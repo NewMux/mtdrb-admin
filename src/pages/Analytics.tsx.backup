@@ -1,0 +1,597 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Tab } from '@headlessui/react';
+import { motion } from 'framer-motion';
+import { 
+  FiDownload, 
+  FiPrinter, 
+  FiFilter, 
+  FiCalendar, 
+  FiUsers, 
+  FiDollarSign, 
+  FiTrendingUp, 
+  FiTrendingDown,
+  FiBarChart2,
+  FiPieChart,
+  FiFileText,
+  FiRefreshCw
+} from 'react-icons/fi';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { supabase } from '../supabaseClient';
+import { AppleButton, AppleButtonGroup } from '../components/AppleStyleModal';
+import toast from 'react-hot-toast';
+import dayjs from 'dayjs';
+
+interface ReportFilters {
+  dateRange: [Date | null, Date | null];
+  memberStatus: string | null;
+  classType: string | null;
+  trainerId: string | null;
+  exportFormat: 'pdf' | 'csv' | 'excel';
+}
+
+interface ReportData {
+  members: any[];
+  classes: any[];
+  bookings: any[];
+  trainers: any[];
+  invoices: any[];
+  expenses: any[];
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+
+const MetricCard = ({ title, value, icon, change, changeType, className = '' }) => (
+  <motion.div
+    className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between ${className}`}
+    whileHover={{ y: -2, boxShadow: '0 4px 16px 0 rgba(0,0,0,0.1)' }}
+  >
+    <div>
+      <div className="flex items-center justify-between">
+        <h3 className="text-gray-500 font-semibold text-sm">{title}</h3>
+        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">{icon}</div>
+      </div>
+      <p className="text-2xl font-bold mt-2 text-gray-900">{value}</p>
+    </div>
+    {change && (
+      <div className={`mt-4 flex items-center text-sm ${changeType === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+        {changeType === 'up' ? <FiTrendingUp className="mr-1" /> : <FiTrendingDown className="mr-1" />}
+        <span>{change}</span>
+        <span className="text-gray-500 ml-1">vs last period</span>
+      </div>
+    )}
+  </motion.div>
+);
+
+const ChartCard = ({ title, children, className = '' }) => (
+  <div className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 ${className}`}>
+    <h3 className="text-lg font-bold mb-4 text-gray-900">{title}</h3>
+    <div style={{ height: '300px' }}>
+      {children}
+    </div>
+  </div>
+);
+
+const FilterBar = ({ filters, onFilterChange, onExport, onRefresh }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FiFilter className="text-gray-400" />
+          <span className="text-sm font-medium text-gray-700">Filters:</span>
+        </div>
+        
+        <select
+          value={filters.memberStatus || ''}
+          onChange={(e) => onFilterChange({ ...filters, memberStatus: e.target.value || null })}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">All Member Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="expired">Expired</option>
+        </select>
+
+        <select
+          value={filters.classType || ''}
+          onChange={(e) => onFilterChange({ ...filters, classType: e.target.value || null })}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">All Class Types</option>
+          <option value="yoga">Yoga</option>
+          <option value="pilates">Pilates</option>
+          <option value="hiit">HIIT</option>
+          <option value="strength">Strength Training</option>
+        </select>
+
+        <select
+          value={filters.exportFormat}
+          onChange={(e) => onFilterChange({ ...filters, exportFormat: e.target.value })}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="pdf">PDF</option>
+          <option value="csv">CSV</option>
+          <option value="excel">Excel</option>
+        </select>
+      </div>
+
+      <AppleButtonGroup>
+        <AppleButton
+          onClick={onRefresh}
+          variant="secondary"
+          size="sm"
+          icon={<FiRefreshCw className="w-4 h-4" />}
+        >
+          Refresh
+        </AppleButton>
+        <AppleButton
+          onClick={() => onExport('download')}
+          variant="primary"
+          size="sm"
+          icon={<FiDownload className="w-4 h-4" />}
+        >
+          Download
+        </AppleButton>
+        <AppleButton
+          onClick={() => onExport('print')}
+          variant="secondary"
+          size="sm"
+          icon={<FiPrinter className="w-4 h-4" />}
+        >
+          Print
+        </AppleButton>
+      </AppleButtonGroup>
+    </div>
+  </div>
+);
+
+export default function Analytics() {
+  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState<ReportData>({
+    members: [],
+    classes: [],
+    bookings: [],
+    trainers: [],
+    invoices: [],
+    expenses: []
+  });
+  const [filters, setFilters] = useState<ReportFilters>({
+    dateRange: [null, null],
+    memberStatus: null,
+    classType: null,
+    trainerId: null,
+    exportFormat: 'pdf'
+  });
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        await fetchReportData();
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      toast.error('Authentication error');
+    }
+  };
+
+  const fetchReportData = async () => {
+    try {
+      setLoading(true);
+      const tenantId = user?.user_metadata?.tenant_id;
+      
+      if (!tenantId) {
+        toast.error('Tenant ID not found');
+        return;
+      }
+
+      // First fetch classes to get their IDs
+      const { data: classes } = await supabase.from('classes').select('*').eq('tenant_id', tenantId);
+      
+      // Then fetch all other data including bookings based on class IDs
+      const [
+        { data: members },
+        { data: bookings },
+        { data: trainers },
+        { data: invoices },
+        { data: expenses }
+      ] = await Promise.all([
+        supabase.from('members').select('*').eq('tenant_id', tenantId),
+        supabase.from('class_bookings').select('*').in('class_id', classes?.map(c => c.id) || []),
+        supabase.from('trainers').select('*').eq('tenant_id', tenantId),
+        supabase.from('invoices').select('*').eq('tenant_id', tenantId),
+        supabase.from('expenses').select('*').eq('tenant_id', tenantId)
+      ]);
+
+      setReportData({
+        members: members || [],
+        classes: classes || [],
+        bookings: bookings || [],
+        trainers: trainers || [],
+        invoices: invoices || [],
+        expenses: expenses || []
+      });
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      toast.error('Failed to fetch analytics data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async (type: 'download' | 'print') => {
+    try {
+      // TODO: Implement actual export functionality
+      if (type === 'download') {
+        toast.success(`Analytics downloaded as ${filters.exportFormat.toUpperCase()}`);
+      } else {
+        toast.success('Analytics sent to printer');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Export failed');
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchReportData();
+    toast.success('Analytics data refreshed');
+  };
+
+  // Calculate analytics metrics
+  const metrics = useMemo(() => {
+    const totalMembers = reportData.members.length;
+    const activeMembers = reportData.members.filter(m => m.status === 'active').length;
+    const totalClasses = reportData.classes.length;
+    const totalBookings = reportData.bookings.length;
+    const totalRevenue = reportData.invoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+    const totalExpenses = reportData.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const netProfit = totalRevenue - totalExpenses;
+
+    return {
+      totalMembers,
+      activeMembers,
+      totalClasses,
+      totalBookings,
+      totalRevenue,
+      totalExpenses,
+      netProfit,
+      memberGrowth: '+12%',
+      classGrowth: '+8%',
+      revenueGrowth: '+15%',
+      profitGrowth: '+22%'
+    };
+  }, [reportData]);
+
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    // Member growth over time
+    const memberGrowthData = [
+      { month: 'Jan', members: 120 },
+      { month: 'Feb', members: 135 },
+      { month: 'Mar', members: 142 },
+      { month: 'Apr', members: 158 },
+      { month: 'May', members: 165 },
+      { month: 'Jun', members: 180 }
+    ];
+
+    // Class attendance by type
+    const classTypeData = reportData.classes.reduce((acc, cls) => {
+      const type = cls.type || 'Other';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+
+    const classTypeChartData = Object.entries(classTypeData).map(([type, count]) => ({
+      name: type,
+      value: count
+    }));
+
+    // Revenue trend
+    const revenueData = [
+      { month: 'Jan', revenue: 4500 },
+      { month: 'Feb', revenue: 5200 },
+      { month: 'Mar', revenue: 4800 },
+      { month: 'Apr', revenue: 6100 },
+      { month: 'May', revenue: 5800 },
+      { month: 'Jun', revenue: 7200 }
+    ];
+
+    return {
+      memberGrowthData,
+      classTypeChartData,
+      revenueData
+    };
+  }, [reportData]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col bg-blue-50 font-sans antialiased text-blue-900">
+        <main className="flex-1 p-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen w-full flex flex-col bg-blue-50 font-sans antialiased text-blue-900">
+      <main className="flex-1 p-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">Analytics Dashboard</h1>
+          </div>
+          <p className="text-gray-600 text-base leading-relaxed max-w-3xl">
+            Generate comprehensive analytics on members, classes, trainers, and financial performance. 
+            Filter data by date ranges and export in multiple formats.
+          </p>
+        </div>
+
+        {/* Filter Bar */}
+        <FilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          onExport={handleExport}
+          onRefresh={handleRefresh}
+        />
+
+        {/* Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+          <MetricCard
+            title="Total Members"
+            value={metrics.totalMembers}
+            icon={<FiUsers size={16} />}
+            change={metrics.memberGrowth}
+            changeType="up"
+          />
+          <MetricCard
+            title="Active Members"
+            value={metrics.activeMembers}
+            icon={<FiUsers size={16} />}
+            change="+5%"
+            changeType="up"
+          />
+          <MetricCard
+            title="Total Classes"
+            value={metrics.totalClasses}
+            icon={<FiCalendar size={16} />}
+            change={metrics.classGrowth}
+            changeType="up"
+          />
+          <MetricCard
+            title="Total Bookings"
+            value={metrics.totalBookings}
+            icon={<FiBarChart2 size={16} />}
+            change="+18%"
+            changeType="up"
+          />
+          <MetricCard
+            title="Total Revenue"
+            value={`${metrics.totalRevenue.toFixed(2)} BHD`}
+            icon={<FiDollarSign size={16} />}
+            change={metrics.revenueGrowth}
+            changeType="up"
+          />
+          <MetricCard
+            title="Net Profit"
+            value={`${metrics.netProfit.toFixed(2)} BHD`}
+            icon={<FiTrendingUp size={16} />}
+            change={metrics.profitGrowth}
+            changeType="up"
+          />
+        </div>
+
+        {/* Analytics Tabs */}
+        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6">
+          <Tab.Group>
+            <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/5 p-1 mb-6">
+              <Tab
+                className={({ selected }) =>
+                  `w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                  ${selected
+                    ? 'bg-white text-blue-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-600'
+                  }`
+                }
+              >
+                Member Analytics
+              </Tab>
+              <Tab
+                className={({ selected }) =>
+                  `w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                  ${selected
+                    ? 'bg-white text-blue-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-600'
+                  }`
+                }
+              >
+                Class Analytics
+              </Tab>
+              <Tab
+                className={({ selected }) =>
+                  `w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                  ${selected
+                    ? 'bg-white text-blue-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-600'
+                  }`
+                }
+              >
+                Trainer Analytics
+              </Tab>
+              <Tab
+                className={({ selected }) =>
+                  `w-full rounded-lg py-2.5 text-sm font-medium leading-5 
+                  ${selected
+                    ? 'bg-white text-blue-700 shadow'
+                    : 'text-gray-600 hover:bg-white/[0.12] hover:text-blue-600'
+                  }`
+                }
+              >
+                Financial Analytics
+              </Tab>
+            </Tab.List>
+
+            <Tab.Panels>
+              {/* Member Analytics Panel */}
+              <Tab.Panel>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <ChartCard title="Member Growth Trend">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData.memberGrowthData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="members" stroke="#2563eb" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+
+                  <ChartCard title="Member Status Distribution">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Active', value: metrics.activeMembers },
+                            { name: 'Inactive', value: metrics.totalMembers - metrics.activeMembers }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {COLORS.map((color, index) => (
+                            <Cell key={`cell-${index}`} fill={color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </div>
+              </Tab.Panel>
+
+              {/* Class Analytics Panel */}
+              <Tab.Panel>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <ChartCard title="Class Type Distribution">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData.classTypeChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#2563eb" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+
+                  <ChartCard title="Class Attendance Overview">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Yoga', attendance: 85 },
+                        { name: 'Pilates', attendance: 72 },
+                        { name: 'HIIT', attendance: 95 },
+                        { name: 'Strength', attendance: 68 }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="attendance" fill="#10b981" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </div>
+              </Tab.Panel>
+
+              {/* Trainer Analytics Panel */}
+              <Tab.Panel>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <ChartCard title="Trainer Performance">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={reportData.trainers.map(trainer => ({
+                        name: trainer.name,
+                        classes: reportData.classes.filter(c => c.trainer_id === trainer.id).length,
+                        rating: trainer.rating || 0
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="classes" fill="#8b5cf6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+
+                  <ChartCard title="Trainer Ratings">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={reportData.trainers.map(trainer => ({
+                        name: trainer.name,
+                        rating: trainer.rating || 0
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="rating" fill="#f59e0b" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </div>
+              </Tab.Panel>
+
+              {/* Financial Analytics Panel */}
+              <Tab.Panel>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <ChartCard title="Revenue Trend">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData.revenueData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+
+                  <ChartCard title="Revenue vs Expenses">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { month: 'Jan', revenue: 4500, expenses: 3200 },
+                        { month: 'Feb', revenue: 5200, expenses: 3800 },
+                        { month: 'Mar', revenue: 4800, expenses: 3500 },
+                        { month: 'Apr', revenue: 6100, expenses: 4200 },
+                        { month: 'May', revenue: 5800, expenses: 4100 },
+                        { month: 'Jun', revenue: 7200, expenses: 4800 }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="revenue" fill="#10b981" />
+                        <Bar dataKey="expenses" fill="#ef4444" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                </div>
+              </Tab.Panel>
+            </Tab.Panels>
+          </Tab.Group>
+        </div>
+      </main>
+    </div>
+  );
+} 

@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FAFAFA;
+    --surface: #F2F2F5;
+    --primary: #1A1A1A;
+    --secondary: #6B6B6B;
+    --sky: #60A5FA;
+    --rose: #F472B6;
+    --emerald: #34D399;
+    --gold: #FBBF24;
+    --error: #EF4444;
+  }
+
+  .dark {
+    --background: #111827;
+    --surface: #1F2937;
+    --primary: #F9FAFB;
+    --secondary: #D1D5DB;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  body {
+    @apply bg-[#FAFAFA] dark:bg-[#111827] text-[#1A1A1A] dark:text-[#F9FAFB] font-sans;
+    font-family: 'Inter', 'Cairo', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+  }
+
+  /* Arabic Typography */
+  .arabic {
+    font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400;
+  }
+
+  .form-select {
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400;
+  }
+
+  .form-textarea {
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400 resize-y;
+  }
+
+  .form-checkbox {
+    @apply h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-blue-400;
+  }
+
+  .card {
+    @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  /* Form Components */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-300;
+  }
+
+  .form-select {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-300;
+  }
+
+  .form-textarea {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-300 resize-none;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+  }
+
+  /* Table Components */
+  .table-container {
+    @apply w-full overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700;
+  }
+
+  .table-header {
+    @apply bg-gray-50 dark:bg-gray-800 px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .table-row {
+    @apply border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-900 dark:text-white;
+  }
+
+  /* Badge Components */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200;
+  }
+
+  .badge-warning {
+    @apply badge bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200;
+  }
+
+  .badge-error {
+    @apply badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+  }
+
+  /* Tab Components */
+  .tab-container {
+    @apply border-b border-gray-200 dark:border-gray-700;
+  }
+
+  .tab-button {
+    @apply px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300;
+  }
+
+  .tab-button-active {
+    @apply text-sky-600 dark:text-sky-400 border-sky-600 dark:border-sky-400;
+  }
+
+  /* Modal Components */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40;
+  }
+
+  .modal-container {
+    @apply fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-gray-900 shadow-2xl z-50;
+  }
+
+  .modal-header {
+    @apply sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4;
+  }
+
+  .modal-content {
+    @apply flex-1 overflow-y-auto px-6 py-4;
+  }
+
+  .modal-footer {
+    @apply sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-4;
+  }
+
+  /* Gradient Components */
+  .gradient-primary {
+    @apply bg-gradient-to-tr from-sky-400 to-rose-400;
+  }
+
+  .gradient-hover {
+    @apply bg-gradient-to-tr from-sky-500 to-rose-500;
+  }
+
+  /* Animation Components */
+  .fade-in {
+    @apply animate-in fade-in duration-300;
+  }
+
+  .slide-in-right {
+    @apply animate-in slide-in-from-right duration-300;
+  }
+
+  .scale-in {
+    @apply animate-in zoom-in duration-300;
+  }
+
+  /* Glass Effect */
+  .glass {
+    @apply backdrop-blur-sm bg-white/80 dark:bg-gray-900/80;
+  }
+
+  /* Text Gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-sky-600 to-rose-600 bg-clip-text text-transparent;
+  }
+
+  /* Text Balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Scrollbar Hiding */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* RTL Support */
+  .rtl {
+    direction: rtl;
+  }
+
+  .ltr {
+    direction: ltr;
+  }
+} 

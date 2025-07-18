@@ -1,0 +1,395 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { supabase } from '../supabaseClient';
+import { 
+  FiUsers, FiZap, FiBarChart, FiTarget, FiCpu, FiSettings,
+  FiTrendingUp, FiAward, FiClock, FiDollarSign, FiStar,
+  FiActivity, FiPlus, FiCalendar, FiCheckCircle
+} from 'react-icons/fi';
+import { migrateTrainerData } from '../utils/migrateTrainerData';
+import toast from 'react-hot-toast';
+import TrainerKPICards from '../components/trainers/TrainerKPICards';
+import SmartTrainerDashboard from '../components/trainers/SmartTrainerDashboard';
+import SmartTrainerMatching from '../components/trainers/SmartTrainerMatching';
+import TrainerAutomationEngine from '../components/trainers/TrainerAutomationEngine';
+import SmartTrainerAnalytics from '../components/trainers/SmartTrainerAnalytics';
+import TrainerOverview from '../components/trainers/TrainerOverview';
+
+interface TrainerStats {
+  totalTrainers: number;
+  activeTrainers: number;
+  todaySessions: number;
+  topRatedTrainer: {
+    name: string;
+    rating: number;
+  } | null;
+}
+
+// ===== SMART TRAINER MANAGEMENT SYSTEM =====
+export default function Trainers() {
+  const [migrationStatus, setMigrationStatus] = useState<'pending' | 'running' | 'completed' | 'error'>('pending');
+  const [migrationError, setMigrationError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Smart Navigation State
+  const [currentView, setCurrentView] = useState<'dashboard' | 'matching' | 'automation' | 'analytics' | 'management'>('dashboard');
+  
+  const [stats, setStats] = useState<TrainerStats>({
+    totalTrainers: 0,
+    activeTrainers: 0,
+    todaySessions: 0,
+    topRatedTrainer: null
+  });
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setIsAuthenticated(true);
+        await checkMigrationNeeded();
+        await fetchStats();
+      } else {
+        setMigrationStatus('error');
+        setMigrationError('Please sign in to access trainer management.');
+      }
+    } catch (error: any) {
+      console.error('Auth check error:', error);
+      setMigrationStatus('error');
+      setMigrationError('Authentication error. Please try signing in again.');
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { data: trainers, error: trainersError } = await supabase
+        .from('trainers')
+        .select('*');
+
+      if (trainersError) {
+        if (trainersError.message.includes('does not exist')) {
+          setStats({
+            totalTrainers: 0,
+            activeTrainers: 0,
+            todaySessions: 0,
+            topRatedTrainer: null
+          });
+          return;
+        }
+        throw trainersError;
+      }
+
+      // Try to fetch trainer schedule
+      let sessions = [];
+      try {
+        const { data: scheduleData, error: sessionsError } = await supabase
+          .from('trainer_schedule')
+          .select('*')
+          .gte('start_time', today.toISOString())
+          .lt('start_time', tomorrow.toISOString());
+
+        if (sessionsError) {
+          if (sessionsError.message.includes('does not exist')) {
+            console.log('Trainer schedule table not available yet');
+            sessions = [];
+          } else {
+            throw sessionsError;
+          }
+        } else {
+          sessions = scheduleData || [];
+        }
+      } catch (scheduleError: any) {
+        console.log('Could not fetch trainer schedule:', scheduleError.message);
+        sessions = [];
+      }
+
+      const activeTrainers = trainers?.filter((t: any) => t.status === 'active') || [];
+      const topRated = activeTrainers.reduce((prev: any, current: any) => {
+        return (!prev || (current.rating && current.rating > (prev.rating || 0))) ? current : prev;
+      }, null);
+
+      setStats({
+        totalTrainers: trainers?.length || 0,
+        activeTrainers: activeTrainers.length,
+        todaySessions: sessions.length,
+        topRatedTrainer: topRated ? {
+          name: topRated.name,
+          rating: topRated.rating || 0
+        } : null
+      });
+    } catch (error: any) {
+      console.error('Error fetching stats:', error);
+      setStats({
+        totalTrainers: 0,
+        activeTrainers: 0,
+        todaySessions: 0,
+        topRatedTrainer: null
+      });
+    }
+  };
+
+  const checkMigrationNeeded = async () => {
+    try {
+      setMigrationStatus('running');
+      
+      const { count: trainerCount, error: countError } = await supabase
+        .from('trainers')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        if (countError.message.includes('does not exist')) {
+          await runMigration();
+          return;
+        }
+        throw countError;
+      }
+
+      if (trainerCount === 0) {
+        const { data: oldClasses, error: classError } = await supabase
+          .from('classes')
+          .select('trainer')
+          .not('trainer', 'is', null)
+          .limit(1);
+
+        if (classError) throw classError;
+
+        if (oldClasses && oldClasses.length > 0) {
+          await runMigration();
+        } else {
+          setMigrationStatus('completed');
+        }
+      } else {
+        setMigrationStatus('completed');
+      }
+    } catch (err: any) {
+      console.error('Migration check error:', err);
+      setMigrationStatus('error');
+      setMigrationError(err.message);
+    }
+  };
+
+  const runMigration = async () => {
+    try {
+      const { success, error } = await migrateTrainerData();
+      
+      if (!success) {
+        setMigrationStatus('error');
+        setMigrationError(error);
+      } else {
+        setMigrationStatus('completed');
+        await fetchStats();
+        toast.success('Trainer management setup completed successfully');
+      }
+    } catch (err: any) {
+      console.error('Migration error:', err);
+      setMigrationStatus('error');
+      setMigrationError(err.message);
+    }
+  };
+
+  const smartViews = [
+    { 
+      id: 'dashboard', 
+      name: 'Smart Dashboard', 
+      icon: FiCpu, 
+      description: 'AI-powered trainer insights',
+      highlight: 'Primary Feature',
+      color: 'from-blue-600 to-indigo-600'
+    },
+    { 
+      id: 'matching', 
+      name: 'Smart Matching', 
+      icon: FiTarget, 
+      description: 'AI member-trainer pairing',
+      color: 'from-emerald-600 to-green-600'
+    },
+    { 
+      id: 'automation', 
+      name: 'Automation', 
+      icon: FiZap, 
+      description: 'Smart trainer workflows',
+      color: 'from-purple-600 to-pink-600'
+    },
+    { 
+      id: 'analytics', 
+      name: 'Performance Analytics', 
+      icon: FiBarChart, 
+      description: 'Advanced trainer metrics',
+      color: 'from-orange-600 to-red-600'
+    },
+    { 
+      id: 'management', 
+      name: 'Trainer Management', 
+      icon: FiUsers, 
+      description: 'Manage trainer profiles',
+      color: 'from-gray-600 to-slate-600'
+    },
+  ];
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <SmartTrainerDashboard refreshKey={refreshKey} stats={stats} />;
+      case 'matching':
+        return <SmartTrainerMatching refreshKey={refreshKey} />;
+      case 'automation':
+        return <TrainerAutomationEngine refreshKey={refreshKey} />;
+      case 'analytics':
+        return <SmartTrainerAnalytics refreshKey={refreshKey} />;
+      case 'management':
+      return (
+          <div className="space-y-6">
+            {/* KPI Cards */}
+            <TrainerKPICards
+              total={stats.totalTrainers}
+              active={stats.activeTrainers}
+              todaySessions={stats.todaySessions}
+              topRatedTrainer={stats.topRatedTrainer}
+            />
+            
+            {/* Trainer Overview */}
+            <TrainerOverview 
+              stats={stats} 
+              onSelectTrainer={(trainerId: string) => console.log('Selected trainer:', trainerId)} 
+            />
+          </div>
+        );
+      default:
+        return <SmartTrainerDashboard refreshKey={refreshKey} stats={stats} />;
+    }
+  };
+
+  // Show migration status if not completed
+  if (migrationStatus !== 'completed') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+          {migrationStatus === 'running' && (
+            <>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Setting up Smart Trainer Management</h2>
+              <p className="text-gray-600">Initializing AI-powered trainer system...</p>
+            </>
+          )}
+          
+          {migrationStatus === 'error' && (
+            <>
+              <div className="bg-red-100 p-3 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                <FiCheckCircle className="text-red-600 text-xl" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Setup Error</h2>
+              <p className="text-gray-600 mb-4">{migrationError}</p>
+                <button
+                onClick={runMigration}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                Retry Setup
+                </button>
+            </>
+              )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+        <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Smart Trainer Management</h1>
+            <p className="text-gray-600 mt-1">
+              AI-powered trainer optimization with intelligent matching and performance analytics
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Quick Stats */}
+            <div className="hidden md:flex items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <FiUsers className="text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{stats.activeTrainers}</div>
+                  <div className="text-gray-500">Active</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <FiCalendar className="text-green-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{stats.todaySessions}</div>
+                  <div className="text-gray-500">Today</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-yellow-100 p-2 rounded-lg">
+                  <FiStar className="text-yellow-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">
+                    {stats.topRatedTrainer?.rating.toFixed(1) || 'N/A'}
+                  </div>
+                  <div className="text-gray-500">Top Rated</div>
+                </div>
+              </div>
+            </div>
+        </div>
+        </div>
+
+        {/* Smart Navigation */}
+        <div className="bg-white rounded-2xl shadow-lg p-2 border border-gray-200">
+          <div className="flex space-x-1 overflow-x-auto">
+            {smartViews.map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setCurrentView(view.id as any)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all whitespace-nowrap relative ${
+                  currentView === view.id
+                    ? `bg-gradient-to-r ${view.color} text-white shadow-lg`
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <view.icon className={`${currentView === view.id ? 'text-white' : 'text-gray-500'}`} />
+                <div className="text-left">
+                  <div className="font-semibold flex items-center gap-2">
+                    {view.name}
+                    {view.highlight && currentView === view.id && (
+                      <span className="bg-white bg-opacity-20 text-white text-xs px-2 py-1 rounded-full">
+                        {view.highlight}
+                      </span>
+                    )}
+                  </div>
+                  <div className={`text-xs ${currentView === view.id ? 'text-white text-opacity-90' : 'text-gray-500'}`}>
+                    {view.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <motion.div
+        key={currentView}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {renderCurrentView()}
+      </motion.div>
+    </div>
+  );
+} 

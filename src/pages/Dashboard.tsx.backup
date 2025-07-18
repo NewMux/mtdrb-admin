@@ -1,0 +1,173 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { User } from "@supabase/supabase-js";
+import { FiHome, FiZap, FiActivity, FiGrid } from "react-icons/fi";
+
+// Import Smart Dashboard Components
+import { SmartDashboardOverview } from "../components/dashboard/SmartDashboardOverview";
+import { QuickActionsHub } from "../components/dashboard/QuickActionsHub";
+import { LiveActivityFeed } from "../components/dashboard/LiveActivityFeed";
+import { SmartWidgets } from "../components/dashboard/SmartWidgets";
+
+export default function Dashboard() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState("overview");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const navigate = useNavigate();
+
+  // Check auth and paid status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        
+        if (!data.user) {
+          navigate('/login');
+        } else if (!data.user.user_metadata?.paid) {
+          navigate('/subscribe');
+        } else {
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Auth error:', error);
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const dashboardViews = [
+    {
+      id: "overview",
+      name: "Smart Overview",
+      icon: <FiHome className="h-5 w-5" />,
+      description: "AI-powered insights and KPIs"
+    },
+    {
+      id: "actions", 
+      name: "Quick Actions",
+      icon: <FiZap className="h-5 w-5" />,
+      description: "Smart suggestions and tasks"
+    },
+    {
+      id: "activity",
+      name: "Live Activity",
+      icon: <FiActivity className="h-5 w-5" />,
+      description: "Real-time member activity"
+    },
+    {
+      id: "widgets",
+      name: "Smart Widgets",
+      icon: <FiGrid className="h-5 w-5" />,
+      description: "Customizable dashboard widgets"
+    }
+  ];
+
+  const renderActiveView = () => {
+    switch (activeView) {
+      case "overview":
+        return <SmartDashboardOverview refreshKey={refreshKey} />;
+      case "actions":
+        return <QuickActionsHub refreshKey={refreshKey} />;
+      case "activity":
+        return <LiveActivityFeed refreshKey={refreshKey} />;
+      case "widgets":
+        return <SmartWidgets refreshKey={refreshKey} />;
+      default:
+        return <SmartDashboardOverview refreshKey={refreshKey} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading smart dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-blue-50">
+      {/* Smart Navigation */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Smart Dashboard</h1>
+            <p className="text-gray-600 text-sm">
+              Welcome back, {user?.user_metadata?.full_name || user?.email}
+            </p>
+          </div>
+          
+          {/* View Switcher */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-2xl">
+            {dashboardViews.map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setActiveView(view.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  activeView === view.id
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+                title={view.description}
+              >
+                {view.icon}
+                <span className="hidden md:inline">{view.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={() => setRefreshKey(prev => prev + 1)}
+            className="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+            title="Refresh data"
+          >
+            <FiActivity className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Active View Content */}
+      <div className="flex-1">
+        {renderActiveView()}
+      </div>
+
+      {/* Smart Status Bar */}
+      <div className="bg-white border-t border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-6 text-gray-600">
+            <span>Last updated: {new Date().toLocaleTimeString()}</span>
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              System Online
+            </span>
+          </div>
+          <div className="flex items-center space-x-4 text-gray-600">
+            <span>Active Members: 1,247</span>
+            <span>Monthly Revenue: ₹24.5k</span>
+            <span>Today's Classes: 12</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 

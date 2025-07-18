@@ -1,0 +1,152 @@
+/* DateTimeRangePicker.css */
+:root {
+  --picker-bg: #fff;
+  --picker-text: #374151;
+  --picker-border: #e5e7eb;
+  --picker-primary: #2563eb;
+  --picker-primary-text: #fff;
+  --picker-hover: #eff6ff;
+}
+
+.dt-range-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-range-picker-container {
+  background: var(--picker-bg);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: inline-flex;
+  flex-direction: column;
+}
+
+/* Style the react-datepicker instance */
+.dt-range-picker-container .react-datepicker {
+  border: none;
+}
+
+.dt-range-picker-container .react-datepicker__month-container {
+  padding: 0 0.5rem;
+}
+
+/* Time selection section */
+.time-section {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem 0.5rem;
+  border-top: 1px solid var(--picker-border);
+  border-bottom: 1px solid var(--picker-border);
+  margin-top: 0.5rem;
+}
+
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.time-picker-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--picker-text);
+  margin: 0;
+}
+
+.time-picker-inputs {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--picker-border);
+}
+
+.time-input {
+  width: 50px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 500;
+  border: none;
+  background-color: transparent;
+}
+.time-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.time-separator {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0.25rem;
+}
+
+.period-toggle {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.5rem;
+}
+
+.period-toggle button {
+  border: 1px solid var(--picker-border);
+  background: transparent;
+  padding: 0.1rem 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.period-toggle button:first-child {
+  border-bottom: none;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+.period-toggle button:last-child {
+  border-radius: 0 0 0.25rem 0.25rem;
+}
+.period-toggle button.active {
+  background: var(--picker-primary);
+  color: var(--picker-primary-text);
+  border-color: var(--picker-primary);
+}
+
+/* Footer section */
+.footer-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0.5rem 0;
+}
+
+.selected-range-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--picker-text);
+}
+
+.footer-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cancel-btn, .save-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel-btn {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+.save-btn {
+  background-color: var(--picker-primary);
+  color: var(--picker-primary-text);
+} 

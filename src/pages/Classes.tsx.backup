@@ -1,0 +1,546 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { FiPlus, FiCalendar, FiUsers, FiClock, FiMapPin, FiTrash2, FiAlertTriangle, FiFilter, FiSearch, FiCpu, FiZap, FiBarChart, FiList } from 'react-icons/fi';
+import { supabase } from '../supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import { debugAuth, createTestMembership, checkDatabaseTables } from '../utils/debugAuth';
+import toast from 'react-hot-toast';
+import ClassFormDrawer from '../components/classes/ClassFormDrawer';
+import ClassDetailsDrawer from '../components/classes/ClassDetailsDrawer';
+import ClassKPICards from '../components/classes/ClassKPICards';
+import ClassList from '../components/classes/ClassList';
+import TablePageLayout from '../components/classes/TablePageLayout';
+import SmartClassesDashboard from '../components/classes/SmartClassesDashboard';
+import ClassAutomationEngine from '../components/classes/ClassAutomationEngine';
+import SmartClassAnalytics from '../components/classes/SmartClassAnalytics';
+import ClassFormModal from '../components/classes/ClassFormModal';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Trainer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: string;
+}
+
+interface Class {
+  id: string;
+  name: string;
+  description?: string;
+  trainer_id?: string;
+  starttime: string;
+  endtime: string;
+  capacity?: number;
+  created_at?: string;
+  trainer?: Trainer;
+}
+
+interface ClassBooking {
+  id: string;
+  class_id: string;
+  member_id: string;
+  status: string;
+  created_at: string;
+}
+
+export default function Classes() {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [bookings, setBookings] = useState<ClassBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add');
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [selectedDetailsClass, setSelectedDetailsClass] = useState<Class | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [classToDelete, setClassToDelete] = useState<Class | null>(null);
+
+  // Smart Classes Navigation
+  const [currentView, setCurrentView] = useState<'dashboard' | 'automation' | 'analytics' | 'classes'>('classes');
+
+  // Class Form Modal
+  const [showClassModal, setShowClassModal] = useState(false);
+
+  // --- UI for search, filters, and actions ---
+  const [search, setSearch] = useState('');
+  const [trainerFilter, setTrainerFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // First, check if user has a membership/tenant
+      const { data: membershipData, error: membershipError } = await supabase
+        .from('memberships')
+        .select('tenant_id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (membershipError || !membershipData) {
+        console.error('No membership found for user:', membershipError);
+        setError('You need to be associated with a tenant to view classes. Please contact your administrator.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Fetching classes for tenant:', membershipData.tenant_id);
+
+      // Test: Try to access classes table without any filters first
+      const { data: testData, error: testError } = await supabase
+        .from('classes')
+        .select('count')
+        .limit(1);
+
+      console.log('Test classes query:', { data: testData, error: testError });
+
+      if (testError) {
+        console.error('Cannot access classes table at all:', testError);
+        setError('Cannot access classes table. Please check database permissions.');
+        setLoading(false);
+        return;
+      }
+
+      // First, try a simple query without joins to see if the table exists
+      const { data: simpleClassData, error: simpleClassError } = await supabase
+        .from('classes')
+        .select('id, name, description, starttime, endtime, capacity')
+        .eq('tenant_id', membershipData.tenant_id)
+        .limit(5);
+
+      if (simpleClassError) {
+        console.error('Simple classes query error:', simpleClassError);
+        throw simpleClassError;
+      }
+
+      console.log('Simple classes query successful:', simpleClassData);
+
+      // Now try with the trainer join
+      const { data: classData, error: classError } = await supabase
+        .from('classes')
+        .select(`
+          id,
+          name,
+          description,
+          starttime,
+          endtime,
+          capacity,
+          trainer:trainers(id, name, email, phone, status)
+        `)
+        .eq('tenant_id', membershipData.tenant_id)
+        .order('starttime', { ascending: true });
+
+      if (classError) {
+        console.error('Error fetching classes with trainer join:', classError);
+        // If the join fails, use the simple data
+        setClasses(simpleClassData?.map(c => ({
+          ...c,
+          trainer_id: undefined,
+          created_at: undefined,
+          trainer: undefined
+        })) || []);
+      } else {
+        // Handle the trainer field which might be an array or single object
+        const processedData = classData?.map(c => ({
+          ...c,
+          trainer: Array.isArray(c.trainer) ? c.trainer[0] : c.trainer
+        })) || [];
+        setClasses(processedData);
+      }
+
+      // Try to fetch bookings, but don't fail if the table doesn't exist
+      try {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('class_bookings')
+          .select('*')
+          .in('class_id', (classData || simpleClassData)?.map(c => c.id) || [])
+          .order('created_at', { ascending: false });
+
+        if (bookingError) {
+          console.error('Error fetching bookings:', bookingError);
+          // Set empty array if bookings table doesn't exist
+          setBookings([]);
+        } else {
+          setBookings(bookingData || []);
+        }
+      } catch (bookingErr) {
+        console.log('Bookings table not accessible, setting empty bookings');
+        setBookings([]);
+      }
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load classes data. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+      setRefreshKey(prevKey => prevKey + 1);
+    }
+  };
+
+  const handleDebugAuth = async () => {
+    try {
+      const result = await debugAuth();
+      console.log('Debug result:', result);
+      
+      // Check database tables
+      const tableCheck = await checkDatabaseTables();
+      console.log('Table check result:', tableCheck);
+      
+      if (!result.membership && result.user) {
+        // Try to create a test membership
+        await createTestMembership(result.user.id);
+        toast.success('Created test membership. Please refresh the page.');
+        setTimeout(() => {
+          fetchData();
+        }, 1000);
+      } else {
+        toast('Check console for debug information');
+      }
+    } catch (error) {
+      console.error('Debug error:', error);
+      toast.error('Debug failed. Check console for details.');
+    }
+  };
+
+  // Event handlers
+  const handleAddClass = () => {
+    toast('Class creation coming soon');
+  };
+
+  const openAddDrawer = () => {
+    setDrawerMode('add');
+    setSelectedClass(null);
+    setDrawerOpen(true);
+  };
+
+  const openEditDrawer = (classItem: Class) => {
+    setDrawerMode('edit');
+    setSelectedClass(classItem);
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedClass(null);
+  };
+
+  const openDetailsDrawer = (classItem: Class) => {
+    setSelectedDetailsClass(classItem);
+    setDetailsOpen(true);
+  };
+
+  const closeDetailsDrawer = () => {
+    setDetailsOpen(false);
+    setSelectedDetailsClass(null);
+  };
+
+  const handleDeleteClass = (classItem: Class) => {
+    setClassToDelete(classItem);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteClass = async () => {
+    if (!classToDelete) return;
+    const { error } = await supabase.from('classes').delete().eq('id', classToDelete.id);
+    if (error) {
+      toast.error('Failed to delete class.');
+    } else {
+      toast.success('Class deleted.');
+      fetchData();
+    }
+    setShowDeleteModal(false);
+    setClassToDelete(null);
+  };
+
+  const cancelDeleteClass = () => {
+    setShowDeleteModal(false);
+    setClassToDelete(null);
+  };
+
+  // Extract unique trainers for filter dropdown
+  const trainers = useMemo(() => {
+    const unique = new Map();
+    classes.forEach(c => {
+      if (c.trainer) unique.set(c.trainer.id, c.trainer.name);
+    });
+    return Array.from(unique.entries());
+  }, [classes]);
+
+  const filters = (
+    <>
+      <div className="flex-1 flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+        <FiSearch className="text-blue-400" />
+        <input
+          type="text"
+          className="bg-transparent outline-none flex-1 text-blue-900 placeholder-blue-300"
+          placeholder="Search by class name or trainer..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+      <select
+        className="bg-blue-50 rounded-lg px-3 py-2 text-blue-900"
+        value={trainerFilter}
+        onChange={e => setTrainerFilter(e.target.value)}
+      >
+        <option value="">All Trainers</option>
+        {trainers.map(([id, name]) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </select>
+      <select
+        className="bg-blue-50 rounded-lg px-3 py-2 text-blue-900"
+        value={statusFilter}
+        onChange={e => setStatusFilter(e.target.value)}
+      >
+        <option value="">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="past">Past</option>
+      </select>
+      <button
+        className={`flex items-center gap-1 px-3 py-2 rounded-lg border ${showFilters ? 'bg-blue-100 border-blue-300' : 'bg-blue-50 border-blue-100'} text-blue-700 font-semibold`}
+        onClick={() => setShowFilters(f => !f)}
+        aria-expanded={showFilters}
+      >
+        <FiFilter />
+        Advanced
+      </button>
+    </>
+  );
+
+  const actions = (
+              <button
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition text-sm shadow"
+            onClick={() => setShowClassModal(true)}
+          >
+            <FiPlus /> Add Class
+          </button>
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-blue-600 text-lg">Loading classes data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-lg mb-4">{error}</div>
+          <button
+            onClick={handleDebugAuth}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Debug Database Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const formatTime = (timeString: string) => {
+    try {
+      return new Date(timeString).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return timeString;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getBookingCount = (classId: string) => {
+    return bookings.filter(booking => booking.class_id === classId).length;
+  };
+
+  const smartViews = [
+    { id: 'classes', name: 'Classes List', icon: FiList, description: 'Manage and view all classes' },
+    { id: 'dashboard', name: 'Smart Dashboard', icon: FiCpu, description: 'AI-powered insights and KPIs' },
+    { id: 'automation', name: 'Automation', icon: FiZap, description: 'Smart workflows and automations' },
+    { id: 'analytics', name: 'Analytics', icon: FiBarChart, description: 'Advanced analytics and forecasting' },
+  ];
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <SmartClassesDashboard refreshKey={refreshKey} />;
+      case 'automation':
+        return <ClassAutomationEngine refreshKey={refreshKey} />;
+      case 'analytics':
+        return <SmartClassAnalytics refreshKey={refreshKey} />;
+      case 'classes':
+        return (
+          <ClassList
+            classes={classes}
+            onEdit={openEditDrawer}
+            onView={openDetailsDrawer}
+            onDelete={handleDeleteClass}
+            refreshKey={refreshKey}
+            selectedClassId={selectedDetailsClass?.id || null}
+          />
+        );
+      default:
+        return <SmartClassesDashboard refreshKey={refreshKey} />;
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Smart Classes Management</h1>
+            <p className="text-gray-600 mt-1">
+              AI-powered class management with automated workflows and predictive analytics
+            </p>
+          </div>
+          <button
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition text-sm shadow"
+            onClick={() => setShowClassModal(true)}
+          >
+            <FiPlus /> Add Class
+          </button>
+        </div>
+
+        {/* Smart Navigation */}
+        <div className="bg-white rounded-2xl shadow p-2">
+          <div className="flex space-x-1">
+            {smartViews.map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setCurrentView(view.id as any)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                  currentView === view.id
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <view.icon className={`${currentView === view.id ? 'text-white' : 'text-gray-500'}`} />
+                <div className="text-left">
+                  <div className="font-semibold">{view.name}</div>
+                  <div className={`text-xs ${currentView === view.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                    {view.description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <motion.div
+        key={currentView}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {renderCurrentView()}
+      </motion.div>
+
+      {/* Delete Confirmation Modal with Animation */}
+      <AnimatePresence>
+        {showDeleteModal && classToDelete && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              <FiAlertTriangle className="text-red-500 text-4xl mb-2" />
+              <h2 className="text-xl font-bold mb-4 text-blue-900">Delete Class</h2>
+              <div className="mb-6 text-blue-400 text-center">
+                Are you sure you want to delete <span className="font-semibold text-blue-900">{classToDelete.name}</span>?<br />This cannot be undone.
+              </div>
+              <div className="flex gap-4">
+                <button
+                  className="px-5 py-2 rounded-lg bg-blue-50 text-blue-400 font-semibold hover:bg-blue-100 transition"
+                  onClick={cancelDeleteClass}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-5 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition"
+                  onClick={confirmDeleteClass}
+                >
+                  <FiTrash2 className="inline mr-1" /> Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Drawer for Add/Edit Class */}
+      <ClassFormDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        classData={selectedClass}
+        onSaved={() => {
+          fetchData();
+          setRefreshKey(prevKey => prevKey + 1);
+        }}
+      />
+
+      {/* Drawer for View Details */}
+      <ClassDetailsDrawer
+        isOpen={isDetailsOpen}
+        classData={selectedDetailsClass}
+        onClose={closeDetailsDrawer}
+        onEdit={openEditDrawer}
+        onRefresh={() => {
+          fetchData();
+          setRefreshKey(prevKey => prevKey + 1);
+        }}
+      />
+
+      {/* Class Form Modal */}
+      <ClassFormModal
+        isOpen={showClassModal}
+        onClose={() => setShowClassModal(false)}
+        onSaved={() => {
+          fetchData();
+          setRefreshKey(prevKey => prevKey + 1);
+        }}
+      />
+    </div>
+  );
+} 

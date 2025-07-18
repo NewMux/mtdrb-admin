@@ -1,0 +1,103 @@
+{
+  "timestamp": "2025-07-03T16:21:40.242Z",
+  "supabaseUrl": "https://wpkqtryhwouttufixdfb.supabase.co",
+  "auditResults": {
+    "tenants": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "memberships": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "members": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "trainers": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "classes": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "class_bookings": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "invoices": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "activities": {
+      "exists": false,
+      "error": "relation \"public.activities\" does not exist",
+      "code": "42P01"
+    },
+    "health_check": {
+      "exists": false,
+      "error": "relation \"public.health_check\" does not exist",
+      "code": "42P01"
+    },
+    "branches": {
+      "exists": true,
+      "accessible": true,
+      "sampleData": 0
+    },
+    "subscription_plans": {
+      "exists": false,
+      "error": "relation \"public.subscription_plans\" does not exist",
+      "code": "42P01"
+    },
+    "membersSchema": {
+      "accessible": true,
+      "columns": []
+    },
+    "constraints": {
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache"
+    },
+    "dataCounts": {
+      "tenants": {
+        "count": 0
+      },
+      "memberships": {
+        "count": 0
+      },
+      "members": {
+        "count": 0
+      },
+      "trainers": {
+        "count": 0
+      },
+      "classes": {
+        "count": 0
+      },
+      "class_bookings": {
+        "count": 0
+      },
+      "invoices": {
+        "count": 0
+      },
+      "branches": {
+        "count": 0
+      }
+    },
+    "healthCheckQuery": {
+      "error": "relation \"public.health_check\" does not exist"
+    },
+    "activitiesQuery": {
+      "error": "relation \"public.activities\" does not exist"
+    },
+    "membersQuery": {
+      "error": "column members.first_name does not exist"
+    }
+  }
+}

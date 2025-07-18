@@ -1,0 +1,435 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
+import { useNavigate } from 'react-router-dom';
+import { FiPackage, FiPlus, FiSearch, FiFilter, FiDollarSign, FiUsers, FiCalendar, FiTrendingUp, FiZap, FiBarChart, FiList, FiActivity } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
+
+// New unified UI components
+import { 
+  PageLayout, 
+  SmartCard, 
+  SmartButton, 
+  FilterBar, 
+  Section,
+  StatsGrid,
+  KPICard,
+  SmartLoading,
+  EmptyState
+} from "../components/ui";
+import { QuickNavigation, SmartSuggestions, usePageNavigation } from "../components/ui/SmartNavigation";
+import FilterButton from '../components/ui/FilterButton';
+
+interface Plan {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration: number;
+  features: string[];
+  status: 'active' | 'inactive';
+  members_count: number;
+  created_at: string;
+}
+
+export default function Plans() {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const navigate = useNavigate();
+  const { currentPage } = usePageNavigation();
+
+  // Plan KPIs
+  const planKPIs = [
+    {
+      title: "Total Plans",
+      value: plans.length,
+      change: "+2",
+      trend: "up" as const,
+      icon: <FiPackage className="h-6 w-6" />,
+      color: "blue" as const
+    },
+    {
+      title: "Active Plans",
+      value: plans.filter(p => p.status === 'active').length,
+      change: "+1",
+      trend: "up" as const,
+      icon: <FiActivity className="h-6 w-6" />,
+      color: "green" as const
+    },
+    {
+      title: "Total Members",
+      value: plans.reduce((sum, p) => sum + p.members_count, 0),
+      change: "+18.5%",
+      trend: "up" as const,
+      icon: <FiUsers className="h-6 w-6" />,
+      color: "purple" as const
+    },
+    {
+      title: "Avg Plan Value",
+      value: plans.length > 0 ? `$${(plans.reduce((sum, p) => sum + p.price, 0) / plans.length).toFixed(0)}` : "$0",
+      change: "+8.2%",
+      trend: "up" as const,
+      icon: <FiDollarSign className="h-6 w-6" />,
+      color: "green" as const
+    }
+  ];
+
+  const contextualActions = [
+    {
+      label: "Create Plan",
+      icon: <FiPlus className="h-4 w-4" />,
+      onClick: () => {
+        setSelectedPlan(null);
+        setShowPlanModal(true);
+      },
+      variant: "primary" as const
+    },
+    {
+      label: "Plan Analytics",
+      icon: <FiBarChart className="h-4 w-4" />,
+      onClick: () => navigate('/analytics'),
+      variant: "secondary" as const
+    },
+    {
+      label: "Member Plans",
+      icon: <FiUsers className="h-4 w-4" />,
+      onClick: () => navigate('/members'),
+      variant: "ghost" as const
+    }
+  ];
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        navigate('/login');
+      } else if (!data.user.user_metadata || !data.user.user_metadata.paid) {
+        navigate('/subscribe');
+      } else {
+        setUser(data.user);
+        fetchPlans();
+      }
+      setLoading(false);
+    });
+  }, [navigate]);
+
+  const fetchPlans = async () => {
+    try {
+      // Mock data for now since plans table might not exist
+      const mockPlans: Plan[] = [
+        {
+          id: '1',
+          name: 'Basic Membership',
+          description: 'Access to gym equipment and basic classes',
+          price: 29.99,
+          duration: 30,
+          features: ['Gym Equipment Access', 'Basic Classes', 'Locker Room'],
+          status: 'active',
+          members_count: 45,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          name: 'Premium Membership',
+          description: 'Full access with personal training sessions',
+          price: 59.99,
+          duration: 30,
+          features: ['All Basic Features', 'Personal Training', 'Nutrition Consultation', 'Premium Classes'],
+          status: 'active',
+          members_count: 23,
+          created_at: new Date().toISOString()
+        },
+        {
+          id: '3',
+          name: 'VIP Membership',
+          description: 'Unlimited access with exclusive perks',
+          price: 99.99,
+          duration: 30,
+          features: ['All Premium Features', 'Priority Booking', 'Guest Passes', 'Spa Access'],
+          status: 'active',
+          members_count: 12,
+          created_at: new Date().toISOString()
+        }
+      ];
+
+      setPlans(mockPlans);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      toast.error('Failed to load plans');
+    }
+  };
+
+  const handleEditPlan = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setShowPlanModal(true);
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    setPlans(prev => prev.filter(p => p.id !== planId));
+    toast.success('Plan deleted successfully');
+  };
+
+  const filteredPlans = plans.filter(plan => {
+    const matchesSearch = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         plan.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || plan.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
+    return <SmartLoading message="Loading Smart Plan Management..." />;
+  }
+
+  return (
+    <PageLayout
+      title="Smart Plan Management"
+      subtitle="AI-powered membership plans and pricing optimization"
+      actions={
+        <div className="flex items-center space-x-3">
+          {contextualActions.map((action, index) => (
+            <SmartButton
+              key={index}
+              variant={action.variant}
+              size="sm"
+              icon={action.icon}
+              onClick={action.onClick}
+            >
+              {action.label}
+            </SmartButton>
+          ))}
+        </div>
+      }
+    >
+      {/* Quick Navigation */}
+      <QuickNavigation currentPage={currentPage} />
+
+      {/* Smart Suggestions */}
+      <SmartSuggestions currentPage={currentPage} />
+
+      {/* KPI Overview */}
+      <Section title="Plan Overview" subtitle="Real-time membership plan performance">
+        <StatsGrid columns={4}>
+          {planKPIs.map((kpi, index) => (
+            <KPICard key={index} {...kpi} />
+          ))}
+        </StatsGrid>
+      </Section>
+
+      {/* Search and Filters */}
+      <FilterBar>
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Search plans..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+        
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+
+        <FilterButton onClick={() => toast.success("Advanced filters coming soon!")} />
+      </FilterBar>
+
+      {/* Plans Grid */}
+      <Section title="Membership Plans" subtitle="Manage and optimize your pricing strategy">
+        {filteredPlans.length === 0 ? (
+          <EmptyState
+            icon={<FiPackage className="h-16 w-16" />}
+            title="No Plans Found"
+            description="Start by creating your first membership plan to manage pricing."
+            action={
+              <SmartButton onClick={() => setShowPlanModal(true)} variant="primary">
+                <FiPlus className="h-4 w-4 mr-2" />
+                Create First Plan
+              </SmartButton>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPlans.map((plan) => (
+              <SmartCard key={plan.id} hover className="relative">
+                <div className="p-6 space-y-4">
+                  {/* Plan Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                        {plan.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {plan.description}
+                      </p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      plan.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {plan.status}
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-center py-4">
+                    <div className="text-3xl font-bold text-gray-900">
+                      ${plan.price}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      per {plan.duration} days
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900">Features:</h4>
+                    <ul className="space-y-1">
+                      {plan.features.slice(0, 3).map((feature, index) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-center">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
+                          {feature}
+                        </li>
+                      ))}
+                      {plan.features.length > 3 && (
+                        <li className="text-sm text-gray-500">
+                          +{plan.features.length - 3} more features
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Members Count */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-gray-600">
+                      <FiUsers className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{plan.members_count} members</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <SmartButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditPlan(plan)}
+                      >
+                        Edit
+                      </SmartButton>
+                      <SmartButton
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDeletePlan(plan.id)}
+                      >
+                        Delete
+                      </SmartButton>
+                    </div>
+                  </div>
+                </div>
+              </SmartCard>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Plan Analytics */}
+      <Section title="Plan Performance" subtitle="Insights and recommendations for pricing optimization">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SmartCard>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Plans</h3>
+              <div className="space-y-4">
+                {plans
+                  .sort((a, b) => b.members_count - a.members_count)
+                  .slice(0, 3)
+                  .map((plan, index) => (
+                    <div key={plan.id} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full mr-3 ${
+                          index === 0 ? 'bg-green-500' :
+                          index === 1 ? 'bg-blue-500' : 'bg-purple-500'
+                        }`}></div>
+                        <div>
+                          <p className="font-medium text-gray-900">{plan.name}</p>
+                          <p className="text-sm text-gray-600">${plan.price}/month</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">{plan.members_count}</p>
+                        <p className="text-sm text-gray-600">members</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </SmartCard>
+
+          <SmartCard>
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Recommendations</h3>
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 rounded-xl">
+                  <div className="flex items-center mb-2">
+                    <FiTrendingUp className="h-5 w-5 text-blue-600 mr-2" />
+                    <p className="font-medium text-blue-900">Optimize Basic Plan</p>
+                  </div>
+                  <p className="text-sm text-blue-800">
+                    Consider increasing Basic plan price by $5 based on demand analysis
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-green-50 rounded-xl">
+                  <div className="flex items-center mb-2">
+                    <FiZap className="h-5 w-5 text-green-600 mr-2" />
+                    <p className="font-medium text-green-900">Family Plan Opportunity</p>
+                  </div>
+                  <p className="text-sm text-green-800">
+                    23% of members have requested family pricing options
+                  </p>
+                </div>
+              </div>
+            </div>
+          </SmartCard>
+        </div>
+      </Section>
+
+      {/* Plan Modal Placeholder */}
+      {showPlanModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <SmartCard className="max-w-2xl w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {selectedPlan ? 'Edit Plan' : 'Create New Plan'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Plan creation and editing features will be available in the next update.
+              </p>
+              <div className="flex justify-end">
+                <SmartButton
+                  variant="secondary"
+                  onClick={() => {
+                    setShowPlanModal(false);
+                    setSelectedPlan(null);
+                  }}
+                >
+                  Close
+                </SmartButton>
+              </div>
+            </div>
+          </SmartCard>
+        </div>
+      )}
+    </PageLayout>
+  );
+}
