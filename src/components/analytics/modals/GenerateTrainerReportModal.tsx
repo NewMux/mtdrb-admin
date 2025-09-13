@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiCalendar, FiStar, FiUsers, FiTrendingUp, FiAlertTriangle, FiZap, FiLock } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiUser,
+  FiCalendar,
+  FiStar,
+  FiUsers,
+  FiTrendingUp,
+  FiAlertTriangle,
+  FiZap,
+  FiLock,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface GenerateTrainerReportModalProps {
   open: boolean;
@@ -14,11 +23,11 @@ interface GenerateTrainerReportModalProps {
 }
 
 const trainerData = {
-  id: '1',
-  name: 'Mike Chen',
-  email: 'mike.chen@mtdrb.com',
-  joinDate: '2022-06-15',
-  specialization: 'HIIT & Strength Training',
+  id: "1",
+  name: "Mike Chen",
+  email: "mike.chen@mtdrb.com",
+  joinDate: "2022-06-15",
+  specialization: "HIIT & Strength Training",
   sessions: {
     totalSessions: 156,
     thisMonth: 18,
@@ -34,47 +43,54 @@ const trainerData = {
   },
   aiInsights: [
     {
-      type: 'alert',
-      title: 'Low Engagement This Month',
-      description: 'Session attendance dropped 15% compared to last month',
+      type: "alert",
+      title: "Low Engagement This Month",
+      description: "Session attendance dropped 15% compared to last month",
       confidence: 78,
-      recommendation: 'Consider class assignment change',
-      impact: 'medium',
+      recommendation: "Consider class assignment change",
+      impact: "medium",
     },
     {
-      type: 'opportunity',
-      title: 'High Client Satisfaction',
-      description: 'Clients rate sessions 4.8/5 on average',
+      type: "opportunity",
+      title: "High Client Satisfaction",
+      description: "Clients rate sessions 4.8/5 on average",
       confidence: 95,
-      recommendation: 'Promote to premium trainer',
-      impact: 'high',
+      recommendation: "Promote to premium trainer",
+      impact: "high",
     },
   ],
 };
 
 const reportSections = [
-  { id: 'sessions', label: 'Session Analytics', icon: FiCalendar },
-  { id: 'clients', label: 'Client Management', icon: FiUsers },
-  { id: 'ratings', label: 'Performance Ratings', icon: FiStar },
-  { id: 'retention', label: 'Retention Metrics', icon: FiTrendingUp },
-  { id: 'ai_insights', label: 'AI Insights', icon: FiZap, isPro: true },
+  { id: "sessions", label: "Session Analytics", icon: FiCalendar },
+  { id: "clients", label: "Client Management", icon: FiUsers },
+  { id: "ratings", label: "Performance Ratings", icon: FiStar },
+  { id: "retention", label: "Retention Metrics", icon: FiTrendingUp },
+  { id: "ai_insights", label: "Smart Insights", icon: FiZap, isPro: true },
 ];
 
-export default function GenerateTrainerReportModal({ 
-  open, 
-  onClose, 
-  trainerId = '1', 
-  trainerName = 'Mike Chen',
-  onSuccess, 
-  isPro 
+export default function GenerateTrainerReportModal({
+  open,
+  onClose,
+  trainerId = "1",
+  trainerName = "Mike Chen",
+  onSuccess,
+  isPro,
 }: GenerateTrainerReportModalProps) {
-  const { loading, generateReport, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [selectedSections, setSelectedSections] = React.useState<string[]>(['sessions', 'clients', 'ratings']);
+  const { loading, generateReport, alerts, clearAlerts } =
+    useSmartAnalyticsModal();
+
+  const [selectedSections, setSelectedSections] = React.useState<string[]>([
+    "sessions",
+    "clients",
+    "ratings",
+  ]);
   const [includeCharts, setIncludeCharts] = React.useState(true);
   const [dateRange, setDateRange] = React.useState({
-    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0],
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    end: new Date().toISOString().split("T")[0],
   });
   const [generating, setGenerating] = React.useState(false);
 
@@ -104,20 +120,26 @@ export default function GenerateTrainerReportModal({
   };
 
   const handleRemoveSection = (sectionId: string) => {
-    setSelectedSections(selectedSections.filter(id => id !== sectionId));
+    setSelectedSections(selectedSections.filter((id) => id !== sectionId));
   };
 
   const getSectionIcon = (sectionId: string) => {
-    const section = reportSections.find(s => s.id === sectionId);
+    const section = reportSections.find((s) => s.id === sectionId);
     return section?.icon || FiUser;
   };
 
   const getSectionLabel = (sectionId: string) => {
-    const section = reportSections.find(s => s.id === sectionId);
+    const section = reportSections.find((s) => s.id === sectionId);
     return section?.label || sectionId;
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -137,11 +159,16 @@ export default function GenerateTrainerReportModal({
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
           {alert.message}
         </div>
       ))}
@@ -151,13 +178,21 @@ export default function GenerateTrainerReportModal({
         <div className="bg-green-50 rounded-lg p-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-lg font-semibold">
-              {trainerData.name.split(' ').map(n => n[0]).join('')}
+              {trainerData.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">{trainerData.name}</h3>
+              <h3 className="font-semibold text-gray-900">
+                {trainerData.name}
+              </h3>
               <p className="text-sm text-gray-600">{trainerData.email}</p>
               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                <span>Trainer since {new Date(trainerData.joinDate).toLocaleDateString()}</span>
+                <span>
+                  Trainer since{" "}
+                  {new Date(trainerData.joinDate).toLocaleDateString()}
+                </span>
                 <span>•</span>
                 <span>{trainerData.specialization}</span>
               </div>
@@ -178,25 +213,34 @@ export default function GenerateTrainerReportModal({
               <div
                 key={section.id}
                 className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-blue-500 bg-blue-50' 
+                  isSelected
+                    ? "border-blue-500 bg-blue-50"
                     : isProOnly
-                    ? 'border-gray-200 bg-gray-50 opacity-60'
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                      ? "border-gray-200 bg-gray-50 opacity-60"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                 }`}
-                onClick={() => !isProOnly && (isSelected ? handleRemoveSection(section.id) : handleAddSection(section.id))}
+                onClick={() =>
+                  !isProOnly &&
+                  (isSelected
+                    ? handleRemoveSection(section.id)
+                    : handleAddSection(section.id))
+                }
               >
                 <div className="flex items-start gap-3">
-                  <Icon className={`mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+                  <Icon
+                    className={`mt-1 ${isSelected ? "text-blue-600" : "text-gray-500"}`}
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{section.label}</h4>
-                      {isProOnly && <FiLock className="text-gray-400" title="Pro feature" />}
+                      <h4 className="font-semibold text-gray-900">
+                        {section.label}
+                      </h4>
+                      {isProOnly && (
+                        <FiLock className="text-gray-400" title="Pro feature" />
+                      )}
                     </div>
                   </div>
-                  {isSelected && (
-                    <FiCheckCircle className="text-blue-600" />
-                  )}
+                  {isSelected && <FiCheckCircle className="text-blue-600" />}
                 </div>
               </div>
             );
@@ -206,33 +250,46 @@ export default function GenerateTrainerReportModal({
 
       {/* AI Insights */}
       {isPro && trainerData.aiInsights.length > 0 && (
-        <Section title="AI Insights">
+        <Section title="Smart Insights">
           <div className="space-y-3">
             {trainerData.aiInsights.map((insight, index) => (
-              <div key={index} className={`p-4 border rounded-lg ${
-                insight.type === 'alert' ? 'border-yellow-200 bg-yellow-50' : 'border-green-200 bg-green-50'
-              }`}>
+              <div
+                key={index}
+                className={`p-4 border rounded-lg ${
+                  insight.type === "alert"
+                    ? "border-yellow-200 bg-yellow-50"
+                    : "border-green-200 bg-green-50"
+                }`}
+              >
                 <div className="flex items-start gap-3">
-                  {insight.type === 'alert' ? (
+                  {insight.type === "alert" ? (
                     <FiAlertTriangle className="text-yellow-600 mt-1" />
                   ) : (
                     <FiZap className="text-green-600 mt-1" />
                   )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{insight.title}</h4>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        insight.impact === 'high' ? 'bg-red-100 text-red-700' :
-                        insight.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
+                      <h4 className="font-semibold text-gray-900">
+                        {insight.title}
+                      </h4>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          insight.impact === "high"
+                            ? "bg-red-100 text-red-700"
+                            : insight.impact === "medium"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
+                        }`}
+                      >
                         {insight.impact} impact
                       </span>
                       <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
                         {insight.confidence}% confidence
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{insight.description}</p>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {insight.description}
+                    </p>
                     <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                       {insight.recommendation} →
                     </button>
@@ -255,7 +312,9 @@ export default function GenerateTrainerReportModal({
               type="date"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              onChange={(e) =>
+                setDateRange({ ...dateRange, start: e.target.value })
+              }
             />
           </div>
           <div>
@@ -266,7 +325,9 @@ export default function GenerateTrainerReportModal({
               type="date"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={dateRange.end}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              onChange={(e) =>
+                setDateRange({ ...dateRange, end: e.target.value })
+              }
             />
           </div>
         </div>
@@ -283,15 +344,21 @@ export default function GenerateTrainerReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Total Sessions</span>
-                <span className="font-semibold">{trainerData.sessions.totalSessions}</span>
+                <span className="font-semibold">
+                  {trainerData.sessions.totalSessions}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>This Month</span>
-                <span className="font-semibold">{trainerData.sessions.thisMonth}</span>
+                <span className="font-semibold">
+                  {trainerData.sessions.thisMonth}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Average Rating</span>
-                <span className="font-semibold">{trainerData.sessions.averageRating}/5</span>
+                <span className="font-semibold">
+                  {trainerData.sessions.averageRating}/5
+                </span>
               </div>
             </div>
           </div>
@@ -304,15 +371,21 @@ export default function GenerateTrainerReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Total Clients</span>
-                <span className="font-semibold">{trainerData.sessions.totalClients}</span>
+                <span className="font-semibold">
+                  {trainerData.sessions.totalClients}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Active Clients</span>
-                <span className="font-semibold">{trainerData.sessions.activeClients}</span>
+                <span className="font-semibold">
+                  {trainerData.sessions.activeClients}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Retention Rate</span>
-                <span className="font-semibold">{trainerData.performance.clientRetention}%</span>
+                <span className="font-semibold">
+                  {trainerData.performance.clientRetention}%
+                </span>
               </div>
             </div>
           </div>
@@ -325,15 +398,21 @@ export default function GenerateTrainerReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Session Completion</span>
-                <span className="font-semibold">{trainerData.performance.sessionCompletion}%</span>
+                <span className="font-semibold">
+                  {trainerData.performance.sessionCompletion}%
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Client Satisfaction</span>
-                <span className="font-semibold">{trainerData.performance.clientSatisfaction}/5</span>
+                <span className="font-semibold">
+                  {trainerData.performance.clientSatisfaction}/5
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Revenue Generated</span>
-                <span className="font-semibold">${trainerData.performance.revenueGenerated}</span>
+                <span className="font-semibold">
+                  ${trainerData.performance.revenueGenerated}
+                </span>
               </div>
             </div>
           </div>
@@ -371,7 +450,9 @@ export default function GenerateTrainerReportModal({
               onChange={(e) => setIncludeCharts(e.target.checked)}
               className="rounded"
             />
-            <span className="font-medium">Include performance charts and graphs</span>
+            <span className="font-medium">
+              Include performance charts and graphs
+            </span>
           </label>
         </div>
       </Section>
@@ -407,4 +488,4 @@ export default function GenerateTrainerReportModal({
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { supabase } from "../supabaseClient";
 
 interface WorkoutPlan {
   id: string;
@@ -18,66 +24,77 @@ interface WorkoutPlansContextType {
   getPlansById: (ids: string[]) => WorkoutPlan[];
 }
 
-const WorkoutPlansContext = createContext<WorkoutPlansContextType | undefined>(undefined);
+const WorkoutPlansContext = createContext<WorkoutPlansContextType | undefined>(
+  undefined,
+);
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export function WorkoutPlansProvider({ children }: { children: React.ReactNode }) {
+export function WorkoutPlansProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState(0);
 
-  const fetchPlans = useCallback(async (force = false) => {
-    // Don't fetch if cache is still valid
-    if (!force && Date.now() - lastFetch < CACHE_DURATION) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setError('User not authenticated');
+  const fetchPlans = useCallback(
+    async (force = false) => {
+      // Don&apos;t fetch if cache is still valid
+      if (!force && Date.now() - lastFetch < CACHE_DURATION) {
         return;
       }
 
-      // Get tenant_id from memberships table
-      const { data: membershipData } = await supabase
-        .from('memberships')
-        .select('tenant_id')
-        .eq('user_id', user.id)
-        .single();
+      setLoading(true);
+      setError(null);
 
-      if (!membershipData) {
-        setError('No tenant found');
-        return;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          setError("User not authenticated");
+          return;
+        }
+
+        // Get tenant_id from memberships table
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!membershipData) {
+          setError("No tenant found");
+          return;
+        }
+
+        const { data, error: fetchError } = await supabase
+          .from("workout_plans")
+          .select("*")
+          .eq("tenant_id", membershipData.tenant_id)
+          .order("name");
+
+        if (fetchError) {
+          console.error("Error fetching plans:", fetchError);
+          setError("Unable to load workout plans");
+          return;
+        }
+
+        setPlans(data || []);
+        setLastFetch(Date.now());
+      } catch (error) {
+        console.error("Unexpected error:", error);
+        setError("An unexpected error occurred");
+      } finally {
+        setLoading(false);
       }
-
-      const { data, error: fetchError } = await supabase
-        .from('workout_plans')
-        .select('*')
-        .eq('tenant_id', membershipData.tenant_id)
-        .order('name');
-
-      if (fetchError) {
-        console.error('Error fetching plans:', fetchError);
-        setError('Unable to load workout plans');
-        return;
-      }
-
-      setPlans(data || []);
-      setLastFetch(Date.now());
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
-  }, [lastFetch]);
+    },
+    [lastFetch],
+  );
 
   // Initial fetch
   useEffect(() => {
@@ -88,18 +105,23 @@ export function WorkoutPlansProvider({ children }: { children: React.ReactNode }
     await fetchPlans(true);
   }, [fetchPlans]);
 
-  const getPlansById = useCallback((ids: string[]) => {
-    return plans.filter(plan => ids.includes(plan.id));
-  }, [plans]);
+  const getPlansById = useCallback(
+    (ids: string[]) => {
+      return plans.filter((plan) => ids.includes(plan.id));
+    },
+    [plans],
+  );
 
   return (
-    <WorkoutPlansContext.Provider value={{
-      plans,
-      loading,
-      error,
-      refreshPlans,
-      getPlansById,
-    }}>
+    <WorkoutPlansContext.Provider
+      value={{
+        plans,
+        loading,
+        error,
+        refreshPlans,
+        getPlansById,
+      }}
+    >
       {children}
     </WorkoutPlansContext.Provider>
   );
@@ -108,7 +130,9 @@ export function WorkoutPlansProvider({ children }: { children: React.ReactNode }
 export function useWorkoutPlans() {
   const context = useContext(WorkoutPlansContext);
   if (context === undefined) {
-    throw new Error('useWorkoutPlans must be used within a WorkoutPlansProvider');
+    throw new Error(
+      "useWorkoutPlans must be used within a WorkoutPlansProvider",
+    );
   }
   return context;
-} 
+}

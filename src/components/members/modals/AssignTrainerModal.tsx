@@ -1,9 +1,16 @@
-import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiUsers, FiStar, FiClock, FiTarget, FiCheck } from 'react-icons/fi';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
-import { MockMember } from '../../../hooks/useMockMembers';
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUser,
+  FiUsers,
+  FiStar,
+  FiClock,
+  FiTarget,
+  FiCheck,
+} from "react-icons/fi";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
+import { MockMember } from "../../../hooks/useMockMembers";
 
 interface AssignTrainerModalProps {
   isOpen: boolean;
@@ -32,64 +39,64 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   member,
   onSuccess,
   loading = false,
-  modalRef
+  modalRef,
 }) => {
-  const [selectedTrainer, setSelectedTrainer] = React.useState<string>('');
+  const [selectedTrainer, setSelectedTrainer] = React.useState<string>("");
   const [isAssigning, setIsAssigning] = React.useState(false);
 
   // Mock trainers data
   const trainers: Trainer[] = [
     {
-      id: 'trainer-1',
-      name: 'Sarah Johnson',
-      specialization: 'Personal Training, HIIT',
+      id: "trainer-1",
+      name: "Sarah Johnson",
+      specialization: "Personal Training, HIIT",
       rating: 4.9,
-      experience: '8 years',
-      availability: 'Mon-Fri, 6AM-8PM',
+      experience: "8 years",
+      availability: "Mon-Fri, 6AM-8PM",
       currentMembers: 12,
       maxMembers: 15,
-      avatar: 'SJ'
+      avatar: "SJ",
     },
     {
-      id: 'trainer-2',
-      name: 'Mike Chen',
-      specialization: 'Strength & Conditioning',
+      id: "trainer-2",
+      name: "Mike Chen",
+      specialization: "Strength & Conditioning",
       rating: 4.8,
-      experience: '6 years',
-      availability: 'Mon-Sat, 7AM-9PM',
+      experience: "6 years",
+      availability: "Mon-Sat, 7AM-9PM",
       currentMembers: 8,
       maxMembers: 12,
-      avatar: 'MC'
+      avatar: "MC",
     },
     {
-      id: 'trainer-3',
-      name: 'Emma Davis',
-      specialization: 'Yoga & Pilates',
+      id: "trainer-3",
+      name: "Emma Davis",
+      specialization: "Yoga & Pilates",
       rating: 4.7,
-      experience: '5 years',
-      availability: 'Mon-Fri, 9AM-7PM',
+      experience: "5 years",
+      availability: "Mon-Fri, 9AM-7PM",
       currentMembers: 15,
       maxMembers: 18,
-      avatar: 'ED'
+      avatar: "ED",
     },
     {
-      id: 'trainer-4',
-      name: 'Alex Rodriguez',
-      specialization: 'Cardio & Endurance',
+      id: "trainer-4",
+      name: "Alex Rodriguez",
+      specialization: "Cardio & Endurance",
       rating: 4.6,
-      experience: '4 years',
-      availability: 'Mon-Sun, 5AM-10PM',
+      experience: "4 years",
+      availability: "Mon-Sun, 5AM-10PM",
       currentMembers: 10,
       maxMembers: 15,
-      avatar: 'AR'
-    }
+      avatar: "AR",
+    },
   ];
 
   React.useEffect(() => {
     if (member?.trainer_id) {
       setSelectedTrainer(member.trainer_id);
     } else {
-      setSelectedTrainer('');
+      setSelectedTrainer("");
     }
   }, [member]);
 
@@ -97,14 +104,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     if (!selectedTrainer || !member) return;
 
     setIsAssigning(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       await onSuccess(member, selectedTrainer);
     } catch (error) {
-      console.error('Failed to assign trainer:', error);
+      console.error("Failed to assign trainer:", error);
     } finally {
       setIsAssigning(false);
     }
@@ -112,21 +119,21 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
   const handleRemove = async () => {
     setIsAssigning(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      await onSuccess(member!, '');
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      await onSuccess(member!, "");
     } catch (error) {
-      console.error('Failed to remove trainer:', error);
+      console.error("Failed to remove trainer:", error);
     } finally {
       setIsAssigning(false);
     }
   };
 
   const handleClose = () => {
-    setSelectedTrainer('');
+    setSelectedTrainer("");
     setIsAssigning(false);
     onClose();
   };
@@ -135,8 +142,9 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     return null;
   }
 
-  const currentTrainer = trainers.find(t => t.id === member.trainer_id);
-  const isAvailable = (trainer: Trainer) => trainer.currentMembers < trainer.maxMembers;
+  const currentTrainer = trainers.find((t) => t.id === member.trainer_id);
+  const isAvailable = (trainer: Trainer) =>
+    trainer.currentMembers < trainer.maxMembers;
 
   return (
     <AnimatePresence>
@@ -156,22 +164,34 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                   <FiUser className="w-5 h-5 mr-2" />
                   Current Trainer
                 </h3>
-                
+
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-purple-400 flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">{currentTrainer.avatar}</span>
+                      <span className="text-white font-medium text-sm">
+                        {currentTrainer.avatar}
+                      </span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 dark:text-white">{currentTrainer.name}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{currentTrainer.specialization}</p>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        {currentTrainer.name}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {currentTrainer.specialization}
+                      </p>
                       <div className="flex items-center space-x-2 mt-1">
                         <div className="flex items-center space-x-1">
                           <FiStar className="w-3 h-3 text-yellow-500" />
-                          <span className="text-xs text-gray-600 dark:text-gray-400">{currentTrainer.rating}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                            {currentTrainer.rating}
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">{currentTrainer.experience}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          •
+                        </span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {currentTrainer.experience}
+                        </span>
                       </div>
                     </div>
                     <SmartButton
@@ -194,37 +214,49 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 <FiUsers className="w-5 h-5 mr-2" />
                 Available Trainers
               </h3>
-              
+
               <div className="space-y-3">
                 {trainers.map((trainer) => (
                   <div
                     key={trainer.id}
                     className={`border rounded-lg p-4 transition-colors ${
                       selectedTrainer === trainer.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    } ${!isAvailable(trainer) ? 'opacity-50' : ''}`}
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                    } ${!isAvailable(trainer) ? "opacity-50" : ""}`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">{trainer.avatar}</span>
+                        <span className="text-white font-medium text-sm">
+                          {trainer.avatar}
+                        </span>
                       </div>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-gray-900 dark:text-white">{trainer.name}</h4>
+                          <h4 className="font-medium text-gray-900 dark:text-white">
+                            {trainer.name}
+                          </h4>
                           <div className="flex items-center space-x-2">
                             <div className="flex items-center space-x-1">
                               <FiStar className="w-3 h-3 text-yellow-500" />
-                              <span className="text-xs text-gray-600 dark:text-gray-400">{trainer.rating}</span>
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                {trainer.rating}
+                              </span>
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
-                            <span className="text-xs text-gray-600 dark:text-gray-400">{trainer.experience}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              •
+                            </span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                              {trainer.experience}
+                            </span>
                           </div>
                         </div>
-                        
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{trainer.specialization}</p>
-                        
+
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {trainer.specialization}
+                        </p>
+
                         <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                           <div className="flex items-center space-x-1">
                             <FiClock className="w-3 h-3" />
@@ -232,11 +264,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                           </div>
                           <div className="flex items-center space-x-1">
                             <FiUsers className="w-3 h-3" />
-                            <span>{trainer.currentMembers}/{trainer.maxMembers} members</span>
+                            <span>
+                              {trainer.currentMembers}/{trainer.maxMembers}{" "}
+                              members
+                            </span>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         {selectedTrainer === trainer.id ? (
                           <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
@@ -255,7 +290,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                         )}
                       </div>
                     </div>
-                    
+
                     {!isAvailable(trainer) && (
                       <div className="mt-2 text-xs text-red-600 dark:text-red-400">
                         Trainer is at full capacity
@@ -272,29 +307,38 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 <FiTarget className="w-5 h-5 mr-2" />
                 Member Information
               </h3>
-              
+
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">{member.avatar}</span>
+                    <span className="text-white font-medium text-sm">
+                      {member.avatar}
+                    </span>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">{member.name}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{member.email}</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      {member.name}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {member.email}
+                    </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        member.fitness_level === 'beginner' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : member.fitness_level === 'intermediate'
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
-                        {member.fitness_level?.charAt(0).toUpperCase() + member.fitness_level?.slice(1) || 'Beginner'}
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          member.fitness_level === "beginner"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            : member.fitness_level === "intermediate"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                      >
+                        {member.fitness_level?.charAt(0).toUpperCase() +
+                          member.fitness_level?.slice(1) || "Beginner"}
                       </span>
                       {member.goals && member.goals.length > 0 && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Goals: {member.goals.slice(0, 2).join(', ')}
-                          {member.goals.length > 2 && '...'}
+                          Goals: {member.goals.slice(0, 2).join(", ")}
+                          {member.goals.length > 2 && "..."}
                         </span>
                       )}
                     </div>
@@ -312,14 +356,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               >
                 Cancel
               </SmartButton>
-              
+
               <SmartButton
                 onClick={handleAssign}
                 loading={isAssigning}
                 disabled={!selectedTrainer || isAssigning}
                 icon={<FiUser className="w-4 h-4" />}
               >
-                {isAssigning ? 'Assigning...' : 'Assign Trainer'}
+                {isAssigning ? "Assigning..." : "Assign Trainer"}
               </SmartButton>
             </div>
           </div>
@@ -329,4 +373,4 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   );
 };
 
-export default AssignTrainerModal; 
+export default AssignTrainerModal;

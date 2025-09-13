@@ -1,47 +1,53 @@
-import React from 'react';
-import { FiCalendar, FiClock, FiUserCheck, FiCheckCircle, FiZap } from 'react-icons/fi';
-import SmartKpiCard from '../ui/SmartKpiCard';
+import React from "react";
+import {
+  FiCalendar,
+  FiClock,
+  FiUserCheck,
+  FiCheckCircle,
+  FiZap,
+} from "react-icons/fi";
+import SmartKpiCard from "../ui/SmartKpiCard";
 
 const snapshots = [
   {
-    label: 'Upcoming Classes',
+    label: "Upcoming Classes",
     value: 8,
     icon: <FiCalendar className="h-6 w-6 text-blue-600" />,
-    color: 'blue',
-    trend: 'up',
-    trendValue: '2',
-    tooltip: 'Number of classes scheduled for today.',
-    context: '+33% vs. yesterday',
+    color: "blue",
+    trend: "up",
+    trendValue: "2",
+    tooltip: "Number of classes scheduled for today.",
+    context: "+33% vs. yesterday",
   },
   {
-    label: 'Trainer Shifts',
-    value: '6 Active',
+    label: "Trainer Shifts",
+    value: "6 Active",
     icon: <FiClock className="h-6 w-6 text-green-600" />,
-    color: 'green',
-    trend: 'up',
-    trendValue: '1',
-    tooltip: 'Number of trainers currently on shift.',
-    context: '+1 vs. yesterday',
+    color: "green",
+    trend: "up",
+    trendValue: "1",
+    tooltip: "Number of trainers currently on shift.",
+    context: "+1 vs. yesterday",
   },
   {
-    label: 'Check-ins Today',
+    label: "Check-ins Today",
     value: 45,
     icon: <FiUserCheck className="h-6 w-6 text-purple-600" />,
-    color: 'purple',
-    trend: 'up',
-    trendValue: '5',
-    tooltip: 'Total member check-ins so far today.',
-    context: '+12% vs. yesterday',
+    color: "purple",
+    trend: "up",
+    trendValue: "5",
+    tooltip: "Total member check-ins so far today.",
+    context: "+12% vs. yesterday",
   },
   {
-    label: 'Pending Tasks',
+    label: "Pending Tasks",
     value: 12,
     icon: <FiCheckCircle className="h-6 w-6 text-orange-500" />,
-    color: 'orange',
-    trend: 'down',
-    trendValue: '2',
-    tooltip: 'Number of tasks pending for today.',
-    context: '-14% vs. yesterday',
+    color: "orange",
+    trend: "down",
+    trendValue: "2",
+    tooltip: "Number of tasks pending for today.",
+    context: "-14% vs. yesterday",
   },
 ];
 
@@ -58,4 +64,4 @@ const TodaysSnapshot: React.FC = () => (
   </section>
 );
 
-export default TodaysSnapshot; 
+export default TodaysSnapshot;

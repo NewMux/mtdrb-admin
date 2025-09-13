@@ -1,74 +1,89 @@
-import React, { useState } from 'react';
-import { FiPlus, FiEdit, FiTrash, FiUpload, FiDownload, FiUser, FiMail, FiTarget, FiEye, FiZap, FiSend, FiFileText, FiTrendingUp, FiDollarSign } from 'react-icons/fi';
+import React, { useState } from "react";
+import {
+  FiPlus,
+  FiEdit,
+  FiTrash,
+  FiUpload,
+  FiDownload,
+  FiUser,
+  FiMail,
+  FiTarget,
+  FiEye,
+  FiZap,
+  FiSend,
+  FiFileText,
+  FiTrendingUp,
+  FiDollarSign,
+} from "react-icons/fi";
 import {
   AddMemberModal,
   EditMemberModal,
   DeleteMemberModal,
   ImportMembersModal,
   ViewMemberProfileModal,
-  AssignTrainerModal
-} from './modals';
+  AssignTrainerModal,
+} from "./modals";
 
 const MemberModalsDemo: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState('member-123');
+  const [selectedMemberId, setSelectedMemberId] = useState("member-123");
 
   const modalConfigs = [
     {
-      id: 'add-member',
-      title: 'Add Member',
-      description: 'Create a new member with smart defaults and AI recommendations',
+      id: "add-member",
+      title: "Add Member",
+      description:
+        "Create a new member with smart defaults and smart recommendations",
       icon: FiPlus,
-      color: 'bg-green-500',
+      color: "bg-green-500",
       modal: AddMemberModal,
-      props: { isPro: true }
+      props: { isPro: true },
     },
     {
-      id: 'edit-member',
-      title: 'Edit Member',
-      description: 'Update member information with real-time validation',
+      id: "edit-member",
+      title: "Edit Member",
+      description: "Update member information with real-time validation",
       icon: FiEdit,
-      color: 'bg-blue-500',
+      color: "bg-blue-500",
       modal: EditMemberModal,
-      props: { memberId: selectedMemberId, isPro: true }
+      props: { memberId: selectedMemberId, isPro: true },
     },
     {
-      id: 'delete-member',
-      title: 'Delete Member',
-      description: 'Safely remove member with smart warnings and confirmation',
+      id: "delete-member",
+      title: "Delete Member",
+      description: "Safely remove member with smart warnings and confirmation",
       icon: FiTrash,
-      color: 'bg-red-500',
+      color: "bg-red-500",
       modal: DeleteMemberModal,
-      props: { memberId: selectedMemberId }
+      props: { memberId: selectedMemberId },
     },
     {
-      id: 'import-members',
-      title: 'Import Members',
-      description: 'Bulk import members from CSV with smart mapping',
+      id: "import-members",
+      title: "Import Members",
+      description: "Bulk import members from CSV with smart mapping",
       icon: FiUpload,
-      color: 'bg-purple-500',
+      color: "bg-purple-500",
       modal: ImportMembersModal,
-      props: { isPro: true }
+      props: { isPro: true },
     },
     {
-      id: 'view-profile',
-      title: 'View Profile',
-      description: 'Comprehensive member profile with tabs and analytics',
+      id: "view-profile",
+      title: "View Profile",
+      description: "Comprehensive member profile with tabs and analytics",
       icon: FiUser,
-      color: 'bg-indigo-500',
+      color: "bg-indigo-500",
       modal: ViewMemberProfileModal,
-      props: { memberId: selectedMemberId, isPro: true }
+      props: { memberId: selectedMemberId, isPro: true },
     },
     {
-      id: 'assign-trainer',
-      title: 'Assign Trainer',
-      description: 'AI-powered trainer matching with availability preview',
+      id: "assign-trainer",
+      title: "Assign Trainer",
+      description: "Smart-powered trainer matching with availability preview",
       icon: FiTarget,
-      color: 'bg-orange-500',
+      color: "bg-orange-500",
       modal: AssignTrainerModal,
-      props: { memberId: selectedMemberId, isPro: true }
+      props: { memberId: selectedMemberId, isPro: true },
     },
-
   ];
 
   const handleOpenModal = (modalId: string) => {
@@ -80,12 +95,12 @@ const MemberModalsDemo: React.FC = () => {
   };
 
   const handleSuccess = () => {
-    console.log('Modal action completed successfully');
+    console.log("Modal action completed successfully");
     // You could add toast notifications here
   };
 
   const renderModal = () => {
-    const config = modalConfigs.find(c => c.id === activeModal);
+    const config = modalConfigs.find((c) => c.id === activeModal);
     if (!config) return null;
 
     const ModalComponent = config.modal;
@@ -93,7 +108,7 @@ const MemberModalsDemo: React.FC = () => {
       isOpen: true,
       onClose: handleCloseModal,
       onSuccess: handleSuccess,
-      ...config.props
+      ...config.props,
     };
 
     return <ModalComponent {...props} />;
@@ -108,7 +123,8 @@ const MemberModalsDemo: React.FC = () => {
             MTDRB Member Management Modals
           </h1>
           <p className="text-gray-600">
-            Smart, sliding modals with Apple-inspired design, AI recommendations, and real-time validation
+            Smart, sliding modals with Apple-inspired design, smart
+            recommendations, and real-time validation
           </p>
         </div>
 
@@ -119,7 +135,8 @@ const MemberModalsDemo: React.FC = () => {
             <h2 className="text-xl font-semibold">Pro Features Enabled</h2>
           </div>
           <p className="text-blue-100">
-            AI-powered recommendations, smart defaults, and advanced analytics are available in this demo.
+            Smart-powered recommendations, smart defaults, and advanced
+            analytics are available in this demo.
           </p>
         </div>
 
@@ -146,7 +163,7 @@ const MemberModalsDemo: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">
                     Click to open modal
@@ -182,7 +199,7 @@ const MemberModalsDemo: React.FC = () => {
             <div className="space-y-2">
               <h3 className="font-medium text-gray-900">AI & Smart Features</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• AI-powered recommendations</li>
+                <li>• Smart-powered recommendations</li>
                 <li>• Smart defaults and suggestions</li>
                 <li>• Predictive analytics</li>
                 <li>• Automated workflows</li>
@@ -206,10 +223,18 @@ const MemberModalsDemo: React.FC = () => {
             How to Use
           </h3>
           <div className="text-sm text-blue-800 space-y-2">
-            <p>• Click on any modal card above to open the corresponding modal</p>
+            <p>
+              • Click on any modal card above to open the corresponding modal
+            </p>
             <p>• Each modal demonstrates different features and interactions</p>
-            <p>• Pro features are enabled to show AI recommendations and advanced functionality</p>
-            <p>• All modals include proper validation, loading states, and error handling</p>
+            <p>
+              • Pro features are enabled to show smart recommendations and
+              advanced functionality
+            </p>
+            <p>
+              • All modals include proper validation, loading states, and error
+              handling
+            </p>
           </div>
         </div>
       </div>
@@ -220,4 +245,4 @@ const MemberModalsDemo: React.FC = () => {
   );
 };
 
-export default MemberModalsDemo; 
+export default MemberModalsDemo;

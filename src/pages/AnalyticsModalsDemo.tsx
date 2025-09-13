@@ -1,6 +1,18 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiBarChart2, FiFileText, FiDownload, FiShare2, FiPrinter, FiBarChart, FiDollarSign, FiUser, FiUsers, FiZap, FiSettings } from 'react-icons/fi';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiBarChart2,
+  FiFileText,
+  FiDownload,
+  FiShare2,
+  FiPrinter,
+  FiBarChart,
+  FiDollarSign,
+  FiUser,
+  FiUsers,
+  FiZap,
+  FiSettings,
+} from "react-icons/fi";
 import {
   GenerateReportModal,
   CreateCustomReportModal,
@@ -17,46 +29,121 @@ import {
   ViewAIInsightsModal,
   ApplyRecommendationModal,
   LearnMoreInsightModal,
-} from '../components/analytics/modals';
+} from "../components/analytics/modals";
 
 const modalCategories = [
   {
-    title: 'Report Generation',
-    description: 'Create and manage various types of reports',
+    title: "Report Generation",
+    description: "Create and manage various types of reports",
     modals: [
-      { name: 'Generate Report', component: 'generate', icon: FiBarChart2, description: 'Select report type, date range, and export options' },
-      { name: 'Create Custom Report', component: 'custom', icon: FiFileText, description: 'Build custom reports with drag-and-drop sections' },
-      { name: 'Export Report', component: 'export', icon: FiDownload, description: 'Export saved reports in various formats' },
-      { name: 'Schedule Report', component: 'schedule', icon: FiSettings, description: 'Set up automated report delivery' },
-      { name: 'Download Report', component: 'download', icon: FiDownload, description: 'Access and manage downloaded reports' },
-      { name: 'Share Report', component: 'share', icon: FiShare2, description: 'Share reports with team members' },
-      { name: 'Print Report', component: 'print', icon: FiPrinter, description: 'Print reports with custom layouts' },
+      {
+        name: "Generate Report",
+        component: "generate",
+        icon: FiBarChart2,
+        description: "Select report type, date range, and export options",
+      },
+      {
+        name: "Create Custom Report",
+        component: "custom",
+        icon: FiFileText,
+        description: "Build custom reports with drag-and-drop sections",
+      },
+      {
+        name: "Export Report",
+        component: "export",
+        icon: FiDownload,
+        description: "Export saved reports in various formats",
+      },
+      {
+        name: "Schedule Report",
+        component: "schedule",
+        icon: FiSettings,
+        description: "Set up automated report delivery",
+      },
+      {
+        name: "Download Report",
+        component: "download",
+        icon: FiDownload,
+        description: "Access and manage downloaded reports",
+      },
+      {
+        name: "Share Report",
+        component: "share",
+        icon: FiShare2,
+        description: "Share reports with team members",
+      },
+      {
+        name: "Print Report",
+        component: "print",
+        icon: FiPrinter,
+        description: "Print reports with custom layouts",
+      },
     ],
   },
   {
-    title: 'Financial Reports',
-    description: 'Specialized financial and tax reporting',
+    title: "Financial Reports",
+    description: "Specialized financial and tax reporting",
     modals: [
-      { name: 'Generate VAT Report', component: 'vat', icon: FiBarChart, description: 'Create VAT reports for tax compliance' },
-      { name: 'Create Financial Report', component: 'financial', icon: FiDollarSign, description: 'Comprehensive financial analysis' },
+      {
+        name: "Generate VAT Report",
+        component: "vat",
+        icon: FiBarChart,
+        description: "Create VAT reports for tax compliance",
+      },
+      {
+        name: "Create Financial Report",
+        component: "financial",
+        icon: FiDollarSign,
+        description: "Comprehensive financial analysis",
+      },
     ],
   },
   {
-    title: 'Specific Reports',
-    description: 'Targeted reports for different entities',
+    title: "Specific Reports",
+    description: "Targeted reports for different entities",
     modals: [
-      { name: 'Generate Member Report', component: 'member', icon: FiUser, description: 'Individual member analysis and insights' },
-      { name: 'Generate Trainer Report', component: 'trainer', icon: FiUsers, description: 'Trainer performance and metrics' },
-      { name: 'Generate Class Report', component: 'class', icon: FiBarChart2, description: 'Class attendance and utilization analysis' },
+      {
+        name: "Generate Member Report",
+        component: "member",
+        icon: FiUser,
+        description: "Individual member analysis and insights",
+      },
+      {
+        name: "Generate Trainer Report",
+        component: "trainer",
+        icon: FiUsers,
+        description: "Trainer performance and metrics",
+      },
+      {
+        name: "Generate Class Report",
+        component: "class",
+        icon: FiBarChart2,
+        description: "Class attendance and utilization analysis",
+      },
     ],
   },
   {
-    title: 'AI Insights',
-    description: 'Advanced AI-powered analytics and recommendations',
+    title: "Smart Insights",
+    description: "Advanced smart-powered analytics and recommendations",
     modals: [
-      { name: 'View AI Insights', component: 'ai_insights', icon: FiZap, description: 'Pro-only AI insights and predictions' },
-      { name: 'Apply Recommendation', component: 'apply_recommendation', icon: FiSettings, description: 'Implement AI recommendations' },
-      { name: 'Learn More Insight', component: 'learn_more', icon: FiZap, description: 'Deep dive into AI logic and data' },
+      {
+        name: "View Smart Insights",
+        component: "ai_insights",
+        icon: FiZap,
+        description: "Pro-only smart insights and predictions",
+      },
+      {
+        name: "Apply Recommendation",
+        component: "apply_recommendation",
+        icon: FiSettings,
+        description: "Implement smart recommendations",
+      },
+      {
+        name: "Learn More Insight",
+        component: "learn_more",
+        icon: FiZap,
+        description: "Deep dive into smart logic and data",
+      },
     ],
   },
 ];
@@ -74,7 +161,7 @@ export default function AnalyticsModalsDemo() {
   };
 
   const handleSuccess = () => {
-    console.log('Modal action completed successfully');
+    console.log("Modal action completed successfully");
   };
 
   return (
@@ -86,9 +173,10 @@ export default function AnalyticsModalsDemo() {
             Analytics & Reporting Modals Demo
           </h1>
           <p className="text-gray-600">
-            Explore all 15 smart, sliding modals for analytics and reporting actions
+            Explore all 15 smart, sliding modals for analytics and reporting
+            actions
           </p>
-          
+
           {/* Pro Toggle */}
           <div className="mt-4">
             <label className="flex items-center justify-center gap-2">
@@ -114,10 +202,12 @@ export default function AnalyticsModalsDemo() {
               className="bg-white rounded-lg shadow-sm border"
             >
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">{category.title}</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {category.title}
+                </h2>
                 <p className="text-gray-600 mt-1">{category.description}</p>
               </div>
-              
+
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {category.modals.map((modal) => {
@@ -152,7 +242,9 @@ export default function AnalyticsModalsDemo() {
 
         {/* Stats */}
         <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Demo Statistics</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Demo Statistics
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">15</div>
@@ -164,7 +256,7 @@ export default function AnalyticsModalsDemo() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">3</div>
-              <div className="text-sm text-gray-600">AI Modals</div>
+              <div className="text-sm text-gray-600">Smart Modals</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">100%</div>
@@ -176,109 +268,109 @@ export default function AnalyticsModalsDemo() {
 
       {/* Modals */}
       <GenerateReportModal
-        open={activeModal === 'generate'}
+        open={activeModal === "generate"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <CreateCustomReportModal
-        open={activeModal === 'custom'}
+        open={activeModal === "custom"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <ExportReportModal
-        open={activeModal === 'export'}
+        open={activeModal === "export"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <ScheduleReportModal
-        open={activeModal === 'schedule'}
+        open={activeModal === "schedule"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <DownloadReportModal
-        open={activeModal === 'download'}
+        open={activeModal === "download"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <ShareReportModal
-        open={activeModal === 'share'}
+        open={activeModal === "share"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <PrintReportModal
-        open={activeModal === 'print'}
+        open={activeModal === "print"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <GenerateVATReportModal
-        open={activeModal === 'vat'}
+        open={activeModal === "vat"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <CreateFinancialReportModal
-        open={activeModal === 'financial'}
+        open={activeModal === "financial"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <GenerateMemberReportModal
-        open={activeModal === 'member'}
+        open={activeModal === "member"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <GenerateTrainerReportModal
-        open={activeModal === 'trainer'}
+        open={activeModal === "trainer"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <GenerateClassReportModal
-        open={activeModal === 'class'}
+        open={activeModal === "class"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <ViewAIInsightsModal
-        open={activeModal === 'ai_insights'}
+        open={activeModal === "ai_insights"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <ApplyRecommendationModal
-        open={activeModal === 'apply_recommendation'}
+        open={activeModal === "apply_recommendation"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
-      
+
       <LearnMoreInsightModal
-        open={activeModal === 'learn_more'}
+        open={activeModal === "learn_more"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}
         isPro={isPro}
       />
     </div>
   );
-} 
+}

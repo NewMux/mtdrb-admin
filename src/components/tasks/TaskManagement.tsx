@@ -6,7 +6,10 @@ interface TaskManagementProps {
   stats: any;
 }
 
-export const TaskManagement: React.FC<TaskManagementProps> = ({ refreshKey, stats }) => {
+export const TaskManagement: React.FC<TaskManagementProps> = ({
+  refreshKey,
+  stats,
+}) => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -21,8 +24,12 @@ export const TaskManagement: React.FC<TaskManagementProps> = ({ refreshKey, stat
       </div>
       <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center">
         <FiCheckSquare className="h-12 w-12 text-green-600 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Task Management</h3>
-        <p className="text-gray-600">Comprehensive task management system coming soon</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Task Management
+        </h3>
+        <p className="text-gray-600">
+          Comprehensive task management system coming soon
+        </p>
       </div>
     </div>
   );

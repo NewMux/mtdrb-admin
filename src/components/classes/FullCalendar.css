@@ -1,0 +1,544 @@
+/* FullCalendar Apple-Inspired Design System Styling */
+.fc {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: #ffffff;
+  color: #1d1d1f;
+  --mtdrb-primary: #007aff;
+  --mtdrb-secondary: #5856d6;
+  --mtdrb-success: #34c759;
+  --mtdrb-warning: #ff9500;
+  --mtdrb-danger: #ff3b30;
+  --mtdrb-gray-50: #f5f5f7;
+  --mtdrb-gray-100: #e5e5e7;
+  --mtdrb-gray-200: #d1d1d6;
+  --mtdrb-gray-300: #c7c7cc;
+  --mtdrb-gray-400: #aeaeb2;
+  --mtdrb-gray-500: #8e8e93;
+  --mtdrb-gray-600: #636366;
+  --mtdrb-gray-700: #48484a;
+  --mtdrb-gray-800: #3a3a3c;
+  --mtdrb-gray-900: #2c2c2e;
+  --mtdrb-gray-950: #1c1c1e;
+}
+
+/* Dark mode support */
+.dark .fc {
+  background: #1c1c1e;
+  color: #ffffff;
+}
+
+.fc-theme-standard {
+  --fc-border-color: var(--mtdrb-gray-200);
+  --fc-button-bg-color: var(--mtdrb-gray-50);
+  --fc-button-border-color: var(--mtdrb-gray-200);
+  --fc-button-hover-bg-color: var(--mtdrb-gray-100);
+  --fc-button-hover-border-color: var(--mtdrb-gray-300);
+  --fc-button-active-bg-color: var(--mtdrb-primary);
+  --fc-button-active-border-color: var(--mtdrb-primary);
+  --fc-event-bg-color: var(--mtdrb-primary);
+  --fc-event-border-color: var(--mtdrb-primary);
+  --fc-event-text-color: #ffffff;
+  --fc-today-bg-color: rgba(0, 122, 255, 0.1);
+  --fc-neutral-bg-color: var(--mtdrb-gray-50);
+  --fc-neutral-text-color: var(--mtdrb-gray-600);
+  --fc-highlight-color: rgba(0, 122, 255, 0.1);
+}
+
+.dark .fc-theme-standard {
+  --fc-border-color: var(--mtdrb-gray-700);
+  --fc-button-bg-color: var(--mtdrb-gray-800);
+  --fc-button-border-color: var(--mtdrb-gray-700);
+  --fc-button-hover-bg-color: var(--mtdrb-gray-700);
+  --fc-button-hover-border-color: var(--mtdrb-gray-600);
+  --fc-button-active-bg-color: var(--mtdrb-primary);
+  --fc-button-active-border-color: var(--mtdrb-primary);
+  --fc-event-bg-color: var(--mtdrb-primary);
+  --fc-event-border-color: var(--mtdrb-primary);
+  --fc-event-text-color: #ffffff;
+  --fc-today-bg-color: rgba(0, 122, 255, 0.15);
+  --fc-neutral-bg-color: var(--mtdrb-gray-900);
+  --fc-neutral-text-color: var(--mtdrb-gray-400);
+  --fc-highlight-color: rgba(0, 122, 255, 0.15);
+}
+
+/* Header styling - Apple-inspired */
+.fc-header-toolbar {
+  padding: 1.5rem 2rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--mtdrb-gray-200);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .fc-header-toolbar {
+  background: var(--mtdrb-gray-900);
+  border-bottom: 1px solid var(--mtdrb-gray-700);
+}
+
+.fc-toolbar-title {
+  color: var(--mtdrb-gray-900);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.dark .fc-toolbar-title {
+  color: #ffffff;
+}
+
+/* Button styling - Apple-inspired */
+.fc-button {
+  background: var(--mtdrb-gray-50) !important;
+  border: 1px solid var(--mtdrb-gray-200) !important;
+  color: var(--mtdrb-gray-900) !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  padding: 0.75rem 1.25rem !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 0.875rem !important;
+  text-transform: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .fc-button {
+  background: var(--mtdrb-gray-800) !important;
+  border: 1px solid var(--mtdrb-gray-700) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.fc-button:hover {
+  background: var(--mtdrb-gray-100) !important;
+  border-color: var(--mtdrb-gray-300) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .fc-button:hover {
+  background: var(--mtdrb-gray-700) !important;
+  border-color: var(--mtdrb-gray-600) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.fc-button:active {
+  background: var(--mtdrb-primary) !important;
+  border-color: var(--mtdrb-primary) !important;
+  color: #ffffff !important;
+  transform: translateY(0);
+}
+
+.fc-button:focus {
+  outline: 2px solid var(--mtdrb-primary);
+  outline-offset: 2px;
+}
+
+.fc-button-primary {
+  background: var(--mtdrb-primary) !important;
+  border-color: var(--mtdrb-primary) !important;
+  color: #ffffff !important;
+}
+
+.fc-button-primary:hover {
+  background: #0056cc !important;
+  border-color: #0056cc !important;
+}
+
+/* Today button specific styling */
+.fc-today-button {
+  background: var(--mtdrb-primary) !important;
+  border-color: var(--mtdrb-primary) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.fc-today-button:hover {
+  background: #0056cc !important;
+  border-color: #0056cc !important;
+}
+
+/* Calendar grid styling */
+.fc-timegrid-col {
+  border-right: 1px solid var(--mtdrb-gray-200);
+}
+
+.dark .fc-timegrid-col {
+  border-right: 1px solid var(--mtdrb-gray-700);
+}
+
+.fc-timegrid-slot {
+  border-bottom: 1px solid var(--mtdrb-gray-100);
+  background: #ffffff;
+  height: 60px;
+  transition: background-color 0.2s ease;
+}
+
+.dark .fc-timegrid-slot {
+  border-bottom: 1px solid var(--mtdrb-gray-800);
+  background: var(--mtdrb-gray-900);
+}
+
+.fc-timegrid-slot:hover {
+  background: var(--mtdrb-gray-50);
+}
+
+.dark .fc-timegrid-slot:hover {
+  background: var(--mtdrb-gray-800);
+}
+
+/* Event styling - Apple-inspired */
+.fc-event {
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-weight: 500 !important;
+  padding: 4px 8px !important;
+  margin: 2px 4px !important;
+  position: relative;
+  overflow: hidden;
+  min-height: 20px !important;
+  display: block !important;
+  z-index: 10 !important;
+}
+
+/* Ensure events are visible */
+.fc-timegrid-event {
+  background-color: var(--mtdrb-primary) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  margin: 2px 4px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.fc-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fc-event:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+.fc-event:hover::before {
+  opacity: 1;
+}
+
+/* Event colors based on type - Apple-inspired */
+.fc-event.hiit {
+  background: linear-gradient(135deg, #ff3b30 0%, #ff453a 100%) !important;
+  border-color: #ff3b30 !important;
+}
+
+.fc-event.yoga {
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%) !important;
+  border-color: #34c759 !important;
+}
+
+.fc-event.strength {
+  background: linear-gradient(135deg, #007aff 0%, #0a84ff 100%) !important;
+  border-color: #007aff !important;
+}
+
+.fc-event.pilates {
+  background: linear-gradient(135deg, #af52de 0%, #bf5af2 100%) !important;
+  border-color: #af52de !important;
+}
+
+.fc-event.cardio {
+  background: linear-gradient(135deg, #ff9500 0%, #ff9f0a 100%) !important;
+  border-color: #ff9500 !important;
+}
+
+/* Time grid specific styling */
+.fc-timegrid-axis {
+  background-color: #ffffff;
+  border-right: 1px solid var(--mtdrb-gray-200);
+  width: 80px;
+}
+
+.dark .fc-timegrid-axis {
+  background-color: var(--mtdrb-gray-900);
+  border-right: 1px solid var(--mtdrb-gray-700);
+}
+
+.fc-timegrid-slot-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--mtdrb-gray-600);
+  padding: 8px 12px;
+  text-align: right;
+}
+
+.dark .fc-timegrid-slot-label {
+  color: var(--mtdrb-gray-400);
+}
+
+/* Day header styling */
+.fc-col-header-cell {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--mtdrb-gray-200);
+  border-right: 1px solid var(--mtdrb-gray-200);
+  height: 56px;
+}
+
+.dark .fc-col-header-cell {
+  background-color: var(--mtdrb-gray-900);
+  border-bottom: 1px solid var(--mtdrb-gray-700);
+  border-right: 1px solid var(--mtdrb-gray-700);
+}
+
+.fc-col-header-cell-cushion {
+  font-weight: 600;
+  color: var(--mtdrb-gray-900);
+  font-size: 0.875rem;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.dark .fc-col-header-cell-cushion {
+  color: #ffffff;
+}
+
+/* Today column highlighting */
+.fc-day-today {
+  background-color: rgba(0, 122, 255, 0.08) !important;
+}
+
+.dark .fc-day-today {
+  background-color: rgba(0, 122, 255, 0.12) !important;
+}
+
+/* Now indicator - Apple-inspired */
+.fc-timegrid-now-indicator-line {
+  border-color: #ff3b30;
+  border-width: 2px;
+  z-index: 10;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.3);
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: #ff3b30;
+  border-width: 6px;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.3);
+}
+
+/* Business hours */
+.fc-timegrid-slot.fc-slot-business {
+  background-color: #ffffff;
+}
+
+.dark .fc-timegrid-slot.fc-slot-business {
+  background-color: var(--mtdrb-gray-900);
+}
+
+/* Event content */
+.fc-event-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
+.fc-event-time {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* All-day slot styling */
+.fc-daygrid-day-events {
+  min-height: 0;
+}
+
+.fc-daygrid-event {
+  border-radius: 6px !important;
+  margin: 2px 4px !important;
+  padding: 4px 8px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .fc-header-toolbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    height: auto;
+  }
+  
+  .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.5rem;
+  }
+  
+  .fc-button {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.8125rem !important;
+  }
+}
+
+/* Custom scrollbar - Apple-inspired */
+.fc-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fc-scroller::-webkit-scrollbar-track {
+  background: var(--mtdrb-gray-100);
+  border-radius: 4px;
+}
+
+.dark .fc-scroller::-webkit-scrollbar-track {
+  background: var(--mtdrb-gray-800);
+}
+
+.fc-scroller::-webkit-scrollbar-thumb {
+  background: var(--mtdrb-gray-300);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.dark .fc-scroller::-webkit-scrollbar-thumb {
+  background: var(--mtdrb-gray-600);
+}
+
+.fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--mtdrb-gray-400);
+}
+
+.dark .fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--mtdrb-gray-500);
+}
+
+/* Focus states for accessibility */
+.fc-button:focus-visible {
+  outline: 2px solid var(--mtdrb-primary);
+  outline-offset: 2px;
+}
+
+.fc-event:focus-visible {
+  outline: 2px solid var(--mtdrb-primary);
+  outline-offset: 2px;
+}
+
+/* Toolbar layout */
+.fc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Navigation buttons */
+.fc-prev-button,
+.fc-next-button {
+  padding: 0.75rem 1rem !important;
+  min-width: 44px;
+  border-radius: 10px !important;
+}
+
+/* View buttons */
+.fc-timeGridWeek-button,
+.fc-timeGridDay-button {
+  padding: 0.75rem 1.25rem !important;
+  min-width: 60px;
+  border-radius: 10px !important;
+}
+
+/* Loading states */
+.fc-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Empty state styling */
+.fc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--mtdrb-gray-500);
+  text-align: center;
+}
+
+.dark .fc-empty-state {
+  color: var(--mtdrb-gray-400);
+}
+
+/* Animation for events */
+@keyframes eventAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.fc-event {
+  animation: eventAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .fc-event {
+    border: 2px solid currentColor !important;
+  }
+  
+  .fc-button {
+    border-width: 2px !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .fc-event,
+  .fc-button {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .fc-event:hover {
+    transform: none !important;
+  }
+  
+  .fc-button:hover {
+    transform: none !important;
+  }
+} 

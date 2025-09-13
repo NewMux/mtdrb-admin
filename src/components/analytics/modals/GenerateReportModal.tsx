@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiCalendar, FiFilter, FiDownload, FiClock, FiZap, FiLock, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiCalendar,
+  FiFilter,
+  FiDownload,
+  FiClock,
+  FiZap,
+  FiLock,
+  FiCheckCircle,
+  FiAlertTriangle,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface GenerateReportModalProps {
   open: boolean;
@@ -17,31 +26,59 @@ interface GenerateReportModalProps {
 }
 
 const reportTypes = [
-  { id: 'member', label: 'Member Report', description: 'Member activity, engagement, and progress metrics' },
-  { id: 'class', label: 'Class Report', description: 'Class attendance, capacity, and performance data' },
-  { id: 'trainer', label: 'Trainer Report', description: 'Trainer performance, sessions, and client feedback' },
-  { id: 'billing', label: 'Billing Report', description: 'Revenue, payments, and financial transactions' },
-  { id: 'vat', label: 'VAT Report', description: 'VAT calculations and compliance data' },
-  { id: 'financial', label: 'Financial Report', description: 'Comprehensive financial analysis and insights' },
+  {
+    id: "member",
+    label: "Member Report",
+    description: "Member activity, engagement, and progress metrics",
+  },
+  {
+    id: "class",
+    label: "Class Report",
+    description: "Class attendance, capacity, and performance data",
+  },
+  {
+    id: "trainer",
+    label: "Trainer Report",
+    description: "Trainer performance, sessions, and client feedback",
+  },
+  {
+    id: "billing",
+    label: "Billing Report",
+    description: "Revenue, payments, and financial transactions",
+  },
+  {
+    id: "vat",
+    label: "VAT Report",
+    description: "VAT calculations and compliance data",
+  },
+  {
+    id: "financial",
+    label: "Financial Report",
+    description: "Comprehensive financial analysis and insights",
+  },
 ];
 
 const exportFormats = [
-  { id: 'csv', label: 'CSV', description: 'Spreadsheet format, good for data analysis' },
-  { id: 'excel', label: 'Excel', description: 'Rich formatting and charts' },
-  { id: 'pdf', label: 'PDF', description: 'Professional presentation format' },
-  { id: 'json', label: 'JSON', description: 'API-friendly data format' },
+  {
+    id: "csv",
+    label: "CSV",
+    description: "Spreadsheet format, good for data analysis",
+  },
+  { id: "excel", label: "Excel", description: "Rich formatting and charts" },
+  { id: "pdf", label: "PDF", description: "Professional presentation format" },
+  { id: "json", label: "JSON", description: "API-friendly data format" },
 ];
 
-export default function GenerateReportModal({ 
-  open, 
-  onClose, 
-  memberId, 
-  classId, 
-  trainerId, 
-  dateRange, 
-  reportType, 
-  onSuccess, 
-  isPro 
+export default function GenerateReportModal({
+  open,
+  onClose,
+  memberId,
+  classId,
+  trainerId,
+  dateRange,
+  reportType,
+  onSuccess,
+  isPro,
 }: GenerateReportModalProps) {
   const {
     loading,
@@ -54,13 +91,19 @@ export default function GenerateReportModal({
     generateReport,
     scheduleReport,
     clearAlerts,
-  } = useSmartAnalyticsModal({ memberId, classId, trainerId, dateRange, reportType });
+  } = useSmartAnalyticsModal({
+    memberId,
+    classId,
+    trainerId,
+    dateRange,
+    reportType,
+  });
 
   const [showSchedule, setShowSchedule] = React.useState(false);
   const [scheduleConfig, setScheduleConfig] = React.useState({
-    frequency: 'weekly' as const,
-    deliveryMethod: 'email' as const,
-    recipients: ['admin@mtdrb.com'],
+    frequency: "weekly" as const,
+    deliveryMethod: "email" as const,
+    recipients: ["admin@mtdrb.com"],
   });
 
   React.useEffect(() => {
@@ -85,7 +128,13 @@ export default function GenerateReportModal({
     }
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -105,41 +154,67 @@ export default function GenerateReportModal({
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
-          {alert.type === 'warning' && <FiAlertTriangle className="text-yellow-500" />}
-          {alert.type === 'error' && <FiAlertTriangle className="text-red-500" />}
-          {alert.type === 'info' && <FiCheckCircle className="text-blue-500" />}
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
+          {alert.type === "warning" && (
+            <FiAlertTriangle className="text-yellow-500" />
+          )}
+          {alert.type === "error" && (
+            <FiAlertTriangle className="text-red-500" />
+          )}
+          {alert.type === "info" && <FiCheckCircle className="text-blue-500" />}
           {alert.message}
         </div>
       ))}
 
-      {/* AI Insights (Pro) */}
+      {/* Smart Insights (Pro) */}
       {aiInsights.length > 0 && (
-        <Section title="AI Insights">
+        <Section title="Smart Insights">
           <div className="space-y-3">
             {aiInsights.map((insight) => (
-              <div key={insight.id} className={`p-4 rounded-lg border ${
-                insight.isPro && !isPro ? 'border-gray-200 bg-gray-50' : 'border-blue-200 bg-blue-50'
-              }`}>
+              <div
+                key={insight.id}
+                className={`p-4 rounded-lg border ${
+                  insight.isPro && !isPro
+                    ? "border-gray-200 bg-gray-50"
+                    : "border-blue-200 bg-blue-50"
+                }`}
+              >
                 <div className="flex items-start gap-3">
-                  <FiZap className={`mt-1 ${insight.isPro && !isPro ? 'text-gray-400' : 'text-yellow-500'}`} />
+                  <FiZap
+                    className={`mt-1 ${insight.isPro && !isPro ? "text-gray-400" : "text-yellow-500"}`}
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{insight.title}</h4>
-                      {insight.isPro && !isPro && <FiLock className="text-gray-400" title="Pro feature" />}
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        insight.impact === 'high' ? 'bg-red-100 text-red-700' :
-                        insight.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
+                      <h4 className="font-semibold text-gray-900">
+                        {insight.title}
+                      </h4>
+                      {insight.isPro && !isPro && (
+                        <FiLock className="text-gray-400" title="Pro feature" />
+                      )}
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          insight.impact === "high"
+                            ? "bg-red-100 text-red-700"
+                            : insight.impact === "medium"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
+                        }`}
+                      >
                         {insight.impact} impact
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{insight.description}</p>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {insight.description}
+                    </p>
                     {insight.action && (
                       <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                         {insight.action} →
@@ -157,13 +232,18 @@ export default function GenerateReportModal({
       <Section title="Report Type">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reportTypes.map((type) => (
-            <label key={type.id} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+            <label
+              key={type.id}
+              className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               <input
                 type="radio"
                 name="reportType"
                 value={type.id}
                 checked={filters.reportType === type.id}
-                onChange={(e) => setFilters({ ...filters, reportType: e.target.value as any })}
+                onChange={(e) =>
+                  setFilters({ ...filters, reportType: e.target.value as any })
+                }
                 className="mt-1"
               />
               <div>
@@ -186,10 +266,12 @@ export default function GenerateReportModal({
               type="date"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={filters.dateRange.start}
-              onChange={(e) => setFilters({
-                ...filters,
-                dateRange: { ...filters.dateRange, start: e.target.value }
-              })}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dateRange: { ...filters.dateRange, start: e.target.value },
+                })
+              }
             />
           </div>
           <div>
@@ -200,10 +282,12 @@ export default function GenerateReportModal({
               type="date"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={filters.dateRange.end}
-              onChange={(e) => setFilters({
-                ...filters,
-                dateRange: { ...filters.dateRange, end: e.target.value }
-              })}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  dateRange: { ...filters.dateRange, end: e.target.value },
+                })
+              }
             />
           </div>
         </div>
@@ -245,7 +329,9 @@ export default function GenerateReportModal({
             <select
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={filters.exportFormat}
-              onChange={(e) => setFilters({ ...filters, exportFormat: e.target.value as any })}
+              onChange={(e) =>
+                setFilters({ ...filters, exportFormat: e.target.value as any })
+              }
             >
               {exportFormats.map((format) => (
                 <option key={format.id} value={format.id}>
@@ -255,15 +341,21 @@ export default function GenerateReportModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Include Visuals</label>
+            <label className="block text-sm font-medium mb-1">
+              Include Visuals
+            </label>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={filters.includeVisuals}
-                onChange={(e) => setFilters({ ...filters, includeVisuals: e.target.checked })}
+                onChange={(e) =>
+                  setFilters({ ...filters, includeVisuals: e.target.checked })
+                }
                 className="rounded"
               />
-              <span className="text-sm text-gray-600">Include charts and graphs</span>
+              <span className="text-sm text-gray-600">
+                Include charts and graphs
+              </span>
             </label>
           </div>
         </div>
@@ -281,11 +373,11 @@ export default function GenerateReportModal({
             />
             <span className="font-medium">Schedule recurring reports</span>
           </label>
-          
+
           {showSchedule && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="space-y-4 p-4 bg-gray-50 rounded-lg"
             >
@@ -297,10 +389,12 @@ export default function GenerateReportModal({
                   <select
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
                     value={scheduleConfig.frequency}
-                    onChange={(e) => setScheduleConfig({
-                      ...scheduleConfig,
-                      frequency: e.target.value as any
-                    })}
+                    onChange={(e) =>
+                      setScheduleConfig({
+                        ...scheduleConfig,
+                        frequency: e.target.value as any,
+                      })
+                    }
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -309,14 +403,18 @@ export default function GenerateReportModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Delivery Method</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Delivery Method
+                  </label>
                   <select
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
                     value={scheduleConfig.deliveryMethod}
-                    onChange={(e) => setScheduleConfig({
-                      ...scheduleConfig,
-                      deliveryMethod: e.target.value as any
-                    })}
+                    onChange={(e) =>
+                      setScheduleConfig({
+                        ...scheduleConfig,
+                        deliveryMethod: e.target.value as any,
+                      })
+                    }
                   >
                     <option value="email">Email</option>
                     <option value="slack">Slack</option>
@@ -335,22 +433,34 @@ export default function GenerateReportModal({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               {reportPreview.topMetrics.map((metric, i) => (
                 <div key={i} className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{metric.value}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {metric.value}
+                  </div>
                   <div className="text-sm text-gray-600">{metric.label}</div>
                   {metric.change && (
-                    <div className={`text-xs ${
-                      metric.trend === 'up' ? 'text-green-600' : 
-                      metric.trend === 'down' ? 'text-red-600' : 
-                      'text-gray-600'
-                    }`}>
-                      {metric.trend === 'up' ? '↗' : metric.trend === 'down' ? '↘' : '→'} {Math.abs(metric.change)}%
+                    <div
+                      className={`text-xs ${
+                        metric.trend === "up"
+                          ? "text-green-600"
+                          : metric.trend === "down"
+                            ? "text-red-600"
+                            : "text-gray-600"
+                      }`}
+                    >
+                      {metric.trend === "up"
+                        ? "↗"
+                        : metric.trend === "down"
+                          ? "↘"
+                          : "→"}{" "}
+                      {Math.abs(metric.change)}%
                     </div>
                   )}
                 </div>
               ))}
             </div>
             <div className="text-sm text-gray-600">
-              Estimated size: {reportPreview.estimatedSize} • Processing time: ~{reportPreview.processingTime}s
+              Estimated size: {reportPreview.estimatedSize} • Processing time: ~
+              {reportPreview.processingTime}s
             </div>
           </div>
         </Section>
@@ -372,7 +482,7 @@ export default function GenerateReportModal({
               onClick={handleSchedule}
               disabled={loading}
             >
-              {loading ? 'Scheduling...' : 'Schedule Report'}
+              {loading ? "Scheduling..." : "Schedule Report"}
             </button>
           ) : (
             <button
@@ -380,11 +490,11 @@ export default function GenerateReportModal({
               onClick={handleGenerate}
               disabled={loading}
             >
-              {loading ? 'Generating...' : 'Generate Report'}
+              {loading ? "Generating..." : "Generate Report"}
             </button>
           )}
         </div>
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

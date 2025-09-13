@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { motion } from "framer-motion";
 
 // ===== PROFILE PAGE (SCAFFOLD) =====
 export default function Profile() {
@@ -13,9 +13,9 @@ export default function Profile() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
-        navigate('/login');
+        navigate("/login");
       } else if (!data.user.user_metadata || !data.user.user_metadata.paid) {
-        navigate('/subscribe');
+        navigate("/subscribe");
       } else {
         setUser(data.user);
       }
@@ -35,19 +35,30 @@ export default function Profile() {
         transition={{ duration: 0.7, ease: [0.4, 0.1, 0.2, 1] }}
       >
         <div className="mb-8">
-          <span className="text-3xl font-extrabold bg-gradient-to-r from-[#0D1F85] via-[#155FD9] via-[#489BFA] to-[#7BBDFE] bg-clip-text text-transparent select-none tracking-tight" style={{letterSpacing: '-0.02em'}}>MTDRB</span>
+          <img 
+            src="/mtdrb-logo.svg" 
+            alt="MTDRB" 
+            className="h-12 w-auto mx-auto"
+          />
         </div>
         <h1 className="text-2xl font-bold mb-2 text-blue-900">Profile</h1>
         <div className="mb-6 text-center">
-          <div className="text-blue-900 font-semibold text-lg">{user?.user_metadata?.name || 'No name set'}</div>
+          <div className="text-blue-900 font-semibold text-lg">
+            {user?.user_metadata?.name || "No name set"}
+          </div>
           <div className="text-blue-400 text-base">{user?.email}</div>
         </div>
         {/* Placeholder for profile editing */}
         <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out min-h-[44px]">
           Save Changes
         </button>
-        <Link to="/dashboard" className="mt-8 text-blue-400 hover:text-blue-600 text-sm underline transition">← Back to Dashboard</Link>
+        <Link
+          to="/dashboard"
+          className="mt-8 text-blue-400 hover:text-blue-600 text-sm underline transition"
+        >
+          ← Back to Dashboard
+        </Link>
       </motion.div>
     </div>
   );
-} 
+}

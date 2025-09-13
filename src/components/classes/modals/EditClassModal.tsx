@@ -1,9 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiEdit, FiClock, FiUsers, FiMapPin, FiUser, FiCalendar, FiZap, FiAlertCircle, FiCheck, FiBell } from 'react-icons/fi';
-import SmartModal from './SmartModal';
-import { FormField, SelectField, TimeField, DateField, FormSection, AIRecommendationCard, ConflictAlert } from './SmartFormComponents';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiEdit,
+  FiClock,
+  FiUsers,
+  FiMapPin,
+  FiUser,
+  FiCalendar,
+  FiZap,
+  FiAlertCircle,
+  FiCheck,
+  FiBell,
+} from "react-icons/fi";
+import SmartModal from "./SmartModal";
+import {
+  FormField,
+  SelectField,
+  TimeField,
+  DateField,
+  FormSection,
+  AIRecommendationCard,
+  ConflictAlert,
+} from "./SmartFormComponents";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface EditClassModalProps {
   isOpen: boolean;
@@ -18,19 +37,19 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: '',
-    trainer_id: '',
-    room_id: '',
-    start_time: '',
-    end_time: '',
-    date: '',
-    recurrence: 'none',
-    capacity: 20
+    name: "",
+    description: "",
+    type: "",
+    trainer_id: "",
+    room_id: "",
+    start_time: "",
+    end_time: "",
+    date: "",
+    recurrence: "none",
+    capacity: 20,
   });
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +67,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     checkConflicts,
     validateForm,
     fetchClass,
-    saveClass
+    saveClass,
   } = useSmartClassModal({ classId, isPro });
 
   // Load class data when modal opens
@@ -62,16 +81,16 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   useEffect(() => {
     if (classData) {
       const data = {
-        name: classData.name || '',
-        description: classData.description || '',
-        type: classData.type || '',
-        trainer_id: classData.trainer_id || '',
-        room_id: classData.room_id || '',
-        start_time: classData.start_time || '',
-        end_time: classData.end_time || '',
-        date: classData.date || '',
-        recurrence: classData.recurrence || 'none',
-        capacity: classData.capacity || 20
+        name: classData.name || "",
+        description: classData.description || "",
+        type: classData.type || "",
+        trainer_id: classData.trainer_id || "",
+        room_id: classData.room_id || "",
+        start_time: classData.start_time || "",
+        end_time: classData.end_time || "",
+        date: classData.date || "",
+        recurrence: classData.recurrence || "none",
+        capacity: classData.capacity || 20,
       };
       setFormData(data);
       setOriginalData(data);
@@ -80,13 +99,29 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
   // Check for conflicts when trainer or time changes
   useEffect(() => {
-    if (formData.trainer_id && formData.start_time && formData.end_time && formData.date) {
-      checkConflicts(formData.trainer_id, formData.start_time, formData.end_time, formData.date, classId);
+    if (
+      formData.trainer_id &&
+      formData.start_time &&
+      formData.end_time &&
+      formData.date
+    ) {
+      checkConflicts(
+        formData.trainer_id,
+        formData.start_time,
+        formData.end_time,
+        formData.date,
+        classId,
+      );
     }
-  }, [formData.trainer_id, formData.start_time, formData.end_time, formData.date]);
+  }, [
+    formData.trainer_id,
+    formData.start_time,
+    formData.end_time,
+    formData.date,
+  ]);
 
   const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
@@ -102,14 +137,14 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         onClose();
       }
     } catch (error) {
-      console.error('Error updating class:', error);
+      console.error("Error updating class:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const getError = (field: string) => {
-    return errors.find(error => error.field === field)?.message;
+    return errors.find((error) => error.field === field)?.message;
   };
 
   const hasChanges = () => {
@@ -118,28 +153,33 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   };
 
   const classTypes = [
-    { value: 'yoga', label: 'Yoga' },
-    { value: 'pilates', label: 'Pilates' },
-    { value: 'hiit', label: 'HIIT' },
-    { value: 'strength', label: 'Strength Training' },
-    { value: 'cardio', label: 'Cardio' },
-    { value: 'spinning', label: 'Spinning' },
-    { value: 'zumba', label: 'Zumba' },
-    { value: 'boxing', label: 'Boxing' },
-    { value: 'martial-arts', label: 'Martial Arts' },
-    { value: 'dance', label: 'Dance' }
+    { value: "yoga", label: "Yoga" },
+    { value: "pilates", label: "Pilates" },
+    { value: "hiit", label: "HIIT" },
+    { value: "strength", label: "Strength Training" },
+    { value: "cardio", label: "Cardio" },
+    { value: "spinning", label: "Spinning" },
+    { value: "zumba", label: "Zumba" },
+    { value: "boxing", label: "Boxing" },
+    { value: "martial-arts", label: "Martial Arts" },
+    { value: "dance", label: "Dance" },
   ];
 
   const recurrenceOptions = [
-    { value: 'none', label: 'No Recurrence' },
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'biweekly', label: 'Bi-weekly' },
-    { value: 'monthly', label: 'Monthly' }
+    { value: "none", label: "No Recurrence" },
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "biweekly", label: "Bi-weekly" },
+    { value: "monthly", label: "Monthly" },
   ];
 
-  const isFormValid = formData.name && formData.type && formData.start_time && 
-                     formData.end_time && formData.date && formData.capacity > 0;
+  const isFormValid =
+    formData.name &&
+    formData.type &&
+    formData.start_time &&
+    formData.end_time &&
+    formData.date &&
+    formData.capacity > 0;
 
   if (!classData) {
     return (
@@ -192,7 +232,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
               disabled={!isFormValid || loading}
               className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Updating...' : 'Update Class'}
+              {loading ? "Updating..." : "Update Class"}
             </button>
           </div>
         </div>
@@ -207,14 +247,19 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                 Class Status
               </h3>
               <p className="text-sm text-light-600 dark:text-dark-400">
-                {classData.enrolled_count} enrolled • {classData.waitlist_count} on waitlist
+                {classData.enrolled_count} enrolled • {classData.waitlist_count}{" "}
+                on waitlist
               </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-              classData.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-              classData.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
-              'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-            }`}>
+            <div
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                classData.status === "active"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                  : classData.status === "cancelled"
+                    ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
+              }`}
+            >
               {classData.status}
             </div>
           </div>
@@ -223,7 +268,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         {/* AI Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
-            title="AI Recommendations"
+            title="Smart Recommendations"
             subtitle="Smart suggestions to optimize your class"
             icon={<FiZap className="h-5 w-5" />}
             collapsible={true}
@@ -236,7 +281,10 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                   recommendation={recommendation}
                   onApply={() => {
                     // Apply recommendation logic
-                    console.log('Applying recommendation:', recommendation.action);
+                    console.log(
+                      "Applying recommendation:",
+                      recommendation.action,
+                    );
                   }}
                 />
               ))}
@@ -254,25 +302,25 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <FormField
               label="Class Name"
               value={formData.name}
-              onChange={(value) => handleInputChange('name', value)}
+              onChange={(value) => handleInputChange("name", value)}
               placeholder="e.g., Morning Yoga Flow"
-              error={getError('name')}
+              error={getError("name")}
               required
             />
             <SelectField
               label="Class Type"
               value={formData.type}
-              onChange={(value) => handleInputChange('type', value)}
+              onChange={(value) => handleInputChange("type", value)}
               options={classTypes}
               placeholder="Select class type"
-              error={getError('type')}
+              error={getError("type")}
               required
             />
           </div>
           <FormField
             label="Description"
             value={formData.description}
-            onChange={(value) => handleInputChange('description', value)}
+            onChange={(value) => handleInputChange("description", value)}
             placeholder="Describe the class, equipment needed, difficulty level..."
             type="textarea"
           />
@@ -288,22 +336,22 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <SelectField
               label="Trainer"
               value={formData.trainer_id}
-              onChange={(value) => handleInputChange('trainer_id', value)}
-              options={trainers.map(trainer => ({
+              onChange={(value) => handleInputChange("trainer_id", value)}
+              options={trainers.map((trainer) => ({
                 value: trainer.id,
-                label: trainer.name
+                label: trainer.name,
               }))}
               placeholder="Select trainer"
-              error={getError('trainer_id')}
+              error={getError("trainer_id")}
               required
             />
             <SelectField
               label="Room"
               value={formData.room_id}
-              onChange={(value) => handleInputChange('room_id', value)}
-              options={rooms.map(room => ({
+              onChange={(value) => handleInputChange("room_id", value)}
+              options={rooms.map((room) => ({
                 value: room.id,
-                label: `${room.name} (${room.capacity} capacity)`
+                label: `${room.name} (${room.capacity} capacity)`,
               }))}
               placeholder="Select room"
             />
@@ -320,23 +368,23 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <DateField
               label="Date"
               value={formData.date}
-              onChange={(value) => handleInputChange('date', value)}
-              error={getError('date')}
+              onChange={(value) => handleInputChange("date", value)}
+              error={getError("date")}
               required
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
             />
             <TimeField
               label="Start Time"
               value={formData.start_time}
-              onChange={(value) => handleInputChange('start_time', value)}
-              error={getError('start_time')}
+              onChange={(value) => handleInputChange("start_time", value)}
+              error={getError("start_time")}
               required
             />
             <TimeField
               label="End Time"
               value={formData.end_time}
-              onChange={(value) => handleInputChange('end_time', value)}
-              error={getError('end_time')}
+              onChange={(value) => handleInputChange("end_time", value)}
+              error={getError("end_time")}
               required
             />
           </div>
@@ -351,7 +399,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
           <SelectField
             label="Recurrence Pattern"
             value={formData.recurrence}
-            onChange={(value) => handleInputChange('recurrence', value)}
+            onChange={(value) => handleInputChange("recurrence", value)}
             options={recurrenceOptions}
           />
         </FormSection>
@@ -366,9 +414,11 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <FormField
               label="Maximum Capacity"
               value={formData.capacity.toString()}
-              onChange={(value) => handleInputChange('capacity', parseInt(value) || 0)}
+              onChange={(value) =>
+                handleInputChange("capacity", parseInt(value) || 0)
+              }
               type="number"
-              error={getError('capacity')}
+              error={getError("capacity")}
               required
             />
             <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
@@ -395,8 +445,12 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                 onChange={(e) => setNotifyMembers(e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <label htmlFor="notify-members" className="text-sm text-blue-900 dark:text-blue-100">
-                Send notification to {classData.enrolled_count} enrolled members about schedule changes
+              <label
+                htmlFor="notify-members"
+                className="text-sm text-blue-900 dark:text-blue-100"
+              >
+                Send notification to {classData.enrolled_count} enrolled members
+                about schedule changes
               </label>
             </div>
           </FormSection>
@@ -409,4 +463,4 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   );
 };
 
-export default EditClassModal; 
+export default EditClassModal;

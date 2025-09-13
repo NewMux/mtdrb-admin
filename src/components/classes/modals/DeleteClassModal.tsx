@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiTrash2, FiUsers, FiAlertTriangle, FiBell, FiCheck, FiX } from 'react-icons/fi';
-import SmartModal from './SmartModal';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
-import { SmartButton } from '../../ui/DesignSystem';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiTrash2,
+  FiUsers,
+  FiAlertTriangle,
+  FiBell,
+  FiCheck,
+  FiX,
+} from "react-icons/fi";
+import SmartModal from "./SmartModal";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { SmartButton } from "../../ui/DesignSystem";
+import { toast } from "react-hot-toast";
 
 interface DeleteClassModalProps {
   isOpen: boolean;
@@ -19,19 +26,18 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [notifyMembers, setNotifyMembers] = useState(true);
   const [notifyTrainer, setNotifyTrainer] = useState(true);
-  const [reason, setReason] = useState('');
-  const [customReason, setCustomReason] = useState('');
+  const [reason, setReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
 
-  const {
-    classData,
-    deleteClass,
-    fetchClass
-  } = useSmartClassModal({ classId, isPro });
+  const { classData, deleteClass, fetchClass } = useSmartClassModal({
+    classId,
+    isPro,
+  });
 
   // Load class data when modal opens
   useEffect(() => {
@@ -45,32 +51,32 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
     try {
       const success = await deleteClass();
       if (success) {
-        toast.success('Class deleted successfully');
+        toast.success("Class deleted successfully");
         onSuccess?.();
         onClose();
       } else {
-        toast.error('Failed to delete class');
+        toast.error("Failed to delete class");
       }
     } catch (error) {
-      console.error('Error deleting class:', error);
-      toast.error('Failed to delete class');
+      console.error("Error deleting class:", error);
+      toast.error("Failed to delete class");
     } finally {
       setLoading(false);
     }
   };
 
   const cancellationReasons = [
-    { value: 'trainer-unavailable', label: 'Trainer Unavailable' },
-    { value: 'low-attendance', label: 'Low Attendance' },
-    { value: 'facility-issue', label: 'Facility Issue' },
-    { value: 'schedule-conflict', label: 'Schedule Conflict' },
-    { value: 'weather', label: 'Weather Conditions' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'other', label: 'Other' }
+    { value: "trainer-unavailable", label: "Trainer Unavailable" },
+    { value: "low-attendance", label: "Low Attendance" },
+    { value: "facility-issue", label: "Facility Issue" },
+    { value: "schedule-conflict", label: "Schedule Conflict" },
+    { value: "weather", label: "Weather Conditions" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "other", label: "Other" },
   ];
 
   const getReasonLabel = (value: string) => {
-    return cancellationReasons.find(r => r.value === value)?.label || value;
+    return cancellationReasons.find((r) => r.value === value)?.label || value;
   };
 
   if (!classData) {
@@ -123,7 +129,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
               loading={loading}
               disabled={loading}
             >
-              {loading ? 'Deleting...' : 'Delete Class'}
+              {loading ? "Deleting..." : "Delete Class"}
             </SmartButton>
           </div>
         </div>
@@ -143,7 +149,8 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                 This action cannot be undone
               </h4>
               <p className="text-sm text-red-700 dark:text-red-200 mt-1">
-                Deleting this class will permanently remove it from the schedule and cancel all enrollments.
+                Deleting this class will permanently remove it from the schedule
+                and cancel all enrollments.
               </p>
             </div>
           </div>
@@ -156,8 +163,12 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-light-600 dark:text-dark-400">Class Name:</span>
-              <span className="ml-2 text-dark-900 dark:text-white font-medium">{classData.name}</span>
+              <span className="text-light-600 dark:text-dark-400">
+                Class Name:
+              </span>
+              <span className="ml-2 text-dark-900 dark:text-white font-medium">
+                {classData.name}
+              </span>
             </div>
             <div>
               <span className="text-light-600 dark:text-dark-400">Date:</span>
@@ -172,9 +183,11 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
               </span>
             </div>
             <div>
-              <span className="text-light-600 dark:text-dark-400">Trainer:</span>
+              <span className="text-light-600 dark:text-dark-400">
+                Trainer:
+              </span>
               <span className="ml-2 text-dark-900 dark:text-white font-medium">
-                {classData.trainer_name || 'Not assigned'}
+                {classData.trainer_name || "Not assigned"}
               </span>
             </div>
           </div>
@@ -185,7 +198,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
           <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
             Impact Assessment
           </h3>
-          
+
           {/* Enrolled Members */}
           {hasEnrolledMembers && (
             <motion.div
@@ -200,7 +213,8 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     {classData.enrolled_count} Enrolled Members
                   </h4>
                   <p className="text-sm text-orange-700 dark:text-orange-200 mt-1">
-                    These members will be automatically unenrolled and can be notified about the cancellation.
+                    These members will be automatically unenrolled and can be
+                    notified about the cancellation.
                   </p>
                 </div>
               </div>
@@ -222,7 +236,8 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     {classData.waitlist_count} Members on Waitlist
                   </h4>
                   <p className="text-sm text-blue-700 dark:text-blue-200 mt-1">
-                    These members will be removed from the waitlist automatically.
+                    These members will be removed from the waitlist
+                    automatically.
                   </p>
                 </div>
               </div>
@@ -256,7 +271,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
           <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
             Cancellation Reason
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
@@ -275,8 +290,8 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                 ))}
               </select>
             </div>
-            
-            {reason === 'other' && (
+
+            {reason === "other" && (
               <div>
                 <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                   Custom Reason
@@ -299,7 +314,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
             <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
               Notifications
             </h3>
-            
+
             <div className="space-y-3">
               {hasEnrolledMembers && (
                 <div className="flex items-center space-x-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -310,12 +325,16 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     onChange={(e) => setNotifyMembers(e.target.checked)}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="notify-members" className="text-sm text-blue-900 dark:text-blue-100">
-                    Send cancellation notification to {classData.enrolled_count} enrolled members
+                  <label
+                    htmlFor="notify-members"
+                    className="text-sm text-blue-900 dark:text-blue-100"
+                  >
+                    Send cancellation notification to {classData.enrolled_count}{" "}
+                    enrolled members
                   </label>
                 </div>
               )}
-              
+
               {classData.trainer_id && (
                 <div className="flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
                   <input
@@ -325,7 +344,10 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     onChange={(e) => setNotifyTrainer(e.target.checked)}
                     className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <label htmlFor="notify-trainer" className="text-sm text-green-900 dark:text-green-100">
+                  <label
+                    htmlFor="notify-trainer"
+                    className="text-sm text-green-900 dark:text-green-100"
+                  >
                     Notify trainer about class cancellation
                   </label>
                 </div>
@@ -363,4 +385,4 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
   );
 };
 
-export default DeleteClassModal; 
+export default DeleteClassModal;

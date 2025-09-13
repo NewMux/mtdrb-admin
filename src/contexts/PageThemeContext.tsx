@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { usePageTheme } from '../hooks/usePageTheme';
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { usePageTheme } from "../hooks/usePageTheme";
 
 interface PageThemeContextType {
   currentPage: string;
@@ -7,7 +7,9 @@ interface PageThemeContextType {
   theme: ReturnType<typeof usePageTheme>;
 }
 
-const PageThemeContext = createContext<PageThemeContextType | undefined>(undefined);
+const PageThemeContext = createContext<PageThemeContextType | undefined>(
+  undefined,
+);
 
 interface PageThemeProviderProps {
   children: ReactNode;
@@ -18,9 +20,9 @@ interface PageThemeProviderProps {
  * Provider component for page-specific theming
  * Manages the current page theme and provides theme utilities to child components
  */
-export const PageThemeProvider: React.FC<PageThemeProviderProps> = ({ 
-  children, 
-  initialPage = 'dashboard' 
+export const PageThemeProvider: React.FC<PageThemeProviderProps> = ({
+  children,
+  initialPage = "dashboard",
 }) => {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const theme = usePageTheme(currentPage);
@@ -28,7 +30,7 @@ export const PageThemeProvider: React.FC<PageThemeProviderProps> = ({
   const value: PageThemeContextType = {
     currentPage,
     setCurrentPage,
-    theme
+    theme,
   };
 
   return (
@@ -45,7 +47,9 @@ export const PageThemeProvider: React.FC<PageThemeProviderProps> = ({
 export const usePageThemeContext = () => {
   const context = useContext(PageThemeContext);
   if (context === undefined) {
-    throw new Error('usePageThemeContext must be used within a PageThemeProvider');
+    throw new Error(
+      "usePageThemeContext must be used within a PageThemeProvider",
+    );
   }
   return context;
 };
@@ -59,4 +63,4 @@ export const usePageThemeFor = (pageName: string) => {
   return usePageTheme(pageName);
 };
 
-export default PageThemeProvider; 
+export default PageThemeProvider;

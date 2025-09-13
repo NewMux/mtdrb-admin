@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { FiCalendar, FiMessageSquare, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
+import React, { useState, useEffect } from "react";
+import {
+  FiCalendar,
+  FiMessageSquare,
+  FiAlertCircle,
+  FiCheck,
+  FiX,
+} from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
 
 interface Request {
   id: string;
@@ -32,9 +38,9 @@ export default function TrainerRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState({
-    type: '',
-    status: '',
-    trainer: ''
+    type: "",
+    status: "",
+    trainer: "",
   });
   const [trainers, setTrainers] = useState<{ id: string; name: string }[]>([]);
 
@@ -46,14 +52,14 @@ export default function TrainerRequests() {
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
-        .from('trainers')
-        .select('id, name')
-        .order('name');
+        .from("trainers")
+        .select("id, name")
+        .order("name");
 
       if (error) throw error;
       setTrainers(data || []);
     } catch (err: any) {
-      console.error('Error fetching trainers:', err);
+      console.error("Error fetching trainers:", err);
     }
   };
 
@@ -63,24 +69,26 @@ export default function TrainerRequests() {
       setError(null);
 
       let query = supabase
-        .from('trainer_requests')
-        .select(`
+        .from("trainer_requests")
+        .select(
+          `
           *,
           trainer:trainers (
             name,
             email
           )
-        `)
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .order("created_at", { ascending: false });
 
       if (filter.type) {
-        query = query.eq('type', filter.type);
+        query = query.eq("type", filter.type);
       }
       if (filter.status) {
-        query = query.eq('status', filter.status);
+        query = query.eq("status", filter.status);
       }
       if (filter.trainer) {
-        query = query.eq('trainer_id', filter.trainer);
+        query = query.eq("trainer_id", filter.trainer);
       }
 
       const { data, error } = await query;
@@ -99,67 +107,76 @@ export default function TrainerRequests() {
 
     try {
       const { data, error } = await supabase
-        .from('trainer_schedule')
-        .select(`
+        .from("trainer_schedule")
+        .select(
+          `
           id,
           start_time,
           type,
           members_count
-        `)
-        .eq('trainer_id', request.trainer_id)
-        .gte('start_time', request.start_date)
-        .lte('start_time', request.end_date)
-        .not('status', 'eq', 'cancelled');
+        `,
+        )
+        .eq("trainer_id", request.trainer_id)
+        .gte("start_time", request.start_date)
+        .lte("start_time", request.end_date)
+        .not("status", "eq", "cancelled");
 
       if (error) throw error;
       setAffectedClasses(data || []);
     } catch (err: any) {
-      console.error('Error fetching affected classes:', err);
+      console.error("Error fetching affected classes:", err);
     }
   };
 
-  const handleRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
+  const handleRequestAction = async (
+    requestId: string,
+    action: "approve" | "reject",
+  ) => {
     try {
       const { error } = await supabase
-        .from('trainer_requests')
+        .from("trainer_requests")
         .update({
-          status: action === 'approve' ? 'approved' : 'rejected',
-          admin_notes: action === 'approve'
-            ? 'Request approved by admin'
-            : 'Request rejected by admin'
+          status: action === "approve" ? "approved" : "rejected",
+          admin_notes:
+            action === "approve"
+              ? "Request approved by admin"
+              : "Request rejected by admin",
         })
-        .eq('id', requestId);
+        .eq("id", requestId);
 
       if (error) throw error;
 
       // If this was a leave request and it was approved, update trainer schedule
-      const request = requests.find(r => r.id === requestId);
-      if (request?.type === 'leave' && action === 'approve' && request.start_date && request.end_date) {
-        await supabase
-          .from('trainer_schedule')
-          .insert({
-            trainer_id: request.trainer_id,
-            type: 'leave',
-            start_time: request.start_date,
-            end_time: request.end_date,
-            status: 'scheduled',
-            notes: request.description
-          });
+      const request = requests.find((r) => r.id === requestId);
+      if (
+        request?.type === "leave" &&
+        action === "approve" &&
+        request.start_date &&
+        request.end_date
+      ) {
+        await supabase.from("trainer_schedule").insert({
+          trainer_id: request.trainer_id,
+          type: "leave",
+          start_time: request.start_date,
+          end_time: request.end_date,
+          status: "scheduled",
+          notes: request.description,
+        });
       }
 
       fetchRequests();
     } catch (err: any) {
-      console.error('Error handling request action:', err);
+      console.error("Error handling request action:", err);
     }
   };
 
   const getRequestTypeIcon = (type: string) => {
     switch (type) {
-      case 'leave':
+      case "leave":
         return <FiCalendar className="h-5 w-5 text-blue-500" />;
-      case 'complaint':
+      case "complaint":
         return <FiAlertCircle className="h-5 w-5 text-red-500" />;
-      case 'handover':
+      case "handover":
         return <FiMessageSquare className="h-5 w-5 text-green-500" />;
       default:
         return <FiMessageSquare className="h-5 w-5 text-gray-500" />;
@@ -218,13 +235,21 @@ export default function TrainerRequests() {
                 {getRequestTypeIcon(request.type)}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    {request.trainer.name} - {request.type.charAt(0).toUpperCase() + request.type.slice(1)} Request
+                    {request.trainer.name} -{" "}
+                    {request.type.charAt(0).toUpperCase() +
+                      request.type.slice(1)}{" "}
+                    Request
                   </h3>
                   <div className="mt-1 flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'}`}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${
+                        request.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : request.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {request.status}
                     </span>
@@ -235,17 +260,17 @@ export default function TrainerRequests() {
                 </div>
               </div>
 
-              {request.status === 'pending' && (
+              {request.status === "pending" && (
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => handleRequestAction(request.id, 'approve')}
+                    onClick={() => handleRequestAction(request.id, "approve")}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
                     <FiCheck className="h-4 w-4 mr-1" />
                     Approve
                   </button>
                   <button
-                    onClick={() => handleRequestAction(request.id, 'reject')}
+                    onClick={() => handleRequestAction(request.id, "reject")}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     <FiX className="h-4 w-4 mr-1" />
@@ -259,25 +284,32 @@ export default function TrainerRequests() {
               {request.description}
             </div>
 
-            {request.type === 'leave' && request.start_date && request.end_date && (
-              <div className="mt-4">
-                <div className="text-sm font-medium text-gray-500">Leave Period</div>
-                <div className="mt-1 text-sm text-gray-900">
-                  {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+            {request.type === "leave" &&
+              request.start_date &&
+              request.end_date && (
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-gray-500">
+                    Leave Period
+                  </div>
+                  <div className="mt-1 text-sm text-gray-900">
+                    {new Date(request.start_date).toLocaleDateString()} -{" "}
+                    {new Date(request.end_date).toLocaleDateString()}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {request.admin_notes && (
               <div className="mt-4">
-                <div className="text-sm font-medium text-gray-500">Admin Notes</div>
+                <div className="text-sm font-medium text-gray-500">
+                  Admin Notes
+                </div>
                 <div className="mt-1 text-sm text-gray-900">
                   {request.admin_notes}
                 </div>
               </div>
             )}
 
-            {request.type === 'leave' && request.status === 'pending' && (
+            {request.type === "leave" && request.status === "pending" && (
               <button
                 onClick={() => {
                   setSelectedRequest(request);
@@ -289,33 +321,37 @@ export default function TrainerRequests() {
               </button>
             )}
 
-            {selectedRequest?.id === request.id && affectedClasses.length > 0 && (
-              <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                <h4 className="text-sm font-medium text-gray-900">Affected Classes</h4>
-                <div className="mt-2 space-y-2">
-                  {affectedClasses.map((cls) => (
-                    <div key={cls.id} className="flex justify-between text-sm">
-                      <div>
-                        <span className="font-medium">{cls.type}</span>
-                        <span className="text-gray-500 ml-2">
-                          {new Date(cls.start_time).toLocaleString()}
+            {selectedRequest?.id === request.id &&
+              affectedClasses.length > 0 && (
+                <div className="mt-4 bg-gray-50 p-4 rounded-md">
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Affected Classes
+                  </h4>
+                  <div className="mt-2 space-y-2">
+                    {affectedClasses.map((cls) => (
+                      <div
+                        key={cls.id}
+                        className="flex justify-between text-sm"
+                      >
+                        <div>
+                          <span className="font-medium">{cls.type}</span>
+                          <span className="text-gray-500 ml-2">
+                            {new Date(cls.start_time).toLocaleString()}
+                          </span>
+                        </div>
+                        <span className="text-gray-500">
+                          {cls.members_count} members
                         </span>
                       </div>
-                      <span className="text-gray-500">
-                        {cls.members_count} members
-                      </span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         ))}
 
         {requests.length === 0 && !loading && (
-          <div className="p-6 text-center text-gray-500">
-            No requests found
-          </div>
+          <div className="p-6 text-center text-gray-500">No requests found</div>
         )}
 
         {loading && (
@@ -332,4 +368,4 @@ export default function TrainerRequests() {
       </div>
     </div>
   );
-} 
+}

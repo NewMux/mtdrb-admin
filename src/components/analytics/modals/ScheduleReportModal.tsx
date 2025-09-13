@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiClock, FiMail, FiMessageSquare, FiSmartphone, FiCalendar, FiZap, FiLock, FiCheckCircle } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiClock,
+  FiMail,
+  FiMessageSquare,
+  FiSmartphone,
+  FiCalendar,
+  FiZap,
+  FiLock,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface ScheduleReportModalProps {
   open: boolean;
@@ -13,55 +22,93 @@ interface ScheduleReportModalProps {
 
 const reportTemplates = [
   {
-    id: 'member_overview',
-    name: 'Member Overview',
-    description: 'Comprehensive member activity and engagement metrics',
-    recommendedFrequency: 'weekly',
-    lastScheduled: '2024-01-15',
+    id: "member_overview",
+    name: "Member Overview",
+    description: "Comprehensive member activity and engagement metrics",
+    recommendedFrequency: "weekly",
+    lastScheduled: "2024-01-15",
   },
   {
-    id: 'financial_summary',
-    name: 'Financial Summary',
-    description: 'Revenue, expenses, and profit analysis',
-    recommendedFrequency: 'monthly',
-    lastScheduled: '2024-01-10',
+    id: "financial_summary",
+    name: "Financial Summary",
+    description: "Revenue, expenses, and profit analysis",
+    recommendedFrequency: "monthly",
+    lastScheduled: "2024-01-10",
   },
   {
-    id: 'class_performance',
-    name: 'Class Performance',
-    description: 'Class attendance, capacity, and trainer performance',
-    recommendedFrequency: 'weekly',
-    lastScheduled: '2024-01-12',
+    id: "class_performance",
+    name: "Class Performance",
+    description: "Class attendance, capacity, and trainer performance",
+    recommendedFrequency: "weekly",
+    lastScheduled: "2024-01-12",
   },
   {
-    id: 'vat_report',
-    name: 'VAT Report',
-    description: 'VAT calculations and compliance data',
-    recommendedFrequency: 'quarterly',
-    lastScheduled: '2024-01-05',
+    id: "vat_report",
+    name: "VAT Report",
+    description: "VAT calculations and compliance data",
+    recommendedFrequency: "quarterly",
+    lastScheduled: "2024-01-05",
   },
 ];
 
 const frequencies = [
-  { id: 'daily', label: 'Daily', description: 'Every day at 9:00 AM', icon: FiClock },
-  { id: 'weekly', label: 'Weekly', description: 'Every Monday at 9:00 AM', icon: FiCalendar },
-  { id: 'monthly', label: 'Monthly', description: 'First day of month at 9:00 AM', icon: FiCalendar },
-  { id: 'quarterly', label: 'Quarterly', description: 'First day of quarter at 9:00 AM', icon: FiCalendar },
+  {
+    id: "daily",
+    label: "Daily",
+    description: "Every day at 9:00 AM",
+    icon: FiClock,
+  },
+  {
+    id: "weekly",
+    label: "Weekly",
+    description: "Every Monday at 9:00 AM",
+    icon: FiCalendar,
+  },
+  {
+    id: "monthly",
+    label: "Monthly",
+    description: "First day of month at 9:00 AM",
+    icon: FiCalendar,
+  },
+  {
+    id: "quarterly",
+    label: "Quarterly",
+    description: "First day of quarter at 9:00 AM",
+    icon: FiCalendar,
+  },
 ];
 
 const deliveryMethods = [
-  { id: 'email', label: 'Email', description: 'Send to email addresses', icon: FiMail },
-  { id: 'slack', label: 'Slack', description: 'Send to Slack channel', icon: FiMessageSquare },
+  {
+    id: "email",
+    label: "Email",
+    description: "Send to email addresses",
+    icon: FiMail,
+  },
+  {
+    id: "slack",
+    label: "Slack",
+    description: "Send to Slack channel",
+    icon: FiMessageSquare,
+  },
 ];
 
-export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }: ScheduleReportModalProps) {
-  const { loading, scheduleReport, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [selectedTemplate, setSelectedTemplate] = React.useState('');
-  const [frequency, setFrequency] = React.useState('weekly');
-  const [deliveryMethod, setDeliveryMethod] = React.useState('email');
-  const [recipients, setRecipients] = React.useState(['admin@mtdrb.com']);
-  const [startDate, setStartDate] = React.useState(new Date().toISOString().split('T')[0]);
+export default function ScheduleReportModal({
+  open,
+  onClose,
+  onSuccess,
+  isPro,
+}: ScheduleReportModalProps) {
+  const { loading, scheduleReport, alerts, clearAlerts } =
+    useSmartAnalyticsModal();
+
+  const [selectedTemplate, setSelectedTemplate] = React.useState("");
+  const [frequency, setFrequency] = React.useState("weekly");
+  const [deliveryMethod, setDeliveryMethod] = React.useState("email");
+  const [recipients, setRecipients] = React.useState(["admin@mtdrb.com"]);
+  const [startDate, setStartDate] = React.useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [scheduling, setScheduling] = React.useState(false);
 
   React.useEffect(() => {
@@ -90,9 +137,16 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
     }
   };
 
-  const getSelectedTemplate = () => reportTemplates.find(t => t.id === selectedTemplate);
+  const getSelectedTemplate = () =>
+    reportTemplates.find((t) => t.id === selectedTemplate);
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -112,14 +166,23 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
-          {alert.type === 'warning' && <FiAlertTriangle className="text-yellow-500" />}
-          {alert.type === 'error' && <FiAlertTriangle className="text-red-500" />}
-          {alert.type === 'info' && <FiCheckCircle className="text-blue-500" />}
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
+          {alert.type === "warning" && (
+            <FiAlertTriangle className="text-yellow-500" />
+          )}
+          {alert.type === "error" && (
+            <FiAlertTriangle className="text-red-500" />
+          )}
+          {alert.type === "info" && <FiCheckCircle className="text-blue-500" />}
           {alert.message}
         </div>
       ))}
@@ -128,7 +191,10 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
       <Section title="Select Report Template">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reportTemplates.map((template) => (
-            <label key={template.id} className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+            <label
+              key={template.id}
+              className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               <input
                 type="radio"
                 name="selectedTemplate"
@@ -139,12 +205,16 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-gray-900">{template.name}</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    {template.name}
+                  </h4>
                   <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
                     {template.recommendedFrequency}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {template.description}
+                </p>
                 <div className="text-xs text-gray-500">
                   Last scheduled: {template.lastScheduled}
                 </div>
@@ -159,14 +229,18 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {frequencies.map((freq) => {
             const Icon = freq.icon;
-            const isRecommended = getSelectedTemplate()?.recommendedFrequency === freq.id;
-            
+            const isRecommended =
+              getSelectedTemplate()?.recommendedFrequency === freq.id;
+
             return (
-              <label key={freq.id} className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                frequency === freq.id 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-              }`}>
+              <label
+                key={freq.id}
+                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                  frequency === freq.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                }`}
+              >
                 <input
                   type="radio"
                   name="frequency"
@@ -177,8 +251,16 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon className={frequency === freq.id ? 'text-blue-600' : 'text-gray-500'} />
-                    <h4 className="font-semibold text-gray-900">{freq.label}</h4>
+                    <Icon
+                      className={
+                        frequency === freq.id
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }
+                    />
+                    <h4 className="font-semibold text-gray-900">
+                      {freq.label}
+                    </h4>
                     {isRecommended && (
                       <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
                         Recommended
@@ -199,11 +281,14 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
           {deliveryMethods.map((method) => {
             const Icon = method.icon;
             return (
-              <label key={method.id} className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                deliveryMethod === method.id 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-              }`}>
+              <label
+                key={method.id}
+                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                  deliveryMethod === method.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                }`}
+              >
                 <input
                   type="radio"
                   name="deliveryMethod"
@@ -214,8 +299,16 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon className={deliveryMethod === method.id ? 'text-blue-600' : 'text-gray-500'} />
-                    <h4 className="font-semibold text-gray-900">{method.label}</h4>
+                    <Icon
+                      className={
+                        deliveryMethod === method.id
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }
+                    />
+                    <h4 className="font-semibold text-gray-900">
+                      {method.label}
+                    </h4>
                   </div>
                   <p className="text-sm text-gray-600">{method.description}</p>
                 </div>
@@ -229,14 +322,20 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
       <Section title="Recipients">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email Addresses</label>
+            <label className="block text-sm font-medium mb-1">
+              Email Addresses
+            </label>
             <textarea
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 min-h-[80px]"
-              value={recipients.join(', ')}
-              onChange={(e) => setRecipients(e.target.value.split(',').map(r => r.trim()))}
+              value={recipients.join(", ")}
+              onChange={(e) =>
+                setRecipients(e.target.value.split(",").map((r) => r.trim()))
+              }
               placeholder="admin@mtdrb.com, manager@mtdrb.com"
             />
-            <p className="text-xs text-gray-500 mt-1">Separate multiple emails with commas</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Separate multiple emails with commas
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Start Date</label>
@@ -256,20 +355,33 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
           <div className="flex items-start gap-3">
             <FiZap className="text-blue-600 mt-1" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">AI Suggestions</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Smart Suggestions
+              </h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Optimal delivery time: <strong>9:00 AM</strong> (highest engagement)</span>
+                  <span>
+                    Optimal delivery time: <strong>9:00 AM</strong> (highest
+                    engagement)
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Consider <strong>monthly</strong> frequency for financial reports to reduce noise</span>
+                  <span>
+                    Consider <strong>monthly</strong> frequency for financial
+                    reports to reduce noise
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Add <strong>Slack integration</strong> for team collaboration</span>
-                  {!isPro && <FiLock className="text-gray-400" title="Pro feature" />}
+                  <span>
+                    Add <strong>Slack integration</strong> for team
+                    collaboration
+                  </span>
+                  {!isPro && (
+                    <FiLock className="text-gray-400" title="Pro feature" />
+                  )}
                 </li>
               </ul>
             </div>
@@ -283,8 +395,12 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-gray-900">{getSelectedTemplate()?.name}</h4>
-                <span className="text-sm text-gray-600">{frequency} delivery</span>
+                <h4 className="font-semibold text-gray-900">
+                  {getSelectedTemplate()?.name}
+                </h4>
+                <span className="text-sm text-gray-600">
+                  {frequency} delivery
+                </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-white rounded-lg p-3 border">
@@ -292,12 +408,18 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
                   <div className="text-gray-600">Monday, Jan 22, 2024</div>
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
-                  <div className="font-medium text-gray-900">Delivery Method</div>
-                  <div className="text-gray-600 capitalize">{deliveryMethod}</div>
+                  <div className="font-medium text-gray-900">
+                    Delivery Method
+                  </div>
+                  <div className="text-gray-600 capitalize">
+                    {deliveryMethod}
+                  </div>
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
                   <div className="font-medium text-gray-900">Recipients</div>
-                  <div className="text-gray-600">{recipients.length} email(s)</div>
+                  <div className="text-gray-600">
+                    {recipients.length} email(s)
+                  </div>
                 </div>
               </div>
             </div>
@@ -336,4 +458,4 @@ export default function ScheduleReportModal({ open, onClose, onSuccess, isPro }:
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

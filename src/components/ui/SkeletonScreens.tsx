@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // Dashboard skeleton
 export const DashboardSkeleton: React.FC = () => (
@@ -6,7 +6,10 @@ export const DashboardSkeleton: React.FC = () => (
     {/* KPI Cards Skeleton */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div
+          key={i}
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        >
           <div className="animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
@@ -78,7 +81,10 @@ export const MembersListSkeleton: React.FC = () => (
 
         {/* Table Rows */}
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-          <div key={i} className="grid grid-cols-6 gap-4 py-4 border-b border-gray-50">
+          <div
+            key={i}
+            className="grid grid-cols-6 gap-4 py-4 border-b border-gray-50"
+          >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
               <div className="w-24 h-4 bg-gray-200 rounded"></div>
@@ -120,10 +126,13 @@ export const ClassesScheduleSkeleton: React.FC = () => (
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div key={i} className="h-10 bg-gray-200 rounded mb-2"></div>
           ))}
-          
+
           {/* Calendar days */}
           {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} className="h-20 bg-gray-100 rounded border border-gray-200">
+            <div
+              key={i}
+              className="h-20 bg-gray-100 rounded border border-gray-200"
+            >
               <div className="p-2">
                 <div className="w-6 h-4 bg-gray-200 rounded mb-2"></div>
                 <div className="space-y-1">
@@ -147,7 +156,10 @@ export const ClassesScheduleSkeleton: React.FC = () => (
         <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+            <div
+              key={i}
+              className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
+            >
               <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
               <div className="flex-1">
                 <div className="w-32 h-5 bg-gray-200 rounded mb-2"></div>
@@ -187,7 +199,7 @@ export const ReportsSkeleton: React.FC = () => (
       <div className="animate-pulse">
         {/* Chart Skeleton */}
         <div className="w-full h-80 bg-gray-200 rounded mb-6"></div>
-        
+
         {/* Data Table Skeleton */}
         <div className="space-y-4">
           <div className="grid grid-cols-5 gap-4 pb-4 border-b border-gray-100">
@@ -213,7 +225,10 @@ export const TrainersSkeleton: React.FC = () => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div
+          key={i}
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        >
           <div className="animate-pulse">
             <div className="flex items-center space-x-4 mb-4">
               <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
@@ -247,7 +262,10 @@ export const TrainersSkeleton: React.FC = () => (
 export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => (
   <>
     {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      <div
+        key={i}
+        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
+      >
         <div className="animate-pulse">
           <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
           <div className="space-y-3">
@@ -262,14 +280,17 @@ export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => (
 );
 
 // Table skeleton
-export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({ 
-  rows = 6, 
-  columns = 5 
+export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
+  rows = 6,
+  columns = 5,
 }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <div className="animate-pulse">
       {/* Table Header */}
-      <div className="grid gap-4 p-6 border-b border-gray-100" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+      <div
+        className="grid gap-4 p-6 border-b border-gray-100"
+        style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+      >
         {Array.from({ length: columns }).map((_, i) => (
           <div key={i} className="w-full h-4 bg-gray-200 rounded"></div>
         ))}
@@ -278,7 +299,11 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
       {/* Table Rows */}
       <div className="divide-y divide-gray-50">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="grid gap-4 p-6" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+          <div
+            key={i}
+            className="grid gap-4 p-6"
+            style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+          >
             {Array.from({ length: columns }).map((_, j) => (
               <div key={j} className="w-full h-4 bg-gray-200 rounded"></div>
             ))}
@@ -294,7 +319,7 @@ export const FormSkeleton: React.FC = () => (
   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
     <div className="animate-pulse space-y-6">
       <div className="w-48 h-8 bg-gray-200 rounded"></div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="space-y-2">
@@ -316,7 +341,10 @@ export const FormSkeleton: React.FC = () => (
 export const ListSkeleton: React.FC<{ items?: number }> = ({ items = 5 }) => (
   <div className="space-y-3">
     {Array.from({ length: items }).map((_, i) => (
-      <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+      <div
+        key={i}
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+      >
         <div className="animate-pulse flex items-center space-x-4">
           <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
           <div className="flex-1">
@@ -328,4 +356,21 @@ export const ListSkeleton: React.FC<{ items?: number }> = ({ items = 5 }) => (
       </div>
     ))}
   </div>
-); 
+);
+
+// Create a default export that includes all skeleton components
+const SkeletonScreens = {
+  DashboardSkeleton,
+  MembersListSkeleton,
+  ClassesScheduleSkeleton,
+  ReportsSkeleton,
+  TrainersSkeleton,
+  CardSkeleton,
+  TableSkeleton,
+  FormSkeleton,
+  ListSkeleton,
+};
+
+export default SkeletonScreens;
+
+

@@ -1,8 +1,16 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiCheck, FiMessageSquare, FiUpload, FiFileText, FiClock, FiZap, FiAlertTriangle } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiCheck,
+  FiMessageSquare,
+  FiUpload,
+  FiFileText,
+  FiClock,
+  FiZap,
+  FiAlertTriangle,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface CompleteTaskModalProps {
   open: boolean;
@@ -17,22 +25,19 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    changeTaskStatus,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, changeTaskStatus, alerts, clearAlerts } =
+    useSmartTaskModal({ taskId, isPro });
 
-  const [comment, setComment] = React.useState('');
-  const [outcomeSummary, setOutcomeSummary] = React.useState('');
+  const [comment, setComment] = React.useState("");
+  const [outcomeSummary, setOutcomeSummary] = React.useState("");
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
   const [showLateWarning, setShowLateWarning] = React.useState(false);
 
   // Check if task is late
   const isLate = task?.dueDate && new Date(task.dueDate) < new Date();
-  const isPastDue = task?.dueDate && new Date(task.dueDate) < new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const isPastDue =
+    task?.dueDate &&
+    new Date(task.dueDate) < new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   React.useEffect(() => {
     if (isLate) {
@@ -42,27 +47,43 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setUploadedFiles(prev => [...prev, ...files]);
+    setUploadedFiles((prev) => [...prev, ...files]);
   };
 
   const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleCompleteTask = async () => {
     if (!task) return;
 
-    const result = await changeTaskStatus(task.id, 'completed', comment);
+    const result = await changeTaskStatus(task.id, "completed", comment);
     if (result.success) {
       onClose();
     }
   };
 
   const outcomeOptions = [
-    { value: 'success', label: 'Successfully Completed', color: 'text-green-600 bg-green-50' },
-    { value: 'partial', label: 'Partially Completed', color: 'text-yellow-600 bg-yellow-50' },
-    { value: 'blocked', label: 'Blocked/Unable to Complete', color: 'text-red-600 bg-red-50' },
-    { value: 'deferred', label: 'Deferred to Later', color: 'text-blue-600 bg-blue-50' },
+    {
+      value: "success",
+      label: "Successfully Completed",
+      color: "text-green-600 bg-green-50",
+    },
+    {
+      value: "partial",
+      label: "Partially Completed",
+      color: "text-yellow-600 bg-yellow-50",
+    },
+    {
+      value: "blocked",
+      label: "Blocked/Unable to Complete",
+      color: "text-red-600 bg-red-50",
+    },
+    {
+      value: "deferred",
+      label: "Deferred to Later",
+      color: "text-blue-600 bg-blue-50",
+    },
   ];
 
   if (!task) {
@@ -84,9 +105,11 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -108,13 +131,12 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {isPastDue ? 'Task is Past Due' : 'Task is Late'}
+                  {isPastDue ? "Task is Past Due" : "Task is Late"}
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  {isPastDue 
-                    ? 'This task is more than 24 hours overdue. It will be auto-tagged for review.'
-                    : 'This task is overdue. Consider adding a note about the delay.'
-                  }
+                  {isPastDue
+                    ? "This task is more than 24 hours overdue. It will be auto-tagged for review."
+                    : "This task is overdue. Consider adding a note about the delay."}
                 </p>
                 <div className="mt-2">
                   <label className="flex items-center space-x-2">
@@ -146,18 +168,24 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="font-medium capitalize">{task.type.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.type.replace("_", " ")}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Priority:
+              </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">Due date:</span>
-                <span className={`font-medium ${isLate ? 'text-red-600' : ''}`}>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Due date:
+                </span>
+                <span className={`font-medium ${isLate ? "text-red-600" : ""}`}>
                   {new Date(task.dueDate).toLocaleDateString()}
-                  {isLate && ' (Late)'}
+                  {isLate && " (Late)"}
                 </span>
               </div>
             )}
@@ -177,8 +205,8 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                 onClick={() => setOutcomeSummary(option.value)}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   outcomeSummary === option.value
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                 }`}
               >
                 <div className="text-sm font-medium">{option.label}</div>
@@ -225,12 +253,15 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               or drag and drop
             </p>
           </div>
-          
+
           {/* Uploaded Files */}
           {uploadedFiles.length > 0 && (
             <div className="mt-3 space-y-2">
               {uploadedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded dark:bg-gray-800">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded dark:bg-gray-800"
+                >
                   <div className="flex items-center space-x-2">
                     <FiFileText className="w-4 h-4 text-gray-500" />
                     <span className="text-sm">{file.name}</span>
@@ -277,7 +308,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {isLate ? 'Late completion detected' : 'Ready to complete'}
+                {isLate ? "Late completion detected" : "Ready to complete"}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -295,7 +326,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiCheck className="w-4 h-4" />
-                <span>{loading ? 'Completing...' : 'Complete Task'}</span>
+                <span>{loading ? "Completing..." : "Complete Task"}</span>
               </button>
             </div>
           </div>
@@ -303,4 +334,4 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

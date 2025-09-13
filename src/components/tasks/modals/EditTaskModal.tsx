@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiEdit, FiClock, FiUser, FiTag, FiCalendar, FiAlertTriangle, FiHistory, FiZap } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiEdit,
+  FiClock,
+  FiUser,
+  FiTag,
+  FiCalendar,
+  FiAlertTriangle,
+  FiHistory,
+  FiZap,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface EditTaskModalProps {
   open: boolean;
@@ -17,22 +26,16 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    aiSuggestions,
-    updateTask,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, aiSuggestions, updateTask, alerts, clearAlerts } =
+    useSmartTaskModal({ taskId, isPro });
 
   const [formData, setFormData] = React.useState({
-    title: '',
-    description: '',
-    type: 'custom' as const,
-    priority: 'medium' as const,
-    dueDate: '',
-    assignedTo: '',
+    title: "",
+    description: "",
+    type: "custom" as const,
+    priority: "medium" as const,
+    dueDate: "",
+    assignedTo: "",
     tags: [] as string[],
   });
 
@@ -47,33 +50,37 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         description: task.description,
         type: task.type,
         priority: task.priority,
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : '',
-        assignedTo: task.assignedTo || '',
+        dueDate: task.dueDate
+          ? new Date(task.dueDate).toISOString().slice(0, 16)
+          : "",
+        assignedTo: task.assignedTo || "",
         tags: task.tags,
       });
     }
   }, [task]);
 
   const taskTypes = [
-    { value: 'onboarding', label: 'Member Onboarding', icon: '👋' },
-    { value: 'class_setup', label: 'Class Setup', icon: '🏋️' },
-    { value: 'maintenance', label: 'Equipment Maintenance', icon: '🔧' },
-    { value: 'cleaning', label: 'Cleaning', icon: '🧹' },
-    { value: 'equipment_check', label: 'Equipment Check', icon: '✅' },
-    { value: 'member_support', label: 'Member Support', icon: '💬' },
-    { value: 'admin', label: 'Administrative', icon: '📋' },
-    { value: 'custom', label: 'Custom Task', icon: '📝' },
+    { value: "onboarding", label: "Member Onboarding", icon: "👋" },
+    { value: "class_setup", label: "Class Setup", icon: "🏋️" },
+    { value: "maintenance", label: "Equipment Maintenance", icon: "🔧" },
+    { value: "cleaning", label: "Cleaning", icon: "🧹" },
+    { value: "equipment_check", label: "Equipment Check", icon: "✅" },
+    { value: "member_support", label: "Member Support", icon: "💬" },
+    { value: "admin", label: "Administrative", icon: "📋" },
+    { value: "custom", label: "Custom Task", icon: "📝" },
   ];
 
   const priorities = [
-    { value: 'low', label: 'Low', color: 'text-green-600 bg-green-50' },
-    { value: 'medium', label: 'Medium', color: 'text-yellow-600 bg-yellow-50' },
-    { value: 'high', label: 'High', color: 'text-orange-600 bg-orange-50' },
-    { value: 'urgent', label: 'Urgent', color: 'text-red-600 bg-red-50' },
+    { value: "low", label: "Low", color: "text-green-600 bg-green-50" },
+    { value: "medium", label: "Medium", color: "text-yellow-600 bg-yellow-50" },
+    { value: "high", label: "High", color: "text-orange-600 bg-orange-50" },
+    { value: "urgent", label: "Urgent", color: "text-red-600 bg-red-50" },
   ];
 
   const isOverdue = task?.dueDate && new Date(task.dueDate) < new Date();
-  const isPastDue = task?.dueDate && new Date(task.dueDate) < new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const isPastDue =
+    task?.dueDate &&
+    new Date(task.dueDate) < new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +88,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
     const result = await updateTask(task.id, {
       ...formData,
-      dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
+      dueDate: formData.dueDate
+        ? new Date(formData.dueDate).toISOString()
+        : undefined,
     });
     if (result.success) {
       onClose();
@@ -89,11 +98,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   };
 
   const handleTypeChange = (type: string) => {
-    setFormData(prev => ({ ...prev, type: type as any }));
+    setFormData((prev) => ({ ...prev, type: type as any }));
   };
 
   const handlePriorityChange = (priority: string) => {
-    setFormData(prev => ({ ...prev, priority: priority as any }));
+    setFormData((prev) => ({ ...prev, priority: priority as any }));
   };
 
   if (!task) {
@@ -115,9 +124,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -139,13 +150,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {isPastDue ? 'Task is Past Due' : 'Task is Overdue'}
+                  {isPastDue ? "Task is Past Due" : "Task is Overdue"}
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  {isPastDue 
-                    ? 'This task is more than 24 hours overdue. Consider reassignment or escalation.'
-                    : 'This task is overdue. Consider updating the deadline or priority.'
-                  }
+                  {isPastDue
+                    ? "This task is more than 24 hours overdue. Consider reassignment or escalation."
+                    : "This task is overdue. Consider updating the deadline or priority."}
                 </p>
                 <div className="flex items-center space-x-4 mt-2">
                   <button className="text-sm text-red-600 hover:text-red-700 dark:text-red-400">
@@ -172,7 +182,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               placeholder="Enter task name..."
               required
@@ -192,8 +204,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   onClick={() => handleTypeChange(type.value)}
                   className={`p-3 rounded-lg border text-left transition-all ${
                     formData.type === type.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -212,7 +224,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               placeholder="Describe the task details..."
@@ -232,8 +249,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   onClick={() => handlePriorityChange(priority.value)}
                   className={`p-2 rounded-lg border text-sm font-medium transition-all ${
                     formData.priority === priority.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   } ${priority.color}`}
                 >
                   {priority.label}
@@ -252,7 +269,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <input
                 type="datetime-local"
                 value={formData.dueDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, dueDate: e.target.value }))
+                }
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               />
             </div>
@@ -268,7 +287,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <input
                 type="email"
                 value={formData.assignedTo}
-                onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    assignedTo: e.target.value,
+                  }))
+                }
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 placeholder="email@mtdrb.com"
               />
@@ -287,36 +311,44 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                 onClick={() => setShowHistory(!showHistory)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showHistory ? 'Hide' : 'Show'} history
+                {showHistory ? "Hide" : "Show"} history
               </button>
             </div>
-            
+
             {showHistory && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-3"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Created by</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Created by
+                    </span>
                     <span className="font-medium">{task.createdBy}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Created at</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Created at
+                    </span>
                     <span className="font-medium">
                       {new Date(task.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Last updated</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Last updated
+                    </span>
                     <span className="font-medium">
                       {new Date(task.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
                   {task.completedAt && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Completed at</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Completed at
+                      </span>
                       <span className="font-medium">
                         {new Date(task.completedAt).toLocaleDateString()}
                       </span>
@@ -339,14 +371,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   onClick={() => setShowAiSuggestions(!showAiSuggestions)}
                   className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
                 >
-                  {showAiSuggestions ? 'Hide' : 'Show'} suggestions
+                  {showAiSuggestions ? "Hide" : "Show"} suggestions
                 </button>
               </div>
-              
+
               {showAiSuggestions && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   className="space-y-2"
                 >
                   {aiSuggestions.map((suggestion) => (
@@ -366,11 +398,15 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                             <span className="text-xs text-gray-500">
                               Confidence: {suggestion.confidence}%
                             </span>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              suggestion.impact === 'high' ? 'bg-red-100 text-red-700' :
-                              suggestion.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                suggestion.impact === "high"
+                                  ? "bg-red-100 text-red-700"
+                                  : suggestion.impact === "medium"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-green-100 text-green-700"
+                              }`}
+                            >
                               {suggestion.impact} impact
                             </span>
                           </div>
@@ -414,7 +450,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiEdit className="w-4 h-4" />
-                  <span>{loading ? 'Updating...' : 'Update Task'}</span>
+                  <span>{loading ? "Updating..." : "Update Task"}</span>
                 </button>
               </div>
             </div>
@@ -423,4 +459,4 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

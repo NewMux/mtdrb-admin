@@ -1,8 +1,21 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiMoreHorizontal, FiEdit, FiTrash2, FiEye, FiUsers, FiClock, FiMapPin, FiCalendar, FiUser, FiSettings, FiDownload, FiX } from 'react-icons/fi';
-import { Class } from '../../types';
-import { SmartButton } from '../ui/DesignSystem';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiMoreHorizontal,
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiUsers,
+  FiClock,
+  FiMapPin,
+  FiCalendar,
+  FiUser,
+  FiSettings,
+  FiDownload,
+  FiX,
+} from "react-icons/fi";
+import { Class } from "../../types";
+import { SmartButton, EmptyState } from "../ui/DesignSystem";
 
 interface ClassTableProps {
   classes: Class[];
@@ -31,41 +44,45 @@ const ClassTable: React.FC<ClassTableProps> = ({
   onWaitlist,
   onCancel,
   onExport,
-  onSettings
+  onSettings,
 }) => {
   const [hoveredRow, setHoveredRow] = React.useState<string | null>(null);
-  const [sortField, setSortField] = React.useState<keyof Class>('start_time');
-  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = React.useState<
+    keyof Class | "enrolled_count"
+  >("start_time");
+  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
+    "asc",
+  );
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'upcoming':
-        return 'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200';
-      case 'active':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case "upcoming":
+        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200";
+      case "active":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+      case "completed":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Yoga':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'Cardio':
-        return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200';
-      case 'Strength':
-        return 'bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200';
-      case 'Pilates':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+      case "Yoga":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "Cardio":
+        return "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200";
+      case "Strength":
+        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+      case "Pilates":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
@@ -73,30 +90,36 @@ const ClassTable: React.FC<ClassTableProps> = ({
     return Math.round((enrolled / capacity) * 100);
   };
 
-  const handleSort = (field: keyof Class) => {
+  const handleSort = (field: keyof Class | "enrolled_count") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   const sortedClasses = React.useMemo(() => {
     return [...classes].sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' 
+      let aValue: any = a[sortField];
+      let bValue: any = b[sortField];
+
+      // Handle enrolled_count field which might not exist in the Class interface
+      if (sortField === "enrolled_count") {
+        aValue = (a as any).enrolled_count || 0;
+        bValue = (b as any).enrolled_count || 0;
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortDirection === "asc"
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
-      
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
       }
-      
+
       return 0;
     });
   }, [classes, sortField, sortDirection]);
@@ -135,18 +158,20 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
   if (classes.length === 0) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
-        <div className="p-8 text-center">
-          <div className="text-gray-500 mb-4">
-            <FiCalendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Classes Found</h3>
-            <p className="text-sm text-gray-600 mb-4">Get started by creating your first class</p>
-            <SmartButton variant="primary" size="sm" onClick={() => onSchedule({} as Class)}>
-              Add Your First Class
-            </SmartButton>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={<FiCalendar className="w-12 h-12" />}
+        title="No Classes Found"
+        description="Get started by creating your first class"
+        action={
+          <SmartButton
+            variant="primary"
+            size="sm"
+            onClick={() => onSchedule({} as Class)}
+          >
+            Add Your First Class
+          </SmartButton>
+        }
+      />
     );
   }
 
@@ -157,58 +182,68 @@ const ClassTable: React.FC<ClassTableProps> = ({
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th 
+              <th
                 className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('name')}
+                onClick={() => handleSort("name")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Class</span>
-                  {sortField === 'name' && (
-                    <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  {sortField === "name" && (
+                    <span className="text-xs">
+                      {sortDirection === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('trainer_id')}
+                onClick={() => handleSort("trainer_id")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Trainer</span>
-                  {sortField === 'trainer_id' && (
-                    <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  {sortField === "trainer_id" && (
+                    <span className="text-xs">
+                      {sortDirection === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('start_time')}
+                onClick={() => handleSort("start_time")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Time</span>
-                  {sortField === 'start_time' && (
-                    <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  {sortField === "start_time" && (
+                    <span className="text-xs">
+                      {sortDirection === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('enrolled_count')}
+                onClick={() => handleSort("enrolled_count")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Enrollment</span>
-                  {sortField === 'enrolled_count' && (
-                    <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  {sortField === "enrolled_count" && (
+                    <span className="text-xs">
+                      {sortDirection === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </th>
-              <th 
+              <th
                 className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => handleSort('status')}
+                onClick={() => handleSort("status")}
               >
                 <div className="flex items-center space-x-1">
                   <span>Status</span>
-                  {sortField === 'status' && (
-                    <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                  {sortField === "status" && (
+                    <span className="text-xs">
+                      {sortDirection === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </th>
@@ -225,7 +260,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 ${
-                  index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/50'
+                  index % 2 === 0
+                    ? "bg-white dark:bg-gray-900"
+                    : "bg-gray-50/50 dark:bg-gray-800/50"
                 }`}
                 onMouseEnter={() => setHoveredRow(classItem.id)}
                 onMouseLeave={() => setHoveredRow(null)}
@@ -240,58 +277,80 @@ const ClassTable: React.FC<ClassTableProps> = ({
                         {classItem.name}
                       </div>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(classItem.type)}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(classItem.type)}`}
+                        >
                           {classItem.type}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {classItem.description}
+                          {classItem.description || "No description"}
                         </span>
                       </div>
                     </div>
                   </div>
                 </td>
-                
+
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 dark:text-white">{classItem.trainer_id}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{classItem.location}</div>
+                  <div className="text-sm text-gray-900 dark:text-white">
+                    {classItem.trainer_id}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {classItem.location}
+                  </div>
                 </td>
-                
+
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-2">
                     <FiClock className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-900 dark:text-white">{classItem.start_time}</span>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {classItem.start_time}
+                    </span>
                   </div>
                 </td>
-                
+
                 <td className="px-6 py-4">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-900 dark:text-white">{classItem.enrolled_count}/{classItem.capacity}</span>
+                      <span className="text-gray-900 dark:text-white">
+                        {(classItem as any).enrolled_count || 0}/
+                        {classItem.capacity}
+                      </span>
                       <span className="text-gray-500 dark:text-gray-400">
-                        {getEnrollmentPercentage(classItem.enrolled_count, classItem.capacity)}%
+                        {getEnrollmentPercentage(
+                          (classItem as any).enrolled_count || 0,
+                          classItem.capacity,
+                        )}
+                        %
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-sky-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${getEnrollmentPercentage(classItem.enrolled_count, classItem.capacity)}%` }}
+                        style={{
+                          width: `${getEnrollmentPercentage((classItem as any).enrolled_count || 0, classItem.capacity)}%`,
+                        }}
                       ></div>
                     </div>
                   </div>
                 </td>
-                
+
                 <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(classItem.status)}`}>
-                    {classItem.status.charAt(0).toUpperCase() + classItem.status.slice(1)}
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(classItem.status || "active")}`}
+                  >
+                    {(classItem.status || "active").charAt(0).toUpperCase() +
+                      (classItem.status || "active").slice(1)}
                   </span>
                 </td>
-                
+
                 <td className="px-6 py-4 text-right">
-                  <div className={`flex items-center justify-end space-x-1 transition-opacity duration-200 ${
-                    hoveredRow === classItem.id ? 'opacity-100' : 'opacity-0'
-                  }`}>
+                  <div
+                    className={`flex items-center justify-end space-x-1 transition-opacity duration-200 ${
+                      hoveredRow === classItem.id ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
                     {/* View Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       onClick={() => onView(classItem)}
                       title="View Details"
@@ -299,9 +358,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiEye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
-                    
+
                     {/* Edit Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       onClick={() => onEdit(classItem)}
                       title="Edit Class"
@@ -309,9 +368,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiEdit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
-                    
+
                     {/* Schedule Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors duration-200"
                       onClick={() => onSchedule(classItem)}
                       title="Schedule Class"
@@ -319,9 +378,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiCalendar className="w-4 h-4 text-blue-500" />
                     </button>
-                    
+
                     {/* Assign Trainer Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       onClick={() => onAssignTrainer(classItem)}
                       title="Assign Trainer"
@@ -329,9 +388,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiUser className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
-                    
+
                     {/* Waitlist Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       onClick={() => onWaitlist(classItem)}
                       title="Manage Waitlist"
@@ -339,9 +398,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiUsers className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
-                    
+
                     {/* Cancel Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors duration-200"
                       onClick={() => onCancel(classItem)}
                       title="Cancel Class"
@@ -349,9 +408,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiX className="w-4 h-4 text-orange-500" />
                     </button>
-                    
+
                     {/* Export Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900 transition-colors duration-200"
                       onClick={() => onExport(classItem)}
                       title="Export Data"
@@ -359,9 +418,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiDownload className="w-4 h-4 text-green-500" />
                     </button>
-                    
+
                     {/* Settings Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       onClick={() => onSettings(classItem)}
                       title="Class Settings"
@@ -369,9 +428,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     >
                       <FiSettings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
-                    
+
                     {/* Delete Button */}
-                    <button 
+                    <button
                       className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
                       onClick={() => onDelete(classItem)}
                       title="Delete Class"
@@ -391,7 +450,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
           <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedClasses.length)} of {sortedClasses.length} classes
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+            {Math.min(currentPage * itemsPerPage, sortedClasses.length)} of{" "}
+            {sortedClasses.length} classes
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -405,7 +466,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -418,4 +481,4 @@ const ClassTable: React.FC<ClassTableProps> = ({
   );
 };
 
-export default ClassTable; 
+export default ClassTable;

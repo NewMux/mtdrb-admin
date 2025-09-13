@@ -1,8 +1,18 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiCalendar, FiDollarSign, FiTrendingUp, FiMail, FiDownload, FiZap, FiLock, FiCheckCircle } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiUser,
+  FiCalendar,
+  FiDollarSign,
+  FiTrendingUp,
+  FiMail,
+  FiDownload,
+  FiZap,
+  FiLock,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface GenerateMemberReportModalProps {
   open: boolean;
@@ -14,65 +24,70 @@ interface GenerateMemberReportModalProps {
 }
 
 const memberData = {
-  id: '1',
-  name: 'Sarah Johnson',
-  email: 'sarah.johnson@email.com',
-  joinDate: '2023-03-15',
-  membershipType: 'Premium',
+  id: "1",
+  name: "Sarah Johnson",
+  email: "sarah.johnson@email.com",
+  joinDate: "2023-03-15",
+  membershipType: "Premium",
   attendance: {
     totalSessions: 45,
     attendanceRate: 78,
-    lastSession: '2024-01-15',
-    favoriteClass: 'HIIT Blast',
+    lastSession: "2024-01-15",
+    favoriteClass: "HIIT Blast",
   },
   payments: {
     totalPaid: 1250,
     outstanding: 0,
-    nextPayment: '2024-02-15',
-    paymentMethod: 'Credit Card',
+    nextPayment: "2024-02-15",
+    paymentMethod: "Credit Card",
   },
   progress: {
     weightLoss: 8.5,
     strengthGain: 15,
     enduranceImprovement: 25,
-    goals: ['Lose 10kg', 'Run 5km', 'Complete 50 pushups'],
+    goals: ["Lose 10kg", "Run 5km", "Complete 50 pushups"],
   },
   aiInsights: [
     {
-      type: 'prediction',
-      title: 'High Engagement Risk',
-      description: 'Attendance dropped 20% this month',
+      type: "prediction",
+      title: "High Engagement Risk",
+      description: "Attendance dropped 20% this month",
       confidence: 85,
-      recommendation: 'Send re-engagement campaign',
+      recommendation: "Send re-engagement campaign",
     },
     {
-      type: 'opportunity',
-      title: 'Upgrade Opportunity',
-      description: 'Ready for personal training sessions',
+      type: "opportunity",
+      title: "Upgrade Opportunity",
+      description: "Ready for personal training sessions",
       confidence: 92,
-      recommendation: 'Offer PT trial session',
+      recommendation: "Offer PT trial session",
     },
   ],
 };
 
 const reportSections = [
-  { id: 'attendance', label: 'Attendance History', icon: FiCalendar },
-  { id: 'payments', label: 'Payment Records', icon: FiDollarSign },
-  { id: 'progress', label: 'Progress Tracking', icon: FiTrendingUp },
-  { id: 'ai_insights', label: 'AI Insights', icon: FiZap, isPro: true },
+  { id: "attendance", label: "Attendance History", icon: FiCalendar },
+  { id: "payments", label: "Payment Records", icon: FiDollarSign },
+  { id: "progress", label: "Progress Tracking", icon: FiTrendingUp },
+  { id: "ai_insights", label: "Smart Insights", icon: FiZap, isPro: true },
 ];
 
-export default function GenerateMemberReportModal({ 
-  open, 
-  onClose, 
-  memberId = '1', 
-  memberName = 'Sarah Johnson',
-  onSuccess, 
-  isPro 
+export default function GenerateMemberReportModal({
+  open,
+  onClose,
+  memberId = "1",
+  memberName = "Sarah Johnson",
+  onSuccess,
+  isPro,
 }: GenerateMemberReportModalProps) {
-  const { loading, generateReport, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [selectedSections, setSelectedSections] = React.useState<string[]>(['attendance', 'payments', 'progress']);
+  const { loading, generateReport, alerts, clearAlerts } =
+    useSmartAnalyticsModal();
+
+  const [selectedSections, setSelectedSections] = React.useState<string[]>([
+    "attendance",
+    "payments",
+    "progress",
+  ]);
   const [includeCharts, setIncludeCharts] = React.useState(true);
   const [sendEmail, setSendEmail] = React.useState(false);
   const [emailRecipient, setEmailRecipient] = React.useState(memberData.email);
@@ -104,20 +119,26 @@ export default function GenerateMemberReportModal({
   };
 
   const handleRemoveSection = (sectionId: string) => {
-    setSelectedSections(selectedSections.filter(id => id !== sectionId));
+    setSelectedSections(selectedSections.filter((id) => id !== sectionId));
   };
 
   const getSectionIcon = (sectionId: string) => {
-    const section = reportSections.find(s => s.id === sectionId);
+    const section = reportSections.find((s) => s.id === sectionId);
     return section?.icon || FiUser;
   };
 
   const getSectionLabel = (sectionId: string) => {
-    const section = reportSections.find(s => s.id === sectionId);
+    const section = reportSections.find((s) => s.id === sectionId);
     return section?.label || sectionId;
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -137,11 +158,16 @@ export default function GenerateMemberReportModal({
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
           {alert.message}
         </div>
       ))}
@@ -151,13 +177,19 @@ export default function GenerateMemberReportModal({
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-lg font-semibold">
-              {memberData.name.split(' ').map(n => n[0]).join('')}
+              {memberData.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900">{memberData.name}</h3>
               <p className="text-sm text-gray-600">{memberData.email}</p>
               <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                <span>Member since {new Date(memberData.joinDate).toLocaleDateString()}</span>
+                <span>
+                  Member since{" "}
+                  {new Date(memberData.joinDate).toLocaleDateString()}
+                </span>
                 <span>•</span>
                 <span>{memberData.membershipType} Plan</span>
               </div>
@@ -178,25 +210,34 @@ export default function GenerateMemberReportModal({
               <div
                 key={section.id}
                 className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'border-blue-500 bg-blue-50' 
+                  isSelected
+                    ? "border-blue-500 bg-blue-50"
                     : isProOnly
-                    ? 'border-gray-200 bg-gray-50 opacity-60'
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                      ? "border-gray-200 bg-gray-50 opacity-60"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                 }`}
-                onClick={() => !isProOnly && (isSelected ? handleRemoveSection(section.id) : handleAddSection(section.id))}
+                onClick={() =>
+                  !isProOnly &&
+                  (isSelected
+                    ? handleRemoveSection(section.id)
+                    : handleAddSection(section.id))
+                }
               >
                 <div className="flex items-start gap-3">
-                  <Icon className={`mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+                  <Icon
+                    className={`mt-1 ${isSelected ? "text-blue-600" : "text-gray-500"}`}
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{section.label}</h4>
-                      {isProOnly && <FiLock className="text-gray-400" title="Pro feature" />}
+                      <h4 className="font-semibold text-gray-900">
+                        {section.label}
+                      </h4>
+                      {isProOnly && (
+                        <FiLock className="text-gray-400" title="Pro feature" />
+                      )}
                     </div>
                   </div>
-                  {isSelected && (
-                    <FiCheckCircle className="text-blue-600" />
-                  )}
+                  {isSelected && <FiCheckCircle className="text-blue-600" />}
                 </div>
               </div>
             );
@@ -206,20 +247,27 @@ export default function GenerateMemberReportModal({
 
       {/* AI Insights */}
       {isPro && memberData.aiInsights.length > 0 && (
-        <Section title="AI Insights">
+        <Section title="Smart Insights">
           <div className="space-y-3">
             {memberData.aiInsights.map((insight, index) => (
-              <div key={index} className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
+              <div
+                key={index}
+                className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg"
+              >
                 <div className="flex items-start gap-3">
                   <FiZap className="text-yellow-600 mt-1" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{insight.title}</h4>
+                      <h4 className="font-semibold text-gray-900">
+                        {insight.title}
+                      </h4>
                       <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
                         {insight.confidence}% confidence
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{insight.description}</p>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {insight.description}
+                    </p>
                     <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                       {insight.recommendation} →
                     </button>
@@ -242,15 +290,21 @@ export default function GenerateMemberReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Total Sessions</span>
-                <span className="font-semibold">{memberData.attendance.totalSessions}</span>
+                <span className="font-semibold">
+                  {memberData.attendance.totalSessions}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Attendance Rate</span>
-                <span className="font-semibold">{memberData.attendance.attendanceRate}%</span>
+                <span className="font-semibold">
+                  {memberData.attendance.attendanceRate}%
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Favorite Class</span>
-                <span className="font-semibold">{memberData.attendance.favoriteClass}</span>
+                <span className="font-semibold">
+                  {memberData.attendance.favoriteClass}
+                </span>
               </div>
             </div>
           </div>
@@ -263,15 +317,23 @@ export default function GenerateMemberReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Total Paid</span>
-                <span className="font-semibold">${memberData.payments.totalPaid}</span>
+                <span className="font-semibold">
+                  ${memberData.payments.totalPaid}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Outstanding</span>
-                <span className="font-semibold">${memberData.payments.outstanding}</span>
+                <span className="font-semibold">
+                  ${memberData.payments.outstanding}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Next Payment</span>
-                <span className="font-semibold">{new Date(memberData.payments.nextPayment).toLocaleDateString()}</span>
+                <span className="font-semibold">
+                  {new Date(
+                    memberData.payments.nextPayment,
+                  ).toLocaleDateString()}
+                </span>
               </div>
             </div>
           </div>
@@ -284,15 +346,21 @@ export default function GenerateMemberReportModal({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Weight Loss</span>
-                <span className="font-semibold">{memberData.progress.weightLoss}kg</span>
+                <span className="font-semibold">
+                  {memberData.progress.weightLoss}kg
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Strength Gain</span>
-                <span className="font-semibold">+{memberData.progress.strengthGain}%</span>
+                <span className="font-semibold">
+                  +{memberData.progress.strengthGain}%
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Endurance</span>
-                <span className="font-semibold">+{memberData.progress.enduranceImprovement}%</span>
+                <span className="font-semibold">
+                  +{memberData.progress.enduranceImprovement}%
+                </span>
               </div>
             </div>
           </div>
@@ -326,11 +394,11 @@ export default function GenerateMemberReportModal({
               </label>
             </div>
           </div>
-          
+
           {sendEmail && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="space-y-2"
             >
@@ -380,4 +448,4 @@ export default function GenerateMemberReportModal({
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

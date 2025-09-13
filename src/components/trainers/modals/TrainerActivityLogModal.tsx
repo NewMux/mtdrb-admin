@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiActivity, FiCalendar, FiFilter, FiDownload, FiTrendingUp } from "react-icons/fi";
+import {
+  FiX,
+  FiActivity,
+  FiCalendar,
+  FiFilter,
+  FiDownload,
+  FiTrendingUp,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerActivityLogModalProps {
@@ -12,7 +19,7 @@ interface TrainerActivityLogModalProps {
 const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const [selectedActivity, setSelectedActivity] = useState("all");
@@ -24,29 +31,29 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
       type: "class_taught",
       description: "Taught Yoga Basics class",
       timestamp: "2024-01-20T10:00:00Z",
-      details: "15 members attended, 4.8/5 rating"
+      details: "15 members attended, 4.8/5 rating",
     },
     {
       id: 2,
       type: "member_assigned",
       description: "Assigned to Sarah Johnson",
       timestamp: "2024-01-19T14:30:00Z",
-      details: "Personal training session scheduled"
+      details: "Personal training session scheduled",
     },
     {
       id: 3,
       type: "payment_received",
       description: "Payment received for January",
       timestamp: "2024-01-18T09:15:00Z",
-      details: "$1,200.00 for 20 sessions"
+      details: "$1,200.00 for 20 sessions",
     },
     {
       id: 4,
       type: "schedule_updated",
       description: "Updated availability",
       timestamp: "2024-01-17T16:45:00Z",
-      details: "Added evening slots on Tuesdays"
-    }
+      details: "Added evening slots on Tuesdays",
+    },
   ];
 
   const isProUser = true; // Mock Pro user status
@@ -87,15 +94,23 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Active</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Status:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Active
+                </span>
               </div>
             </div>
           </div>
@@ -142,11 +157,12 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
                 <FiTrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Insights
+                    Smart Insights
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Performance trend: +15% improvement in member satisfaction over the last 30 days. 
-                    Consider increasing class capacity based on demand patterns.
+                    Performance trend: +15% improvement in member satisfaction
+                    over the last 30 days. Consider increasing class capacity
+                    based on demand patterns.
                   </p>
                 </div>
               </div>
@@ -160,7 +176,10 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockActivityLogs.map((log) => (
-                <div key={log.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={log.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 dark:text-white">
@@ -175,7 +194,7 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
                     </div>
                     <div className="ml-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        {log.type.replace('_', ' ')}
+                        {log.type.replace("_", " ")}
                       </span>
                     </div>
                   </div>
@@ -209,4 +228,4 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
   );
 };
 
-export default TrainerActivityLogModal; 
+export default TrainerActivityLogModal;

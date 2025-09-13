@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiTrendingUp, 
-  FiUsers, 
-  FiTarget, 
-  FiZap, 
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiTrendingUp,
+  FiUsers,
+  FiTarget,
+  FiZap,
   FiAlertCircle,
   FiCheckCircle,
   FiDollarSign,
@@ -12,10 +12,10 @@ import {
   FiHeart,
   FiStar,
   FiArrowRight,
-  FiRefreshCw
-} from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
-import dayjs from 'dayjs';
+  FiRefreshCw,
+} from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import dayjs from "dayjs";
 
 interface SmartMetrics {
   totalMembers: number;
@@ -27,7 +27,7 @@ interface SmartMetrics {
   };
   lifetimeValue: {
     average: number;
-    trend: 'up' | 'down' | 'stable';
+    trend: "up" | "down" | "stable";
     change: number;
   };
   engagement: {
@@ -52,10 +52,14 @@ interface SmartMetrics {
 
 interface AutomationInsight {
   id: string;
-  type: 'churn_risk' | 'upsell_opportunity' | 'engagement_drop' | 'milestone_achieved';
+  type:
+    | "churn_risk"
+    | "upsell_opportunity"
+    | "engagement_drop"
+    | "milestone_achieved";
   memberId: string;
   memberName: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   insight: string;
   recommendedAction: string;
   automationAvailable: boolean;
@@ -69,15 +73,17 @@ interface SmartMemberDashboardProps {
   onAutomationTrigger: (automationId: string, memberId: string) => void;
 }
 
-export default function SmartMemberDashboard({ 
-  refreshKey, 
-  onMemberClick, 
-  onAutomationTrigger 
+export default function SmartMemberDashboard({
+  refreshKey,
+  onMemberClick,
+  onAutomationTrigger,
 }: SmartMemberDashboardProps) {
   const [metrics, setMetrics] = useState<SmartMetrics | null>(null);
   const [insights, setInsights] = useState<AutomationInsight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'predictions'>('overview');
+  const [activeTab, setActiveTab] = useState<"overview" | "predictions">(
+    "overview",
+  );
   // No demo data - always use real data from backend
 
   useEffect(() => {
@@ -87,19 +93,21 @@ export default function SmartMemberDashboard({
 
   const fetchSmartMetrics = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Try to get tenant_id from user metadata first, fallback to memberships table
       let tenantId = user.user_metadata?.tenantId;
-      
+
       if (!tenantId) {
         const { data: membershipData } = await supabase
-          .from('memberships')
-          .select('tenant_id')
-          .eq('user_id', user.id)
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
           .single();
-        
+
         if (membershipData?.tenant_id) {
           tenantId = membershipData.tenant_id;
         }
@@ -109,15 +117,13 @@ export default function SmartMemberDashboard({
       let members;
       if (tenantId) {
         const { data } = await supabase
-          .from('members')
-          .select('*')
-          .eq('tenant_id', tenantId);
+          .from("members")
+          .select("*")
+          .eq("tenant_id", tenantId);
         members = data;
       } else {
         // Fallback: fetch all members for demo
-        const { data } = await supabase
-          .from('members')
-          .select('*');
+        const { data } = await supabase.from("members").select("*");
         members = data;
       }
 
@@ -129,76 +135,117 @@ export default function SmartMemberDashboard({
           churnPrediction: {
             highRisk: 0,
             mediumRisk: 0,
-            lowRisk: 0
+            lowRisk: 0,
           },
-          lifetimeValue: { average: 0, trend: 'stable', change: 0 },
-          engagement: { 
-            score: 0, 
-            trends: { appUsage: 0, classAttendance: 0, paymentConsistency: 0 }
+          lifetimeValue: { average: 0, trend: "stable", change: 0 },
+          engagement: {
+            score: 0,
+            trends: { appUsage: 0, classAttendance: 0, paymentConsistency: 0 },
           },
-          automation: { activeWorkflows: 0, conversionRate: 0, messagesDelivered: 0 },
+          automation: {
+            activeWorkflows: 0,
+            conversionRate: 0,
+            messagesDelivered: 0,
+          },
           predictions: {
             nextMonthRevenue: 0,
             expectedChurn: 0,
-            growthOpportunities: 0
-          }
+            growthOpportunities: 0,
+          },
         });
         return;
       }
 
       // Calculate smart metrics
       const now = dayjs();
-      const thirtyDaysAgo = now.subtract(30, 'days');
+      const thirtyDaysAgo = now.subtract(30, "days");
 
       // Basic counts
       const totalMembers = members.length;
-      const activeMembers = members.filter(m => m.status === 'active').length;
+      const activeMembers = members.filter((m) => m.status === "active").length;
 
       // Churn risk calculation (AI-powered simulation)
-      const churnRiskAnalysis = members.map(member => {
+      const churnRiskAnalysis = members.map((member) => {
         let riskScore = 0;
-        
+
         // Risk factors
-        if (member.last_attendance && dayjs(member.last_attendance).isBefore(thirtyDaysAgo)) riskScore += 30;
-        if (member.payment_status === 'overdue') riskScore += 25;
+        if (
+          member.last_attendance &&
+          dayjs(member.last_attendance).isBefore(thirtyDaysAgo)
+        )
+          riskScore += 30;
+        if (member.payment_status === "overdue") riskScore += 25;
         if (!member.assigned_trainer_id) riskScore += 15;
-        if (member.app_last_login && dayjs(member.app_last_login).isBefore(thirtyDaysAgo)) riskScore += 20;
-        if (member.fitness_level === 'beginner' && !member.welcome_sequence_completed) riskScore += 10;
+        if (
+          member.app_last_login &&
+          dayjs(member.app_last_login).isBefore(thirtyDaysAgo)
+        )
+          riskScore += 20;
+        if (
+          member.fitness_level === "beginner" &&
+          !member.welcome_sequence_completed
+        )
+          riskScore += 10;
 
         return { ...member, riskScore };
       });
 
-      const highRisk = churnRiskAnalysis.filter(m => m.riskScore >= 60).length;
-      const mediumRisk = churnRiskAnalysis.filter(m => m.riskScore >= 30 && m.riskScore < 60).length;
-      const lowRisk = churnRiskAnalysis.filter(m => m.riskScore < 30).length;
+      const highRisk = churnRiskAnalysis.filter(
+        (m) => m.riskScore >= 60,
+      ).length;
+      const mediumRisk = churnRiskAnalysis.filter(
+        (m) => m.riskScore >= 30 && m.riskScore < 60,
+      ).length;
+      const lowRisk = churnRiskAnalysis.filter((m) => m.riskScore < 30).length;
 
       // Lifetime value calculation (safe division)
-      const membershipPrices = members.map(m => parseFloat(m.membership_price || '0') || 0);
-      const averageLTV = membershipPrices.length > 0 ? 
-        (membershipPrices.reduce((sum, price) => sum + price, 0) / membershipPrices.length) * 12 : 0;
+      const membershipPrices = members.map(
+        (m) => parseFloat(m.membership_price || "0") || 0,
+      );
+      const averageLTV =
+        membershipPrices.length > 0
+          ? (membershipPrices.reduce((sum, price) => sum + price, 0) /
+              membershipPrices.length) *
+            12
+          : 0;
 
       // Engagement scoring (safe division)
-      const engagementScore = totalMembers > 0 ? Math.round(
-        (activeMembers / totalMembers) * 40 + // 40% weight on active status
-        (members.filter(m => m.workout_reminders).length / totalMembers) * 30 + // 30% on automation opt-in
-        (members.filter(m => m.assigned_trainer_id).length / totalMembers) * 30 // 30% on trainer assignment
-      ) : 0;
+      const engagementScore =
+        totalMembers > 0
+          ? Math.round(
+              (activeMembers / totalMembers) * 40 + // 40% weight on active status
+                (members.filter((m) => m.workout_reminders).length /
+                  totalMembers) *
+                  30 + // 30% on automation opt-in
+                (members.filter((m) => m.assigned_trainer_id).length /
+                  totalMembers) *
+                  30, // 30% on trainer assignment
+            )
+          : 0;
 
       // Real automation metrics from backend data
-      const membersWithAutomation = members.filter(m => 
-        m.send_welcome_sequence || m.workout_reminders || m.assigned_trainer_id
+      const membersWithAutomation = members.filter(
+        (m) =>
+          m.send_welcome_sequence ||
+          m.workout_reminders ||
+          m.assigned_trainer_id,
       );
       const automationMetrics = {
         activeWorkflows: membersWithAutomation.length,
         messagesDelivered: membersWithAutomation.length * 4, // 4 messages per month per automated member
-        conversionRate: totalMembers > 0 ? Math.round((activeMembers / totalMembers) * 100) : 0 // Real conversion rate
+        conversionRate:
+          totalMembers > 0
+            ? Math.round((activeMembers / totalMembers) * 100)
+            : 0, // Real conversion rate
       };
 
       // Predictions (AI simulation)
-      const nextMonthRevenue = membershipPrices.reduce((sum, price) => sum + price, 0) * 1.05; // 5% growth estimate
+      const nextMonthRevenue =
+        membershipPrices.reduce((sum, price) => sum + price, 0) * 1.05; // 5% growth estimate
       const expectedChurn = Math.round(highRisk * 0.7 + mediumRisk * 0.3); // Churn probability
-      const growthOpportunities = members.filter(m => 
-        m.fitness_level === 'intermediate' && !m.premium_services_offered
+      const growthOpportunities = members.filter(
+        (m) =>
+          m.fitness_level === "intermediate" && !m.premium_services_offered,
       ).length;
 
       // Calculate real metrics from member data
@@ -208,35 +255,34 @@ export default function SmartMemberDashboard({
         churnPrediction: {
           highRisk,
           mediumRisk,
-          lowRisk
+          lowRisk,
         },
-        lifetimeValue: { 
-          average: averageLTV, 
-          trend: averageLTV > 1000 ? 'up' : 'stable',
-          change: averageLTV > 1000 ? Math.min(15, (averageLTV / 1000) * 5) : 0
+        lifetimeValue: {
+          average: averageLTV,
+          trend: averageLTV > 1000 ? "up" : "stable",
+          change: averageLTV > 1000 ? Math.min(15, (averageLTV / 1000) * 5) : 0,
         },
-        engagement: { 
+        engagement: {
           score: engagementScore,
-          trends: { 
-            appUsage: Math.round(engagementScore * 0.9), 
-            classAttendance: Math.round(engagementScore * 1.1), 
-            paymentConsistency: Math.round(engagementScore * 1.05) 
-          }
+          trends: {
+            appUsage: Math.round(engagementScore * 0.9),
+            classAttendance: Math.round(engagementScore * 1.1),
+            paymentConsistency: Math.round(engagementScore * 1.05),
+          },
         },
-        automation: { 
-          activeWorkflows: automationMetrics.activeWorkflows, 
-          conversionRate: engagementScore, 
-          messagesDelivered: automationMetrics.messagesDelivered 
+        automation: {
+          activeWorkflows: automationMetrics.activeWorkflows,
+          conversionRate: engagementScore,
+          messagesDelivered: automationMetrics.messagesDelivered,
         },
         predictions: {
           nextMonthRevenue,
           expectedChurn,
-          growthOpportunities
-        }
+          growthOpportunities,
+        },
       });
-
     } catch (error) {
-      console.error('Error fetching smart metrics:', error);
+      console.error("Error fetching smart metrics:", error);
     } finally {
       setLoading(false);
     }
@@ -244,19 +290,21 @@ export default function SmartMemberDashboard({
 
   const fetchAutomationInsights = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Use same tenant_id logic as fetchSmartMetrics
       let tenantId = user.user_metadata?.tenantId;
-      
+
       if (!tenantId) {
         const { data: membershipData } = await supabase
-          .from('memberships')
-          .select('tenant_id')
-          .eq('user_id', user.id)
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
           .single();
-        
+
         if (membershipData?.tenant_id) {
           tenantId = membershipData.tenant_id;
         }
@@ -266,17 +314,14 @@ export default function SmartMemberDashboard({
       let members;
       if (tenantId) {
         const { data } = await supabase
-          .from('members')
-          .select('*')
-          .eq('tenant_id', tenantId)
+          .from("members")
+          .select("*")
+          .eq("tenant_id", tenantId)
           .limit(10);
         members = data;
       } else {
         // Fallback: fetch all members for demo
-        const { data } = await supabase
-          .from('members')
-          .select('*')
-          .limit(10);
+        const { data } = await supabase.from("members").select("*").limit(10);
         members = data;
       }
 
@@ -284,41 +329,44 @@ export default function SmartMemberDashboard({
         // Generate demo insights when no members exist
         const demoInsights: AutomationInsight[] = [
           {
-            id: 'demo_churn_1',
-            type: 'churn_risk',
-            memberId: 'demo_1',
-            memberName: 'Sarah Johnson',
-            priority: 'high',
-            insight: 'Member hasn\'t attended in 18 days - showing churn risk patterns',
-            recommendedAction: 'Send personalized re-engagement message with class recommendation',
+            id: "demo_churn_1",
+            type: "churn_risk",
+            memberId: "demo_1",
+            memberName: "Sarah Johnson",
+            priority: "high",
+            insight:
+              "Member hasn't attended in 18 days - showing churn risk patterns",
+            recommendedAction:
+              "Send personalized re-engagement message with class recommendation",
             automationAvailable: true,
-            estimatedImpact: '70% retention probability',
-            timeframe: 'Next 48 hours'
+            estimatedImpact: "70% retention probability",
+            timeframe: "Next 48 hours",
           },
           {
-            id: 'demo_upsell_1',
-            type: 'upsell_opportunity',
-            memberId: 'demo_2',
-            memberName: 'Mike Thompson',
-            priority: 'medium',
-            insight: 'Member shows consistent attendance and fitness progression',
-            recommendedAction: 'Offer personal training consultation',
+            id: "demo_upsell_1",
+            type: "upsell_opportunity",
+            memberId: "demo_2",
+            memberName: "Mike Thompson",
+            priority: "medium",
+            insight:
+              "Member shows consistent attendance and fitness progression",
+            recommendedAction: "Offer personal training consultation",
             automationAvailable: true,
-            estimatedImpact: '+$200 monthly revenue',
-            timeframe: 'This week'
+            estimatedImpact: "+$200 monthly revenue",
+            timeframe: "This week",
           },
           {
-            id: 'demo_milestone_1',
-            type: 'milestone_achieved',
-            memberId: 'demo_3',
-            memberName: 'Emma Davis',
-            priority: 'low',
-            insight: 'Member completed their first month - celebrate success!',
-            recommendedAction: 'Send celebration message and progress check-in',
+            id: "demo_milestone_1",
+            type: "milestone_achieved",
+            memberId: "demo_3",
+            memberName: "Emma Davis",
+            priority: "low",
+            insight: "Member completed their first month - celebrate success!",
+            recommendedAction: "Send celebration message and progress check-in",
             automationAvailable: true,
-            estimatedImpact: '85% continued engagement',
-            timeframe: 'Today'
-          }
+            estimatedImpact: "85% continued engagement",
+            timeframe: "Today",
+          },
         ];
         setInsights(demoInsights);
         return;
@@ -327,81 +375,99 @@ export default function SmartMemberDashboard({
       // Generate AI insights (simulated with smart logic)
       const generatedInsights: AutomationInsight[] = [];
 
-      members.forEach(member => {
+      members.forEach((member) => {
         const now = dayjs();
-        
+
         // Churn risk insight
-        if (member.last_attendance && dayjs(member.last_attendance).isBefore(now.subtract(14, 'days'))) {
+        if (
+          member.last_attendance &&
+          dayjs(member.last_attendance).isBefore(now.subtract(14, "days"))
+        ) {
           generatedInsights.push({
             id: `churn_${member.id}`,
-            type: 'churn_risk',
+            type: "churn_risk",
             memberId: member.id,
             memberName: member.name,
-            priority: 'high',
-            insight: `${member.name} hasn't attended in ${now.diff(dayjs(member.last_attendance), 'days')} days`,
-            recommendedAction: 'Send personalized re-engagement message with class recommendation',
+            priority: "high",
+            insight: `${member.name} hasn&apos;t attended in ${now.diff(dayjs(member.last_attendance), "days")} days`,
+            recommendedAction:
+              "Send personalized re-engagement message with class recommendation",
             automationAvailable: true,
-            estimatedImpact: '70% retention probability',
-            timeframe: 'Next 48 hours'
+            estimatedImpact: "70% retention probability",
+            timeframe: "Next 48 hours",
           });
         }
 
         // Upsell opportunity
-        if (member.fitness_level === 'intermediate' && !member.personal_training_interested) {
+        if (
+          member.fitness_level === "intermediate" &&
+          !member.personal_training_interested
+        ) {
           generatedInsights.push({
             id: `upsell_${member.id}`,
-            type: 'upsell_opportunity',
+            type: "upsell_opportunity",
             memberId: member.id,
             memberName: member.name,
-            priority: 'medium',
+            priority: "medium",
             insight: `${member.name} shows signs of training progression`,
-            recommendedAction: 'Offer personal training consultation',
+            recommendedAction: "Offer personal training consultation",
             automationAvailable: true,
-            estimatedImpact: '+$200 monthly revenue',
-            timeframe: 'This week'
+            estimatedImpact: "+$200 monthly revenue",
+            timeframe: "This week",
           });
         }
 
         // Milestone achievement
-        if (member.created_at && dayjs().diff(dayjs(member.created_at), 'days') === 30) {
+        if (
+          member.created_at &&
+          dayjs().diff(dayjs(member.created_at), "days") === 30
+        ) {
           generatedInsights.push({
             id: `milestone_${member.id}`,
-            type: 'milestone_achieved',
+            type: "milestone_achieved",
             memberId: member.id,
             memberName: member.name,
-            priority: 'low',
+            priority: "low",
             insight: `${member.name} completed their first month!`,
-            recommendedAction: 'Send celebration message and progress check-in',
+            recommendedAction: "Send celebration message and progress check-in",
             automationAvailable: true,
-            estimatedImpact: '85% continued engagement',
-            timeframe: 'Today'
+            estimatedImpact: "85% continued engagement",
+            timeframe: "Today",
           });
         }
       });
 
       setInsights(generatedInsights.slice(0, 6)); // Top 6 insights
-
     } catch (error) {
-      console.error('Error fetching automation insights:', error);
+      console.error("Error fetching automation insights:", error);
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-50 border-red-200 text-red-800';
-      case 'medium': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-      case 'low': return 'bg-green-50 border-green-200 text-green-800';
-      default: return 'bg-gray-50 border-gray-200 text-gray-800';
+      case "high":
+        return "bg-red-50 border-red-200 text-red-800";
+      case "medium":
+        return "bg-yellow-50 border-yellow-200 text-yellow-800";
+      case "low":
+        return "bg-green-50 border-green-200 text-green-800";
+      default:
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
   const getInsightIcon = (type: string) => {
     switch (type) {
-      case 'churn_risk': return FiAlertCircle;
-      case 'upsell_opportunity': return FiTrendingUp;
-      case 'engagement_drop': return FiActivity;
-      case 'milestone_achieved': return FiStar;
-      default: return FiZap;
+      case "churn_risk":
+        return FiAlertCircle;
+      case "upsell_opportunity":
+        return FiTrendingUp;
+      case "engagement_drop":
+        return FiActivity;
+      case "milestone_achieved":
+        return FiStar;
+      default:
+        return FiZap;
     }
   };
 
@@ -410,7 +476,9 @@ export default function SmartMemberDashboard({
       <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
         <div className="flex items-center justify-center">
           <FiRefreshCw className="animate-spin text-blue-500 text-2xl mr-3" />
-          <span className="text-blue-700 font-medium">Loading Smart Analytics...</span>
+          <span className="text-blue-700 font-medium">
+            Loading Smart Analytics...
+          </span>
         </div>
       </div>
     );
@@ -427,12 +495,16 @@ export default function SmartMemberDashboard({
               Smart Member Intelligence
             </h2>
             <p className="text-blue-100 text-lg">
-              AI-powered insights and automated member success workflows
+              Smart-powered insights and automated member success workflows
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-blue-200 mb-1">Overall Health Score</div>
-            <div className="text-4xl font-bold">{metrics?.engagement.score || 0}%</div>
+            <div className="text-sm text-blue-200 mb-1">
+              Overall Health Score
+            </div>
+            <div className="text-4xl font-bold">
+              {metrics?.engagement.score || 0}%
+            </div>
             <div className="text-gray-600 text-sm">
               Live Performance Metrics
             </div>
@@ -446,10 +518,10 @@ export default function SmartMemberDashboard({
           aria-label="Member Dashboard Views"
         >
           {[
-            { id: 'overview', label: 'Overview', icon: FiActivity },
-            { id: 'automation', label: 'Automation', icon: FiZap },
-            { id: 'predictions', label: 'Predictions', icon: FiActivity }
-          ].map(tab => (
+            { id: "overview", label: "Overview", icon: FiActivity },
+            { id: "automation", label: "Automation", icon: FiZap },
+            { id: "predictions", label: "Predictions", icon: FiActivity },
+          ].map((tab) => (
             <button
               key={tab.id}
               role="tab"
@@ -457,9 +529,11 @@ export default function SmartMemberDashboard({
               tabIndex={activeTab === tab.id ? 0 : -1}
               onClick={() => setActiveTab(tab.id as any)}
               className={`text-sm font-medium px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap
-                ${activeTab === tab.id
-                  ? 'bg-white text-blue-700 shadow-lg'
-                  : 'text-blue-100 hover:text-white hover:bg-blue-500/40'}
+                ${
+                  activeTab === tab.id
+                    ? "bg-white text-blue-700 shadow-lg"
+                    : "text-blue-100 hover:text-white hover:bg-blue-500/40"
+                }
               `}
             >
               <tab.icon size={18} />
@@ -471,7 +545,7 @@ export default function SmartMemberDashboard({
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <motion.div
             key="overview"
             initial={{ opacity: 0, y: 20 }}
@@ -482,21 +556,29 @@ export default function SmartMemberDashboard({
             {/* Churn Risk Analysis */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Churn Risk Analysis</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Churn Risk Analysis
+                </h3>
                 <FiAlertCircle className="text-orange-500" />
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-red-600">High Risk</span>
-                  <span className="font-bold text-red-700">{metrics?.churnPrediction.highRisk || 0}</span>
+                  <span className="font-bold text-red-700">
+                    {metrics?.churnPrediction.highRisk || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-yellow-600">Medium Risk</span>
-                  <span className="font-bold text-yellow-700">{metrics?.churnPrediction.mediumRisk || 0}</span>
+                  <span className="font-bold text-yellow-700">
+                    {metrics?.churnPrediction.mediumRisk || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-green-600">Low Risk</span>
-                  <span className="font-bold text-green-700">{metrics?.churnPrediction.lowRisk || 0}</span>
+                  <span className="font-bold text-green-700">
+                    {metrics?.churnPrediction.lowRisk || 0}
+                  </span>
                 </div>
               </div>
             </div>
@@ -504,7 +586,9 @@ export default function SmartMemberDashboard({
             {/* Lifetime Value */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Avg. Lifetime Value</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Avg. Lifetime Value
+                </h3>
                 <FiDollarSign className="text-green-500" />
               </div>
               <div className="text-2xl font-bold text-green-700 mb-2">
@@ -512,28 +596,38 @@ export default function SmartMemberDashboard({
               </div>
               <div className="flex items-center text-sm">
                 <FiTrendingUp className="text-green-500 mr-1" />
-                <span className="text-green-600">+{metrics?.lifetimeValue.change || 0}% this month</span>
+                <span className="text-green-600">
+                  +{metrics?.lifetimeValue.change || 0}% this month
+                </span>
               </div>
             </div>
 
             {/* Engagement Trends */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Engagement Trends</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Engagement Trends
+                </h3>
                 <FiHeart className="text-pink-500" />
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">App Usage</span>
-                  <span className="font-bold text-blue-700">{metrics?.engagement.trends.appUsage || 0}%</span>
+                  <span className="font-bold text-blue-700">
+                    {metrics?.engagement.trends.appUsage || 0}%
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Attendance</span>
-                  <span className="font-bold text-blue-700">{metrics?.engagement.trends.classAttendance || 0}%</span>
+                  <span className="font-bold text-blue-700">
+                    {metrics?.engagement.trends.classAttendance || 0}%
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Payments</span>
-                  <span className="font-bold text-blue-700">{metrics?.engagement.trends.paymentConsistency || 0}%</span>
+                  <span className="font-bold text-blue-700">
+                    {metrics?.engagement.trends.paymentConsistency || 0}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -541,30 +635,38 @@ export default function SmartMemberDashboard({
             {/* Automation Performance */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Automation Impact</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Automation Impact
+                </h3>
                 <FiZap className="text-purple-500" />
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Active Workflows</span>
-                  <span className="font-bold text-purple-700">{metrics?.automation.activeWorkflows || 0}</span>
+                  <span className="text-sm text-gray-600">
+                    Active Workflows
+                  </span>
+                  <span className="font-bold text-purple-700">
+                    {metrics?.automation.activeWorkflows || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Messages Sent</span>
-                  <span className="font-bold text-purple-700">{metrics?.automation.messagesDelivered || 0}</span>
+                  <span className="font-bold text-purple-700">
+                    {metrics?.automation.messagesDelivered || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Conversion Rate</span>
-                  <span className="font-bold text-purple-700">{metrics?.automation.conversionRate || 0}%</span>
+                  <span className="font-bold text-purple-700">
+                    {metrics?.automation.conversionRate || 0}%
+                  </span>
                 </div>
               </div>
             </div>
           </motion.div>
         )}
 
-
-
-        {activeTab === 'predictions' && (
+        {activeTab === "predictions" && (
           <motion.div
             key="predictions"
             initial={{ opacity: 0, y: 20 }}
@@ -575,7 +677,9 @@ export default function SmartMemberDashboard({
             {/* Revenue Prediction */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Next Month Revenue</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Next Month Revenue
+                </h3>
                 <FiDollarSign className="text-green-500" />
               </div>
               <div className="text-3xl font-bold text-green-700 mb-2">
@@ -603,7 +707,9 @@ export default function SmartMemberDashboard({
             {/* Growth Opportunities */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Growth Opportunities</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Growth Opportunities
+                </h3>
                 <FiTarget className="text-blue-500" />
               </div>
               <div className="text-3xl font-bold text-blue-700 mb-2">
@@ -618,4 +724,4 @@ export default function SmartMemberDashboard({
       </AnimatePresence>
     </div>
   );
-} 
+}

@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiUsers, FiCheck, FiX, FiArrowUp, FiArrowDown, FiStar, FiClock } from 'react-icons/fi';
-import SmartModal from './SmartModal';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiUsers,
+  FiCheck,
+  FiX,
+  FiArrowUp,
+  FiArrowDown,
+  FiStar,
+  FiClock,
+} from "react-icons/fi";
+import SmartModal from "./SmartModal";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface WaitlistMember {
   id: string;
@@ -28,18 +36,17 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [waitlistMembers, setWaitlistMembers] = useState<WaitlistMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [assignmentLogic, setAssignmentLogic] = useState<'first-come' | 'engagement' | 'vip' | 'manual'>('first-come');
+  const [assignmentLogic, setAssignmentLogic] = useState<
+    "first-come" | "engagement" | "vip" | "manual"
+  >("first-come");
   const [availableSpots, setAvailableSpots] = useState(0);
 
-  const {
-    classData,
-    fetchClass
-  } = useSmartClassModal({ classId, isPro });
+  const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
   // Load class data when modal opens
   useEffect(() => {
@@ -61,55 +68,55 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   const loadWaitlistData = () => {
     const mockWaitlist: WaitlistMember[] = [
       {
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com',
-        joined_waitlist: '2024-01-15T10:30:00Z',
+        id: "1",
+        name: "Sarah Johnson",
+        email: "sarah@example.com",
+        joined_waitlist: "2024-01-15T10:30:00Z",
         attendance_score: 95,
         loyalty_score: 8.5,
         is_vip: true,
-        preferred_time: '09:00'
+        preferred_time: "09:00",
       },
       {
-        id: '2',
-        name: 'Mike Chen',
-        email: 'mike@example.com',
-        joined_waitlist: '2024-01-15T11:15:00Z',
+        id: "2",
+        name: "Mike Chen",
+        email: "mike@example.com",
+        joined_waitlist: "2024-01-15T11:15:00Z",
         attendance_score: 87,
         loyalty_score: 7.2,
         is_vip: false,
-        preferred_time: '09:00'
+        preferred_time: "09:00",
       },
       {
-        id: '3',
-        name: 'Emma Davis',
-        email: 'emma@example.com',
-        joined_waitlist: '2024-01-15T12:00:00Z',
+        id: "3",
+        name: "Emma Davis",
+        email: "emma@example.com",
+        joined_waitlist: "2024-01-15T12:00:00Z",
         attendance_score: 92,
         loyalty_score: 9.1,
         is_vip: true,
-        preferred_time: '09:00'
+        preferred_time: "09:00",
       },
       {
-        id: '4',
-        name: 'Alex Rodriguez',
-        email: 'alex@example.com',
-        joined_waitlist: '2024-01-15T13:30:00Z',
+        id: "4",
+        name: "Alex Rodriguez",
+        email: "alex@example.com",
+        joined_waitlist: "2024-01-15T13:30:00Z",
         attendance_score: 78,
         loyalty_score: 6.8,
         is_vip: false,
-        preferred_time: '09:00'
+        preferred_time: "09:00",
       },
       {
-        id: '5',
-        name: 'Lisa Wang',
-        email: 'lisa@example.com',
-        joined_waitlist: '2024-01-15T14:45:00Z',
+        id: "5",
+        name: "Lisa Wang",
+        email: "lisa@example.com",
+        joined_waitlist: "2024-01-15T14:45:00Z",
         attendance_score: 89,
         loyalty_score: 8.9,
         is_vip: false,
-        preferred_time: '09:00'
-      }
+        preferred_time: "09:00",
+      },
     ];
     setWaitlistMembers(mockWaitlist);
   };
@@ -117,36 +124,46 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   // Auto-assign based on logic
   const autoAssign = () => {
     let sortedMembers = [...waitlistMembers];
-    
+
     switch (assignmentLogic) {
-      case 'first-come':
-        sortedMembers.sort((a, b) => 
-          new Date(a.joined_waitlist).getTime() - new Date(b.joined_waitlist).getTime()
+      case "first-come":
+        sortedMembers.sort(
+          (a, b) =>
+            new Date(a.joined_waitlist).getTime() -
+            new Date(b.joined_waitlist).getTime(),
         );
         break;
-      case 'engagement':
-        sortedMembers.sort((a, b) => 
-          (b.attendance_score + b.loyalty_score) - (a.attendance_score + a.loyalty_score)
+      case "engagement":
+        sortedMembers.sort(
+          (a, b) =>
+            b.attendance_score +
+            b.loyalty_score -
+            (a.attendance_score + a.loyalty_score),
         );
         break;
-      case 'vip':
+      case "vip":
         sortedMembers.sort((a, b) => {
           if (a.is_vip && !b.is_vip) return -1;
           if (!a.is_vip && b.is_vip) return 1;
-          return new Date(a.joined_waitlist).getTime() - new Date(b.joined_waitlist).getTime();
+          return (
+            new Date(a.joined_waitlist).getTime() -
+            new Date(b.joined_waitlist).getTime()
+          );
         });
         break;
     }
-    
-    const autoSelected = sortedMembers.slice(0, availableSpots).map(m => m.id);
+
+    const autoSelected = sortedMembers
+      .slice(0, availableSpots)
+      .map((m) => m.id);
     setSelectedMembers(autoSelected);
   };
 
   const handleMemberToggle = (memberId: string) => {
-    setSelectedMembers(prev => 
+    setSelectedMembers((prev) =>
       prev.includes(memberId)
-        ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId],
     );
   };
 
@@ -154,19 +171,20 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Waitlist processed successfully');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("Waitlist processed successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error processing waitlist:', error);
+      console.error("Error processing waitlist:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getMemberById = (id: string) => waitlistMembers.find(m => m.id === id);
+  const getMemberById = (id: string) =>
+    waitlistMembers.find((m) => m.id === id);
 
   if (!classData) {
     return (
@@ -210,7 +228,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               disabled={loading || selectedMembers.length === 0}
               className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Processing...' : `Enroll ${selectedMembers.length} Members`}
+              {loading
+                ? "Processing..."
+                : `Enroll ${selectedMembers.length} Members`}
             </button>
           </div>
         </div>
@@ -225,7 +245,8 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                 {classData.name}
               </h3>
               <p className="text-sm text-light-600 dark:text-dark-400">
-                {new Date(classData.date).toLocaleDateString()} • {classData.start_time} - {classData.end_time}
+                {new Date(classData.date).toLocaleDateString()} •{" "}
+                {classData.start_time} - {classData.end_time}
               </p>
             </div>
             <div className="text-right">
@@ -260,11 +281,11 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                 <option value="manual">Manual Selection</option>
               </select>
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={autoAssign}
-                disabled={assignmentLogic === 'manual'}
+                disabled={assignmentLogic === "manual"}
                 className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Auto-assign {availableSpots} Spots
@@ -281,8 +302,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
           <div className="space-y-3">
             {waitlistMembers.map((member, index) => {
               const isSelected = selectedMembers.includes(member.id);
-              const isOverLimit = selectedMembers.length >= availableSpots && !isSelected;
-              
+              const isOverLimit =
+                selectedMembers.length >= availableSpots && !isSelected;
+
               return (
                 <motion.div
                   key={member.id}
@@ -291,10 +313,10 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                   transition={{ delay: index * 0.1 }}
                   className={`p-4 border rounded-xl transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20'
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20"
                       : isOverLimit
-                      ? 'border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700 opacity-50'
-                      : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 hover:border-brand-300'
+                        ? "border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700 opacity-50"
+                        : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 hover:border-brand-300"
                   }`}
                   onClick={() => !isOverLimit && handleMemberToggle(member.id)}
                 >
@@ -303,7 +325,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => !isOverLimit && handleMemberToggle(member.id)}
+                        onChange={() =>
+                          !isOverLimit && handleMemberToggle(member.id)
+                        }
                         disabled={isOverLimit}
                         className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                       />
@@ -321,29 +345,37 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-xs">
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Joined</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Joined
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
-                          {new Date(member.joined_waitlist).toLocaleDateString()}
+                          {new Date(
+                            member.joined_waitlist,
+                          ).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Attendance</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Attendance
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {member.attendance_score}%
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Loyalty</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Loyalty
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {member.loyalty_score}/10
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   {isOverLimit && (
                     <div className="mt-2 text-xs text-red-600 dark:text-red-400">
                       No more spots available
@@ -362,12 +394,15 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               Selected Members ({selectedMembers.length}/{availableSpots})
             </h3>
             <div className="space-y-2">
-              {selectedMembers.map(memberId => {
+              {selectedMembers.map((memberId) => {
                 const member = getMemberById(memberId);
                 if (!member) return null;
-                
+
                 return (
-                  <div key={memberId} className="flex items-center justify-between text-sm">
+                  <div
+                    key={memberId}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span className="text-green-700 dark:text-green-300">
                       {member.name}
                     </span>
@@ -393,7 +428,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
             <div className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
               <p>• Consider prioritizing VIP members for better retention</p>
               <p>• Members with 90%+ attendance are more likely to show up</p>
-              <p>• Balance between loyalty and recency for optimal engagement</p>
+              <p>
+                • Balance between loyalty and recency for optimal engagement
+              </p>
             </div>
           </div>
         )}
@@ -402,4 +439,4 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   );
 };
 
-export default ProcessWaitlistModal; 
+export default ProcessWaitlistModal;

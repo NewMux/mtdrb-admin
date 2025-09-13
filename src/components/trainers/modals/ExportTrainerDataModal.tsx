@@ -1,9 +1,16 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiDownload, FiFileText, FiCalendar, FiUsers, FiX, FiCheck } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiDownload,
+  FiFileText,
+  FiCalendar,
+  FiUsers,
+  FiX,
+  FiCheck,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
 
 interface ExportTrainerDataModalProps {
   isOpen: boolean;
@@ -17,55 +24,62 @@ interface ExportOption {
   name: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  format: 'csv' | 'xlsx' | 'pdf';
+  format: "csv" | "xlsx" | "pdf";
 }
 
 const exportOptions: ExportOption[] = [
   {
-    id: 'all-trainers',
-    name: 'All Trainers',
-    description: 'Complete list of all trainers with basic information',
+    id: "all-trainers",
+    name: "All Trainers",
+    description: "Complete list of all trainers with basic information",
     icon: FiUsers,
-    format: 'csv'
+    format: "csv",
   },
   {
-    id: 'trainer-performance',
-    name: 'Performance Report',
-    description: 'Detailed performance metrics and ratings for all trainers',
+    id: "trainer-performance",
+    name: "Performance Report",
+    description: "Detailed performance metrics and ratings for all trainers",
     icon: FiFileText,
-    format: 'xlsx'
+    format: "xlsx",
   },
   {
-    id: 'trainer-schedule',
-    name: 'Schedule Report',
-    description: 'Current class assignments and availability for all trainers',
+    id: "trainer-schedule",
+    name: "Schedule Report",
+    description: "Current class assignments and availability for all trainers",
     icon: FiCalendar,
-    format: 'csv'
+    format: "csv",
   },
   {
-    id: 'trainer-analytics',
-    name: 'Analytics Report',
-    description: 'Comprehensive analytics and insights (Pro feature)',
+    id: "trainer-analytics",
+    name: "Analytics Report",
+    description: "Comprehensive analytics and insights (Pro feature)",
     icon: FiFileText,
-    format: 'pdf'
-  }
+    format: "pdf",
+  },
 ];
 
-export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isPro = false }: ExportTrainerDataModalProps) {
-  const [selectedOptions, setSelectedOptions] = React.useState<string[]>(['all-trainers']);
-  const [dateRange, setDateRange] = React.useState('last-30-days');
+export default function ExportTrainerDataModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  isPro = false,
+}: ExportTrainerDataModalProps) {
+  const [selectedOptions, setSelectedOptions] = React.useState<string[]>([
+    "all-trainers",
+  ]);
+  const [dateRange, setDateRange] = React.useState("last-30-days");
   const [loading, setLoading] = React.useState(false);
 
   const handleToggleOption = (optionId: string) => {
-    setSelectedOptions(prev => 
-      prev.includes(optionId) 
-        ? prev.filter(id => id !== optionId)
-        : [...prev, optionId]
+    setSelectedOptions((prev) =>
+      prev.includes(optionId)
+        ? prev.filter((id) => id !== optionId)
+        : [...prev, optionId],
     );
   };
 
   const handleSelectAll = () => {
-    setSelectedOptions(exportOptions.map(opt => opt.id));
+    setSelectedOptions(exportOptions.map((opt) => opt.id));
   };
 
   const handleDeselectAll = () => {
@@ -74,16 +88,18 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
 
   const handleExport = async () => {
     if (selectedOptions.length === 0) {
-      toast.error('Please select at least one export option');
+      toast.error("Please select at least one export option");
       return;
     }
 
     setLoading(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast.success(`Export completed! ${selectedOptions.length} file(s) downloaded.`);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    toast.success(
+      `Export completed! ${selectedOptions.length} file(s) downloaded.`,
+    );
     setLoading(false);
     onSuccess?.();
     onClose();
@@ -104,7 +120,9 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
       <div className="space-y-6">
         {/* Date Range Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Date Range</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Date Range
+          </h3>
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
@@ -121,7 +139,9 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
         {/* Export Options */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Export Options</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Export Options
+            </h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSelectAll}
@@ -138,15 +158,15 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
               </button>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             {exportOptions.map((option) => (
               <div
                 key={option.id}
                 className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   selectedOptions.includes(option.id)
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
                 onClick={() => handleToggleOption(option.id)}
               >
@@ -160,14 +180,16 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
                   <option.icon className="text-gray-400 w-5 h-5" />
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{option.name}</h4>
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                    <p className="text-sm text-gray-600">
+                      {option.description}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {option.format.toUpperCase()}
                   </span>
-                  {option.id === 'trainer-analytics' && !isPro && (
+                  {option.id === "trainer-analytics" && !isPro && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                       PRO
                     </span>
@@ -185,12 +207,16 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-green-700">Selected Reports:</span>
-                <span className="font-medium text-green-900 ml-2">{selectedOptions.length}</span>
+                <span className="font-medium text-green-900 ml-2">
+                  {selectedOptions.length}
+                </span>
               </div>
               <div>
                 <span className="text-green-700">Date Range:</span>
                 <span className="font-medium text-green-900 ml-2">
-                  {dateRange.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {dateRange
+                    .replace("-", " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
                 </span>
               </div>
             </div>
@@ -209,7 +235,7 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
           <FiX className="h-4 w-4 mr-2" />
           Cancel
         </SmartButton>
-        
+
         <SmartButton
           variant="primary"
           size="sm"
@@ -217,9 +243,9 @@ export default function ExportTrainerDataModal({ isOpen, onClose, onSuccess, isP
           loading={loading}
         >
           <FiDownload className="h-4 w-4 mr-2" />
-          {loading ? 'Exporting...' : 'Export Data'}
+          {loading ? "Exporting..." : "Export Data"}
         </SmartButton>
       </div>
     </ColorfulModalUI>
   );
-} 
+}

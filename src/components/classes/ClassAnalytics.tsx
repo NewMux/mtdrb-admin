@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -12,7 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
+} from "recharts";
 
 interface Class {
   id: string;
@@ -54,19 +54,24 @@ interface Props {
   trainers: Trainer[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-export default function ClassAnalytics({ classes, bookings, analytics, trainers }: Props) {
+export default function ClassAnalytics({
+  classes,
+  bookings,
+  analytics,
+  trainers,
+}: Props) {
   const attendanceData = React.useMemo(() => {
-    return classes.map(c => ({
+    return classes.map((c) => ({
       name: c.name,
-      attendance: (c.bookings?.length || 0) / (c.capacity || 1) * 100,
+      attendance: ((c.bookings?.length || 0) / (c.capacity || 1)) * 100,
       revenue: (c.bookings?.length || 0) * (c.price || 0),
     }));
   }, [classes]);
 
   const instructorData = React.useMemo(() => {
-    return trainers.map(t => ({
+    return trainers.map((t) => ({
       name: t.name,
       rating: t.performance?.averageRating || 0,
       classes: t.performance?.totalClasses || 0,
@@ -92,20 +97,36 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Average Attendance Rate</h3>
-          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">{analytics.attendanceRate}%</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Average Attendance Rate
+          </h3>
+          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {analytics.attendanceRate}%
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Revenue</h3>
-          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">${analytics.revenue}</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Total Revenue
+          </h3>
+          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
+            ${analytics.revenue}
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Classes</h3>
-          <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">{classes.length}</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Total Classes
+          </h3>
+          <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
+            {classes.length}
+          </p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Total Bookings</h3>
-          <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">{bookings.length}</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Total Bookings
+          </h3>
+          <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">
+            {bookings.length}
+          </p>
         </div>
       </div>
 
@@ -113,7 +134,9 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Class Attendance Chart */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Class Attendance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Class Attendance
+          </h3>
           <BarChart width={500} height={300} data={attendanceData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -126,7 +149,9 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
 
         {/* Revenue by Time Slot */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Bookings by Time Slot</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Bookings by Time Slot
+          </h3>
           <LineChart width={500} height={300} data={timeSlotData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="time" />
@@ -139,7 +164,9 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
 
         {/* Instructor Performance */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Instructor Performance</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Instructor Performance
+          </h3>
           <BarChart width={500} height={300} data={instructorData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -153,7 +180,9 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
 
         {/* Revenue Distribution */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Revenue Distribution</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Revenue Distribution
+          </h3>
           <PieChart width={500} height={300}>
             <Pie
               data={instructorData}
@@ -165,7 +194,10 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
               fill="#8884d8"
             >
               {instructorData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
               ))}
             </Pie>
             <Tooltip />
@@ -176,25 +208,48 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
 
       {/* Detailed Stats Table */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Detailed Statistics</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Detailed Statistics
+        </h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Class</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Instructor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Attendance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Revenue</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Class
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Instructor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Attendance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Revenue
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Rating
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {classes.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{c.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{c.trainer?.name}</td>
+                <tr
+                  key={c.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {c.name}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {((c.bookings?.length || 0) / (c.capacity || 1) * 100).toFixed(1)}%
+                    {c.trainer?.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {(
+                      ((c.bookings?.length || 0) / (c.capacity || 1)) *
+                      100
+                    ).toFixed(1)}
+                    %
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     ${((c.bookings?.length || 0) * (c.price || 0)).toFixed(2)}
@@ -210,4 +265,4 @@ export default function ClassAnalytics({ classes, bookings, analytics, trainers 
       </div>
     </div>
   );
-} 
+}

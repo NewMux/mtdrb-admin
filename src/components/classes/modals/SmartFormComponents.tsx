@@ -1,13 +1,22 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FiAlertCircle, FiCheck, FiClock, FiUsers, FiMapPin, FiUser, FiCalendar, FiZap } from 'react-icons/fi';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  FiAlertCircle,
+  FiCheck,
+  FiClock,
+  FiUsers,
+  FiMapPin,
+  FiUser,
+  FiCalendar,
+  FiZap,
+} from "react-icons/fi";
 
 interface FormFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: 'text' | 'email' | 'number' | 'textarea';
+  type?: "text" | "email" | "number" | "textarea";
   error?: string;
   required?: boolean;
   disabled?: boolean;
@@ -19,11 +28,11 @@ export const FormField: React.FC<FormFieldProps> = ({
   value,
   onChange,
   placeholder,
-  type = 'text',
+  type = "text",
   error,
   required = false,
   disabled = false,
-  icon
+  icon,
 }) => {
   return (
     <div className="space-y-2">
@@ -37,20 +46,20 @@ export const FormField: React.FC<FormFieldProps> = ({
             {icon}
           </div>
         )}
-        {type === 'textarea' ? (
+        {type === "textarea" ? (
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
-              icon ? 'pl-10' : ''
+              icon ? "pl-10" : ""
             } ${
               error
-                ? 'border-red-300 bg-red-50 dark:bg-red-900/10'
-                : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700'
+                ? "border-red-300 bg-red-50 dark:bg-red-900/10"
+                : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
             } ${
-              disabled ? 'opacity-50 cursor-not-allowed' : ''
+              disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-dark-900 dark:text-white`}
             rows={4}
           />
@@ -62,13 +71,13 @@ export const FormField: React.FC<FormFieldProps> = ({
             placeholder={placeholder}
             disabled={disabled}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
-              icon ? 'pl-10' : ''
+              icon ? "pl-10" : ""
             } ${
               error
-                ? 'border-red-300 bg-red-50 dark:bg-red-900/10'
-                : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700'
+                ? "border-red-300 bg-red-50 dark:bg-red-900/10"
+                : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
             } ${
-              disabled ? 'opacity-50 cursor-not-allowed' : ''
+              disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-dark-900 dark:text-white`}
           />
         )}
@@ -106,7 +115,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   placeholder,
   error,
   required = false,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -120,10 +129,10 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         disabled={disabled}
         className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
           error
-            ? 'border-red-300 bg-red-50 dark:bg-red-900/10'
-            : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700'
+            ? "border-red-300 bg-red-50 dark:bg-red-900/10"
+            : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
         } ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
+          disabled ? "opacity-50 cursor-not-allowed" : ""
         } text-dark-900 dark:text-white`}
       >
         {placeholder && (
@@ -166,7 +175,7 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   onChange,
   error,
   required = false,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -183,10 +192,10 @@ export const TimeField: React.FC<TimeFieldProps> = ({
           disabled={disabled}
           className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
             error
-              ? 'border-red-300 bg-red-50 dark:bg-red-900/10'
-              : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700'
+              ? "border-red-300 bg-red-50 dark:bg-red-900/10"
+              : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
           } ${
-            disabled ? 'opacity-50 cursor-not-allowed' : ''
+            disabled ? "opacity-50 cursor-not-allowed" : ""
           } text-dark-900 dark:text-white`}
         />
         {error && (
@@ -221,7 +230,7 @@ export const DateField: React.FC<DateFieldProps> = ({
   error,
   required = false,
   disabled = false,
-  min
+  min,
 }) => {
   return (
     <div className="space-y-2">
@@ -239,10 +248,10 @@ export const DateField: React.FC<DateFieldProps> = ({
           disabled={disabled}
           className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
             error
-              ? 'border-red-300 bg-red-50 dark:bg-red-900/10'
-              : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700'
+              ? "border-red-300 bg-red-50 dark:bg-red-900/10"
+              : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
           } ${
-            disabled ? 'opacity-50 cursor-not-allowed' : ''
+            disabled ? "opacity-50 cursor-not-allowed" : ""
           } text-dark-900 dark:text-white`}
         />
         {error && (
@@ -275,7 +284,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   children,
   icon,
   collapsible = false,
-  defaultOpen = true
+  defaultOpen = true,
 }) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
@@ -287,11 +296,17 @@ export const FormSection: React.FC<FormSectionProps> = ({
           className="w-full px-6 py-4 bg-light-50 dark:bg-dark-700 hover:bg-light-100 dark:hover:bg-dark-600 transition-colors duration-200 flex items-center justify-between"
         >
           <div className="flex items-center space-x-3">
-            {icon && <div className="text-light-600 dark:text-dark-400">{icon}</div>}
+            {icon && (
+              <div className="text-light-600 dark:text-dark-400">{icon}</div>
+            )}
             <div className="text-left">
-              <h3 className="text-sm font-semibold text-dark-900 dark:text-white">{title}</h3>
+              <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+                {title}
+              </h3>
               {subtitle && (
-                <p className="text-xs text-light-600 dark:text-dark-400">{subtitle}</p>
+                <p className="text-xs text-light-600 dark:text-dark-400">
+                  {subtitle}
+                </p>
               )}
             </div>
           </div>
@@ -307,7 +322,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           {isOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
@@ -323,11 +338,17 @@ export const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-3">
-        {icon && <div className="text-light-600 dark:text-dark-400">{icon}</div>}
+        {icon && (
+          <div className="text-light-600 dark:text-dark-400">{icon}</div>
+        )}
         <div>
-          <h3 className="text-sm font-semibold text-dark-900 dark:text-white">{title}</h3>
+          <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+            {title}
+          </h3>
           {subtitle && (
-            <p className="text-xs text-light-600 dark:text-dark-400">{subtitle}</p>
+            <p className="text-xs text-light-600 dark:text-dark-400">
+              {subtitle}
+            </p>
           )}
         </div>
       </div>
@@ -344,25 +365,25 @@ interface AIRecommendationCardProps {
     description: string;
     confidence: number;
     action: string;
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
   };
   onApply?: () => void;
 }
 
 export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
   recommendation,
-  onApply
+  onApply,
 }) => {
   const priorityColors = {
-    high: 'border-red-200 bg-red-50 dark:bg-red-900/10',
-    medium: 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10',
-    low: 'border-blue-200 bg-blue-50 dark:bg-blue-900/10'
+    high: "border-red-200 bg-red-50 dark:bg-red-900/10",
+    medium: "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10",
+    low: "border-blue-200 bg-blue-50 dark:bg-blue-900/10",
   };
 
   const priorityIcons = {
-    high: '🔴',
-    medium: '🟡',
-    low: '🔵'
+    high: "🔴",
+    medium: "🟡",
+    low: "🔵",
   };
 
   return (
@@ -373,7 +394,9 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-2">
-          <span className="text-lg">{priorityIcons[recommendation.priority]}</span>
+          <span className="text-lg">
+            {priorityIcons[recommendation.priority]}
+          </span>
           <div>
             <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
               {recommendation.title}
@@ -421,11 +444,15 @@ export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
             Scheduling Conflict Detected
           </h4>
           <p className="text-sm text-red-700 dark:text-red-200 mt-1">
-            The selected trainer has {conflicts.length} conflicting class(es) at this time.
+            The selected trainer has {conflicts.length} conflicting class(es) at
+            this time.
           </p>
           <div className="mt-2 space-y-1">
             {conflicts.slice(0, 3).map((conflict, index) => (
-              <div key={index} className="text-xs text-red-600 dark:text-red-300">
+              <div
+                key={index}
+                className="text-xs text-red-600 dark:text-red-300"
+              >
                 • {conflict.name} ({conflict.start_time} - {conflict.end_time})
               </div>
             ))}
@@ -439,4 +466,4 @@ export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
       </div>
     </motion.div>
   );
-}; 
+};

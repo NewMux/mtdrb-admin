@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FiSend, FiUsers, FiMessageSquare, FiTarget, 
-  FiCalendar, FiDollarSign, FiCheckCircle 
-} from 'react-icons/fi';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiSend,
+  FiUsers,
+  FiMessageSquare,
+  FiTarget,
+  FiCalendar,
+  FiDollarSign,
+  FiCheckCircle,
+} from "react-icons/fi";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
+import { toast } from "react-hot-toast";
 
 interface SendClassPromotionModalProps {
   isOpen: boolean;
@@ -19,7 +24,11 @@ interface SendClassPromotionModalProps {
 interface PromotionFormData {
   title: string;
   message: string;
-  targetAudience: 'waitlist' | 'previous_attendees' | 'all_members' | 'inactive_members';
+  targetAudience:
+    | "waitlist"
+    | "previous_attendees"
+    | "all_members"
+    | "inactive_members";
   discountPercentage: number;
   validUntil: string;
   channels: string[];
@@ -38,15 +47,15 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   onClose,
   onSuccess,
   classId,
-  isPro = false
+  isPro = false,
 }) => {
   const [formData, setFormData] = useState<PromotionFormData>({
-    title: '',
-    message: '',
-    targetAudience: 'waitlist',
+    title: "",
+    message: "",
+    targetAudience: "waitlist",
     discountPercentage: 15,
-    validUntil: '',
-    channels: ['email', 'sms']
+    validUntil: "",
+    channels: ["email", "sms"],
   });
 
   const [loading, setLoading] = useState(false);
@@ -56,58 +65,92 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
   // Mock members data
   const mockMembers: Member[] = [
-    { id: '1', name: 'Sarah Johnson', email: 'sarah@example.com', status: 'active', lastClass: '2024-01-15' },
-    { id: '2', name: 'Mike Chen', email: 'mike@example.com', status: 'active', lastClass: '2024-01-10' },
-    { id: '3', name: 'Emma Davis', email: 'emma@example.com', status: 'inactive', lastClass: '2023-12-20' },
-    { id: '4', name: 'James Wilson', email: 'james@example.com', status: 'active', lastClass: '2024-01-12' },
-    { id: '5', name: 'Lisa Brown', email: 'lisa@example.com', status: 'waitlist', lastClass: '2024-01-08' },
+    {
+      id: "1",
+      name: "Sarah Johnson",
+      email: "sarah@example.com",
+      status: "active",
+      lastClass: "2024-01-15",
+    },
+    {
+      id: "2",
+      name: "Mike Chen",
+      email: "mike@example.com",
+      status: "active",
+      lastClass: "2024-01-10",
+    },
+    {
+      id: "3",
+      name: "Emma Davis",
+      email: "emma@example.com",
+      status: "inactive",
+      lastClass: "2023-12-20",
+    },
+    {
+      id: "4",
+      name: "James Wilson",
+      email: "james@example.com",
+      status: "active",
+      lastClass: "2024-01-12",
+    },
+    {
+      id: "5",
+      name: "Lisa Brown",
+      email: "lisa@example.com",
+      status: "waitlist",
+      lastClass: "2024-01-08",
+    },
   ];
 
   useEffect(() => {
     if (isOpen) {
       setMembers(mockMembers);
       // Set default title and message based on class
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        title: `Special Offer: ${classId ? 'Class Promotion' : 'New Classes Available'}`,
-        message: `Don't miss out on our amazing classes! We have special offers just for you.`,
-        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        title: `Special Offer: ${classId ? "Class Promotion" : "New Classes Available"}`,
+        message: `Don&apos;t miss out on our amazing classes! We have special offers just for you.`,
+        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
       }));
     }
   }, [isOpen, classId]);
 
   const handleInputChange = (field: keyof PromotionFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleMemberToggle = (memberId: string) => {
-    setSelectedMembers(prev => 
-      prev.includes(memberId) 
-        ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
+    setSelectedMembers((prev) =>
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId],
     );
   };
 
   const handleChannelToggle = (channel: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       channels: prev.channels.includes(channel)
-        ? prev.channels.filter(c => c !== channel)
-        : [...prev.channels, channel]
+        ? prev.channels.filter((c) => c !== channel)
+        : [...prev.channels, channel],
     }));
   };
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
-    
-    if (!formData.title.trim()) newErrors.push('Title is required');
-    if (!formData.message.trim()) newErrors.push('Message is required');
+
+    if (!formData.title.trim()) newErrors.push("Title is required");
+    if (!formData.message.trim()) newErrors.push("Message is required");
     if (formData.discountPercentage < 0 || formData.discountPercentage > 100) {
-      newErrors.push('Discount must be between 0-100%');
+      newErrors.push("Discount must be between 0-100%");
     }
-    if (!formData.validUntil) newErrors.push('Valid until date is required');
-    if (formData.channels.length === 0) newErrors.push('Select at least one channel');
-    if (selectedMembers.length === 0) newErrors.push('Select at least one member');
+    if (!formData.validUntil) newErrors.push("Valid until date is required");
+    if (formData.channels.length === 0)
+      newErrors.push("Select at least one channel");
+    if (selectedMembers.length === 0)
+      newErrors.push("Select at least one member");
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -119,14 +162,16 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`Promotion sent to ${selectedMembers.length} members successfully!`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      toast.success(
+        `Promotion sent to ${selectedMembers.length} members successfully!`,
+      );
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error sending promotion:', error);
-      toast.error('Failed to send promotion');
+      console.error("Error sending promotion:", error);
+      toast.error("Failed to send promotion");
     } finally {
       setLoading(false);
     }
@@ -134,13 +179,13 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
   const getFilteredMembers = () => {
     switch (formData.targetAudience) {
-      case 'waitlist':
-        return members.filter(m => m.status === 'waitlist');
-      case 'previous_attendees':
-        return members.filter(m => m.status === 'active' && m.lastClass);
-      case 'inactive_members':
-        return members.filter(m => m.status === 'inactive');
-      case 'all_members':
+      case "waitlist":
+        return members.filter((m) => m.status === "waitlist");
+      case "previous_attendees":
+        return members.filter((m) => m.status === "active" && m.lastClass);
+      case "inactive_members":
+        return members.filter((m) => m.status === "inactive");
+      case "all_members":
         return members;
       default:
         return members;
@@ -166,7 +211,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              onChange={(e) => handleInputChange("title", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter promotion title"
             />
@@ -178,7 +223,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
             </label>
             <textarea
               value={formData.message}
-              onChange={(e) => handleInputChange('message', e.target.value)}
+              onChange={(e) => handleInputChange("message", e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your promotion message..."
@@ -193,7 +238,12 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
               <input
                 type="number"
                 value={formData.discountPercentage}
-                onChange={(e) => handleInputChange('discountPercentage', parseInt(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange(
+                    "discountPercentage",
+                    parseInt(e.target.value),
+                  )
+                }
                 min="0"
                 max="100"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -207,7 +257,9 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
               <input
                 type="date"
                 value={formData.validUntil}
-                onChange={(e) => handleInputChange('validUntil', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("validUntil", e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -221,7 +273,9 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
           </label>
           <select
             value={formData.targetAudience}
-            onChange={(e) => handleInputChange('targetAudience', e.target.value)}
+            onChange={(e) =>
+              handleInputChange("targetAudience", e.target.value)
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="waitlist">Waitlist Members</option>
@@ -237,7 +291,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
             Communication Channels
           </label>
           <div className="space-y-2">
-            {['email', 'sms', 'push'].map((channel) => (
+            {["email", "sms", "push"].map((channel) => (
               <label key={channel} className="flex items-center">
                 <input
                   type="checkbox"
@@ -258,7 +312,10 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
           </label>
           <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
             {filteredMembers.map((member) => (
-              <label key={member.id} className="flex items-center p-2 hover:bg-gray-50 rounded">
+              <label
+                key={member.id}
+                className="flex items-center p-2 hover:bg-gray-50 rounded"
+              >
                 <input
                   type="checkbox"
                   checked={selectedMembers.includes(member.id)}
@@ -269,11 +326,15 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
                   <div className="font-medium">{member.name}</div>
                   <div className="text-sm text-gray-500">{member.email}</div>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  member.status === 'active' ? 'bg-green-100 text-green-800' :
-                  member.status === 'waitlist' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    member.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : member.status === "waitlist"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {member.status}
                 </span>
               </label>
@@ -285,7 +346,9 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
         {errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             {errors.map((error, index) => (
-              <div key={index} className="text-red-700 text-sm">{error}</div>
+              <div key={index} className="text-red-700 text-sm">
+                {error}
+              </div>
             ))}
           </div>
         )}
@@ -294,22 +357,28 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="font-medium text-blue-900 mb-2">Preview</h4>
           <div className="text-sm text-blue-800">
-            <div><strong>Title:</strong> {formData.title}</div>
-            <div><strong>Discount:</strong> {formData.discountPercentage}%</div>
-            <div><strong>Valid Until:</strong> {formData.validUntil}</div>
-            <div><strong>Channels:</strong> {formData.channels.join(', ')}</div>
-            <div><strong>Recipients:</strong> {selectedMembers.length} members</div>
+            <div>
+              <strong>Title:</strong> {formData.title}
+            </div>
+            <div>
+              <strong>Discount:</strong> {formData.discountPercentage}%
+            </div>
+            <div>
+              <strong>Valid Until:</strong> {formData.validUntil}
+            </div>
+            <div>
+              <strong>Channels:</strong> {formData.channels.join(", ")}
+            </div>
+            <div>
+              <strong>Recipients:</strong> {selectedMembers.length} members
+            </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
       <div className="flex justify-end space-x-3 mt-6">
-        <SmartButton
-          variant="secondary"
-          onClick={onClose}
-          disabled={loading}
-        >
+        <SmartButton variant="secondary" onClick={onClose} disabled={loading}>
           Cancel
         </SmartButton>
         <SmartButton
@@ -326,4 +395,4 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   );
 };
 
-export default SendClassPromotionModal; 
+export default SendClassPromotionModal;

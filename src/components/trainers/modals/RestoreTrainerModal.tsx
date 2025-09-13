@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiUserPlus, FiShield, FiCheckCircle, FiClock } from "react-icons/fi";
+import {
+  FiX,
+  FiUserPlus,
+  FiShield,
+  FiCheckCircle,
+  FiClock,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface RestoreTrainerModalProps {
@@ -12,7 +18,7 @@ interface RestoreTrainerModalProps {
 const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [restoreType, setRestoreType] = useState("");
   const [scheduleRestore, setScheduleRestore] = useState(false);
@@ -23,7 +29,7 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
   const handleRestore = async () => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
     onClose();
   };
@@ -67,7 +73,8 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                   Trainer can be restored
                 </h3>
                 <p className="text-sm text-green-600 dark:text-green-300 mt-1">
-                  All trainer data is preserved and can be fully restored to the system.
+                  All trainer data is preserved and can be fully restored to the
+                  system.
                 </p>
               </div>
             </div>
@@ -81,15 +88,23 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Removed Date:</span>
-                <span className="font-medium text-red-600 dark:text-red-400">2024-01-15</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Removed Date:
+                </span>
+                <span className="font-medium text-red-600 dark:text-red-400">
+                  2024-01-15
+                </span>
               </div>
             </div>
           </div>
@@ -122,7 +137,10 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                   onChange={(e) => setScheduleRestore(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="scheduleRestore" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="scheduleRestore"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Schedule for later restoration
                 </label>
               </div>
@@ -152,7 +170,9 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                     AI Recommendation
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    This trainer had excellent performance metrics before removal. Consider immediate restoration to maintain member relationships.
+                    This trainer had excellent performance metrics before
+                    removal. Consider immediate restoration to maintain member
+                    relationships.
                   </p>
                 </div>
               </div>
@@ -168,7 +188,8 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                   Data Recovery
                 </h3>
                 <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                  The following data will be restored: Profile, Schedule, Member Assignments, Performance History, and Payment Records.
+                  The following data will be restored: Profile, Schedule, Member
+                  Assignments, Performance History, and Payment Records.
                 </p>
               </div>
             </div>
@@ -201,4 +222,4 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
   );
 };
 
-export default RestoreTrainerModal; 
+export default RestoreTrainerModal;

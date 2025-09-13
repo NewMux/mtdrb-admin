@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { MockMember } from './useMockMembers';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { MockMember } from "./useMockMembers";
 
-export type ModalType = 
-  | 'addMember'
-  | 'editMember' 
-  | 'deleteMember'
-  | 'viewProfile'
-  | 'importMembers'
-  | 'assignTrainer';
+export type ModalType =
+  | "addMember"
+  | "editMember"
+  | "deleteMember"
+  | "viewProfile"
+  | "importMembers"
+  | "assignTrainer";
 
 interface ModalState {
   addMember: boolean;
@@ -53,17 +53,19 @@ export const useSmartMemberModal = () => {
   // Generic modal open/close functions with accessibility
   const openModal = useCallback((config: ModalConfig) => {
     const { type, data = {} } = config;
-    
-    setModalState(prev => ({ ...prev, [type]: true }));
+
+    setModalState((prev) => ({ ...prev, [type]: true }));
     setModalData({
       selectedMember: data.selectedMember || null,
       memberId: data.memberId || null,
       additionalData: data.additionalData || null,
     });
-    
+
     // Focus management for accessibility
     setTimeout(() => {
-      const firstInput = modalRef.current?.querySelector('input, select, textarea');
+      const firstInput = modalRef.current?.querySelector(
+        "input, select, textarea",
+      );
       if (firstInput instanceof HTMLElement) {
         firstInput.focus();
       }
@@ -71,8 +73,12 @@ export const useSmartMemberModal = () => {
   }, []);
 
   const closeModal = useCallback((type: ModalType) => {
-    setModalState(prev => ({ ...prev, [type]: false }));
-    setModalData({ selectedMember: null, memberId: null, additionalData: null });
+    setModalState((prev) => ({ ...prev, [type]: false }));
+    setModalData({
+      selectedMember: null,
+      memberId: null,
+      additionalData: null,
+    });
     setIsLoading(false);
   }, []);
 
@@ -85,84 +91,102 @@ export const useSmartMemberModal = () => {
       importMembers: false,
       assignTrainer: false,
     });
-    setModalData({ selectedMember: null, memberId: null, additionalData: null });
+    setModalData({
+      selectedMember: null,
+      memberId: null,
+      additionalData: null,
+    });
     setIsLoading(false);
   }, []);
 
   // Specific modal actions with proper data handling
   const openAddMemberModal = useCallback(() => {
-    openModal({ type: 'addMember' });
+    openModal({ type: "addMember" });
   }, [openModal]);
 
-  const openEditMemberModal = useCallback((member: MockMember) => {
-    openModal({ 
-      type: 'editMember', 
-      data: { selectedMember: member, memberId: member.id } 
-    });
-  }, [openModal]);
+  const openEditMemberModal = useCallback(
+    (member: MockMember) => {
+      openModal({
+        type: "editMember",
+        data: { selectedMember: member, memberId: member.id },
+      });
+    },
+    [openModal],
+  );
 
-  const openDeleteMemberModal = useCallback((member: MockMember) => {
-    openModal({ 
-      type: 'deleteMember', 
-      data: { selectedMember: member, memberId: member.id } 
-    });
-  }, [openModal]);
+  const openDeleteMemberModal = useCallback(
+    (member: MockMember) => {
+      openModal({
+        type: "deleteMember",
+        data: { selectedMember: member, memberId: member.id },
+      });
+    },
+    [openModal],
+  );
 
-  const openViewProfileModal = useCallback((member: MockMember) => {
-    openModal({ 
-      type: 'viewProfile', 
-      data: { selectedMember: member, memberId: member.id } 
-    });
-  }, [openModal]);
+  const openViewProfileModal = useCallback(
+    (member: MockMember) => {
+      openModal({
+        type: "viewProfile",
+        data: { selectedMember: member, memberId: member.id },
+      });
+    },
+    [openModal],
+  );
 
   const openImportMembersModal = useCallback(() => {
-    openModal({ type: 'importMembers' });
+    openModal({ type: "importMembers" });
   }, [openModal]);
 
-  const openAssignTrainerModal = useCallback((member: MockMember) => {
-    openModal({ 
-      type: 'assignTrainer', 
-      data: { selectedMember: member, memberId: member.id } 
-    });
-  }, [openModal]);
+  const openAssignTrainerModal = useCallback(
+    (member: MockMember) => {
+      openModal({
+        type: "assignTrainer",
+        data: { selectedMember: member, memberId: member.id },
+      });
+    },
+    [openModal],
+  );
 
   // Success handlers with loading state management
   const handleAddMemberSuccess = useCallback(() => {
     setIsLoading(false);
-    closeModal('addMember');
+    closeModal("addMember");
   }, [closeModal]);
 
   const handleEditMemberSuccess = useCallback(() => {
     setIsLoading(false);
-    closeModal('editMember');
+    closeModal("editMember");
   }, [closeModal]);
 
   const handleDeleteMemberSuccess = useCallback(() => {
     setIsLoading(false);
-    closeModal('deleteMember');
+    closeModal("deleteMember");
   }, [closeModal]);
 
   const handleImportMembersSuccess = useCallback(() => {
     setIsLoading(false);
-    closeModal('importMembers');
+    closeModal("importMembers");
   }, [closeModal]);
 
   const handleAssignTrainerSuccess = useCallback(() => {
     setIsLoading(false);
-    closeModal('assignTrainer');
+    closeModal("assignTrainer");
   }, [closeModal]);
 
   // Error handlers
   const handleModalError = useCallback((error: Error) => {
     setIsLoading(false);
-    console.error('Modal operation failed:', error);
+    console.error("Modal operation failed:", error);
   }, []);
 
   // Keyboard navigation and accessibility
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        const openModalType = Object.entries(modalState).find(([_, isOpen]) => isOpen)?.[0] as ModalType;
+      if (event.key === "Escape") {
+        const openModalType = Object.entries(modalState).find(
+          ([_, isOpen]) => isOpen,
+        )?.[0] as ModalType;
         if (openModalType) {
           closeModal(openModalType);
         }
@@ -170,12 +194,14 @@ export const useSmartMemberModal = () => {
     };
 
     const handleTabKey = (event: KeyboardEvent) => {
-      if (event.key === 'Tab' && modalRef.current) {
+      if (event.key === "Tab" && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
         );
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
 
         if (event.shiftKey) {
           if (document.activeElement === firstElement) {
@@ -191,18 +217,18 @@ export const useSmartMemberModal = () => {
       }
     };
 
-    const hasOpenModal = Object.values(modalState).some(isOpen => isOpen);
-    
+    const hasOpenModal = Object.values(modalState).some((isOpen) => isOpen);
+
     if (hasOpenModal) {
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('keydown', handleTabKey);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", handleTabKey);
+      document.body.style.overflow = "hidden"; // Prevent background scrolling
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('keydown', handleTabKey);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleTabKey);
+      document.body.style.overflow = "unset";
     };
   }, [modalState, closeModal]);
 
@@ -217,13 +243,13 @@ export const useSmartMemberModal = () => {
     modalData,
     isLoading,
     modalRef,
-    
+
     // Generic actions
     openModal,
     closeModal,
     closeAllModals,
     setModalLoading,
-    
+
     // Specific modal actions
     openAddMemberModal,
     openEditMemberModal,
@@ -231,15 +257,15 @@ export const useSmartMemberModal = () => {
     openViewProfileModal,
     openImportMembersModal,
     openAssignTrainerModal,
-    
+
     // Success handlers
     handleAddMemberSuccess,
     handleEditMemberSuccess,
     handleDeleteMemberSuccess,
     handleImportMembersSuccess,
     handleAssignTrainerSuccess,
-    
+
     // Error handlers
     handleModalError,
   };
-}; 
+};

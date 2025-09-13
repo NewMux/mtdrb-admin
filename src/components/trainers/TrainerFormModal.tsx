@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiTarget, FiHeart, FiFileText } from 'react-icons/fi';
-import { SmartModal } from '../ui/SmartModal';
-import { SmartButton } from '../ui/DesignSystem';
-import { AppleInput, AppleSelect, AppleTextarea } from '../AppleStyleModal';
-import { supabase } from '../../supabaseClient';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiCalendar,
+  FiTarget,
+  FiHeart,
+  FiFileText,
+} from "react-icons/fi";
+import { SmartModal } from "../ui/SmartModal";
+import { SmartButton } from "../ui/DesignSystem";
+import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
+import { supabase } from "../../supabaseClient";
+import toast from "react-hot-toast";
 
 interface Props {
   isOpen: boolean;
@@ -15,49 +24,62 @@ interface Props {
   isEdit?: boolean;
 }
 
-export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialValues, isEdit }: Props) {
+export default function TrainerFormModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialValues,
+  isEdit,
+}: Props) {
   const [formData, setFormData] = useState({
-    name: initialValues?.name || '',
-    email: initialValues?.email || '',
-    phone: initialValues?.phone || '',
-    status: initialValues?.status || 'active',
+    name: initialValues?.name || "",
+    email: initialValues?.email || "",
+    phone: initialValues?.phone || "",
+    status: initialValues?.status || "active",
     specialties: initialValues?.specialties || [],
-    bio: initialValues?.bio || '',
-    profile_image_url: initialValues?.profile_image_url || '',
-    address: initialValues?.address || '',
-    specialization: initialValues?.specialization || '',
+    bio: initialValues?.bio || "",
+    profile_image_url: initialValues?.profile_image_url || "",
+    address: initialValues?.address || "",
+    specialization: initialValues?.specialization || "",
     experience: initialValues?.experience || 0,
-    certifications: initialValues?.certifications || '',
+    certifications: initialValues?.certifications || "",
     hourly_rate: initialValues?.hourly_rate || 0,
-    start_date: initialValues?.start_date || '',
-    notes: initialValues?.notes || ''
+    start_date: initialValues?.start_date || "",
+    notes: initialValues?.notes || "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [specialtyInput, setSpecialtyInput] = useState('');
+  const [specialtyInput, setSpecialtyInput] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleAddSpecialty = () => {
-    if (specialtyInput.trim() && !formData.specialties.includes(specialtyInput.trim())) {
+    if (
+      specialtyInput.trim() &&
+      !formData.specialties.includes(specialtyInput.trim())
+    ) {
       setFormData({
         ...formData,
-        specialties: [...formData.specialties, specialtyInput.trim()]
+        specialties: [...formData.specialties, specialtyInput.trim()],
       });
-      setSpecialtyInput('');
+      setSpecialtyInput("");
     }
   };
 
   const handleRemoveSpecialty = (specialty: string) => {
     setFormData({
       ...formData,
-      specialties: formData.specialties.filter((s: string) => s !== specialty)
+      specialties: formData.specialties.filter((s: string) => s !== specialty),
     });
   };
 
@@ -69,16 +91,14 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
     try {
       if (isEdit) {
         const { error } = await supabase
-          .from('trainers')
+          .from("trainers")
           .update(formData)
-          .eq('id', initialValues.id);
-        
+          .eq("id", initialValues.id);
+
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('trainers')
-          .insert([formData]);
-        
+        const { error } = await supabase.from("trainers").insert([formData]);
+
         if (error) throw error;
       }
 
@@ -95,19 +115,23 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? 'Edit Trainer' : 'Add New Trainer'}
+      title={isEdit ? "Edit Trainer" : "Add New Trainer"}
       maxWidth="3xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Personal Information
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
               label="Name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               error={error}
               required
               placeholder="Enter trainer name"
@@ -117,7 +141,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
               label="Email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               error={error}
               placeholder="Enter email address"
             />
@@ -127,7 +153,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
             <AppleInput
               label="Phone"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               error={error}
               placeholder="Enter phone number"
             />
@@ -135,7 +163,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
             <AppleInput
               label="Address"
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               error={error}
               placeholder="Enter address"
             />
@@ -144,13 +174,17 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
 
         {/* Professional Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Professional Information
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleSelect
               label="Specialization"
               value={formData.specialization}
-              onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, specialization: e.target.value })
+              }
               error={error}
             >
               <option value="">Select specialization</option>
@@ -168,7 +202,12 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
               label="Experience (years)"
               type="number"
               value={formData.experience}
-              onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  experience: parseInt(e.target.value),
+                })
+              }
               error={error}
               min={0}
               placeholder="0"
@@ -179,7 +218,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
             <AppleInput
               label="Certifications"
               value={formData.certifications}
-              onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, certifications: e.target.value })
+              }
               error={error}
               placeholder="e.g., NASM, ACE, ISSA"
             />
@@ -189,7 +230,12 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
               type="number"
               step="0.01"
               value={formData.hourly_rate}
-              onChange={(e) => setFormData({ ...formData, hourly_rate: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  hourly_rate: parseFloat(e.target.value),
+                })
+              }
               error={error}
               placeholder="0.00"
             />
@@ -207,13 +253,17 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
 
         {/* Status & Settings */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Status & Settings</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Status & Settings
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleSelect
               label="Status"
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
               error={error}
             >
               <option value="">Select status</option>
@@ -226,7 +276,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
               label="Start Date"
               type="date"
               value={formData.start_date}
-              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, start_date: e.target.value })
+              }
               error={error}
             />
           </div>
@@ -234,7 +286,9 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
           <AppleTextarea
             label="Notes"
             value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, notes: e.target.value })
+            }
             error={error}
             placeholder="Additional notes about the trainer..."
             rows={3}
@@ -253,8 +307,12 @@ export default function TrainerFormModal({ isOpen, onClose, onSuccess, initialVa
           <SmartButton variant="secondary" onClick={onClose}>
             Cancel
           </SmartButton>
-          <SmartButton variant="primary" onClick={handleSubmit} loading={loading}>
-            {loading ? 'Saving...' : (isEdit ? 'Update Trainer' : 'Add Trainer')}
+          <SmartButton
+            variant="primary"
+            onClick={handleSubmit}
+            loading={loading}
+          >
+            {loading ? "Saving..." : isEdit ? "Update Trainer" : "Add Trainer"}
           </SmartButton>
         </div>
       </form>

@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiTarget, FiHeart, FiFileText, FiBell, FiX } from 'react-icons/fi';
-import { SmartModal } from '../ui/SmartModal';
-import { SmartButton } from '../ui/DesignSystem';
-import { AppleInput } from '../AppleStyleModal';
-import { Member } from '../../types/member';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiCalendar,
+  FiTarget,
+  FiHeart,
+  FiFileText,
+  FiBell,
+  FiX,
+} from "react-icons/fi";
+import { SmartClassModal } from "./modals/SmartClassModal";
+import { SmartButton } from "../ui/DesignSystem";
+import { AppleInput } from "../AppleStyleModal";
+import { Member } from "../../types/member";
+import { toast } from "react-hot-toast";
 
 /**
  * Props for WaitlistModal
@@ -28,7 +39,11 @@ interface WaitlistModalProps {
 }
 
 /** AppleAvatar utility for member avatars/initials */
-const AppleAvatar: React.FC<{ name: string; avatarUrl?: string; size?: number }> = ({ name, avatarUrl, size = 36 }) => (
+const AppleAvatar: React.FC<{
+  name: string;
+  avatarUrl?: string;
+  size?: number;
+}> = ({ name, avatarUrl, size = 36 }) =>
   avatarUrl ? (
     <img
       src={avatarUrl}
@@ -42,10 +57,9 @@ const AppleAvatar: React.FC<{ name: string; avatarUrl?: string; size?: number }>
       style={{ width: size, height: size }}
       aria-label={name}
     >
-      {name?.[0]?.toUpperCase() || '?'}
+      {name?.[0]?.toUpperCase() || "?"}
     </div>
-  )
-);
+  );
 
 /**
  * Staff-only Waitlist Modal for class management
@@ -59,31 +73,34 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
   onRemove,
   onAdd,
   onNotifyAll,
-  members
+  members,
 }) => {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [showConfirm, setShowConfirm] = useState<{ type: 'remove' | 'promote'; memberId: string } | null>(null);
+  const [showConfirm, setShowConfirm] = useState<{
+    type: "remove" | "promote";
+    memberId: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Filtered member suggestions
   const filteredMembers = members.filter(
-    m =>
+    (m) =>
       m.name.toLowerCase().includes(search.toLowerCase()) &&
-      !waitlist.some(w => w.id === m.id)
+      !waitlist.some((w) => w.id === m.id),
   );
 
   // Keyboard navigation for dropdown
   const [highlighted, setHighlighted] = useState<number>(-1);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!dropdownOpen) return;
-    if (e.key === 'ArrowDown') {
-      setHighlighted(h => Math.min(h + 1, filteredMembers.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      setHighlighted(h => Math.max(h - 1, 0));
-    } else if (e.key === 'Enter' && highlighted >= 0) {
+    if (e.key === "ArrowDown") {
+      setHighlighted((h) => Math.min(h + 1, filteredMembers.length - 1));
+    } else if (e.key === "ArrowUp") {
+      setHighlighted((h) => Math.max(h - 1, 0));
+    } else if (e.key === "Enter" && highlighted >= 0) {
       setSelectedMember(filteredMembers[highlighted]);
       setDropdownOpen(false);
     }
@@ -95,11 +112,11 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
     setLoading(true);
     try {
       await onAdd(selectedMember);
-      toast.success('Member added to waitlist');
-      setSearch('');
+      toast.success("Member added to waitlist");
+      setSearch("");
       setSelectedMember(null);
     } catch (e) {
-      toast.error('Failed to add member');
+      toast.error("Failed to add member");
     } finally {
       setLoading(false);
     }
@@ -110,16 +127,16 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
     if (!showConfirm) return;
     setLoading(true);
     try {
-      if (showConfirm.type === 'remove') {
+      if (showConfirm.type === "remove") {
         await onRemove(showConfirm.memberId);
-        toast.success('Removed from waitlist');
+        toast.success("Removed from waitlist");
       } else {
         await onPromote(showConfirm.memberId);
-        toast.success('Promoted to booking');
+        toast.success("Promoted to booking");
       }
       setShowConfirm(null);
     } catch (e) {
-      toast.error('Action failed');
+      toast.error("Action failed");
     } finally {
       setLoading(false);
     }
@@ -130,16 +147,20 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
     setLoading(true);
     try {
       await onNotifyAll();
-      toast.success('All waitlisted members notified');
+      toast.success("All waitlisted members notified");
     } catch (e) {
-      toast.error('Failed to notify');
+      toast.error("Failed to notify");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SmartModal isOpen={isOpen} onClose={onClose} title={`Waitlist for ${classItem.name}`} maxWidth="md">
+    <SmartClassModal
+      open={isOpen}
+      onClose={onClose}
+      title={`Waitlist for ${classItem.name}`}
+    >
       <div className="space-y-8">
         {/* Add to Waitlist */}
         <div>
@@ -150,7 +171,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
             <AppleInput
               placeholder="Search member by name..."
               value={search}
-              onChange={e => {
+              onChange={(e) => {
                 setSearch(e.target.value);
                 setDropdownOpen(true);
                 setHighlighted(-1);
@@ -173,12 +194,14 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
           {dropdownOpen && search && (
             <div className="bg-white rounded-2xl border border-gray-100 max-h-48 overflow-y-auto shadow-lg mt-1 z-10">
               {filteredMembers.length === 0 ? (
-                <div className="p-3 text-gray-500 text-sm">No members found</div>
+                <div className="p-3 text-gray-500 text-sm">
+                  No members found
+                </div>
               ) : (
                 filteredMembers.map((m, i) => (
                   <button
                     key={m.id}
-                    className={`w-full flex items-center gap-3 px-4 py-2 hover:bg-blue-50 focus:bg-blue-100 transition text-left ${highlighted === i ? 'bg-blue-50' : ''}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2 hover:bg-blue-50 focus:bg-blue-100 transition text-left ${highlighted === i ? "bg-blue-50" : ""}`}
                     onClick={() => {
                       setSelectedMember(m);
                       setDropdownOpen(false);
@@ -187,7 +210,9 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
                   >
                     <AppleAvatar name={m.name} />
                     <span className="font-medium text-gray-900">{m.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">{m.email || m.phone}</span>
+                    <span className="text-xs text-gray-400 ml-2">
+                      {m.email || m.phone}
+                    </span>
                   </button>
                 ))
               )}
@@ -201,14 +226,21 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <FiUser className="text-green-500" /> Current Waitlist
             </h3>
-            <span className="text-xs text-gray-500">{waitlist.length} waiting</span>
+            <span className="text-xs text-gray-500">
+              {waitlist.length} waiting
+            </span>
           </div>
           {waitlist.length === 0 ? (
-            <div className="text-gray-500 text-sm">No members on the waitlist.</div>
+            <div className="text-gray-500 text-sm">
+              No members on the waitlist.
+            </div>
           ) : (
             <div className="divide-y divide-gray-100 rounded-2xl border border-gray-100 bg-gray-50">
-              {waitlist.map(w => (
-                <div key={w.id} className="flex items-center justify-between px-4 py-3 group">
+              {waitlist.map((w) => (
+                <div
+                  key={w.id}
+                  className="flex items-center justify-between px-4 py-3 group"
+                >
                   <div className="flex items-center gap-3">
                     <AppleAvatar name={w.name} />
                     <div>
@@ -220,7 +252,9 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
                   </div>
                   <div className="flex gap-2">
                     <SmartButton
-                      onClick={() => setShowConfirm({ type: 'promote', memberId: w.id })}
+                      onClick={() =>
+                        setShowConfirm({ type: "promote", memberId: w.id })
+                      }
                       variant="primary"
                       size="sm"
                       aria-label="Promote to booking"
@@ -229,7 +263,9 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
                       Promote
                     </SmartButton>
                     <SmartButton
-                      onClick={() => setShowConfirm({ type: 'remove', memberId: w.id })}
+                      onClick={() =>
+                        setShowConfirm({ type: "remove", memberId: w.id })
+                      }
                       variant="danger"
                       size="sm"
                       aria-label="Remove from waitlist"
@@ -261,24 +297,32 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
             <div className="bg-white rounded-2xl shadow-xl p-8 max-w-xs w-full flex flex-col items-center">
               <div className="mb-4">
-                {showConfirm.type === 'remove' ? (
+                {showConfirm.type === "remove" ? (
                   <FiX className="h-8 w-8 text-red-500" />
                 ) : (
                   <FiUser className="h-8 w-8 text-green-500" />
                 )}
               </div>
               <div className="text-lg font-semibold text-gray-900 mb-2">
-                {showConfirm.type === 'remove' ? 'Remove from waitlist?' : 'Promote to booking?'}
+                {showConfirm.type === "remove"
+                  ? "Remove from waitlist?"
+                  : "Promote to booking?"}
               </div>
               <div className="text-gray-500 text-sm mb-6">
-                Are you sure you want to {showConfirm.type === 'remove' ? 'remove' : 'promote'} this member?
+                Are you sure you want to{" "}
+                {showConfirm.type === "remove" ? "remove" : "promote"} this
+                member?
               </div>
               <div className="flex gap-3 w-full">
-                <SmartButton variant="secondary" fullWidth onClick={() => setShowConfirm(null)}>
+                <SmartButton
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setShowConfirm(null)}
+                >
                   Cancel
                 </SmartButton>
                 <SmartButton
-                  variant={showConfirm.type === 'remove' ? 'danger' : 'primary'}
+                  variant={showConfirm.type === "remove" ? "danger" : "primary"}
                   fullWidth
                   onClick={handleConfirm}
                   loading={loading}
@@ -290,8 +334,8 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
           </div>
         )}
       </div>
-    </SmartModal>
+    </SmartClassModal>
   );
 };
 
-export default WaitlistModal; 
+export default WaitlistModal;

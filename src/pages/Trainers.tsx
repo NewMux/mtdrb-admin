@@ -1,17 +1,36 @@
-import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiSearch, FiFilter, FiUser, FiStar, FiBarChart, FiSettings, FiDownload, FiRefreshCw, FiEye, FiEdit, FiTrash2, FiMail, FiClock, FiTarget } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
-import TrainerTable from '../components/trainers/TrainerTable';
-import TrainerKPICards from '../components/trainers/TrainerKPICards';
-import SmartTrainerAnalytics from '../components/trainers/SmartTrainerAnalytics';
-import TrainerAutomationEngine from '../components/trainers/TrainerAutomationEngine';
-import FilterButton from '../components/ui/FilterButton';
-import TabsNav from '../components/ui/TabsNav';
-import AddButton from '../components/ui/AddButton';
-import { SmartButton } from '../components/ui/DesignSystem';
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiPlus,
+  FiSearch,
+  FiFilter,
+  FiUser,
+  FiStar,
+  FiBarChart2,
+  FiSettings,
+  FiDownload,
+  FiRefreshCw,
+  FiEye,
+  FiEdit,
+  FiTrash2,
+  FiMail,
+  FiClock,
+  FiTarget,
+  FiUsers,
+  FiTrendingUp,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
+import TrainerTable from "../components/trainers/TrainerTable";
+import TrainerKPICards from "../components/trainers/TrainerKPICards";
+import SmartTrainerAnalytics from "../components/trainers/SmartTrainerAnalytics";
+import TrainerPerformanceDashboard from "../components/trainers/TrainerPerformanceDashboard";
+import TrainerAutomationEngine from "../components/trainers/TrainerAutomationEngine";
+import FilterButton from "../components/ui/FilterButton";
+import TabsNav from "../components/ui/TabsNav";
+import { AddButton } from "../components/ui/AddButton";
+import { SmartButton } from "../components/ui/DesignSystem";
 
-import { mockTrainerTableData } from '../api/mockTrainerData';
+import { mockTrainerTableData } from "../api/mockTrainerData";
 
 // Import all modals
 import {
@@ -20,8 +39,8 @@ import {
   DeleteTrainerModal,
   ViewTrainerProfileModal,
   AssignClassesModal,
-  ExportTrainerDataModal
-} from '../components/trainers/modals';
+  ExportTrainerDataModal,
+} from "../components/trainers/modals";
 
 interface Trainer {
   id: string;
@@ -30,31 +49,33 @@ interface Trainer {
   phone: string;
   specialty: string;
   rating: number;
-  status: 'active' | 'inactive' | 'busy' | 'available';
+  status: "active" | "inactive" | "busy" | "available";
   classes: number;
   experience: string;
   avatar: string;
 }
 
-type ModalType = 'add' | 'edit' | 'delete' | 'view' | 'assign' | 'export' | null;
+type ModalType =
+  | "add"
+  | "edit"
+  | "delete"
+  | "view"
+  | "assign"
+  | "export"
+  | null;
 
 const Trainers: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState('dashboard');
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedFilter, setSelectedFilter] = React.useState('all');
+  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedFilter, setSelectedFilter] = React.useState("all");
   const [activeModal, setActiveModal] = React.useState<ModalType>(null);
-  const [selectedTrainer, setSelectedTrainer] = React.useState<Trainer | null>(null);
-  const [trainers, setTrainers] = React.useState<Trainer[]>(mockTrainerTableData || []);
+  const [selectedTrainer, setSelectedTrainer] = React.useState<Trainer | null>(
+    null,
+  );
+  const [trainers, setTrainers] = React.useState<Trainer[]>(
+    mockTrainerTableData || [],
+  );
   const [refreshKey, setRefreshKey] = React.useState(0);
-
-  // Debug logging for state changes
-  React.useEffect(() => {
-    console.log('Active tab changed to:', activeTab);
-  }, [activeTab]);
-
-  React.useEffect(() => {
-    console.log('Active modal changed to:', activeModal);
-  }, [activeModal]);
 
   // Ensure trainers is always an array
   const safeTrainers = React.useMemo(() => {
@@ -62,110 +83,171 @@ const Trainers: React.FC = () => {
   }, [trainers]);
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: FiUser },
-    { id: 'analytics', name: 'Analytics', icon: FiBarChart },
-    { id: 'list', name: 'Trainer List', icon: FiSettings },
+    { id: "dashboard", name: "Dashboard", icon: FiUser },
+    { id: "analytics", name: "Analytics", icon: FiBarChart2 },
+    { id: "list", name: "Trainer List", icon: FiSettings },
   ];
 
   const filters = [
-    { id: 'all', name: 'All Trainers', count: safeTrainers.length },
-    { id: 'active', name: 'Active', count: safeTrainers.filter(t => t.status === 'active').length },
-    { id: 'available', name: 'Available', count: safeTrainers.filter(t => t.status === 'available').length },
-    { id: 'busy', name: 'Busy', count: safeTrainers.filter(t => t.status === 'busy').length },
+    { id: "all", name: "All Trainers", count: safeTrainers.length },
+    {
+      id: "active",
+      name: "Active",
+      count: safeTrainers.filter((t) => t.status === "active").length,
+    },
+    {
+      id: "available",
+      name: "Available",
+      count: safeTrainers.filter((t) => t.status === "available").length,
+    },
+    {
+      id: "busy",
+      name: "Busy",
+      count: safeTrainers.filter((t) => t.status === "busy").length,
+    },
   ];
 
-  // Modal handlers with debugging
+  // Modal handlers
   const handleOpenModal = (type: ModalType, trainer?: Trainer) => {
-    console.log('Opening modal:', type, trainer);
     setActiveModal(type);
     if (trainer) setSelectedTrainer(trainer);
   };
 
   const handleCloseModal = () => {
-    console.log('Closing modal');
     setActiveModal(null);
     setSelectedTrainer(null);
   };
 
   const handleModalSuccess = () => {
-    toast.success('Action completed successfully!');
+    toast.success("Action completed successfully!");
     handleCloseModal();
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
-  // Action handlers with debugging
+  // Action handlers
   const handleAddTrainer = () => {
-    console.log('Add trainer button clicked');
-    handleOpenModal('add');
+    handleOpenModal("add");
   };
 
   const handleEditTrainer = (trainer: Trainer) => {
-    console.log('Edit trainer clicked:', trainer.name);
-    handleOpenModal('edit', trainer);
+    handleOpenModal("edit", trainer);
   };
 
   const handleDeleteTrainer = (trainer: Trainer) => {
-    console.log('Delete trainer clicked:', trainer.name);
-    handleOpenModal('delete', trainer);
+    handleOpenModal("delete", trainer);
   };
 
   const handleViewTrainer = (trainer: Trainer) => {
-    console.log('View trainer clicked:', trainer.name);
-    handleOpenModal('view', trainer);
+    handleOpenModal("view", trainer);
   };
 
   const handleAssignTrainer = (trainer: Trainer) => {
-    console.log('Assign trainer clicked:', trainer.name);
-    handleOpenModal('assign', trainer);
+    handleOpenModal("assign", trainer);
   };
 
   const handleMessageTrainer = (trainer: Trainer) => {
-    console.log('Message trainer clicked:', trainer.name);
-    handleOpenModal('view', trainer); // Using view modal for now
+    handleOpenModal("view", trainer);
   };
 
   const handleScheduleTrainer = (trainer: Trainer) => {
-    console.log('Schedule trainer clicked:', trainer.name);
-    handleOpenModal('assign', trainer); // Using assign modal for schedule
+    handleOpenModal("assign", trainer);
   };
 
   const handleExport = async () => {
-    console.log('Export button clicked');
-    toast.loading('Exporting trainers...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success('Trainers exported successfully!');
+    toast.loading("Exporting trainers...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    toast.success("Trainers exported successfully!");
   };
 
   const handleRefresh = () => {
-    console.log('Refresh button clicked');
-    setRefreshKey(prev => prev + 1);
-    toast.success('Trainer list refreshed!');
+    setRefreshKey((prev) => prev + 1);
+    toast.success("Trainer list refreshed!");
   };
 
-  // Tab change handler with debugging
   const handleTabChange = (tabId: string) => {
-    console.log('Tab changing to:', tabId);
     setActiveTab(tabId);
   };
 
+  const trainerStats = [
+    {
+      name: "Total Trainers",
+      value: "12",
+      change: "+2 from last month",
+      icon: FiUsers,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      name: "Average Rating",
+      value: "4.8",
+      change: "+0.2 from last month",
+      icon: FiStar,
+      color: "from-yellow-500 to-orange-500",
+    },
+    {
+      name: "Classes This Week",
+      value: "156",
+      change: "+12% from last month",
+      icon: FiClock,
+      color: "from-green-500 to-green-600",
+    },
+    {
+      name: "Available Hours",
+      value: "89%",
+      change: "+5% from last month",
+      icon: FiTrendingUp,
+      color: "from-purple-500 to-purple-600",
+    },
+  ];
+
   const renderActiveTab = () => {
-    console.log('Rendering tab:', activeTab);
-    
     switch (activeTab) {
-      case 'dashboard':
+      case "dashboard":
         return (
           <div className="space-y-6">
-            <TrainerKPICards />
-            <div className="card">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {trainerStats.map((stat, index) => (
+                <motion.div
+                  key={stat.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {stat.name}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {stat.change}
+                      </p>
+                    </div>
+                    <div
+                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                    >
+                      <stat.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* All Trainers Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">All Trainers</h3>
-                <SmartButton 
-                  variant="secondary" 
-                  size="sm" 
-                  onClick={() => handleTabChange('list')}
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  All Trainers
+                </h2>
+                <button
+                  onClick={() => handleTabChange("list")}
+                  className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   View All Trainers
-                </SmartButton>
+                </button>
               </div>
               <TrainerTable
                 trainers={safeTrainers}
@@ -180,45 +262,51 @@ const Trainers: React.FC = () => {
           </div>
         );
 
-
-
-      case 'analytics':
+      case "analytics":
         return (
           <div className="space-y-6">
-            <SmartTrainerAnalytics refreshKey={refreshKey} />
+            <TrainerPerformanceDashboard refreshKey={refreshKey} />
           </div>
         );
 
-      case 'list':
+      case "list":
         return (
           <div className="space-y-6">
-            <div className="card">
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trainer Management</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Manage all trainers, schedules, and assignments</p>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Trainer Management
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Manage all trainers, schedules, and assignments
+                  </p>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <SmartButton 
-                    variant="secondary" 
-                    size="sm" 
-                    icon={<FiDownload className="h-4 w-4" />} 
+                  <button
                     onClick={handleExport}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
                   >
-                    Export
-                  </SmartButton>
-                  <AddButton label="Add Trainer" onClick={handleAddTrainer} />
-                  <SmartButton 
-                    variant="secondary" 
-                    size="sm" 
-                    icon={<FiRefreshCw className="h-4 w-4" />} 
+                    <FiDownload className="w-4 h-4" />
+                    <span>Export</span>
+                  </button>
+                  <button
+                    onClick={handleAddTrainer}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span>Add Trainer</span>
+                  </button>
+                  <button
                     onClick={handleRefresh}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
                   >
-                    Refresh
-                  </SmartButton>
+                    <FiRefreshCw className="w-4 h-4" />
+                    <span>Refresh</span>
+                  </button>
                 </div>
               </div>
-              
+
               <TrainerTable
                 trainers={safeTrainers}
                 onEdit={handleEditTrainer}
@@ -233,7 +321,6 @@ const Trainers: React.FC = () => {
         );
 
       default:
-        console.log('Unknown tab:', activeTab);
         return null;
     }
   };
@@ -241,27 +328,38 @@ const Trainers: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🚀 Smart Trainer Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Intelligent scheduling • Performance tracking • Zero Excel</p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <SmartButton 
-            variant="secondary" 
-            size="sm" 
-            icon={<FiTarget className="h-4 w-4" />}
-            onClick={() => handleTabChange('list')}
-          >
-            View Schedule
-          </SmartButton>
-          <AddButton label="Add Trainer" onClick={handleAddTrainer} />
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              🚀 Smart Trainer Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Intelligent scheduling • Performance tracking • Zero Excel
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => handleTabChange("list")}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              <FiTarget className="w-4 h-4" />
+              <span>View Schedule</span>
+            </button>
+            <button
+              onClick={handleAddTrainer}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span>Add Trainer</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="card">
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -271,7 +369,7 @@ const Trainers: React.FC = () => {
               placeholder="Search trainers by name, specialty, or availability..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input pl-10"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
@@ -280,7 +378,7 @@ const Trainers: React.FC = () => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="form-select"
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {filters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -288,18 +386,33 @@ const Trainers: React.FC = () => {
                 </option>
               ))}
             </select>
-            
-            <FilterButton />
+
+            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <FiFilter className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <TabsNav
-        tabs={tabs.map(tab => ({ id: tab.id, label: tab.name, icon: <tab.icon className="w-4 h-4" /> }))}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="flex space-x-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
@@ -316,53 +429,53 @@ const Trainers: React.FC = () => {
 
       {/* Modals */}
       <AnimatePresence>
-        {activeModal === 'add' && (
+        {activeModal === "add" && (
           <AddTrainerModal
-            isOpen={activeModal === 'add'}
+            isOpen={activeModal === "add"}
             onClose={handleCloseModal}
             onSuccess={handleModalSuccess}
           />
         )}
 
-        {activeModal === 'edit' && selectedTrainer && (
+        {activeModal === "edit" && selectedTrainer && (
           <EditTrainerModal
-            isOpen={activeModal === 'edit'}
+            isOpen={activeModal === "edit"}
             onClose={handleCloseModal}
             trainer={selectedTrainer}
             onSuccess={handleModalSuccess}
           />
         )}
 
-        {activeModal === 'delete' && selectedTrainer && (
+        {activeModal === "delete" && selectedTrainer && (
           <DeleteTrainerModal
-            isOpen={activeModal === 'delete'}
+            isOpen={activeModal === "delete"}
             onClose={handleCloseModal}
             trainer={selectedTrainer}
             onSuccess={handleModalSuccess}
           />
         )}
 
-        {activeModal === 'view' && selectedTrainer && (
+        {activeModal === "view" && selectedTrainer && (
           <ViewTrainerProfileModal
-            isOpen={activeModal === 'view'}
+            isOpen={activeModal === "view"}
             onClose={handleCloseModal}
             trainer={selectedTrainer}
             onSuccess={handleModalSuccess}
           />
         )}
 
-        {activeModal === 'assign' && selectedTrainer && (
+        {activeModal === "assign" && selectedTrainer && (
           <AssignClassesModal
-            isOpen={activeModal === 'assign'}
+            isOpen={activeModal === "assign"}
             onClose={handleCloseModal}
             trainer={selectedTrainer}
             onSuccess={handleModalSuccess}
           />
         )}
 
-        {activeModal === 'export' && (
+        {activeModal === "export" && (
           <ExportTrainerDataModal
-            isOpen={activeModal === 'export'}
+            isOpen={activeModal === "export"}
             onClose={handleCloseModal}
             onSuccess={handleModalSuccess}
           />

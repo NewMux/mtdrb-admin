@@ -1,8 +1,18 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiShare2, FiLink, FiUsers, FiClock, FiLock, FiUnlock, FiMail, FiCopy, FiCheckCircle } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiShare2,
+  FiLink,
+  FiUsers,
+  FiClock,
+  FiLock,
+  FiUnlock,
+  FiMail,
+  FiCopy,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface ShareReportModalProps {
   open: boolean;
@@ -14,35 +24,89 @@ interface ShareReportModalProps {
 }
 
 const teamMembers = [
-  { id: '1', name: 'Sarah Johnson', email: 'sarah@mtdrb.com', role: 'Manager', avatar: 'SJ' },
-  { id: '2', name: 'Mike Chen', email: 'mike@mtdrb.com', role: 'Trainer', avatar: 'MC' },
-  { id: '3', name: 'Lisa Rodriguez', email: 'lisa@mtdrb.com', role: 'Admin', avatar: 'LR' },
-  { id: '4', name: 'David Kim', email: 'david@mtdrb.com', role: 'Finance', avatar: 'DK' },
-  { id: '5', name: 'Emma Wilson', email: 'emma@mtdrb.com', role: 'HR', avatar: 'EW' },
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    email: "sarah@mtdrb.com",
+    role: "Manager",
+    avatar: "SJ",
+  },
+  {
+    id: "2",
+    name: "Mike Chen",
+    email: "mike@mtdrb.com",
+    role: "Trainer",
+    avatar: "MC",
+  },
+  {
+    id: "3",
+    name: "Lisa Rodriguez",
+    email: "lisa@mtdrb.com",
+    role: "Admin",
+    avatar: "LR",
+  },
+  {
+    id: "4",
+    name: "David Kim",
+    email: "david@mtdrb.com",
+    role: "Finance",
+    avatar: "DK",
+  },
+  {
+    id: "5",
+    name: "Emma Wilson",
+    email: "emma@mtdrb.com",
+    role: "HR",
+    avatar: "EW",
+  },
 ];
 
 const permissionLevels = [
-  { id: 'view', label: 'View Only', description: 'Can view but not edit or share', icon: FiUnlock },
-  { id: 'comment', label: 'Comment', description: 'Can view and add comments', icon: FiUsers },
-  { id: 'edit', label: 'Edit', description: 'Can view, comment, and edit', icon: FiLock },
-  { id: 'admin', label: 'Admin', description: 'Full access including sharing', icon: FiLock },
+  {
+    id: "view",
+    label: "View Only",
+    description: "Can view but not edit or share",
+    icon: FiUnlock,
+  },
+  {
+    id: "comment",
+    label: "Comment",
+    description: "Can view and add comments",
+    icon: FiUsers,
+  },
+  {
+    id: "edit",
+    label: "Edit",
+    description: "Can view, comment, and edit",
+    icon: FiLock,
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    description: "Full access including sharing",
+    icon: FiLock,
+  },
 ];
 
-export default function ShareReportModal({ 
-  open, 
-  onClose, 
-  reportId = '1', 
-  reportName = 'Member Overview Report',
-  onSuccess, 
-  isPro 
+export default function ShareReportModal({
+  open,
+  onClose,
+  reportId = "1",
+  reportName = "Member Overview Report",
+  onSuccess,
+  isPro,
 }: ShareReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [shareLink, setShareLink] = React.useState(`https://mtdrb.com/reports/share/${reportId}`);
-  const [selectedPermission, setSelectedPermission] = React.useState('view');
-  const [expirationDate, setExpirationDate] = React.useState('');
-  const [selectedRecipients, setSelectedRecipients] = React.useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const [shareLink, setShareLink] = React.useState(
+    `https://mtdrb.com/reports/share/${reportId}`,
+  );
+  const [selectedPermission, setSelectedPermission] = React.useState("view");
+  const [expirationDate, setExpirationDate] = React.useState("");
+  const [selectedRecipients, setSelectedRecipients] = React.useState<string[]>(
+    [],
+  );
+  const [searchTerm, setSearchTerm] = React.useState("");
   const [sharing, setSharing] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
 
@@ -50,7 +114,9 @@ export default function ShareReportModal({
     if (open) {
       clearAlerts();
       // Generate unique share link
-      setShareLink(`https://mtdrb.com/reports/share/${reportId}?token=${Date.now()}`);
+      setShareLink(
+        `https://mtdrb.com/reports/share/${reportId}?token=${Date.now()}`,
+      );
     }
   }, [open, reportId, clearAlerts]);
 
@@ -60,7 +126,7 @@ export default function ShareReportModal({
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy link');
+      console.error("Failed to copy link");
     }
   };
 
@@ -68,7 +134,7 @@ export default function ShareReportModal({
     setSharing(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       onSuccess?.();
       onClose();
     } finally {
@@ -83,20 +149,27 @@ export default function ShareReportModal({
   };
 
   const handleRemoveRecipient = (email: string) => {
-    setSelectedRecipients(selectedRecipients.filter(r => r !== email));
+    setSelectedRecipients(selectedRecipients.filter((r) => r !== email));
   };
 
-  const filteredMembers = teamMembers.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMembers = teamMembers.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const getPermissionIcon = (permissionId: string) => {
-    const permission = permissionLevels.find(p => p.id === permissionId);
+    const permission = permissionLevels.find((p) => p.id === permissionId);
     return permission?.icon || FiUnlock;
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -116,11 +189,16 @@ export default function ShareReportModal({
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
           {alert.message}
         </div>
       ))}
@@ -157,7 +235,7 @@ export default function ShareReportModal({
               </button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
@@ -187,7 +265,7 @@ export default function ShareReportModal({
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
                 value={expirationDate}
                 onChange={(e) => setExpirationDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={new Date().toISOString().split("T")[0]}
               />
             </div>
           </div>
@@ -212,14 +290,21 @@ export default function ShareReportModal({
           {/* Team Members */}
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {filteredMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div
+                key={member.id}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
                     {member.avatar}
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900">{member.name}</div>
-                    <div className="text-sm text-gray-600">{member.email} • {member.role}</div>
+                    <div className="font-medium text-gray-900">
+                      {member.name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {member.email} • {member.role}
+                    </div>
                   </div>
                 </div>
                 <button
@@ -227,11 +312,11 @@ export default function ShareReportModal({
                   disabled={selectedRecipients.includes(member.email)}
                   className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
                     selectedRecipients.includes(member.email)
-                      ? 'bg-green-100 text-green-700 cursor-not-allowed'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      ? "bg-green-100 text-green-700 cursor-not-allowed"
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                   }`}
                 >
-                  {selectedRecipients.includes(member.email) ? 'Added' : 'Add'}
+                  {selectedRecipients.includes(member.email) ? "Added" : "Add"}
                 </button>
               </div>
             ))}
@@ -240,10 +325,15 @@ export default function ShareReportModal({
           {/* Selected Recipients */}
           {selectedRecipients.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">Selected Recipients ({selectedRecipients.length})</h4>
+              <h4 className="font-medium text-gray-900">
+                Selected Recipients ({selectedRecipients.length})
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {selectedRecipients.map((email) => (
-                  <div key={email} className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">
+                  <div
+                    key={email}
+                    className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg"
+                  >
                     <span className="text-sm">{email}</span>
                     <button
                       onClick={() => handleRemoveRecipient(email)}
@@ -265,20 +355,32 @@ export default function ShareReportModal({
           <div className="flex items-start gap-3">
             <FiShare2 className="text-blue-600 mt-1" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">AI Suggestions</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Smart Suggestions
+              </h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Recommended permission: <strong>View Only</strong> for this report type</span>
+                  <span>
+                    Recommended permission: <strong>View Only</strong> for this
+                    report type
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Set expiration to <strong>7 days</strong> for sensitive data</span>
+                  <span>
+                    Set expiration to <strong>7 days</strong> for sensitive data
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Consider sharing with <strong>Finance team</strong> for budget insights</span>
-                  {!isPro && <FiLock className="text-gray-400" title="Pro feature" />}
+                  <span>
+                    Consider sharing with <strong>Finance team</strong> for
+                    budget insights
+                  </span>
+                  {!isPro && (
+                    <FiLock className="text-gray-400" title="Pro feature" />
+                  )}
                 </li>
               </ul>
             </div>
@@ -296,16 +398,22 @@ export default function ShareReportModal({
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Permission</span>
-              <span className="text-gray-600 capitalize">{selectedPermission}</span>
+              <span className="text-gray-600 capitalize">
+                {selectedPermission}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Recipients</span>
-              <span className="text-gray-600">{selectedRecipients.length} people</span>
+              <span className="text-gray-600">
+                {selectedRecipients.length} people
+              </span>
             </div>
             {expirationDate && (
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-900">Expires</span>
-                <span className="text-gray-600">{new Date(expirationDate).toLocaleDateString()}</span>
+                <span className="text-gray-600">
+                  {new Date(expirationDate).toLocaleDateString()}
+                </span>
               </div>
             )}
             <div className="flex items-center justify-between">
@@ -347,4 +455,4 @@ export default function ShareReportModal({
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

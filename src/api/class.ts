@@ -1,8 +1,8 @@
-import { supabase } from '../supabaseClient';
-import { toast } from 'react-hot-toast';
-import { Class, ClassBooking } from '../types';
-import { mockClasses, mockBookings, mockTrainers, mockMembers } from './mockClassData';
-const isDev = import.meta.env.MODE === 'development';
+import { supabase } from "../supabaseClient";
+import { toast } from "react-hot-toast";
+import { Class, ClassBooking } from "../types";
+import { mockClasses, mockBookings, mockTrainers } from "./mockClassData";
+const isDev = import.meta.env.MODE === "development";
 
 // ============================================================================
 // TYPES
@@ -19,10 +19,10 @@ export interface ClassStats {
 
 export interface ClassAnalyticsData {
   popularTimes: {
-    'morning': number;
-    'afternoon': number;
-    'evening': number;
-    'night': number;
+    morning: number;
+    afternoon: number;
+    evening: number;
+    night: number;
   };
   classTypes: {
     strength: number;
@@ -61,78 +61,96 @@ export const getAllClasses = async (): Promise<Class[]> => {
   if (isDev) return mockClasses;
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
-      .order('start_time', { ascending: true });
+      `,
+      )
+      .order("start_time", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching classes:', error);
-    toast.error('Failed to load classes');
+    console.error("Error fetching classes:", error);
+    toast.error("Failed to load classes");
     return [];
   }
 };
 
 export const getClassById = async (id: string): Promise<Class | null> => {
-  if (isDev) return mockClasses.find(c => c.id === id) || null;
+  if (isDev) return mockClasses.find((c) => c.id === id) || null;
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
-      .eq('id', id)
+      `,
+      )
+      .eq("id", id)
       .single();
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching class:', error);
-    toast.error('Failed to load class details');
+    console.error("Error fetching class:", error);
+    toast.error("Failed to load class details");
     return null;
   }
 };
 
-export const createClass = async (classData: Omit<Class, 'id' | 'created_at'>): Promise<Class | null> => {
-  if (isDev) return { ...classData, id: `mock-${Date.now()}`, created_at: new Date().toISOString() } as Class;
+export const createClass = async (
+  classData: Omit<Class, "id" | "created_at">,
+): Promise<Class | null> => {
+  if (isDev)
+    return {
+      ...classData,
+      id: `mock-${Date.now()}`,
+      created_at: new Date().toISOString(),
+    } as Class;
   try {
     const { data, error } = await supabase
-      .from('classes')
+      .from("classes")
       .insert(classData)
       .select()
       .single();
 
     if (error) throw error;
-    toast.success('Class created successfully');
+    toast.success("Class created successfully");
     return data;
   } catch (error) {
-    console.error('Error creating class:', error);
-    toast.error('Failed to create class');
+    console.error("Error creating class:", error);
+    toast.error("Failed to create class");
     return null;
   }
 };
 
-export const updateClass = async (id: string, updates: Partial<Class>): Promise<Class | null> => {
-  if (isDev) return { ...(mockClasses.find(c => c.id === id) || {}), ...updates } as Class;
+export const updateClass = async (
+  id: string,
+  updates: Partial<Class>,
+): Promise<Class | null> => {
+  if (isDev)
+    return {
+      ...(mockClasses.find((c) => c.id === id) || {}),
+      ...updates,
+    } as Class;
   try {
     const { data, error } = await supabase
-      .from('classes')
+      .from("classes")
       .update(updates)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
     if (error) throw error;
-    toast.success('Class updated successfully');
+    toast.success("Class updated successfully");
     return data;
   } catch (error) {
-    console.error('Error updating class:', error);
-    toast.error('Failed to update class');
+    console.error("Error updating class:", error);
+    toast.error("Failed to update class");
     return null;
   }
 };
@@ -140,17 +158,14 @@ export const updateClass = async (id: string, updates: Partial<Class>): Promise<
 export const deleteClass = async (id: string): Promise<boolean> => {
   if (isDev) return true;
   try {
-    const { error } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("classes").delete().eq("id", id);
 
     if (error) throw error;
-    toast.success('Class deleted successfully');
+    toast.success("Class deleted successfully");
     return true;
   } catch (error) {
-    console.error('Error deleting class:', error);
-    toast.error('Failed to delete class');
+    console.error("Error deleting class:", error);
+    toast.error("Failed to delete class");
     return false;
   }
 };
@@ -159,80 +174,95 @@ export const deleteClass = async (id: string): Promise<boolean> => {
 // BOOKINGS & ATTENDANCE
 // ============================================================================
 
-export const getClassBookings = async (classId: string): Promise<ClassBooking[]> => {
-  if (isDev) return mockBookings.filter(b => b.class_id === classId);
+export const getClassBookings = async (
+  classId: string,
+): Promise<ClassBooking[]> => {
+  if (isDev) return mockBookings.filter((b) => b.class_id === classId);
   try {
     const { data, error } = await supabase
-      .from('class_bookings')
-      .select(`
+      .from("class_bookings")
+      .select(
+        `
         *,
         members!inner(name, email, phone)
-      `)
-      .eq('class_id', classId)
-      .order('created_at', { ascending: true });
+      `,
+      )
+      .eq("class_id", classId)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching class bookings:', error);
+    console.error("Error fetching class bookings:", error);
     return [];
   }
 };
 
-export const getClassesWithBookings = async (): Promise<ClassWithBookings[]> => {
-  if (isDev) return mockClasses.map(c => ({
-    ...c,
-    bookedCount: mockBookings.filter(b => b.class_id === c.id && b.status === 'booked').length,
-    trainer_name: mockTrainers.find(t => t.id === c.trainer_id)?.name || '',
-  }));
+export const getClassesWithBookings = async (): Promise<
+  ClassWithBookings[]
+> => {
+  if (isDev)
+    return mockClasses.map((c) => ({
+      ...c,
+      bookedCount: mockBookings.filter(
+        (b) => b.class_id === c.id && b.status === "booked",
+      ).length,
+      trainer_name: mockTrainers.find((t) => t.id === c.trainer_id)?.name || "",
+    }));
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name),
         class_bookings(count)
-      `)
-      .order('start_time', { ascending: true });
+      `,
+      )
+      .order("start_time", { ascending: true });
 
     if (error) throw error;
-    
-    return (data || []).map(classItem => ({
+
+    return (data || []).map((classItem) => ({
       ...classItem,
       bookedCount: classItem.class_bookings?.[0]?.count || 0,
-      trainer_name: classItem.trainers?.name
+      trainer_name: classItem.trainers?.name,
     }));
   } catch (error) {
-    console.error('Error fetching classes with bookings:', error);
+    console.error("Error fetching classes with bookings:", error);
     return [];
   }
 };
 
-export const bookClass = async (classId: string, memberId: string): Promise<ClassBooking | null> => {
-  if (isDev) return {
-    id: `mock-booking-${Date.now()}`,
-    class_id: classId,
-    member_id: memberId,
-    status: 'booked',
-    created_at: new Date().toISOString(),
-  };
+export const bookClass = async (
+  classId: string,
+  memberId: string,
+): Promise<ClassBooking | null> => {
+  if (isDev)
+    return {
+      id: `mock-booking-${Date.now()}`,
+      class_id: classId,
+      member_id: memberId,
+      status: "booked",
+      created_at: new Date().toISOString(),
+    };
   try {
     const { data, error } = await supabase
-      .from('class_bookings')
+      .from("class_bookings")
       .insert({
         class_id: classId,
         member_id: memberId,
-        status: 'booked'
+        status: "booked",
       })
       .select()
       .single();
 
     if (error) throw error;
-    toast.success('Class booked successfully');
+    toast.success("Class booked successfully");
     return data;
   } catch (error) {
-    console.error('Error booking class:', error);
-    toast.error('Failed to book class');
+    console.error("Error booking class:", error);
+    toast.error("Failed to book class");
     return null;
   }
 };
@@ -241,34 +271,37 @@ export const cancelBooking = async (bookingId: string): Promise<boolean> => {
   if (isDev) return true;
   try {
     const { error } = await supabase
-      .from('class_bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', bookingId);
+      .from("class_bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId);
 
     if (error) throw error;
-    toast.success('Booking cancelled successfully');
+    toast.success("Booking cancelled successfully");
     return true;
   } catch (error) {
-    console.error('Error cancelling booking:', error);
-    toast.error('Failed to cancel booking');
+    console.error("Error cancelling booking:", error);
+    toast.error("Failed to cancel booking");
     return false;
   }
 };
 
-export const markAttendance = async (bookingId: string, attended: boolean): Promise<boolean> => {
+export const markAttendance = async (
+  bookingId: string,
+  attended: boolean,
+): Promise<boolean> => {
   if (isDev) return true;
   try {
     const { error } = await supabase
-      .from('class_bookings')
-      .update({ status: attended ? 'attended' : 'no-show' })
-      .eq('id', bookingId);
+      .from("class_bookings")
+      .update({ status: attended ? "attended" : "no-show" })
+      .eq("id", bookingId);
 
     if (error) throw error;
-    toast.success(`Attendance marked as ${attended ? 'attended' : 'no-show'}`);
+    toast.success(`Attendance marked as ${attended ? "attended" : "no-show"}`);
     return true;
   } catch (error) {
-    console.error('Error marking attendance:', error);
-    toast.error('Failed to mark attendance');
+    console.error("Error marking attendance:", error);
+    toast.error("Failed to mark attendance");
     return false;
   }
 };
@@ -280,34 +313,50 @@ export const markAttendance = async (bookingId: string, attended: boolean): Prom
 export const getClassStats = async (): Promise<ClassStats> => {
   if (isDev) {
     const totalClasses = mockClasses.length;
-    const totalCapacity = mockClasses.reduce((sum, c) => sum + (c.capacity || 0), 0);
-    const bookedSpots = mockBookings.filter(b => b.status === 'booked').length;
+    const totalCapacity = mockClasses.reduce(
+      (sum, c) => sum + (c.capacity || 0),
+      0,
+    );
+    const bookedSpots = mockBookings.filter(
+      (b) => b.status === "booked",
+    ).length;
     const now = new Date();
-    const upcomingClasses = mockClasses.filter(c => new Date(c.start_time) > now).length;
+    const upcomingClasses = mockClasses.filter(
+      (c) => new Date(c.start_time) > now,
+    ).length;
     const revenue = mockClasses.reduce((sum, c) => sum + (c.price || 0), 0);
-    const utilization = totalCapacity > 0 ? (bookedSpots / totalCapacity) * 100 : 0;
-    return { totalClasses, totalCapacity, bookedSpots, upcomingClasses, revenue, utilization };
+    const utilization =
+      totalCapacity > 0 ? (bookedSpots / totalCapacity) * 100 : 0;
+    return {
+      totalClasses,
+      totalCapacity,
+      bookedSpots,
+      upcomingClasses,
+      revenue,
+      utilization,
+    };
   }
   try {
-    const { data: classes, error } = await supabase
-      .from('classes')
-      .select('*');
+    const { data: classes, error } = await supabase.from("classes").select("*");
 
     if (error) throw error;
 
     const now = new Date();
-    const upcomingClasses = classes?.filter(c => new Date(c.start_time) > now).length || 0;
+    const upcomingClasses =
+      classes?.filter((c) => new Date(c.start_time) > now).length || 0;
     const totalClasses = classes?.length || 0;
-    const totalCapacity = classes?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
+    const totalCapacity =
+      classes?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
 
     // Get booking stats
     const { data: bookings } = await supabase
-      .from('class_bookings')
-      .select('*')
-      .eq('status', 'booked');
+      .from("class_bookings")
+      .select("*")
+      .eq("status", "booked");
 
     const bookedSpots = bookings?.length || 0;
-    const utilization = totalCapacity > 0 ? (bookedSpots / totalCapacity) * 100 : 0;
+    const utilization =
+      totalCapacity > 0 ? (bookedSpots / totalCapacity) * 100 : 0;
 
     // Calculate revenue (assuming price field exists)
     const revenue = classes?.reduce((sum, c) => sum + (c.price || 0), 0) || 0;
@@ -318,17 +367,17 @@ export const getClassStats = async (): Promise<ClassStats> => {
       bookedSpots,
       upcomingClasses,
       revenue,
-      utilization: Math.round(utilization * 100) / 100
+      utilization: Math.round(utilization * 100) / 100,
     };
   } catch (error) {
-    console.error('Error calculating class stats:', error);
+    console.error("Error calculating class stats:", error);
     return {
       totalClasses: 0,
       totalCapacity: 0,
       bookedSpots: 0,
       upcomingClasses: 0,
       revenue: 0,
-      utilization: 0
+      utilization: 0,
     };
   }
 };
@@ -341,17 +390,15 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
       classTypes: { strength: 1, cardio: 1, yoga: 1, other: 0 },
       classRating: { average: 4.5, totalReviews: 12 },
       weeklyTrends: [
-        { week: '2024-05-06', totalClasses: 2, attendance: 1.4 },
-        { week: '2024-05-13', totalClasses: 1, attendance: 0.7 },
+        { week: "2024-05-06", totalClasses: 2, attendance: 1.4 },
+        { week: "2024-05-13", totalClasses: 1, attendance: 0.7 },
       ],
       capacityStats: { thisWeek: 2, totalCapacity: 47 },
       revenueGrowth: 10.5,
     };
   }
   try {
-    const { data: classes, error } = await supabase
-      .from('classes')
-      .select('*');
+    const { data: classes, error } = await supabase.from("classes").select("*");
 
     if (error) throw error;
 
@@ -360,10 +407,10 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
       morning: 0,
       afternoon: 0,
       evening: 0,
-      night: 0
+      night: 0,
     };
 
-    classes?.forEach(classItem => {
+    classes?.forEach((classItem) => {
       const hour = new Date(classItem.start_time).getHours();
       if (hour >= 6 && hour < 12) popularTimes.morning++;
       else if (hour >= 12 && hour < 17) popularTimes.afternoon++;
@@ -373,12 +420,22 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
 
     // Calculate class types (assuming type field exists)
     const classTypes = {
-      strength: classes?.filter(c => c.type?.toLowerCase().includes('strength')).length || 0,
-      cardio: classes?.filter(c => c.type?.toLowerCase().includes('cardio')).length || 0,
-      yoga: classes?.filter(c => c.type?.toLowerCase().includes('yoga')).length || 0,
-      other: classes?.filter(c => !c.type?.toLowerCase().includes('strength') && 
-                                 !c.type?.toLowerCase().includes('cardio') && 
-                                 !c.type?.toLowerCase().includes('yoga')).length || 0
+      strength:
+        classes?.filter((c) => c.type?.toLowerCase().includes("strength"))
+          .length || 0,
+      cardio:
+        classes?.filter((c) => c.type?.toLowerCase().includes("cardio"))
+          .length || 0,
+      yoga:
+        classes?.filter((c) => c.type?.toLowerCase().includes("yoga")).length ||
+        0,
+      other:
+        classes?.filter(
+          (c) =>
+            !c.type?.toLowerCase().includes("strength") &&
+            !c.type?.toLowerCase().includes("cardio") &&
+            !c.type?.toLowerCase().includes("yoga"),
+        ).length || 0,
     };
 
     // Weekly trends (last 4 weeks)
@@ -389,15 +446,16 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
 
-      const weekClasses = classes?.filter(c => {
-        const classDate = new Date(c.start_time);
-        return classDate >= weekStart && classDate <= weekEnd;
-      }) || [];
+      const weekClasses =
+        classes?.filter((c) => {
+          const classDate = new Date(c.start_time);
+          return classDate >= weekStart && classDate <= weekEnd;
+        }) || [];
 
       weeklyTrends.push({
-        week: weekStart.toISOString().split('T')[0],
+        week: weekStart.toISOString().split("T")[0],
         totalClasses: weekClasses.length,
-        attendance: weekClasses.length * 0.7 // Mock attendance rate
+        attendance: weekClasses.length * 0.7, // Mock attendance rate
       });
     }
 
@@ -407,28 +465,30 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
       classRating: { average: 4.5, totalReviews: 120 }, // Mock data
       weeklyTrends,
       capacityStats: {
-        thisWeek: classes?.filter(c => {
-          const classDate = new Date(c.start_time);
-          const now = new Date();
-          const weekStart = new Date(now);
-          weekStart.setDate(now.getDate() - now.getDay());
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 6);
-          return classDate >= weekStart && classDate <= weekEnd;
-        }).length || 0,
-        totalCapacity: classes?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0
+        thisWeek:
+          classes?.filter((c) => {
+            const classDate = new Date(c.start_time);
+            const now = new Date();
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            return classDate >= weekStart && classDate <= weekEnd;
+          }).length || 0,
+        totalCapacity:
+          classes?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0,
       },
-      revenueGrowth: 12.5 // Mock growth percentage
+      revenueGrowth: 12.5, // Mock growth percentage
     };
   } catch (error) {
-    console.error('Error calculating class analytics:', error);
+    console.error("Error calculating class analytics:", error);
     return {
       popularTimes: { morning: 0, afternoon: 0, evening: 0, night: 0 },
       classTypes: { strength: 0, cardio: 0, yoga: 0, other: 0 },
       classRating: { average: 0, totalReviews: 0 },
       weeklyTrends: [],
       capacityStats: { thisWeek: 0, totalCapacity: 0 },
-      revenueGrowth: 0
+      revenueGrowth: 0,
     };
   }
 };
@@ -438,62 +498,81 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
 // ============================================================================
 
 export const searchClasses = async (query: string): Promise<Class[]> => {
-  if (isDev) return mockClasses.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.description?.toLowerCase().includes(query.toLowerCase()));
+  if (isDev)
+    return mockClasses.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query.toLowerCase()) ||
+        c.description?.toLowerCase().includes(query.toLowerCase()),
+    );
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
+      `,
+      )
       .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-      .order('start_time', { ascending: true });
+      .order("start_time", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error searching classes:', error);
+    console.error("Error searching classes:", error);
     return [];
   }
 };
 
-export const getClassesByDateRange = async (startDate: string, endDate: string): Promise<Class[]> => {
-  if (isDev) return mockClasses.filter(c => c.start_time >= startDate && c.end_time <= endDate);
+export const getClassesByDateRange = async (
+  startDate: string,
+  endDate: string,
+): Promise<Class[]> => {
+  if (isDev)
+    return mockClasses.filter(
+      (c) => c.start_time >= startDate && c.end_time <= endDate,
+    );
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
-      .gte('start_time', startDate)
-      .lte('start_time', endDate)
-      .order('start_time', { ascending: true });
+      `,
+      )
+      .gte("start_time", startDate)
+      .lte("start_time", endDate)
+      .order("start_time", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching classes by date range:', error);
+    console.error("Error fetching classes by date range:", error);
     return [];
   }
 };
 
-export const getClassesByTrainer = async (trainerId: string): Promise<Class[]> => {
-  if (isDev) return mockClasses.filter(c => c.trainer_id === trainerId);
+export const getClassesByTrainer = async (
+  trainerId: string,
+): Promise<Class[]> => {
+  if (isDev) return mockClasses.filter((c) => c.trainer_id === trainerId);
   try {
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
-      .eq('trainer_id', trainerId)
-      .order('start_time', { ascending: true });
+      `,
+      )
+      .eq("trainer_id", trainerId)
+      .order("start_time", { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching classes by trainer:', error);
+    console.error("Error fetching classes by trainer:", error);
     return [];
   }
 };
@@ -502,27 +581,31 @@ export const getClassesByTrainer = async (trainerId: string): Promise<Class[]> =
 // UTILITY FUNCTIONS
 // ============================================================================
 
-export const checkClassCapacity = async (classId: string): Promise<{ available: boolean; booked: number; capacity: number }> => {
+export const checkClassCapacity = async (
+  classId: string,
+): Promise<{ available: boolean; booked: number; capacity: number }> => {
   if (isDev) {
-    const c = mockClasses.find(c => c.id === classId);
-    const booked = mockBookings.filter(b => b.class_id === classId && b.status === 'booked').length;
+    const c = mockClasses.find((c) => c.id === classId);
+    const booked = mockBookings.filter(
+      (b) => b.class_id === classId && b.status === "booked",
+    ).length;
     const capacity = c?.capacity || 0;
     return { available: booked < capacity, booked, capacity };
   }
   try {
     const { data: classData, error: classError } = await supabase
-      .from('classes')
-      .select('capacity')
-      .eq('id', classId)
+      .from("classes")
+      .select("capacity")
+      .eq("id", classId)
       .single();
 
     if (classError) throw classError;
 
     const { data: bookings, error: bookingError } = await supabase
-      .from('class_bookings')
-      .select('*')
-      .eq('class_id', classId)
-      .eq('status', 'booked');
+      .from("class_bookings")
+      .select("*")
+      .eq("class_id", classId)
+      .eq("status", "booked");
 
     if (bookingError) throw bookingError;
 
@@ -532,33 +615,37 @@ export const checkClassCapacity = async (classId: string): Promise<{ available: 
 
     return { available, booked, capacity };
   } catch (error) {
-    console.error('Error checking class capacity:', error);
+    console.error("Error checking class capacity:", error);
     return { available: false, booked: 0, capacity: 0 };
   }
 };
 
-export const getUpcomingClasses = async (limit: number = 10): Promise<Class[]> => {
+export const getUpcomingClasses = async (
+  limit: number = 10,
+): Promise<Class[]> => {
   if (isDev) {
     const now = new Date().toISOString();
-    return mockClasses.filter(c => c.start_time >= now).slice(0, limit);
+    return mockClasses.filter((c) => c.start_time >= now).slice(0, limit);
   }
   try {
     const now = new Date().toISOString();
-    
+
     const { data, error } = await supabase
-      .from('classes')
-      .select(`
+      .from("classes")
+      .select(
+        `
         *,
         trainers!inner(name)
-      `)
-      .gte('start_time', now)
-      .order('start_time', { ascending: true })
+      `,
+      )
+      .gte("start_time", now)
+      .order("start_time", { ascending: true })
       .limit(limit);
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching upcoming classes:', error);
+    console.error("Error fetching upcoming classes:", error);
     return [];
   }
 };
@@ -567,49 +654,66 @@ export const getUpcomingClasses = async (limit: number = 10): Promise<Class[]> =
 // CLASS REVIEWS
 // ============================================================================
 
+export interface ClassReview {
+  id: string;
+  class_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  profiles?: {
+    name: string;
+    avatar_url?: string;
+  };
+}
+
 export const createClassReview = async (
-  classId: string, 
-  userId: string, 
-  rating: number, 
-  comment: string
-): Promise<any> => {
+  classId: string,
+  userId: string,
+  rating: number,
+  comment: string,
+): Promise<ClassReview | null> => {
   try {
     const { data, error } = await supabase
-      .from('class_reviews')
+      .from("class_reviews")
       .insert({
         class_id: classId,
         user_id: userId,
         rating,
-        comment
+        comment,
       })
       .select()
       .single();
 
     if (error) throw error;
-    toast.success('Review submitted successfully');
+    toast.success("Review submitted successfully");
     return data;
   } catch (error) {
-    console.error('Error creating class review:', error);
-    toast.error('Failed to submit review');
+    console.error("Error creating class review:", error);
+    toast.error("Failed to submit review");
     throw error;
   }
 };
 
-export const getClassReviews = async (classId: string): Promise<any[]> => {
+export const getClassReviews = async (
+  classId: string,
+): Promise<ClassReview[]> => {
   try {
     const { data, error } = await supabase
-      .from('class_reviews')
-      .select(`
+      .from("class_reviews")
+      .select(
+        `
         *,
         profiles!inner(name, avatar_url)
-      `)
-      .eq('class_id', classId)
-      .order('created_at', { ascending: false });
+      `,
+      )
+      .eq("class_id", classId)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error('Error fetching class reviews:', error);
+    console.error("Error fetching class reviews:", error);
     return [];
   }
-}; 
+};

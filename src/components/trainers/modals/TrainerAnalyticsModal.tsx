@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiBarChart2, FiTrendingUp, FiUsers, FiCalendar, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiBarChart2,
+  FiTrendingUp,
+  FiUsers,
+  FiCalendar,
+  FiShield,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerAnalyticsModalProps {
@@ -12,7 +19,7 @@ interface TrainerAnalyticsModalProps {
 const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedMetric, setSelectedMetric] = useState("overview");
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
@@ -25,7 +32,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
     memberGrowth: 23,
     revenueGrowth: 18,
     classAttendance: 94,
-    memberRetention: 91
+    memberRetention: 91,
   };
 
   const isProUser = true; // Mock Pro user status
@@ -66,14 +73,20 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Analytics Period:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Analytics Period:
+                </span>
                 <span className="font-medium">Last 30 Days</span>
               </div>
             </div>
@@ -200,18 +213,30 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
           {selectedMetric === "performance" && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Performance Metrics</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                  Performance Metrics
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Class Attendance Rate</span>
-                    <span className="font-medium">{mockAnalytics.classAttendance}%</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Class Attendance Rate
+                    </span>
+                    <span className="font-medium">
+                      {mockAnalytics.classAttendance}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Member Retention Rate</span>
-                    <span className="font-medium">{mockAnalytics.memberRetention}%</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Member Retention Rate
+                    </span>
+                    <span className="font-medium">
+                      {mockAnalytics.memberRetention}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Average Class Size</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Average Class Size
+                    </span>
                     <span className="font-medium">12.5 members</span>
                   </div>
                 </div>
@@ -223,18 +248,26 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
           {selectedMetric === "revenue" && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Revenue Breakdown</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                  Revenue Breakdown
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Group Classes</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Group Classes
+                    </span>
                     <span className="font-medium">$8,400</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Personal Training</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Personal Training
+                    </span>
                     <span className="font-medium">$3,600</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Special Events</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Special Events
+                    </span>
                     <span className="font-medium">$500</span>
                   </div>
                 </div>
@@ -246,18 +279,26 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
           {selectedMetric === "members" && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Member Demographics</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                  Member Demographics
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">New Members (30d)</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      New Members (30d)
+                    </span>
                     <span className="font-medium">12</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Returning Members</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Returning Members
+                    </span>
                     <span className="font-medium">77</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Average Age</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Average Age
+                    </span>
                     <span className="font-medium">34 years</span>
                   </div>
                 </div>
@@ -275,8 +316,9 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                     AI Analytics Insights
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Performance analysis shows 23% improvement in member engagement. 
-                    Consider expanding class offerings during peak hours (6-8 PM) to capitalize on demand.
+                    Performance analysis shows 23% improvement in member
+                    engagement. Consider expanding class offerings during peak
+                    hours (6-8 PM) to capitalize on demand.
                   </p>
                 </div>
               </div>
@@ -306,4 +348,4 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
   );
 };
 
-export default TrainerAnalyticsModal; 
+export default TrainerAnalyticsModal;

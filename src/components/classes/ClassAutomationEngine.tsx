@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiZap, FiPlay, FiPause, FiSettings, FiUsers, FiCalendar, 
-  FiClock, FiBell, FiTrendingUp, FiTarget, FiMessageSquare, 
-  FiSend, FiCheckCircle, FiAlertTriangle, FiBarChart 
-} from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiZap,
+  FiPlay,
+  FiPause,
+  FiSettings,
+  FiUsers,
+  FiCalendar,
+  FiClock,
+  FiBell,
+  FiTrendingUp,
+  FiTarget,
+  FiMessageSquare,
+  FiSend,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiBarChart,
+} from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface AutomationWorkflow {
   id: string;
   name: string;
   description: string;
-  type: 'booking' | 'reminder' | 'optimization' | 'marketing' | 'analytics';
-  status: 'active' | 'paused' | 'draft';
+  type: "booking" | "reminder" | "optimization" | "marketing" | "analytics";
+  status: "active" | "paused" | "draft";
   icon: React.ElementType;
   color: string;
   bgColor: string;
@@ -32,135 +44,184 @@ interface ClassAutomationEngineProps {
   refreshKey: number;
 }
 
-export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEngineProps) {
+export default function ClassAutomationEngine({
+  refreshKey,
+}: ClassAutomationEngineProps) {
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedWorkflow, setSelectedWorkflow] = useState<AutomationWorkflow | null>(null);
+  const [selectedWorkflow, setSelectedWorkflow] =
+    useState<AutomationWorkflow | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const { user } = useAuth();
 
   // Predefined smart workflows
   const defaultWorkflows: AutomationWorkflow[] = [
     {
-      id: 'smart-booking-reminders',
-      name: 'Smart Booking Reminders',
-      description: 'Automatically send personalized reminders 24h before class time with custom messages based on member preferences.',
-      type: 'reminder',
-      status: 'active',
+      id: "smart-booking-reminders",
+      name: "Smart Booking Reminders",
+      description:
+        "Automatically send personalized reminders 24h before class time with custom messages based on member preferences.",
+      type: "reminder",
+      status: "active",
       icon: FiBell,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      triggers: ['24 hours before class', 'Member books class', 'Class changes'],
-      actions: ['Send SMS reminder', 'Send email notification', 'Push notification', 'Add to calendar'],
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      triggers: [
+        "24 hours before class",
+        "Member books class",
+        "Class changes",
+      ],
+      actions: [
+        "Send SMS reminder",
+        "Send email notification",
+        "Push notification",
+        "Add to calendar",
+      ],
       stats: {
         triggered: 127,
         successful: 119,
         revenue: 0,
-        lastRun: '2 hours ago'
+        lastRun: "2 hours ago",
       },
       settings: {
         reminderTime: 24,
-        channels: ['email', 'sms'],
+        channels: ["email", "sms"],
         personalizedMessages: true,
-        weatherIntegration: true
-      }
+        weatherIntegration: true,
+      },
     },
     {
-      id: 'class-capacity-optimizer',
-      name: 'Class Capacity Optimizer',
-      description: 'Automatically adjust class capacity and create additional sessions when demand is high. Smart waitlist management.',
-      type: 'optimization',
-      status: 'active',
+      id: "class-capacity-optimizer",
+      name: "Class Capacity Optimizer",
+      description:
+        "Automatically adjust class capacity and create additional sessions when demand is high. Smart waitlist management.",
+      type: "optimization",
+      status: "active",
       icon: FiTarget,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      triggers: ['90% capacity reached', 'Waitlist > 5 people', 'High demand pattern'],
-      actions: ['Create additional session', 'Increase capacity', 'Notify trainers', 'Auto-book from waitlist'],
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      triggers: [
+        "90% capacity reached",
+        "Waitlist > 5 people",
+        "High demand pattern",
+      ],
+      actions: [
+        "Create additional session",
+        "Increase capacity",
+        "Notify trainers",
+        "Auto-book from waitlist",
+      ],
       stats: {
         triggered: 23,
         successful: 21,
         revenue: 1840,
-        lastRun: '6 hours ago'
+        lastRun: "6 hours ago",
       },
       settings: {
         capacityThreshold: 90,
         waitlistThreshold: 5,
         autoCreateSessions: true,
-        trainerNotification: true
-      }
+        trainerNotification: true,
+      },
     },
     {
-      id: 'smart-class-scheduling',
-      name: 'Smart Class Scheduling',
-      description: 'AI-powered scheduling that analyzes member preferences, trainer availability, and historical data to optimize class times.',
-      type: 'optimization',
-      status: 'active',
+      id: "smart-class-scheduling",
+      name: "Smart Class Scheduling",
+      description:
+        "Smart-powered scheduling that analyzes member preferences, trainer availability, and historical data to optimize class times.",
+      type: "optimization",
+      status: "active",
       icon: FiCalendar,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      triggers: ['Weekly schedule review', 'Low attendance pattern', 'Trainer availability change'],
-      actions: ['Suggest optimal times', 'Auto-reschedule', 'Send schedule updates', 'Notify affected members'],
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      triggers: [
+        "Weekly schedule review",
+        "Low attendance pattern",
+        "Trainer availability change",
+      ],
+      actions: [
+        "Suggest optimal times",
+        "Auto-reschedule",
+        "Send schedule updates",
+        "Notify affected members",
+      ],
       stats: {
         triggered: 8,
         successful: 7,
         revenue: 560,
-        lastRun: '1 day ago'
+        lastRun: "1 day ago",
       },
       settings: {
         aiOptimization: true,
         memberPreferences: true,
         trainerAvailability: true,
-        historicalData: true
-      }
+        historicalData: true,
+      },
     },
     {
-      id: 'class-marketing-automation',
-      name: 'Class Marketing Automation',
-      description: 'Promote underperforming classes with targeted campaigns. Special offers for members who haven\'t booked recently.',
-      type: 'marketing',
-      status: 'active',
+      id: "class-marketing-automation",
+      name: "Class Marketing Automation",
+      description:
+        "Promote underperforming classes with targeted campaigns. Special offers for members who haven't booked recently.",
+      type: "marketing",
+      status: "active",
       icon: FiTrendingUp,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      triggers: ['Class < 50% capacity', 'Member inactive 2 weeks', 'New class launch'],
-      actions: ['Send promotional email', 'Create discount code', 'Social media post', 'In-app notification'],
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      triggers: [
+        "Class < 50% capacity",
+        "Member inactive 2 weeks",
+        "New class launch",
+      ],
+      actions: [
+        "Send promotional email",
+        "Create discount code",
+        "Social media post",
+        "In-app notification",
+      ],
       stats: {
         triggered: 34,
         successful: 29,
         revenue: 2340,
-        lastRun: '4 hours ago'
+        lastRun: "4 hours ago",
       },
       settings: {
         discountPercentage: 15,
-        targetAudience: 'inactive_members',
+        targetAudience: "inactive_members",
         campaignDuration: 7,
-        maxPromotions: 3
-      }
+        maxPromotions: 3,
+      },
     },
     {
-      id: 'attendance-tracking-automation',
-      name: 'Attendance Tracking & Follow-up',
-      description: 'Track no-shows automatically and send follow-up messages. Manage cancellation policies and waitlist promotion.',
-      type: 'analytics',
-      status: 'active',
+      id: "attendance-tracking-automation",
+      name: "Attendance Tracking & Follow-up",
+      description:
+        "Track no-shows automatically and send follow-up messages. Manage cancellation policies and waitlist promotion.",
+      type: "analytics",
+      status: "active",
       icon: FiUsers,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      triggers: ['Member no-show', 'Last-minute cancellation', 'Class ends'],
-      actions: ['Mark attendance', 'Send follow-up', 'Apply penalties', 'Promote from waitlist'],
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      triggers: ["Member no-show", "Last-minute cancellation", "Class ends"],
+      actions: [
+        "Mark attendance",
+        "Send follow-up",
+        "Apply penalties",
+        "Promote from waitlist",
+      ],
       stats: {
         triggered: 67,
         successful: 64,
         revenue: 0,
-        lastRun: '30 minutes ago'
+        lastRun: "30 minutes ago",
       },
       settings: {
         noShowPenalty: true,
         followUpDelay: 2,
         waitlistPromotion: true,
-        attendanceRewards: false
-      }
-    }
+        attendanceRewards: false,
+      },
+    },
   ];
 
   useEffect(() => {
@@ -175,38 +236,42 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
       // For now, use default workflows. In production, load from database
       setWorkflows(defaultWorkflows);
     } catch (error) {
-      console.error('Error loading workflows:', error);
+      console.error("Error loading workflows:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const toggleWorkflow = async (workflowId: string) => {
-    setWorkflows(prev => prev.map(w => 
-      w.id === workflowId 
-        ? { ...w, status: w.status === 'active' ? 'paused' : 'active' }
-        : w
-    ));
+    setWorkflows((prev) =>
+      prev.map((w) =>
+        w.id === workflowId
+          ? { ...w, status: w.status === "active" ? "paused" : "active" }
+          : w,
+      ),
+    );
   };
 
   const triggerWorkflow = async (workflowId: string) => {
-    const workflow = workflows.find(w => w.id === workflowId);
+    const workflow = workflows.find((w) => w.id === workflowId);
     if (!workflow) return;
 
     // Simulate workflow execution
-    setWorkflows(prev => prev.map(w => 
-      w.id === workflowId 
-        ? { 
-            ...w, 
-            stats: {
-              ...w.stats,
-              triggered: w.stats.triggered + 1,
-              successful: w.stats.successful + 1,
-              lastRun: 'Just now'
+    setWorkflows((prev) =>
+      prev.map((w) =>
+        w.id === workflowId
+          ? {
+              ...w,
+              stats: {
+                ...w.stats,
+                triggered: w.stats.triggered + 1,
+                successful: w.stats.successful + 1,
+                lastRun: "Just now",
+              },
             }
-          }
-        : w
-    ));
+          : w,
+      ),
+    );
 
     // Show success message
     setTimeout(() => {
@@ -218,7 +283,10 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow p-6 animate-pulse">
+          <div
+            key={i}
+            className="bg-white rounded-2xl shadow p-6 animate-pulse"
+          >
             <div className="h-4 bg-gray-200 rounded mb-4"></div>
             <div className="h-8 bg-gray-200 rounded mb-2"></div>
             <div className="h-3 bg-gray-200 rounded w-2/3"></div>
@@ -234,11 +302,15 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
       <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 border border-indigo-200">
         <div className="flex items-center gap-3 mb-4">
           <FiZap className="text-indigo-600 text-xl" />
-          <h3 className="text-lg font-bold text-indigo-900">Class Automation Engine</h3>
+          <h3 className="text-lg font-bold text-indigo-900">
+            Class Automation Engine
+          </h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-indigo-900">{workflows.filter(w => w.status === 'active').length}</p>
+            <p className="text-2xl font-bold text-indigo-900">
+              {workflows.filter((w) => w.status === "active").length}
+            </p>
             <p className="text-sm text-indigo-600">Active Workflows</p>
           </div>
           <div className="text-center">
@@ -249,7 +321,15 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-purple-900">
-              {Math.round((workflows.reduce((sum, w) => sum + w.stats.successful, 0) / Math.max(workflows.reduce((sum, w) => sum + w.stats.triggered, 0), 1)) * 100)}%
+              {Math.round(
+                (workflows.reduce((sum, w) => sum + w.stats.successful, 0) /
+                  Math.max(
+                    workflows.reduce((sum, w) => sum + w.stats.triggered, 0),
+                    1,
+                  )) *
+                  100,
+              )}
+              %
             </p>
             <p className="text-sm text-purple-600">Success Rate</p>
           </div>
@@ -278,11 +358,13 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
                 <div>
                   <h4 className="font-bold text-gray-900">{workflow.name}</h4>
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      workflow.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        workflow.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
                       {workflow.status}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -294,12 +376,12 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
               <button
                 onClick={() => toggleWorkflow(workflow.id)}
                 className={`p-2 rounded-lg transition-colors ${
-                  workflow.status === 'active'
-                    ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  workflow.status === "active"
+                    ? "bg-green-100 text-green-600 hover:bg-green-200"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {workflow.status === 'active' ? <FiPause /> : <FiPlay />}
+                {workflow.status === "active" ? <FiPause /> : <FiPlay />}
               </button>
             </div>
 
@@ -308,16 +390,22 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
             {/* Performance Stats */}
             <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
               <div className="text-center">
-                <p className="text-lg font-bold text-blue-900">{workflow.stats.triggered}</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {workflow.stats.triggered}
+                </p>
                 <p className="text-xs text-gray-600">Triggered</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-green-900">{workflow.stats.successful}</p>
+                <p className="text-lg font-bold text-green-900">
+                  {workflow.stats.successful}
+                </p>
                 <p className="text-xs text-gray-600">Successful</p>
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-purple-900">
-                  {workflow.stats.revenue > 0 ? `$${workflow.stats.revenue}` : '-'}
+                  {workflow.stats.revenue > 0
+                    ? `$${workflow.stats.revenue}`
+                    : "-"}
                 </p>
                 <p className="text-xs text-gray-600">Revenue</p>
               </div>
@@ -326,10 +414,15 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
             {/* Triggers & Actions */}
             <div className="space-y-3 mb-4">
               <div>
-                <p className="text-xs font-medium text-gray-700 mb-1">Triggers</p>
+                <p className="text-xs font-medium text-gray-700 mb-1">
+                  Triggers
+                </p>
                 <div className="flex flex-wrap gap-1">
                   {workflow.triggers.slice(0, 2).map((trigger, index) => (
-                    <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
+                    >
                       {trigger}
                     </span>
                   ))}
@@ -341,10 +434,15 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
                 </div>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-700 mb-1">Actions</p>
+                <p className="text-xs font-medium text-gray-700 mb-1">
+                  Actions
+                </p>
                 <div className="flex flex-wrap gap-1">
                   {workflow.actions.slice(0, 2).map((action, index) => (
-                    <span key={index} className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                    >
                       {action}
                     </span>
                   ))}
@@ -409,35 +507,41 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
               </div>
               <div className="p-6">
                 <div className="space-y-6">
-                  {Object.entries(selectedWorkflow.settings).map(([key, value]) => (
-                    <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </label>
-                      {typeof value === 'boolean' ? (
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={value}
-                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                          />
-                          <span className="ml-2 text-sm text-gray-600">Enable this feature</span>
+                  {Object.entries(selectedWorkflow.settings).map(
+                    ([key, value]) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {key
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/^./, (str) => str.toUpperCase())}
                         </label>
-                      ) : typeof value === 'number' ? (
-                        <input
-                          type="number"
-                          defaultValue={value}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      ) : (
-                        <input
-                          type="text"
-                          defaultValue={value}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      )}
-                    </div>
-                  ))}
+                        {typeof value === "boolean" ? (
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={value}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                            />
+                            <span className="ml-2 text-sm text-gray-600">
+                              Enable this feature
+                            </span>
+                          </label>
+                        ) : typeof value === "number" ? (
+                          <input
+                            type="number"
+                            defaultValue={value}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            defaultValue={value}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        )}
+                      </div>
+                    ),
+                  )}
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]">
@@ -457,4 +561,4 @@ export default function ClassAutomationEngine({ refreshKey }: ClassAutomationEng
       </AnimatePresence>
     </div>
   );
-} 
+}

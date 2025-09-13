@@ -1,532 +1,892 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
-import { FiX, FiPlus, FiTrash2, FiUser, FiCalendar, FiDollarSign, FiFileText, FiCreditCard, FiPercent, FiBarChart2 } from 'react-icons/fi';
-import { AppleInput, AppleSelect, AppleTextarea, AppleButton } from '../AppleStyleModal';
-import dayjs from 'dayjs';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  FiDollarSign,
+  FiCalendar,
+  FiTag,
+  FiFileText,
+  FiUpload,
+  FiX,
+  FiCheck,
+  FiAlertCircle,
+  FiInfo,
+  FiSearch,
+  FiClock,
+  FiTrendingUp,
+  FiShield,
+  FiBarChart2,
+  FiZap,
+  FiStar,
+  FiTarget,
+  FiActivity,
+  FiHeart,
+  FiSave,
+  FiArrowRight,
+  FiArrowLeft,
+  FiRefreshCw,
+} from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import toast from "react-hot-toast";
+import {
+  AppleStyleModal,
+  AppleInput,
+  AppleSelect,
+  AppleTextarea,
+  AppleButton,
+  AppleButtonGroup,
+  AppleToggle,
+} from "../AppleStyleModal";
+import {
+  Invoice,
+  InvoiceType,
+  InvoiceStatus,
+  RecurringFrequency,
+  PaymentMethodType,
+} from "../../types";
+import { Database } from "../../types/supabase";
+import { useAuth } from "../../contexts/AuthContext";
+import { SmartModal } from "../ui/SmartModal";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  clients: any[];
-  onSave: () => void;
+  onInvoiceAdded: () => void;
+  tenantId: string | null;
+  invoice: Invoice | null;
 }
 
-interface LineItem {
+// Enhanced invoice categories with smart suggestions
+const INVOICE_CATEGORIES: InvoiceType[] = [
+  "Membership",
+  "PT",
+  "Class",
+  "Facility",
+  "Other",
+];
+
+const PAYMENT_METHODS: PaymentMethodType[] = [
+  "cash",
+  "card",
+  "bank_transfer",
+  "cheque",
+  "digital_wallet",
+];
+
+const RECURRING_FREQUENCIES = ["weekly", "monthly", "quarterly", "yearly"];
+const INVOICE_STATUSES = [
+  "Paid",
+  "Unpaid",
+  "Partial",
+  "Overdue",
+  "Refunded",
+  "Draft",
+  "Cancelled",
+];
+
+// Smart categorization patterns
+const SMART_CATEGORIZATION = {
+  MEMBERSHIP: { category: "Membership", description: "Gym Membership Payment" },
+  TRAINING: { category: "PT", description: "Personal Training Session" },
+  CLASS: { category: "Class", description: "Group Class Session" },
+  EQUIPMENT: { category: "Facility", description: "Equipment Purchase" },
+  SUPPLEMENT: { category: "Other", description: "Supplement Purchase" },
+  MERCHANDISE: { category: "Other", description: "Gym Merchandise" },
+  SERVICE: { category: "Other", description: "Gym Service" },
+  CONSULTATION: { category: "PT", description: "Fitness Consultation" },
+  ASSESSMENT: { category: "PT", description: "Fitness Assessment" },
+  PERSONAL: { category: "PT", description: "Personal Training" },
+  GROUP: { category: "Class", description: "Group Class" },
+  SUPPLEMENT: { category: "Other", description: "Supplement" },
+  MERCH: { category: "Other", description: "Merchandise" },
+  CONSULT: { category: "PT", description: "Consultation" },
+  ASSESS: { category: "PT", description: "Assessment" },
+};
+
+// Validation schema
+const invoiceSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must be less than 100 characters"),
+  amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
+  date: z.string().min(1, "Date is required"),
+  category: z.string().min(1, "Category is required"),
+  payment_method: z.string().min(1, "Payment method is required"),
+  client: z.string().optional(),
+  description: z.string().optional(),
+  status: z.string().min(1, "Status is required"),
+  recurring: z.boolean().default(false),
+  recurring_frequency: z.string().optional(),
+  vat_included: z.boolean().default(false),
+  vat_rate: z.coerce.number().min(0).max(100).optional(),
+  internal_notes: z.string().optional(),
+  public_notes: z.string().optional(),
+  invoice_file: z.any().optional(),
+});
+
+type InvoiceFormData = z.infer<typeof invoiceSchema>;
+
+interface RecentClient {
   id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  vatRate: number;
-  discountPercent: number;
-  total: number;
+  name: string;
+  category: string;
+  last_used: string;
+  total_invoices: number;
 }
 
-interface InvoiceData {
-  memberId: string;
-  invoiceNumber: string;
-  status: 'Unpaid' | 'Paid' | 'Draft' | 'Cancelled';
-  type: 'Membership' | 'Product' | 'Service' | 'Subscription';
-  issueDate: string;
-  dueDate: string;
-  paymentMethod: 'card' | 'cash' | 'bank' | 'other';
-  paidAmount: number;
-  currency: string;
-  notes: string;
+interface SimilarInvoice {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  client: string;
+  date: string;
+  similarity_score: number;
 }
 
-const AddInvoiceModal: React.FC<AddInvoiceModalProps> = ({
+export function AddInvoiceModal({
   isOpen,
   onClose,
-  clients,
-  onSave
-}) => {
-  // Form state
-  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    memberId: '',
-    invoiceNumber: `INV-${Date.now()}`,
-    status: 'Unpaid',
-    type: 'Membership',
-    issueDate: dayjs().format('YYYY-MM-DD'),
-    dueDate: dayjs().add(7, 'day').format('YYYY-MM-DD'),
-    paymentMethod: 'card',
-    paidAmount: 0,
-    currency: 'BHD',
-    notes: ''
+  onInvoiceAdded,
+  tenantId,
+  invoice: editingInvoice,
+}: AddInvoiceModalProps) {
+  const { user } = useAuth();
+  const { tenantId: authTenantId } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [recentClients, setRecentClients] = useState<RecentClient[]>([]);
+  const [similarInvoices, setSimilarInvoices] = useState<SimilarInvoice[]>([]);
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+  const [showSimilarInvoices, setShowSimilarInvoices] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const clientInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    control,
+    formState: { errors, isValid, isDirty },
+    trigger,
+  } = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: {
+      title: "",
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      category: "Other",
+      payment_method: "card",
+      client: "",
+      description: "",
+      status: "Unpaid",
+      recurring: false,
+      recurring_frequency: "monthly",
+      vat_included: false,
+      vat_rate: 15,
+      internal_notes: "",
+      public_notes: "",
+    },
+    mode: "onChange",
   });
 
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    {
-      id: '1',
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      vatRate: 5,
-      discountPercent: 0,
-      total: 0
-    }
-  ]);
+  const watchedTitle = watch("title");
+  const watchedDescription = watch("description");
+  const watchedCategory = watch("category");
+  const watchedClient = watch("client");
+  const watchedRecurring = watch("recurring");
+  const watchedVatIncluded = watch("vat_included");
+  const watchedAmount = watch("amount");
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Calculate totals
-  const calculateLineItemTotal = useCallback((item: LineItem) => {
-    const subtotal = item.quantity * item.unitPrice;
-    const vatAmount = subtotal * (item.vatRate / 100);
-    const discountAmount = subtotal * (item.discountPercent / 100);
-    return subtotal + vatAmount - discountAmount;
-  }, []);
-
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const vatTotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.vatRate / 100)), 0);
-  const discountTotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.discountPercent / 100)), 0);
-  const grandTotal = subtotal + vatTotal - discountTotal;
-  const remainingBalance = grandTotal - invoiceData.paidAmount;
-
-  // Update line item totals when values change
+  // Load recent clients and similar invoices
   useEffect(() => {
-    setLineItems(prev => prev.map(item => ({
-      ...item,
-      total: calculateLineItemTotal(item)
-    })));
-  }, [calculateLineItemTotal]);
+    if (isOpen) {
+      loadRecentClients();
+      if (watchedTitle || watchedDescription) {
+        findSimilarInvoices();
+      }
+    }
+  }, [isOpen, watchedTitle, watchedDescription]);
 
-  // Add new line item
-  const addLineItem = () => {
-    const newItem: LineItem = {
-      id: Date.now().toString(),
-      description: '',
-      quantity: 1,
-      unitPrice: 0,
-      vatRate: 5,
-      discountPercent: 0,
-      total: 0
-    };
-    setLineItems([...lineItems, newItem]);
-  };
+  // Auto-categorization based on title and description
+  useEffect(() => {
+    if (watchedTitle || watchedDescription) {
+      const text = `${watchedTitle} ${watchedDescription}`.toUpperCase();
+      for (const [key, suggestion] of Object.entries(SMART_CATEGORIZATION)) {
+        if (text.includes(key)) {
+          setValue("category", suggestion.category as InvoiceType);
+          if (!watchedDescription) {
+            setValue("description", suggestion.description);
+          }
+          break;
+        }
+      }
+    }
+  }, [watchedTitle, watchedDescription, setValue]);
 
-  // Remove line item
-  const removeLineItem = (id: string) => {
-    if (lineItems.length > 1) {
-      setLineItems(lineItems.filter(item => item.id !== id));
+  // Load editing invoice data
+  useEffect(() => {
+    if (editingInvoice && isOpen) {
+      reset({
+        title: editingInvoice.title || "",
+        amount: editingInvoice.amount?.toString() || "",
+        date:
+          editingInvoice.issue_date || new Date().toISOString().split("T")[0],
+        category: editingInvoice.type || "Other",
+        payment_method: editingInvoice.payment_method || "card",
+        client: editingInvoice.member?.name || "",
+        description: editingInvoice.notes || "",
+        status: editingInvoice.status || "Unpaid",
+        recurring: false,
+        recurring_frequency: "monthly",
+        vat_included: false,
+        vat_rate: 15,
+        internal_notes: "",
+        public_notes: "",
+      });
+    }
+  }, [editingInvoice, isOpen, reset]);
+
+  // Load recent clients from database
+  const loadRecentClients = async () => {
+    try {
+      const { data } = await supabase
+        .from("invoices")
+        .select("member, type, created_at, amount")
+        .not("member", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (data) {
+        const clients = data.reduce((acc: RecentClient[], invoice) => {
+          const memberName = invoice.member?.name || "Unknown";
+          const existing = acc.find((c) => c.name === memberName);
+          if (existing) {
+            existing.total_invoices += invoice.amount || 0;
+          } else {
+            acc.push({
+              id: memberName,
+              name: memberName,
+              category: invoice.type || "Other",
+              last_used: invoice.created_at,
+              total_invoices: invoice.amount || 0,
+            });
+          }
+          return acc;
+        }, []);
+
+        setRecentClients(clients.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Error loading recent clients:", error);
     }
   };
 
-  // Update line item
-  const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
-    setLineItems(prev => prev.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+  // Find similar invoices for duplicate detection
+  const findSimilarInvoices = async () => {
+    if (!watchedTitle && !watchedDescription) return;
+
+    setIsAnalyzing(true);
+    try {
+      const { data } = await supabase
+        .from("invoices")
+        .select("*")
+        .or(`title.ilike.%${watchedTitle}%,notes.ilike.%${watchedDescription}%`)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (data) {
+        const similar = data
+          .map((invoice) => ({
+            id: invoice.id || "",
+            title: invoice.title || "",
+            amount: invoice.amount || 0,
+            category: invoice.type || "",
+            client: invoice.member?.name || "",
+            date: invoice.issue_date || "",
+            similarity_score: calculateSimilarity(invoice),
+          }))
+          .filter((invoice) => invoice.similarity_score > 0.3);
+
+        setSimilarInvoices(similar);
+        setShowSimilarInvoices(similar.length > 0);
+      }
+    } catch (error) {
+      console.error("Error finding similar invoices:", error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  // Validate form
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  // Calculate similarity score between current form and existing invoice
+  const calculateSimilarity = (invoice: any): number => {
+    let score = 0;
+    const currentText = `${watchedTitle} ${watchedDescription}`.toLowerCase();
+    const invoiceText =
+      `${invoice.title || ""} ${invoice.notes || ""}`.toLowerCase();
 
-    if (!invoiceData.memberId) {
-      newErrors.memberId = 'Please select a member';
+    // Title similarity
+    if (watchedTitle && invoice.title) {
+      const titleSimilarity = similarity(
+        watchedTitle.toLowerCase(),
+        invoice.title.toLowerCase(),
+      );
+      score += titleSimilarity * 0.4;
     }
 
-    if (!invoiceData.invoiceNumber) {
-      newErrors.invoiceNumber = 'Invoice number is required';
+    // Description similarity
+    if (watchedDescription && invoice.notes) {
+      const descSimilarity = similarity(
+        watchedDescription.toLowerCase(),
+        invoice.notes.toLowerCase(),
+      );
+      score += descSimilarity * 0.3;
     }
 
-    if (lineItems.some(item => !item.description)) {
-      newErrors.lineItems = 'All line items must have a description';
+    // Category match
+    if (watchedCategory === invoice.type) {
+      score += 0.2;
     }
 
-    if (grandTotal <= 0) {
-      newErrors.total = 'Invoice total must be greater than 0';
+    // Client match
+    if (
+      watchedClient &&
+      invoice.member?.name &&
+      watchedClient.toLowerCase() === invoice.member.name.toLowerCase()
+    ) {
+      score += 0.1;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return score;
   };
 
-  // Handle save
-  const handleSave = async (saveAsDraft: boolean = false) => {
-    if (!validateForm()) {
+  // Simple string similarity function
+  const similarity = (s1: string, s2: string): number => {
+    const longer = s1.length > s2.length ? s1 : s2;
+    const shorter = s1.length > s2.length ? s2 : s1;
+    if (longer.length === 0) return 1.0;
+    return (longer.length - editDistance(longer, shorter)) / longer.length;
+  };
+
+  const editDistance = (s1: string, s2: string): number => {
+    const costs = [];
+    for (let i = 0; i <= s1.length; i++) {
+      let lastValue = i;
+      for (let j = 0; j <= s2.length; j++) {
+        if (i === 0) {
+          costs[j] = j;
+        } else if (j > 0) {
+          let newValue = costs[j - 1];
+          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          }
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+      if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+  };
+
+  // Handle file upload with preview
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "application/pdf",
+      ];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+        return;
+      }
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be less than 10MB");
+        return;
+      }
+
+      setSelectedFile(file);
+      setValue("invoice_file", file);
+
+      // Create preview for images
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    }
+  };
+
+  // Handle drag and drop
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = fileInputRef.current;
+      if (input) {
+        input.files = e.dataTransfer.files;
+        handleFileChange({ target: { files: e.dataTransfer.files } } as any);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  // Handle client autocomplete
+  const handleClientInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setValue("client", value);
+    setShowClientSuggestions(value.length > 0);
+  };
+
+  const selectClient = (client: RecentClient) => {
+    setValue("client", client.name);
+    setValue("category", client.category as InvoiceType);
+    setShowClientSuggestions(false);
+  };
+
+  // Calculate VAT amount
+  const calculateVatAmount = () => {
+    const amount = parseFloat(watchedAmount) || 0;
+    const vatRate = watch("vat_rate") || 15;
+    return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
+  };
+
+  // Handle form submission
+  const onSubmit = async (data: InvoiceFormData) => {
+    if (isSubmitting) return;
+
+    if (!authTenantId) {
+      toast.error("Tenant ID not found. Please ensure you're logged in.");
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Upload file if selected
+      let invoiceUrl = null;
+      if (selectedFile) {
+        const fileName = `invoices/${authTenantId}/${Date.now()}_${selectedFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("invoice-files")
+          .upload(fileName, selectedFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("invoice-files")
+          .getPublicUrl(fileName);
+
+        invoiceUrl = urlData.publicUrl;
+      }
+
       const invoicePayload = {
-        ...invoiceData,
-        status: saveAsDraft ? 'Draft' : invoiceData.status,
-        lineItems,
-        subtotal,
-        vatTotal,
-        discountTotal,
-        grandTotal,
-        remainingBalance
+        title: data.title,
+        issue_date: data.date,
+        amount: parseFloat(data.amount.toString()),
+        type: data.category as InvoiceType,
+        payment_method: data.payment_method,
+        member: data.client || null,
+        notes: data.description || null,
+        invoice_url: invoiceUrl,
+        status: data.status as InvoiceStatus,
+        tenant_id: authTenantId,
+        created_by: user?.id,
+        country_code: "AE",
+        vat_amount: calculateVatAmount(),
+        currency: "BHD",
+        internal_notes: data.internal_notes || null,
+        public_notes: data.public_notes || null,
       };
 
-      console.log('Saving invoice:', invoicePayload);
-      onSave();
+      const { error } = await supabase
+        .from("invoices")
+        .insert([invoicePayload]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(
+        editingInvoice
+          ? "Invoice updated successfully"
+          : "Invoice added successfully",
+      );
+      onInvoiceAdded();
       onClose();
     } catch (error) {
-      console.error('Error saving invoice:', error);
+      console.error("Error saving invoice:", error);
+      toast.error("Failed to save invoice. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Auto-suggest line item for membership
-  useEffect(() => {
-    if (invoiceData.type === 'Membership' && lineItems.length === 1 && !lineItems[0].description) {
-      updateLineItem(lineItems[0].id, 'description', 'Monthly Gym Membership');
-      updateLineItem(lineItems[0].id, 'unitPrice', 100);
+  // Handle modal close with data preservation
+  const handleClose = () => {
+    if (isDirty) {
+      const shouldClose = window.confirm(
+        "You have unsaved changes. Are you sure you want to close?",
+      );
+      if (!shouldClose) return;
     }
-  }, [invoiceData.type]);
+    onClose();
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      handleClose();
+    }
+    if (e.key === "Enter" && e.ctrlKey) {
+      handleSubmit(onSubmit)();
+    }
+  };
+
+  const totalAmount = parseFloat(watchedAmount) || 0;
+  const vatAmount = calculateVatAmount();
+  const finalAmount = totalAmount + vatAmount;
+
+  // Sticky footer
+  const Footer = () => (
+    <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-200 py-4 px-8 flex items-center justify-between z-10">
+      <AppleButton variant="secondary" onClick={onClose}>
+        Cancel
+      </AppleButton>
+      <AppleButton
+        variant="primary"
+        onClick={handleSubmit(onSubmit)}
+        loading={isSubmitting}
+        disabled={!isValid || isSubmitting}
+      >
+        {isSubmitting
+          ? "Saving..."
+          : editingInvoice
+            ? "Update Invoice"
+            : "Add Invoice"}
+      </AppleButton>
+    </div>
+  );
 
   return (
-    <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
-        <div className="min-h-screen px-4 text-center">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+    <AnimatePresence>
+      {isOpen && (
+        <SmartModal
+          isOpen={isOpen}
+          onClose={handleClose}
+          title={editingInvoice ? "Edit Invoice" : "Add New Invoice"}
+          subtitle="Create and manage professional invoices with smart features"
+        >
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-8"
+            onKeyDown={handleKeyDown}
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
+            {/* Invoice Details Section */}
+            <div className="card p-6 space-y-6">
+              <h3 className="text-lg font-semibold flex items-center mb-4">
+                <FiDollarSign className="mr-2" />
+                Invoice Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleInput
+                  label="Title"
+                  {...register("title")}
+                  error={errors.title?.message}
+                  required
+                  placeholder="Enter invoice title"
+                />
+                <AppleInput
+                  label="Amount"
+                  type="number"
+                  step="0.01"
+                  {...register("amount")}
+                  error={errors.amount?.message}
+                  required
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleInput
+                  label="Date"
+                  type="date"
+                  {...register("date")}
+                  error={errors.date?.message}
+                  required
+                />
+                <AppleSelect
+                  label="Category"
+                  {...register("category")}
+                  error={errors.category?.message}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {INVOICE_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </AppleSelect>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleInput
+                  label="Client"
+                  {...register("client")}
+                  error={errors.client?.message}
+                  placeholder="Enter client name"
+                  onChange={handleClientInput}
+                  ref={clientInputRef}
+                />
+                <AppleSelect
+                  label="Payment Method"
+                  {...register("payment_method")}
+                  error={errors.payment_method?.message}
+                  required
+                >
+                  <option value="">Select Payment Method</option>
+                  {PAYMENT_METHODS.map((method) => (
+                    <option key={method} value={method}>
+                      {method.charAt(0).toUpperCase() +
+                        method.slice(1).replace("_", " ")}
+                    </option>
+                  ))}
+                </AppleSelect>
+              </div>
+              <AppleTextarea
+                label="Description"
+                {...register("description")}
+                error={errors.description?.message}
+                rows={3}
+                placeholder="Describe the invoice..."
+              />
+            </div>
 
-          <span className="inline-block h-screen align-middle" aria-hidden="true">
-            &#8203;
-          </span>
-
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <div className="inline-block w-full max-w-4xl h-screen align-middle text-left bg-white rounded-2xl shadow-2xl transform transition-all">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-[#002D9C] to-[#0E5EF2] rounded-t-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Dialog.Title className="text-2xl font-bold text-white">
-                      Add New Invoice
-                    </Dialog.Title>
-                    <p className="text-blue-100 mt-1">
-                      Create a professional invoice for your client
-                    </p>
-                  </div>
-                  <button
-                    onClick={onClose}
-                    className="text-white hover:text-blue-100 transition-colors"
+            {/* VAT & File Section */}
+            <div className="card p-6 space-y-6">
+              <h3 className="text-lg font-semibold flex items-center mb-4">
+                <FiBarChart2 className="mr-2" />
+                VAT & File
+              </h3>
+              <div className="flex items-center space-x-4">
+                <AppleToggle
+                  label="VAT Included"
+                  checked={watchedVatIncluded}
+                  onChange={(checked) => setValue("vat_included", checked)}
+                />
+                {watchedVatIncluded && (
+                  <AppleSelect
+                    label="VAT Rate"
+                    {...register("vat_rate")}
+                    error={errors.vat_rate?.message}
                   >
-                    <FiX className="h-6 w-6" />
-                  </button>
+                    <option value={0}>0%</option>
+                    <option value={5}>5%</option>
+                    <option value={15}>15%</option>
+                  </AppleSelect>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>${totalAmount.toFixed(2)}</span>
+                </div>
+                {watchedVatIncluded && (
+                  <div className="flex justify-between text-sm">
+                    <span>VAT ({watch("vat_rate")}%):</span>
+                    <span>${vatAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-medium border-t pt-2">
+                  <span>Total:</span>
+                  <span>${finalAmount.toFixed(2)}</span>
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="flex h-[calc(100vh-120px)]">
-                {/* Main Form */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {/* Client Info Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                      <FiUser className="w-4 h-4 mr-2" />
-                      Client Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <AppleSelect
-                        label="Member"
-                        value={invoiceData.memberId}
-                        onChange={(e) => setInvoiceData({...invoiceData, memberId: e.target.value})}
-                        required
-                        error={errors.memberId}
-                      >
-                        <option value="">Select a member</option>
-                        {clients.map(client => (
-                          <option key={client.id} value={client.id}>
-                            {client.name} - {client.email}
-                          </option>
-                        ))}
-                      </AppleSelect>
-
-                      <AppleInput
-                        label="Invoice Number"
-                        value={invoiceData.invoiceNumber}
-                        onChange={(e) => setInvoiceData({...invoiceData, invoiceNumber: e.target.value})}
-                        required
-                        error={errors.invoiceNumber}
-                      />
-
-                      <AppleSelect
-                        label="Status"
-                        value={invoiceData.status}
-                        onChange={(e) => setInvoiceData({...invoiceData, status: e.target.value as any})}
-                      >
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </AppleSelect>
-
-                      <AppleSelect
-                        label="Type"
-                        value={invoiceData.type}
-                        onChange={(e) => setInvoiceData({...invoiceData, type: e.target.value as any})}
-                      >
-                        <option value="Membership">Membership</option>
-                        <option value="Product">Product</option>
-                        <option value="Service">Service</option>
-                        <option value="Subscription">Subscription</option>
-                      </AppleSelect>
-                    </div>
-                  </div>
-
-                  {/* Dates Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                      <FiCalendar className="w-4 h-4 mr-2" />
-                      Dates
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <AppleInput
-                        label="Issue Date"
-                        type="date"
-                        value={invoiceData.issueDate}
-                        onChange={(e) => setInvoiceData({...invoiceData, issueDate: e.target.value})}
-                      />
-
-                      <AppleInput
-                        label="Due Date"
-                        type="date"
-                        value={invoiceData.dueDate}
-                        onChange={(e) => setInvoiceData({...invoiceData, dueDate: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Payment Info Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                      <FiCreditCard className="w-4 h-4 mr-2" />
-                      Payment Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <AppleSelect
-                        label="Payment Method"
-                        value={invoiceData.paymentMethod}
-                        onChange={(e) => setInvoiceData({...invoiceData, paymentMethod: e.target.value as any})}
-                      >
-                        <option value="card">Card</option>
-                        <option value="cash">Cash</option>
-                        <option value="bank">Bank Transfer</option>
-                        <option value="other">Other</option>
-                      </AppleSelect>
-
-                      <AppleInput
-                        label="Paid Amount"
-                        type="number"
-                        value={invoiceData.paidAmount}
-                        onChange={(e) => setInvoiceData({...invoiceData, paidAmount: parseFloat(e.target.value) || 0})}
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Line Items Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium text-gray-900 dark:text-white flex items-center">
-                        <FiFileText className="w-4 h-4 mr-2" />
-                        Line Items
-                      </h3>
-                      <AppleButton
-                        onClick={addLineItem}
-                        variant="secondary"
-                        size="sm"
-                        icon={<FiPlus className="w-4 h-4" />}
-                      >
-                        Add Item
-                      </AppleButton>
-                    </div>
-
+              <div className="space-y-4">
+                <h4 className="font-medium flex items-center">
+                  <FiUpload className="mr-2" />
+                  Invoice File Upload
+                </h4>
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors"
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                >
+                  {selectedFile ? (
                     <div className="space-y-4">
-                      {lineItems.map((item, index) => (
-                        <div key={item.id} className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium text-gray-900 dark:text-white">Item {index + 1}</h4>
-                            {lineItems.length > 1 && (
-                              <button
-                                onClick={() => removeLineItem(item.id)}
-                                className="text-red-500 hover:text-red-700 transition-colors"
-                              >
-                                <FiTrash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-12 gap-3">
-                            <div className="col-span-6">
-                              <AppleInput
-                                label="Description"
-                                value={item.description}
-                                onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
-                                placeholder="Item description"
-                                required
-                              />
-                            </div>
-                            <div className="col-span-2">
-                              <AppleInput
-                                label="Quantity"
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) => updateLineItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
-                                min="1"
-                              />
-                            </div>
-                            <div className="col-span-2">
-                              <AppleInput
-                                label="Unit Price"
-                                type="number"
-                                value={item.unitPrice}
-                                onChange={(e) => updateLineItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                                step="0.01"
-                              />
-                            </div>
-                            <div className="col-span-1">
-                              <AppleInput
-                                label="VAT %"
-                                type="number"
-                                value={item.vatRate}
-                                onChange={(e) => updateLineItem(item.id, 'vatRate', parseFloat(e.target.value) || 0)}
-                                min="0"
-                                max="100"
-                              />
-                            </div>
-                            <div className="col-span-1">
-                              <AppleInput
-                                label="Discount %"
-                                type="number"
-                                value={item.discountPercent}
-                                onChange={(e) => updateLineItem(item.id, 'discountPercent', parseFloat(e.target.value) || 0)}
-                                min="0"
-                                max="100"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="mt-3 text-right">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                              Total: {invoiceData.currency} {item.total.toFixed(2)}
-                            </span>
-                          </div>
+                      {filePreview ? (
+                        <div className="flex justify-center">
+                          <img
+                            src={filePreview}
+                            alt="Invoice preview"
+                            className="max-w-xs max-h-32 object-contain rounded-lg"
+                          />
                         </div>
-                      ))}
-                    </div>
-
-                    {errors.lineItems && (
-                      <p className="text-sm text-red-500 mt-2">{errors.lineItems}</p>
-                    )}
-                  </div>
-
-                  {/* Notes Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4">Notes</h3>
-                    <AppleTextarea
-                      label="Internal Notes"
-                      value={invoiceData.notes}
-                      onChange={(e) => setInvoiceData({...invoiceData, notes: e.target.value})}
-                      rows={3}
-                      placeholder="Add any internal notes..."
-                    />
-                  </div>
-                </div>
-
-                {/* Summary Panel */}
-                <div className="w-80 bg-gray-50 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6">
-                  <div className="sticky top-6">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                      <FiBarChart2 className="w-4 h-4 mr-2" />
-                      Summary
-                    </h3>
-
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                        <span className="font-medium">{invoiceData.currency} {subtotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">VAT:</span>
-                        <span className="font-medium">{invoiceData.currency} {vatTotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Discount:</span>
-                        <span className="font-medium text-green-600">-{invoiceData.currency} {discountTotal.toFixed(2)}</span>
-                      </div>
-                      <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
-                        <div className="flex justify-between">
-                          <span className="text-lg font-semibold text-gray-900 dark:text-white">Grand Total:</span>
-                          <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {invoiceData.currency} {grandTotal.toFixed(2)}
-                          </span>
+                      ) : (
+                        <div className="flex justify-center">
+                          <FiFileText className="h-12 w-12 text-green-500" />
                         </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Paid Amount:</span>
-                        <span className="font-medium">{invoiceData.currency} {invoiceData.paidAmount.toFixed(2)}</span>
-                      </div>
-                      <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
-                        <div className="flex justify-between">
-                          <span className="text-lg font-semibold text-gray-900 dark:text-white">Remaining:</span>
-                          <span className={`text-lg font-semibold ${remainingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {invoiceData.currency} {remainingBalance.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {errors.total && (
-                      <p className="text-sm text-red-500 mt-3">{errors.total}</p>
-                    )}
-
-                    <div className="mt-6 space-y-3">
-                      <AppleButton
-                        onClick={() => handleSave(false)}
-                        variant="primary"
-                        loading={isLoading}
-                        className="w-full"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setFilePreview(null);
+                          setValue("invoice_file", null);
+                        }}
+                        className="text-sm text-red-600 hover:text-red-700"
                       >
-                        Save Invoice
-                      </AppleButton>
-                      <AppleButton
-                        onClick={() => handleSave(true)}
-                        variant="secondary"
-                        loading={isLoading}
-                        className="w-full"
-                      >
-                        Save as Draft
-                      </AppleButton>
+                        Remove file
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <FiUpload className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">
+                          Drag and drop your invoice file here, or{" "}
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            browse
+                          </button>
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Supports: JPG, PNG, GIF, PDF (max 10MB)
+                        </p>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </Transition.Child>
-        </div>
-      </Dialog>
-    </Transition.Root>
-  );
-};
 
-export default AddInvoiceModal; 
+            {/* Settings & Notes Section */}
+            <div className="card p-6 space-y-6">
+              <h3 className="text-lg font-semibold flex items-center mb-4">
+                <FiShield className="mr-2" />
+                Settings & Notes
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleSelect
+                  label="Status"
+                  {...register("status")}
+                  error={errors.status?.message}
+                  required
+                >
+                  <option value="">Select Status</option>
+                  {INVOICE_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </AppleSelect>
+                <div className="flex items-center space-x-3">
+                  <AppleToggle
+                    label="Recurring Invoice"
+                    checked={watchedRecurring}
+                    onChange={(checked) => setValue("recurring", checked)}
+                  />
+                </div>
+              </div>
+              {watchedRecurring && (
+                <AppleSelect
+                  label="Recurring Frequency"
+                  {...register("recurring_frequency")}
+                  error={errors.recurring_frequency?.message}
+                >
+                  <option value="">Select Frequency</option>
+                  {RECURRING_FREQUENCIES.map((freq) => (
+                    <option key={freq} value={freq}>
+                      {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                    </option>
+                  ))}
+                </AppleSelect>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleTextarea
+                  label="Internal Notes"
+                  {...register("internal_notes")}
+                  error={errors.internal_notes?.message}
+                  rows={3}
+                  placeholder="Private notes for staff only..."
+                />
+                <AppleTextarea
+                  label="Public Notes"
+                  {...register("public_notes")}
+                  error={errors.public_notes?.message}
+                  rows={3}
+                  placeholder="Notes visible to clients..."
+                />
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {Object.keys(errors).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 rounded-lg p-4"
+              >
+                <div className="flex items-center mb-2">
+                  <FiAlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <p className="text-sm font-medium text-red-700">
+                    Please fix the following errors:
+                  </p>
+                </div>
+                <ul className="text-sm text-red-600 space-y-1">
+                  {Object.values(errors).map((error, index) => (
+                    <li key={index}>• {error?.message}</li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            <Footer />
+          </form>
+        </SmartModal>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export default AddInvoiceModal;

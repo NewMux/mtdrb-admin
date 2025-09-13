@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiPlay, FiClock, FiMessageSquare, FiZap, FiUser, FiCalendar } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiPlay,
+  FiClock,
+  FiMessageSquare,
+  FiZap,
+  FiUser,
+  FiCalendar,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface StartTaskModalProps {
   open: boolean;
@@ -17,26 +24,23 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    changeTaskStatus,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, changeTaskStatus, alerts, clearAlerts } =
+    useSmartTaskModal({ taskId, isPro });
 
-  const [comment, setComment] = React.useState('');
+  const [comment, setComment] = React.useState("");
   const [showTimer, setShowTimer] = React.useState(false);
   const [timerRunning, setTimerRunning] = React.useState(false);
   const [timerSeconds, setTimerSeconds] = React.useState(0);
-  const [selectedStatus, setSelectedStatus] = React.useState<'in_progress' | 'waiting'>('in_progress');
+  const [selectedStatus, setSelectedStatus] = React.useState<
+    "in_progress" | "waiting"
+  >("in_progress");
 
   // Timer effect
   React.useEffect(() => {
     let interval: NodeJS.Timeout;
     if (timerRunning) {
       interval = setInterval(() => {
-        setTimerSeconds(prev => prev + 1);
+        setTimerSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -46,7 +50,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleStartTask = async () => {
@@ -69,16 +73,16 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
 
   const statusOptions = [
     {
-      value: 'in_progress' as const,
-      label: 'In Progress',
-      description: 'Start working on the task now',
-      icon: '▶️',
+      value: "in_progress" as const,
+      label: "In Progress",
+      description: "Start working on the task now",
+      icon: "▶️",
     },
     {
-      value: 'waiting' as const,
-      label: 'Waiting on Response',
-      description: 'Waiting for someone else to respond',
-      icon: '⏳',
+      value: "waiting" as const,
+      label: "Waiting on Response",
+      description: "Waiting for someone else to respond",
+      icon: "⏳",
     },
   ];
 
@@ -101,9 +105,11 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -130,21 +136,29 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="font-medium capitalize">{task.type.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.type.replace("_", " ")}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Priority:
+              </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.assignedTo && (
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">Assigned to:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Assigned to:
+                </span>
                 <span className="font-medium">{task.assignedTo}</span>
               </div>
             )}
             {task.dueDate && (
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">Due date:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Due date:
+                </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
                 </span>
@@ -265,7 +279,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {showTimer ? 'Timer ready' : 'Quick start available'}
+                {showTimer ? "Timer ready" : "Quick start available"}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -294,7 +308,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                   >
                     <FiPlay className="w-4 h-4" />
-                    <span>{loading ? 'Starting...' : 'Start Task'}</span>
+                    <span>{loading ? "Starting..." : "Start Task"}</span>
                   </button>
                 </>
               )}
@@ -304,4 +318,4 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

@@ -1,1 +1,7 @@
-export { default as Ae2 } from './Ae2'; 
+// Component exports
+
+// Unified Modal System
+export { UnifiedModal } from "./ui/UnifiedModal";
+
+// UI Components
+export * from "./ui";

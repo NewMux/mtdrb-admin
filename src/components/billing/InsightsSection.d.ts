@@ -10,4 +10,4 @@ interface InsightsSectionProps {
 
 declare const InsightsSection: React.FC<InsightsSectionProps>;
 
-export default InsightsSection; 
+export default InsightsSection;

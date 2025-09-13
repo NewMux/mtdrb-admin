@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiFileText, FiUser, FiCalendar, FiDollarSign, FiShield, FiZap } from "react-icons/fi";
+import {
+  FiX,
+  FiFileText,
+  FiUser,
+  FiCalendar,
+  FiDollarSign,
+  FiShield,
+  FiZap,
+} from "react-icons/fi";
 import { SmartBillingModal } from "./SmartBillingModal";
 import { useSmartBillingModal } from "./useSmartBillingModal";
 
@@ -20,19 +28,19 @@ interface InvoiceTemplate {
     quantity: number;
     unitPrice: number;
   }>;
-  category: 'pt' | 'subscription' | 'product' | 'custom';
+  category: "pt" | "subscription" | "product" | "custom";
 }
 
 const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   open,
   onClose,
   memberId,
-  planId
+  planId,
 }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [selectedMember, setSelectedMember] = useState(memberId || '');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [selectedMember, setSelectedMember] = useState(memberId || "");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -43,83 +51,93 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
     isProUser,
     updateData,
     getSmartDefaults,
-    fetchRelatedData
+    fetchRelatedData,
   } = useSmartBillingModal({ memberId, planId });
 
   const invoiceTemplates: InvoiceTemplate[] = [
     {
-      id: 'pt-session',
-      name: 'Personal Training Session',
-      description: 'Standard 1-hour personal training session',
-      category: 'pt',
+      id: "pt-session",
+      name: "Personal Training Session",
+      description: "Standard 1-hour personal training session",
+      category: "pt",
       items: [
-        { description: 'Personal Training Session (1 hour)', quantity: 1, unitPrice: 150 }
-      ]
+        {
+          description: "Personal Training Session (1 hour)",
+          quantity: 1,
+          unitPrice: 150,
+        },
+      ],
     },
     {
-      id: 'pt-package',
-      name: 'PT Package (10 Sessions)',
-      description: 'Package of 10 personal training sessions',
-      category: 'pt',
+      id: "pt-package",
+      name: "PT Package (10 Sessions)",
+      description: "Package of 10 personal training sessions",
+      category: "pt",
       items: [
-        { description: 'Personal Training Package (10 sessions)', quantity: 1, unitPrice: 1200 }
-      ]
+        {
+          description: "Personal Training Package (10 sessions)",
+          quantity: 1,
+          unitPrice: 1200,
+        },
+      ],
     },
     {
-      id: 'monthly-subscription',
-      name: 'Monthly Gym Membership',
-      description: 'Standard monthly gym membership',
-      category: 'subscription',
+      id: "monthly-subscription",
+      name: "Monthly Gym Membership",
+      description: "Standard monthly gym membership",
+      category: "subscription",
       items: [
-        { description: 'Monthly Gym Membership', quantity: 1, unitPrice: 299 }
-      ]
+        { description: "Monthly Gym Membership", quantity: 1, unitPrice: 299 },
+      ],
     },
     {
-      id: 'premium-subscription',
-      name: 'Premium Membership',
-      description: 'Premium membership with all amenities',
-      category: 'subscription',
+      id: "premium-subscription",
+      name: "Premium Membership",
+      description: "Premium membership with all amenities",
+      category: "subscription",
       items: [
-        { description: 'Premium Gym Membership', quantity: 1, unitPrice: 499 }
-      ]
+        { description: "Premium Gym Membership", quantity: 1, unitPrice: 499 },
+      ],
     },
     {
-      id: 'supplements',
-      name: 'Supplements Package',
-      description: 'Basic supplements package',
-      category: 'product',
+      id: "supplements",
+      name: "Supplements Package",
+      description: "Basic supplements package",
+      category: "product",
       items: [
-        { description: 'Protein Powder', quantity: 1, unitPrice: 89 },
-        { description: 'BCAA Supplements', quantity: 1, unitPrice: 45 }
-      ]
-    }
+        { description: "Protein Powder", quantity: 1, unitPrice: 89 },
+        { description: "BCAA Supplements", quantity: 1, unitPrice: 45 },
+      ],
+    },
   ];
 
   const generateInvoiceNumber = () => {
     const date = new Date();
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
     return `INV-${year}${month}-${random}`;
   };
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
-    const template = invoiceTemplates.find(t => t.id === templateId);
+    const template = invoiceTemplates.find((t) => t.id === templateId);
     if (template) {
       // Auto-populate with template data
       setInvoiceNumber(generateInvoiceNumber());
       const defaults = getSmartDefaults(selectedMember);
-      setDueDate(defaults.dueDate || '');
+      setDueDate(defaults.dueDate || "");
     }
   };
 
   const handleGenerateInvoice = async () => {
     if (!selectedTemplate || !selectedMember) return;
-    
+
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
     onClose();
   };
@@ -183,19 +201,23 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
                   onClick={() => handleTemplateSelect(template.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     selectedTemplate === template.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-medium text-gray-900 dark:text-white">
                       {template.name}
                     </h4>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      template.category === 'pt' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-                      template.category === 'subscription' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        template.category === "pt"
+                          ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                          : template.category === "subscription"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      }`}
+                    >
                       {template.category.toUpperCase()}
                     </span>
                   </div>
@@ -217,9 +239,11 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
                 Template Details
               </h4>
               {(() => {
-                const template = invoiceTemplates.find(t => t.id === selectedTemplate);
+                const template = invoiceTemplates.find(
+                  (t) => t.id === selectedTemplate,
+                );
                 if (!template) return null;
-                
+
                 return (
                   <div className="space-y-2">
                     {template.items.map((item, index) => (
@@ -279,14 +303,16 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Recommendations
+                    Smart Recommendations
                   </h3>
                   <div className="space-y-2 mt-2">
                     <p className="text-sm text-blue-600 dark:text-blue-300">
-                      Member has 2 previous PT sessions this month. Consider package discount.
+                      Member has 2 previous PT sessions this month. Consider
+                      package discount.
                     </p>
                     <p className="text-sm text-blue-600 dark:text-blue-300">
-                      Payment history shows preference for monthly billing cycles.
+                      Payment history shows preference for monthly billing
+                      cycles.
                     </p>
                   </div>
                 </div>
@@ -327,4 +353,4 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   );
 };
 
-export default GenerateInvoiceModal; 
+export default GenerateInvoiceModal;

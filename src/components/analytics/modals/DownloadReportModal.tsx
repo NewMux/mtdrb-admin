@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiDownload, FiClock, FiCheckCircle, FiArchive, FiFilter, FiSearch, FiTrash2, FiRefreshCw } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiDownload,
+  FiClock,
+  FiCheckCircle,
+  FiArchive,
+  FiFilter,
+  FiSearch,
+  FiTrash2,
+  FiRefreshCw,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface DownloadReportModalProps {
   open: boolean;
@@ -13,97 +22,102 @@ interface DownloadReportModalProps {
 
 const availableDownloads = [
   {
-    id: '1',
-    name: 'Member Overview Report',
-    type: 'member',
-    date: '2024-01-15T10:30:00Z',
-    creator: 'admin@mtdrb.com',
-    size: '2.3 MB',
-    format: 'pdf',
-    status: 'completed',
-    downloadUrl: '/api/reports/download/1',
+    id: "1",
+    name: "Member Overview Report",
+    type: "member",
+    date: "2024-01-15T10:30:00Z",
+    creator: "admin@mtdrb.com",
+    size: "2.3 MB",
+    format: "pdf",
+    status: "completed",
+    downloadUrl: "/api/reports/download/1",
   },
   {
-    id: '2',
-    name: 'Financial Summary Q4',
-    type: 'financial',
-    date: '2024-01-10T14:20:00Z',
-    creator: 'manager@mtdrb.com',
-    size: '1.8 MB',
-    format: 'excel',
-    status: 'completed',
-    downloadUrl: '/api/reports/download/2',
+    id: "2",
+    name: "Financial Summary Q4",
+    type: "financial",
+    date: "2024-01-10T14:20:00Z",
+    creator: "manager@mtdrb.com",
+    size: "1.8 MB",
+    format: "excel",
+    status: "completed",
+    downloadUrl: "/api/reports/download/2",
   },
   {
-    id: '3',
-    name: 'Class Performance Report',
-    type: 'class',
-    date: '2024-01-12T09:15:00Z',
-    creator: 'admin@mtdrb.com',
-    size: '3.1 MB',
-    format: 'csv',
-    status: 'completed',
-    downloadUrl: '/api/reports/download/3',
+    id: "3",
+    name: "Class Performance Report",
+    type: "class",
+    date: "2024-01-12T09:15:00Z",
+    creator: "admin@mtdrb.com",
+    size: "3.1 MB",
+    format: "csv",
+    status: "completed",
+    downloadUrl: "/api/reports/download/3",
   },
   {
-    id: '4',
-    name: 'VAT Report Q4 2023',
-    type: 'vat',
-    date: '2024-01-08T16:45:00Z',
-    creator: 'finance@mtdrb.com',
-    size: '1.2 MB',
-    format: 'pdf',
-    status: 'completed',
-    downloadUrl: '/api/reports/download/4',
+    id: "4",
+    name: "VAT Report Q4 2023",
+    type: "vat",
+    date: "2024-01-08T16:45:00Z",
+    creator: "finance@mtdrb.com",
+    size: "1.2 MB",
+    format: "pdf",
+    status: "completed",
+    downloadUrl: "/api/reports/download/4",
   },
   {
-    id: '5',
-    name: 'Custom Analytics Report',
-    type: 'custom',
-    date: '2024-01-14T11:20:00Z',
-    creator: 'admin@mtdrb.com',
-    size: '4.5 MB',
-    format: 'excel',
-    status: 'pending',
+    id: "5",
+    name: "Custom Analytics Report",
+    type: "custom",
+    date: "2024-01-14T11:20:00Z",
+    creator: "admin@mtdrb.com",
+    size: "4.5 MB",
+    format: "excel",
+    status: "pending",
     downloadUrl: null,
   },
   {
-    id: '6',
-    name: 'Trainer Performance Q4',
-    type: 'trainer',
-    date: '2024-01-09T13:30:00Z',
-    creator: 'hr@mtdrb.com',
-    size: '2.7 MB',
-    format: 'pdf',
-    status: 'completed',
-    downloadUrl: '/api/reports/download/6',
+    id: "6",
+    name: "Trainer Performance Q4",
+    type: "trainer",
+    date: "2024-01-09T13:30:00Z",
+    creator: "hr@mtdrb.com",
+    size: "2.7 MB",
+    format: "pdf",
+    status: "completed",
+    downloadUrl: "/api/reports/download/6",
   },
 ];
 
 const reportTypes = [
-  { id: 'all', label: 'All Types' },
-  { id: 'member', label: 'Member Reports' },
-  { id: 'financial', label: 'Financial Reports' },
-  { id: 'class', label: 'Class Reports' },
-  { id: 'vat', label: 'VAT Reports' },
-  { id: 'trainer', label: 'Trainer Reports' },
-  { id: 'custom', label: 'Custom Reports' },
+  { id: "all", label: "All Types" },
+  { id: "member", label: "Member Reports" },
+  { id: "financial", label: "Financial Reports" },
+  { id: "class", label: "Class Reports" },
+  { id: "vat", label: "VAT Reports" },
+  { id: "trainer", label: "Trainer Reports" },
+  { id: "custom", label: "Custom Reports" },
 ];
 
 const formatIcons = {
-  pdf: '📄',
-  excel: '📊',
-  csv: '📋',
-  json: '📄',
+  pdf: "📄",
+  excel: "📊",
+  csv: "📋",
+  json: "📄",
 };
 
-export default function DownloadReportModal({ open, onClose, onSuccess, isPro }: DownloadReportModalProps) {
+export default function DownloadReportModal({
+  open,
+  onClose,
+  onSuccess,
+  isPro,
+}: DownloadReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedType, setSelectedType] = React.useState('all');
-  const [selectedStatus, setSelectedStatus] = React.useState('all');
-  const [selectedCreator, setSelectedCreator] = React.useState('all');
+
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedType, setSelectedType] = React.useState("all");
+  const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [selectedCreator, setSelectedCreator] = React.useState("all");
   const [showArchived, setShowArchived] = React.useState(false);
   const [downloading, setDownloading] = React.useState<string | null>(null);
 
@@ -117,9 +131,9 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
     setDownloading(reportId);
     try {
       // Simulate download
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       // In real app, trigger actual download
-      console.log('Downloading:', downloadUrl);
+      console.log("Downloading:", downloadUrl);
       onSuccess?.();
     } finally {
       setDownloading(null);
@@ -128,28 +142,32 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
 
   const handleArchive = async (reportId: string) => {
     // Simulate archive action
-    console.log('Archiving report:', reportId);
+    console.log("Archiving report:", reportId);
   };
 
-  const filteredDownloads = availableDownloads.filter(report => {
-    const matchesSearch = report.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === 'all' || report.type === selectedType;
-    const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus;
-    const matchesCreator = selectedCreator === 'all' || report.creator === selectedCreator;
-    
+  const filteredDownloads = availableDownloads.filter((report) => {
+    const matchesSearch = report.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === "all" || report.type === selectedType;
+    const matchesStatus =
+      selectedStatus === "all" || report.status === selectedStatus;
+    const matchesCreator =
+      selectedCreator === "all" || report.creator === selectedCreator;
+
     return matchesSearch && matchesType && matchesStatus && matchesCreator;
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return (
           <span className="flex items-center gap-1 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
             <FiCheckCircle className="w-3 h-3" />
             Generated
           </span>
         );
-      case 'pending':
+      case "pending":
         return (
           <span className="flex items-center gap-1 text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
             <FiClock className="w-3 h-3" />
@@ -161,7 +179,13 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
     }
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -181,11 +205,16 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
           {alert.message}
         </div>
       ))}
@@ -217,7 +246,9 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
                 onChange={(e) => setSelectedType(e.target.value)}
               >
                 {reportTypes.map((type) => (
-                  <option key={type.id} value={type.id}>{type.label}</option>
+                  <option key={type.id} value={type.id}>
+                    {type.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -279,24 +310,32 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="text-2xl">{formatIcons[report.format as keyof typeof formatIcons]}</div>
+                  <div className="text-2xl">
+                    {formatIcons[report.format as keyof typeof formatIcons]}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{report.name}</h4>
+                      <h4 className="font-semibold text-gray-900">
+                        {report.name}
+                      </h4>
                       {getStatusBadge(report.status)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span>Size: {report.size}</span>
                       <span>Format: {report.format.toUpperCase()}</span>
-                      <span>Created: {new Date(report.date).toLocaleDateString()}</span>
+                      <span>
+                        Created: {new Date(report.date).toLocaleDateString()}
+                      </span>
                       <span>By: {report.creator}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {report.status === 'completed' && report.downloadUrl ? (
+                  {report.status === "completed" && report.downloadUrl ? (
                     <button
-                      onClick={() => handleDownload(report.id, report.downloadUrl!)}
+                      onClick={() =>
+                        handleDownload(report.id, report.downloadUrl!)
+                      }
                       disabled={downloading === report.id}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
                     >
@@ -368,7 +407,7 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={() => {
               // Refresh downloads
-              console.log('Refreshing downloads...');
+              console.log("Refreshing downloads...");
             }}
             disabled={loading}
           >
@@ -379,4 +418,4 @@ export default function DownloadReportModal({ open, onClose, onSuccess, isPro }:
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

@@ -1,8 +1,14 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiPause, FiMessageSquare, FiClock, FiZap, FiAlertCircle } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiPause,
+  FiMessageSquare,
+  FiClock,
+  FiZap,
+  FiAlertCircle,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface PauseTaskModalProps {
   open: boolean;
@@ -17,61 +23,56 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    changeTaskStatus,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, changeTaskStatus, alerts, clearAlerts } =
+    useSmartTaskModal({ taskId, isPro });
 
-  const [reason, setReason] = React.useState('');
-  const [note, setNote] = React.useState('');
+  const [reason, setReason] = React.useState("");
+  const [note, setNote] = React.useState("");
   const [enableReminder, setEnableReminder] = React.useState(false);
   const [reminderDays, setReminderDays] = React.useState(2);
 
   const pauseReasons = [
     {
-      value: 'blocked',
-      label: 'Blocked',
-      description: 'Waiting for information or resources',
-      icon: '🚫',
-      color: 'text-red-600 bg-red-50',
+      value: "blocked",
+      label: "Blocked",
+      description: "Waiting for information or resources",
+      icon: "🚫",
+      color: "text-red-600 bg-red-50",
     },
     {
-      value: 'waiting_response',
-      label: 'Waiting on Response',
-      description: 'Waiting for someone else to respond',
-      icon: '⏳',
-      color: 'text-yellow-600 bg-yellow-50',
+      value: "waiting_response",
+      label: "Waiting on Response",
+      description: "Waiting for someone else to respond",
+      icon: "⏳",
+      color: "text-yellow-600 bg-yellow-50",
     },
     {
-      value: 'not_priority',
-      label: 'Not Priority',
-      description: 'Lower priority than other tasks',
-      icon: '📉',
-      color: 'text-gray-600 bg-gray-50',
+      value: "not_priority",
+      label: "Not Priority",
+      description: "Lower priority than other tasks",
+      icon: "📉",
+      color: "text-gray-600 bg-gray-50",
     },
     {
-      value: 'personal',
-      label: 'Personal Matter',
-      description: 'Personal emergency or conflict',
-      icon: '👤',
-      color: 'text-blue-600 bg-blue-50',
+      value: "personal",
+      label: "Personal Matter",
+      description: "Personal emergency or conflict",
+      icon: "👤",
+      color: "text-blue-600 bg-blue-50",
     },
     {
-      value: 'technical',
-      label: 'Technical Issue',
-      description: 'Technical problem or system issue',
-      icon: '🔧',
-      color: 'text-purple-600 bg-purple-50',
+      value: "technical",
+      label: "Technical Issue",
+      description: "Technical problem or system issue",
+      icon: "🔧",
+      color: "text-purple-600 bg-purple-50",
     },
     {
-      value: 'other',
-      label: 'Other',
-      description: 'Other reason not listed above',
-      icon: '❓',
-      color: 'text-gray-600 bg-gray-50',
+      value: "other",
+      label: "Other",
+      description: "Other reason not listed above",
+      icon: "❓",
+      color: "text-gray-600 bg-gray-50",
     },
   ];
 
@@ -79,7 +80,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
     if (!task) return;
 
     const pauseNote = note ? `${reason}: ${note}` : reason;
-    const result = await changeTaskStatus(task.id, 'paused', pauseNote);
+    const result = await changeTaskStatus(task.id, "paused", pauseNote);
     if (result.success) {
       onClose();
     }
@@ -104,9 +105,11 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -133,15 +136,21 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="font-medium capitalize">{task.type.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.type.replace("_", " ")}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Priority:
+              </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">Due date:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Due date:
+                </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
                 </span>
@@ -163,14 +172,16 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 onClick={() => setReason(pauseReason.value)}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   reason === pauseReason.value
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                 }`}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{pauseReason.icon}</span>
                   <div>
-                    <div className="text-sm font-medium">{pauseReason.label}</div>
+                    <div className="text-sm font-medium">
+                      {pauseReason.label}
+                    </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {pauseReason.description}
                     </div>
@@ -216,11 +227,11 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
               </span>
             </label>
           </div>
-          
+
           {enableReminder && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               className="space-y-3"
             >
               <div>
@@ -236,11 +247,14 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                     onChange={(e) => setReminderDays(parseInt(e.target.value))}
                     className="w-20 px-2 py-1 border border-gray-300 rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">days</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    days
+                  </span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                You'll receive a notification to resume this task in {reminderDays} day{reminderDays !== 1 ? 's' : ''}.
+                You'll receive a notification to resume this task in{" "}
+                {reminderDays} day{reminderDays !== 1 ? "s" : ""}.
               </p>
             </motion.div>
           )}
@@ -270,7 +284,9 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {enableReminder ? `Auto-resume in ${reminderDays} days` : 'No auto-resume set'}
+                {enableReminder
+                  ? `Auto-resume in ${reminderDays} days`
+                  : "No auto-resume set"}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -288,7 +304,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiPause className="w-4 h-4" />
-                <span>{loading ? 'Pausing...' : 'Pause Task'}</span>
+                <span>{loading ? "Pausing..." : "Pause Task"}</span>
               </button>
             </div>
           </div>
@@ -296,4 +312,4 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

@@ -6,4 +6,4 @@ interface VatReportModalProps {
 
 declare const VatReportModal: React.FC<VatReportModalProps>;
 
-export default VatReportModal; 
+export default VatReportModal;

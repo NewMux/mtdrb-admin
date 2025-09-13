@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ProgressGoalsTabProps {
   goal: string;
@@ -8,10 +8,16 @@ interface ProgressGoalsTabProps {
   upgradeSuggestion: string;
 }
 
-const ProgressGoalsTab: React.FC<ProgressGoalsTabProps> = ({ goal, progress, trainerNotes, onNotesChange, upgradeSuggestion }) => {
+const ProgressGoalsTab: React.FC<ProgressGoalsTabProps> = ({
+  goal,
+  progress,
+  trainerNotes,
+  onNotesChange,
+  upgradeSuggestion,
+}) => {
   return (
     <div className="p-6">{/* TODO: Progress chart, notes, suggestion */}</div>
   );
 };
 
-export default ProgressGoalsTab; 
+export default ProgressGoalsTab;

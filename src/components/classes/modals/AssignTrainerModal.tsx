@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiCalendar, FiClock, FiStar, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
-import { SmartModal } from '../../ui/SmartModal';
-import { FormField, SelectField, FormSection } from './SmartFormComponents';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiUser,
+  FiCalendar,
+  FiClock,
+  FiStar,
+  FiCheck,
+  FiX,
+  FiAlertTriangle,
+} from "react-icons/fi";
+import { SmartModal } from "../../ui/SmartModal";
+import { FormField, SelectField, FormSection } from "./SmartFormComponents";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface Trainer {
   id: string;
@@ -34,19 +42,18 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [selectedTrainer, setSelectedTrainer] = useState<string>('');
+  const [selectedTrainer, setSelectedTrainer] = useState<string>("");
   const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [filterSpecialty, setFilterSpecialty] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'rating' | 'availability' | 'load' | 'rate'>('rating');
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("");
+  const [sortBy, setSortBy] = useState<
+    "rating" | "availability" | "load" | "rate"
+  >("rating");
   const [showConflicts, setShowConflicts] = useState(false);
 
-  const {
-    classData,
-    fetchClass
-  } = useSmartClassModal({ classId, isPro });
+  const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
   // Load class data when modal opens
   useEffect(() => {
@@ -60,89 +67,89 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   const loadTrainers = () => {
     const mockTrainers: Trainer[] = [
       {
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah@mtdrb.com',
-        specialties: ['Yoga', 'Pilates', 'Strength Training'],
+        id: "1",
+        name: "Sarah Johnson",
+        email: "sarah@mtdrb.com",
+        specialties: ["Yoga", "Pilates", "Strength Training"],
         rating: 4.8,
         availability: {
-          'Monday': ['09:00', '14:00', '18:00'],
-          'Tuesday': ['09:00', '14:00', '18:00'],
-          'Wednesday': ['09:00', '14:00'],
-          'Thursday': ['09:00', '14:00', '18:00'],
-          'Friday': ['09:00', '14:00'],
-          'Saturday': ['10:00', '15:00'],
-          'Sunday': ['10:00', '15:00']
+          Monday: ["09:00", "14:00", "18:00"],
+          Tuesday: ["09:00", "14:00", "18:00"],
+          Wednesday: ["09:00", "14:00"],
+          Thursday: ["09:00", "14:00", "18:00"],
+          Friday: ["09:00", "14:00"],
+          Saturday: ["10:00", "15:00"],
+          Sunday: ["10:00", "15:00"],
         },
         current_load: 12,
         max_load: 20,
         hourly_rate: 45,
         is_preferred: true,
-        last_assigned: '2024-01-10'
+        last_assigned: "2024-01-10",
       },
       {
-        id: '2',
-        name: 'Mike Chen',
-        email: 'mike@mtdrb.com',
-        specialties: ['HIIT', 'Cardio', 'Strength Training'],
+        id: "2",
+        name: "Mike Chen",
+        email: "mike@mtdrb.com",
+        specialties: ["HIIT", "Cardio", "Strength Training"],
         rating: 4.6,
         availability: {
-          'Monday': ['08:00', '13:00', '17:00'],
-          'Tuesday': ['08:00', '13:00', '17:00'],
-          'Wednesday': ['08:00', '13:00', '17:00'],
-          'Thursday': ['08:00', '13:00'],
-          'Friday': ['08:00', '13:00', '17:00'],
-          'Saturday': ['09:00', '14:00'],
-          'Sunday': ['09:00', '14:00']
+          Monday: ["08:00", "13:00", "17:00"],
+          Tuesday: ["08:00", "13:00", "17:00"],
+          Wednesday: ["08:00", "13:00", "17:00"],
+          Thursday: ["08:00", "13:00"],
+          Friday: ["08:00", "13:00", "17:00"],
+          Saturday: ["09:00", "14:00"],
+          Sunday: ["09:00", "14:00"],
         },
         current_load: 18,
         max_load: 25,
         hourly_rate: 40,
         is_preferred: false,
-        last_assigned: '2024-01-12'
+        last_assigned: "2024-01-12",
       },
       {
-        id: '3',
-        name: 'Emma Davis',
-        email: 'emma@mtdrb.com',
-        specialties: ['Yoga', 'Meditation', 'Flexibility'],
+        id: "3",
+        name: "Emma Davis",
+        email: "emma@mtdrb.com",
+        specialties: ["Yoga", "Meditation", "Flexibility"],
         rating: 4.9,
         availability: {
-          'Monday': ['10:00', '15:00', '19:00'],
-          'Tuesday': ['10:00', '15:00'],
-          'Wednesday': ['10:00', '15:00', '19:00'],
-          'Thursday': ['10:00', '15:00', '19:00'],
-          'Friday': ['10:00', '15:00'],
-          'Saturday': ['11:00', '16:00'],
-          'Sunday': ['11:00', '16:00']
+          Monday: ["10:00", "15:00", "19:00"],
+          Tuesday: ["10:00", "15:00"],
+          Wednesday: ["10:00", "15:00", "19:00"],
+          Thursday: ["10:00", "15:00", "19:00"],
+          Friday: ["10:00", "15:00"],
+          Saturday: ["11:00", "16:00"],
+          Sunday: ["11:00", "16:00"],
         },
         current_load: 8,
         max_load: 15,
         hourly_rate: 50,
         is_preferred: true,
-        last_assigned: '2024-01-08'
+        last_assigned: "2024-01-08",
       },
       {
-        id: '4',
-        name: 'Alex Rodriguez',
-        email: 'alex@mtdrb.com',
-        specialties: ['CrossFit', 'Olympic Lifting', 'Powerlifting'],
+        id: "4",
+        name: "Alex Rodriguez",
+        email: "alex@mtdrb.com",
+        specialties: ["CrossFit", "Olympic Lifting", "Powerlifting"],
         rating: 4.4,
         availability: {
-          'Monday': ['07:00', '12:00', '16:00'],
-          'Tuesday': ['07:00', '12:00', '16:00'],
-          'Wednesday': ['07:00', '12:00'],
-          'Thursday': ['07:00', '12:00', '16:00'],
-          'Friday': ['07:00', '12:00', '16:00'],
-          'Saturday': ['08:00', '13:00'],
-          'Sunday': ['08:00', '13:00']
+          Monday: ["07:00", "12:00", "16:00"],
+          Tuesday: ["07:00", "12:00", "16:00"],
+          Wednesday: ["07:00", "12:00"],
+          Thursday: ["07:00", "12:00", "16:00"],
+          Friday: ["07:00", "12:00", "16:00"],
+          Saturday: ["08:00", "13:00"],
+          Sunday: ["08:00", "13:00"],
         },
         current_load: 22,
         max_load: 30,
         hourly_rate: 35,
         is_preferred: false,
-        last_assigned: '2024-01-15'
-      }
+        last_assigned: "2024-01-15",
+      },
     ];
     setTrainers(mockTrainers);
   };
@@ -151,13 +158,13 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Trainer assigned successfully');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("Trainer assigned successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error assigning trainer:', error);
+      console.error("Error assigning trainer:", error);
     } finally {
       setLoading(false);
     }
@@ -165,77 +172,81 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
   const getAvailableTrainers = () => {
     if (!classData) return [];
-    
+
     const classDate = new Date(classData.date);
-    const dayOfWeek = classDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = classDate.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
     const classTime = classData.start_time;
-    
-    return trainers.filter(trainer => {
+
+    return trainers.filter((trainer) => {
       // Check if trainer has availability for this day and time
       const dayAvailability = trainer.availability[dayOfWeek] || [];
       const isAvailable = dayAvailability.includes(classTime);
-      
+
       // Check if trainer is not overloaded
       const hasCapacity = trainer.current_load < trainer.max_load;
-      
+
       return isAvailable && hasCapacity;
     });
   };
 
   const getFilteredTrainers = () => {
     let filtered = getAvailableTrainers();
-    
+
     if (filterSpecialty) {
-      filtered = filtered.filter(trainer => 
-        trainer.specialties.some(specialty => 
-          specialty.toLowerCase().includes(filterSpecialty.toLowerCase())
-        )
+      filtered = filtered.filter((trainer) =>
+        trainer.specialties.some((specialty) =>
+          specialty.toLowerCase().includes(filterSpecialty.toLowerCase()),
+        ),
       );
     }
-    
+
     // Sort by selected criteria
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'rating':
+        case "rating":
           return b.rating - a.rating;
-        case 'availability':
+        case "availability":
           return a.current_load - b.current_load;
-        case 'load':
-          return (a.current_load / a.max_load) - (b.current_load / b.max_load);
-        case 'rate':
+        case "load":
+          return a.current_load / a.max_load - b.current_load / b.max_load;
+        case "rate":
           return a.hourly_rate - b.hourly_rate;
         default:
           return 0;
       }
     });
-    
+
     return filtered;
   };
 
-  const getTrainerById = (id: string) => trainers.find(t => t.id === id);
+  const getTrainerById = (id: string) => trainers.find((t) => t.id === id);
 
   const getConflicts = () => {
     if (!classData || !selectedTrainer) return [];
-    
+
     const trainer = getTrainerById(selectedTrainer);
     if (!trainer) return [];
-    
+
     const conflicts = [];
-    
+
     // Check for schedule conflicts
     const classDate = new Date(classData.date);
-    const dayOfWeek = classDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayOfWeek = classDate.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
     const dayAvailability = trainer.availability[dayOfWeek] || [];
-    
+
     if (!dayAvailability.includes(classData.start_time)) {
-      conflicts.push('Trainer not available at this time');
+      conflicts.push("Trainer not available at this time");
     }
-    
+
     // Check for overload
     if (trainer.current_load >= trainer.max_load) {
-      conflicts.push('Trainer at maximum capacity');
+      conflicts.push("Trainer at maximum capacity");
     }
-    
+
     return conflicts;
   };
 
@@ -287,7 +298,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               disabled={loading || !selectedTrainer || conflicts.length > 0}
               className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Assigning...' : 'Assign Trainer'}
+              {loading ? "Assigning..." : "Assign Trainer"}
             </button>
           </div>
         </div>
@@ -302,7 +313,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 {classData.name}
               </h3>
               <p className="text-sm text-light-600 dark:text-dark-400">
-                {new Date(classData.date).toLocaleDateString()} • {classData.start_time} - {classData.end_time}
+                {new Date(classData.date).toLocaleDateString()} •{" "}
+                {classData.start_time} - {classData.end_time}
               </p>
             </div>
             <div className="text-right">
@@ -310,7 +322,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 Current Trainer
               </div>
               <div className="text-sm font-medium text-dark-900 dark:text-white">
-                {classData.trainer_name || 'Not assigned'}
+                {classData.trainer_name || "Not assigned"}
               </div>
             </div>
           </div>
@@ -334,7 +346,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                 Sort by
@@ -361,8 +373,9 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
           <div className="space-y-3">
             {availableTrainers.map((trainer, index) => {
               const isSelected = selectedTrainer === trainer.id;
-              const loadPercentage = (trainer.current_load / trainer.max_load) * 100;
-              
+              const loadPercentage =
+                (trainer.current_load / trainer.max_load) * 100;
+
               return (
                 <motion.div
                   key={trainer.id}
@@ -371,8 +384,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                   transition={{ delay: index * 0.1 }}
                   className={`p-4 border rounded-xl transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20'
-                      : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 hover:border-brand-300'
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20"
+                      : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 hover:border-brand-300"
                   }`}
                   onClick={() => setSelectedTrainer(trainer.id)}
                 >
@@ -412,33 +425,46 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-xs">
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Load</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Load
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {trainer.current_load}/{trainer.max_load}
                         </div>
                         <div className="w-16 bg-gray-200 rounded-full h-1 mt-1">
                           <div
                             className={`h-1 rounded-full ${
-                              loadPercentage > 80 ? 'bg-red-500' :
-                              loadPercentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                              loadPercentage > 80
+                                ? "bg-red-500"
+                                : loadPercentage > 60
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
                             }`}
                             style={{ width: `${loadPercentage}%` }}
                           ></div>
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Rate</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Rate
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           ${trainer.hourly_rate}/hr
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">Last</div>
+                        <div className="text-light-600 dark:text-dark-400">
+                          Last
+                        </div>
                         <div className="font-medium text-dark-900 dark:text-white">
-                          {trainer.last_assigned ? new Date(trainer.last_assigned).toLocaleDateString() : 'Never'}
+                          {trainer.last_assigned
+                            ? new Date(
+                                trainer.last_assigned,
+                              ).toLocaleDateString()
+                            : "Never"}
                         </div>
                       </div>
                     </div>
@@ -455,10 +481,12 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
               Selected Trainer: {selectedTrainerData.name}
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-blue-700 dark:text-blue-300">Specialties:</span>
+                <span className="text-blue-700 dark:text-blue-300">
+                  Specialties:
+                </span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {selectedTrainerData.specialties.map((specialty, idx) => (
                     <span
@@ -471,9 +499,12 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 </div>
               </div>
               <div>
-                <span className="text-blue-700 dark:text-blue-300">Current Load:</span>
+                <span className="text-blue-700 dark:text-blue-300">
+                  Current Load:
+                </span>
                 <span className="ml-2 text-blue-900 dark:text-blue-100">
-                  {selectedTrainerData.current_load}/{selectedTrainerData.max_load} classes
+                  {selectedTrainerData.current_load}/
+                  {selectedTrainerData.max_load} classes
                 </span>
               </div>
             </div>
@@ -503,11 +534,13 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         {isPro && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              AI Recommendations
+              Smart Recommendations
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
               <p>• Emma Davis has the highest rating and specializes in Yoga</p>
-              <p>• Sarah Johnson is a preferred trainer with good availability</p>
+              <p>
+                • Sarah Johnson is a preferred trainer with good availability
+              </p>
               <p>• Consider trainer load to ensure quality instruction</p>
             </div>
           </div>
@@ -517,4 +550,4 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   );
 };
 
-export default AssignTrainerModal; 
+export default AssignTrainerModal;

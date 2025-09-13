@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiSettings, FiUsers, FiDollarSign, FiCalendar, FiClock, FiAlertTriangle, FiCheck } from 'react-icons/fi';
-import { SmartModal } from '../../ui/SmartModal';
-import { FormField, SelectField, FormSection } from './SmartFormComponents';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
-import { SmartButton } from '../../ui/DesignSystem';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiSettings,
+  FiUsers,
+  FiDollarSign,
+  FiCalendar,
+  FiClock,
+  FiAlertTriangle,
+  FiCheck,
+} from "react-icons/fi";
+import { SmartModal } from "../../ui/SmartModal";
+import { FormField, SelectField, FormSection } from "./SmartFormComponents";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { SmartButton } from "../../ui/DesignSystem";
+import { toast } from "react-hot-toast";
 
 interface ClassSettings {
   capacity: number;
   price: number;
   duration: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   class_type: string;
   location: string;
   description: string;
@@ -37,32 +45,29 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<ClassSettings>({
     capacity: 20,
     price: 25,
     duration: 60,
-    difficulty: 'intermediate',
-    class_type: 'Yoga',
-    location: 'Studio A',
-    description: '',
+    difficulty: "intermediate",
+    class_type: "Yoga",
+    location: "Studio A",
+    description: "",
     auto_waitlist: true,
     auto_cancel: false,
     min_attendance: 3,
     max_waitlist: 10,
     trainer_requirements: [],
     equipment_needed: [],
-    special_instructions: ''
+    special_instructions: "",
   });
-  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
+  const [activeTab, setActiveTab] = useState<"basic" | "advanced">("basic");
   const [hasChanges, setHasChanges] = useState(false);
 
-  const {
-    classData,
-    fetchClass
-  } = useSmartClassModal({ classId, isPro });
+  const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
   // Load class data when modal opens
   useEffect(() => {
@@ -79,45 +84,45 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         capacity: classData.capacity || 20,
         price: 25, // Mock price
         duration: 60,
-        difficulty: 'intermediate',
-        class_type: classData.class_type || 'Yoga',
-        location: 'Studio A',
-        description: classData.description || '',
+        difficulty: "intermediate",
+        class_type: classData.class_type || "Yoga",
+        location: "Studio A",
+        description: classData.description || "",
         auto_waitlist: true,
         auto_cancel: false,
         min_attendance: 3,
         max_waitlist: 10,
         trainer_requirements: [],
         equipment_needed: [],
-        special_instructions: ''
+        special_instructions: "",
       });
     }
   };
 
   const handleSettingChange = (key: keyof ClassSettings, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
   const handleSave = async () => {
     if (validationErrors.length > 0) {
-      toast.error('Please fix validation errors before saving');
+      toast.error("Please fix validation errors before saving");
       return;
     }
 
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Settings updated successfully');
-      toast.success('Class settings updated successfully');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("Settings updated successfully");
+      toast.success("Class settings updated successfully");
       setHasChanges(false);
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error updating settings:', error);
-      toast.error('Failed to update settings');
+      console.error("Error updating settings:", error);
+      toast.error("Failed to update settings");
     } finally {
       setLoading(false);
     }
@@ -125,23 +130,23 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const getValidationErrors = () => {
     const errors: string[] = [];
-    
+
     if (settings.capacity < 1) {
-      errors.push('Capacity must be at least 1');
+      errors.push("Capacity must be at least 1");
     }
-    
+
     if (settings.price < 0) {
-      errors.push('Price cannot be negative');
+      errors.push("Price cannot be negative");
     }
-    
+
     if (settings.duration < 15) {
-      errors.push('Duration must be at least 15 minutes');
+      errors.push("Duration must be at least 15 minutes");
     }
-    
+
     if (settings.min_attendance > settings.capacity) {
-      errors.push('Minimum attendance cannot exceed capacity');
+      errors.push("Minimum attendance cannot exceed capacity");
     }
-    
+
     return errors;
   };
 
@@ -199,7 +204,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               loading={loading}
               disabled={loading || validationErrors.length > 0}
             >
-              {loading ? 'Saving...' : 'Save Settings'}
+              {loading ? "Saving..." : "Save Settings"}
             </SmartButton>
           </div>
         </div>
@@ -214,7 +219,8 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 {classData.name}
               </h3>
               <p className="text-sm text-light-600 dark:text-dark-400">
-                {new Date(classData.date).toLocaleDateString()} • {classData.start_time} - {classData.end_time}
+                {new Date(classData.date).toLocaleDateString()} •{" "}
+                {classData.start_time} - {classData.end_time}
               </p>
             </div>
             <div className="text-right">
@@ -232,16 +238,24 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         <div className="border-b border-light-200 dark:border-dark-600">
           <nav className="flex space-x-8">
             {[
-              { id: 'basic', label: 'Basic Settings', icon: <FiSettings className="h-4 w-4" /> },
-              { id: 'advanced', label: 'Advanced', icon: <FiUsers className="h-4 w-4" /> }
+              {
+                id: "basic",
+                label: "Basic Settings",
+                icon: <FiSettings className="h-4 w-4" />,
+              },
+              {
+                id: "advanced",
+                label: "Advanced",
+                icon: <FiUsers className="h-4 w-4" />,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-brand-500 text-brand-600'
-                    : 'border-transparent text-light-600 dark:text-dark-400 hover:text-light-900 dark:hover:text-dark-200'
+                    ? "border-brand-500 text-brand-600"
+                    : "border-transparent text-light-600 dark:text-dark-400 hover:text-light-900 dark:hover:text-dark-200"
                 }`}
               >
                 {tab.icon}
@@ -253,7 +267,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
         {/* Tab Content */}
         <div className="min-h-[400px]">
-          {activeTab === 'basic' && (
+          {activeTab === "basic" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -267,60 +281,72 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                   <FormField
                     label="Class Type"
                     value={settings.class_type}
-                    onChange={(value) => handleSettingChange('class_type', value)}
+                    onChange={(value) =>
+                      handleSettingChange("class_type", value)
+                    }
                     placeholder="e.g., Yoga, HIIT, Strength"
                   />
-                  
+
                   <FormField
                     label="Location"
                     value={settings.location}
-                    onChange={(value) => handleSettingChange('location', value)}
+                    onChange={(value) => handleSettingChange("location", value)}
                     placeholder="e.g., Studio A, Gym Floor"
                   />
-                  
+
                   <FormField
                     label="Capacity"
                     type="number"
                     value={settings.capacity.toString()}
-                    onChange={(value) => handleSettingChange('capacity', parseInt(value) || 0)}
+                    onChange={(value) =>
+                      handleSettingChange("capacity", parseInt(value) || 0)
+                    }
                     placeholder="Maximum number of participants"
                   />
-                  
+
                   <FormField
                     label="Price ($)"
                     type="number"
                     value={settings.price.toString()}
-                    onChange={(value) => handleSettingChange('price', parseFloat(value) || 0)}
+                    onChange={(value) =>
+                      handleSettingChange("price", parseFloat(value) || 0)
+                    }
                     placeholder="Class price per person"
                   />
-                  
+
                   <FormField
                     label="Duration (minutes)"
                     type="number"
                     value={settings.duration.toString()}
-                    onChange={(value) => handleSettingChange('duration', parseInt(value) || 0)}
+                    onChange={(value) =>
+                      handleSettingChange("duration", parseInt(value) || 0)
+                    }
                     placeholder="Class duration in minutes"
                   />
-                  
+
                   <SelectField
                     label="Difficulty Level"
                     value={settings.difficulty}
-                    onChange={(value) => handleSettingChange('difficulty', value)}
+                    onChange={(value) =>
+                      handleSettingChange("difficulty", value)
+                    }
                     options={[
-                      { value: 'beginner', label: 'Beginner' },
-                      { value: 'intermediate', label: 'Intermediate' },
-                      { value: 'advanced', label: 'Advanced' }
+                      { value: "beginner", label: "Beginner" },
+                      { value: "intermediate", label: "Intermediate" },
+                      { value: "advanced", label: "Advanced" },
                     ]}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                     Description
                   </label>
                   <textarea
                     value={settings.description}
-                    onChange={(e) => handleSettingChange('description', e.target.value)}
+                    onChange={(e) =>
+                      handleSettingChange("description", e.target.value)
+                    }
                     placeholder="Describe the class, what to expect, and any requirements..."
                     rows={4}
                     className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
@@ -330,7 +356,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
             </motion.div>
           )}
 
-          {activeTab === 'advanced' && (
+          {activeTab === "advanced" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -345,25 +371,36 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                     label="Minimum Attendance"
                     type="number"
                     value={settings.min_attendance.toString()}
-                    onChange={(value) => handleSettingChange('min_attendance', parseInt(value) || 0)}
+                    onChange={(value) =>
+                      handleSettingChange(
+                        "min_attendance",
+                        parseInt(value) || 0,
+                      )
+                    }
                     placeholder="Minimum participants to run class"
                   />
-                  
+
                   <FormField
                     label="Max Waitlist Size"
                     type="number"
                     value={settings.max_waitlist.toString()}
-                    onChange={(value) => handleSettingChange('max_waitlist', parseInt(value) || 0)}
+                    onChange={(value) =>
+                      handleSettingChange("max_waitlist", parseInt(value) || 0)
+                    }
                     placeholder="Maximum waitlist capacity"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                     Trainer Requirements
                   </label>
                   <div className="space-y-2">
-                    {['Yoga certification', 'First aid certified', 'Experience with beginners'].map((req, idx) => (
+                    {[
+                      "Yoga certification",
+                      "First aid certified",
+                      "Experience with beginners",
+                    ].map((req, idx) => (
                       <div key={idx} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -372,53 +409,78 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                           onChange={(e) => {
                             const newReqs = e.target.checked
                               ? [...settings.trainer_requirements, req]
-                              : settings.trainer_requirements.filter(r => r !== req);
-                            handleSettingChange('trainer_requirements', newReqs);
+                              : settings.trainer_requirements.filter(
+                                  (r) => r !== req,
+                                );
+                            handleSettingChange(
+                              "trainer_requirements",
+                              newReqs,
+                            );
                           }}
                           className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                         />
-                        <label htmlFor={`req-${idx}`} className="text-sm text-dark-900 dark:text-white">
+                        <label
+                          htmlFor={`req-${idx}`}
+                          className="text-sm text-dark-900 dark:text-white"
+                        >
                           {req}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                     Equipment Needed
                   </label>
                   <div className="space-y-2">
-                    {['Yoga mats', 'Resistance bands', 'Water bottles'].map((equipment, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={`equipment-${idx}`}
-                          checked={settings.equipment_needed.includes(equipment)}
-                          onChange={(e) => {
-                            const newEquipment = e.target.checked
-                              ? [...settings.equipment_needed, equipment]
-                              : settings.equipment_needed.filter(eq => eq !== equipment);
-                            handleSettingChange('equipment_needed', newEquipment);
-                          }}
-                          className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
-                        />
-                        <label htmlFor={`equipment-${idx}`} className="text-sm text-dark-900 dark:text-white">
-                          {equipment}
-                        </label>
-                      </div>
-                    ))}
+                    {["Yoga mats", "Resistance bands", "Water bottles"].map(
+                      (equipment, idx) => (
+                        <div key={idx} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`equipment-${idx}`}
+                            checked={settings.equipment_needed.includes(
+                              equipment,
+                            )}
+                            onChange={(e) => {
+                              const newEquipment = e.target.checked
+                                ? [...settings.equipment_needed, equipment]
+                                : settings.equipment_needed.filter(
+                                    (eq) => eq !== equipment,
+                                  );
+                              handleSettingChange(
+                                "equipment_needed",
+                                newEquipment,
+                              );
+                            }}
+                            className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                          />
+                          <label
+                            htmlFor={`equipment-${idx}`}
+                            className="text-sm text-dark-900 dark:text-white"
+                          >
+                            {equipment}
+                          </label>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                     Special Instructions
                   </label>
                   <textarea
                     value={settings.special_instructions}
-                    onChange={(e) => handleSettingChange('special_instructions', e.target.value)}
+                    onChange={(e) =>
+                      handleSettingChange(
+                        "special_instructions",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Any special instructions for participants or trainers..."
                     rows={3}
                     className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
@@ -427,8 +489,6 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               </FormSection>
             </motion.div>
           )}
-
-
         </div>
 
         {/* Validation Errors */}
@@ -454,12 +514,18 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         {isPro && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              AI Recommendations
+              Smart Recommendations
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
               <p>• Consider increasing capacity based on historical demand</p>
-              <p>• Set minimum attendance to 20% of capacity for optimal experience</p>
-              <p>• Enable auto-cancel to maintain class quality and trainer satisfaction</p>
+              <p>
+                • Set minimum attendance to 20% of capacity for optimal
+                experience
+              </p>
+              <p>
+                • Enable auto-cancel to maintain class quality and trainer
+                satisfaction
+              </p>
             </div>
           </div>
         )}
@@ -468,4 +534,4 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
   );
 };
 
-export default UpdateClassSettingsModal; 
+export default UpdateClassSettingsModal;

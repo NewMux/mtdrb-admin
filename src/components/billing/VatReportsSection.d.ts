@@ -10,4 +10,4 @@ interface VatReportsSectionProps {
 
 declare const VatReportsSection: React.FC<VatReportsSectionProps>;
 
-export default VatReportsSection; 
+export default VatReportsSection;

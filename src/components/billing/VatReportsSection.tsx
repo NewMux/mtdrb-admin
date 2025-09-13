@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FiDownload, FiPrinter, FiBarChart2, FiShield, FiTrendingUp } from 'react-icons/fi';
-import { mockVatTransactions, mockVatDashboardData } from '../../api/mockBillingData';
-import { VatTransaction, VatDashboardData } from '../../types';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FiDownload,
+  FiPrinter,
+  FiBarChart2,
+  FiShield,
+  FiTrendingUp,
+} from "react-icons/fi";
+import {
+  mockVatTransactions,
+  mockVatDashboardData,
+} from "../../api/mockBillingData";
+import { VatTransaction, VatDashboardData } from "../../types";
+import { toast } from "react-hot-toast";
 
 interface VatReportsSectionProps {
   searchQuery: string;
@@ -21,53 +30,66 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   refreshKey,
   dateRange,
   tenantId,
-  selectedStatus
+  selectedStatus,
 }) => {
   const [transactions, setTransactions] = useState<VatTransaction[]>([]);
-  const [dashboardData, setDashboardData] = useState<VatDashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<VatDashboardData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Use mock data instead of backend calls
       let filteredTransactions = [...mockVatTransactions];
 
       // Apply search filter
       if (searchQuery) {
-        filteredTransactions = filteredTransactions.filter(transaction => 
-          transaction.entity_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          transaction.reference_number?.toLowerCase().includes(searchQuery.toLowerCase())
+        filteredTransactions = filteredTransactions.filter(
+          (transaction) =>
+            transaction.entity_name
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            transaction.reference_number
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase()),
         );
       }
 
       // Apply date range filter
       if (dateRange && dateRange[0] && dateRange[1]) {
-        filteredTransactions = filteredTransactions.filter(transaction => {
+        filteredTransactions = filteredTransactions.filter((transaction) => {
           const transactionDate = new Date(transaction.date);
-          return transactionDate >= dateRange[0] && transactionDate <= dateRange[1];
+          return (
+            transactionDate >= dateRange[0] && transactionDate <= dateRange[1]
+          );
         });
       }
 
       // Apply status filter
       if (selectedStatus) {
-        filteredTransactions = filteredTransactions.filter(transaction => 
-          transaction.status?.toLowerCase() === selectedStatus.toLowerCase()
+        filteredTransactions = filteredTransactions.filter(
+          (transaction) =>
+            transaction.status?.toLowerCase() === selectedStatus.toLowerCase(),
         );
       }
 
       // Apply pagination
       const startIndex = (page - 1) * 10;
       const endIndex = startIndex + 10;
-      const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+      const paginatedTransactions = filteredTransactions.slice(
+        startIndex,
+        endIndex,
+      );
 
       setTransactions(paginatedTransactions);
       setTotalPages(Math.ceil(filteredTransactions.length / 10));
     } catch (error) {
-      console.error('Error loading VAT transactions:', error);
-      toast.error('Failed to load VAT transactions');
+      console.error("Error loading VAT transactions:", error);
+      toast.error("Failed to load VAT transactions");
     } finally {
       setLoading(false);
     }
@@ -85,20 +107,20 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   const handleDownloadReport = async () => {
     try {
       // TODO: Implement report download
-      toast.success('Report downloaded successfully');
+      toast.success("Report downloaded successfully");
     } catch (error) {
-      console.error('Error downloading report:', error);
-      toast.error('Failed to download report');
+      console.error("Error downloading report:", error);
+      toast.error("Failed to download report");
     }
   };
 
   const handlePrintReport = async () => {
     try {
       // TODO: Implement report printing
-      toast.success('Report sent to printer');
+      toast.success("Report sent to printer");
     } catch (error) {
-      console.error('Error printing report:', error);
-      toast.error('Failed to print report');
+      console.error("Error printing report:", error);
+      toast.error("Failed to print report");
     }
   };
 
@@ -114,39 +136,51 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">VAT Reports & Analytics</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          VAT Reports & Analytics
+        </h2>
       </div>
       <div className="overflow-x-auto">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">VAT Collected</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              VAT Collected
+            </h3>
             <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
               {transactions
-                .filter(t => t.type === 'Invoice')
+                .filter((t) => t.type === "Invoice")
                 .reduce((sum, t) => sum + t.vat_amount, 0)
-                .toFixed(2)} BHD
+                .toFixed(2)}{" "}
+              BHD
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">VAT Paid</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              VAT Paid
+            </h3>
             <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
               {transactions
-                .filter(t => t.type === 'Expense')
+                .filter((t) => t.type === "Expense")
                 .reduce((sum, t) => sum + t.vat_amount, 0)
-                .toFixed(2)} BHD
+                .toFixed(2)}{" "}
+              BHD
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Net VAT Payable</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              Net VAT Payable
+            </h3>
             <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-              {(transactions
-                .filter(t => t.type === 'Invoice')
-                .reduce((sum, t) => sum + t.vat_amount, 0) -
+              {(
                 transactions
-                .filter(t => t.type === 'Expense')
-                .reduce((sum, t) => sum + t.vat_amount, 0))
-                .toFixed(2)} BHD
+                  .filter((t) => t.type === "Invoice")
+                  .reduce((sum, t) => sum + t.vat_amount, 0) -
+                transactions
+                  .filter((t) => t.type === "Expense")
+                  .reduce((sum, t) => sum + t.vat_amount, 0)
+              ).toFixed(2)}{" "}
+              BHD
             </p>
           </div>
         </div>
@@ -201,16 +235,21 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {transactions.map((transaction) => (
-              <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <tr
+                key={transaction.id}
+                className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(transaction.date).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    transaction.type === 'Invoice'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      transaction.type === "Invoice"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                        : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                    }`}
+                  >
                     {transaction.type}
                   </span>
                 </td>
@@ -230,11 +269,13 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
                   {transaction.vat_amount.toFixed(2)} BHD
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    transaction.status === 'Paid'
-                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      transaction.status === "Paid"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                        : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
+                    }`}
+                  >
                     {transaction.status}
                   </span>
                 </td>
@@ -264,7 +305,7 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Showing page <span className="font-medium">{page}</span> of{' '}
+                Showing page <span className="font-medium">{page}</span> of{" "}
                 <span className="font-medium">{totalPages}</span>
               </p>
             </div>
@@ -278,21 +319,24 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
                   Previous
                 </button>
                 {/* Page numbers */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => onPageChange(pageNum)}
-                    className={`
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => onPageChange(pageNum)}
+                      className={`
                       relative inline-flex items-center px-4 py-2 border text-sm font-medium
-                      ${pageNum === page
-                        ? 'z-10 bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
+                      ${
+                        pageNum === page
+                          ? "z-10 bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-600 dark:text-blue-400"
+                          : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600"
                       }
                     `}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
+                    >
+                      {pageNum}
+                    </button>
+                  ),
+                )}
                 <button
                   onClick={() => onPageChange(page + 1)}
                   disabled={page === totalPages}
@@ -309,4 +353,4 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   );
 };
 
-export default VatReportsSection; 
+export default VatReportsSection;

@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUpload, FiFile, FiCheck, FiAlertCircle, FiX, FiDownload } from 'react-icons/fi';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUpload,
+  FiFile,
+  FiCheck,
+  FiAlertCircle,
+  FiX,
+  FiDownload,
+} from "react-icons/fi";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
 
 interface ImportMembersModalProps {
   isOpen: boolean;
@@ -32,7 +39,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
   onClose,
   onSuccess,
   loading = false,
-  modalRef
+  modalRef,
 }) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [importedData, setImportedData] = React.useState<ImportedMember[]>([]);
@@ -52,24 +59,26 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
+      const lines = text.split("\n");
+      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+
       const data: ImportedMember[] = [];
       const newErrors: string[] = [];
 
       for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim()) {
-          const values = lines[i].split(',').map(v => v.trim());
+          const values = lines[i].split(",").map((v) => v.trim());
           const row: any = {};
-          
+
           headers.forEach((header, index) => {
-            row[header] = values[index] || '';
+            row[header] = values[index] || "";
           });
 
           // Validate required fields
           if (!row.name || !row.email) {
-            newErrors.push(`Row ${i + 1}: Missing required fields (name or email)`);
+            newErrors.push(
+              `Row ${i + 1}: Missing required fields (name or email)`,
+            );
             continue;
           }
 
@@ -82,16 +91,21 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
           data.push({
             name: row.name,
             email: row.email,
-            phone: row.phone || '',
-            status: row.status || 'active',
-            membershipType: row.membershiptype || row.membership_type || 'Standard',
-            gender: row.gender || 'other',
-            address: row.address || '',
-            emergency_contact: row.emergency_contact || '',
-            fitness_level: row.fitness_level || 'beginner',
-            goals: row.goals ? row.goals.split(';').map((g: string) => g.trim()) : [],
-            health_conditions: row.health_conditions ? row.health_conditions.split(';').map((h: string) => h.trim()) : [],
-            notes: row.notes || ''
+            phone: row.phone || "",
+            status: row.status || "active",
+            membershipType:
+              row.membershiptype || row.membership_type || "Standard",
+            gender: row.gender || "other",
+            address: row.address || "",
+            emergency_contact: row.emergency_contact || "",
+            fitness_level: row.fitness_level || "beginner",
+            goals: row.goals
+              ? row.goals.split(";").map((g: string) => g.trim())
+              : [],
+            health_conditions: row.health_conditions
+              ? row.health_conditions.split(";").map((h: string) => h.trim())
+              : [],
+            notes: row.notes || "",
           });
         }
       }
@@ -106,22 +120,22 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
     if (importedData.length === 0) return;
 
     setIsUploading(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // Simulate 5% chance of failure
       if (Math.random() < 0.05) {
-        setErrors(['Import failed. Please try again.']);
+        setErrors(["Import failed. Please try again."]);
         setIsUploading(false);
         return;
       }
 
       await onSuccess(importedData);
     } catch (error) {
-      console.error('Import failed:', error);
-      setErrors(['Import failed. Please try again.']);
+      console.error("Import failed:", error);
+      setErrors(["Import failed. Please try again."]);
     } finally {
       setIsUploading(false);
     }
@@ -136,11 +150,12 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
   };
 
   const downloadTemplate = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
       "Name,Email,Phone,Status,Membership Type,Gender,Address,Emergency Contact,Fitness Level,Goals,Health Conditions,Notes\n" +
       "John Doe,john.doe@email.com,+1 (555) 123-4567,active,Standard,male,123 Main St,City,State,+1 (555) 987-6543,beginner,weight_loss;strength,,Very motivated member\n" +
       "Jane Smith,jane.smith@email.com,+1 (555) 234-5678,active,Premium,female,456 Oak Ave,City,State,+1 (555) 876-5432,intermediate,muscle_gain,asthma,Prefers morning sessions";
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -167,7 +182,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                 <FiUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <div className="space-y-2">
                   <p className="text-lg font-medium text-gray-900 dark:text-white">
-                    {file ? file.name : 'Drop your CSV file here'}
+                    {file ? file.name : "Drop your CSV file here"}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     or click to browse
@@ -192,7 +207,9 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Need a template?</h4>
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Need a template?
+                    </h4>
                     <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
                       Download our CSV template with example data
                     </p>
@@ -243,7 +260,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                     size="sm"
                     onClick={() => setPreviewMode(!previewMode)}
                   >
-                    {previewMode ? 'Hide Details' : 'Show Details'}
+                    {previewMode ? "Hide Details" : "Show Details"}
                   </SmartButton>
                 </div>
 
@@ -252,27 +269,43 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Name</th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Email</th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Status</th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">Type</th>
+                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                            Name
+                          </th>
+                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                            Email
+                          </th>
+                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                            Status
+                          </th>
+                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                            Type
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {importedData.slice(0, 10).map((member, index) => (
                           <tr key={index} className="bg-white dark:bg-gray-900">
-                            <td className="px-4 py-2 text-gray-900 dark:text-white">{member.name}</td>
-                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{member.email}</td>
+                            <td className="px-4 py-2 text-gray-900 dark:text-white">
+                              {member.name}
+                            </td>
+                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                              {member.email}
+                            </td>
                             <td className="px-4 py-2">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                member.status === 'active' 
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                              }`}>
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  member.status === "active"
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                }`}
+                              >
                                 {member.status}
                               </span>
                             </td>
-                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{member.membershipType}</td>
+                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                              {member.membershipType}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -305,14 +338,18 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
               >
                 Cancel
               </SmartButton>
-              
+
               <SmartButton
                 onClick={handleImport}
                 loading={isUploading}
-                disabled={importedData.length === 0 || errors.length > 0 || isUploading}
+                disabled={
+                  importedData.length === 0 || errors.length > 0 || isUploading
+                }
                 icon={<FiUpload className="w-4 h-4" />}
               >
-                {isUploading ? 'Importing...' : `Import ${importedData.length} Members`}
+                {isUploading
+                  ? "Importing..."
+                  : `Import ${importedData.length} Members`}
               </SmartButton>
             </div>
           </div>
@@ -322,4 +359,4 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
   );
 };
 
-export default ImportMembersModal; 
+export default ImportMembersModal;

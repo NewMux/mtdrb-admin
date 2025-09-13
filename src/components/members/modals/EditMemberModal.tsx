@@ -1,32 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { FiUser, FiTarget, FiUpload, FiCheck, FiActivity } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SmartModal } from '../../ui/SmartModal';
-import { SmartButton } from '../../ui/DesignSystem';
-import { MockMember } from '../../../hooks/useMockMembers';
+import React, { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  FiUser,
+  FiTarget,
+  FiUpload,
+  FiCheck,
+  FiActivity,
+} from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
+import { SmartModal } from "../../ui/SmartModal";
+import { SmartButton } from "../../ui/DesignSystem";
+import { MockMember } from "../../../hooks/useMockMembers";
 
 type EditMemberForm = {
   name: string;
   age: number;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: "Male" | "Female" | "Other";
   email?: string;
   phone: string;
-  fitnessGoal: 'Weight Loss' | 'Muscle Gain' | 'General Fitness' | 'Athletic Performance' | 'Rehabilitation' | 'Stress Relief';
+  fitnessGoal:
+    | "Weight Loss"
+    | "Muscle Gain"
+    | "General Fitness"
+    | "Athletic Performance"
+    | "Rehabilitation"
+    | "Stress Relief";
   injuries?: string;
   staffNotes?: string;
   idDocument?: File | null;
 };
 
 const schema = z.object({
-  name: z.string().min(1, 'Full Name is required'),
-  age: z.coerce.number().min(16, 'Must be at least 16 years old').max(100, 'Invalid age'),
-  gender: z.enum(['Male', 'Female', 'Other']),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  phone: z.string().min(1, 'Phone number is required'),
-  fitnessGoal: z.enum(['Weight Loss', 'Muscle Gain', 'General Fitness', 'Athletic Performance', 'Rehabilitation', 'Stress Relief']),
+  name: z.string().min(1, "Full Name is required"),
+  age: z.coerce
+    .number()
+    .min(16, "Must be at least 16 years old")
+    .max(100, "Invalid age"),
+  gender: z.enum(["Male", "Female", "Other"]),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  phone: z.string().min(1, "Phone number is required"),
+  fitnessGoal: z.enum([
+    "Weight Loss",
+    "Muscle Gain",
+    "General Fitness",
+    "Athletic Performance",
+    "Rehabilitation",
+    "Stress Relief",
+  ]),
   injuries: z.string().optional(),
   staffNotes: z.string().optional(),
   idDocument: z.any().optional(),
@@ -36,7 +58,10 @@ interface EditMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   member?: MockMember | null;
-  onSuccess: (memberId: string, memberData: Partial<MockMember>) => Promise<void>;
+  onSuccess: (
+    memberId: string,
+    memberData: Partial<MockMember>,
+  ) => Promise<void>;
   loading?: boolean;
 }
 
@@ -55,34 +80,36 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
     handleSubmit,
     reset,
     setValue,
-    formState: { errors, isValid }
+    formState: { errors, isValid },
   } = useForm<EditMemberForm>({
     resolver: zodResolver(schema),
-    mode: 'onChange',
+    mode: "onChange",
     defaultValues: {
-      name: '',
+      name: "",
       age: 18,
-      gender: 'Male',
-      email: '',
-      phone: '',
-      fitnessGoal: 'General Fitness',
-      injuries: '',
-      staffNotes: '',
+      gender: "Male",
+      email: "",
+      phone: "",
+      fitnessGoal: "General Fitness",
+      injuries: "",
+      staffNotes: "",
       idDocument: null,
-    }
+    },
   });
 
   useEffect(() => {
     if (isOpen && member) {
       reset({
-        name: member.name || '',
+        name: member.name || "",
         age: member.age || 18,
-        gender: (member.gender as 'Male' | 'Female' | 'Other') || 'Male',
-        email: member.email || '',
-        phone: member.phone || '',
-        fitnessGoal: (member.fitnessGoal as EditMemberForm['fitnessGoal']) || 'General Fitness',
-        injuries: member.injuries || '',
-        staffNotes: member.staffNotes || '',
+        gender: (member.gender as "Male" | "Female" | "Other") || "Male",
+        email: member.email || "",
+        phone: member.phone || "",
+        fitnessGoal:
+          (member.fitnessGoal as EditMemberForm["fitnessGoal"]) ||
+          "General Fitness",
+        injuries: member.injuries || "",
+        staffNotes: member.staffNotes || "",
         idDocument: null,
       });
       setUploadedFile(null);
@@ -93,7 +120,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
     const file = event.target.files?.[0];
     if (file) {
       setUploadedFile(file);
-      setValue('idDocument', file);
+      setValue("idDocument", file);
     }
   };
 
@@ -104,7 +131,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
         ...data,
         idDocument: uploadedFile || undefined,
       };
-      await onSuccess(member?.id || '', updatedData);
+      await onSuccess(member?.id || "", updatedData);
       onClose();
     } catch (error) {
       // handle error
@@ -145,12 +172,18 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 disabled={!isValid}
                 className="px-6 py-2.5 ml-3"
               >
-                {isLoading || loading ? 'Updating...' : 'Update Member'}
+                {isLoading || loading ? "Updating..." : "Update Member"}
               </SmartButton>
             </div>
           }
         >
-          <form className="space-y-10" onSubmit={e => { e.preventDefault(); handleSubmit(onSubmit)(); }}>
+          <form
+            className="space-y-10"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(onSubmit)();
+            }}
+          >
             {/* Basic Information Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -163,8 +196,12 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                   <FiUser className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Member's personal details</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Basic Information
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Member's personal details
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -184,8 +221,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       />
                     )}
                   />
-                  {getError('name') && (
-                    <p className="text-red-500 text-sm mt-1">{getError('name')}</p>
+                  {getError("name") && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getError("name")}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -204,8 +243,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       />
                     )}
                   />
-                  {getError('age') && (
-                    <p className="text-red-500 text-sm mt-1">{getError('age')}</p>
+                  {getError("age") && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getError("age")}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -227,8 +268,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       </select>
                     )}
                   />
-                  {getError('gender') && (
-                    <p className="text-red-500 text-sm mt-1">{getError('gender')}</p>
+                  {getError("gender") && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getError("gender")}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -247,8 +290,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       />
                     )}
                   />
-                  {getError('phone') && (
-                    <p className="text-red-500 text-sm mt-1">{getError('phone')}</p>
+                  {getError("phone") && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getError("phone")}
+                    </p>
                   )}
                 </div>
                 <div className="md:col-span-2">
@@ -267,8 +312,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       />
                     )}
                   />
-                  {getError('email') && (
-                    <p className="text-red-500 text-sm mt-1">{getError('email')}</p>
+                  {getError("email") && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {getError("email")}
+                    </p>
                   )}
                 </div>
               </div>
@@ -285,8 +332,12 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                   <FiTarget className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Fitness Goals</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Select primary fitness objective</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Fitness Goals
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Select primary fitness objective
+                  </p>
                 </div>
               </div>
               <Controller
@@ -295,12 +346,36 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 render={({ field }) => (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {[
-                      { value: 'Weight Loss', icon: '⚖️', description: 'Lose weight and get leaner' },
-                      { value: 'Muscle Gain', icon: '💪', description: 'Build muscle and strength' },
-                      { value: 'General Fitness', icon: '🏃', description: 'Stay healthy and active' },
-                      { value: 'Athletic Performance', icon: '🏆', description: 'Improve sports performance' },
-                      { value: 'Rehabilitation', icon: '🩺', description: 'Recover from injury' },
-                      { value: 'Stress Relief', icon: '🧘', description: 'Reduce stress and relax' }
+                      {
+                        value: "Weight Loss",
+                        icon: "⚖️",
+                        description: "Lose weight and get leaner",
+                      },
+                      {
+                        value: "Muscle Gain",
+                        icon: "💪",
+                        description: "Build muscle and strength",
+                      },
+                      {
+                        value: "General Fitness",
+                        icon: "🏃",
+                        description: "Stay healthy and active",
+                      },
+                      {
+                        value: "Athletic Performance",
+                        icon: "🏆",
+                        description: "Improve sports performance",
+                      },
+                      {
+                        value: "Rehabilitation",
+                        icon: "🩺",
+                        description: "Recover from injury",
+                      },
+                      {
+                        value: "Stress Relief",
+                        icon: "🧘",
+                        description: "Reduce stress and relax",
+                      },
                     ].map((goal) => (
                       <button
                         key={goal.value}
@@ -308,15 +383,19 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                         onClick={() => field.onChange(goal.value)}
                         className={`p-4 border-2 rounded-xl text-left transition-all ${
                           field.value === goal.value
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                            ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                            : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                         }`}
                       >
                         <div className="flex items-center space-x-3">
                           <span className="text-2xl">{goal.icon}</span>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{goal.value}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">{goal.description}</div>
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {goal.value}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {goal.description}
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -324,8 +403,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                   </div>
                 )}
               />
-              {getError('fitnessGoal') && (
-                <p className="text-red-500 text-sm mt-1">{getError('fitnessGoal')}</p>
+              {getError("fitnessGoal") && (
+                <p className="text-red-500 text-sm mt-1">
+                  {getError("fitnessGoal")}
+                </p>
               )}
             </motion.div>
             {/* Medical Info Section */}
@@ -340,8 +421,12 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                   <FiActivity className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Medical Info</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Injuries, medical conditions, and staff notes</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Medical Info
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Injuries, medical conditions, and staff notes
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -393,8 +478,12 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                   <FiUpload className="h-5 w-5 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Document Upload</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Upload ID for verification</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Document Upload
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Upload ID for verification
+                  </p>
                 </div>
               </div>
               <div>
@@ -413,14 +502,22 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                     {uploadedFile ? (
                       <div className="space-y-2">
                         <FiCheck className="w-8 h-8 text-green-500 mx-auto" />
-                        <p className="text-green-600 dark:text-green-400 font-medium">{uploadedFile.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">File uploaded successfully</p>
+                        <p className="text-green-600 dark:text-green-400 font-medium">
+                          {uploadedFile.name}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          File uploaded successfully
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <FiUpload className="w-8 h-8 text-gray-400 mx-auto" />
-                        <p className="text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">PNG, JPG, PDF up to 10MB</p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          PNG, JPG, PDF up to 10MB
+                        </p>
                       </div>
                     )}
                   </label>
@@ -434,4 +531,4 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
   );
 };
 
-export default EditMemberModal; 
+export default EditMemberModal;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface DocumentsTabProps {
   documents: any[];
@@ -6,10 +6,16 @@ interface DocumentsTabProps {
   onReupload: (docId: string) => void;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents, onResend, onReupload }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({
+  documents,
+  onResend,
+  onReupload,
+}) => {
   return (
-    <div className="p-6">{/* TODO: Document list, status badges, actions */}</div>
+    <div className="p-6">
+      {/* TODO: Document list, status badges, actions */}
+    </div>
   );
 };
 
-export default DocumentsTab; 
+export default DocumentsTab;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,11 +9,11 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-import { FiTrendingUp, FiUsers, FiStar, FiClock } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
+  ChartData,
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
+import { FiTrendingUp, FiUsers, FiStar, FiClock } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
 
 ChartJS.register(
   CategoryScale,
@@ -23,7 +23,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface TrainerPerformance {
@@ -47,8 +47,8 @@ interface TopFeedback {
 }
 
 export default function TrainerPerformance() {
-  const [selectedTrainer, setSelectedTrainer] = useState<string>('');
-  const [dateRange, setDateRange] = useState<'1m' | '3m' | '6m' | '1y'>('3m');
+  const [selectedTrainer, setSelectedTrainer] = useState<string>("");
+  const [dateRange, setDateRange] = useState<"1m" | "3m" | "6m" | "1y">("3m");
   const [trainers, setTrainers] = useState<{ id: string; name: string }[]>([]);
   const [performance, setPerformance] = useState<TrainerPerformance[]>([]);
   const [topFeedback, setTopFeedback] = useState<TopFeedback[]>([]);
@@ -69,17 +69,18 @@ export default function TrainerPerformance() {
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
-        .from('trainers')
-        .select('id, name')
-        .order('name');
+        .from("trainers")
+        .select("id, name")
+        .order("name");
 
       if (error) throw error;
       setTrainers(data || []);
       if (data?.[0]) {
         setSelectedTrainer(data[0].id);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     }
   };
 
@@ -92,46 +93,46 @@ export default function TrainerPerformance() {
       const endDate = new Date();
       const startDate = new Date();
       switch (dateRange) {
-        case '1m':
+        case "1m":
           startDate.setMonth(startDate.getMonth() - 1);
           break;
-        case '3m':
+        case "3m":
           startDate.setMonth(startDate.getMonth() - 3);
           break;
-        case '6m':
+        case "6m":
           startDate.setMonth(startDate.getMonth() - 6);
           break;
-        case '1y':
+        case "1y":
           startDate.setFullYear(startDate.getFullYear() - 1);
           break;
       }
 
       // Fetch sessions data
       const { data: sessions, error: sessionsError } = await supabase
-        .from('trainer_schedule')
-        .select('*')
-        .eq('trainer_id', selectedTrainer)
-        .gte('start_time', startDate.toISOString())
-        .lte('start_time', endDate.toISOString());
+        .from("trainer_schedule")
+        .select("*")
+        .eq("trainer_id", selectedTrainer)
+        .gte("start_time", startDate.toISOString())
+        .lte("start_time", endDate.toISOString());
 
       if (sessionsError) throw sessionsError;
 
       // Fetch feedback data
       const { data: feedback, error: feedbackError } = await supabase
-        .from('trainer_feedback')
-        .select('rating, created_at')
-        .eq('trainer_id', selectedTrainer)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        .from("trainer_feedback")
+        .select("rating, created_at")
+        .eq("trainer_id", selectedTrainer)
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString());
 
       if (feedbackError) throw feedbackError;
 
       // Process data by month
       const monthlyData: { [key: string]: TrainerPerformance } = {};
-      
-      sessions?.forEach(session => {
+
+      sessions?.forEach((session) => {
         const month = new Date(session.start_time).toISOString().slice(0, 7);
-        
+
         if (!monthlyData[month]) {
           monthlyData[month] = {
             trainer_id: selectedTrainer,
@@ -143,42 +144,45 @@ export default function TrainerPerformance() {
             total_members: 0,
             avg_rating: 0,
             revenue: 0,
-            attendance_rate: 0
+            attendance_rate: 0,
           };
         }
 
         monthlyData[month].total_sessions++;
-        
+
         switch (session.status) {
-          case 'completed':
+          case "completed":
             monthlyData[month].completed_sessions++;
             break;
-          case 'cancelled':
+          case "cancelled":
             monthlyData[month].cancelled_sessions++;
             break;
-          case 'no_show':
+          case "no_show":
             monthlyData[month].no_shows++;
             break;
         }
       });
 
       // Calculate average ratings by month
-      feedback?.forEach(item => {
+      feedback?.forEach((item) => {
         const month = new Date(item.created_at).toISOString().slice(0, 7);
         if (monthlyData[month]) {
-          monthlyData[month].avg_rating = (monthlyData[month].avg_rating + item.rating) / 2;
+          monthlyData[month].avg_rating =
+            (monthlyData[month].avg_rating + item.rating) / 2;
         }
       });
 
       // Calculate attendance rates and format final data
-      const performanceData = Object.values(monthlyData).map(month => ({
+      const performanceData = Object.values(monthlyData).map((month) => ({
         ...month,
-        attendance_rate: (month.completed_sessions / month.total_sessions) * 100
+        attendance_rate:
+          (month.completed_sessions / month.total_sessions) * 100,
       }));
 
       setPerformance(performanceData);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -187,105 +191,109 @@ export default function TrainerPerformance() {
   const fetchTopFeedback = async () => {
     try {
       const { data, error } = await supabase
-        .from('trainer_feedback')
-        .select(`
-          comment,
-          rating,
-          created_at,
-          member:profiles (name)
-        `)
-        .eq('trainer_id', selectedTrainer)
-        .order('rating', { ascending: false })
+        .from("trainer_feedback")
+        .select("comment, rating, member_name, created_at")
+        .eq("trainer_id", selectedTrainer)
+        .order("rating", { ascending: false })
         .limit(5);
 
       if (error) throw error;
-
-      setTopFeedback(
-        data.map((item: any) => ({
-          comment: item.comment,
-          rating: item.rating,
-          member_name: item.member.name,
-          created_at: item.created_at
-        }))
-      );
-    } catch (err: any) {
-      console.error('Error fetching top feedback:', err);
+      setTopFeedback(data || []);
+    } catch (err: unknown) {
+      console.error("Error fetching top feedback:", err);
     }
   };
 
   const getLatestPerformance = (): TrainerPerformance | null => {
-    if (performance.length === 0) return null;
-    return performance[performance.length - 1];
+    return performance.length > 0 ? performance[performance.length - 1] : null;
   };
 
   const getAveragePerformance = (): TrainerPerformance | null => {
     if (performance.length === 0) return null;
-    
-    const totals = performance.reduce((acc, curr) => ({
-      total_sessions: acc.total_sessions + curr.total_sessions,
-      completed_sessions: acc.completed_sessions + curr.completed_sessions,
-      cancelled_sessions: acc.cancelled_sessions + curr.cancelled_sessions,
-      no_shows: acc.no_shows + curr.no_shows,
-      total_members: acc.total_members + curr.total_members,
-      avg_rating: acc.avg_rating + curr.avg_rating,
-      revenue: acc.revenue + curr.revenue,
-      attendance_rate: acc.attendance_rate + curr.attendance_rate,
-      trainer_id: curr.trainer_id,
-      month: ''
-    }));
 
+    const totals = performance.reduce(
+      (acc, curr) => ({
+        total_sessions: acc.total_sessions + curr.total_sessions,
+        completed_sessions: acc.completed_sessions + curr.completed_sessions,
+        cancelled_sessions: acc.cancelled_sessions + curr.cancelled_sessions,
+        no_shows: acc.no_shows + curr.no_shows,
+        avg_rating: acc.avg_rating + curr.avg_rating,
+        revenue: acc.revenue + curr.revenue,
+      }),
+      {
+        total_sessions: 0,
+        completed_sessions: 0,
+        cancelled_sessions: 0,
+        no_shows: 0,
+        avg_rating: 0,
+        revenue: 0,
+      }
+    );
+
+    const count = performance.length;
     return {
-      ...totals,
-      avg_rating: totals.avg_rating / performance.length,
-      attendance_rate: totals.attendance_rate / performance.length
+      trainer_id: selectedTrainer,
+      month: "Average",
+      total_sessions: totals.total_sessions,
+      completed_sessions: totals.completed_sessions,
+      cancelled_sessions: totals.cancelled_sessions,
+      no_shows: totals.no_shows,
+      total_members: 0,
+      avg_rating: totals.avg_rating / count,
+      revenue: totals.revenue,
+      attendance_rate: (totals.completed_sessions / totals.total_sessions) * 100,
     };
   };
 
-  const sessionsData: ChartData<'line'> = {
-    labels: performance.map(p => new Date(p.month).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })),
+  const chartData: ChartData<"line"> = {
+    labels: performance.map((p) => p.month),
     datasets: [
       {
-        label: 'Total Sessions',
-        data: performance.map(p => p.total_sessions),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        tension: 0.1
+        label: "Completed Sessions",
+        data: performance.map((p) => p.completed_sessions),
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        tension: 0.4,
       },
       {
-        label: 'Completed Sessions',
-        data: performance.map(p => p.completed_sessions),
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.5)',
-        tension: 0.1
-      }
-    ]
+        label: "Cancelled Sessions",
+        data: performance.map((p) => p.cancelled_sessions),
+        borderColor: "rgb(239, 68, 68)",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+        tension: 0.4,
+      },
+    ],
   };
 
-  const attendanceData: ChartData<'bar'> = {
-    labels: performance.map(p => new Date(p.month).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })),
+  const ratingData: ChartData<"bar"> = {
+    labels: performance.map((p) => p.month),
     datasets: [
       {
-        label: 'Attendance Rate (%)',
-        data: performance.map(p => p.attendance_rate),
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgb(59, 130, 246)',
-        borderWidth: 1
-      }
-    ]
+        label: "Average Rating",
+        data: performance.map((p) => p.avg_rating),
+        backgroundColor: "rgba(34, 197, 94, 0.8)",
+        borderColor: "rgb(34, 197, 94)",
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const latestStats = getLatestPerformance();
-  const averageStats = getAveragePerformance();
+  const latest = getLatestPerformance();
+  const average = getAveragePerformance();
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex gap-2">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Trainer Performance</h2>
+          <p className="text-gray-600">Track and analyze trainer metrics</p>
+        </div>
+        <div className="flex items-center space-x-4">
           <select
             value={selectedTrainer}
             onChange={(e) => setSelectedTrainer(e.target.value)}
-            className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {trainers.map((trainer) => (
               <option key={trainer.id} value={trainer.id}>
@@ -293,11 +301,10 @@ export default function TrainerPerformance() {
               </option>
             ))}
           </select>
-
           <select
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as any)}
-            className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setDateRange(e.target.value as "1m" | "3m" | "6m" | "1y")}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="1m">Last Month</option>
             <option value="3m">Last 3 Months</option>
@@ -307,156 +314,134 @@ export default function TrainerPerformance() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <FiTrendingUp className="h-8 w-8 text-blue-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Sessions</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {latestStats?.total_sessions || 0}
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Avg: {averageStats?.total_sessions.toFixed(1) || 0} per month
-          </p>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
         </div>
+      )}
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <FiUsers className="h-8 w-8 text-green-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Members</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {latestStats?.total_members || 0}
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Avg: {averageStats?.total_members.toFixed(1) || 0} per month
-          </p>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <FiStar className="h-8 w-8 text-yellow-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Average Rating</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {latestStats?.avg_rating.toFixed(1) || 0}
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Overall: {averageStats?.avg_rating.toFixed(1) || 0}
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <FiClock className="h-8 w-8 text-red-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Attendance Rate</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {latestStats?.attendance_rate.toFixed(1) || 0}%
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Avg: {averageStats?.attendance_rate.toFixed(1) || 0}%
-          </p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Sessions Over Time</h3>
-          <Line
-            data={sessionsData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top' as const,
-                },
-                title: {
-                  display: false
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    stepSize: 1
-                  }
-                }
-              }
-            }}
-          />
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Attendance Rate</h3>
-          <Bar
-            data={attendanceData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'top' as const,
-                },
-                title: {
-                  display: false
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  max: 100,
-                  ticks: {
-                    callback: (value) => `${value}%`
-                  }
-                }
-              }
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Top Feedback */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Top Feedback</h3>
-        <div className="space-y-4">
-          {topFeedback.map((feedback, index) => (
-            <div key={index} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <FiStar
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < feedback.rating ? 'text-yellow-400' : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm text-gray-500">
-                    by {feedback.member_name}
-                  </span>
+      ) : (
+        <>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <FiTrendingUp className="w-6 h-6 text-blue-600" />
                 </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(feedback.created_at).toLocaleDateString()}
-                </span>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Sessions</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latest?.total_sessions || 0}
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-gray-700">{feedback.comment}</p>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <FiUsers className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Completion Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latest?.attendance_rate.toFixed(1) || 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <FiStar className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Avg Rating</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latest?.avg_rating.toFixed(1) || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FiClock className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">No Shows</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {latest?.no_shows || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Session Trends
+              </h3>
+              <Line data={chartData} />
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Rating Trends
+              </h3>
+              <Bar data={ratingData} />
+            </div>
+          </div>
+
+          {/* Top Feedback */}
+          {topFeedback.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Top Feedback
+              </h3>
+              <div className="space-y-4">
+                {topFeedback.map((feedback, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <FiStar
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < feedback.rating
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-medium">
+                        {feedback.member_name}
+                      </p>
+                      <p className="text-gray-600 text-sm">{feedback.comment}</p>
+                      <p className="text-gray-500 text-xs mt-1">
+                        {new Date(feedback.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
-} 
+}

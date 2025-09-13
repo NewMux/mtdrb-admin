@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface StatCardProps {
   title: string;
@@ -8,7 +8,7 @@ interface StatCardProps {
   trendText?: string;
   trendValue?: number;
   icon?: React.ReactNode;
-  color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange';
+  color?: "blue" | "green" | "red" | "yellow" | "purple" | "orange";
   onClick?: () => void;
   href?: string;
   className?: string;
@@ -20,49 +20,49 @@ const StatCard: React.FC<StatCardProps> = ({
   trendText,
   trendValue,
   icon,
-  color = 'blue',
+  color = "blue",
   onClick,
   href,
-  className = '',
+  className = "",
 }) => {
   const navigate = useNavigate();
 
   const colorClasses = {
     blue: {
-      bg: 'bg-brand-50 dark:bg-brand-900/20',
-      border: 'border-brand-200 dark:border-brand-800',
-      icon: 'text-brand-600 dark:text-brand-400',
-      trend: 'text-brand-600 dark:text-brand-400',
+      bg: "bg-brand-50 dark:bg-brand-900/20",
+      border: "border-brand-200 dark:border-brand-800",
+      icon: "text-brand-600 dark:text-brand-400",
+      trend: "text-brand-600 dark:text-brand-400",
     },
     green: {
-      bg: 'bg-success-50 dark:bg-success-900/20',
-      border: 'border-success-200 dark:border-success-800',
-      icon: 'text-success-600 dark:text-success-400',
-      trend: 'text-success-600 dark:text-success-400',
+      bg: "bg-success-50 dark:bg-success-900/20",
+      border: "border-success-200 dark:border-success-800",
+      icon: "text-success-600 dark:text-success-400",
+      trend: "text-success-600 dark:text-success-400",
     },
     red: {
-      bg: 'bg-error-50 dark:bg-error-900/20',
-      border: 'border-error-200 dark:border-error-800',
-      icon: 'text-error-600 dark:text-error-400',
-      trend: 'text-error-600 dark:text-error-400',
+      bg: "bg-error-50 dark:bg-error-900/20",
+      border: "border-error-200 dark:border-error-800",
+      icon: "text-error-600 dark:text-error-400",
+      trend: "text-error-600 dark:text-error-400",
     },
     yellow: {
-      bg: 'bg-warning-50 dark:bg-warning-900/20',
-      border: 'border-warning-200 dark:border-warning-800',
-      icon: 'text-warning-600 dark:text-warning-400',
-      trend: 'text-warning-600 dark:text-warning-400',
+      bg: "bg-warning-50 dark:bg-warning-900/20",
+      border: "border-warning-200 dark:border-warning-800",
+      icon: "text-warning-600 dark:text-warning-400",
+      trend: "text-warning-600 dark:text-warning-400",
     },
     purple: {
-      bg: 'bg-purple-50 dark:bg-purple-900/20',
-      border: 'border-purple-200 dark:border-purple-800',
-      icon: 'text-purple-600 dark:text-purple-400',
-      trend: 'text-purple-600 dark:text-purple-400',
+      bg: "bg-purple-50 dark:bg-purple-900/20",
+      border: "border-purple-200 dark:border-purple-800",
+      icon: "text-purple-600 dark:text-purple-400",
+      trend: "text-purple-600 dark:text-purple-400",
     },
     orange: {
-      bg: 'bg-orange-50 dark:bg-orange-900/20',
-      border: 'border-orange-200 dark:border-orange-800',
-      icon: 'text-orange-600 dark:text-orange-400',
-      trend: 'text-orange-600 dark:text-orange-400',
+      bg: "bg-orange-50 dark:bg-orange-900/20",
+      border: "border-orange-200 dark:border-orange-800",
+      icon: "text-orange-600 dark:text-orange-400",
+      trend: "text-orange-600 dark:text-orange-400",
     },
   };
 
@@ -88,7 +88,7 @@ const StatCard: React.FC<StatCardProps> = ({
         border border-light-200 dark:border-dark-700
         shadow-soft dark:shadow-lg
         transition-all duration-300 ease-out
-        ${isClickable ? 'cursor-pointer hover:shadow-medium' : ''}
+        ${isClickable ? "cursor-pointer hover:shadow-medium" : ""}
         ${colorClasses[color].bg}
         ${colorClasses[color].border}
         ${className}
@@ -97,7 +97,7 @@ const StatCard: React.FC<StatCardProps> = ({
     >
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-transparent to-white/5 dark:to-white/5 pointer-events-none" />
-      
+
       <div className="relative z-10">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
@@ -110,8 +110,11 @@ const StatCard: React.FC<StatCardProps> = ({
             {trendText && (
               <div className="flex items-center gap-1">
                 {trendValue !== undefined && (
-                  <span className={`text-sm font-medium ${colorClasses[color].trend}`}>
-                    {trendValue > 0 ? '+' : ''}{trendValue}%
+                  <span
+                    className={`text-sm font-medium ${colorClasses[color].trend}`}
+                  >
+                    {trendValue > 0 ? "+" : ""}
+                    {trendValue}%
                   </span>
                 )}
                 <span className="text-sm text-light-500 dark:text-dark-400">
@@ -121,7 +124,9 @@ const StatCard: React.FC<StatCardProps> = ({
             )}
           </div>
           {icon && (
-            <div className={`p-3 rounded-xl bg-white/50 dark:bg-dark-700/50 ${colorClasses[color].icon}`}>
+            <div
+              className={`p-3 rounded-xl bg-white/50 dark:bg-dark-700/50 ${colorClasses[color].icon}`}
+            >
               {icon}
             </div>
           )}
@@ -138,4 +143,4 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-export default StatCard; 
+export default StatCard;

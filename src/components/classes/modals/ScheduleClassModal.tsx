@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiCalendar, FiClock, FiRepeat, FiZap, FiAlertCircle, FiCheck } from 'react-icons/fi';
-import { SmartModal } from '../../ui/SmartModal';
-import { FormField, SelectField, TimeField, DateField, FormSection, AIRecommendationCard, ConflictAlert } from './SmartFormComponents';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
-import { SmartButton } from '../../ui/DesignSystem';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiCalendar,
+  FiClock,
+  FiRepeat,
+  FiZap,
+  FiAlertCircle,
+  FiCheck,
+} from "react-icons/fi";
+import { SmartModal } from "../../ui/SmartModal";
+import {
+  FormField,
+  SelectField,
+  TimeField,
+  DateField,
+  FormSection,
+  AIRecommendationCard,
+  ConflictAlert,
+} from "./SmartFormComponents";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { SmartButton } from "../../ui/DesignSystem";
+import { toast } from "react-hot-toast";
 
 interface ScheduleClassModalProps {
   isOpen: boolean;
@@ -20,20 +35,20 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    type: '',
-    trainer_id: '',
-    room_id: '',
-    start_time: '',
-    end_time: '',
-    start_date: '',
-    end_date: '',
-    recurrence: 'weekly',
+    name: "",
+    type: "",
+    trainer_id: "",
+    room_id: "",
+    start_time: "",
+    end_time: "",
+    start_date: "",
+    end_date: "",
+    recurrence: "weekly",
     days_of_week: [] as string[],
-    max_occurrences: 12
+    max_occurrences: 12,
   });
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +63,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
     recommendations,
     checkConflicts,
     validateForm,
-    getPopularTimeSlots
+    getPopularTimeSlots,
   } = useSmartClassModal({ classId, isPro });
 
   // Get optimal times on mount
@@ -62,26 +77,39 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
   // Generate schedule preview when form data changes
   useEffect(() => {
-    if (formData.start_date && formData.end_date && formData.days_of_week.length > 0) {
+    if (
+      formData.start_date &&
+      formData.end_date &&
+      formData.days_of_week.length > 0
+    ) {
       generateSchedulePreview();
     }
-  }, [formData.start_date, formData.end_date, formData.days_of_week, formData.recurrence]);
+  }, [
+    formData.start_date,
+    formData.end_date,
+    formData.days_of_week,
+    formData.recurrence,
+  ]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleDayToggle = (day: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       days_of_week: prev.days_of_week.includes(day)
-        ? prev.days_of_week.filter(d => d !== day)
-        : [...prev.days_of_week, day]
+        ? prev.days_of_week.filter((d) => d !== day)
+        : [...prev.days_of_week, day],
     }));
   };
 
   const generateSchedulePreview = () => {
-    if (!formData.start_date || !formData.end_date || formData.days_of_week.length === 0) {
+    if (
+      !formData.start_date ||
+      !formData.end_date ||
+      formData.days_of_week.length === 0
+    ) {
       setSchedulePreview([]);
       return;
     }
@@ -92,19 +120,24 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
     let currentDate = new Date(startDate);
     let occurrenceCount = 0;
 
-    while (currentDate <= endDate && occurrenceCount < formData.max_occurrences) {
-      const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      
+    while (
+      currentDate <= endDate &&
+      occurrenceCount < formData.max_occurrences
+    ) {
+      const dayOfWeek = currentDate
+        .toLocaleDateString("en-US", { weekday: "long" })
+        .toLowerCase();
+
       if (formData.days_of_week.includes(dayOfWeek)) {
         preview.push({
           date: new Date(currentDate),
           day: dayOfWeek,
           time: `${formData.start_time} - ${formData.end_time}`,
-          occurrence: occurrenceCount + 1
+          occurrence: occurrenceCount + 1,
         });
         occurrenceCount++;
       }
-      
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -113,64 +146,69 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
   const handleSave = async () => {
     if (!validateForm(formData)) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Schedule created successfully');
-      toast.success('Recurring classes scheduled successfully');
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log("Schedule created successfully");
+      toast.success("Recurring classes scheduled successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error creating schedule:', error);
-      toast.error('Failed to create schedule');
+      console.error("Error creating schedule:", error);
+      toast.error("Failed to create schedule");
     } finally {
       setLoading(false);
     }
   };
 
   const getError = (field: string) => {
-    return errors.find(error => error.field === field)?.message;
+    return errors.find((error) => error.field === field)?.message;
   };
 
   const classTypes = [
-    { value: 'yoga', label: 'Yoga' },
-    { value: 'pilates', label: 'Pilates' },
-    { value: 'hiit', label: 'HIIT' },
-    { value: 'strength', label: 'Strength Training' },
-    { value: 'cardio', label: 'Cardio' },
-    { value: 'spinning', label: 'Spinning' },
-    { value: 'zumba', label: 'Zumba' },
-    { value: 'boxing', label: 'Boxing' },
-    { value: 'martial-arts', label: 'Martial Arts' },
-    { value: 'dance', label: 'Dance' }
+    { value: "yoga", label: "Yoga" },
+    { value: "pilates", label: "Pilates" },
+    { value: "hiit", label: "HIIT" },
+    { value: "strength", label: "Strength Training" },
+    { value: "cardio", label: "Cardio" },
+    { value: "spinning", label: "Spinning" },
+    { value: "zumba", label: "Zumba" },
+    { value: "boxing", label: "Boxing" },
+    { value: "martial-arts", label: "Martial Arts" },
+    { value: "dance", label: "Dance" },
   ];
 
   const recurrenceOptions = [
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'biweekly', label: 'Bi-weekly' },
-    { value: 'monthly', label: 'Monthly' }
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+    { value: "biweekly", label: "Bi-weekly" },
+    { value: "monthly", label: "Monthly" },
   ];
 
   const daysOfWeek = [
-    { value: 'monday', label: 'Monday' },
-    { value: 'tuesday', label: 'Tuesday' },
-    { value: 'wednesday', label: 'Wednesday' },
-    { value: 'thursday', label: 'Thursday' },
-    { value: 'friday', label: 'Friday' },
-    { value: 'saturday', label: 'Saturday' },
-    { value: 'sunday', label: 'Sunday' }
+    { value: "monday", label: "Monday" },
+    { value: "tuesday", label: "Tuesday" },
+    { value: "wednesday", label: "Wednesday" },
+    { value: "thursday", label: "Thursday" },
+    { value: "friday", label: "Friday" },
+    { value: "saturday", label: "Saturday" },
+    { value: "sunday", label: "Sunday" },
   ];
 
-  const isFormValid = formData.name && formData.type && formData.start_time && 
-                     formData.end_time && formData.start_date && formData.end_date && 
-                     formData.days_of_week.length > 0;
+  const isFormValid =
+    formData.name &&
+    formData.type &&
+    formData.start_time &&
+    formData.end_time &&
+    formData.start_date &&
+    formData.end_date &&
+    formData.days_of_week.length > 0;
 
   return (
     <SmartModal
@@ -210,7 +248,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               loading={loading}
               disabled={!isFormValid || loading}
             >
-              {loading ? 'Scheduling...' : 'Create Schedule'}
+              {loading ? "Scheduling..." : "Create Schedule"}
             </SmartButton>
           </div>
         </div>
@@ -220,7 +258,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         {/* AI Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
-            title="AI Recommendations"
+            title="Smart Recommendations"
             subtitle="Smart suggestions for optimal scheduling"
             icon={<FiZap className="h-5 w-5" />}
             collapsible={true}
@@ -232,7 +270,10 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                   key={recommendation.id}
                   recommendation={recommendation}
                   onApply={() => {
-                    console.log('Applying recommendation:', recommendation.action);
+                    console.log(
+                      "Applying recommendation:",
+                      recommendation.action,
+                    );
                   }}
                 />
               ))}
@@ -250,18 +291,18 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             <FormField
               label="Class Name"
               value={formData.name}
-              onChange={(value) => handleInputChange('name', value)}
+              onChange={(value) => handleInputChange("name", value)}
               placeholder="e.g., Morning Yoga Series"
-              error={getError('name')}
+              error={getError("name")}
               required
             />
             <SelectField
               label="Class Type"
               value={formData.type}
-              onChange={(value) => handleInputChange('type', value)}
+              onChange={(value) => handleInputChange("type", value)}
               options={classTypes}
               placeholder="Select class type"
-              error={getError('type')}
+              error={getError("type")}
               required
             />
           </div>
@@ -277,22 +318,22 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             <SelectField
               label="Trainer"
               value={formData.trainer_id}
-              onChange={(value) => handleInputChange('trainer_id', value)}
-              options={trainers.map(trainer => ({
+              onChange={(value) => handleInputChange("trainer_id", value)}
+              options={trainers.map((trainer) => ({
                 value: trainer.id,
-                label: trainer.name
+                label: trainer.name,
               }))}
               placeholder="Select trainer"
-              error={getError('trainer_id')}
+              error={getError("trainer_id")}
               required
             />
             <SelectField
               label="Room"
               value={formData.room_id}
-              onChange={(value) => handleInputChange('room_id', value)}
-              options={rooms.map(room => ({
+              onChange={(value) => handleInputChange("room_id", value)}
+              options={rooms.map((room) => ({
                 value: room.id,
-                label: `${room.name} (${room.capacity} capacity)`
+                label: `${room.name} (${room.capacity} capacity)`,
               }))}
               placeholder="Select room"
             />
@@ -309,33 +350,35 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             <DateField
               label="Start Date"
               value={formData.start_date}
-              onChange={(value) => handleInputChange('start_date', value)}
-              error={getError('start_date')}
+              onChange={(value) => handleInputChange("start_date", value)}
+              error={getError("start_date")}
               required
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
             />
             <DateField
               label="End Date"
               value={formData.end_date}
-              onChange={(value) => handleInputChange('end_date', value)}
-              error={getError('end_date')}
+              onChange={(value) => handleInputChange("end_date", value)}
+              error={getError("end_date")}
               required
-              min={formData.start_date || new Date().toISOString().split('T')[0]}
+              min={
+                formData.start_date || new Date().toISOString().split("T")[0]
+              }
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TimeField
               label="Start Time"
               value={formData.start_time}
-              onChange={(value) => handleInputChange('start_time', value)}
-              error={getError('start_time')}
+              onChange={(value) => handleInputChange("start_time", value)}
+              error={getError("start_time")}
               required
             />
             <TimeField
               label="End Time"
               value={formData.end_time}
-              onChange={(value) => handleInputChange('end_time', value)}
-              error={getError('end_time')}
+              onChange={(value) => handleInputChange("end_time", value)}
+              error={getError("end_time")}
               required
             />
           </div>
@@ -353,7 +396,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                 {optimalTimes.slice(0, 5).map((time, index) => (
                   <button
                     key={index}
-                    onClick={() => handleInputChange('start_time', time)}
+                    onClick={() => handleInputChange("start_time", time)}
                     className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                   >
                     {time}
@@ -374,14 +417,16 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             <SelectField
               label="Recurrence Type"
               value={formData.recurrence}
-              onChange={(value) => handleInputChange('recurrence', value)}
+              onChange={(value) => handleInputChange("recurrence", value)}
               options={recurrenceOptions}
               required
             />
             <FormField
               label="Maximum Occurrences"
               value={formData.max_occurrences.toString()}
-              onChange={(value) => handleInputChange('max_occurrences', parseInt(value) || 12)}
+              onChange={(value) =>
+                handleInputChange("max_occurrences", parseInt(value) || 12)
+              }
               type="number"
               required
             />
@@ -401,8 +446,8 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                 onClick={() => handleDayToggle(day.value)}
                 className={`p-3 rounded-xl border transition-all duration-200 ${
                   formData.days_of_week.includes(day.value)
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300'
-                    : 'border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 text-light-700 dark:text-dark-300 hover:border-brand-300'
+                    ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300"
+                    : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700 text-light-700 dark:text-dark-300 hover:border-brand-300"
                 }`}
               >
                 <div className="text-sm font-medium">{day.label}</div>
@@ -427,10 +472,10 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-dark-900 dark:text-white">
-                        {session.date.toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          month: 'short', 
-                          day: 'numeric' 
+                        {session.date.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </span>
                       <span className="text-sm text-light-600 dark:text-dark-400 ml-2">
@@ -459,4 +504,4 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
   );
 };
 
-export default ScheduleClassModal; 
+export default ScheduleClassModal;

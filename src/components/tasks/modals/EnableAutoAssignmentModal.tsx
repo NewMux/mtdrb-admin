@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUsers, FiShuffle, FiClock, FiZap, FiUser, FiCheck } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiUsers,
+  FiShuffle,
+  FiClock,
+  FiZap,
+  FiUser,
+  FiCheck,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface EnableAutoAssignmentModalProps {
   open: boolean;
@@ -10,134 +17,132 @@ interface EnableAutoAssignmentModalProps {
   isPro?: boolean;
 }
 
-export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps> = ({
-  open,
-  onClose,
-  isPro = false,
-}) => {
-  const {
-    loading,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ isPro });
+export const EnableAutoAssignmentModal: React.FC<
+  EnableAutoAssignmentModalProps
+> = ({ open, onClose, isPro = false }) => {
+  const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
-  const [assignmentType, setAssignmentType] = React.useState<'round_robin' | 'availability' | 'role_based'>('availability');
+  const [assignmentType, setAssignmentType] = React.useState<
+    "round_robin" | "availability" | "role_based"
+  >("availability");
   const [selectedRoles, setSelectedRoles] = React.useState<string[]>([]);
   const [enableOverride, setEnableOverride] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
 
   const assignmentTypes = [
     {
-      value: 'round_robin' as const,
-      label: 'Round Robin',
-      description: 'Assign tasks in rotation order',
-      icon: '🔄',
+      value: "round_robin" as const,
+      label: "Round Robin",
+      description: "Assign tasks in rotation order",
+      icon: "🔄",
       isPro: false,
     },
     {
-      value: 'availability' as const,
-      label: 'Availability Based',
-      description: 'Assign to most available team member',
-      icon: '📊',
+      value: "availability" as const,
+      label: "Availability Based",
+      description: "Assign to most available team member",
+      icon: "📊",
       isPro: false,
     },
     {
-      value: 'role_based' as const,
-      label: 'Role Based',
-      description: 'Assign based on task type and role',
-      icon: '👥',
+      value: "role_based" as const,
+      label: "Role Based",
+      description: "Assign based on task type and role",
+      icon: "👥",
       isPro: true,
     },
   ];
 
   const roles = [
-    { value: 'trainer', label: 'Trainer', count: 8 },
-    { value: 'maintenance', label: 'Maintenance', count: 3 },
-    { value: 'admin', label: 'Administrative', count: 2 },
-    { value: 'cleaning', label: 'Cleaning', count: 4 },
+    { value: "trainer", label: "Trainer", count: 8 },
+    { value: "maintenance", label: "Maintenance", count: 3 },
+    { value: "admin", label: "Administrative", count: 2 },
+    { value: "cleaning", label: "Cleaning", count: 4 },
   ];
 
   const mockTeamMembers = [
     {
-      id: '1',
-      name: 'Mike Chen',
-      role: 'trainer',
+      id: "1",
+      name: "Mike Chen",
+      role: "trainer",
       currentLoad: 3,
-      availability: 'high',
-      lastAssigned: '2 hours ago',
-      avatar: 'MC',
+      availability: "high",
+      lastAssigned: "2 hours ago",
+      avatar: "MC",
     },
     {
-      id: '2',
-      name: 'Sarah Johnson',
-      role: 'trainer',
+      id: "2",
+      name: "Sarah Johnson",
+      role: "trainer",
       currentLoad: 5,
-      availability: 'medium',
-      lastAssigned: '1 hour ago',
-      avatar: 'SJ',
+      availability: "medium",
+      lastAssigned: "1 hour ago",
+      avatar: "SJ",
     },
     {
-      id: '3',
-      name: 'David Rodriguez',
-      role: 'maintenance',
+      id: "3",
+      name: "David Rodriguez",
+      role: "maintenance",
       currentLoad: 2,
-      availability: 'high',
-      lastAssigned: '30 minutes ago',
-      avatar: 'DR',
+      availability: "high",
+      lastAssigned: "30 minutes ago",
+      avatar: "DR",
     },
     {
-      id: '4',
-      name: 'Emma Wilson',
-      role: 'admin',
+      id: "4",
+      name: "Emma Wilson",
+      role: "admin",
       currentLoad: 4,
-      availability: 'low',
-      lastAssigned: '3 hours ago',
-      avatar: 'EW',
+      availability: "low",
+      lastAssigned: "3 hours ago",
+      avatar: "EW",
     },
     {
-      id: '5',
-      name: 'Alex Thompson',
-      role: 'trainer',
+      id: "5",
+      name: "Alex Thompson",
+      role: "trainer",
       currentLoad: 1,
-      availability: 'high',
-      lastAssigned: '15 minutes ago',
-      avatar: 'AT',
+      availability: "high",
+      lastAssigned: "15 minutes ago",
+      avatar: "AT",
     },
   ];
 
   const handleRoleToggle = (role: string) => {
-    setSelectedRoles(prev => 
-      prev.includes(role) 
-        ? prev.filter(r => r !== role)
-        : [...prev, role]
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     onClose();
   };
 
   const getPreviewData = () => {
-    if (assignmentType === 'round_robin') {
+    if (assignmentType === "round_robin") {
       return {
-        nextAssignee: 'Mike Chen',
-        queue: ['Sarah Johnson', 'David Rodriguez', 'Emma Wilson'],
-        description: 'Tasks will be assigned in rotation order',
+        nextAssignee: "Mike Chen",
+        queue: ["Sarah Johnson", "David Rodriguez", "Emma Wilson"],
+        description: "Tasks will be assigned in rotation order",
       };
-    } else if (assignmentType === 'availability') {
+    } else if (assignmentType === "availability") {
       return {
-        nextAssignee: 'Alex Thompson',
-        queue: ['Mike Chen', 'David Rodriguez', 'Sarah Johnson'],
-        description: 'Tasks assigned to most available team member',
+        nextAssignee: "Alex Thompson",
+        queue: ["Mike Chen", "David Rodriguez", "Sarah Johnson"],
+        description: "Tasks assigned to most available team member",
       };
     } else {
       return {
-        nextAssignee: 'Role-based assignment',
-        queue: ['Trainer: Mike Chen', 'Maintenance: David Rodriguez', 'Admin: Emma Wilson'],
-        description: 'Tasks assigned based on type and role',
+        nextAssignee: "Role-based assignment",
+        queue: [
+          "Trainer: Mike Chen",
+          "Maintenance: David Rodriguez",
+          "Admin: Emma Wilson",
+        ],
+        description: "Tasks assigned based on type and role",
       };
     }
   };
@@ -159,9 +164,11 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -188,8 +195,8 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                   key={type.value}
                   className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${
                     assignmentType === type.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <input
@@ -204,7 +211,9 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                     <span className="text-lg">{type.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">{type.label}</span>
+                        <span className="text-sm font-medium">
+                          {type.label}
+                        </span>
                         {type.isPro && (
                           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
                             Pro
@@ -222,7 +231,7 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
           </div>
 
           {/* Role Selection (for role-based) */}
-          {assignmentType === 'role_based' && (
+          {assignmentType === "role_based" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Include Roles
@@ -269,11 +278,11 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                 </span>
               </label>
             </div>
-            
+
             {enableOverride && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2 text-sm text-gray-600 dark:text-gray-400"
               >
                 <p>• Admins can manually assign tasks</p>
@@ -294,18 +303,20 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? 'Hide' : 'Show'} preview
+                {showPreview ? "Hide" : "Show"} preview
               </button>
             </div>
-            
+
             {showPreview && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-3"
               >
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
-                  <div className="text-sm font-medium mb-2">Next Assignment</div>
+                  <div className="text-sm font-medium mb-2">
+                    Next Assignment
+                  </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
                       {previewData.nextAssignee.charAt(0)}
@@ -313,19 +324,24 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                     <span className="text-sm">{previewData.nextAssignee}</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
-                  <div className="text-sm font-medium mb-2">Assignment Queue</div>
+                  <div className="text-sm font-medium mb-2">
+                    Assignment Queue
+                  </div>
                   <div className="space-y-1">
                     {previewData.queue.map((member, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span>{member}</span>
                         <span className="text-gray-500">#{index + 1}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="text-xs text-blue-700 dark:text-blue-300">
                   {previewData.description}
                 </div>
@@ -340,7 +356,10 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {mockTeamMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded dark:bg-gray-800">
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded dark:bg-gray-800"
+                >
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 bg-gray-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
                       {member.avatar}
@@ -353,11 +372,15 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-xs px-2 py-1 rounded ${
-                      member.availability === 'high' ? 'bg-green-100 text-green-700' :
-                      member.availability === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
+                    <div
+                      className={`text-xs px-2 py-1 rounded ${
+                        member.availability === "high"
+                          ? "bg-green-100 text-green-700"
+                          : member.availability === "medium"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                      }`}
+                    >
                       {member.availability}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -375,10 +398,9 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {assignmentType === 'role_based' && selectedRoles.length > 0 
+                  {assignmentType === "role_based" && selectedRoles.length > 0
                     ? `${selectedRoles.length} roles selected`
-                    : `${mockTeamMembers.length} team members available`
-                  }
+                    : `${mockTeamMembers.length} team members available`}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -391,11 +413,17 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || (assignmentType === 'role_based' && selectedRoles.length === 0)}
+                  disabled={
+                    loading ||
+                    (assignmentType === "role_based" &&
+                      selectedRoles.length === 0)
+                  }
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiCheck className="w-4 h-4" />
-                  <span>{loading ? 'Enabling...' : 'Enable Auto Assignment'}</span>
+                  <span>
+                    {loading ? "Enabling..." : "Enable Auto Assignment"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -404,4 +432,4 @@ export const EnableAutoAssignmentModal: React.FC<EnableAutoAssignmentModalProps>
       </div>
     </SmartTaskModal>
   );
-}; 
+};

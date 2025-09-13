@@ -120,12 +120,6 @@ export default {
         full: '9999px',
       },
       
-      boxShadow: {
-        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-      },
-      
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'slide-in-right': 'slideInRight 0.3s ease-out',
@@ -158,14 +152,11 @@ export default {
         'fast': '150ms',
         'normal': '300ms',
         'slow': '500ms',
-      },
-      
-      transitionTimingFunction: {
-        'ease': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        'ease-in': 'cubic-bezier(0.4, 0, 1, 1)',
-        'ease-out': 'cubic-bezier(0, 0, 0.2, 1)',
-      },
+      }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
 } 

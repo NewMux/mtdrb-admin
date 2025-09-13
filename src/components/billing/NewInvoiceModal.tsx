@@ -1,47 +1,111 @@
-import React, { useEffect, useState, Fragment, useCallback } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import dayjs from 'dayjs';
-import { 
-  FiPlus, FiDownload, FiMail, FiFilter, FiRefreshCw, FiTrendingUp, FiAlertCircle, 
-  FiDollarSign, FiCalendar, FiUsers, FiClock, FiX, FiChevronDown, 
-  FiChevronUp, FiSearch, FiSend, FiEye, FiEdit, FiTrash2, FiSettings, FiSave, 
-  FiBookmark, FiZap, FiSmartphone, FiCreditCard, FiDroplet, FiHelpCircle, 
-  FiArrowUp, FiArrowDown, FiLoader, FiUser, FiFileText, FiInfo, FiTag, FiPercent, FiPieChart, FiBarChart
-} from 'react-icons/fi';
-import toast from 'react-hot-toast';
-import { supabase } from '../../supabaseClient';
-import { 
-  Invoice, 
-  InvoiceStatus, 
+import React, { useEffect, useState, Fragment, useCallback } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import dayjs from "dayjs";
+import {
+  FiPlus,
+  FiDownload,
+  FiMail,
+  FiFilter,
+  FiRefreshCw,
+  FiTrendingUp,
+  FiAlertCircle,
+  FiDollarSign,
+  FiCalendar,
+  FiUsers,
+  FiClock,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+  FiSearch,
+  FiSend,
+  FiEye,
+  FiEdit,
+  FiTrash2,
+  FiSettings,
+  FiSave,
+  FiBookmark,
+  FiZap,
+  FiSmartphone,
+  FiCreditCard,
+  FiDroplet,
+  FiHelpCircle,
+  FiArrowUp,
+  FiArrowDown,
+  FiLoader,
+  FiUser,
+  FiFileText,
+  FiInfo,
+  FiTag,
+  FiPercent,
+  FiPieChart,
+  FiBarChart,
+} from "react-icons/fi";
+import toast from "react-hot-toast";
+import { supabase } from "../../supabaseClient";
+import {
+  Invoice,
+  InvoiceStatus,
   PaymentMethodType,
   LineItem,
   InvoiceType,
-  VatRate
-} from '../../types';
-import { 
-  AppleInput, 
-  AppleSelect, 
-  AppleTextarea
-} from '../AppleStyleModal';
-import { SmartButton } from '../ui/DesignSystem';
-import { motion, AnimatePresence } from 'framer-motion';
+  VatRate,
+} from "../../types";
+import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
+import { SmartButton } from "../ui/DesignSystem";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Smart suggestions for line items
 const SMART_SUGGESTIONS = {
-  'PT': { description: 'Personal Training Session', type: 'PT', unitPrice: 50, vatRate: 5, currency: 'BHD' },
-  'MEMBERSHIP': { description: 'Monthly Membership', type: 'Membership', unitPrice: 100, vatRate: 5, currency: 'BHD' },
-  'CLASS': { description: 'Group Fitness Class', type: 'Class', unitPrice: 25, vatRate: 5, currency: 'BHD' },
-  'EQUIPMENT': { description: 'Equipment Rental', type: 'Facility', unitPrice: 15, vatRate: 5, currency: 'BHD' },
-  'CONSULTATION': { description: 'Fitness Consultation', type: 'PT', unitPrice: 75, vatRate: 5, currency: 'BHD' },
-  'SUPPLEMENTS': { description: 'Nutrition Supplements', type: 'Other', unitPrice: 45, vatRate: 5, currency: 'BHD' }
+  PT: {
+    description: "Personal Training Session",
+    type: "PT",
+    unitPrice: 50,
+    vatRate: 5,
+    currency: "BHD",
+  },
+  MEMBERSHIP: {
+    description: "Monthly Membership",
+    type: "Membership",
+    unitPrice: 100,
+    vatRate: 5,
+    currency: "BHD",
+  },
+  CLASS: {
+    description: "Group Fitness Class",
+    type: "Class",
+    unitPrice: 25,
+    vatRate: 5,
+    currency: "BHD",
+  },
+  EQUIPMENT: {
+    description: "Equipment Rental",
+    type: "Facility",
+    unitPrice: 15,
+    vatRate: 5,
+    currency: "BHD",
+  },
+  CONSULTATION: {
+    description: "Fitness Consultation",
+    type: "PT",
+    unitPrice: 75,
+    vatRate: 5,
+    currency: "BHD",
+  },
+  SUPPLEMENTS: {
+    description: "Nutrition Supplements",
+    type: "Other",
+    unitPrice: 45,
+    vatRate: 5,
+    currency: "BHD",
+  },
 };
 
 // VAT Rate options
 const VAT_RATES: { value: VatRate; label: string }[] = [
-  { value: 0, label: '0% - Exempt' },
-  { value: 5, label: '5% - Standard' },
-  { value: 10, label: '10% - Reduced' },
-  { value: 15, label: '15% - Premium' }
+  { value: 0, label: "0% - Exempt" },
+  { value: 5, label: "5% - Standard" },
+  { value: 10, label: "10% - Reduced" },
+  { value: 15, label: "15% - Premium" },
 ];
 
 interface ClientHistory {
@@ -61,30 +125,30 @@ interface NewInvoiceModalProps {
   invoice: Invoice | null;
 }
 
-export function NewInvoiceModal({ 
-  isOpen, 
-  onClose, 
-  clients, 
-  classes, 
-  tenantId, 
-  onSave, 
-  invoice: editingInvoice 
+export function NewInvoiceModal({
+  isOpen,
+  onClose,
+  clients,
+  classes,
+  tenantId,
+  onSave,
+  invoice: editingInvoice,
 }: NewInvoiceModalProps) {
-  console.log('NewInvoiceModal rendered with isOpen:', isOpen);
-  console.log('Number of clients:', clients.length);
-  
+  console.log("NewInvoiceModal rendered with isOpen:", isOpen);
+  console.log("Number of clients:", clients.length);
+
   // Invoice Details State
   const [invoiceData, setInvoiceData] = useState({
-    invoice_number: '',
-    type: 'Membership' as InvoiceType,
-    status: 'Unpaid' as InvoiceStatus,
-    member_id: '',
-    issue_date: dayjs().format('YYYY-MM-DD'),
-    due_date: dayjs().add(7, 'day').format('YYYY-MM-DD'),
-    payment_method: 'card' as PaymentMethodType,
+    invoice_number: "",
+    type: "Membership" as InvoiceType,
+    status: "Unpaid" as InvoiceStatus,
+    member_id: "",
+    issue_date: dayjs().format("YYYY-MM-DD"),
+    due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
+    payment_method: "card" as PaymentMethodType,
     paid_amount: 0,
-    currency: 'BHD',
-    notes: '',
+    currency: "BHD",
+    notes: "",
   });
 
   // Client State
@@ -93,19 +157,19 @@ export function NewInvoiceModal({
     lastInvoiceDate: null,
     preferredPaymentMethod: null,
     outstandingBalance: 0,
-    overdueInvoices: 0
+    overdueInvoices: 0,
   });
 
   // Line Items State
   const [items, setItems] = useState<LineItem[]>(() => {
     const initialItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      description: '',
+      description: "",
       quantity: 1,
       unit_price: 0,
       vat_rate: 5 as VatRate,
       discount_percentage: 0,
-      total: 0
+      total: 0,
     };
     initialItem.total = 0; // Will be calculated by calculateItemTotal
     return [initialItem];
@@ -115,33 +179,52 @@ export function NewInvoiceModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingClientHistory, setIsLoadingClientHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [activeSection, setActiveSection] = useState<'details' | 'items' | 'summary'>('details');
+  const [activeSection, setActiveSection] = useState<
+    "details" | "items" | "summary"
+  >("details");
 
   // Calculate totals with smart logic
-  const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-  const vat_total = items.reduce((sum, item) => sum + ((item.unit_price * item.quantity) * (item.vat_rate / 100)), 0);
-  const discount_total = items.reduce((sum, item) => sum + ((item.unit_price * item.quantity) * (item.discount_percentage / 100)), 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.unit_price * item.quantity,
+    0,
+  );
+  const vat_total = items.reduce(
+    (sum, item) =>
+      sum + item.unit_price * item.quantity * (item.vat_rate / 100),
+    0,
+  );
+  const discount_total = items.reduce(
+    (sum, item) =>
+      sum + item.unit_price * item.quantity * (item.discount_percentage / 100),
+    0,
+  );
   const total = subtotal + vat_total - discount_total;
   const remaining_balance = total - invoiceData.paid_amount;
 
   // Auto-calculate line item totals
   const calculateItemTotal = useCallback((item: LineItem) => {
-    return item.quantity * item.unit_price * (1 + item.vat_rate / 100) * (1 - item.discount_percentage / 100);
+    return (
+      item.quantity *
+      item.unit_price *
+      (1 + item.vat_rate / 100) *
+      (1 - item.discount_percentage / 100)
+    );
   }, []);
 
   useEffect(() => {
     if (editingInvoice) {
       setInvoiceData({
-        invoice_number: editingInvoice.invoice_number || '',
-        type: editingInvoice.type || 'Membership',
-        status: editingInvoice.status || 'Unpaid',
-        member_id: editingInvoice.member?.id || '',
-        issue_date: editingInvoice.issue_date || dayjs().format('YYYY-MM-DD'),
-        due_date: editingInvoice.due_date || dayjs().add(7, 'day').format('YYYY-MM-DD'),
-        payment_method: editingInvoice.payment_method || 'card',
+        invoice_number: editingInvoice.invoice_number || "",
+        type: editingInvoice.type || "Membership",
+        status: editingInvoice.status || "Unpaid",
+        member_id: editingInvoice.member?.id || "",
+        issue_date: editingInvoice.issue_date || dayjs().format("YYYY-MM-DD"),
+        due_date:
+          editingInvoice.due_date || dayjs().add(7, "day").format("YYYY-MM-DD"),
+        payment_method: editingInvoice.payment_method || "card",
         paid_amount: editingInvoice.paid_amount || 0,
-        currency: editingInvoice.currency || 'BHD',
-        notes: editingInvoice.notes || '',
+        currency: editingInvoice.currency || "BHD",
+        notes: editingInvoice.notes || "",
       });
       setSelectedClient(editingInvoice.member || null);
       if (editingInvoice.line_items && editingInvoice.line_items.length > 0) {
@@ -151,25 +234,25 @@ export function NewInvoiceModal({
       // Reset form with smart defaults
       setInvoiceData({
         invoice_number: `INV-${Date.now()}`,
-        type: 'Membership' as InvoiceType,
-        status: 'Unpaid' as InvoiceStatus,
-        member_id: '',
-        issue_date: dayjs().format('YYYY-MM-DD'),
-        due_date: dayjs().add(7, 'day').format('YYYY-MM-DD'),
-        payment_method: 'card' as PaymentMethodType,
+        type: "Membership" as InvoiceType,
+        status: "Unpaid" as InvoiceStatus,
+        member_id: "",
+        issue_date: dayjs().format("YYYY-MM-DD"),
+        due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
+        payment_method: "card" as PaymentMethodType,
         paid_amount: 0,
-        currency: 'BHD',
-        notes: '',
+        currency: "BHD",
+        notes: "",
       });
       setSelectedClient(null);
       const resetItem = {
         id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        description: '',
+        description: "",
         quantity: 1,
         unit_price: 0,
         vat_rate: 5 as VatRate,
         discount_percentage: 0,
-        total: 0
+        total: 0,
       };
       resetItem.total = calculateItemTotal(resetItem);
       setItems([resetItem]);
@@ -180,43 +263,48 @@ export function NewInvoiceModal({
     setIsLoadingClientHistory(true);
     try {
       const { data: lastInvoice } = await supabase
-        .from('invoices')
-        .select('issue_date, payment_method')
-        .eq('member_id', clientId)
-        .order('issue_date', { ascending: false })
+        .from("invoices")
+        .select("issue_date, payment_method")
+        .eq("member_id", clientId)
+        .order("issue_date", { ascending: false })
         .limit(1)
         .single();
 
       const { data: outstandingInvoices } = await supabase
-        .from('invoices')
-        .select('total, due_date')
-        .eq('member_id', clientId)
-        .eq('status', 'Unpaid');
+        .from("invoices")
+        .select("total, due_date")
+        .eq("member_id", clientId)
+        .eq("status", "Unpaid");
 
-      const outstandingBalance = outstandingInvoices?.reduce((sum, inv) => sum + inv.total, 0) || 0;
-      const overdueInvoices = outstandingInvoices?.filter(inv => 
-        dayjs(inv.due_date).isBefore(dayjs())
-      ).length || 0;
+      const outstandingBalance =
+        outstandingInvoices?.reduce((sum, inv) => sum + inv.total, 0) || 0;
+      const overdueInvoices =
+        outstandingInvoices?.filter((inv) =>
+          dayjs(inv.due_date).isBefore(dayjs()),
+        ).length || 0;
 
       setClientHistory({
         lastInvoiceDate: lastInvoice?.issue_date || null,
         preferredPaymentMethod: lastInvoice?.payment_method || null,
         outstandingBalance,
-        overdueInvoices
+        overdueInvoices,
       });
 
       if (lastInvoice?.payment_method) {
-        setInvoiceData(prev => ({ ...prev, payment_method: lastInvoice.payment_method as PaymentMethodType }));
+        setInvoiceData((prev) => ({
+          ...prev,
+          payment_method: lastInvoice.payment_method as PaymentMethodType,
+        }));
       }
 
       if (overdueInvoices > 0) {
         toast.error(`Client has ${overdueInvoices} overdue invoice(s)!`, {
           duration: 4000,
-          icon: '⚠️'
+          icon: "⚠️",
         });
       }
     } catch (error) {
-      console.error('Error loading client history:', error);
+      console.error("Error loading client history:", error);
     } finally {
       setIsLoadingClientHistory(false);
     }
@@ -232,37 +320,41 @@ export function NewInvoiceModal({
     return null;
   }
 
-  const handleItemChange = (index: number, field: string, value: string | number) => {
+  const handleItemChange = (
+    index: number,
+    field: string,
+    value: string | number,
+  ) => {
     try {
       const newItems = [...items];
       const currentItem = { ...newItems[index] };
-      
-      if (field === 'quantity') {
+
+      if (field === "quantity") {
         currentItem.quantity = value as number;
-      } else if (field === 'vat_rate') {
+      } else if (field === "vat_rate") {
         currentItem.vat_rate = value as VatRate;
       } else {
         currentItem[field as keyof LineItem] = value as any;
       }
-      
+
       currentItem.total = calculateItemTotal(currentItem);
       newItems[index] = currentItem;
       setItems(newItems);
     } catch (error) {
-      console.error('Error updating item:', error);
-      toast.error('Error updating item');
+      console.error("Error updating item:", error);
+      toast.error("Error updating item");
     }
   };
 
   const addItem = () => {
     const newItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      description: '',
+      description: "",
       quantity: 1,
       unit_price: 0,
       vat_rate: 5 as VatRate,
       discount_percentage: 0,
-      total: 0
+      total: 0,
     };
     newItem.total = calculateItemTotal(newItem);
     setItems([...items, newItem]);
@@ -275,32 +367,33 @@ export function NewInvoiceModal({
   };
 
   const applySmartSuggestion = (suggestionKey: string, index: number) => {
-    const suggestion = SMART_SUGGESTIONS[suggestionKey as keyof typeof SMART_SUGGESTIONS];
+    const suggestion =
+      SMART_SUGGESTIONS[suggestionKey as keyof typeof SMART_SUGGESTIONS];
     if (suggestion) {
-      handleItemChange(index, 'description', suggestion.description);
-      handleItemChange(index, 'unit_price', suggestion.unitPrice);
-      handleItemChange(index, 'vat_rate', suggestion.vatRate);
+      handleItemChange(index, "description", suggestion.description);
+      handleItemChange(index, "unit_price", suggestion.unitPrice);
+      handleItemChange(index, "vat_rate", suggestion.vatRate);
     }
   };
 
   const handleSave = async (saveAsDraft: boolean = false) => {
     if (!selectedClient) {
-      toast.error('Please select a client');
+      toast.error("Please select a client");
       return;
     }
 
-    if (items.length === 0 || items.every(item => !item.description)) {
-      toast.error('Please add at least one line item');
+    if (items.length === 0 || items.every((item) => !item.description)) {
+      toast.error("Please add at least one line item");
       return;
     }
 
     setIsSaving(true);
     try {
-      const action = editingInvoice ? 'updated' : 'created';
+      const action = editingInvoice ? "updated" : "created";
       const invoicePayload = {
         invoice_number: invoiceData.invoice_number || `INV-${Date.now()}`,
         type: invoiceData.type,
-        status: saveAsDraft ? 'Draft' : invoiceData.status,
+        status: saveAsDraft ? "Draft" : invoiceData.status,
         member_id: selectedClient.id,
         issue_date: invoiceData.issue_date,
         due_date: invoiceData.due_date,
@@ -313,30 +406,30 @@ export function NewInvoiceModal({
         discount_total,
         total,
         line_items: items,
-        tenant_id: tenantId
+        tenant_id: tenantId,
       };
 
       let result;
       if (editingInvoice) {
         const { data, error } = await supabase
-          .from('invoices')
+          .from("invoices")
           .update(invoicePayload)
-          .eq('id', editingInvoice.id);
+          .eq("id", editingInvoice.id);
         result = { data, error };
       } else {
         const { data, error } = await supabase
-          .from('invoices')
+          .from("invoices")
           .insert([invoicePayload]);
         result = { data, error };
       }
 
       if (result.error) throw result.error;
-      
+
       toast.success(`Invoice ${action} successfully!`);
       onSave();
       onClose();
     } catch (error: any) {
-      console.error('Error saving invoice:', error);
+      console.error("Error saving invoice:", error);
       toast.error(`Failed to save invoice: ${error.message}`);
     } finally {
       setIsSaving(false);
@@ -365,7 +458,10 @@ export function NewInvoiceModal({
               <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-25" />
             </Transition.Child>
 
-            <span className="inline-block h-screen align-middle" aria-hidden="true">
+            <span
+              className="inline-block h-screen align-middle"
+              aria-hidden="true"
+            >
               &#8203;
             </span>
 
@@ -384,7 +480,7 @@ export function NewInvoiceModal({
                   <div className="flex items-center justify-between">
                     <div>
                       <Dialog.Title className="text-2xl font-bold text-white">
-                        {editingInvoice ? 'Edit Invoice' : 'Create New Invoice'}
+                        {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
                       </Dialog.Title>
                       <p className="text-blue-100 mt-1">
                         Generate a professional invoice for your client
@@ -403,17 +499,21 @@ export function NewInvoiceModal({
                 <div className="border-b border-gray-200 bg-gray-50">
                   <div className="flex space-x-8 px-6">
                     {[
-                      { key: 'details', label: 'Invoice Details', icon: FiFileText },
-                      { key: 'items', label: 'Line Items', icon: FiDollarSign },
-                      { key: 'summary', label: 'Summary', icon: FiPieChart }
+                      {
+                        key: "details",
+                        label: "Invoice Details",
+                        icon: FiFileText,
+                      },
+                      { key: "items", label: "Line Items", icon: FiDollarSign },
+                      { key: "summary", label: "Summary", icon: FiPieChart },
                     ].map(({ key, label, icon: Icon }) => (
                       <button
                         key={key}
                         onClick={() => setActiveSection(key as any)}
                         className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                           activeSection === key
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? "border-blue-500 text-blue-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700"
                         }`}
                       >
                         <Icon className="h-4 w-4" />
@@ -427,7 +527,7 @@ export function NewInvoiceModal({
                 <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
                   <div className="p-6 space-y-6">
                     {/* Invoice Details Section */}
-                    {activeSection === 'details' && (
+                    {activeSection === "details" && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -444,7 +544,12 @@ export function NewInvoiceModal({
                               label="Invoice Number"
                               name="invoice_number"
                               value={invoiceData.invoice_number}
-                              onChange={(e) => setInvoiceData({...invoiceData, invoice_number: e.target.value})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  invoice_number: e.target.value,
+                                })
+                              }
                               placeholder="INV-12345"
                               required
                             />
@@ -452,7 +557,12 @@ export function NewInvoiceModal({
                               label="Status"
                               name="status"
                               value={invoiceData.status}
-                              onChange={(e) => setInvoiceData({...invoiceData, status: e.target.value as InvoiceStatus})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  status: e.target.value as InvoiceStatus,
+                                })
+                              }
                               required
                             >
                               <option value="Unpaid">Unpaid</option>
@@ -464,7 +574,12 @@ export function NewInvoiceModal({
                             <AppleSelect
                               label="Type"
                               value={invoiceData.type}
-                              onChange={(e) => setInvoiceData({...invoiceData, type: e.target.value as InvoiceType})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  type: e.target.value as InvoiceType,
+                                })
+                              }
                             >
                               <option value="Membership">Membership</option>
                               <option value="PT">Personal Training</option>
@@ -481,14 +596,19 @@ export function NewInvoiceModal({
                             </label>
                             <AppleSelect
                               label=""
-                              value={selectedClient?.id || ''}
+                              value={selectedClient?.id || ""}
                               onChange={(e) => {
                                 try {
-                                  const client = clients.find(c => c.id === e.target.value);
+                                  const client = clients.find(
+                                    (c) => c.id === e.target.value,
+                                  );
                                   setSelectedClient(client || null);
                                 } catch (error) {
-                                  console.error('Error selecting client:', error);
-                                  toast.error('Error selecting client');
+                                  console.error(
+                                    "Error selecting client:",
+                                    error,
+                                  );
+                                  toast.error("Error selecting client");
                                 }
                               }}
                             >
@@ -510,30 +630,55 @@ export function NewInvoiceModal({
                               </h4>
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                  <span className="text-gray-600">Last Invoice:</span>
+                                  <span className="text-gray-600">
+                                    Last Invoice:
+                                  </span>
                                   <span className="font-medium ml-2">
-                                    {clientHistory.lastInvoiceDate 
-                                      ? dayjs(clientHistory.lastInvoiceDate).format('MMM D, YYYY')
-                                      : 'None'
+                                    {clientHistory.lastInvoiceDate
+                                      ? dayjs(
+                                          clientHistory.lastInvoiceDate,
+                                        ).format("MMM D, YYYY")
+                                      : "None"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">
+                                    Outstanding Balance:
+                                  </span>
+                                  <span
+                                    className={
+                                      clientHistory.outstandingBalance > 0
+                                        ? "font-medium ml-2 text-red-600"
+                                        : "font-medium ml-2 text-green-600"
                                     }
+                                  >
+                                    {clientHistory.outstandingBalance.toFixed(
+                                      3,
+                                    )}{" "}
+                                    BHD
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Outstanding Balance:</span>
-                                  <span className={clientHistory.outstandingBalance > 0 ? 'font-medium ml-2 text-red-600' : 'font-medium ml-2 text-green-600'}>
-                                    {clientHistory.outstandingBalance.toFixed(3)} BHD
+                                  <span className="text-gray-600">
+                                    Overdue Invoices:
                                   </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">Overdue Invoices:</span>
-                                  <span className={clientHistory.overdueInvoices > 0 ? 'font-medium ml-2 text-red-600' : 'font-medium ml-2 text-green-600'}>
+                                  <span
+                                    className={
+                                      clientHistory.overdueInvoices > 0
+                                        ? "font-medium ml-2 text-red-600"
+                                        : "font-medium ml-2 text-green-600"
+                                    }
+                                  >
                                     {clientHistory.overdueInvoices}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Preferred Payment:</span>
+                                  <span className="text-gray-600">
+                                    Preferred Payment:
+                                  </span>
                                   <span className="font-medium ml-2">
-                                    {clientHistory.preferredPaymentMethod || 'Not set'}
+                                    {clientHistory.preferredPaymentMethod ||
+                                      "Not set"}
                                   </span>
                                 </div>
                               </div>
@@ -553,7 +698,12 @@ export function NewInvoiceModal({
                               name="issue_date"
                               type="date"
                               value={invoiceData.issue_date}
-                              onChange={(e) => setInvoiceData({...invoiceData, issue_date: e.target.value})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  issue_date: e.target.value,
+                                })
+                              }
                               required
                             />
                             <AppleInput
@@ -561,7 +711,12 @@ export function NewInvoiceModal({
                               name="due_date"
                               type="date"
                               value={invoiceData.due_date}
-                              onChange={(e) => setInvoiceData({...invoiceData, due_date: e.target.value})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  due_date: e.target.value,
+                                })
+                              }
                               min={invoiceData.issue_date}
                               required
                             />
@@ -578,13 +733,23 @@ export function NewInvoiceModal({
                             <AppleSelect
                               label="Payment Method"
                               value={invoiceData.payment_method}
-                              onChange={(e) => setInvoiceData({...invoiceData, payment_method: e.target.value as PaymentMethodType})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  payment_method: e.target
+                                    .value as PaymentMethodType,
+                                })
+                              }
                             >
                               <option value="">Select payment method</option>
                               <option value="card">Credit/Debit Card</option>
-                              <option value="bank_transfer">Bank Transfer</option>
+                              <option value="bank_transfer">
+                                Bank Transfer
+                              </option>
                               <option value="cash">Cash</option>
-                              <option value="digital_wallet">Digital Wallet</option>
+                              <option value="digital_wallet">
+                                Digital Wallet
+                              </option>
                               <option value="cheque">Cheque</option>
                             </AppleSelect>
                             <AppleInput
@@ -592,7 +757,12 @@ export function NewInvoiceModal({
                               type="number"
                               step="0.01"
                               value={invoiceData.paid_amount}
-                              onChange={(e) => setInvoiceData({...invoiceData, paid_amount: parseFloat(e.target.value) || 0})}
+                              onChange={(e) =>
+                                setInvoiceData({
+                                  ...invoiceData,
+                                  paid_amount: parseFloat(e.target.value) || 0,
+                                })
+                              }
                               placeholder="0.00"
                             />
                           </div>
@@ -601,7 +771,7 @@ export function NewInvoiceModal({
                     )}
 
                     {/* Line Items Section */}
-                    {activeSection === 'items' && (
+                    {activeSection === "items" && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -637,21 +807,31 @@ export function NewInvoiceModal({
                                     <AppleInput
                                       label="Description"
                                       value={item.description}
-                                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                                      onChange={(e) =>
+                                        handleItemChange(
+                                          index,
+                                          "description",
+                                          e.target.value,
+                                        )
+                                      }
                                       placeholder="Enter item description"
                                     />
                                     {/* Smart Suggestions */}
                                     {!item.description && (
                                       <div className="mt-2 flex flex-wrap gap-2">
-                                        {Object.entries(SMART_SUGGESTIONS).map(([key, suggestion]) => (
-                                          <button
-                                            key={key}
-                                            onClick={() => applySmartSuggestion(key, index)}
-                                            className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                                          >
-                                            {suggestion.description}
-                                          </button>
-                                        ))}
+                                        {Object.entries(SMART_SUGGESTIONS).map(
+                                          ([key, suggestion]) => (
+                                            <button
+                                              key={key}
+                                              onClick={() =>
+                                                applySmartSuggestion(key, index)
+                                              }
+                                              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                                            >
+                                              {suggestion.description}
+                                            </button>
+                                          ),
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -662,7 +842,13 @@ export function NewInvoiceModal({
                                       label="Quantity"
                                       type="number"
                                       value={item.quantity}
-                                      onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value))}
+                                      onChange={(e) =>
+                                        handleItemChange(
+                                          index,
+                                          "quantity",
+                                          parseInt(e.target.value),
+                                        )
+                                      }
                                       min={1}
                                     />
                                   </div>
@@ -674,7 +860,13 @@ export function NewInvoiceModal({
                                       type="number"
                                       step="0.01"
                                       value={item.unit_price}
-                                      onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value))}
+                                      onChange={(e) =>
+                                        handleItemChange(
+                                          index,
+                                          "unit_price",
+                                          parseFloat(e.target.value),
+                                        )
+                                      }
                                       placeholder="0.00"
                                     />
                                   </div>
@@ -686,11 +878,20 @@ export function NewInvoiceModal({
                                     </label>
                                     <select
                                       value={item.vat_rate}
-                                      onChange={(e) => handleItemChange(index, 'vat_rate', parseInt(e.target.value))}
+                                      onChange={(e) =>
+                                        handleItemChange(
+                                          index,
+                                          "vat_rate",
+                                          parseInt(e.target.value),
+                                        )
+                                      }
                                       className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"
                                     >
-                                      {VAT_RATES.map(rate => (
-                                        <option key={rate.value} value={rate.value}>
+                                      {VAT_RATES.map((rate) => (
+                                        <option
+                                          key={rate.value}
+                                          value={rate.value}
+                                        >
                                           {rate.label}
                                         </option>
                                       ))}
@@ -725,7 +926,7 @@ export function NewInvoiceModal({
                     )}
 
                     {/* Summary Section */}
-                    {activeSection === 'summary' && (
+                    {activeSection === "summary" && (
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -741,29 +942,51 @@ export function NewInvoiceModal({
                             <div className="space-y-4">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Subtotal:</span>
-                                <span className="font-medium">{subtotal.toFixed(3)} BHD</span>
+                                <span className="font-medium">
+                                  {subtotal.toFixed(3)} BHD
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">VAT:</span>
-                                <span className="font-medium">{vat_total.toFixed(3)} BHD</span>
+                                <span className="font-medium">
+                                  {vat_total.toFixed(3)} BHD
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Discount:</span>
-                                <span className="font-medium text-red-600">-{discount_total.toFixed(3)} BHD</span>
+                                <span className="font-medium text-red-600">
+                                  -{discount_total.toFixed(3)} BHD
+                                </span>
                               </div>
                               <div className="border-t pt-2">
                                 <div className="flex justify-between">
-                                  <span className="text-lg font-semibold text-gray-900">Grand Total:</span>
-                                  <span className="text-lg font-semibold text-blue-600">{total.toFixed(3)} BHD</span>
+                                  <span className="text-lg font-semibold text-gray-900">
+                                    Grand Total:
+                                  </span>
+                                  <span className="text-lg font-semibold text-blue-600">
+                                    {total.toFixed(3)} BHD
+                                  </span>
                                 </div>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Paid Amount:</span>
-                                <span className="font-medium">{invoiceData.paid_amount.toFixed(3)} BHD</span>
+                                <span className="text-gray-600">
+                                  Paid Amount:
+                                </span>
+                                <span className="font-medium">
+                                  {invoiceData.paid_amount.toFixed(3)} BHD
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">Remaining Balance:</span>
-                                <span className={remaining_balance > 0 ? 'font-medium text-red-600' : 'font-medium text-green-600'}>
+                                <span className="text-gray-600">
+                                  Remaining Balance:
+                                </span>
+                                <span
+                                  className={
+                                    remaining_balance > 0
+                                      ? "font-medium text-red-600"
+                                      : "font-medium text-green-600"
+                                  }
+                                >
                                   {remaining_balance.toFixed(3)} BHD
                                 </span>
                               </div>
@@ -774,7 +997,13 @@ export function NewInvoiceModal({
                                 type="number"
                                 step="0.01"
                                 value={invoiceData.paid_amount}
-                                onChange={(e) => setInvoiceData({...invoiceData, paid_amount: parseFloat(e.target.value) || 0})}
+                                onChange={(e) =>
+                                  setInvoiceData({
+                                    ...invoiceData,
+                                    paid_amount:
+                                      parseFloat(e.target.value) || 0,
+                                  })
+                                }
                                 placeholder="0.00"
                               />
                             </div>
@@ -790,7 +1019,12 @@ export function NewInvoiceModal({
                           <AppleTextarea
                             label="Notes"
                             value={invoiceData.notes}
-                            onChange={(e) => setInvoiceData({...invoiceData, notes: e.target.value})}
+                            onChange={(e) =>
+                              setInvoiceData({
+                                ...invoiceData,
+                                notes: e.target.value,
+                              })
+                            }
                             placeholder="Notes for internal use..."
                             rows={3}
                           />
@@ -806,42 +1040,47 @@ export function NewInvoiceModal({
                     <div className="flex items-center space-x-4">
                       <button
                         onClick={() => {
-                          if (activeSection === 'details') {
-                            setActiveSection('items');
-                          } else if (activeSection === 'items') {
-                            setActiveSection('summary');
+                          if (activeSection === "details") {
+                            setActiveSection("items");
+                          } else if (activeSection === "items") {
+                            setActiveSection("summary");
                           } else {
-                            setActiveSection('details');
+                            setActiveSection("details");
                           }
                         }}
                         className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
                       >
                         {(() => {
-                          if (activeSection === 'details') return 'Next: Line Items';
-                          if (activeSection === 'items') return 'Next: Summary';
-                          return 'Back to Details';
+                          if (activeSection === "details")
+                            return "Next: Line Items";
+                          if (activeSection === "items") return "Next: Summary";
+                          return "Back to Details";
                         })()}
                       </button>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <SmartButton variant="ghost" onClick={onClose} disabled={isSaving}>
+                      <SmartButton
+                        variant="ghost"
+                        onClick={onClose}
+                        disabled={isSaving}
+                      >
                         Cancel
                       </SmartButton>
-                      <SmartButton 
-                        variant="secondary" 
-                        onClick={() => handleSave(true)} 
-                        loading={isSaving} 
+                      <SmartButton
+                        variant="secondary"
+                        onClick={() => handleSave(true)}
+                        loading={isSaving}
                         disabled={isSaving}
                       >
                         Save as Draft
                       </SmartButton>
-                      <SmartButton 
-                        onClick={() => handleSave(false)} 
-                        loading={isSaving} 
+                      <SmartButton
+                        onClick={() => handleSave(false)}
+                        loading={isSaving}
                         disabled={isSaving}
                         className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                       >
-                        {isSaving ? 'Saving...' : 'Save Invoice'}
+                        {isSaving ? "Saving..." : "Save Invoice"}
                       </SmartButton>
                     </div>
                   </div>

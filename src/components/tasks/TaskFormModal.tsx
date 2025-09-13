@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { Task } from '../../types/index';
-import { FiX, FiCalendar, FiUser, FiTag, FiClock, FiSave } from 'react-icons/fi';
-import { SmartModal } from '../ui/SmartModal';
-import { SmartButton } from '../ui/DesignSystem';
+import React, { useState } from "react";
+import { Task } from "../../types/index";
+import {
+  FiX,
+  FiCalendar,
+  FiUser,
+  FiTag,
+  FiClock,
+  FiSave,
+} from "react-icons/fi";
+import { SmartModal } from "../ui/SmartModal";
+import { SmartButton } from "../ui/DesignSystem";
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -15,16 +22,16 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  task
+  task,
 }) => {
   const [formData, setFormData] = useState({
-    title: task?.title || '',
-    description: task?.description || '',
-    priority: task?.priority || 'medium',
-    status: task?.status || 'pending',
-    dueDate: task?.dueDate || '',
-    assignedTo: task?.assignedTo || '',
-    tags: task?.tags || []
+    title: task?.title || "",
+    description: task?.description || "",
+    priority: task?.priority || "medium",
+    status: task?.status || "pending",
+    dueDate: task?.dueDate || "",
+    assignedTo: task?.assignedTo || "",
+    tags: task?.tags || [],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,21 +41,21 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   };
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title={task ? 'Edit Task' : 'Create New Task'}
+      title={task ? "Edit Task" : "Create New Task"}
       footer={
         <div className="flex items-center justify-end space-x-3">
           <SmartButton variant="ghost" onClick={onClose}>
             Cancel
           </SmartButton>
           <SmartButton variant="primary" onClick={handleSubmit}>
-            {task ? 'Update Task' : 'Create Task'}
+            {task ? "Update Task" : "Create Task"}
           </SmartButton>
         </div>
       }
@@ -62,7 +69,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => handleChange('title', e.target.value)}
+            onChange={(e) => handleChange("title", e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter task title..."
             required
@@ -76,7 +83,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => handleChange('description', e.target.value)}
+            onChange={(e) => handleChange("description", e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Describe the task..."
@@ -91,7 +98,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </label>
             <select
               value={formData.priority}
-              onChange={(e) => handleChange('priority', e.target.value)}
+              onChange={(e) => handleChange("priority", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="low">Low</option>
@@ -106,7 +113,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </label>
             <select
               value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value)}
+              onChange={(e) => handleChange("status", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="pending">Pending</option>
@@ -126,7 +133,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <input
               type="date"
               value={formData.dueDate}
-              onChange={(e) => handleChange('dueDate', e.target.value)}
+              onChange={(e) => handleChange("dueDate", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -137,7 +144,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             <input
               type="text"
               value={formData.assignedTo}
-              onChange={(e) => handleChange('assignedTo', e.target.value)}
+              onChange={(e) => handleChange("assignedTo", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter assignee name..."
             />
@@ -151,8 +158,13 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           </label>
           <input
             type="text"
-            value={formData.tags.join(', ')}
-            onChange={(e) => handleChange('tags', e.target.value.split(',').map(tag => tag.trim()))}
+            value={formData.tags.join(", ")}
+            onChange={(e) =>
+              handleChange(
+                "tags",
+                e.target.value.split(",").map((tag) => tag.trim()),
+              )
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter tags separated by commas..."
           />
@@ -160,4 +172,4 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
       </form>
     </SmartModal>
   );
-}; 
+};

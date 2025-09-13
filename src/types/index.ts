@@ -1,12 +1,18 @@
 // Re-export Member from member.ts to avoid conflicts
-export type { Member, MemberFormData } from './member';
-export { MEMBERSHIP_TYPES, PAYMENT_METHODS, PAYMENT_STATUSES, FITNESS_GOALS, COMMON_TAGS } from './member';
+export type { Member, MemberFormData } from "./member";
+export {
+  MEMBERSHIP_TYPES,
+  PAYMENT_METHODS,
+  PAYMENT_STATUSES,
+  FITNESS_GOALS,
+  COMMON_TAGS,
+} from "./member";
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'owner' | 'trainer' | 'staff';
+  role: "admin" | "owner" | "trainer" | "staff";
   metadata: {
     paid: boolean;
     tenantId: string;
@@ -33,29 +39,41 @@ export interface Class {
   created_at: string;
 }
 
-export type PaymentMethodType = 'cash' | 'card' | 'bank_transfer' | 'cheque' | 'digital_wallet';
+export type PaymentMethodType =
+  | "cash"
+  | "card"
+  | "bank_transfer"
+  | "cheque"
+  | "digital_wallet";
 
-export type InvoiceType = 'Membership' | 'PT' | 'Class' | 'Facility' | 'Other';
+export type InvoiceType = "Membership" | "PT" | "Class" | "Facility" | "Other";
 
-export type InvoiceStatus = 'Paid' | 'Unpaid' | 'Partial' | 'Overdue' | 'Refunded' | 'Draft' | 'Cancelled';
+export type InvoiceStatus =
+  | "Paid"
+  | "Unpaid"
+  | "Partial"
+  | "Overdue"
+  | "Refunded"
+  | "Draft"
+  | "Cancelled";
 
-export type ExpenseCategory = 
-  | 'Salaries'
-  | 'Rent'
-  | 'Utilities'
-  | 'Equipment'
-  | 'Cleaning'
-  | 'Subscriptions'
-  | 'Marketing'
-  | 'Insurance'
-  | 'Maintenance'
-  | 'Software'
-  | 'Office Supplies'
-  | 'Other';
+export type ExpenseCategory =
+  | "Salaries"
+  | "Rent"
+  | "Utilities"
+  | "Equipment"
+  | "Cleaning"
+  | "Subscriptions"
+  | "Marketing"
+  | "Insurance"
+  | "Maintenance"
+  | "Software"
+  | "Office Supplies"
+  | "Other";
 
-export type ExpenseStatus = 'pending' | 'paid' | 'approved' | 'rejected';
+export type ExpenseStatus = "pending" | "paid" | "approved" | "rejected";
 
-export type RecurringFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type RecurringFrequency = "weekly" | "monthly" | "quarterly" | "yearly";
 
 export type VatRate = 0 | 5 | 10 | 15;
 
@@ -136,19 +154,24 @@ export interface VatTransaction {
   id: string;
   tenant_id: string;
   date: string;
-  type: 'Invoice' | 'Expense';
+  type: "Invoice" | "Expense";
   reference_id: string;
   reference_number: string;
   entity_name: string;
   vat_rate: VatRate;
   amount: number;
   vat_amount: number;
-  status: 'Paid' | 'Unpaid';
+  status: "Paid" | "Unpaid";
   created_at: string;
   // GCC-specific fields
   country_code?: string;
   vat_return_id?: string;
-  transaction_category?: 'standard' | 'zero_rated' | 'exempt' | 'import' | 'export';
+  transaction_category?:
+    | "standard"
+    | "zero_rated"
+    | "exempt"
+    | "import"
+    | "export";
   original_currency?: string;
   exchange_rate?: number;
   customer_vat_number?: string;
@@ -158,11 +181,11 @@ export interface VatTransaction {
 export interface FinancialInsight {
   id: string;
   date: string;
-  type: 'Income' | 'Expense';
+  type: "Income" | "Expense";
   category: string;
   amount: number;
   reference_id: string;
-  reference_type: 'Invoice' | 'Expense';
+  reference_type: "Invoice" | "Expense";
   description: string;
   created_at: string;
 }
@@ -171,7 +194,7 @@ export interface ClassBooking {
   id: string;
   class_id: string;
   member_id: string;
-  status: 'booked' | 'cancelled' | 'attended' | 'no-show';
+  status: "booked" | "cancelled" | "attended" | "no-show";
   created_at: string;
 }
 
@@ -192,7 +215,7 @@ export interface Trainer {
   name: string;
   email: string;
   phone: string;
-  status: 'active' | 'inactive' | 'on_leave';
+  status: "active" | "inactive" | "on_leave";
   specialties: string[];
   bio: string;
   profile_image_url: string;
@@ -219,7 +242,7 @@ export interface TrainerSchedule {
   trainer_id: string;
   start_time: string;
   end_time: string;
-  status: 'available' | 'booked' | 'unavailable';
+  status: "available" | "booked" | "unavailable";
   class_id?: string;
   created_at: string;
 }
@@ -227,7 +250,7 @@ export interface TrainerSchedule {
 export interface TrainerAvailability {
   start_time: string;
   end_time: string;
-  status: 'available' | 'unavailable';
+  status: "available" | "unavailable";
   recurring?: boolean;
   recurring_pattern?: string;
 }
@@ -333,7 +356,7 @@ export interface AutomationWorkflow {
   id: string;
   tenant_id: string;
   name: string;
-  type: 'member' | 'trainer' | 'class' | 'billing';
+  type: "member" | "trainer" | "class" | "billing";
   trigger: {
     event: string;
     conditions: Record<string, any>;
@@ -342,7 +365,7 @@ export interface AutomationWorkflow {
     type: string;
     params: Record<string, any>;
   }[];
-  status: 'active' | 'paused' | 'draft';
+  status: "active" | "paused" | "draft";
   created_at: string;
   last_run?: string;
   stats?: {
@@ -378,9 +401,9 @@ export interface Task {
   member_id: string;
   title: string;
   description: string;
-  type: 'follow_up' | 'payment_reminder' | 'renewal' | 'check_in' | 'other';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  type: "follow_up" | "payment_reminder" | "renewal" | "check_in" | "other";
+  priority: "low" | "medium" | "high" | "urgent";
+  status: "pending" | "in_progress" | "completed" | "cancelled";
   due_date: string;
   assigned_to: string;
   created_by: string;
@@ -422,27 +445,27 @@ export interface VatReturn {
   country_code: string;
   return_period_start: string;
   return_period_end: string;
-  filing_period: 'monthly' | 'quarterly' | 'annual';
-  status: 'draft' | 'submitted' | 'accepted' | 'rejected';
-  
+  filing_period: "monthly" | "quarterly" | "annual";
+  status: "draft" | "submitted" | "accepted" | "rejected";
+
   // VAT Summary
   total_sales: number;
   vat_on_sales: number;
   total_purchases: number;
   vat_on_purchases: number;
   net_vat_payable: number;
-  
+
   // Additional fields for GCC compliance
   zero_rated_sales: number;
   exempt_sales: number;
   imports_subject_to_vat: number;
-  
+
   // Filing information
   due_date: string;
   submitted_at?: string;
   submitted_by?: string;
   reference_number?: string;
-  
+
   created_at: string;
   updated_at: string;
 }
@@ -456,7 +479,7 @@ export interface VatReturnLineItem {
   net_amount: number;
   vat_amount: number;
   gross_amount: number;
-  transaction_type: 'sale' | 'purchase' | 'import' | 'export';
+  transaction_type: "sale" | "purchase" | "import" | "export";
   created_at: string;
 }
 
@@ -469,7 +492,7 @@ export interface VatComplianceAudit {
   issues_found: number;
   critical_issues: number;
   recommendations: string[];
-  status: 'active' | 'resolved' | 'pending';
+  status: "active" | "resolved" | "pending";
   created_at: string;
   updated_at: string;
 }
@@ -493,17 +516,17 @@ export interface VatDashboardData {
   totalVatPaid: number;
   netVatPayable: number;
   complianceScore: number;
-  
+
   // Period comparisons
   currentPeriodVat: number;
   previousPeriodVat: number;
   vatGrowthPercentage: number;
-  
+
   // Compliance status
   overdueReturns: number;
   upcomingDeadlines: number;
   criticalIssues: number;
-  
+
   // Country breakdown
   vatByCountry: {
     country_code: string;
@@ -512,13 +535,13 @@ export interface VatDashboardData {
     vat_paid: number;
     net_vat: number;
   }[];
-  
+
   // Recent transactions
   recentTransactions: VatTransaction[];
-  
+
   // Compliance alerts
   complianceAlerts: {
-    type: 'warning' | 'error' | 'info';
+    type: "warning" | "error" | "info";
     message: string;
     action_required: boolean;
   }[];
@@ -527,7 +550,7 @@ export interface VatDashboardData {
 export interface VatReportFilters {
   dateRange: [Date | null, Date | null];
   countryCode?: string;
-  transactionType?: 'Invoice' | 'Expense';
+  transactionType?: "Invoice" | "Expense";
   status?: string;
   vatRate?: VatRate;
   category?: string;
@@ -553,4 +576,4 @@ export interface VatReportData {
     issues: string[];
     recommendations: string[];
   };
-} 
+}

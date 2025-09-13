@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiCalendar, FiMapPin, FiBarChart, FiFilter } from 'react-icons/fi';
-import { getBranches, getMetricTypes } from '../../api/mockReports';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { FiCalendar, FiMapPin, FiBarChart, FiFilter } from "react-icons/fi";
+import { getBranches, getMetricTypes } from "../../api/mockReports";
 
 interface FilterBarProps {
   onFiltersChange: (filters: {
@@ -12,13 +12,20 @@ interface FilterBarProps {
   isPro?: boolean;
 }
 
-export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarProps) {
-  const [branches, setBranches] = useState<Array<{ id: string; name: string }>>([]);
-  const [metricTypes, setMetricTypes] = useState<Array<{ id: string; name: string }>>([]);
+export default function FilterBar({
+  onFiltersChange,
+  isPro = false,
+}: FilterBarProps) {
+  const [branches, setBranches] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
+  const [metricTypes, setMetricTypes] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [filters, setFilters] = useState({
-    dateRange: 'last-30-days',
-    branch: 'all',
-    metricType: 'all'
+    dateRange: "last-30-days",
+    branch: "all",
+    metricType: "all",
   });
   const [loading, setLoading] = useState(true);
 
@@ -31,12 +38,12 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
       setLoading(true);
       const [branchesData, metricTypesData] = await Promise.all([
         getBranches(),
-        getMetricTypes()
+        getMetricTypes(),
       ]);
       setBranches(branchesData);
       setMetricTypes(metricTypesData);
     } catch (error) {
-      console.error('Error fetching filter options:', error);
+      console.error("Error fetching filter options:", error);
     } finally {
       setLoading(false);
     }
@@ -49,12 +56,12 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
   };
 
   const dateRangeOptions = [
-    { value: 'last-7-days', label: 'Last 7 Days' },
-    { value: 'last-30-days', label: 'Last 30 Days' },
-    { value: 'last-90-days', label: 'Last 90 Days' },
-    { value: 'this-month', label: 'This Month' },
-    { value: 'this-quarter', label: 'This Quarter' },
-    { value: 'this-year', label: 'This Year' }
+    { value: "last-7-days", label: "Last 7 Days" },
+    { value: "last-30-days", label: "Last 30 Days" },
+    { value: "last-90-days", label: "Last 90 Days" },
+    { value: "this-month", label: "This Month" },
+    { value: "this-quarter", label: "This Quarter" },
+    { value: "this-year", label: "This Year" },
   ];
 
   if (loading) {
@@ -89,10 +96,10 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
           <FiCalendar className="w-4 h-4 text-gray-500" />
           <select
             value={filters.dateRange}
-            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+            onChange={(e) => handleFilterChange("dateRange", e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
           >
-            {dateRangeOptions.map(option => (
+            {dateRangeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -105,10 +112,10 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
           <FiMapPin className="w-4 h-4 text-gray-500" />
           <select
             value={filters.branch}
-            onChange={(e) => handleFilterChange('branch', e.target.value)}
+            onChange={(e) => handleFilterChange("branch", e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
           >
-            {branches.map(branch => (
+            {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
                 {branch.name}
               </option>
@@ -121,10 +128,10 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
           <FiBarChart className="w-4 h-4 text-gray-500" />
           <select
             value={filters.metricType}
-            onChange={(e) => handleFilterChange('metricType', e.target.value)}
+            onChange={(e) => handleFilterChange("metricType", e.target.value)}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
           >
-            {metricTypes.map(metric => (
+            {metricTypes.map((metric) => (
               <option key={metric.id} value={metric.id}>
                 {metric.name}
               </option>
@@ -143,7 +150,11 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
         {/* Clear Filters Button */}
         <button
           onClick={() => {
-            const defaultFilters = { dateRange: 'last-30-days', branch: 'all', metricType: 'all' };
+            const defaultFilters = {
+              dateRange: "last-30-days",
+              branch: "all",
+              metricType: "all",
+            };
             setFilters(defaultFilters);
             onFiltersChange(defaultFilters);
           }}
@@ -159,7 +170,8 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
           <div className="flex items-center gap-2">
             <div className="text-sm">🔒</div>
             <span className="text-sm text-gray-700">
-              Unlock advanced filtering, custom date ranges, and multi-branch analytics
+              Unlock advanced filtering, custom date ranges, and multi-branch
+              analytics
             </span>
             <button className="ml-auto bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition-colors">
               Upgrade
@@ -169,4 +181,4 @@ export default function FilterBar({ onFiltersChange, isPro = false }: FilterBarP
       )}
     </motion.div>
   );
-} 
+}

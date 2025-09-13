@@ -1,6 +1,6 @@
-import React from 'react';
-import { useSubscription } from '../contexts/SubscriptionContext';
-import { FiLock, FiStar, FiZap, FiTrendingUp } from 'react-icons/fi';
+import React from "react";
+import { useSubscription } from "../contexts/SubscriptionContext";
+import { FiLock, FiStar, FiZap, FiTrendingUp } from "react-icons/fi";
 
 interface ProFeatureGateProps {
   feature: string;
@@ -9,7 +9,12 @@ interface ProFeatureGateProps {
   showPreview?: boolean;
 }
 
-export function ProFeatureGate({ feature, children, fallback, showPreview = true }: ProFeatureGateProps) {
+export function ProFeatureGate({
+  feature,
+  children,
+  fallback,
+  showPreview = true,
+}: ProFeatureGateProps) {
   const { checkProFeature, upgradePrompt, isPro } = useSubscription();
 
   if (checkProFeature(feature)) {
@@ -21,13 +26,13 @@ export function ProFeatureGate({ feature, children, fallback, showPreview = true
   }
 
   const featureNames: { [key: string]: string } = {
-    deepAnalytics: 'Deep Analytics',
-    advancedReports: 'Advanced Reports',
-    automationEngine: 'Automation Engine',
-    memberInsights: 'Member Insights',
-    bulkOperations: 'Bulk Operations',
-    customBranding: 'Custom Branding',
-    apiAccess: 'API Access',
+    deepAnalytics: "Deep Analytics",
+    advancedReports: "Advanced Reports",
+    automationEngine: "Automation Engine",
+    memberInsights: "Member Insights",
+    bulkOperations: "Bulk Operations",
+    customBranding: "Custom Branding",
+    apiAccess: "API Access",
   };
 
   const featureIcons: { [key: string]: React.ReactNode } = {
@@ -43,25 +48,28 @@ export function ProFeatureGate({ feature, children, fallback, showPreview = true
   return (
     <div className="relative">
       {showPreview && (
-        <div className="blur-sm pointer-events-none opacity-30">
-          {children}
-        </div>
+        <div className="blur-sm pointer-events-none opacity-30">{children}</div>
       )}
-      
-      <div className={`${showPreview ? 'absolute inset-0' : ''} flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border-2 border-dashed border-blue-200 p-8`}>
+
+      <div
+        className={`${showPreview ? "absolute inset-0" : ""} flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border-2 border-dashed border-blue-200 p-8`}
+      >
         <div className="text-center max-w-sm">
           <div className="flex justify-center mb-4">
-            {featureIcons[feature] || <FiLock className="h-8 w-8 text-gray-500" />}
+            {featureIcons[feature] || (
+              <FiLock className="h-8 w-8 text-gray-500" />
+            )}
           </div>
-          
+
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {featureNames[feature] || 'Pro Feature'}
+            {featureNames[feature] || "Pro Feature"}
           </h3>
-          
+
           <p className="text-sm text-gray-600 mb-4">
-            Upgrade to Pro to unlock this powerful feature and take your gym management to the next level.
+            Upgrade to Pro to unlock this powerful feature and take your gym
+            management to the next level.
           </p>
-          
+
           <div className="space-y-2">
             <button
               onClick={upgradePrompt}
@@ -70,10 +78,8 @@ export function ProFeatureGate({ feature, children, fallback, showPreview = true
               <FiStar className="mr-2 h-4 w-4" />
               Upgrade to Pro
             </button>
-            
-            <div className="text-xs text-gray-500">
-              Starting at $29/month
-            </div>
+
+            <div className="text-xs text-gray-500">Starting at $29/month</div>
           </div>
         </div>
       </div>
@@ -82,7 +88,13 @@ export function ProFeatureGate({ feature, children, fallback, showPreview = true
 }
 
 // Mini version for smaller spaces
-export function ProBadge({ feature, onClick }: { feature: string; onClick?: () => void }) {
+export function ProBadge({
+  feature,
+  onClick,
+}: {
+  feature: string;
+  onClick?: () => void;
+}) {
   const { checkProFeature, upgradePrompt } = useSubscription();
 
   if (checkProFeature(feature)) {
@@ -101,7 +113,13 @@ export function ProBadge({ feature, onClick }: { feature: string; onClick?: () =
 }
 
 // Inline pro feature wrapper
-export function ProInline({ feature, children }: { feature: string; children: React.ReactNode }) {
+export function ProInline({
+  feature,
+  children,
+}: {
+  feature: string;
+  children: React.ReactNode;
+}) {
   const { checkProFeature } = useSubscription();
 
   if (!checkProFeature(feature)) {
@@ -109,4 +127,4 @@ export function ProInline({ feature, children }: { feature: string; children: Re
   }
 
   return <>{children}</>;
-} 
+}

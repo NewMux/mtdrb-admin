@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface AttendanceTabProps {
   history: any[];
@@ -7,10 +7,17 @@ interface AttendanceTabProps {
   aiFlags: string[];
 }
 
-const AttendanceTab: React.FC<AttendanceTabProps> = ({ history, classBreakdown, calendar, aiFlags }) => {
+const AttendanceTab: React.FC<AttendanceTabProps> = ({
+  history,
+  classBreakdown,
+  calendar,
+  aiFlags,
+}) => {
   return (
-    <div className="p-6">{/* TODO: Attendance table, breakdown, heatmap, flags */}</div>
+    <div className="p-6">
+      {/* TODO: Attendance table, breakdown, heatmap, flags */}
+    </div>
   );
 };
 
-export default AttendanceTab; 
+export default AttendanceTab;

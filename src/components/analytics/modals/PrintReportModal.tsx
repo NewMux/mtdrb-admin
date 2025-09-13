@@ -1,8 +1,17 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiPrinter, FiFileText, FiGrid, FiList, FiDownload, FiEye, FiSettings, FiCheckCircle } from 'react-icons/fi';
-import { SmartAnalyticsModal } from './SmartAnalyticsModal';
-import { useSmartAnalyticsModal } from './useSmartAnalyticsModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiPrinter,
+  FiFileText,
+  FiGrid,
+  FiList,
+  FiDownload,
+  FiEye,
+  FiSettings,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
+import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
 interface PrintReportModalProps {
   open: boolean;
@@ -14,28 +23,52 @@ interface PrintReportModalProps {
 }
 
 const layoutOptions = [
-  { id: 'summary', label: 'Summary', description: 'Key metrics and highlights only', icon: FiFileText },
-  { id: 'detailed', label: 'Detailed', description: 'Complete report with all data', icon: FiList },
-  { id: 'grid', label: 'Grid Layout', description: 'Organized in grid format', icon: FiGrid },
+  {
+    id: "summary",
+    label: "Summary",
+    description: "Key metrics and highlights only",
+    icon: FiFileText,
+  },
+  {
+    id: "detailed",
+    label: "Detailed",
+    description: "Complete report with all data",
+    icon: FiList,
+  },
+  {
+    id: "grid",
+    label: "Grid Layout",
+    description: "Organized in grid format",
+    icon: FiGrid,
+  },
 ];
 
 const printSettings = [
-  { id: 'portrait', label: 'Portrait', description: 'Standard vertical layout' },
-  { id: 'landscape', label: 'Landscape', description: 'Wide horizontal layout' },
+  {
+    id: "portrait",
+    label: "Portrait",
+    description: "Standard vertical layout",
+  },
+  {
+    id: "landscape",
+    label: "Landscape",
+    description: "Wide horizontal layout",
+  },
 ];
 
-export default function PrintReportModal({ 
-  open, 
-  onClose, 
-  reportId = '1', 
-  reportName = 'Member Overview Report',
-  onSuccess, 
-  isPro 
+export default function PrintReportModal({
+  open,
+  onClose,
+  reportId = "1",
+  reportName = "Member Overview Report",
+  onSuccess,
+  isPro,
 }: PrintReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
-  
-  const [selectedLayout, setSelectedLayout] = React.useState('summary');
-  const [selectedOrientation, setSelectedOrientation] = React.useState('portrait');
+
+  const [selectedLayout, setSelectedLayout] = React.useState("summary");
+  const [selectedOrientation, setSelectedOrientation] =
+    React.useState("portrait");
   const [includeCharts, setIncludeCharts] = React.useState(true);
   const [includeHeaders, setIncludeHeaders] = React.useState(true);
   const [pageNumbers, setPageNumbers] = React.useState(true);
@@ -52,7 +85,7 @@ export default function PrintReportModal({
     setPrinting(true);
     try {
       // Simulate print process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       onSuccess?.();
       onClose();
     } finally {
@@ -64,19 +97,25 @@ export default function PrintReportModal({
     setPrinting(true);
     try {
       // Simulate PDF generation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Downloading PDF...');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("Downloading PDF...");
     } finally {
       setPrinting(false);
     }
   };
 
   const getLayoutIcon = (layoutId: string) => {
-    const layout = layoutOptions.find(l => l.id === layoutId);
+    const layout = layoutOptions.find((l) => l.id === layoutId);
     return layout?.icon || FiFileText;
   };
 
-  function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  function Section({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <section className="mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -96,11 +135,16 @@ export default function PrintReportModal({
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
-        <div key={i} className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
-          alert.type === 'error' ? 'bg-red-50 text-red-700' : 
-          alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' : 
-          'bg-blue-50 text-blue-700'
-        }`}>
+        <div
+          key={i}
+          className={`rounded-lg px-4 py-3 mb-4 text-sm font-medium flex items-center gap-2 ${
+            alert.type === "error"
+              ? "bg-red-50 text-red-700"
+              : alert.type === "warning"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-blue-50 text-blue-700"
+          }`}
+        >
           {alert.message}
         </div>
       ))}
@@ -111,11 +155,14 @@ export default function PrintReportModal({
           {layoutOptions.map((layout) => {
             const Icon = layout.icon;
             return (
-              <label key={layout.id} className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                selectedLayout === layout.id 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-              }`}>
+              <label
+                key={layout.id}
+                className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                  selectedLayout === layout.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                }`}
+              >
                 <input
                   type="radio"
                   name="layout"
@@ -126,8 +173,16 @@ export default function PrintReportModal({
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Icon className={selectedLayout === layout.id ? 'text-blue-600' : 'text-gray-500'} />
-                    <h4 className="font-semibold text-gray-900">{layout.label}</h4>
+                    <Icon
+                      className={
+                        selectedLayout === layout.id
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }
+                    />
+                    <h4 className="font-semibold text-gray-900">
+                      {layout.label}
+                    </h4>
                   </div>
                   <p className="text-sm text-gray-600">{layout.description}</p>
                 </div>
@@ -141,7 +196,9 @@ export default function PrintReportModal({
       <Section title="Print Settings">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Orientation</label>
+            <label className="block text-sm font-medium mb-1">
+              Orientation
+            </label>
             <select
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={selectedOrientation}
@@ -155,7 +212,9 @@ export default function PrintReportModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Content Options</label>
+            <label className="block text-sm font-medium mb-1">
+              Content Options
+            </label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
                 <input
@@ -164,7 +223,9 @@ export default function PrintReportModal({
                   onChange={(e) => setIncludeCharts(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">Include charts and graphs</span>
+                <span className="text-sm text-gray-600">
+                  Include charts and graphs
+                </span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -173,7 +234,9 @@ export default function PrintReportModal({
                   onChange={(e) => setIncludeHeaders(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">Include headers and footers</span>
+                <span className="text-sm text-gray-600">
+                  Include headers and footers
+                </span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -199,19 +262,28 @@ export default function PrintReportModal({
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Use <strong>Landscape</strong> orientation for wide tables</span>
+                  <span>
+                    Use <strong>Landscape</strong> orientation for wide tables
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Consider <strong>Summary</strong> layout for executive presentations</span>
+                  <span>
+                    Consider <strong>Summary</strong> layout for executive
+                    presentations
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Split by branch if report exceeds <strong>10 pages</strong></span>
+                  <span>
+                    Split by branch if report exceeds <strong>10 pages</strong>
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>Enable <strong>charts</strong> for better visual impact</span>
+                  <span>
+                    Enable <strong>charts</strong> for better visual impact
+                  </span>
                 </li>
               </ul>
             </div>
@@ -231,38 +303,54 @@ export default function PrintReportModal({
             />
             <span className="font-medium">Show print preview</span>
           </label>
-          
+
           {showPreview && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="bg-gray-50 rounded-lg p-4"
             >
               <div className="bg-white border rounded-lg p-6 shadow-sm">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{reportName}</h3>
-                  <p className="text-sm text-gray-600">Generated on {new Date().toLocaleDateString()}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {reportName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Generated on {new Date().toLocaleDateString()}
+                  </p>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">1,247</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        1,247
+                      </div>
                       <div className="text-sm text-gray-600">Total Members</div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">89%</div>
-                      <div className="text-sm text-gray-600">Attendance Rate</div>
+                      <div className="text-2xl font-bold text-green-600">
+                        89%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Attendance Rate
+                      </div>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600">$45K</div>
-                      <div className="text-sm text-gray-600">Monthly Revenue</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        $45K
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Monthly Revenue
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="border-t pt-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">Key Insights</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Key Insights
+                    </h4>
                     <ul className="text-sm text-gray-600 space-y-1">
                       <li>• Member retention increased by 12% this month</li>
                       <li>• Peak attendance times: 6-8 PM on weekdays</li>
@@ -270,7 +358,7 @@ export default function PrintReportModal({
                     </ul>
                   </div>
                 </div>
-                
+
                 {pageNumbers && (
                   <div className="text-center text-xs text-gray-500 mt-6">
                     Page 1 of 1
@@ -330,4 +418,4 @@ export default function PrintReportModal({
       </div>
     </SmartAnalyticsModal>
   );
-} 
+}

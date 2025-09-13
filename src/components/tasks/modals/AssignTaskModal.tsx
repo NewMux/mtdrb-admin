@@ -1,8 +1,16 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiSearch, FiFilter, FiZap, FiUsers, FiClock, FiCheck } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiUser,
+  FiSearch,
+  FiFilter,
+  FiZap,
+  FiUsers,
+  FiClock,
+  FiCheck,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface AssignTaskModalProps {
   open: boolean;
@@ -17,90 +25,89 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    assignTask,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, assignTask, alerts, clearAlerts } = useSmartTaskModal({
+    taskId,
+    isPro,
+  });
 
-  const [selectedAssignee, setSelectedAssignee] = React.useState('');
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedRole, setSelectedRole] = React.useState('');
+  const [selectedAssignee, setSelectedAssignee] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedRole, setSelectedRole] = React.useState("");
   const [assignToSelf, setAssignToSelf] = React.useState(false);
 
   // Mock assignee data
   const mockAssignees = [
     {
-      id: '1',
-      name: 'Mike Chen',
-      email: 'mike.chen@mtdrb.com',
-      role: 'trainer',
-      department: 'fitness',
+      id: "1",
+      name: "Mike Chen",
+      email: "mike.chen@mtdrb.com",
+      role: "trainer",
+      department: "fitness",
       currentLoad: 3,
-      availability: 'high',
-      lastActive: '2 hours ago',
-      avatar: 'MC',
+      availability: "high",
+      lastActive: "2 hours ago",
+      avatar: "MC",
     },
     {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@mtdrb.com',
-      role: 'trainer',
-      department: 'fitness',
+      id: "2",
+      name: "Sarah Johnson",
+      email: "sarah.johnson@mtdrb.com",
+      role: "trainer",
+      department: "fitness",
       currentLoad: 5,
-      availability: 'medium',
-      lastActive: '1 hour ago',
-      avatar: 'SJ',
+      availability: "medium",
+      lastActive: "1 hour ago",
+      avatar: "SJ",
     },
     {
-      id: '3',
-      name: 'David Rodriguez',
-      email: 'david.rodriguez@mtdrb.com',
-      role: 'maintenance',
-      department: 'facilities',
+      id: "3",
+      name: "David Rodriguez",
+      email: "david.rodriguez@mtdrb.com",
+      role: "maintenance",
+      department: "facilities",
       currentLoad: 2,
-      availability: 'high',
-      lastActive: '30 minutes ago',
-      avatar: 'DR',
+      availability: "high",
+      lastActive: "30 minutes ago",
+      avatar: "DR",
     },
     {
-      id: '4',
-      name: 'Emma Wilson',
-      email: 'emma.wilson@mtdrb.com',
-      role: 'admin',
-      department: 'operations',
+      id: "4",
+      name: "Emma Wilson",
+      email: "emma.wilson@mtdrb.com",
+      role: "admin",
+      department: "operations",
       currentLoad: 4,
-      availability: 'low',
-      lastActive: '3 hours ago',
-      avatar: 'EW',
+      availability: "low",
+      lastActive: "3 hours ago",
+      avatar: "EW",
     },
     {
-      id: '5',
-      name: 'Alex Thompson',
-      email: 'alex.thompson@mtdrb.com',
-      role: 'trainer',
-      department: 'fitness',
+      id: "5",
+      name: "Alex Thompson",
+      email: "alex.thompson@mtdrb.com",
+      role: "trainer",
+      department: "fitness",
       currentLoad: 1,
-      availability: 'high',
-      lastActive: '15 minutes ago',
-      avatar: 'AT',
+      availability: "high",
+      lastActive: "15 minutes ago",
+      avatar: "AT",
     },
   ];
 
   const roles = [
-    { value: '', label: 'All Roles' },
-    { value: 'trainer', label: 'Trainer' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'admin', label: 'Administrative' },
-    { value: 'cleaning', label: 'Cleaning' },
+    { value: "", label: "All Roles" },
+    { value: "trainer", label: "Trainer" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "admin", label: "Administrative" },
+    { value: "cleaning", label: "Cleaning" },
   ];
 
   const handleAssignTask = async () => {
     if (!task) return;
 
-    const assigneeEmail = assignToSelf ? 'current_user@mtdrb.com' : selectedAssignee;
+    const assigneeEmail = assignToSelf
+      ? "current_user@mtdrb.com"
+      : selectedAssignee;
     const result = await assignTask(task.id, assigneeEmail);
     if (result.success) {
       onClose();
@@ -108,9 +115,10 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   };
 
   // Filter assignees based on search and role
-  const filteredAssignees = mockAssignees.filter(assignee => {
-    const matchesSearch = assignee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         assignee.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredAssignees = mockAssignees.filter((assignee) => {
+    const matchesSearch =
+      assignee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assignee.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = !selectedRole || assignee.role === selectedRole;
     return matchesSearch && matchesRole;
   });
@@ -118,9 +126,9 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   // Smart suggestions based on task type and current load
   const getSmartSuggestions = () => {
     if (!task) return [];
-    
+
     return mockAssignees
-      .filter(a => a.availability === 'high' && a.currentLoad < 4)
+      .filter((a) => a.availability === "high" && a.currentLoad < 4)
       .sort((a, b) => a.currentLoad - b.currentLoad)
       .slice(0, 3);
   };
@@ -146,9 +154,11 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -175,15 +185,21 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="font-medium capitalize">{task.type.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.type.replace("_", " ")}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Priority:
+              </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600 dark:text-gray-400">Due date:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Due date:
+                </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
                 </span>
@@ -209,8 +225,8 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                   onClick={() => setSelectedAssignee(suggestion.email)}
                   className={`w-full p-3 rounded-lg border text-left transition-all ${
                     selectedAssignee === suggestion.email
-                      ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-100 dark:bg-blue-900/40"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -219,7 +235,9 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                         {suggestion.avatar}
                       </div>
                       <div>
-                        <div className="text-sm font-medium">{suggestion.name}</div>
+                        <div className="text-sm font-medium">
+                          {suggestion.name}
+                        </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {suggestion.email}
                         </div>
@@ -229,11 +247,15 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {suggestion.currentLoad} tasks
                       </div>
-                      <div className={`text-xs px-2 py-1 rounded ${
-                        suggestion.availability === 'high' ? 'bg-green-100 text-green-700' :
-                        suggestion.availability === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
+                      <div
+                        className={`text-xs px-2 py-1 rounded ${
+                          suggestion.availability === "high"
+                            ? "bg-green-100 text-green-700"
+                            : suggestion.availability === "medium"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {suggestion.availability} availability
                       </div>
                     </div>
@@ -253,7 +275,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
               onChange={(e) => {
                 setAssignToSelf(e.target.checked);
                 if (e.target.checked) {
-                  setSelectedAssignee('');
+                  setSelectedAssignee("");
                 }
               }}
               className="text-blue-600 focus:ring-blue-500"
@@ -318,8 +340,8 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                     onClick={() => setSelectedAssignee(assignee.email)}
                     className={`w-full p-3 rounded-lg border text-left transition-all ${
                       selectedAssignee === assignee.email
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -328,7 +350,9 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                           {assignee.avatar}
                         </div>
                         <div>
-                          <div className="text-sm font-medium">{assignee.name}</div>
+                          <div className="text-sm font-medium">
+                            {assignee.name}
+                          </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             {assignee.email} • {assignee.role}
                           </div>
@@ -338,11 +362,15 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {assignee.currentLoad} tasks
                         </div>
-                        <div className={`text-xs px-2 py-1 rounded ${
-                          assignee.availability === 'high' ? 'bg-green-100 text-green-700' :
-                          assignee.availability === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
+                        <div
+                          className={`text-xs px-2 py-1 rounded ${
+                            assignee.availability === "high"
+                              ? "bg-green-100 text-green-700"
+                              : assignee.availability === "medium"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
                           {assignee.availability}
                         </div>
                       </div>
@@ -360,7 +388,9 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {assignToSelf ? 'Self-assignment' : `${filteredAssignees.length} assignees available`}
+                {assignToSelf
+                  ? "Self-assignment"
+                  : `${filteredAssignees.length} assignees available`}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -378,7 +408,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiCheck className="w-4 h-4" />
-                <span>{loading ? 'Assigning...' : 'Assign Task'}</span>
+                <span>{loading ? "Assigning..." : "Assign Task"}</span>
               </button>
             </div>
           </div>
@@ -386,4 +416,4 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

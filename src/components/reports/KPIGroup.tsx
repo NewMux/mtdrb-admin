@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiFileText, FiDownload, FiCalendar, FiZap, FiTrendingUp, FiTrendingDown, FiMoreVertical } from 'react-icons/fi';
-import { getKPIStats, KPIStats } from '../../api/mockReports';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiFileText,
+  FiDownload,
+  FiCalendar,
+  FiZap,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiMoreVertical,
+} from "react-icons/fi";
+import { getKPIStats, KPIStats } from "../../api/mockReports";
+import { toast } from "react-hot-toast";
 
 interface KPIGroupProps {
   isPro?: boolean;
 }
 
-const KPICard = ({ 
-  title, 
-  value, 
-  trend, 
-  icon: Icon, 
-  color, 
-  isLoading = false 
+const KPICard = ({
+  title,
+  value,
+  trend,
+  icon: Icon,
+  color,
+  isLoading = false,
 }: {
   title: string;
   value: number;
@@ -23,9 +31,9 @@ const KPICard = ({
   color: string;
   isLoading?: boolean;
 }) => {
-  const isPositive = trend.startsWith('+');
+  const isPositive = trend.startsWith("+");
   const TrendIcon = isPositive ? FiTrendingUp : FiTrendingDown;
-  
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-200">
@@ -70,19 +78,23 @@ const KPICard = ({
           </div>
         </div>
       </div>
-      
+
       <div className="mb-2">
         <div className="text-3xl font-bold text-gray-900">
           {value.toLocaleString()}
         </div>
         <div className="flex items-center gap-2">
-          <TrendIcon className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
-          <span className={`text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <TrendIcon
+            className={`w-4 h-4 ${isPositive ? "text-green-500" : "text-red-500"}`}
+          />
+          <span
+            className={`text-sm font-medium ${isPositive ? "text-green-600" : "text-red-600"}`}
+          >
             {trend}
           </span>
         </div>
       </div>
-      
+
       <div className="text-sm text-gray-600">{title}</div>
     </motion.div>
   );
@@ -104,8 +116,8 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
       const stats = await getKPIStats();
       setKpiStats(stats);
     } catch (err) {
-      setError('Failed to load KPI data');
-      toast.error('Failed to load KPI data');
+      setError("Failed to load KPI data");
+      toast.error("Failed to load KPI data");
     } finally {
       setLoading(false);
     }
@@ -117,29 +129,29 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
       value: kpiStats?.generatedReports.value || 0,
       trend: kpiStats?.generatedReports.trend || "+0%",
       icon: FiFileText,
-      color: "blue"
+      color: "blue",
     },
     {
       title: "Downloads",
       value: kpiStats?.downloads.value || 0,
       trend: kpiStats?.downloads.trend || "+0%",
       icon: FiDownload,
-      color: "green"
+      color: "green",
     },
     {
       title: "Scheduled Reports",
       value: kpiStats?.scheduledReports.value || 0,
       trend: kpiStats?.scheduledReports.trend || "+0",
       icon: FiCalendar,
-      color: "purple"
+      color: "purple",
     },
     {
       title: "Auto Reports",
       value: kpiStats?.autoReports.value || 0,
       trend: kpiStats?.autoReports.trend || "+0",
       icon: FiZap,
-      color: "orange"
-    }
+      color: "orange",
+    },
   ];
 
   if (error) {
@@ -148,10 +160,12 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
         <div className="flex items-center gap-3">
           <div className="text-red-500">⚠️</div>
           <div>
-            <h3 className="font-semibold text-red-900">Failed to load KPI data</h3>
+            <h3 className="font-semibold text-red-900">
+              Failed to load KPI data
+            </h3>
             <p className="text-red-700 text-sm">{error}</p>
           </div>
-          <button 
+          <button
             onClick={fetchKPIStats}
             className="ml-auto bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
           >
@@ -165,7 +179,9 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Key Performance Indicators</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Key Performance Indicators
+        </h2>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           Real-time data
@@ -191,8 +207,12 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
           <div className="flex items-center gap-3">
             <div className="text-2xl">🔒</div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">Advanced Analytics</h3>
-              <p className="text-gray-600 text-sm">Get detailed breakdowns and custom metrics</p>
+              <h3 className="font-semibold text-gray-900">
+                Advanced Analytics
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Get detailed breakdowns and custom metrics
+              </p>
             </div>
             <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
               Upgrade to Pro
@@ -202,4 +222,4 @@ export default function KPIGroup({ isPro = false }: KPIGroupProps) {
       )}
     </div>
   );
-} 
+}

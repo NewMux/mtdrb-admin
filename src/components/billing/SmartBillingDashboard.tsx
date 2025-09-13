@@ -1,13 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FiDollarSign, FiTrendingUp, FiTrendingDown, FiUsers, FiFileText, 
-  FiCalendar, FiAlertCircle, FiCheckCircle, FiClock, FiGlobe,
-  FiTarget, FiArrowUp, FiArrowDown, FiShield, FiCreditCard,
-  FiBarChart, FiPieChart, FiActivity, FiZap
-} from 'react-icons/fi';
-import { mockBillingMetrics, mockRevenueGrowth } from '../../api/mockBillingData';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiDollarSign,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiUsers,
+  FiFileText,
+  FiCalendar,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiClock,
+  FiGlobe,
+  FiTarget,
+  FiArrowUp,
+  FiArrowDown,
+  FiShield,
+  FiCreditCard,
+  FiBarChart,
+  FiPieChart,
+  FiActivity,
+  FiZap,
+} from "react-icons/fi";
+import {
+  mockBillingMetrics,
+  mockRevenueGrowth,
+} from "../../api/mockBillingData";
+import toast from "react-hot-toast";
 
 interface SmartBillingDashboardProps {
   refreshKey: number;
@@ -28,11 +46,13 @@ interface BillingMetrics {
 
 interface RevenueGrowth {
   percentage: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   value: number;
 }
 
-export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashboardProps) {
+export default function SmartBillingDashboard({
+  refreshKey,
+}: SmartBillingDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<BillingMetrics>({
     totalRevenue: 0,
@@ -48,8 +68,8 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
   });
   const [revenueGrowth, setRevenueGrowth] = useState<RevenueGrowth>({
     percentage: 0,
-    trend: 'stable',
-    value: 0
+    trend: "stable",
+    value: 0,
   });
 
   useEffect(() => {
@@ -59,14 +79,13 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Use mock data instead of backend calls
       setMetrics(mockBillingMetrics);
       setRevenueGrowth(mockRevenueGrowth);
-
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      console.error("Error loading dashboard data:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -96,13 +115,15 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90">Total Revenue</div>
-              <div className="text-2xl font-bold">{metrics.totalRevenue.toFixed(0)} AED</div>
+              <div className="text-2xl font-bold">
+                {metrics.totalRevenue.toFixed(0)} AED
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {revenueGrowth.trend === 'up' ? (
+            {revenueGrowth.trend === "up" ? (
               <FiArrowUp className="text-green-300" />
-            ) : revenueGrowth.trend === 'down' ? (
+            ) : revenueGrowth.trend === "down" ? (
               <FiArrowDown className="text-red-300" />
             ) : (
               <FiActivity className="text-blue-300" />
@@ -125,7 +146,9 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90">VAT Collected</div>
-              <div className="text-2xl font-bold">{metrics.vatCollected.toFixed(0)} AED</div>
+              <div className="text-2xl font-bold">
+                {metrics.vatCollected.toFixed(0)} AED
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -148,7 +171,9 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90">Outstanding</div>
-              <div className="text-2xl font-bold">{metrics.outstandingAmount.toFixed(0)} AED</div>
+              <div className="text-2xl font-bold">
+                {metrics.outstandingAmount.toFixed(0)} AED
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -171,14 +196,14 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             </div>
             <div className="text-right">
               <div className="text-sm opacity-90">Avg Invoice</div>
-              <div className="text-2xl font-bold">{metrics.averageInvoiceValue.toFixed(0)} AED</div>
+              <div className="text-2xl font-bold">
+                {metrics.averageInvoiceValue.toFixed(0)} AED
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <FiTrendingUp className="text-purple-300" />
-            <span className="text-sm opacity-90">
-              +12% from last month
-            </span>
+            <span className="text-sm opacity-90">+12% from last month</span>
           </div>
         </motion.div>
       </div>
@@ -195,7 +220,9 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
               <FiPieChart className="text-white text-xl" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Revenue Breakdown</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                Revenue Breakdown
+              </h3>
               <p className="text-gray-600 text-sm">By service type</p>
             </div>
           </div>
@@ -207,9 +234,17 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
                 <span className="font-medium text-gray-900">Memberships</span>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900">{metrics.membershipRevenue.toFixed(0)} AED</div>
+                <div className="font-bold text-gray-900">
+                  {metrics.membershipRevenue.toFixed(0)} AED
+                </div>
                 <div className="text-sm text-gray-500">
-                  {metrics.totalRevenue ? ((metrics.membershipRevenue / metrics.totalRevenue) * 100).toFixed(0) : 0}%
+                  {metrics.totalRevenue
+                    ? (
+                        (metrics.membershipRevenue / metrics.totalRevenue) *
+                        100
+                      ).toFixed(0)
+                    : 0}
+                  %
                 </div>
               </div>
             </div>
@@ -220,9 +255,17 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
                 <span className="font-medium text-gray-900">Classes</span>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900">{metrics.classRevenue.toFixed(0)} AED</div>
+                <div className="font-bold text-gray-900">
+                  {metrics.classRevenue.toFixed(0)} AED
+                </div>
                 <div className="text-sm text-gray-500">
-                  {metrics.totalRevenue ? ((metrics.classRevenue / metrics.totalRevenue) * 100).toFixed(0) : 0}%
+                  {metrics.totalRevenue
+                    ? (
+                        (metrics.classRevenue / metrics.totalRevenue) *
+                        100
+                      ).toFixed(0)
+                    : 0}
+                  %
                 </div>
               </div>
             </div>
@@ -230,12 +273,22 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">Personal Training</span>
+                <span className="font-medium text-gray-900">
+                  Personal Training
+                </span>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900">{metrics.ptRevenue.toFixed(0)} AED</div>
+                <div className="font-bold text-gray-900">
+                  {metrics.ptRevenue.toFixed(0)} AED
+                </div>
                 <div className="text-sm text-gray-500">
-                  {metrics.totalRevenue ? ((metrics.ptRevenue / metrics.totalRevenue) * 100).toFixed(0) : 0}%
+                  {metrics.totalRevenue
+                    ? (
+                        (metrics.ptRevenue / metrics.totalRevenue) *
+                        100
+                      ).toFixed(0)
+                    : 0}
+                  %
                 </div>
               </div>
             </div>
@@ -252,7 +305,9 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
               <FiGlobe className="text-white text-xl" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">GCC VAT Compliance</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                GCC VAT Compliance
+              </h3>
               <p className="text-gray-600 text-sm">Regional tax management</p>
             </div>
           </div>
@@ -265,14 +320,18 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
               </div>
               <div className="text-right">
                 <div className="font-bold text-emerald-600">Compliant</div>
-                <div className="text-sm text-gray-500">Last filed: Dec 2024</div>
+                <div className="text-sm text-gray-500">
+                  Last filed: Dec 2024
+                </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <FiClock className="text-blue-600" />
-                <span className="font-medium text-gray-900">Next Return Due</span>
+                <span className="font-medium text-gray-900">
+                  Next Return Due
+                </span>
               </div>
               <div className="text-right">
                 <div className="font-bold text-blue-600">15 Days</div>
@@ -286,7 +345,9 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
                 <span className="font-medium text-gray-900">VAT Payable</span>
               </div>
               <div className="text-right">
-                <div className="font-bold text-yellow-600">{(metrics.vatCollected * 0.8).toFixed(0)} AED</div>
+                <div className="font-bold text-yellow-600">
+                  {(metrics.vatCollected * 0.8).toFixed(0)} AED
+                </div>
                 <div className="text-sm text-gray-500">Estimated payment</div>
               </div>
             </div>
@@ -305,8 +366,12 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
             <FiZap className="text-white text-xl" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Smart Billing Insights</h3>
-            <p className="text-gray-600 text-sm">AI-powered recommendations for your gym</p>
+            <h3 className="text-xl font-bold text-gray-900">
+              Smart Billing Insights
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Smart-powered recommendations for your gym
+            </p>
           </div>
         </div>
 
@@ -314,34 +379,43 @@ export default function SmartBillingDashboard({ refreshKey }: SmartBillingDashbo
           <div className="bg-white rounded-xl p-4 border border-indigo-200">
             <div className="flex items-center gap-2 mb-2">
               <FiTrendingUp className="text-green-600" />
-              <span className="text-sm font-medium text-gray-900">Revenue Opportunity</span>
+              <span className="text-sm font-medium text-gray-900">
+                Revenue Opportunity
+              </span>
             </div>
             <p className="text-xs text-gray-600">
-              Consider introducing premium class packages. Analysis shows 23% of members would upgrade.
+              Consider introducing premium class packages. Analysis shows 23% of
+              members would upgrade.
             </p>
           </div>
 
           <div className="bg-white rounded-xl p-4 border border-indigo-200">
             <div className="flex items-center gap-2 mb-2">
               <FiTarget className="text-blue-600" />
-              <span className="text-sm font-medium text-gray-900">Collection Optimization</span>
+              <span className="text-sm font-medium text-gray-900">
+                Collection Optimization
+              </span>
             </div>
             <p className="text-xs text-gray-600">
-              Automated payment reminders could improve collection rate by 15% based on industry data.
+              Automated payment reminders could improve collection rate by 15%
+              based on industry data.
             </p>
           </div>
 
           <div className="bg-white rounded-xl p-4 border border-indigo-200">
             <div className="flex items-center gap-2 mb-2">
               <FiShield className="text-emerald-600" />
-              <span className="text-sm font-medium text-gray-900">VAT Optimization</span>
+              <span className="text-sm font-medium text-gray-900">
+                VAT Optimization
+              </span>
             </div>
             <p className="text-xs text-gray-600">
-              Your VAT compliance is excellent. Consider automating quarterly returns for efficiency.
+              Your VAT compliance is excellent. Consider automating quarterly
+              returns for efficiency.
             </p>
           </div>
         </div>
       </motion.div>
     </div>
   );
-} 
+}

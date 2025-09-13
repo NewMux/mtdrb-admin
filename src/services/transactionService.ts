@@ -1,5 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { errorHandler, ErrorContext } from './errorHandler';
+import { supabase } from "../supabaseClient";
+import { errorHandler, ErrorContext } from "./errorHandler";
 
 export interface TransactionResult<T = any> {
   success: boolean;
@@ -47,11 +47,13 @@ export interface ClassWithBookingData {
 
 class TransactionService {
   // Create member with initial invoice atomically
-  async createMembershipWithInvoice(data: MembershipWithInvoiceData): Promise<TransactionResult> {
+  async createMembershipWithInvoice(
+    data: MembershipWithInvoiceData,
+  ): Promise<TransactionResult> {
     try {
       // Start transaction
       const { data: member, error: memberError } = await supabase
-        .from('members')
+        .from("members")
         .insert(data.member)
         .select()
         .single();
@@ -60,12 +62,12 @@ class TransactionService {
 
       // Create invoice for the new member
       const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
+        .from("invoices")
         .insert({
           ...data.invoice,
           member_id: member.id,
           tenant_id: data.member.tenant_id,
-          status: 'pending'
+          status: "pending",
         })
         .select()
         .single();
@@ -79,51 +81,58 @@ class TransactionService {
       // Log activity
       await this.logActivity(
         data.member.tenant_id,
-        'member',
-        'New Member Created',
+        "member",
+        "New Member Created",
         `Member ${data.member.first_name} ${data.member.last_name} registered with initial invoice`,
-        'success',
-        { member_id: member.id, invoice_id: invoice.id }
+        "success",
+        { member_id: member.id, invoice_id: invoice.id },
       );
 
       return {
         success: true,
-        data: { member, invoice }
+        data: { member, invoice },
       };
-
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return {
         success: false,
         error: processedError.userMessage,
-        rollbackPerformed: true
+        rollbackPerformed: true,
       };
     }
   }
 
   // Create class with automatic booking atomically
-  async createClassWithBooking(data: ClassWithBookingData): Promise<TransactionResult> {
+  async createClassWithBooking(
+    data: ClassWithBookingData,
+  ): Promise<TransactionResult> {
     try {
       // Check trainer availability first
       const { data: conflictingClasses } = await supabase
-        .from('classes')
-        .select('id')
-        .eq('tenant_id', data.class.tenant_id)
-        .eq('trainer_id', data.class.trainer_id)
-        .or(`start_time.lte.${data.class.end_time},end_time.gte.${data.class.start_time}`)
-        .neq('status', 'cancelled');
+        .from("classes")
+        .select("id")
+        .eq("tenant_id", data.class.tenant_id)
+        .eq("trainer_id", data.class.trainer_id)
+        .or(
+          `start_time.lte.${data.class.end_time},end_time.gte.${data.class.start_time}`,
+        )
+        .neq("status", "cancelled");
 
       if (conflictingClasses && conflictingClasses.length > 0) {
-        throw new Error('trainer_unavailable');
+        throw new Error("trainer_unavailable");
       }
 
       // Create class
       const { data: newClass, error: classError } = await supabase
-        .from('classes')
+        .from("classes")
         .insert({
           ...data.class,
           current_bookings: 1,
-          status: 'scheduled'
+          status: "scheduled",
         })
         .select()
         .single();
@@ -132,12 +141,12 @@ class TransactionService {
 
       // Create booking
       const { data: booking, error: bookingError } = await supabase
-        .from('class_bookings')
+        .from("class_bookings")
         .insert({
           ...data.booking,
           class_id: newClass.id,
           tenant_id: data.class.tenant_id,
-          status: 'booked'
+          status: "booked",
         })
         .select()
         .single();
@@ -151,61 +160,67 @@ class TransactionService {
       // Log activity
       await this.logActivity(
         data.class.tenant_id,
-        'class',
-        'Class Created with Booking',
+        "class",
+        "Class Created with Booking",
         `Class ${data.class.name} created and booked`,
-        'success',
-        { class_id: newClass.id, booking_id: booking.id }
+        "success",
+        { class_id: newClass.id, booking_id: booking.id },
       );
 
       return {
         success: true,
-        data: { class: newClass, booking }
+        data: { class: newClass, booking },
       };
-
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.CLASS_SCHEDULING, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.CLASS_SCHEDULING,
+        false,
+      );
       return {
         success: false,
         error: processedError.userMessage,
-        rollbackPerformed: true
+        rollbackPerformed: true,
       };
     }
   }
 
   // Process payment and update invoice atomically
-  async processPayment(invoiceId: string, paymentData: {
-    amount: number;
-    payment_method: string;
-    tenant_id: string;
-  }): Promise<TransactionResult> {
+  async processPayment(
+    invoiceId: string,
+    paymentData: {
+      amount: number;
+      payment_method: string;
+      tenant_id: string;
+    },
+  ): Promise<TransactionResult> {
     try {
       // Get invoice details
       const { data: invoice, error: fetchError } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('id', invoiceId)
-        .eq('tenant_id', paymentData.tenant_id)
+        .from("invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .eq("tenant_id", paymentData.tenant_id)
         .single();
 
       if (fetchError) throw fetchError;
 
-      if (invoice.status === 'paid') {
-        throw new Error('invoice_already_paid');
+      if (invoice.status === "paid") {
+        throw new Error("invoice_already_paid");
       }
 
       if (paymentData.amount !== invoice.amount) {
-        throw new Error('invalid_amount');
+        throw new Error("invalid_amount");
       }
 
       // Update invoice status
       const { data: updatedInvoice, error: updateError } = await supabase
-        .from('invoices')
+        .from("invoices")
         .update({
-          status: 'paid',
-          paid_date: new Date().toISOString()
+          status: "paid",
+          paid_date: new Date().toISOString(),
         })
-        .eq('id', invoiceId)
+        .eq("id", invoiceId)
         .select()
         .single();
 
@@ -214,43 +229,50 @@ class TransactionService {
       // Log payment activity
       await this.logActivity(
         paymentData.tenant_id,
-        'payment',
-        'Payment Processed',
+        "payment",
+        "Payment Processed",
         `Payment of ${paymentData.amount} processed for invoice ${invoiceId}`,
-        'success',
-        { 
-          invoice_id: invoiceId, 
+        "success",
+        {
+          invoice_id: invoiceId,
           amount: paymentData.amount,
-          payment_method: paymentData.payment_method 
-        }
+          payment_method: paymentData.payment_method,
+        },
       );
 
       return {
         success: true,
-        data: { invoice: updatedInvoice }
+        data: { invoice: updatedInvoice },
       };
-
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.BILLING, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.BILLING,
+        false,
+      );
       return {
         success: false,
-        error: processedError.userMessage
+        error: processedError.userMessage,
       };
     }
   }
 
   // Cancel membership and handle related data atomically
-  async cancelMembership(memberId: string, tenantId: string, reason?: string): Promise<TransactionResult> {
+  async cancelMembership(
+    memberId: string,
+    tenantId: string,
+    reason?: string,
+  ): Promise<TransactionResult> {
     try {
       // Update member status
       const { data: member, error: memberError } = await supabase
-        .from('members')
+        .from("members")
         .update({
-          status: 'inactive',
-          expiry_date: new Date().toISOString()
+          status: "inactive",
+          expiry_date: new Date().toISOString(),
         })
-        .eq('id', memberId)
-        .eq('tenant_id', tenantId)
+        .eq("id", memberId)
+        .eq("tenant_id", tenantId)
         .select()
         .single();
 
@@ -258,42 +280,45 @@ class TransactionService {
 
       // Cancel future bookings
       const { error: bookingError } = await supabase
-        .from('class_bookings')
-        .update({ status: 'cancelled' })
-        .eq('member_id', memberId)
-        .eq('tenant_id', tenantId)
-        .gte('created_at', new Date().toISOString());
+        .from("class_bookings")
+        .update({ status: "cancelled" })
+        .eq("member_id", memberId)
+        .eq("tenant_id", tenantId)
+        .gte("created_at", new Date().toISOString());
 
       if (bookingError) {
         // Rollback member status
         await supabase
-          .from('members')
-          .update({ status: 'active', expiry_date: null })
-          .eq('id', memberId);
+          .from("members")
+          .update({ status: "active", expiry_date: null })
+          .eq("id", memberId);
         throw bookingError;
       }
 
       // Log cancellation
       await this.logActivity(
         tenantId,
-        'member',
-        'Membership Cancelled',
-        `Membership for ${member.first_name} ${member.last_name} has been cancelled${reason ? `: ${reason}` : ''}`,
-        'success',
-        { member_id: memberId, reason }
+        "member",
+        "Membership Cancelled",
+        `Membership for ${member.first_name} ${member.last_name} has been cancelled${reason ? `: ${reason}` : ""}`,
+        "success",
+        { member_id: memberId, reason },
       );
 
       return {
         success: true,
-        data: { member }
+        data: { member },
       };
-
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return {
         success: false,
         error: processedError.userMessage,
-        rollbackPerformed: true
+        rollbackPerformed: true,
       };
     }
   }
@@ -301,17 +326,17 @@ class TransactionService {
   // Rollback helpers
   private async rollbackMemberCreation(memberId: string): Promise<void> {
     try {
-      await supabase.from('members').delete().eq('id', memberId);
+      await supabase.from("members").delete().eq("id", memberId);
     } catch (error) {
-      console.error('Rollback failed for member:', memberId, error);
+      console.error("Rollback failed for member:", memberId, error);
     }
   }
 
   private async rollbackClassCreation(classId: string): Promise<void> {
     try {
-      await supabase.from('classes').delete().eq('id', classId);
+      await supabase.from("classes").delete().eq("id", classId);
     } catch (error) {
-      console.error('Rollback failed for class:', classId, error);
+      console.error("Rollback failed for class:", classId, error);
     }
   }
 
@@ -321,25 +346,28 @@ class TransactionService {
     type: string,
     title: string,
     description: string,
-    status: 'success' | 'pending' | 'failed',
-    metadata?: any
+    status: "success" | "pending" | "failed",
+    metadata?: any,
   ): Promise<void> {
     try {
-      await supabase.from('activities').insert({
+      await supabase.from("activities").insert({
         tenant_id: tenantId,
         type,
         title,
         description,
         status,
-        metadata
+        metadata,
       });
     } catch (error) {
-      console.error('Failed to log activity:', error);
+      console.error("Failed to log activity:", error);
     }
   }
 
   // Batch operations
-  async batchCreateMembers(members: any[], tenantId: string): Promise<TransactionResult> {
+  async batchCreateMembers(
+    members: any[],
+    tenantId: string,
+  ): Promise<TransactionResult> {
     try {
       const results = [];
       const errors = [];
@@ -347,7 +375,7 @@ class TransactionService {
       for (const memberData of members) {
         try {
           const { data: member, error } = await supabase
-            .from('members')
+            .from("members")
             .insert({ ...memberData, tenant_id: tenantId })
             .select()
             .single();
@@ -362,27 +390,30 @@ class TransactionService {
       // Log batch operation
       await this.logActivity(
         tenantId,
-        'member',
-        'Batch Member Import',
+        "member",
+        "Batch Member Import",
         `Imported ${results.length} members, ${errors.length} failed`,
-        errors.length === 0 ? 'success' : 'partial',
-        { successful: results.length, failed: errors.length, errors }
+        errors.length === 0 ? "success" : "partial",
+        { successful: results.length, failed: errors.length, errors },
       );
 
       return {
         success: errors.length === 0,
-        data: { successful: results, failed: errors }
+        data: { successful: results, failed: errors },
       };
-
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return {
         success: false,
-        error: processedError.userMessage
+        error: processedError.userMessage,
       };
     }
   }
 }
 
 // Export singleton instance
-export const transactionService = new TransactionService(); 
+export const transactionService = new TransactionService();

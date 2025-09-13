@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiCalendar, FiClock, FiPlus, FiEdit, FiTrash2, FiShield, FiDownload } from "react-icons/fi";
+import {
+  FiX,
+  FiCalendar,
+  FiClock,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiShield,
+  FiDownload,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerScheduleModalProps {
@@ -12,7 +21,7 @@ interface TrainerScheduleModalProps {
 const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -28,7 +37,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
       endTime: "10:00",
       activity: "Yoga Basics",
       type: "class",
-      status: "confirmed"
+      status: "confirmed",
     },
     {
       id: 2,
@@ -37,7 +46,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
       endTime: "15:00",
       activity: "Personal Training - Sarah J.",
       type: "session",
-      status: "confirmed"
+      status: "confirmed",
     },
     {
       id: 3,
@@ -46,15 +55,15 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
       endTime: "11:00",
       activity: "Pilates Intermediate",
       type: "class",
-      status: "pending"
-    }
+      status: "pending",
+    },
   ];
 
   const handleAddSchedule = async () => {
     if (!selectedDate || !startTime || !endTime || !activityType) return;
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
     setSelectedDate("");
     setStartTime("");
@@ -100,15 +109,23 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Availability:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Available</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Availability:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Available
+                </span>
               </div>
             </div>
           </div>
@@ -199,7 +216,13 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
             </div>
             <button
               onClick={handleAddSchedule}
-              disabled={!selectedDate || !startTime || !endTime || !activityType || isLoading}
+              disabled={
+                !selectedDate ||
+                !startTime ||
+                !endTime ||
+                !activityType ||
+                isLoading
+              }
               className="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               {isLoading ? (
@@ -221,7 +244,8 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                     AI Schedule Optimization
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Analysis shows peak demand between 6-8 PM. Consider adding evening classes to maximize revenue and member satisfaction.
+                    Analysis shows peak demand between 6-8 PM. Consider adding
+                    evening classes to maximize revenue and member satisfaction.
                   </p>
                 </div>
               </div>
@@ -235,7 +259,10 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockSchedule.map((item) => (
-                <div key={item.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={item.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 dark:text-white">
@@ -243,15 +270,19 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                       </h4>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
                         <span>{new Date(item.date).toLocaleDateString()}</span>
-                        <span>{item.startTime} - {item.endTime}</span>
+                        <span>
+                          {item.startTime} - {item.endTime}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.status === 'confirmed' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          item.status === "confirmed"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                        }`}
+                      >
                         {item.status}
                       </span>
                       <div className="flex space-x-2">
@@ -294,4 +325,4 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
   );
 };
 
-export default TrainerScheduleModal; 
+export default TrainerScheduleModal;

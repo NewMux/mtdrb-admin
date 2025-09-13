@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiTrendingUp, FiUsers, FiStar, FiDollarSign, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiTrendingUp,
+  FiUsers,
+  FiStar,
+  FiDollarSign,
+  FiShield,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerKPICardModalProps {
@@ -12,7 +19,7 @@ interface TrainerKPICardModalProps {
 const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
   const [selectedMetric, setSelectedMetric] = useState("all");
@@ -23,7 +30,7 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
     revenueGenerated: 8500,
     memberRetention: 92,
     attendanceRate: 88,
-    personalSessions: 23
+    personalSessions: 23,
   };
 
   const isProUser = true; // Mock Pro user status
@@ -64,15 +71,23 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Performance Rating:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Excellent</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Performance Rating:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Excellent
+                </span>
               </div>
             </div>
           </div>
@@ -212,8 +227,9 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
                     AI Performance Analysis
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    This trainer is performing in the top 15% of all trainers. 
-                    Consider promoting to lead trainer role and increasing class capacity.
+                    This trainer is performing in the top 15% of all trainers.
+                    Consider promoting to lead trainer role and increasing class
+                    capacity.
                   </p>
                 </div>
               </div>
@@ -227,28 +243,43 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Member Satisfaction</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Member Satisfaction
+                </span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '96%' }}></div>
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{ width: "96%" }}
+                    ></div>
                   </div>
                   <span className="text-sm font-medium">96%</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Revenue Growth</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Revenue Growth
+                </span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '88%' }}></div>
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{ width: "88%" }}
+                    ></div>
                   </div>
                   <span className="text-sm font-medium">88%</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Class Attendance</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Class Attendance
+                </span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    <div
+                      className="bg-purple-600 h-2 rounded-full"
+                      style={{ width: "92%" }}
+                    ></div>
                   </div>
                   <span className="text-sm font-medium">92%</span>
                 </div>
@@ -279,4 +310,4 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
   );
 };
 
-export default TrainerKPICardModal; 
+export default TrainerKPICardModal;

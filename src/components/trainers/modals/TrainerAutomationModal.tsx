@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiZap, FiSettings, FiPlay, FiPause, FiShield, FiCheck } from "react-icons/fi";
+import {
+  FiX,
+  FiZap,
+  FiSettings,
+  FiPlay,
+  FiPause,
+  FiShield,
+  FiCheck,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerAutomationModalProps {
@@ -12,7 +20,7 @@ interface TrainerAutomationModalProps {
 const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedAutomation, setSelectedAutomation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,47 +28,49 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
     schedule: true,
     notifications: true,
     reporting: false,
-    matching: true
+    matching: true,
   });
 
   const mockAutomations = [
     {
       id: "schedule",
       name: "Smart Schedule Optimization",
-      description: "Automatically optimize class schedules based on demand and trainer availability",
+      description:
+        "Automatically optimize class schedules based on demand and trainer availability",
       status: "active",
-      efficiency: 85
+      efficiency: 85,
     },
     {
       id: "notifications",
       name: "Automated Notifications",
-      description: "Send automated reminders and updates to members about classes and sessions",
+      description:
+        "Send automated reminders and updates to members about classes and sessions",
       status: "active",
-      efficiency: 92
+      efficiency: 92,
     },
     {
       id: "reporting",
       name: "Performance Reporting",
       description: "Generate automated performance reports and analytics",
       status: "inactive",
-      efficiency: 78
+      efficiency: 78,
     },
     {
       id: "matching",
       name: "Member-Trainer Matching",
-      description: "AI-powered matching of members with suitable trainers",
+      description: "Smart-powered matching of members with suitable trainers",
       status: "active",
-      efficiency: 89
-    }
+      efficiency: 89,
+    },
   ];
 
   const handleToggleAutomation = async (automationId: string) => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setAutomationEnabled(prev => ({
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setAutomationEnabled((prev) => ({
       ...prev,
-      [automationId]: !prev[automationId as keyof typeof prev]
+      [automationId]: !prev[automationId as keyof typeof prev],
     }));
     setIsLoading(false);
   };
@@ -81,7 +91,7 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
                 Trainer Automation
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage automated workflows and AI-powered features
+                Manage automated workflows and smart-powered features
               </p>
             </div>
           </div>
@@ -103,15 +113,23 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Automation Level:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Advanced</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Automation Level:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Advanced
+                </span>
               </div>
             </div>
           </div>
@@ -154,8 +172,9 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
                     AI Automation Recommendations
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Analysis suggests enabling Performance Reporting automation could improve efficiency by 15%. 
-                    Consider activating member feedback automation for better engagement tracking.
+                    Analysis suggests enabling Performance Reporting automation
+                    could improve efficiency by 15%. Consider activating member
+                    feedback automation for better engagement tracking.
                   </p>
                 </div>
               </div>
@@ -169,18 +188,23 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockAutomations.map((automation) => (
-                <div key={automation.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={automation.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {automation.name}
                         </h4>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          automation.status === 'active' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            automation.status === "active"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                          }`}
+                        >
                           {automation.status}
                         </span>
                       </div>
@@ -189,11 +213,18 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
                       </p>
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500 dark:text-gray-500">Efficiency:</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-500">
+                            Efficiency:
+                          </span>
                           <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div className="bg-green-600 h-2 rounded-full" style={{ width: `${automation.efficiency}%` }}></div>
+                            <div
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{ width: `${automation.efficiency}%` }}
+                            ></div>
                           </div>
-                          <span className="text-xs font-medium">{automation.efficiency}%</span>
+                          <span className="text-xs font-medium">
+                            {automation.efficiency}%
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -202,18 +233,26 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
                         onClick={() => handleToggleAutomation(automation.id)}
                         disabled={isLoading}
                         className={`px-3 py-1 rounded-lg transition-colors flex items-center space-x-1 ${
-                          automationEnabled[automation.id as keyof typeof automationEnabled]
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                          automationEnabled[
+                            automation.id as keyof typeof automationEnabled
+                          ]
+                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                         }`}
                       >
-                        {automationEnabled[automation.id as keyof typeof automationEnabled] ? (
+                        {automationEnabled[
+                          automation.id as keyof typeof automationEnabled
+                        ] ? (
                           <FiCheck className="w-3 h-3" />
                         ) : (
                           <FiPause className="w-3 h-3" />
                         )}
                         <span className="text-xs">
-                          {automationEnabled[automation.id as keyof typeof automationEnabled] ? 'Active' : 'Inactive'}
+                          {automationEnabled[
+                            automation.id as keyof typeof automationEnabled
+                          ]
+                            ? "Active"
+                            : "Inactive"}
                         </span>
                       </button>
                       <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
@@ -234,19 +273,27 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center space-x-2">
                 <FiCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-green-700 dark:text-green-300">Reduced manual work</span>
+                <span className="text-green-700 dark:text-green-300">
+                  Reduced manual work
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <FiCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-green-700 dark:text-green-300">Improved accuracy</span>
+                <span className="text-green-700 dark:text-green-300">
+                  Improved accuracy
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <FiCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-green-700 dark:text-green-300">Better member experience</span>
+                <span className="text-green-700 dark:text-green-300">
+                  Better member experience
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <FiCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-green-700 dark:text-green-300">Increased efficiency</span>
+                <span className="text-green-700 dark:text-green-300">
+                  Increased efficiency
+                </span>
               </div>
             </div>
           </div>
@@ -275,4 +322,4 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
   );
 };
 
-export default TrainerAutomationModal; 
+export default TrainerAutomationModal;

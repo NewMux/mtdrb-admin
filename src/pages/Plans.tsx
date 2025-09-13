@@ -1,23 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { useNavigate } from 'react-router-dom';
-import { FiPackage, FiPlus, FiSearch, FiFilter, FiDollarSign, FiUsers, FiCalendar, FiTrendingUp, FiZap, FiBarChart, FiList, FiActivity } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
+import {
+  FiPackage,
+  FiPlus,
+  FiSearch,
+  FiFilter,
+  FiDollarSign,
+  FiUsers,
+  FiCalendar,
+  FiTrendingUp,
+  FiZap,
+  FiBarChart,
+  FiList,
+  FiActivity,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
 
 // New unified UI components
-import { 
-  PageLayout, 
-  SmartCard, 
-  SmartButton, 
-  FilterBar, 
+import {
+  PageLayout,
+  SmartCard,
+  SmartButton,
+  FilterBar,
   Section,
   StatsGrid,
   KPICard,
   SmartLoading,
-  EmptyState
+  EmptyState,
 } from "../components/ui";
-import { QuickNavigation, SmartSuggestions, usePageNavigation } from "../components/ui/SmartNavigation";
-import FilterButton from '../components/ui/FilterButton';
+import {
+  QuickNavigation,
+  SmartSuggestions,
+  usePageNavigation,
+} from "../components/ui/SmartNavigation";
+import FilterButton from "../components/ui/FilterButton";
 
 interface Plan {
   id: string;
@@ -26,7 +43,7 @@ interface Plan {
   price: number;
   duration: number;
   features: string[];
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   members_count: number;
   created_at: string;
 }
@@ -35,8 +52,8 @@ export default function Plans() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const navigate = useNavigate();
@@ -50,15 +67,15 @@ export default function Plans() {
       change: "+2",
       trend: "up" as const,
       icon: <FiPackage className="h-6 w-6" />,
-      color: "blue" as const
+      color: "blue" as const,
     },
     {
       title: "Active Plans",
-      value: plans.filter(p => p.status === 'active').length,
+      value: plans.filter((p) => p.status === "active").length,
       change: "+1",
       trend: "up" as const,
       icon: <FiActivity className="h-6 w-6" />,
-      color: "green" as const
+      color: "green" as const,
     },
     {
       title: "Total Members",
@@ -66,16 +83,19 @@ export default function Plans() {
       change: "+18.5%",
       trend: "up" as const,
       icon: <FiUsers className="h-6 w-6" />,
-      color: "purple" as const
+      color: "purple" as const,
     },
     {
       title: "Avg Plan Value",
-      value: plans.length > 0 ? `$${(plans.reduce((sum, p) => sum + p.price, 0) / plans.length).toFixed(0)}` : "$0",
+      value:
+        plans.length > 0
+          ? `$${(plans.reduce((sum, p) => sum + p.price, 0) / plans.length).toFixed(0)}`
+          : "$0",
       change: "+8.2%",
       trend: "up" as const,
       icon: <FiDollarSign className="h-6 w-6" />,
-      color: "green" as const
-    }
+      color: "green" as const,
+    },
   ];
 
   const contextualActions = [
@@ -86,28 +106,28 @@ export default function Plans() {
         setSelectedPlan(null);
         setShowPlanModal(true);
       },
-      variant: "primary" as const
+      variant: "primary" as const,
     },
     {
       label: "Plan Analytics",
       icon: <FiBarChart className="h-4 w-4" />,
-      onClick: () => navigate('/analytics'),
-      variant: "secondary" as const
+      onClick: () => navigate("/analytics"),
+      variant: "secondary" as const,
     },
     {
       label: "Member Plans",
       icon: <FiUsers className="h-4 w-4" />,
-      onClick: () => navigate('/members'),
-      variant: "ghost" as const
-    }
+      onClick: () => navigate("/members"),
+      variant: "ghost" as const,
+    },
   ];
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) {
-        navigate('/login');
+        navigate("/login");
       } else if (!data.user.user_metadata || !data.user.user_metadata.paid) {
-        navigate('/subscribe');
+        navigate("/subscribe");
       } else {
         setUser(data.user);
         fetchPlans();
@@ -121,44 +141,54 @@ export default function Plans() {
       // Mock data for now since plans table might not exist
       const mockPlans: Plan[] = [
         {
-          id: '1',
-          name: 'Basic Membership',
-          description: 'Access to gym equipment and basic classes',
+          id: "1",
+          name: "Basic Membership",
+          description: "Access to gym equipment and basic classes",
           price: 29.99,
           duration: 30,
-          features: ['Gym Equipment Access', 'Basic Classes', 'Locker Room'],
-          status: 'active',
+          features: ["Gym Equipment Access", "Basic Classes", "Locker Room"],
+          status: "active",
           members_count: 45,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         },
         {
-          id: '2',
-          name: 'Premium Membership',
-          description: 'Full access with personal training sessions',
+          id: "2",
+          name: "Premium Membership",
+          description: "Full access with personal training sessions",
           price: 59.99,
           duration: 30,
-          features: ['All Basic Features', 'Personal Training', 'Nutrition Consultation', 'Premium Classes'],
-          status: 'active',
+          features: [
+            "All Basic Features",
+            "Personal Training",
+            "Nutrition Consultation",
+            "Premium Classes",
+          ],
+          status: "active",
           members_count: 23,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         },
         {
-          id: '3',
-          name: 'VIP Membership',
-          description: 'Unlimited access with exclusive perks',
+          id: "3",
+          name: "VIP Membership",
+          description: "Unlimited access with exclusive perks",
           price: 99.99,
           duration: 30,
-          features: ['All Premium Features', 'Priority Booking', 'Guest Passes', 'Spa Access'],
-          status: 'active',
+          features: [
+            "All Premium Features",
+            "Priority Booking",
+            "Guest Passes",
+            "Spa Access",
+          ],
+          status: "active",
           members_count: 12,
-          created_at: new Date().toISOString()
-        }
+          created_at: new Date().toISOString(),
+        },
       ];
 
       setPlans(mockPlans);
     } catch (error) {
-      console.error('Error fetching plans:', error);
-      toast.error('Failed to load plans');
+      console.error("Error fetching plans:", error);
+      toast.error("Failed to load plans");
     }
   };
 
@@ -168,15 +198,17 @@ export default function Plans() {
   };
 
   const handleDeletePlan = (planId: string) => {
-    setPlans(prev => prev.filter(p => p.id !== planId));
-    toast.success('Plan deleted successfully');
+    setPlans((prev) => prev.filter((p) => p.id !== planId));
+    toast.success("Plan deleted successfully");
   };
 
-  const filteredPlans = plans.filter(plan => {
-    const matchesSearch = plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         plan.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || plan.status === statusFilter;
-    
+  const filteredPlans = plans.filter((plan) => {
+    const matchesSearch =
+      plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plan.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || plan.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -187,7 +219,7 @@ export default function Plans() {
   return (
     <PageLayout
       title="Smart Plan Management"
-      subtitle="AI-powered membership plans and pricing optimization"
+      subtitle="Smart-powered membership plans and pricing optimization"
       actions={
         <div className="flex items-center space-x-3">
           {contextualActions.map((action, index) => (
@@ -211,7 +243,10 @@ export default function Plans() {
       <SmartSuggestions currentPage={currentPage} />
 
       {/* KPI Overview */}
-      <Section title="Plan Overview" subtitle="Real-time membership plan performance">
+      <Section
+        title="Plan Overview"
+        subtitle="Real-time membership plan performance"
+      >
         <StatsGrid columns={4}>
           {planKPIs.map((kpi, index) => (
             <KPICard key={index} {...kpi} />
@@ -233,7 +268,7 @@ export default function Plans() {
             />
           </div>
         </div>
-        
+
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -244,18 +279,26 @@ export default function Plans() {
           <option value="inactive">Inactive</option>
         </select>
 
-        <FilterButton onClick={() => toast.success("Advanced filters coming soon!")} />
+        <FilterButton
+          onClick={() => toast.success("Advanced filters coming soon!")}
+        />
       </FilterBar>
 
       {/* Plans Grid */}
-      <Section title="Membership Plans" subtitle="Manage and optimize your pricing strategy">
+      <Section
+        title="Membership Plans"
+        subtitle="Manage and optimize your pricing strategy"
+      >
         {filteredPlans.length === 0 ? (
           <EmptyState
             icon={<FiPackage className="h-16 w-16" />}
             title="No Plans Found"
             description="Start by creating your first membership plan to manage pricing."
             action={
-              <SmartButton onClick={() => setShowPlanModal(true)} variant="primary">
+              <SmartButton
+                onClick={() => setShowPlanModal(true)}
+                variant="primary"
+              >
                 <FiPlus className="h-4 w-4 mr-2" />
                 Create First Plan
               </SmartButton>
@@ -276,11 +319,13 @@ export default function Plans() {
                         {plan.description}
                       </p>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      plan.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        plan.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
                       {plan.status}
                     </div>
                   </div>
@@ -300,7 +345,10 @@ export default function Plans() {
                     <h4 className="font-medium text-gray-900">Features:</h4>
                     <ul className="space-y-1">
                       {plan.features.slice(0, 3).map((feature, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-center">
+                        <li
+                          key={index}
+                          className="text-sm text-gray-600 flex items-center"
+                        >
                           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
                           {feature}
                         </li>
@@ -317,7 +365,9 @@ export default function Plans() {
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center text-gray-600">
                       <FiUsers className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{plan.members_count} members</span>
+                      <span className="text-sm">
+                        {plan.members_count} members
+                      </span>
                     </div>
                     <div className="flex space-x-2">
                       <SmartButton
@@ -344,29 +394,48 @@ export default function Plans() {
       </Section>
 
       {/* Plan Analytics */}
-      <Section title="Plan Performance" subtitle="Insights and recommendations for pricing optimization">
+      <Section
+        title="Plan Performance"
+        subtitle="Insights and recommendations for pricing optimization"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Plans</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Popular Plans
+              </h3>
               <div className="space-y-4">
                 {plans
                   .sort((a, b) => b.members_count - a.members_count)
                   .slice(0, 3)
                   .map((plan, index) => (
-                    <div key={plan.id} className="flex items-center justify-between">
+                    <div
+                      key={plan.id}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center">
-                        <div className={`w-3 h-3 rounded-full mr-3 ${
-                          index === 0 ? 'bg-green-500' :
-                          index === 1 ? 'bg-blue-500' : 'bg-purple-500'
-                        }`}></div>
+                        <div
+                          className={`w-3 h-3 rounded-full mr-3 ${
+                            index === 0
+                              ? "bg-green-500"
+                              : index === 1
+                                ? "bg-blue-500"
+                                : "bg-purple-500"
+                          }`}
+                        ></div>
                         <div>
-                          <p className="font-medium text-gray-900">{plan.name}</p>
-                          <p className="text-sm text-gray-600">${plan.price}/month</p>
+                          <p className="font-medium text-gray-900">
+                            {plan.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            ${plan.price}/month
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-gray-900">{plan.members_count}</p>
+                        <p className="font-medium text-gray-900">
+                          {plan.members_count}
+                        </p>
                         <p className="text-sm text-gray-600">members</p>
                       </div>
                     </div>
@@ -377,22 +446,29 @@ export default function Plans() {
 
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Recommendations</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Pricing Recommendations
+              </h3>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-xl">
                   <div className="flex items-center mb-2">
                     <FiTrendingUp className="h-5 w-5 text-blue-600 mr-2" />
-                    <p className="font-medium text-blue-900">Optimize Basic Plan</p>
+                    <p className="font-medium text-blue-900">
+                      Optimize Basic Plan
+                    </p>
                   </div>
                   <p className="text-sm text-blue-800">
-                    Consider increasing Basic plan price by $5 based on demand analysis
+                    Consider increasing Basic plan price by $5 based on demand
+                    analysis
                   </p>
                 </div>
-                
+
                 <div className="p-4 bg-green-50 rounded-xl">
                   <div className="flex items-center mb-2">
                     <FiZap className="h-5 w-5 text-green-600 mr-2" />
-                    <p className="font-medium text-green-900">Family Plan Opportunity</p>
+                    <p className="font-medium text-green-900">
+                      Family Plan Opportunity
+                    </p>
                   </div>
                   <p className="text-sm text-green-800">
                     23% of members have requested family pricing options
@@ -410,10 +486,11 @@ export default function Plans() {
           <SmartCard className="max-w-2xl w-full mx-4">
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {selectedPlan ? 'Edit Plan' : 'Create New Plan'}
+                {selectedPlan ? "Edit Plan" : "Create New Plan"}
               </h3>
               <p className="text-gray-600 mb-6">
-                Plan creation and editing features will be available in the next update.
+                Plan creation and editing features will be available in the next
+                update.
               </p>
               <div className="flex justify-end">
                 <SmartButton

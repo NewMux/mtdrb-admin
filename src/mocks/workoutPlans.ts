@@ -1,23 +1,23 @@
 export const MOCK_WORKOUT_PLANS = [
   {
-    id: 'plan-1',
-    name: 'Beginner Full Body',
-    description: 'A simple full body workout for beginners.',
+    id: "plan-1",
+    name: "Beginner Full Body",
+    description: "A simple full body workout for beginners.",
     durationWeeks: 4,
-    difficulty: 'Beginner',
+    difficulty: "Beginner",
   },
   {
-    id: 'plan-2',
-    name: 'Intermediate Strength',
-    description: 'A strength-focused plan for intermediate lifters.',
+    id: "plan-2",
+    name: "Intermediate Strength",
+    description: "A strength-focused plan for intermediate lifters.",
     durationWeeks: 8,
-    difficulty: 'Intermediate',
+    difficulty: "Intermediate",
   },
   {
-    id: 'plan-3',
-    name: 'Advanced HIIT',
-    description: 'High-intensity interval training for advanced athletes.',
+    id: "plan-3",
+    name: "Advanced HIIT",
+    description: "High-intensity interval training for advanced athletes.",
     durationWeeks: 6,
-    difficulty: 'Advanced',
+    difficulty: "Advanced",
   },
-]; 
+];

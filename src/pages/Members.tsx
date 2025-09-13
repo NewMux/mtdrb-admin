@@ -1,18 +1,29 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiPlus, FiSearch, FiFilter, FiDownload, FiUsers, FiUserPlus, FiActivity, FiBarChart, FiUpload } from 'react-icons/fi';
-import SmartMemberTable from '../components/members/SmartMemberTable';
-import SmartMemberAnalytics from '../components/members/SmartMemberAnalytics';
-import SmartMemberOnboardingModal from '../components/members/SmartMemberOnboardingModal';
-import MemberProfileDrawer from '../components/members/MemberProfileDrawer';
-import { AnimatePresence } from 'framer-motion';
-import FilterButton from '../components/ui/FilterButton';
-import TabsNav from '../components/ui/TabsNav';
-import AddButton from '../components/ui/AddButton';
-import { SmartButton } from '../components/ui/DesignSystem';
-import ToastContainer from '../components/ui/Toast';
-import { useToast } from '../hooks/useToast';
-import { usePageThemeContext } from '../contexts/PageThemeContext';
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiPlus,
+  FiSearch,
+  FiFilter,
+  FiDownload,
+  FiUsers,
+  FiUserPlus,
+  FiActivity,
+  FiBarChart2,
+  FiUpload,
+  FiTrendingUp,
+  FiStar,
+  FiClock,
+} from "react-icons/fi";
+import SmartMemberTable from "../components/members/SmartMemberTable";
+
+import MemberProfileDrawer from "../components/members/MemberProfileDrawer";
+import FilterButton from "../components/ui/FilterButton";
+import TabsNav from "../components/ui/TabsNav";
+import { AddButton } from "../components/ui/AddButton";
+import { SmartButton } from "../components/ui/DesignSystem";
+import ToastContainer from "../components/ui/Toast";
+import { useToast } from "../hooks/useToast";
+import { usePageThemeContext } from "../contexts/PageThemeContext";
 
 // Import modal components
 import {
@@ -21,14 +32,14 @@ import {
   DeleteMemberModal,
   ViewMemberProfileModal,
   ImportMembersModal,
-  AssignTrainerModal
-} from '../components/members/modals';
+  AssignTrainerModal,
+} from "../components/members/modals";
 
 // Import hooks
-import { useMockMembers, MockMember } from '../hooks/useMockMembers';
-import { useSmartMemberModal } from '../hooks/useSmartMemberModal';
-import MemberModal from '../components/members/MemberModal';
-import AnalyticsTab from '../components/members/tabs/AnalyticsTab';
+import { useMockMembers, MockMember } from "../hooks/useMockMembers";
+import { useSmartMemberModal } from "../hooks/useSmartMemberModal";
+import MemberModal from "../components/members/MemberModal";
+import AnalyticsTab from "../components/members/tabs/AnalyticsTab";
 
 // Type adapter to convert MockMember to Member
 const convertMockMemberToMember = (mockMember: MockMember) => ({
@@ -36,33 +47,52 @@ const convertMockMemberToMember = (mockMember: MockMember) => ({
   name: mockMember.name,
   email: mockMember.email,
   phone: mockMember.phone,
-  age: 25, // Default age
-  gender: mockMember.gender || 'other',
+  age: 25,
+  gender: mockMember.gender || "other",
   joinDate: mockMember.joinDate,
-  planEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-  lastCheckIn: mockMember.lastVisit === 'Never' ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : mockMember.lastVisit,
+  planEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0],
+  lastCheckIn:
+    mockMember.lastVisit === "Never"
+      ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0]
+      : mockMember.lastVisit,
   checkInCount: Math.floor(Math.random() * 50) + 1,
-  status: mockMember.status === 'active' ? 'active' : mockMember.status === 'inactive' ? 'inactive' : 'expired',
+  status:
+    mockMember.status === "active"
+      ? "active"
+      : mockMember.status === "inactive"
+        ? "inactive"
+        : ("expired" as const),
   membershipPrice: 99.99,
-  formsSubmitted: ['waiver'],
+  formsSubmitted: ["waiver"],
   isTrial: false,
-  attendance: [mockMember.lastVisit === 'Never' ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : mockMember.lastVisit],
-  tags: mockMember.status === 'active' ? ['active'] : ['inactive'],
+  attendance: [
+    mockMember.lastVisit === "Never"
+      ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0]
+      : mockMember.lastVisit,
+  ],
+  tags: mockMember.status === "active" ? ["active"] : ["inactive"],
   assignedTrainerId: mockMember.trainer_id,
-  fitnessGoal: mockMember.goals?.[0] || 'general_fitness'
+  fitnessGoal: mockMember.goals?.[0] || "general_fitness",
 });
 
 const Members: React.FC = () => {
   const { theme } = usePageThemeContext();
-  const [activeTab, setActiveTab] = React.useState('dashboard');
-  
+  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
   // Use custom hooks for data and modal management
   const {
     members,
     searchTerm,
-    setSearchTerm,
+    updateSearch,
     selectedFilter,
-    setSelectedFilter,
+    updateFilter,
     sortBy,
     sortOrder,
     updateSorting,
@@ -71,39 +101,37 @@ const Members: React.FC = () => {
     addMember,
     editMember,
     deleteMember,
-    // Pagination from hook
     currentPage,
     totalPages,
     itemsPerPage,
     updateItemsPerPage,
-    goToPage
+    goToPage,
   } = useMockMembers();
 
   // Convert MockMembers to Members for SmartMemberTable
-  const convertedMembers = React.useMemo(() => 
-    members.map(convertMockMemberToMember), 
-    [members]
+  const convertedMembers = React.useMemo(
+    () => members.map(convertMockMemberToMember),
+    [members],
   );
 
-  // Pagination handlers using hook functions
-  const handlePageChange = React.useCallback((page: number) => {
-    goToPage(page);
-  }, [goToPage]);
+  // Pagination handlers
+  const handlePageChange = React.useCallback(
+    (page: number) => {
+      goToPage(page);
+    },
+    [goToPage],
+  );
 
-  const handleItemsPerPageChange = React.useCallback((newItemsPerPage: number) => {
-    updateItemsPerPage(newItemsPerPage);
-  }, [updateItemsPerPage]);
+  const handleItemsPerPageChange = React.useCallback(
+    (newItemsPerPage: number) => {
+      updateItemsPerPage(newItemsPerPage);
+    },
+    [updateItemsPerPage],
+  );
 
-  // Get total items count for pagination display
   const totalItems = React.useMemo(() => {
-    // Get the total count from the hook's stats
     return stats.total;
   }, [stats.total]);
-
-  // Reset pagination when search/filter changes
-  React.useEffect(() => {
-    // setCurrentPage(1); // This is now handled by goToPage from the hook
-  }, [searchTerm, selectedFilter]);
 
   const {
     modalState,
@@ -123,223 +151,288 @@ const Members: React.FC = () => {
     handleAssignTrainerSuccess,
     closeModal,
     setModalLoading,
-    handleModalError
+    handleModalError,
   } = useSmartMemberModal();
 
   // Toast system
   const { toasts, removeToast, showSuccess, showError } = useToast();
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: FiUsers },
-    { id: 'analytics', name: 'Analytics', icon: FiBarChart },
-    { id: 'list', name: 'Member List', icon: FiUserPlus },
+    { id: "dashboard", name: "Dashboard", icon: FiUsers },
+    { id: "list", name: "Member List", icon: FiUserPlus },
+    { id: "analytics", name: "Analytics", icon: FiBarChart2 },
   ];
 
   const filters = [
-    { id: 'all', name: 'All Members', count: stats.total },
-    { id: 'active', name: 'Active', count: stats.active },
-    { id: 'inactive', name: 'Inactive', count: stats.inactive },
-    { id: 'new', name: 'New This Month', count: stats.newThisMonth },
+    { id: "all", name: "All Members", count: stats.total },
+    { id: "active", name: "Active", count: stats.active },
+    { id: "inactive", name: "Inactive", count: stats.inactive },
+    { id: "new", name: "New This Month", count: stats.newThisMonth },
   ];
 
-  // Enhanced member action handlers with error handling
-  const handleEditMember = React.useCallback((member: any) => {
-    try {
-      // Find the original MockMember
-      const originalMember = members.find(m => m.id === member.id);
-      if (originalMember) {
-        openEditMemberModal(originalMember);
+  const memberStats = [
+    {
+      name: "Total Members",
+      value: stats.total.toString(),
+      change: "+12 from last month",
+      icon: FiUsers,
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      name: "Active Members",
+      value: stats.active.toString(),
+      change: "+8 from last month",
+      icon: FiActivity,
+      color: "from-green-500 to-green-600",
+    },
+    {
+      name: "Average Rating",
+      value: "4.8",
+      change: "+0.2 from last month",
+      icon: FiStar,
+      color: "from-yellow-500 to-orange-500",
+    },
+    {
+      name: "Monthly Check-ins",
+      value: "1,247",
+      change: "+15% from last month",
+      icon: FiClock,
+      color: "from-purple-500 to-purple-600",
+    },
+  ];
+
+  // Enhanced member action handlers
+  const handleEditMember = React.useCallback(
+    (member: any) => {
+      try {
+        const originalMember = members.find((m) => m.id === member.id);
+        if (originalMember) {
+          openEditMemberModal(originalMember);
+        }
+      } catch (error) {
+        showError("Error", "Failed to open edit modal. Please try again.");
       }
-    } catch (error) {
-      showError('Error', 'Failed to open edit modal. Please try again.');
-      console.error('Error opening edit modal:', error);
-    }
-  }, [openEditMemberModal, showError, members]);
+    },
+    [openEditMemberModal, showError, members],
+  );
 
-  const handleDeleteMember = React.useCallback((member: any) => {
-    try {
-      // Find the original MockMember
-      const originalMember = members.find(m => m.id === member.id);
-      if (originalMember) {
-        openDeleteMemberModal(originalMember);
+  const handleDeleteMember = React.useCallback(
+    (member: any) => {
+      try {
+        const originalMember = members.find((m) => m.id === member.id);
+        if (originalMember) {
+          openDeleteMemberModal(originalMember);
+        }
+      } catch (error) {
+        showError("Error", "Failed to open delete modal. Please try again.");
       }
-    } catch (error) {
-      showError('Error', 'Failed to open delete modal. Please try again.');
-      console.error('Error opening delete modal:', error);
-    }
-  }, [openDeleteMemberModal, showError, members]);
+    },
+    [openDeleteMemberModal, showError, members],
+  );
 
-  const handleViewMember = React.useCallback((member: any) => {
-    try {
-      // Find the original MockMember
-      const originalMember = members.find(m => m.id === member.id);
-      if (originalMember) {
-        openViewProfileModal(originalMember);
+  const handleViewMember = React.useCallback(
+    (member: any) => {
+      try {
+        const originalMember = members.find((m) => m.id === member.id);
+        if (originalMember) {
+          openViewProfileModal(originalMember);
+        }
+      } catch (error) {
+        showError("Error", "Failed to open profile modal. Please try again.");
       }
-    } catch (error) {
-      showError('Error', 'Failed to open profile modal. Please try again.');
-      console.error('Error opening profile modal:', error);
-    }
-  }, [openViewProfileModal, showError, members]);
+    },
+    [openViewProfileModal, showError, members],
+  );
 
-  const handleAssignTrainer = React.useCallback((member: any) => {
-    try {
-      // Find the original MockMember
-      const originalMember = members.find(m => m.id === member.id);
-      if (originalMember) {
-        openAssignTrainerModal(originalMember);
+  const handleAssignTrainer = React.useCallback(
+    (member: any) => {
+      try {
+        const originalMember = members.find((m) => m.id === member.id);
+        if (originalMember) {
+          openAssignTrainerModal(originalMember);
+        }
+      } catch (error) {
+        showError(
+          "Error",
+          "Failed to open trainer assignment modal. Please try again.",
+        );
       }
-    } catch (error) {
-      showError('Error', 'Failed to open trainer assignment modal. Please try again.');
-      console.error('Error opening trainer assignment modal:', error);
-    }
-  }, [openAssignTrainerModal, showError, members]);
+    },
+    [openAssignTrainerModal, showError, members],
+  );
 
-  // Enhanced form submission handlers with proper error handling
-  const [showSmartOnboarding, setShowSmartOnboarding] = React.useState(false);
-  const [selectedMemberForDetail, setSelectedMemberForDetail] = React.useState<any>(null);
 
-  const handleAddMember = React.useCallback(async (memberData: any) => {
-    setModalLoading(true);
-    try {
-      await addMember(memberData);
-      handleAddMemberSuccess();
-      showSuccess('Member Added', 'The member has been successfully added to the system.');
-    } catch (error) {
-      handleModalError(error as Error);
-      showError('Add Failed', error instanceof Error ? error.message : 'Failed to add member. Please try again.');
-    }
-  }, [addMember, handleAddMemberSuccess, handleModalError, setModalLoading, showSuccess, showError]);
+  const [selectedMemberForDetail, setSelectedMemberForDetail] =
+    React.useState<any>(null);
 
-  const handleEditMemberSubmit = React.useCallback(async (memberId: string, memberData: any) => {
-    setModalLoading(true);
-    try {
-      await editMember(memberId, memberData);
-      handleEditMemberSuccess();
-      showSuccess('Member Updated', 'The member information has been successfully updated.');
-    } catch (error) {
-      handleModalError(error as Error);
-      showError('Update Failed', error instanceof Error ? error.message : 'Failed to update member. Please try again.');
-    }
-  }, [editMember, handleEditMemberSuccess, handleModalError, setModalLoading, showSuccess, showError]);
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return (
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {memberStats.map((stat, index) => (
+                <motion.div
+                  key={stat.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {stat.name}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {stat.change}
+                      </p>
+                    </div>
+                    <div
+                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                    >
+                      <stat.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
 
-  const handleDeleteMemberSubmit = React.useCallback(async (member: any) => {
-    setModalLoading(true);
-    try {
-      await deleteMember(member.id);
-      handleDeleteMemberSuccess();
-      showSuccess('Member Deleted', 'The member has been successfully removed from the system.');
-    } catch (error) {
-      handleModalError(error as Error);
-      showError('Delete Failed', error instanceof Error ? error.message : 'Failed to delete member. Please try again.');
-    }
-  }, [deleteMember, handleDeleteMemberSuccess, handleModalError, setModalLoading, showSuccess, showError]);
+            {/* Member List Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Recent Members
+                </h2>
+                <button
+                  onClick={() => setActiveTab("list")}
+                  className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
+                >
+                  View All Members
+                </button>
+              </div>
+              <SmartMemberTable
+                members={convertedMembers.slice(0, 5)}
+                onEdit={handleEditMember}
+                onDelete={handleDeleteMember}
+                onView={handleViewMember}
+                onAssign={handleAssignTrainer}
+                loading={loading}
+                pagination={{
+                  currentPage: 1,
+                  totalPages: 1,
+                  totalItems: 5,
+                  itemsPerPage: 5,
+                  onPageChange: () => {},
+                  onItemsPerPageChange: () => {},
+                }}
+              />
+            </div>
+          </div>
+        );
 
-  // Enhanced export functionality with error handling
-  const handleExport = React.useCallback(() => {
-    try {
-      // Simulate export functionality
-      const csvContent = "data:text/csv;charset=utf-8," + 
-        "Name,Email,Phone,Status,Membership Type,Join Date\n" +
-        members.map(m => `${m.name},${m.email},${m.phone},${m.status},${m.membershipType},${m.joinDate}`).join("\n");
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "members_export.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      showSuccess('Export Successful', 'Member data has been exported to CSV file.');
-    } catch (error) {
-      showError('Export Failed', 'There was an error exporting the member data. Please try again.');
-      console.error('Export error:', error);
-    }
-  }, [members, showSuccess, showError]);
+      case "analytics":
+        return (
+          <div className="space-y-6">
+            <AnalyticsTab
+              members={convertedMembers}
+              stats={stats}
+              onFilterMembers={(filter) => {
+                // Handle filter logic here
+                console.log("Filter applied:", filter);
+              }}
+            />
+          </div>
+        );
 
-  // Enhanced import functionality
-  const handleImportMembers = React.useCallback(async (fileData: any) => {
-    setModalLoading(true);
-    try {
-      // Simulate import processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate 5% chance of failure
-      if (Math.random() < 0.05) {
-        throw new Error('Import failed due to invalid file format.');
-      }
-      
-      handleImportMembersSuccess();
-      showSuccess('Import Successful', 'Members have been successfully imported from the CSV file.');
-    } catch (error) {
-      handleModalError(error as Error);
-      showError('Import Failed', error instanceof Error ? error.message : 'Failed to import members. Please check your file format.');
-    }
-  }, [handleImportMembersSuccess, handleModalError, setModalLoading, showSuccess, showError]);
+      case "list":
+        return (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Member Management
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Manage all members, profiles, and memberships
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => openImportMembersModal()}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                  >
+                    <FiUpload className="w-4 h-4" />
+                    <span>Import</span>
+                  </button>
+                  <button
+                    onClick={() => openAddMemberModal()}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span>Add Member</span>
+                  </button>
+                </div>
+              </div>
 
-  // Enhanced trainer assignment
-  const handleAssignTrainerSubmit = React.useCallback(async (member: any, trainerId: string) => {
-    setModalLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate 3% chance of failure
-      if (Math.random() < 0.03) {
-        throw new Error('Trainer assignment failed. Please try again.');
-      }
-      
-      handleAssignTrainerSuccess();
-      showSuccess('Trainer Assigned', 'The personal trainer has been successfully assigned to the member.');
-    } catch (error) {
-      handleModalError(error as Error);
-      showError('Assignment Failed', error instanceof Error ? error.message : 'Failed to assign trainer. Please try again.');
+              <SmartMemberTable
+                members={convertedMembers}
+                onEdit={handleEditMember}
+                onDelete={handleDeleteMember}
+                onView={handleViewMember}
+                onAssign={handleAssignTrainer}
+                loading={loading}
+                pagination={{
+                  currentPage,
+                  totalPages,
+                  totalItems,
+                  itemsPerPage,
+                  onPageChange: handlePageChange,
+                  onItemsPerPageChange: handleItemsPerPageChange,
+                }}
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
-  }, [handleAssignTrainerSuccess, handleModalError, setModalLoading, showSuccess, showError]);
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Members</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your gym members and their profiles</p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <SmartButton
-            variant="secondary"
-            size="sm"
-            icon={<FiUpload className="w-4 h-4" />}
-            onClick={openImportMembersModal}
-            className="gap-2"
-            disabled={loading || modalLoading}
-          >
-            Import
-          </SmartButton>
-          
-          <SmartButton
-            variant="secondary"
-            size="sm"
-            icon={<FiDownload className="w-4 h-4" />}
-            onClick={handleExport}
-            className="gap-2"
-            disabled={loading || modalLoading}
-          >
-            Export
-          </SmartButton>
-          
-          <AddButton 
-            label="Add Member" 
-            onClick={() => setShowSmartOnboarding(true)}
-            disabled={loading || modalLoading}
-          />
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              👥 Smart Member Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Intelligent tracking • Automated onboarding • Zero paperwork
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => openAddMemberModal()}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span>Add Member</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="card">
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -348,9 +441,8 @@ const Members: React.FC = () => {
               type="text"
               placeholder="Search members by name, email, or phone..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input pl-10"
-              disabled={loading}
+              onChange={(e) => updateSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
@@ -358,9 +450,8 @@ const Members: React.FC = () => {
           <div className="flex items-center space-x-2">
             <select
               value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-              className="form-select"
-              disabled={loading}
+              onChange={(e) => updateFilter(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {filters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -368,18 +459,33 @@ const Members: React.FC = () => {
                 </option>
               ))}
             </select>
-            
-            <FilterButton />
+
+            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              <FiFilter className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <TabsNav
-        tabs={tabs.map(tab => ({ id: tab.id, label: tab.name, icon: <tab.icon className="w-4 h-4" /> }))}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="flex space-x-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
@@ -390,137 +496,66 @@ const Members: React.FC = () => {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              {/* Member Table */}
-              <div className="card">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Members</h3>
-                  <SmartButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab('list')}
-                    className="text-sky-600 hover:text-sky-700 dark:text-sky-400"
-                    disabled={loading}
-                  >
-                    View All Members
-                  </SmartButton>
-                </div>
-                <SmartMemberTable 
-                  members={convertedMembers.slice(0, 5)} // Show only first 5 on dashboard
-                  onEdit={handleEditMember}
-                  onDelete={handleDeleteMember}
-                  onView={(member) => {
-                    console.log('Member clicked:', member);
-                    setSelectedMemberForDetail(member);
-                  }}
-                  onAssignTrainer={handleAssignTrainer}
-                  loading={loading}
-                  currentPage={1}
-                  totalPages={1}
-                  itemsPerPage={5}
-                  onPageChange={() => {}}
-                  onItemsPerPageChange={() => {}}
-                  totalItems={Math.min(5, totalItems)}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <AnalyticsTab 
-                members={members} 
-                stats={stats} 
-                onFilterMembers={(filter) => {
-                  console.log('Filtering members:', filter);
-                  // TODO: Implement filtering logic
-                  // This would typically update the search/filter state
-                  // and trigger a re-render of the member table
-                }}
-              />
-            </div>
-          )}
-
-          {activeTab === 'list' && (
-            <div className="space-y-6">
-              <SmartMemberTable 
-                members={convertedMembers}
-                onEdit={handleEditMember}
-                onDelete={handleDeleteMember}
-                onView={(member) => {
-                  console.log('Member clicked:', member);
-                  setSelectedMemberForDetail(member);
-                }}
-                onAssignTrainer={handleAssignTrainer}
-                loading={loading}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={updateSorting}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-                onItemsPerPageChange={handleItemsPerPageChange}
-                totalItems={totalItems}
-              />
-            </div>
-          )}
+          {renderActiveTab()}
         </motion.div>
       </AnimatePresence>
 
-      {/* Smart Modals */}
-      <SmartMemberOnboardingModal
-        isOpen={showSmartOnboarding}
-        onClose={() => setShowSmartOnboarding(false)}
-        onSuccess={handleAddMember}
-      />
+      {/* Modals */}
+      <AnimatePresence>
+        {modalState.addMember && (
+          <AddMemberModal
+            isOpen={modalState.addMember}
+            onClose={() => closeModal("addMember")}
+            onSuccess={handleAddMemberSuccess}
+          />
+        )}
 
-      <MemberProfileDrawer
-        member={selectedMemberForDetail}
-        isOpen={!!selectedMemberForDetail}
-        onClose={() => setSelectedMemberForDetail(null)}
-        onEdit={handleEditMember}
-        onRefresh={() => {
-          // Refresh member data if needed
-          console.log('Refreshing member data...');
-        }}
-      />
+        {modalState.editMember && modalData.selectedMember && (
+          <EditMemberModal
+            isOpen={modalState.editMember}
+            onClose={() => closeModal("editMember")}
+            member={modalData.selectedMember}
+            onSuccess={handleEditMemberSuccess}
+          />
+        )}
 
-      {/* Legacy Modals */}
-      <EditMemberModal
-        isOpen={modalState.editMember}
-        onClose={() => closeModal('editMember')}
-        member={modalData.selectedMember}
-        onSuccess={handleEditMemberSubmit}
-        loading={modalLoading}
-      />
+        {modalState.deleteMember && modalData.selectedMember && (
+          <DeleteMemberModal
+            isOpen={modalState.deleteMember}
+            onClose={() => closeModal("deleteMember")}
+            member={modalData.selectedMember}
+            onSuccess={handleDeleteMemberSuccess}
+          />
+        )}
 
-      <DeleteMemberModal
-        isOpen={modalState.deleteMember}
-        onClose={() => closeModal('deleteMember')}
-        member={modalData.selectedMember}
-        onSuccess={handleDeleteMemberSubmit}
-        loading={modalLoading}
-        modalRef={modalRef}
-      />
+        {modalState.viewProfile && modalData.selectedMember && (
+          <ViewMemberProfileModal
+            isOpen={modalState.viewProfile}
+            onClose={() => closeModal("viewProfile")}
+            member={modalData.selectedMember}
+            onSuccess={handleViewMember}
+          />
+        )}
 
-      <ImportMembersModal
-        isOpen={modalState.importMembers}
-        onClose={() => closeModal('importMembers')}
-        onSuccess={handleImportMembers}
-        loading={modalLoading}
-        modalRef={modalRef}
-      />
+        {modalState.importMembers && (
+          <ImportMembersModal
+            isOpen={modalState.importMembers}
+            onClose={() => closeModal("importMembers")}
+            onSuccess={handleImportMembersSuccess}
+          />
+        )}
 
-      <AssignTrainerModal
-        isOpen={modalState.assignTrainer}
-        onClose={() => closeModal('assignTrainer')}
-        member={modalData.selectedMember}
-        onSuccess={handleAssignTrainerSubmit}
-        loading={modalLoading}
-        modalRef={modalRef}
-      />
+        {modalState.assignTrainer && modalData.selectedMember && (
+          <AssignTrainerModal
+            isOpen={modalState.assignTrainer}
+            onClose={() => closeModal("assignTrainer")}
+            member={modalData.selectedMember}
+            onSuccess={handleAssignTrainerSuccess}
+          />
+        )}
+      </AnimatePresence>
+
+
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />

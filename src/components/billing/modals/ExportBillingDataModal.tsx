@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiDownload, FiFilter, FiCalendar, FiUser, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiDownload,
+  FiFilter,
+  FiCalendar,
+  FiUser,
+  FiShield,
+} from "react-icons/fi";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { useSmartBillingModal } from "./useSmartBillingModal";
 
@@ -11,74 +18,72 @@ interface ExportBillingDataModalProps {
 
 const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
   open,
-  onClose
+  onClose,
 }) => {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('');
-  const [selectedMember, setSelectedMember] = useState('');
-  const [selectedTrainer, setSelectedTrainer] = useState('');
-  const [exportFormat, setExportFormat] = useState('csv');
-  const [dataTypes, setDataTypes] = useState(['invoices', 'expenses']);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [selectedMember, setSelectedMember] = useState("");
+  const [selectedTrainer, setSelectedTrainer] = useState("");
+  const [exportFormat, setExportFormat] = useState("csv");
+  const [dataTypes, setDataTypes] = useState(["invoices", "expenses"]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    data,
-    loading,
-    validation,
-    suggestions,
-    isProUser,
-    updateData
-  } = useSmartBillingModal({});
+  const { data, loading, validation, suggestions, isProUser, updateData } =
+    useSmartBillingModal({});
 
   const branches = [
-    'All Branches',
-    'Main Branch - Dubai',
-    'Fitness Hub - Abu Dhabi',
-    'Wellness Center - Sharjah'
+    "All Branches",
+    "Main Branch - Dubai",
+    "Fitness Hub - Abu Dhabi",
+    "Wellness Center - Sharjah",
   ];
 
   const members = [
-    'All Members',
-    'John Doe',
-    'Sarah Smith',
-    'Mike Johnson',
-    'Emma Wilson'
+    "All Members",
+    "John Doe",
+    "Sarah Smith",
+    "Mike Johnson",
+    "Emma Wilson",
   ];
 
   const trainers = [
-    'All Trainers',
-    'Alex Trainer',
-    'Maria Coach',
-    'David Fitness',
-    'Lisa Wellness'
+    "All Trainers",
+    "Alex Trainer",
+    "Maria Coach",
+    "David Fitness",
+    "Lisa Wellness",
   ];
 
   const exportFormats = [
-    { id: 'csv', name: 'CSV', description: 'Comma-separated values' },
-    { id: 'excel', name: 'Excel', description: 'Microsoft Excel format' },
-    { id: 'json', name: 'JSON', description: 'Structured data format' }
+    { id: "csv", name: "CSV", description: "Comma-separated values" },
+    { id: "excel", name: "Excel", description: "Microsoft Excel format" },
+    { id: "json", name: "JSON", description: "Structured data format" },
   ];
 
   const dataTypeOptions = [
-    { id: 'invoices', name: 'Invoices', description: 'All invoice data' },
-    { id: 'expenses', name: 'Expenses', description: 'All expense records' },
-    { id: 'vat', name: 'VAT Data', description: 'VAT calculations and reports' },
-    { id: 'payments', name: 'Payments', description: 'Payment transactions' }
+    { id: "invoices", name: "Invoices", description: "All invoice data" },
+    { id: "expenses", name: "Expenses", description: "All expense records" },
+    {
+      id: "vat",
+      name: "VAT Data",
+      description: "VAT calculations and reports",
+    },
+    { id: "payments", name: "Payments", description: "Payment transactions" },
   ];
 
   const handleDataTypeToggle = (typeId: string) => {
-    setDataTypes(prev => 
-      prev.includes(typeId) 
-        ? prev.filter(id => id !== typeId)
-        : [...prev, typeId]
+    setDataTypes((prev) =>
+      prev.includes(typeId)
+        ? prev.filter((id) => id !== typeId)
+        : [...prev, typeId],
     );
   };
 
   const handleExportData = async () => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     setIsLoading(false);
     onClose();
   };
@@ -144,7 +149,9 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                 >
                   <option value="">All Branches</option>
                   {branches.slice(1).map((branch) => (
-                    <option key={branch} value={branch}>{branch}</option>
+                    <option key={branch} value={branch}>
+                      {branch}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -159,7 +166,9 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                 >
                   <option value="">All Members</option>
                   {members.slice(1).map((member) => (
-                    <option key={member} value={member}>{member}</option>
+                    <option key={member} value={member}>
+                      {member}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -174,7 +183,9 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                 >
                   <option value="">All Trainers</option>
                   {trainers.slice(1).map((trainer) => (
-                    <option key={trainer} value={trainer}>{trainer}</option>
+                    <option key={trainer} value={trainer}>
+                      {trainer}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -193,16 +204,18 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                   onClick={() => handleDataTypeToggle(type.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     dataTypes.includes(type.id)
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-5 h-5 rounded-full border-2 ${
-                      dataTypes.includes(type.id)
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        dataTypes.includes(type.id)
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    >
                       {dataTypes.includes(type.id) && (
                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
                           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
@@ -235,8 +248,8 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                   onClick={() => setExportFormat(format.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     exportFormat === format.id
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <h4 className="font-medium text-gray-900 dark:text-white">
@@ -257,15 +270,23 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
             </h4>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-blue-700 dark:text-blue-300">Data Types:</span>
+                <span className="text-blue-700 dark:text-blue-300">
+                  Data Types:
+                </span>
                 <span className="font-medium">{dataTypes.length} selected</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-700 dark:text-blue-300">Format:</span>
-                <span className="font-medium">{exportFormats.find(f => f.id === exportFormat)?.name}</span>
+                <span className="text-blue-700 dark:text-blue-300">
+                  Format:
+                </span>
+                <span className="font-medium">
+                  {exportFormats.find((f) => f.id === exportFormat)?.name}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-700 dark:text-blue-300">Estimated Records:</span>
+                <span className="text-blue-700 dark:text-blue-300">
+                  Estimated Records:
+                </span>
                 <span className="font-medium">~2,450 records</span>
               </div>
             </div>
@@ -278,11 +299,12 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Export Insights
+                    Smart Export Insights
                   </h3>
                   <div className="space-y-2 mt-2">
                     <p className="text-sm text-blue-600 dark:text-blue-300">
-                      CSV format recommended for large datasets (&gt;1000 records).
+                      CSV format recommended for large datasets (&gt;1000
+                      records).
                     </p>
                     <p className="text-sm text-blue-600 dark:text-blue-300">
                       Consider filtering by date range to reduce file size.
@@ -325,4 +347,4 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
   );
 };
 
-export default ExportBillingDataModal; 
+export default ExportBillingDataModal;

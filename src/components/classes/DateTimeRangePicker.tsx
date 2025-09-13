@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { FiCalendar, FiClock, FiX } from 'react-icons/fi';
-import { SmartButton } from '../ui/DesignSystem';
-import './DateTimeRangePicker.css';
+import React, { useState, useEffect } from "react";
+import { FiCalendar, FiClock, FiX } from "react-icons/fi";
+import { SmartButton } from "../ui/DesignSystem";
+import "./DateTimeRangePicker.css";
 
 interface DateTimeRangePickerProps {
   startTime: Date | null;
@@ -14,7 +14,7 @@ const DateTimeRangePicker: React.FC<DateTimeRangePickerProps> = ({
   startTime,
   endTime,
   onChange,
-  className = ''
+  className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tempStartTime, setTempStartTime] = useState<Date | null>(startTime);
@@ -34,14 +34,14 @@ const DateTimeRangePicker: React.FC<DateTimeRangePickerProps> = ({
   };
 
   const formatDateTime = (date: Date | null) => {
-    if (!date) return 'Select date & time';
-    return date.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    if (!date) return "Select date & time";
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -66,31 +66,45 @@ const DateTimeRangePicker: React.FC<DateTimeRangePickerProps> = ({
             <div className="picker-header">
               <h3>Select Date & Time Range</h3>
             </div>
-            
+
             <div className="picker-content">
               <div className="time-inputs">
                 <div className="input-group">
                   <label>Start Date & Time</label>
                   <input
                     type="datetime-local"
-                    value={tempStartTime ? tempStartTime.toISOString().slice(0, 16) : ''}
-                    onChange={(e) => setTempStartTime(e.target.value ? new Date(e.target.value) : null)}
+                    value={
+                      tempStartTime
+                        ? tempStartTime.toISOString().slice(0, 16)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setTempStartTime(
+                        e.target.value ? new Date(e.target.value) : null,
+                      )
+                    }
                     className="datetime-input"
                   />
                 </div>
-                
+
                 <div className="input-group">
                   <label>End Date & Time</label>
                   <input
                     type="datetime-local"
-                    value={tempEndTime ? tempEndTime.toISOString().slice(0, 16) : ''}
-                    onChange={(e) => setTempEndTime(e.target.value ? new Date(e.target.value) : null)}
+                    value={
+                      tempEndTime ? tempEndTime.toISOString().slice(0, 16) : ""
+                    }
+                    onChange={(e) =>
+                      setTempEndTime(
+                        e.target.value ? new Date(e.target.value) : null,
+                      )
+                    }
                     className="datetime-input"
                   />
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-2 mt-4">
               <SmartButton variant="secondary" size="sm" onClick={handleCancel}>
                 Cancel
@@ -106,4 +120,4 @@ const DateTimeRangePicker: React.FC<DateTimeRangePickerProps> = ({
   );
 };
 
-export default DateTimeRangePicker; 
+export default DateTimeRangePicker;

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = "success" | "error" | "warning" | "info";
 
 export interface Toast {
   id: string;
@@ -13,7 +13,7 @@ export interface Toast {
 export const useToast = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
+  const addToast = useCallback((toast: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast: Toast = {
       id,
@@ -21,7 +21,7 @@ export const useToast = () => {
       ...toast,
     };
 
-    setToasts(prev => [...prev, newToast]);
+    setToasts((prev) => [...prev, newToast]);
 
     // Auto remove toast after duration
     if (newToast.duration && newToast.duration > 0) {
@@ -32,24 +32,36 @@ export const useToast = () => {
   }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showSuccess = useCallback((title: string, message?: string) => {
-    addToast({ type: 'success', title, message });
-  }, [addToast]);
+  const showSuccess = useCallback(
+    (title: string, message?: string) => {
+      addToast({ type: "success", title, message });
+    },
+    [addToast],
+  );
 
-  const showError = useCallback((title: string, message?: string) => {
-    addToast({ type: 'error', title, message });
-  }, [addToast]);
+  const showError = useCallback(
+    (title: string, message?: string) => {
+      addToast({ type: "error", title, message });
+    },
+    [addToast],
+  );
 
-  const showWarning = useCallback((title: string, message?: string) => {
-    addToast({ type: 'warning', title, message });
-  }, [addToast]);
+  const showWarning = useCallback(
+    (title: string, message?: string) => {
+      addToast({ type: "warning", title, message });
+    },
+    [addToast],
+  );
 
-  const showInfo = useCallback((title: string, message?: string) => {
-    addToast({ type: 'info', title, message });
-  }, [addToast]);
+  const showInfo = useCallback(
+    (title: string, message?: string) => {
+      addToast({ type: "info", title, message });
+    },
+    [addToast],
+  );
 
   return {
     toasts,
@@ -60,4 +72,4 @@ export const useToast = () => {
     showWarning,
     showInfo,
   };
-}; 
+};

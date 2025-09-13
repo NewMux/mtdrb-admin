@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export function useSmartTrainerModal({ trainerId, fromClassId, fromMemberId }: {
+export function useSmartTrainerModal({
+  trainerId,
+  fromClassId,
+  fromMemberId,
+}: {
   trainerId?: string;
   fromClassId?: string;
   fromMemberId?: string;
@@ -21,8 +25,8 @@ export function useSmartTrainerModal({ trainerId, fromClassId, fromMemberId }: {
       // Mocked trainer data
       setTrainer({
         id: trainerId,
-        name: 'Jane Trainer',
-        status: 'active',
+        name: "Jane Trainer",
+        status: "active",
         onLeave: false,
         overloaded: false,
         conflicts: [],
@@ -31,11 +35,11 @@ export function useSmartTrainerModal({ trainerId, fromClassId, fromMemberId }: {
         activeMembers: 12,
       });
       setAIRecommendations([
-        'AI: Suggest reducing schedule due to high workload.',
-        'AI: Recommend assigning to morning classes for higher attendance.',
+        "AI: Suggest reducing schedule due to high workload.",
+        "AI: Recommend assigning to morning classes for higher attendance.",
       ]);
       setAlerts([
-        { type: 'info', message: 'Trainer is available for new assignments.' },
+        { type: "info", message: "Trainer is available for new assignments." },
       ]);
       setProLocked(false);
       setLoading(false);
@@ -46,9 +50,21 @@ export function useSmartTrainerModal({ trainerId, fromClassId, fromMemberId }: {
   useEffect(() => {
     if (!trainer) return;
     const newAlerts: { type: string; message: string }[] = [];
-    if (trainer.onLeave) newAlerts.push({ type: 'warning', message: 'Trainer is currently on leave.' });
-    if (trainer.overloaded) newAlerts.push({ type: 'error', message: 'Trainer is overloaded with classes.' });
-    if (trainer.conflicts && trainer.conflicts.length > 0) newAlerts.push({ type: 'error', message: 'Trainer has class schedule conflicts.' });
+    if (trainer.onLeave)
+      newAlerts.push({
+        type: "warning",
+        message: "Trainer is currently on leave.",
+      });
+    if (trainer.overloaded)
+      newAlerts.push({
+        type: "error",
+        message: "Trainer is overloaded with classes.",
+      });
+    if (trainer.conflicts && trainer.conflicts.length > 0)
+      newAlerts.push({
+        type: "error",
+        message: "Trainer has class schedule conflicts.",
+      });
     setAlerts(newAlerts);
   }, [trainer]);
 
@@ -61,4 +77,4 @@ export function useSmartTrainerModal({ trainerId, fromClassId, fromMemberId }: {
     proLocked,
     // Add more smart helpers as needed
   };
-} 
+}

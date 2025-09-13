@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FiDownload, FiTrendingUp, FiTrendingDown, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
-import { FinancialInsight } from '../../types';
-import toast from 'react-hot-toast';
-import dayjs from 'dayjs';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FiDownload,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiAlertTriangle,
+  FiCheckCircle,
+} from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import { FinancialInsight } from "../../types";
+import toast from "react-hot-toast";
+import dayjs from "dayjs";
 
 interface InsightsSectionProps {
   searchQuery: string;
@@ -22,7 +28,7 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
   refreshKey,
   dateRange,
   tenantId,
-  selectedStatus
+  selectedStatus,
 }) => {
   const [insights, setInsights] = useState<FinancialInsight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,18 +42,18 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
     profitChange: 0,
     cashFlow: 0,
     cashFlowChange: 0,
-    topExpenseCategory: '',
-    topRevenueSource: '',
+    topExpenseCategory: "",
+    topRevenueSource: "",
     overdueInvoices: 0,
-    overdueAmount: 0
+    overdueAmount: 0,
   });
 
   const fetchInsights = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
-        .from('financial_insights')
-        .select('*', { count: 'exact' });
+        .from("financial_insights")
+        .select("*", { count: "exact" });
 
       if (searchQuery) {
         query = query.or(`
@@ -57,22 +63,23 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       }
 
       if (dateRange && dateRange[0] && dateRange[1]) {
-        query = query.gte('date', dateRange[0].toISOString())
-                    .lte('date', dateRange[1].toISOString());
+        query = query
+          .gte("date", dateRange[0].toISOString())
+          .lte("date", dateRange[1].toISOString());
       }
 
       if (tenantId) {
-        query = query.eq('tenant_id', tenantId);
+        query = query.eq("tenant_id", tenantId);
       } else {
-        throw new Error('Tenant ID is required');
+        throw new Error("Tenant ID is required");
       }
 
       if (selectedStatus) {
-        query = query.eq('status', selectedStatus);
+        query = query.eq("status", selectedStatus);
       }
 
       const { data, error, count } = await query
-        .order('date', { ascending: false })
+        .order("date", { ascending: false })
         .range((page - 1) * 10, page * 10 - 1);
 
       if (error) throw error;
@@ -80,8 +87,8 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       setInsights(data || []);
       setTotalPages(Math.ceil((count || 0) / 10));
     } catch (error) {
-      console.error('Error fetching insights:', error);
-      toast.error('Failed to fetch insights');
+      console.error("Error fetching insights:", error);
+      toast.error("Failed to fetch insights");
     } finally {
       setLoading(false);
     }
@@ -90,11 +97,12 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
   const fetchMetrics = useCallback(async () => {
     try {
       if (!tenantId) {
-        throw new Error('Tenant ID is required');
+        throw new Error("Tenant ID is required");
       }
 
-      const { data, error } = await supabase
-        .rpc('get_financial_metrics', { p_tenant_id: tenantId });
+      const { data, error } = await supabase.rpc("get_financial_metrics", {
+        p_tenant_id: tenantId,
+      });
 
       if (error) throw error;
 
@@ -107,14 +115,14 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
         profitChange: data.profit_change || 0,
         cashFlow: data.cash_flow || 0,
         cashFlowChange: data.cash_flow_change || 0,
-        topExpenseCategory: data.top_expense_category || '',
-        topRevenueSource: data.top_revenue_source || '',
+        topExpenseCategory: data.top_expense_category || "",
+        topRevenueSource: data.top_revenue_source || "",
         overdueInvoices: data.overdue_invoices || 0,
-        overdueAmount: data.overdue_amount || 0
+        overdueAmount: data.overdue_amount || 0,
       });
     } catch (error) {
-      console.error('Error fetching metrics:', error);
-      toast.error('Failed to fetch metrics');
+      console.error("Error fetching metrics:", error);
+      toast.error("Failed to fetch metrics");
     }
   }, [tenantId]);
 
@@ -125,49 +133,74 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
 
   // Calculate risk levels and insights
   const calculateFinancialHealth = () => {
-    let risk = 'Low';
-    if (metrics.profitLoss < 0 || metrics.overdueInvoices > 5 || metrics.cashFlow < 0) {
-      risk = 'High';
+    let risk = "Low";
+    if (
+      metrics.profitLoss < 0 ||
+      metrics.overdueInvoices > 5 ||
+      metrics.cashFlow < 0
+    ) {
+      risk = "High";
     } else if (metrics.profitChange < 0 || metrics.overdueAmount > 1000) {
-      risk = 'Medium';
+      risk = "Medium";
     }
     return risk;
   };
 
   const financialHealth = calculateFinancialHealth();
-  const healthColor = financialHealth === 'High' ? 'bg-red-100 text-red-700' : 
-                     financialHealth === 'Medium' ? 'bg-orange-100 text-orange-700' : 
-                     'bg-green-100 text-green-700';
+  const healthColor =
+    financialHealth === "High"
+      ? "bg-red-100 text-red-700"
+      : financialHealth === "Medium"
+        ? "bg-orange-100 text-orange-700"
+        : "bg-green-100 text-green-700";
 
   // Generate AI insights
   const getAiInsights = () => {
     const insights = [];
-    
+
     // Revenue insights
     if (metrics.revenueChange > 10) {
-      insights.push({ type: 'good', text: `Revenue has increased by ${metrics.revenueChange.toFixed(1)}% compared to last month.` });
+      insights.push({
+        type: "good",
+        text: `Revenue has increased by ${metrics.revenueChange.toFixed(1)}% compared to last month.`,
+      });
     } else if (metrics.revenueChange < -10) {
-      insights.push({ type: 'bad', text: `Revenue has decreased by ${Math.abs(metrics.revenueChange).toFixed(1)}%. Consider reviewing pricing or running promotions.` });
+      insights.push({
+        type: "bad",
+        text: `Revenue has decreased by ${Math.abs(metrics.revenueChange).toFixed(1)}%. Consider reviewing pricing or running promotions.`,
+      });
     }
 
     // Expense insights
     if (metrics.expenseChange > 20) {
-      insights.push({ type: 'bad', text: `Expenses have increased significantly by ${metrics.expenseChange.toFixed(1)}%. The top expense category is ${metrics.topExpenseCategory}.` });
+      insights.push({
+        type: "bad",
+        text: `Expenses have increased significantly by ${metrics.expenseChange.toFixed(1)}%. The top expense category is ${metrics.topExpenseCategory}.`,
+      });
     }
 
     // Cash flow insights
     if (metrics.cashFlow < 0) {
-      insights.push({ type: 'bad', text: 'Negative cash flow detected. Consider reviewing payment terms and expense timing.' });
+      insights.push({
+        type: "bad",
+        text: "Negative cash flow detected. Consider reviewing payment terms and expense timing.",
+      });
     }
 
     // Overdue invoices
     if (metrics.overdueInvoices > 0) {
-      insights.push({ type: 'bad', text: `${metrics.overdueInvoices} overdue invoices totaling ${metrics.overdueAmount.toFixed(2)} BHD. Follow up on collections.` });
+      insights.push({
+        type: "bad",
+        text: `${metrics.overdueInvoices} overdue invoices totaling ${metrics.overdueAmount.toFixed(2)} BHD. Follow up on collections.`,
+      });
     }
 
     // Profitability insights
     if (metrics.profitLoss > 0 && metrics.profitChange > 0) {
-      insights.push({ type: 'good', text: `Profitability is improving with a ${metrics.profitChange.toFixed(1)}% increase.` });
+      insights.push({
+        type: "good",
+        text: `Profitability is improving with a ${metrics.profitChange.toFixed(1)}% increase.`,
+      });
     }
 
     return insights;
@@ -178,10 +211,10 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
   const handleExportReport = async () => {
     try {
       // TODO: Implement report export
-      toast.success('Report exported successfully');
+      toast.success("Report exported successfully");
     } catch (error) {
-      console.error('Error exporting report:', error);
-      toast.error('Failed to export report');
+      console.error("Error exporting report:", error);
+      toast.error("Failed to export report");
     }
   };
 
@@ -199,10 +232,18 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       {/* Financial Health Score */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex items-center gap-4">
         <div className="flex-1">
-          <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">Financial Health</div>
+          <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">
+            Financial Health
+          </div>
           <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${healthColor}`}>{financialHealth} Risk</span>
-            <span className="text-blue-400 dark:text-blue-300 text-xs">(AI assessment)</span>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${healthColor}`}
+            >
+              {financialHealth} Risk
+            </span>
+            <span className="text-blue-400 dark:text-blue-300 text-xs">
+              (Smart assessment)
+            </span>
           </div>
         </div>
       </div>
@@ -211,11 +252,21 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
           <div className="flex-1">
-            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">Monthly Revenue</div>
+            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">
+              Monthly Revenue
+            </div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">{metrics.monthlyRevenue.toFixed(2)} BHD</span>
-              <span className={`flex items-center text-sm ${metrics.revenueChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {metrics.revenueChange >= 0 ? <FiTrendingUp className="mr-1" /> : <FiTrendingDown className="mr-1" />}
+              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                {metrics.monthlyRevenue.toFixed(2)} BHD
+              </span>
+              <span
+                className={`flex items-center text-sm ${metrics.revenueChange >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              >
+                {metrics.revenueChange >= 0 ? (
+                  <FiTrendingUp className="mr-1" />
+                ) : (
+                  <FiTrendingDown className="mr-1" />
+                )}
                 {Math.abs(metrics.revenueChange).toFixed(1)}%
               </span>
             </div>
@@ -224,11 +275,21 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
           <div className="flex-1">
-            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">Monthly Expenses</div>
+            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">
+              Monthly Expenses
+            </div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">{metrics.monthlyExpenses.toFixed(2)} BHD</span>
-              <span className={`flex items-center text-sm ${metrics.expenseChange <= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {metrics.expenseChange <= 0 ? <FiTrendingDown className="mr-1" /> : <FiTrendingUp className="mr-1" />}
+              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                {metrics.monthlyExpenses.toFixed(2)} BHD
+              </span>
+              <span
+                className={`flex items-center text-sm ${metrics.expenseChange <= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              >
+                {metrics.expenseChange <= 0 ? (
+                  <FiTrendingDown className="mr-1" />
+                ) : (
+                  <FiTrendingUp className="mr-1" />
+                )}
                 {Math.abs(metrics.expenseChange).toFixed(1)}%
               </span>
             </div>
@@ -237,11 +298,21 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
 
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
           <div className="flex-1">
-            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">Cash Flow</div>
+            <div className="text-blue-400 dark:text-blue-300 text-xs mb-1">
+              Cash Flow
+            </div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">{metrics.cashFlow.toFixed(2)} BHD</span>
-              <span className={`flex items-center text-sm ${metrics.cashFlowChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {metrics.cashFlowChange >= 0 ? <FiTrendingUp className="mr-1" /> : <FiTrendingDown className="mr-1" />}
+              <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                {metrics.cashFlow.toFixed(2)} BHD
+              </span>
+              <span
+                className={`flex items-center text-sm ${metrics.cashFlowChange >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              >
+                {metrics.cashFlowChange >= 0 ? (
+                  <FiTrendingUp className="mr-1" />
+                ) : (
+                  <FiTrendingDown className="mr-1" />
+                )}
                 {Math.abs(metrics.cashFlowChange).toFixed(1)}%
               </span>
             </div>
@@ -251,16 +322,20 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
 
       {/* AI Insights */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-        <div className="text-blue-400 dark:text-blue-300 text-xs mb-3">AI Insights</div>
+        <div className="text-blue-400 dark:text-blue-300 text-xs mb-3">
+          Smart Insights
+        </div>
         <div className="space-y-3">
           {aiInsights.map((insight, index) => (
             <div key={index} className="flex items-start gap-3">
-              {insight.type === 'good' ? (
+              {insight.type === "good" ? (
                 <FiCheckCircle className="mt-1 text-green-500 dark:text-green-400" />
               ) : (
                 <FiAlertTriangle className="mt-1 text-yellow-500 dark:text-yellow-400" />
               )}
-              <span className="text-sm text-gray-700 dark:text-gray-300">{insight.text}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {insight.text}
+              </span>
             </div>
           ))}
         </div>
@@ -269,7 +344,9 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       {/* Transactions Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">Recent Transactions</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">
+            Recent Transactions
+          </h3>
           <button
             onClick={handleExportReport}
             className="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -283,26 +360,43 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Reference
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {insights.map((insight) => (
-                <tr key={insight.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr
+                  key={insight.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {dayjs(insight.date).format('MMM D, YYYY')}
+                    {dayjs(insight.date).format("MMM D, YYYY")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      insight.type === 'Income'
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        insight.type === "Income"
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                          : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                      }`}
+                    >
                       {insight.type}
                     </span>
                   </td>
@@ -346,4 +440,4 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
       </div>
     </div>
   );
-}; 
+};

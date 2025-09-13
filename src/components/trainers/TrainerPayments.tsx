@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { FiDollarSign, FiPlus, FiDownload, FiFilter } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
+import React, { useState, useEffect } from "react";
+import { FiDollarSign, FiPlus, FiDownload, FiFilter } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
 
 interface Payment {
   id: string;
@@ -35,9 +35,9 @@ interface PaymentSummary {
 }
 
 export default function TrainerPayments() {
-  const [selectedTrainer, setSelectedTrainer] = useState<string>('');
-  const [dateRange, setDateRange] = useState<'1m' | '3m' | '6m' | '1y'>('1m');
-  const [paymentType, setPaymentType] = useState<string>('');
+  const [selectedTrainer, setSelectedTrainer] = useState<string>("");
+  const [dateRange, setDateRange] = useState<"1m" | "3m" | "6m" | "1y">("1m");
+  const [paymentType, setPaymentType] = useState<string>("");
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<PaymentSummary>({
@@ -48,8 +48,8 @@ export default function TrainerPayments() {
       salary: 0,
       bonus: 0,
       commission: 0,
-      penalty: 0
-    }
+      penalty: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,9 +68,11 @@ export default function TrainerPayments() {
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
-        .from('trainers')
-        .select('id, name, salary_type, hourly_rate, fixed_salary, commission_percentage')
-        .order('name');
+        .from("trainers")
+        .select(
+          "id, name, salary_type, hourly_rate, fixed_salary, commission_percentage",
+        )
+        .order("name");
 
       if (error) throw error;
       setTrainers(data || []);
@@ -91,29 +93,29 @@ export default function TrainerPayments() {
       const endDate = new Date();
       const startDate = new Date();
       switch (dateRange) {
-        case '1m':
+        case "1m":
           startDate.setMonth(startDate.getMonth() - 1);
           break;
-        case '3m':
+        case "3m":
           startDate.setMonth(startDate.getMonth() - 3);
           break;
-        case '6m':
+        case "6m":
           startDate.setMonth(startDate.getMonth() - 6);
           break;
-        case '1y':
+        case "1y":
           startDate.setFullYear(startDate.getFullYear() - 1);
           break;
       }
 
       let query = supabase
-        .from('trainer_payments')
-        .select('*')
-        .eq('trainer_id', selectedTrainer)
-        .gte('payment_date', startDate.toISOString())
-        .lte('payment_date', endDate.toISOString());
+        .from("trainer_payments")
+        .select("*")
+        .eq("trainer_id", selectedTrainer)
+        .gte("payment_date", startDate.toISOString())
+        .lte("payment_date", endDate.toISOString());
 
       if (paymentType) {
-        query = query.eq('type', paymentType);
+        query = query.eq("type", paymentType);
       }
 
       const { data, error } = await query;
@@ -138,19 +140,24 @@ export default function TrainerPayments() {
         salary: 0,
         bonus: 0,
         commission: 0,
-        penalty: 0
-      }
+        penalty: 0,
+      },
     };
 
-    payments.forEach(payment => {
-      if (payment.status === 'paid') {
+    payments.forEach((payment) => {
+      if (payment.status === "paid") {
         summary.total_paid += payment.amount;
-        summary.payment_breakdown[payment.type as keyof typeof summary.payment_breakdown] += payment.amount;
-      } else if (payment.status === 'pending') {
+        summary.payment_breakdown[
+          payment.type as keyof typeof summary.payment_breakdown
+        ] += payment.amount;
+      } else if (payment.status === "pending") {
         summary.pending_amount += payment.amount;
       }
 
-      if (!summary.last_payment_date || new Date(payment.payment_date) > new Date(summary.last_payment_date)) {
+      if (
+        !summary.last_payment_date ||
+        new Date(payment.payment_date) > new Date(summary.last_payment_date)
+      ) {
         summary.last_payment_date = payment.payment_date;
       }
     });
@@ -161,39 +168,41 @@ export default function TrainerPayments() {
   const handleExport = async () => {
     try {
       const { data: trainer } = await supabase
-        .from('trainers')
-        .select('name')
-        .eq('id', selectedTrainer)
+        .from("trainers")
+        .select("name")
+        .eq("id", selectedTrainer)
         .single();
 
-      const headers = ['Date', 'Type', 'Amount', 'Status', 'Description'];
+      const headers = ["Date", "Type", "Amount", "Status", "Description"];
       const csvContent = [
-        headers.join(','),
-        ...payments.map(payment => [
-          new Date(payment.payment_date).toLocaleDateString(),
-          payment.type,
-          payment.amount.toFixed(2),
-          payment.status,
-          `"${payment.description.replace(/"/g, '""')}"`
-        ].join(','))
-      ].join('\n');
+        headers.join(","),
+        ...payments.map((payment) =>
+          [
+            new Date(payment.payment_date).toLocaleDateString(),
+            payment.type,
+            payment.amount.toFixed(2),
+            payment.status,
+            `"${payment.description.replace(/"/g, '""')}"`,
+          ].join(","),
+        ),
+      ].join("\n");
 
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const blob = new Blob([csvContent], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `${trainer.name}_payments_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `${trainer.name}_payments_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error exporting payments:', error);
+      console.error("Error exporting payments:", error);
     }
   };
 
   const getSelectedTrainer = () => {
-    return trainers.find(t => t.id === selectedTrainer);
+    return trainers.find((t) => t.id === selectedTrainer);
   };
 
   return (
@@ -262,16 +271,19 @@ export default function TrainerPayments() {
           <div className="flex items-center">
             <FiDollarSign className="h-8 w-8 text-green-500 dark:text-green-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Paid</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total Paid
+              </p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                 ${summary.total_paid.toFixed(2)}
               </p>
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Last payment: {summary.last_payment_date
+            Last payment:{" "}
+            {summary.last_payment_date
               ? new Date(summary.last_payment_date).toLocaleDateString()
-              : 'N/A'}
+              : "N/A"}
           </p>
         </div>
 
@@ -279,14 +291,17 @@ export default function TrainerPayments() {
           <div className="flex items-center">
             <FiDollarSign className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Amount</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Pending Amount
+              </p>
               <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                 ${summary.pending_amount.toFixed(2)}
               </p>
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {payments.filter(p => p.status === 'pending').length} pending payments
+            {payments.filter((p) => p.status === "pending").length} pending
+            payments
           </p>
         </div>
 
@@ -294,20 +309,22 @@ export default function TrainerPayments() {
           <div className="flex items-center">
             <FiDollarSign className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Payment Type</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Payment Type
+              </p>
               <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 capitalize">
-                {getSelectedTrainer()?.salary_type || 'N/A'}
+                {getSelectedTrainer()?.salary_type || "N/A"}
               </p>
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {getSelectedTrainer()?.salary_type === 'hourly'
+            {getSelectedTrainer()?.salary_type === "hourly"
               ? `$${getSelectedTrainer()?.hourly_rate}/hour`
-              : getSelectedTrainer()?.salary_type === 'fixed'
-              ? `$${getSelectedTrainer()?.fixed_salary}/month`
-              : getSelectedTrainer()?.salary_type === 'commission'
-              ? `${getSelectedTrainer()?.commission_percentage}% commission`
-              : 'Hybrid model'}
+              : getSelectedTrainer()?.salary_type === "fixed"
+                ? `$${getSelectedTrainer()?.fixed_salary}/month`
+                : getSelectedTrainer()?.salary_type === "commission"
+                  ? `${getSelectedTrainer()?.commission_percentage}% commission`
+                  : "Hybrid model"}
           </p>
         </div>
 
@@ -315,7 +332,9 @@ export default function TrainerPayments() {
           <div className="flex items-center">
             <FiDollarSign className="h-8 w-8 text-purple-500 dark:text-purple-400" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Payment Breakdown</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Payment Breakdown
+              </p>
               <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {Object.keys(summary.payment_breakdown).length} types
               </p>
@@ -324,8 +343,12 @@ export default function TrainerPayments() {
           <div className="mt-2 space-y-1">
             {Object.entries(summary.payment_breakdown).map(([type, amount]) => (
               <div key={type} className="flex justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400 capitalize">{type}</span>
-                <span className="text-gray-900 dark:text-gray-100">${amount.toFixed(2)}</span>
+                <span className="text-gray-500 dark:text-gray-400 capitalize">
+                  {type}
+                </span>
+                <span className="text-gray-900 dark:text-gray-100">
+                  ${amount.toFixed(2)}
+                </span>
               </div>
             ))}
           </div>
@@ -338,38 +361,65 @@ export default function TrainerPayments() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Date
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Type
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Amount
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Description
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
                   Receipt
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {payments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <tr
+                  key={payment.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {new Date(payment.payment_date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${payment.type === 'salary' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200' :
-                        payment.type === 'bonus' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' :
-                        payment.type === 'commission' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200' :
-                        'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'}`}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${
+                        payment.type === "salary"
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                          : payment.type === "bonus"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                            : payment.type === "commission"
+                              ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+                              : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                      }`}
                     >
                       {payment.type}
                     </span>
@@ -378,10 +428,15 @@ export default function TrainerPayments() {
                     ${payment.amount.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${payment.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' :
-                        payment.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200' :
-                        'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'}`}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${
+                        payment.status === "paid"
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                          : payment.status === "pending"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                      }`}
                     >
                       {payment.status}
                     </span>
@@ -400,7 +455,9 @@ export default function TrainerPayments() {
                         View
                       </a>
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500">N/A</span>
+                      <span className="text-gray-400 dark:text-gray-500">
+                        N/A
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -414,4 +471,4 @@ export default function TrainerPayments() {
       {/* TODO: Implement AddPaymentModal component */}
     </div>
   );
-} 
+}

@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiSortAsc, FiClock, FiTarget, FiZap, FiLock, FiBarChart2 } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiSortAsc,
+  FiClock,
+  FiTarget,
+  FiZap,
+  FiLock,
+  FiBarChart2,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface EnablePrioritySortingModalProps {
   open: boolean;
@@ -10,16 +17,10 @@ interface EnablePrioritySortingModalProps {
   isPro?: boolean;
 }
 
-export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProps> = ({
-  open,
-  onClose,
-  isPro = false,
-}) => {
-  const {
-    loading,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ isPro });
+export const EnablePrioritySortingModal: React.FC<
+  EnablePrioritySortingModalProps
+> = ({ open, onClose, isPro = false }) => {
+  const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
   const [sortingEnabled, setSortingEnabled] = React.useState(true);
   const [sortingFactors, setSortingFactors] = React.useState({
@@ -42,94 +43,94 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
 
   const sortingFactorsOptions = [
     {
-      key: 'deadline',
-      label: 'Deadline',
-      description: 'Tasks closer to due date get higher priority',
-      icon: '⏰',
+      key: "deadline",
+      label: "Deadline",
+      description: "Tasks closer to due date get higher priority",
+      icon: "⏰",
       isPro: false,
     },
     {
-      key: 'impact',
-      label: 'Business Impact',
-      description: 'Tasks with higher business impact prioritized',
-      icon: '📈',
+      key: "impact",
+      label: "Business Impact",
+      description: "Tasks with higher business impact prioritized",
+      icon: "📈",
       isPro: false,
     },
     {
-      key: 'taskType',
-      label: 'Task Type',
-      description: 'Certain task types get priority (e.g., onboarding)',
-      icon: '🏷️',
+      key: "taskType",
+      label: "Task Type",
+      description: "Certain task types get priority (e.g., onboarding)",
+      icon: "🏷️",
       isPro: false,
     },
     {
-      key: 'assignee',
-      label: 'Assignee Availability',
-      description: 'Consider assignee workload and availability',
-      icon: '👤',
+      key: "assignee",
+      label: "Assignee Availability",
+      description: "Consider assignee workload and availability",
+      icon: "👤",
       isPro: false,
     },
     {
-      key: 'aiWeight',
-      label: 'AI Weight Scoring',
-      description: 'AI-powered priority scoring based on historical data',
-      icon: '🤖',
+      key: "aiWeight",
+      label: "AI Weight Scoring",
+      description: "AI-powered priority scoring based on historical data",
+      icon: "🤖",
       isPro: true,
     },
   ];
 
   const mockTasks = [
     {
-      id: '1',
-      title: 'Setup new member onboarding',
-      type: 'onboarding',
-      priority: 'high',
+      id: "1",
+      title: "Setup new member onboarding",
+      type: "onboarding",
+      priority: "high",
       dueDate: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-      impact: 'high',
-      assignee: 'Mike Chen',
+      impact: "high",
+      assignee: "Mike Chen",
       score: 95,
     },
     {
-      id: '2',
-      title: 'Monthly equipment maintenance',
-      type: 'maintenance',
-      priority: 'medium',
+      id: "2",
+      title: "Monthly equipment maintenance",
+      type: "maintenance",
+      priority: "medium",
       dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      impact: 'medium',
-      assignee: 'David Rodriguez',
+      impact: "medium",
+      assignee: "David Rodriguez",
       score: 78,
     },
     {
-      id: '3',
-      title: 'Daily cleaning checklist',
-      type: 'cleaning',
-      priority: 'low',
+      id: "3",
+      title: "Daily cleaning checklist",
+      type: "cleaning",
+      priority: "low",
       dueDate: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-      impact: 'low',
-      assignee: 'Cleaning Team',
+      impact: "low",
+      assignee: "Cleaning Team",
       score: 65,
     },
     {
-      id: '4',
-      title: 'Member complaint resolution',
-      type: 'member_support',
-      priority: 'urgent',
+      id: "4",
+      title: "Member complaint resolution",
+      type: "member_support",
+      priority: "urgent",
       dueDate: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
-      impact: 'high',
-      assignee: 'Emma Wilson',
+      impact: "high",
+      assignee: "Emma Wilson",
       score: 92,
     },
   ];
 
   const handleFactorToggle = (factor: string) => {
-    setSortingFactors(prev => ({
+    setSortingFactors((prev) => ({
       ...prev,
       [factor]: !prev[factor as keyof typeof prev],
     }));
   };
 
   const handleWeightChange = (factor: string, value: number) => {
-    setWeights(prev => ({
+    setWeights((prev) => ({
       ...prev,
       [factor]: value,
     }));
@@ -138,7 +139,7 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     onClose();
   };
 
@@ -163,9 +164,11 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -215,15 +218,19 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                   key={factor.key}
                   className={`p-3 rounded-lg border transition-all ${
                     sortingFactors[factor.key as keyof typeof sortingFactors]
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 dark:border-gray-600"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
-                        checked={sortingFactors[factor.key as keyof typeof sortingFactors]}
+                        checked={
+                          sortingFactors[
+                            factor.key as keyof typeof sortingFactors
+                          ]
+                        }
                         onChange={() => handleFactorToggle(factor.key)}
                         disabled={factor.isPro && !isPro}
                         className="text-blue-600 focus:ring-blue-500 disabled:opacity-50"
@@ -232,7 +239,9 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                         <span className="text-lg">{factor.icon}</span>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium">{factor.label}</span>
+                            <span className="text-sm font-medium">
+                              {factor.label}
+                            </span>
                             {factor.isPro && (
                               <FiLock className="w-3 h-3 text-yellow-500" />
                             )}
@@ -243,8 +252,10 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                         </div>
                       </div>
                     </div>
-                    
-                    {sortingFactors[factor.key as keyof typeof sortingFactors] && (
+
+                    {sortingFactors[
+                      factor.key as keyof typeof sortingFactors
+                    ] && (
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-gray-500">Weight:</span>
                         <input
@@ -252,7 +263,12 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                           min="0"
                           max="50"
                           value={weights[factor.key as keyof typeof weights]}
-                          onChange={(e) => handleWeightChange(factor.key, parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleWeightChange(
+                              factor.key,
+                              parseInt(e.target.value),
+                            )
+                          }
                           className="w-16"
                         />
                         <span className="text-xs font-medium w-8">
@@ -273,11 +289,16 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
             </h3>
             <div className="space-y-2">
               {Object.entries(weights).map(([factor, weight]) => {
-                const factorOption = sortingFactorsOptions.find(f => f.key === factor);
+                const factorOption = sortingFactorsOptions.find(
+                  (f) => f.key === factor,
+                );
                 if (!factorOption) return null;
-                
+
                 return (
-                  <div key={factor} className="flex items-center justify-between">
+                  <div
+                    key={factor}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center space-x-2">
                       <span className="text-sm">{factorOption.label}</span>
                       {factorOption.isPro && (
@@ -310,39 +331,53 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? 'Hide' : 'Show'} preview
+                {showPreview ? "Hide" : "Show"} preview
               </button>
             </div>
-            
+
             {showPreview && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2"
               >
                 <div className="text-sm text-blue-700 dark:text-blue-300 mb-2">
                   Tasks sorted by priority score:
                 </div>
                 {sortedTasks.map((task, index) => (
-                  <div key={task.id} className="bg-white rounded p-3 dark:bg-gray-800">
+                  <div
+                    key={task.id}
+                    className="bg-white rounded p-3 dark:bg-gray-800"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">#{index + 1}</span>
+                        <span className="text-sm font-medium">
+                          #{index + 1}
+                        </span>
                         <div>
-                          <div className="text-sm font-medium">{task.title}</div>
+                          <div className="text-sm font-medium">
+                            {task.title}
+                          </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             {task.type} • {task.assignee}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-blue-600">{task.score}</div>
-                        <div className={`text-xs px-2 py-1 rounded ${
-                          task.priority === 'urgent' ? 'bg-red-100 text-red-700' :
-                          task.priority === 'high' ? 'bg-orange-100 text-orange-700' :
-                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
+                        <div className="text-sm font-bold text-blue-600">
+                          {task.score}
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded ${
+                            task.priority === "urgent"
+                              ? "bg-red-100 text-red-700"
+                              : task.priority === "high"
+                                ? "bg-orange-100 text-orange-700"
+                                : task.priority === "medium"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-green-100 text-green-700"
+                          }`}
+                        >
                           {task.priority}
                         </div>
                       </div>
@@ -381,7 +416,8 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {Object.values(sortingFactors).filter(Boolean).length} factors enabled
+                  {Object.values(sortingFactors).filter(Boolean).length} factors
+                  enabled
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -398,7 +434,9 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiSortAsc className="w-4 h-4" />
-                  <span>{loading ? 'Enabling...' : 'Enable Priority Sorting'}</span>
+                  <span>
+                    {loading ? "Enabling..." : "Enable Priority Sorting"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -407,4 +445,4 @@ export const EnablePrioritySortingModal: React.FC<EnablePrioritySortingModalProp
       </div>
     </SmartTaskModal>
   );
-}; 
+};

@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiCalendar, FiDownload, FiFileText, FiShield, FiBarChart2 } from "react-icons/fi";
+import {
+  FiX,
+  FiCalendar,
+  FiDownload,
+  FiFileText,
+  FiShield,
+  FiBarChart2,
+} from "react-icons/fi";
 import { SmartBillingModal } from "./SmartBillingModal";
 import { useSmartBillingModal } from "./useSmartBillingModal";
 
@@ -11,34 +18,52 @@ interface GenerateVATReportModalProps {
 
 const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
   open,
-  onClose
+  onClose,
 }) => {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [reportType, setReportType] = useState('all');
-  const [exportFormat, setExportFormat] = useState('pdf');
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [reportType, setReportType] = useState("all");
+  const [exportFormat, setExportFormat] = useState("pdf");
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    data,
-    loading,
-    validation,
-    suggestions,
-    isProUser,
-    updateData
-  } = useSmartBillingModal({});
+  const { data, loading, validation, suggestions, isProUser, updateData } =
+    useSmartBillingModal({});
 
   const reportTypes = [
-    { id: 'all', name: 'All Transactions', description: 'Invoices, expenses, and refunds' },
-    { id: 'invoices', name: 'Invoices Only', description: 'Revenue and VAT collected' },
-    { id: 'expenses', name: 'Expenses Only', description: 'Expenses and VAT paid' },
-    { id: 'refunds', name: 'Refunds Only', description: 'Refunds and VAT adjustments' }
+    {
+      id: "all",
+      name: "All Transactions",
+      description: "Invoices, expenses, and refunds",
+    },
+    {
+      id: "invoices",
+      name: "Invoices Only",
+      description: "Revenue and VAT collected",
+    },
+    {
+      id: "expenses",
+      name: "Expenses Only",
+      description: "Expenses and VAT paid",
+    },
+    {
+      id: "refunds",
+      name: "Refunds Only",
+      description: "Refunds and VAT adjustments",
+    },
   ];
 
   const exportFormats = [
-    { id: 'pdf', name: 'PDF Report', description: 'Professional formatted report' },
-    { id: 'csv', name: 'CSV Data', description: 'Raw data for analysis' },
-    { id: 'excel', name: 'Excel Spreadsheet', description: 'Detailed spreadsheet with calculations' }
+    {
+      id: "pdf",
+      name: "PDF Report",
+      description: "Professional formatted report",
+    },
+    { id: "csv", name: "CSV Data", description: "Raw data for analysis" },
+    {
+      id: "excel",
+      name: "Excel Spreadsheet",
+      description: "Detailed spreadsheet with calculations",
+    },
   ];
 
   const mockVATSummary = {
@@ -47,13 +72,13 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
     vatCollected: 6750,
     vatPaid: 2700,
     vatDue: 4050,
-    refundableVAT: 0
+    refundableVAT: 0,
   };
 
   const handleGenerateReport = async () => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     setIsLoading(false);
     onClose();
   };
@@ -130,8 +155,8 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
                   onClick={() => setReportType(type.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     reportType === type.id
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <h4 className="font-medium text-gray-900 dark:text-white">
@@ -157,8 +182,8 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
                   onClick={() => setExportFormat(format.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     exportFormat === format.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <h4 className="font-medium text-gray-900 dark:text-white">
@@ -181,30 +206,54 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">Total Revenue:</span>
-                  <span className="font-medium">${mockVATSummary.totalRevenue.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    Total Revenue:
+                  </span>
+                  <span className="font-medium">
+                    ${mockVATSummary.totalRevenue.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">VAT Collected:</span>
-                  <span className="font-medium">${mockVATSummary.vatCollected.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    VAT Collected:
+                  </span>
+                  <span className="font-medium">
+                    ${mockVATSummary.vatCollected.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">Total Expenses:</span>
-                  <span className="font-medium">${mockVATSummary.totalExpenses.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    Total Expenses:
+                  </span>
+                  <span className="font-medium">
+                    ${mockVATSummary.totalExpenses.toLocaleString()}
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">VAT Paid:</span>
-                  <span className="font-medium">${mockVATSummary.vatPaid.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    VAT Paid:
+                  </span>
+                  <span className="font-medium">
+                    ${mockVATSummary.vatPaid.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">VAT Due:</span>
-                  <span className="font-medium text-green-600 dark:text-green-400">${mockVATSummary.vatDue.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    VAT Due:
+                  </span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    ${mockVATSummary.vatDue.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">Refundable VAT:</span>
-                  <span className="font-medium">${mockVATSummary.refundableVAT.toLocaleString()}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    Refundable VAT:
+                  </span>
+                  <span className="font-medium">
+                    ${mockVATSummary.refundableVAT.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -217,11 +266,12 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI VAT Insights
+                    Smart VAT Insights
                   </h3>
                   <div className="space-y-2 mt-2">
                     <p className="text-sm text-blue-600 dark:text-blue-300">
-                      VAT due is 15% higher than last quarter. Consider reviewing expense categories.
+                      VAT due is 15% higher than last quarter. Consider
+                      reviewing expense categories.
                     </p>
                     <p className="text-sm text-blue-600 dark:text-blue-300">
                       Recommend quarterly VAT filing to maintain compliance.
@@ -265,4 +315,4 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
   );
 };
 
-export default GenerateVATReportModal; 
+export default GenerateVATReportModal;

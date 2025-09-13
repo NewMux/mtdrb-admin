@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUsers, FiUserCheck, FiUserX, FiUserPlus } from 'react-icons/fi';
+import * as React from "react";
+import { motion } from "framer-motion";
+import { FiUsers, FiUserCheck, FiUserX, FiUserPlus } from "react-icons/fi";
 
 interface Stats {
   total: number;
@@ -16,44 +16,44 @@ interface MemberKPICardsProps {
 const MemberKPICards: React.FC<MemberKPICardsProps> = ({ stats }) => {
   const cards = [
     {
-      title: 'Total Members',
+      title: "Total Members",
       value: stats.total,
-      change: '+12%',
-      changeType: 'positive',
+      change: "+12%",
+      changeType: "positive",
       icon: FiUsers,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      textColor: 'text-blue-600 dark:text-blue-400',
+      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      textColor: "text-blue-600 dark:text-blue-400",
     },
     {
-      title: 'Active Members',
+      title: "Active Members",
       value: stats.active,
-      change: '+8%',
-      changeType: 'positive',
+      change: "+8%",
+      changeType: "positive",
       icon: FiUserCheck,
-      color: 'from-emerald-500 to-emerald-600',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
-      textColor: 'text-emerald-600 dark:text-emerald-400',
+      color: "from-emerald-500 to-emerald-600",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      textColor: "text-emerald-600 dark:text-emerald-400",
     },
     {
-      title: 'Inactive Members',
+      title: "Inactive Members",
       value: stats.inactive,
-      change: '-3%',
-      changeType: 'negative',
+      change: "-3%",
+      changeType: "negative",
       icon: FiUserX,
-      color: 'from-gray-500 to-gray-600',
-      bgColor: 'bg-gray-50 dark:bg-gray-900/20',
-      textColor: 'text-gray-600 dark:text-gray-400',
+      color: "from-gray-500 to-gray-600",
+      bgColor: "bg-gray-50 dark:bg-gray-900/20",
+      textColor: "text-gray-600 dark:text-gray-400",
     },
     {
-      title: 'New This Month',
+      title: "New This Month",
       value: stats.newThisMonth,
-      change: '+15%',
-      changeType: 'positive',
+      change: "+15%",
+      changeType: "positive",
       icon: FiUserPlus,
-      color: 'from-rose-500 to-rose-600',
-      bgColor: 'bg-rose-50 dark:bg-rose-900/20',
-      textColor: 'text-rose-600 dark:text-rose-400',
+      color: "from-rose-500 to-rose-600",
+      bgColor: "bg-rose-50 dark:bg-rose-900/20",
+      textColor: "text-rose-600 dark:text-rose-400",
     },
   ];
 
@@ -78,9 +78,9 @@ const MemberKPICards: React.FC<MemberKPICardsProps> = ({ stats }) => {
               <div className="flex items-center mt-2">
                 <span
                   className={`text-xs font-medium ${
-                    card.changeType === 'positive'
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-red-600 dark:text-red-400'
+                    card.changeType === "positive"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {card.change}
@@ -102,4 +102,4 @@ const MemberKPICards: React.FC<MemberKPICardsProps> = ({ stats }) => {
   );
 };
 
-export default MemberKPICards; 
+export default MemberKPICards;

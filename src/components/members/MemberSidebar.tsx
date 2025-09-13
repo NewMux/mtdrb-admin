@@ -1,6 +1,17 @@
-import React from 'react';
-import { FiUser, FiMail, FiPhone, FiCheckCircle, FiFlag, FiRefreshCw, FiUserCheck, FiArrowRight, FiAlertTriangle, FiHash } from 'react-icons/fi';
-import { FaSnowflake } from 'react-icons/fa';
+import React from "react";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiCheckCircle,
+  FiFlag,
+  FiRefreshCw,
+  FiUserCheck,
+  FiArrowRight,
+  FiAlertTriangle,
+  FiHash,
+} from "react-icons/fi";
+import { FaSnowflake } from "react-icons/fa";
 
 interface MemberSidebarProps {
   avatar: string;
@@ -14,16 +25,16 @@ interface MemberSidebarProps {
 }
 
 const statusColors: Record<string, string> = {
-  'Active': 'bg-green-100 text-green-800',
-  'active': 'bg-green-100 text-green-800',
-  'Trial': 'bg-blue-100 text-blue-800',
-  'trial': 'bg-blue-100 text-blue-800',
-  'Paused': 'bg-yellow-100 text-yellow-800',
-  'paused': 'bg-yellow-100 text-yellow-800',
-  'Cancelled': 'bg-red-100 text-red-800',
-  'cancelled': 'bg-red-100 text-red-800',
-  'inactive': 'bg-gray-100 text-gray-800',
-  'expired': 'bg-red-100 text-red-800',
+  Active: "bg-green-100 text-green-800",
+  active: "bg-green-100 text-green-800",
+  Trial: "bg-blue-100 text-blue-800",
+  trial: "bg-blue-100 text-blue-800",
+  Paused: "bg-yellow-100 text-yellow-800",
+  paused: "bg-yellow-100 text-yellow-800",
+  Cancelled: "bg-red-100 text-red-800",
+  cancelled: "bg-red-100 text-red-800",
+  inactive: "bg-gray-100 text-gray-800",
+  expired: "bg-red-100 text-red-800",
 };
 
 const MemberSidebar: React.FC<MemberSidebarProps> = ({
@@ -36,14 +47,18 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({
   emergencyContact,
   barcode,
 }) => {
-  const colorClass = statusColors[status] || 'bg-gray-100 text-gray-800';
+  const colorClass = statusColors[status] || "bg-gray-100 text-gray-800";
 
   return (
     <aside className="sticky top-0 p-6 w-80 bg-white rounded-3xl shadow-xl flex flex-col items-center space-y-8 border-r border-gray-100 min-h-full">
       {/* Avatar */}
       <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center text-5xl text-blue-400 mb-2">
         {avatar ? (
-          <img src={avatar} alt={name} className="w-24 h-24 rounded-full object-cover" />
+          <img
+            src={avatar}
+            alt={name}
+            className="w-24 h-24 rounded-full object-cover"
+          />
         ) : (
           <FiUser />
         )}
@@ -51,9 +66,11 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({
       {/* Name & Status */}
       <div className="text-center space-y-2">
         <h2 className="text-xl font-bold text-gray-900">{name}</h2>
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+        <span
+          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${colorClass}`}
+        >
           <FiCheckCircle className="mr-1" />
-          {status || 'Unknown'}
+          {status || "Unknown"}
         </span>
       </div>
       {/* Contact Info */}
@@ -73,7 +90,12 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({
       {tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-2 justify-center">
           {tags.map((tag) => (
-            <span key={tag} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">{tag}</span>
+            <span
+              key={tag}
+              className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium"
+            >
+              {tag}
+            </span>
           ))}
         </div>
       )}
@@ -104,11 +126,13 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({
           <div className="flex items-center gap-2 text-gray-400 text-xs">
             <FiHash /> Member ID
           </div>
-          <div className="font-mono text-lg text-gray-700 tracking-widest mt-1">{barcode}</div>
+          <div className="font-mono text-lg text-gray-700 tracking-widest mt-1">
+            {barcode}
+          </div>
         </div>
       )}
     </aside>
   );
 };
 
-export default MemberSidebar; 
+export default MemberSidebar;

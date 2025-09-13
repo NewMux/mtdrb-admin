@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiMessageSquare, FiCheck, FiX as FiXIcon, FiClock, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiMessageSquare,
+  FiCheck,
+  FiX as FiXIcon,
+  FiClock,
+  FiShield,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerRequestsModalProps {
@@ -12,7 +19,7 @@ interface TrainerRequestsModalProps {
 const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [response, setResponse] = useState("");
@@ -23,45 +30,48 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
       id: 1,
       type: "schedule_change",
       title: "Request for Schedule Adjustment",
-      description: "I would like to adjust my Monday morning class from 8 AM to 9 AM to accommodate my commute.",
+      description:
+        "I would like to adjust my Monday morning class from 8 AM to 9 AM to accommodate my commute.",
       status: "pending",
       priority: "medium",
       createdAt: "2024-01-20T10:00:00Z",
-      trainer: "John Doe"
+      trainer: "John Doe",
     },
     {
       id: 2,
       type: "equipment",
       title: "Additional Equipment Request",
-      description: "Need additional yoga mats and blocks for the advanced class. Current inventory is insufficient.",
+      description:
+        "Need additional yoga mats and blocks for the advanced class. Current inventory is insufficient.",
       status: "approved",
       priority: "high",
       createdAt: "2024-01-19T14:30:00Z",
-      trainer: "John Doe"
+      trainer: "John Doe",
     },
     {
       id: 3,
       type: "training",
       title: "Professional Development Request",
-      description: "Requesting approval to attend the Advanced Yoga Certification workshop next month.",
+      description:
+        "Requesting approval to attend the Advanced Yoga Certification workshop next month.",
       status: "pending",
       priority: "low",
       createdAt: "2024-01-18T09:15:00Z",
-      trainer: "John Doe"
-    }
+      trainer: "John Doe",
+    },
   ];
 
   const handleApprove = async (requestId: number) => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
   };
 
   const handleReject = async (requestId: number) => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
   };
 
@@ -103,15 +113,23 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Active Requests:</span>
-                <span className="font-medium text-orange-600 dark:text-orange-400">2 Pending</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Active Requests:
+                </span>
+                <span className="font-medium text-orange-600 dark:text-orange-400">
+                  2 Pending
+                </span>
               </div>
             </div>
           </div>
@@ -154,8 +172,9 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                     AI Request Analysis
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    This trainer has a 95% approval rate for reasonable requests. 
-                    Consider fast-tracking schedule and equipment requests to maintain satisfaction.
+                    This trainer has a 95% approval rate for reasonable
+                    requests. Consider fast-tracking schedule and equipment
+                    requests to maintain satisfaction.
                   </p>
                 </div>
               </div>
@@ -169,29 +188,36 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockRequests.map((request) => (
-                <div key={request.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={request.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {request.title}
                         </h4>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          request.priority === 'high' 
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            : request.priority === 'medium'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            request.priority === "high"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              : request.priority === "medium"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          }`}
+                        >
                           {request.priority}
                         </span>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          request.status === 'approved' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : request.status === 'rejected'
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            request.status === "approved"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : request.status === "rejected"
+                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          }`}
+                        >
                           {request.status}
                         </span>
                       </div>
@@ -251,4 +277,4 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
   );
 };
 
-export default TrainerRequestsModal; 
+export default TrainerRequestsModal;

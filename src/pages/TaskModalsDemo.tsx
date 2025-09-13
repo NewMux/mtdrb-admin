@@ -1,6 +1,18 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiPlay, FiEdit, FiTrash2, FiCheck, FiPause, FiUser, FiDownload, FiSettings, FiUsers, FiBell } from 'react-icons/fi';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiPlay,
+  FiEdit,
+  FiTrash2,
+  FiCheck,
+  FiPause,
+  FiUser,
+  FiDownload,
+  FiSettings,
+  FiUsers,
+  FiBell,
+  FiTrendingUp,
+} from "react-icons/fi";
 import {
   AddTaskModal,
   EditTaskModal,
@@ -14,107 +26,110 @@ import {
   EnableAutoAssignmentModal,
   EnablePrioritySortingModal,
   EnableDeadlineRemindersModal,
-} from '../components/tasks/modals';
+} from "../components/tasks/modals";
 
 const TaskModalsDemo: React.FC = () => {
   const [isPro, setIsPro] = React.useState(false);
-  const [activeModals, setActiveModals] = React.useState<Record<string, boolean>>({});
+  const [activeModals, setActiveModals] = React.useState<
+    Record<string, boolean>
+  >({});
 
   const openModal = (modalName: string) => {
-    setActiveModals(prev => ({ ...prev, [modalName]: true }));
+    setActiveModals((prev) => ({ ...prev, [modalName]: true }));
   };
 
   const closeModal = (modalName: string) => {
-    setActiveModals(prev => ({ ...prev, [modalName]: false }));
+    setActiveModals((prev) => ({ ...prev, [modalName]: false }));
   };
 
   const taskModals = [
     {
-      name: 'AddTaskModal',
-      title: 'Add Task',
-      description: 'Create new task with smart defaults and AI suggestions',
+      name: "AddTaskModal",
+      title: "Add Task",
+      description: "Create new task with smart defaults and smart suggestions",
       icon: FiPlay,
-      color: 'bg-green-500',
+      color: "bg-green-500",
     },
     {
-      name: 'EditTaskModal',
-      title: 'Edit Task',
-      description: 'Edit existing task with history tracking and smart warnings',
+      name: "EditTaskModal",
+      title: "Edit Task",
+      description:
+        "Edit existing task with history tracking and smart warnings",
       icon: FiEdit,
-      color: 'bg-blue-500',
+      color: "bg-blue-500",
     },
     {
-      name: 'DeleteTaskModal',
-      title: 'Delete Task',
-      description: 'Delete or archive task with automation warnings',
+      name: "DeleteTaskModal",
+      title: "Delete Task",
+      description: "Delete or archive task with automation warnings",
       icon: FiTrash2,
-      color: 'bg-red-500',
+      color: "bg-red-500",
     },
     {
-      name: 'StartTaskModal',
-      title: 'Start Task',
-      description: 'Start task with timer and status transition options',
+      name: "StartTaskModal",
+      title: "Start Task",
+      description: "Start task with timer and status transition options",
       icon: FiPlay,
-      color: 'bg-green-500',
+      color: "bg-green-500",
     },
     {
-      name: 'CompleteTaskModal',
-      title: 'Complete Task',
-      description: 'Mark task as complete with outcome tracking',
+      name: "CompleteTaskModal",
+      title: "Complete Task",
+      description: "Mark task as complete with outcome tracking",
       icon: FiCheck,
-      color: 'bg-green-500',
+      color: "bg-green-500",
     },
     {
-      name: 'PauseTaskModal',
-      title: 'Pause Task',
-      description: 'Pause task with reasons and smart reminders',
+      name: "PauseTaskModal",
+      title: "Pause Task",
+      description: "Pause task with reasons and smart reminders",
       icon: FiPause,
-      color: 'bg-yellow-500',
+      color: "bg-yellow-500",
     },
     {
-      name: 'AssignTaskModal',
-      title: 'Assign Task',
-      description: 'Assign task with smart suggestions and role filtering',
+      name: "AssignTaskModal",
+      title: "Assign Task",
+      description: "Assign task with smart suggestions and role filtering",
       icon: FiUser,
-      color: 'bg-purple-500',
+      color: "bg-purple-500",
     },
     {
-      name: 'ExportTaskDataModal',
-      title: 'Export Task Data',
-      description: 'Export task data with filters and smart insights',
+      name: "ExportTaskDataModal",
+      title: "Export Task Data",
+      description: "Export task data with filters and smart insights",
       icon: FiDownload,
-      color: 'bg-indigo-500',
+      color: "bg-indigo-500",
     },
   ];
 
   const automationModals = [
     {
-      name: 'SetupTaskAutomationModal',
-      title: 'Setup Task Automation',
-      description: 'Create automated task workflows with templates',
+      name: "SetupTaskAutomationModal",
+      title: "Setup Task Automation",
+      description: "Create automated task workflows with templates",
       icon: FiSettings,
-      color: 'bg-orange-500',
+      color: "bg-orange-500",
     },
     {
-      name: 'EnableAutoAssignmentModal',
-      title: 'Enable Auto Assignment',
-      description: 'Configure automatic task assignment logic',
+      name: "EnableAutoAssignmentModal",
+      title: "Enable Auto Assignment",
+      description: "Configure automatic task assignment logic",
       icon: FiUsers,
-      color: 'bg-purple-500',
+      color: "bg-purple-500",
     },
     {
-      name: 'EnablePrioritySortingModal',
-      title: 'Enable Priority Sorting',
-      description: 'Auto-sort tasks based on deadlines and impact',
-      icon: FiSortAsc,
-      color: 'bg-blue-500',
+      name: "EnablePrioritySortingModal",
+      title: "Enable Priority Sorting",
+      description: "Auto-sort tasks based on deadlines and impact",
+      icon: FiTrendingUp,
+      color: "bg-blue-500",
     },
     {
-      name: 'EnableDeadlineRemindersModal',
-      title: 'Enable Deadline Reminders',
-      description: 'Configure deadline notifications and smart detection',
+      name: "EnableDeadlineRemindersModal",
+      title: "Enable Deadline Reminders",
+      description: "Configure deadline notifications and smart detection",
       icon: FiBell,
-      color: 'bg-red-500',
+      color: "bg-red-500",
     },
   ];
 
@@ -127,7 +142,8 @@ const TaskModalsDemo: React.FC = () => {
             Task Management Modals Demo
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Interactive demo of all smart task management modals with Apple-inspired design
+            Interactive demo of all smart task management modals with
+            Apple-inspired design
           </p>
         </div>
 
@@ -167,7 +183,9 @@ const TaskModalsDemo: React.FC = () => {
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
               >
                 <div className="flex items-start space-x-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${modal.color} text-white`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${modal.color} text-white`}
+                  >
                     <modal.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
@@ -204,7 +222,9 @@ const TaskModalsDemo: React.FC = () => {
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
               >
                 <div className="flex items-start space-x-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${modal.color} text-white`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${modal.color} text-white`}
+                  >
                     <modal.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
@@ -230,79 +250,79 @@ const TaskModalsDemo: React.FC = () => {
         {/* Modal Renderers */}
         <AddTaskModal
           open={activeModals.AddTaskModal || false}
-          onClose={() => closeModal('AddTaskModal')}
+          onClose={() => closeModal("AddTaskModal")}
           isPro={isPro}
         />
 
         <EditTaskModal
           open={activeModals.EditTaskModal || false}
-          onClose={() => closeModal('EditTaskModal')}
+          onClose={() => closeModal("EditTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <DeleteTaskModal
           open={activeModals.DeleteTaskModal || false}
-          onClose={() => closeModal('DeleteTaskModal')}
+          onClose={() => closeModal("DeleteTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <StartTaskModal
           open={activeModals.StartTaskModal || false}
-          onClose={() => closeModal('StartTaskModal')}
+          onClose={() => closeModal("StartTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <CompleteTaskModal
           open={activeModals.CompleteTaskModal || false}
-          onClose={() => closeModal('CompleteTaskModal')}
+          onClose={() => closeModal("CompleteTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <PauseTaskModal
           open={activeModals.PauseTaskModal || false}
-          onClose={() => closeModal('PauseTaskModal')}
+          onClose={() => closeModal("PauseTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <AssignTaskModal
           open={activeModals.AssignTaskModal || false}
-          onClose={() => closeModal('AssignTaskModal')}
+          onClose={() => closeModal("AssignTaskModal")}
           taskId="1"
           isPro={isPro}
         />
 
         <ExportTaskDataModal
           open={activeModals.ExportTaskDataModal || false}
-          onClose={() => closeModal('ExportTaskDataModal')}
+          onClose={() => closeModal("ExportTaskDataModal")}
           isPro={isPro}
         />
 
         <SetupTaskAutomationModal
           open={activeModals.SetupTaskAutomationModal || false}
-          onClose={() => closeModal('SetupTaskAutomationModal')}
+          onClose={() => closeModal("SetupTaskAutomationModal")}
           isPro={isPro}
         />
 
         <EnableAutoAssignmentModal
           open={activeModals.EnableAutoAssignmentModal || false}
-          onClose={() => closeModal('EnableAutoAssignmentModal')}
+          onClose={() => closeModal("EnableAutoAssignmentModal")}
           isPro={isPro}
         />
 
         <EnablePrioritySortingModal
           open={activeModals.EnablePrioritySortingModal || false}
-          onClose={() => closeModal('EnablePrioritySortingModal')}
+          onClose={() => closeModal("EnablePrioritySortingModal")}
           isPro={isPro}
         />
 
         <EnableDeadlineRemindersModal
           open={activeModals.EnableDeadlineRemindersModal || false}
-          onClose={() => closeModal('EnableDeadlineRemindersModal')}
+          onClose={() => closeModal("EnableDeadlineRemindersModal")}
           isPro={isPro}
         />
       </div>
@@ -310,4 +330,4 @@ const TaskModalsDemo: React.FC = () => {
   );
 };
 
-export default TaskModalsDemo; 
+export default TaskModalsDemo;

@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiAlertCircle, FiCheck, FiChevronDown } from 'react-icons/fi';
+import React from "react";
+import { FiAlertCircle, FiCheck, FiChevronDown } from "react-icons/fi";
 
 interface FormFieldProps {
   label: string;
@@ -8,7 +8,7 @@ interface FormFieldProps {
   onChange: (value: string) => void;
   error?: string;
   placeholder?: string;
-  type?: 'text' | 'email' | 'tel' | 'password';
+  type?: "text" | "email" | "tel" | "password";
   required?: boolean;
   disabled?: boolean;
 }
@@ -20,9 +20,9 @@ export const FormField: React.FC<FormFieldProps> = ({
   onChange,
   error,
   placeholder,
-  type = 'text',
+  type = "text",
   required = false,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -41,11 +41,12 @@ export const FormField: React.FC<FormFieldProps> = ({
           className={`
             w-full px-3 py-2 border rounded-lg transition-colors duration-200
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            ${error 
-              ? 'border-red-300 bg-red-50' 
-              : 'border-gray-300 hover:border-gray-400'
+            ${
+              error
+                ? "border-red-300 bg-red-50"
+                : "border-gray-300 hover:border-gray-400"
             }
-            ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
           `}
         />
         {error && (
@@ -63,6 +64,8 @@ export const FormField: React.FC<FormFieldProps> = ({
     </div>
   );
 };
+
+
 
 interface SelectFieldProps {
   label: string;
@@ -83,9 +86,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   onChange,
   options,
   error,
-  placeholder = 'Select an option',
+  placeholder = "Select an option",
   required = false,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -102,11 +105,12 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           className={`
             w-full px-3 py-2 border rounded-lg appearance-none transition-colors duration-200
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            ${error 
-              ? 'border-red-300 bg-red-50' 
-              : 'border-gray-300 hover:border-gray-400'
+            ${
+              error
+                ? "border-red-300 bg-red-50"
+                : "border-gray-300 hover:border-gray-400"
             }
-            ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
           `}
         >
           <option value="">{placeholder}</option>
@@ -151,7 +155,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   placeholder,
   rows = 3,
   required = false,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -169,11 +173,12 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
         className={`
           w-full px-3 py-2 border rounded-lg transition-colors duration-200 resize-none
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          ${error 
-            ? 'border-red-300 bg-red-50' 
-            : 'border-gray-300 hover:border-gray-400'
+          ${
+            error
+              ? "border-red-300 bg-red-50"
+              : "border-gray-300 hover:border-gray-400"
           }
-          ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+          ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
         `}
       />
       {error && (
@@ -201,7 +206,7 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   checked,
   onChange,
   description,
-  disabled = false
+  disabled = false,
 }) => {
   return (
     <div className="flex items-start space-x-3">
@@ -214,13 +219,9 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
         className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
       />
       <div className="flex-1">
-        <label className="text-sm font-medium text-gray-700">
-          {label}
-        </label>
+        <label className="text-sm font-medium text-gray-700">{label}</label>
         {description && (
-          <p className="text-sm text-gray-500 mt-1">
-            {description}
-          </p>
+          <p className="text-sm text-gray-500 mt-1">{description}</p>
         )}
       </div>
     </div>
@@ -238,19 +239,15 @@ export const FormSection: React.FC<FormSectionProps> = ({
   title,
   subtitle,
   children,
-  className = ''
+  className = "",
 }) => {
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        {subtitle && (
-          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
       </div>
-      <div className="space-y-4">
-        {children}
-      </div>
+      <div className="space-y-4">{children}</div>
     </div>
   );
 };
@@ -259,7 +256,9 @@ interface ValidationSummaryProps {
   errors: { field: string; message: string }[];
 }
 
-export const ValidationSummary: React.FC<ValidationSummaryProps> = ({ errors }) => {
+export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
+  errors,
+}) => {
   if (errors.length === 0) return null;
 
   return (
@@ -269,7 +268,10 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({ errors }) 
       </h4>
       <ul className="space-y-1">
         {errors.map((error, index) => (
-          <li key={index} className="text-sm text-red-700 flex items-center gap-1">
+          <li
+            key={index}
+            className="text-sm text-red-700 flex items-center gap-1"
+          >
             <FiAlertCircle className="h-3 w-3" />
             {error.message}
           </li>
@@ -292,4 +294,17 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ message }) => {
       </div>
     </div>
   );
-}; 
+};
+
+// Create a default export that includes all form components
+const SmartFormComponents = {
+  FormField,
+  SelectField,
+  TextAreaField,
+  CheckboxField,
+  FormSection,
+  ValidationSummary,
+  SuccessMessage,
+};
+
+export default SmartFormComponents;

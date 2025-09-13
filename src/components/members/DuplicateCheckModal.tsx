@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { FiX, FiAlertTriangle, FiTrash2, FiGitMerge } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
+import React, { useState } from "react";
+import { FiX, FiAlertTriangle, FiTrash2, FiGitMerge } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
 
 interface Member {
   id: string;
@@ -27,10 +27,17 @@ interface DuplicateGroup {
   members: Member[];
 }
 
-export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onActionComplete }: DuplicateCheckModalProps) {
-  const [selectedDuplicates, setSelectedDuplicates] = useState<Set<string>>(new Set());
+export default function DuplicateCheckModal({
+  isOpen,
+  onClose,
+  duplicates,
+  onActionComplete,
+}: DuplicateCheckModalProps) {
+  const [selectedDuplicates, setSelectedDuplicates] = useState<Set<string>>(
+    new Set(),
+  );
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionType, setActionType] = useState<'merge' | 'delete' | null>(null);
+  const [actionType, setActionType] = useState<"merge" | "delete" | null>(null);
 
   if (!isOpen) return null;
 
@@ -39,11 +46,11 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
   // Convert duplicates object to a more manageable format
   const duplicateGroups: DuplicateGroup[] = [];
   Object.entries(duplicates).forEach(([field, groups]) => {
-    groups.forEach(group => {
+    groups.forEach((group) => {
       duplicateGroups.push({
         field,
         value: group.value,
-        members: group.members
+        members: group.members,
       });
     });
   });
@@ -62,43 +69,59 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
     if (selectedDuplicates.size === duplicateGroups.length) {
       setSelectedDuplicates(new Set());
     } else {
-      setSelectedDuplicates(new Set(duplicateGroups.map(group => `${group.field}:${group.value}`)));
+      setSelectedDuplicates(
+        new Set(
+          duplicateGroups.map((group) => `${group.field}:${group.value}`),
+        ),
+      );
     }
   };
 
   const handleMerge = async () => {
     setActionLoading(true);
-    setActionType('merge');
-    
+    setActionType("merge");
+
     try {
-      const mergeOperations: Array<{ primaryId: string; duplicateIds: string[]; mergedData: Partial<Member> }> = [];
-      
+      const mergeOperations: Array<{
+        primaryId: string;
+        duplicateIds: string[];
+        mergedData: Partial<Member>;
+      }> = [];
+
       // Prepare merge operations for each selected duplicate group
-      selectedDuplicates.forEach(duplicateKey => {
-        const [field, value] = duplicateKey.split(':');
-        const group = duplicateGroups.find(g => g.field === field && g.value === value);
-        
+      selectedDuplicates.forEach((duplicateKey) => {
+        const [field, value] = duplicateKey.split(":");
+        const group = duplicateGroups.find(
+          (g) => g.field === field && g.value === value,
+        );
+
         if (group && group.members.length > 1) {
           const primaryMember = group.members[0]; // Keep the first member as primary
           const duplicateMembers = group.members.slice(1);
-          
+
           // Merge data from all members, keeping the most complete information
           const mergedData: Partial<Member> = {
             name: primaryMember.name,
-            email: primaryMember.email || duplicateMembers.find(m => m.email)?.email || undefined,
-            phone: primaryMember.phone || duplicateMembers.find(m => m.phone)?.phone || undefined,
+            email:
+              primaryMember.email ||
+              duplicateMembers.find((m) => m.email)?.email ||
+              undefined,
+            phone:
+              primaryMember.phone ||
+              duplicateMembers.find((m) => m.phone)?.phone ||
+              undefined,
           };
-          
+
           mergeOperations.push({
             primaryId: primaryMember.id,
-            duplicateIds: duplicateMembers.map(m => m.id),
-            mergedData
+            duplicateIds: duplicateMembers.map((m) => m.id),
+            mergedData,
           });
         }
       });
 
       if (mergeOperations.length === 0) {
-        alert('No duplicates selected for merging.');
+        alert("No duplicates selected for merging.");
         return;
       }
 
@@ -106,9 +129,9 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
       for (const operation of mergeOperations) {
         // Update the primary member with merged data
         const { error: updateError } = await supabase
-          .from('members')
+          .from("members")
           .update(operation.mergedData)
-          .eq('id', operation.primaryId);
+          .eq("id", operation.primaryId);
 
         if (updateError) {
           throw updateError;
@@ -117,9 +140,9 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
         // Delete the duplicate members
         if (operation.duplicateIds.length > 0) {
           const { error: deleteError } = await supabase
-            .from('members')
+            .from("members")
             .delete()
-            .in('id', operation.duplicateIds);
+            .in("id", operation.duplicateIds);
 
           if (deleteError) {
             throw deleteError;
@@ -127,14 +150,19 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
         }
       }
 
-      const totalDeleted = mergeOperations.reduce((sum, op) => sum + op.duplicateIds.length, 0);
-      alert(`Successfully merged ${mergeOperations.length} duplicate group(s) and deleted ${totalDeleted} duplicate member(s).`);
-      
+      const totalDeleted = mergeOperations.reduce(
+        (sum, op) => sum + op.duplicateIds.length,
+        0,
+      );
+      alert(
+        `Successfully merged ${mergeOperations.length} duplicate group(s) and deleted ${totalDeleted} duplicate member(s).`,
+      );
+
       onActionComplete?.();
       onClose();
     } catch (error) {
-      console.error('Error merging duplicates:', error);
-      alert('Failed to merge duplicates. Please try again.');
+      console.error("Error merging duplicates:", error);
+      alert("Failed to merge duplicates. Please try again.");
     } finally {
       setActionLoading(false);
       setActionType(null);
@@ -142,50 +170,58 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete the selected duplicate members? This action cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete the selected duplicate members? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     setActionLoading(true);
-    setActionType('delete');
-    
+    setActionType("delete");
+
     try {
       // Get all member IDs to delete from selected duplicates
       const memberIdsToDelete: string[] = [];
-      
-      selectedDuplicates.forEach(duplicateKey => {
-        const [field, value] = duplicateKey.split(':');
-        const group = duplicateGroups.find(g => g.field === field && g.value === value);
+
+      selectedDuplicates.forEach((duplicateKey) => {
+        const [field, value] = duplicateKey.split(":");
+        const group = duplicateGroups.find(
+          (g) => g.field === field && g.value === value,
+        );
         if (group) {
           // Add all member IDs except the first one (keep one as primary)
-          group.members.slice(1).forEach(member => {
+          group.members.slice(1).forEach((member) => {
             memberIdsToDelete.push(member.id);
           });
         }
       });
 
       if (memberIdsToDelete.length === 0) {
-        alert('No members selected for deletion.');
+        alert("No members selected for deletion.");
         return;
       }
 
       // Delete the duplicate members
       const { error } = await supabase
-        .from('members')
+        .from("members")
         .delete()
-        .in('id', memberIdsToDelete);
+        .in("id", memberIdsToDelete);
 
       if (error) {
         throw error;
       }
 
-      alert(`Successfully deleted ${memberIdsToDelete.length} duplicate member(s).`);
-      
+      alert(
+        `Successfully deleted ${memberIdsToDelete.length} duplicate member(s).`,
+      );
+
       onActionComplete?.();
       onClose();
     } catch (error) {
-      console.error('Error deleting duplicates:', error);
-      alert('Failed to delete duplicates. Please try again.');
+      console.error("Error deleting duplicates:", error);
+      alert("Failed to delete duplicates. Please try again.");
     } finally {
       setActionLoading(false);
       setActionType(null);
@@ -205,12 +241,14 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FiAlertTriangle 
-              size={24} 
-              className={hasDuplicates ? "text-yellow-500" : "text-green-500"} 
+            <FiAlertTriangle
+              size={24}
+              className={hasDuplicates ? "text-yellow-500" : "text-green-500"}
             />
             <h2 className="text-xl font-semibold">
-              {hasDuplicates ? "Duplicate Members Found" : "No Duplicates Found"}
+              {hasDuplicates
+                ? "Duplicate Members Found"
+                : "No Duplicates Found"}
             </h2>
           </div>
           <button
@@ -232,17 +270,21 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={selectedDuplicates.size === duplicateGroups.length && duplicateGroups.length > 0}
+                      checked={
+                        selectedDuplicates.size === duplicateGroups.length &&
+                        duplicateGroups.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       disabled={actionLoading}
                     />
                     <span className="text-sm font-medium text-gray-700">
-                      Select All ({selectedDuplicates.size}/{duplicateGroups.length})
+                      Select All ({selectedDuplicates.size}/
+                      {duplicateGroups.length})
                     </span>
                   </label>
                 </div>
-                
+
                 {selectedDuplicates.size > 0 && (
                   <div className="flex items-center gap-2">
                     <button
@@ -250,7 +292,7 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
                       disabled={actionLoading}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      {actionLoading && actionType === 'merge' ? (
+                      {actionLoading && actionType === "merge" ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       ) : (
                         <FiGitMerge size={16} />
@@ -262,7 +304,7 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
                       disabled={actionLoading}
                       className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      {actionLoading && actionType === 'delete' ? (
+                      {actionLoading && actionType === "delete" ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       ) : (
                         <FiTrash2 size={16} />
@@ -277,9 +319,12 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
               {duplicateGroups.map((group, index) => {
                 const groupKey = `${group.field}:${group.value}`;
                 const isSelected = selectedDuplicates.has(groupKey);
-                
+
                 return (
-                  <div key={index} className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-xl overflow-hidden"
+                  >
                     <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -291,7 +336,9 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
                             disabled={actionLoading}
                           />
                           <span className="font-medium text-gray-900">
-                            {group.field.charAt(0).toUpperCase() + group.field.slice(1)}: {group.value}
+                            {group.field.charAt(0).toUpperCase() +
+                              group.field.slice(1)}
+                            : {group.value}
                           </span>
                           <span className="text-sm text-gray-500">
                             ({group.members.length} members)
@@ -306,14 +353,23 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
                             key={memberIndex}
                             className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
                           >
-                            <FiAlertTriangle size={16} className="text-yellow-600 flex-shrink-0" />
+                            <FiAlertTriangle
+                              size={16}
+                              className="text-yellow-600 flex-shrink-0"
+                            />
                             <div className="flex-1">
-                              <div className="font-medium text-yellow-800">{member.name}</div>
+                              <div className="font-medium text-yellow-800">
+                                {member.name}
+                              </div>
                               {member.email && (
-                                <div className="text-sm text-yellow-700">Email: {member.email}</div>
+                                <div className="text-sm text-yellow-700">
+                                  Email: {member.email}
+                                </div>
                               )}
                               {member.phone && (
-                                <div className="text-sm text-yellow-700">Phone: {member.phone}</div>
+                                <div className="text-sm text-yellow-700">
+                                  Phone: {member.phone}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -344,4 +400,4 @@ export default function DuplicateCheckModal({ isOpen, onClose, duplicates, onAct
       </div>
     </div>
   );
-} 
+}

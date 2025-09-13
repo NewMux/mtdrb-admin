@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiFileText, FiPlus, FiEdit, FiTrash2, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiFileText,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiShield,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerNotesModalProps {
@@ -12,7 +19,7 @@ interface TrainerNotesModalProps {
 const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [notes, setNotes] = useState("");
   const [noteType, setNoteType] = useState("");
@@ -23,35 +30,38 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
   const mockNotes = [
     {
       id: 1,
-      content: "Excellent performance in morning classes. Members consistently rate 4.8+ stars.",
+      content:
+        "Excellent performance in morning classes. Members consistently rate 4.8+ stars.",
       type: "performance",
       isPrivate: false,
       createdAt: "2024-01-20T10:00:00Z",
-      createdBy: "Admin"
+      createdBy: "Admin",
     },
     {
       id: 2,
-      content: "Requested additional training on advanced yoga techniques. Scheduled for next week.",
+      content:
+        "Requested additional training on advanced yoga techniques. Scheduled for next week.",
       type: "training",
       isPrivate: true,
       createdAt: "2024-01-19T14:30:00Z",
-      createdBy: "Manager"
+      createdBy: "Manager",
     },
     {
       id: 3,
-      content: "Great communication with members. Often receives positive feedback.",
+      content:
+        "Great communication with members. Often receives positive feedback.",
       type: "feedback",
       isPrivate: false,
       createdAt: "2024-01-18T09:15:00Z",
-      createdBy: "Admin"
-    }
+      createdBy: "Admin",
+    },
   ];
 
   const handleAddNote = async () => {
     if (!notes.trim() || !noteType) return;
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
     setNotes("");
     setNoteType("");
@@ -96,15 +106,23 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Active</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Status:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Active
+                </span>
               </div>
             </div>
           </div>
@@ -152,7 +170,10 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                   onChange={(e) => setIsPrivate(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="isPrivate"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Private note (only visible to managers)
                 </label>
               </div>
@@ -181,7 +202,8 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                     AI Suggestion
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Consider adding a note about the recent improvement in class attendance and member satisfaction scores.
+                    Consider adding a note about the recent improvement in class
+                    attendance and member satisfaction scores.
                   </p>
                 </div>
               </div>
@@ -195,7 +217,10 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockNotes.map((note) => (
-                <div key={note.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={note.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
@@ -213,7 +238,9 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
                         <span>By {note.createdBy}</span>
-                        <span>{new Date(note.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(note.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                     <div className="ml-4 flex space-x-2">
@@ -250,4 +277,4 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
   );
 };
 
-export default TrainerNotesModal; 
+export default TrainerNotesModal;

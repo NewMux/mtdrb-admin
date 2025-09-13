@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 interface ChartCardProps {
   title: string;
@@ -13,8 +13,8 @@ const ChartCard: React.FC<ChartCardProps> = ({
   title,
   subtitle,
   children,
-  className = '',
-  onClick
+  className = "",
+  onClick,
 }) => {
   return (
     <motion.div
@@ -26,7 +26,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
         border border-light-200 dark:border-dark-700 
         shadow-soft dark:shadow-lg
         transition-all duration-300 ease-out
-        ${onClick ? 'cursor-pointer hover:shadow-medium' : ''}
+        ${onClick ? "cursor-pointer hover:shadow-medium" : ""}
         ${className}
       `}
       onClick={onClick}
@@ -41,11 +41,9 @@ const ChartCard: React.FC<ChartCardProps> = ({
           </p>
         )}
       </div>
-      <div className="relative">
-        {children}
-      </div>
+      <div className="relative">{children}</div>
     </motion.div>
   );
 };
 
-export default ChartCard; 
+export default ChartCard;

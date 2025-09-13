@@ -13,4 +13,10 @@ export { default as SendClassPromotionModal } from "./SendClassPromotionModal";
 
 // Base Components
 export { default as SmartModal } from "./SmartModal";
-export { FormField, SelectField, FormSection, AIRecommendationCard, ConflictAlert } from "./SmartFormComponents"; 
+export {
+  FormField,
+  SelectField,
+  FormSection,
+  AIRecommendationCard,
+  ConflictAlert,
+} from "./SmartFormComponents";

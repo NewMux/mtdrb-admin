@@ -1,0 +1,10 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#1f2937"/>
+  <rect x="50" y="50" width="700" height="500" fill="#374151" stroke="#6b7280" stroke-width="2" rx="8"/>
+  <rect x="80" y="80" width="200" height="120" fill="#4b5563" rx="4"/>
+  <rect x="300" y="80" width="200" height="120" fill="#4b5563" rx="4"/>
+  <rect x="520" y="80" width="200" height="120" fill="#4b5563" rx="4"/>
+  <rect x="80" y="220" width="640" height="300" fill="#4b5563" rx="4"/>
+  <text x="400" y="380" text-anchor="middle" fill="#9ca3af" font-family="Arial" font-size="24">Idara Dashboard Preview</text>
+  <text x="400" y="410" text-anchor="middle" fill="#6b7280" font-family="Arial" font-size="14">Gym Management Interface</text>
+</svg> 

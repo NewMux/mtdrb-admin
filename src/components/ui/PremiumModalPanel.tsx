@@ -1,5 +1,5 @@
-import React from 'react';
-import { FiX } from 'react-icons/fi';
+import React from "react";
+import { FiX } from "react-icons/fi";
 
 interface PremiumModalPanelProps {
   open: boolean;
@@ -9,26 +9,37 @@ interface PremiumModalPanelProps {
   title?: string;
 }
 
-const PremiumModalPanel: React.FC<PremiumModalPanelProps> = ({ open, onClose, onSave, children, title }) => {
+const PremiumModalPanel: React.FC<PremiumModalPanelProps> = ({
+  open,
+  onClose,
+  onSave,
+  children,
+  title,
+}) => {
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end transition-all duration-500 ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+      className={`fixed inset-0 z-50 flex justify-end transition-all duration-500 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
       aria-modal="true"
       role="dialog"
     >
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/30 transition-opacity duration-500 ${open ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 bg-black/30 transition-opacity duration-500 ${open ? "opacity-100" : "opacity-0"}`}
         onClick={onClose}
       />
       {/* Panel */}
       <div
-        className={`relative h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-2xl flex flex-col transition-transform duration-500 ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`relative h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-2xl flex flex-col transition-transform duration-500 ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
         <div className="relative px-8 py-6 rounded-tl-2xl rounded-tr-none bg-gradient-to-r from-primary via-pink-500 to-indigo-500 text-white flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">{title || 'Premium Feature'}</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition">
+          <h2 className="text-2xl font-bold tracking-tight">
+            {title || "Premium Feature"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-white/10 transition"
+          >
             <FiX className="w-6 h-6" />
           </button>
         </div>
@@ -49,7 +60,7 @@ const PremiumModalPanel: React.FC<PremiumModalPanelProps> = ({ open, onClose, on
           <button
             onClick={onSave}
             className="px-6 py-2 rounded-xl font-semibold text-white bg-primary shadow-lg hover:shadow-xl transition relative focus:outline-none focus:ring-2 focus:ring-primary/50"
-            style={{ boxShadow: '0 0 16px 0 rgba(139,92,246,0.15)' }}
+            style={{ boxShadow: "0 0 16px 0 rgba(139,92,246,0.15)" }}
             type="button"
           >
             Save
@@ -60,4 +71,4 @@ const PremiumModalPanel: React.FC<PremiumModalPanelProps> = ({ open, onClose, on
   );
 };
 
-export default PremiumModalPanel; 
+export default PremiumModalPanel;

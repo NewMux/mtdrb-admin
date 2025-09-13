@@ -1,18 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { FiGift, FiPlus, FiSearch, FiFilter, FiPercent, FiDollarSign, FiCalendar, FiUsers, FiTrendingUp, FiBarChart, FiEdit, FiTrash2, FiEye, FiCopy, FiCheck, FiX } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
-import { usePageThemeContext } from '../contexts/PageThemeContext';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiGift,
+  FiBarChart2,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiMoreVertical,
+  FiSearch,
+  FiFilter,
+  FiCalendar,
+  FiClock,
+  FiTarget,
+  FiTrendingUp,
+  FiActivity,
+  FiCheckCircle,
+  FiXCircle,
+  FiAlertCircle,
+  FiStar,
+  FiHeart,
+  FiMessageSquare,
+  FiSettings,
+  FiX,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
+import { usePageThemeContext } from "../contexts/PageThemeContext";
 
 // Promotion Components
 import { PromoCodeDashboard } from "../components/promotions/PromoCodeDashboard";
 import { PromoCodeBuilder } from "../components/promotions/PromoCodeBuilder";
-import { PromoCodeAnalytics } from "../components/promotions/PromoCodeAnalytics";
+import PromoCodeAnalytics from "../components/promotions/PromoCodeAnalytics";
 import { PromoCodeManagement } from "../components/promotions/PromoCodeManagement";
 import { PromoCodeModals } from "../components/promotions/PromoCodeModals";
 
 export default function Promotions() {
   const { theme } = usePageThemeContext();
-  
+
   const [activeView, setActiveView] = useState("dashboard");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -22,7 +46,7 @@ export default function Promotions() {
   const tabs = [
     { label: "Dashboard", key: "dashboard", icon: <FiGift /> },
     { label: "Create", key: "create", icon: <FiPlus /> },
-    { label: "Analytics", key: "analytics", icon: <FiBarChart /> },
+    { label: "Analytics", key: "analytics", icon: <FiBarChart2 /> },
     { label: "Management", key: "management", icon: <FiEdit /> },
   ];
 
@@ -37,15 +61,15 @@ export default function Promotions() {
 
   const renderView = () => {
     switch (activeView) {
-      case "dashboard": 
+      case "dashboard":
         return <PromoCodeDashboard onEditPromoCode={handleEditPromoCode} />;
-      case "create": 
+      case "create":
         return <PromoCodeBuilder />;
-      case "analytics": 
+      case "analytics":
         return <PromoCodeAnalytics />;
-      case "management": 
+      case "management":
         return <PromoCodeManagement onEditPromoCode={handleEditPromoCode} />;
-      default: 
+      default:
         return null;
     }
   };
@@ -68,7 +92,9 @@ export default function Promotions() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Promo Codes</h1>
-              <p className="text-gray-600 mt-1">Create and manage discount codes for your business</p>
+              <p className="text-gray-600 mt-1">
+                Create and manage discount codes for your business
+              </p>
             </div>
             <div className="flex items-center space-x-3">
               <button

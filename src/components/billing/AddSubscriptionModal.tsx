@@ -1,22 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { FiX } from 'react-icons/fi';
-import { supabase } from '../../supabaseClient';
-import toast from 'react-hot-toast';
-import { 
-  AppleInput, 
-  AppleSelect, 
-  AppleTextarea
-} from '../AppleStyleModal';
-import { PaymentMethodType } from '../../types';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiDollarSign, FiCalendar, FiUsers, FiCheck, FiX, FiEdit2, FiTrash2 } from 'react-icons/fi';
-import { SmartModal } from '../ui/SmartModal';
-import { SmartButton } from '../ui/DesignSystem';
+import React, { useEffect, useState } from "react";
+import { supabase } from "../../supabaseClient";
+import toast from "react-hot-toast";
+import {
+  AppleInput,
+  AppleSelect,
+  AppleTextarea,
+  AppleToggle,
+} from "../AppleStyleModal";
+import { PaymentMethodType } from "../../types";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiDollarSign,
+  FiCalendar,
+  FiUsers,
+  FiCheck,
+  FiX,
+  FiEdit2,
+  FiTrash2,
+  FiAlertCircle,
+} from "react-icons/fi";
+import { SmartModal } from "../ui/SmartModal";
+import { SmartButton } from "../ui/DesignSystem";
 
 // Add subscription related types
-type subscription_status = 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Draft';
-type billing_cycle = 'Weekly' | 'Monthly' | 'Annually';
-type subscription_plan_type = 'Membership' | 'PT' | 'Class Pack' | 'Online';
+type subscription_status =
+  | "Active"
+  | "Paused"
+  | "Cancelled"
+  | "Expired"
+  | "Draft";
+type billing_cycle = "Weekly" | "Monthly" | "Annually";
+type subscription_plan_type = "Membership" | "PT" | "Class Pack" | "Online";
 
 interface Subscription {
   id: string;
@@ -34,6 +48,13 @@ interface Subscription {
   auto_renew: boolean;
   payment_method: PaymentMethodType | null;
   vat_percentage: number;
+  name?: string;
+  price?: number;
+  duration_months?: number;
+  description?: string;
+  auto_renewal?: boolean;
+  trial_enabled?: boolean;
+  trial_days?: number;
 }
 
 interface Member {
@@ -61,28 +82,43 @@ export function AddSubscriptionModal({
   onClose,
   onSave,
   tenantId,
-  subscription
+  subscription,
 }: AddSubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  
+
   const [formData, setFormData] = useState({
-    member_id: '',
+    member_id: "",
     plan_id: null as string | null,
-    plan_name: '',
-    plan_type: 'Membership' as subscription_plan_type,
-    status: 'Draft' as subscription_status,
-    start_date: '',
+    plan_name: "",
+    plan_type: "Membership" as subscription_plan_type,
+    status: "Draft" as subscription_status,
+    start_date: "",
     end_date: null as string | null,
     next_billing_date: null as string | null,
-    billing_cycle: 'Monthly' as billing_cycle,
+    billing_cycle: "Monthly" as billing_cycle,
     amount: 0,
-    currency: 'BHD',
+    currency: "BHD",
     auto_renew: true,
     payment_method: null as PaymentMethodType | null,
-    vat_percentage: 0
+    vat_percentage: 0,
+    name: "",
+    price: 0,
+    duration_months: 1,
+    description: "",
+    auto_renewal: true,
+    trial_enabled: false,
+    trial_days: 0,
   });
+
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [features, setFeatures] = useState([
+    { name: "Gym Access", included: true, limit: "Unlimited" },
+    { name: "Group Classes", included: true, limit: "Unlimited" },
+    { name: "Personal Training", included: false, limit: "0" },
+    { name: "Online Classes", included: false, limit: "0" },
+  ]);
 
   useEffect(() => {
     if (subscription) {
@@ -100,24 +136,24 @@ export function AddSubscriptionModal({
         currency: subscription.currency,
         auto_renew: subscription.auto_renew,
         payment_method: subscription.payment_method,
-        vat_percentage: subscription.vat_percentage
+        vat_percentage: subscription.vat_percentage,
       });
     } else {
       setFormData({
-        member_id: '',
+        member_id: "",
         plan_id: null,
-        plan_name: '',
-        plan_type: 'Membership',
-        status: 'Draft',
-        start_date: '',
+        plan_name: "",
+        plan_type: "Membership",
+        status: "Draft",
+        start_date: "",
         end_date: null,
         next_billing_date: null,
-        billing_cycle: 'Monthly',
+        billing_cycle: "Monthly",
         amount: 0,
-        currency: 'BHD',
+        currency: "BHD",
         auto_renew: true,
         payment_method: null,
-        vat_percentage: 0
+        vat_percentage: 0,
       });
     }
   }, [subscription]);
@@ -126,30 +162,30 @@ export function AddSubscriptionModal({
     const fetchMembers = async () => {
       try {
         const { data, error } = await supabase
-          .from('members')
-          .select('id, name, email')
-          .eq('tenant_id', tenantId);
+          .from("members")
+          .select("id, name, email")
+          .eq("tenant_id", tenantId);
 
         if (error) throw error;
         setMembers(data || []);
       } catch (error) {
-        console.error('Error fetching members:', error);
-        toast.error('Failed to fetch members');
+        console.error("Error fetching members:", error);
+        toast.error("Failed to fetch members");
       }
     };
 
     const fetchPlans = async () => {
       try {
         const { data, error } = await supabase
-          .from('plans')
-          .select('id, name, price')
-          .eq('tenant_id', tenantId);
+          .from("plans")
+          .select("id, name, price")
+          .eq("tenant_id", tenantId);
 
         if (error) throw error;
         setPlans(data || []);
       } catch (error) {
-        console.error('Error fetching plans:', error);
-        toast.error('Failed to fetch plans');
+        console.error("Error fetching plans:", error);
+        toast.error("Failed to fetch plans");
       }
     };
 
@@ -166,35 +202,38 @@ export function AddSubscriptionModal({
     try {
       // Validate form data
       if (!formData.member_id || !formData.plan_id || !formData.start_date) {
-        throw new Error('Please fill in all required fields');
+        throw new Error("Please fill in all required fields");
       }
 
       if (formData.amount <= 0) {
-        throw new Error('Amount must be greater than 0');
+        throw new Error("Amount must be greater than 0");
       }
 
-      if (formData.end_date && new Date(formData.end_date) <= new Date(formData.start_date)) {
-        throw new Error('End date must be after start date');
+      if (
+        formData.end_date &&
+        new Date(formData.end_date) <= new Date(formData.start_date)
+      ) {
+        throw new Error("End date must be after start date");
       }
 
       // Check for existing active subscriptions
       const { data: existingSubscriptions, error: checkError } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('member_id', formData.member_id)
-        .eq('status', 'active')
-        .neq('id', subscription?.id || '');
+        .from("subscriptions")
+        .select("id")
+        .eq("member_id", formData.member_id)
+        .eq("status", "active")
+        .neq("id", subscription?.id || "");
 
       if (checkError) throw checkError;
 
       if (existingSubscriptions && existingSubscriptions.length > 0) {
-        throw new Error('Member already has an active subscription');
+        throw new Error("Member already has an active subscription");
       }
 
       // Proceed with save/update
       if (subscription) {
         const { error } = await supabase
-          .from('subscriptions')
+          .from("subscriptions")
           .update({
             member_id: formData.member_id,
             plan_id: formData.plan_id,
@@ -203,52 +242,72 @@ export function AddSubscriptionModal({
             end_date: formData.end_date || null,
             billing_cycle: formData.billing_cycle,
             amount: formData.amount,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', subscription.id);
+          .eq("id", subscription.id);
 
         if (error) throw error;
-        toast.success('Subscription updated successfully');
+        toast.success("Subscription updated successfully");
       } else {
-        const { error } = await supabase
-          .from('subscriptions')
-          .insert([
-            {
-              tenant_id: tenantId,
-              member_id: formData.member_id,
-              plan_id: formData.plan_id,
-              status: formData.status,
-              start_date: formData.start_date,
-              end_date: formData.end_date || null,
-              billing_cycle: formData.billing_cycle,
-              amount: formData.amount
-            }
-          ]);
+        const { error } = await supabase.from("subscriptions").insert([
+          {
+            tenant_id: tenantId,
+            member_id: formData.member_id,
+            plan_id: formData.plan_id,
+            status: formData.status,
+            start_date: formData.start_date,
+            end_date: formData.end_date || null,
+            billing_cycle: formData.billing_cycle,
+            amount: formData.amount,
+          },
+        ]);
 
         if (error) throw error;
-        toast.success('Subscription created successfully');
+        toast.success("Subscription created successfully");
       }
 
       onSave();
       onClose();
     } catch (error) {
-      console.error('Error saving subscription:', error);
-      toast.error((error as Error).message || 'Failed to save subscription');
+      console.error("Error saving subscription:", error);
+      toast.error((error as Error).message || "Failed to save subscription");
     } finally {
       setLoading(false);
     }
   };
 
   // Add form validation
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleFeatureChange = (
+    index: number,
+    field: "included" | "limit",
+    value: any,
+  ) => {
+    setFeatures((prev) =>
+      prev.map((feature, i) =>
+        i === index ? { ...feature, [field]: value } : feature,
+      ),
+    );
+  };
+
   const validateForm = () => {
     const errors: string[] = [];
-    
-    if (!formData.member_id) errors.push('Member is required');
-    if (!formData.plan_id) errors.push('Plan is required');
-    if (!formData.start_date) errors.push('Start date is required');
-    if (formData.amount <= 0) errors.push('Amount must be greater than 0');
-    if (formData.end_date && new Date(formData.end_date) <= new Date(formData.start_date)) {
-      errors.push('End date must be after start date');
+
+    if (!formData.member_id) errors.push("Member is required");
+    if (!formData.plan_id) errors.push("Plan is required");
+    if (!formData.start_date) errors.push("Start date is required");
+    if (formData.amount <= 0) errors.push("Amount must be greater than 0");
+    if (
+      formData.end_date &&
+      new Date(formData.end_date) <= new Date(formData.start_date)
+    ) {
+      errors.push("End date must be after start date");
     }
 
     return errors;
@@ -263,16 +322,31 @@ export function AddSubscriptionModal({
 
   return (
     <SmartModal
-      open={isOpen}
+      isOpen={isOpen}
       onClose={onClose}
-      onAction={handleSubmit}
       title="Add New Subscription"
+      footer={
+        <div className="flex justify-end space-x-3">
+          <SmartButton variant="secondary" onClick={onClose}>
+            Cancel
+          </SmartButton>
+          <SmartButton
+            variant="primary"
+            onClick={handleSubmit}
+            loading={loading}
+          >
+            Save Subscription
+          </SmartButton>
+        </div>
+      }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Subscription Details */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Subscription Details</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Subscription Details
+          </h3>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
               label="Plan Name"
@@ -327,24 +401,33 @@ export function AddSubscriptionModal({
         {/* Features */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Features</h3>
-          
+
           <div className="space-y-3">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     checked={feature.included}
-                    onChange={(e) => handleFeatureChange(index, 'included', e.target.checked)}
+                    onChange={(e) =>
+                      handleFeatureChange(index, "included", e.target.checked)
+                    }
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <span className="text-sm font-medium text-gray-900">{feature.name}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {feature.name}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
-                    value={feature.limit || ''}
-                    onChange={(e) => handleFeatureChange(index, 'limit', e.target.value)}
+                    value={feature.limit || ""}
+                    onChange={(e) =>
+                      handleFeatureChange(index, "limit", e.target.value)
+                    }
                     placeholder="Unlimited"
                     className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -358,31 +441,39 @@ export function AddSubscriptionModal({
         {/* Settings */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
-          
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-gray-700">Auto-renewal</label>
-                <p className="text-xs text-gray-500">Automatically renew subscriptions</p>
+                <label className="text-sm font-medium text-gray-700">
+                  Auto-renewal
+                </label>
+                <p className="text-xs text-gray-500">
+                  Automatically renew subscriptions
+                </p>
               </div>
               <AppleToggle
                 label=""
                 name="auto_renewal"
                 checked={formData.auto_renewal}
-                onChange={(checked) => handleChange('auto_renewal', checked)}
+                onChange={(checked) => handleChange("auto_renewal", checked)}
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-gray-700">Trial period</label>
-                <p className="text-xs text-gray-500">Allow free trial before billing</p>
+                <label className="text-sm font-medium text-gray-700">
+                  Trial period
+                </label>
+                <p className="text-xs text-gray-500">
+                  Allow free trial before billing
+                </p>
               </div>
               <AppleToggle
                 label=""
                 name="trial_enabled"
                 checked={formData.trial_enabled}
-                onChange={(checked) => handleChange('trial_enabled', checked)}
+                onChange={(checked) => handleChange("trial_enabled", checked)}
               />
             </div>
           </div>

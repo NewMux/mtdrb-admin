@@ -1,12 +1,17 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUploadCloud, FiFileText, FiX, FiAlertCircle, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
-import Papa from 'papaparse';
-import { supabase } from '../../supabaseClient';
+import React, { useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUploadCloud,
+  FiFileText,
+  FiX,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiAlertTriangle,
+} from "react-icons/fi";
+import Papa from "papaparse";
+import { supabase } from "../../supabaseClient";
 
-const REQUIRED_COLUMNS = [
-  'name', 'status'
-];
+const REQUIRED_COLUMNS = ["name", "status"];
 
 interface MemberImportModalProps {
   isOpen: boolean;
@@ -32,7 +37,11 @@ interface CsvData {
   [key: string]: string | number | boolean | null;
 }
 
-export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: MemberImportModalProps) {
+export default function MemberImportModal({
+  isOpen,
+  onClose,
+  onImportSuccess,
+}: MemberImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [csvData, setCsvData] = useState<CsvData[]>([]);
@@ -40,24 +49,26 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
   const [csvError, setCsvError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [duplicateWarnings, setDuplicateWarnings] = useState<DuplicateWarning[]>([]);
+  const [duplicateWarnings, setDuplicateWarnings] = useState<
+    DuplicateWarning[]
+  >([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Function to check for duplicates in the CSV data
   const checkDuplicates = useCallback((data: CsvData[]) => {
     const warnings: DuplicateWarning[] = [];
-    const fieldsToCheck = ['name', 'email', 'phone'];
-    
+    const fieldsToCheck = ["name", "email", "phone"];
+
     // Create indexes for each field
     const indexes: { [key: string]: { [value: string]: number[] } } = {};
-    fieldsToCheck.forEach(field => {
+    fieldsToCheck.forEach((field) => {
       indexes[field] = {};
     });
 
     // Build indexes
     data.forEach((row, rowIndex) => {
-      fieldsToCheck.forEach(field => {
-        const value = (row[field] || '').toString().trim().toLowerCase();
+      fieldsToCheck.forEach((field) => {
+        const value = (row[field] || "").toString().trim().toLowerCase();
         if (value) {
           if (!indexes[field][value]) {
             indexes[field][value] = [];
@@ -69,17 +80,26 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
 
     // Check each row for duplicates
     data.forEach((_row, rowIndex) => {
-      const rowWarnings: { field: string; value: string; matchingRows: number[] }[] = [];
+      const rowWarnings: {
+        field: string;
+        value: string;
+        matchingRows: number[];
+      }[] = [];
 
-      fieldsToCheck.forEach(field => {
-        const value = (data[rowIndex][field] || '').toString().trim().toLowerCase();
+      fieldsToCheck.forEach((field) => {
+        const value = (data[rowIndex][field] || "")
+          .toString()
+          .trim()
+          .toLowerCase();
         if (value && indexes[field][value].length > 1) {
-          const matchingRows = indexes[field][value].filter(i => i !== rowIndex);
+          const matchingRows = indexes[field][value].filter(
+            (i) => i !== rowIndex,
+          );
           if (matchingRows.length > 0) {
             rowWarnings.push({
               field,
               value: data[rowIndex][field] as string,
-              matchingRows
+              matchingRows,
             });
           }
         }
@@ -88,7 +108,7 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
       if (rowWarnings.length > 0) {
         warnings.push({
           rowIndex,
-          fields: rowWarnings
+          fields: rowWarnings,
         });
       }
     });
@@ -99,39 +119,45 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
   // Check for duplicates in existing members
   const checkExistingDuplicates = useCallback(async (data: CsvData[]) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
 
       const { data: membershipData } = await supabase
-        .from('memberships')
-        .select('tenant_id')
-        .eq('user_id', user.id)
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
         .single();
 
-      if (!membershipData?.tenant_id) throw new Error('No organization found');
+      if (!membershipData?.tenant_id) throw new Error("No organization found");
 
       const warnings: DuplicateWarning[] = [];
-      const fieldsToCheck = ['name', 'email', 'phone'];
+      const fieldsToCheck = ["name", "email", "phone"];
 
       // Check each row against existing members
       for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
         const row = data[rowIndex];
-        const rowWarnings: { field: string; value: string; matchingRows: number[] }[] = [];
+        const rowWarnings: {
+          field: string;
+          value: string;
+          matchingRows: number[];
+        }[] = [];
 
         for (const field of fieldsToCheck) {
-          const value = String(row[field] || '').trim();
+          const value = String(row[field] || "").trim();
           if (value) {
             const { data: existingMembers } = await supabase
-              .from('members')
+              .from("members")
               .select(field)
-              .eq('tenant_id', membershipData.tenant_id)
+              .eq("tenant_id", membershipData.tenant_id)
               .ilike(field, value);
 
             if (existingMembers && existingMembers.length > 0) {
               rowWarnings.push({
                 field,
                 value,
-                matchingRows: [-1] // Use -1 to indicate existing database record
+                matchingRows: [-1], // Use -1 to indicate existing database record
               });
             }
           }
@@ -140,14 +166,14 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
         if (rowWarnings.length > 0) {
           warnings.push({
             rowIndex,
-            fields: rowWarnings
+            fields: rowWarnings,
           });
         }
       }
 
       return warnings;
     } catch (error) {
-      console.error('Error checking existing duplicates:', error);
+      console.error("Error checking existing duplicates:", error);
       return [];
     }
   }, []);
@@ -163,8 +189,8 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
-    if (e.type === 'dragleave') setDragActive(false);
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    if (e.type === "dragleave") setDragActive(false);
   };
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -177,12 +203,12 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
 
   // Download template
   const handleDownloadTemplate = () => {
-    const csv = '#,name,email,phone,status\n';
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = "#,name,email,phone,status\n";
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'members_template.csv';
+    a.download = "members_template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -204,22 +230,24 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
         setCsvData(data);
 
         // Check for missing required columns
-        const missing = REQUIRED_COLUMNS.filter(col => !headers.includes(col));
+        const missing = REQUIRED_COLUMNS.filter(
+          (col) => !headers.includes(col),
+        );
         if (missing.length > 0) {
-          setCsvError(`Missing required columns: ${missing.join(', ')}`);
+          setCsvError(`Missing required columns: ${missing.join(", ")}`);
           return;
         }
 
         // Check for duplicates within the CSV
         const internalDuplicates = checkDuplicates(data);
-        
+
         // Check for duplicates with existing members
         const existingDuplicates = await checkExistingDuplicates(data);
-        
+
         setDuplicateWarnings([...internalDuplicates, ...existingDuplicates]);
       },
       error: (err: Error) => {
-        setCsvError('Failed to parse CSV: ' + err.message);
+        setCsvError("Failed to parse CSV: " + err.message);
         setCsvHeaders([]);
         setCsvData([]);
         setDuplicateWarnings([]);
@@ -232,27 +260,29 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
     setImporting(true);
     setImportResult(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('No user found');
+        throw new Error("No user found");
       }
 
       // Get tenant_id from memberships table
       const { data: membershipData, error: membershipError } = await supabase
-        .from('memberships')
-        .select('tenant_id')
-        .eq('user_id', user.id)
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
         .single();
 
       if (membershipError) {
-        throw new Error('Failed to get organization details');
+        throw new Error("Failed to get organization details");
       }
 
       if (!membershipData?.tenant_id) {
-        throw new Error('No organization found');
+        throw new Error("No organization found");
       }
 
-      const membersToInsert = csvData.map(row => ({
+      const membersToInsert = csvData.map((row) => ({
         tenant_id: membershipData.tenant_id,
         name: row.name,
         email: row.email,
@@ -261,7 +291,7 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
       }));
 
       const { error: insertError } = await supabase
-        .from('members')
+        .from("members")
         .insert(membersToInsert);
 
       if (insertError) {
@@ -276,7 +306,7 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
     } catch (error) {
       setImportResult({
         success: false,
-        message: 'Import failed: ' + (error as Error).message,
+        message: "Import failed: " + (error as Error).message,
       });
     } finally {
       setImporting(false);
@@ -296,11 +326,15 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl mx-auto flex flex-col h-[90vh]">
-        
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Import Members</h2>
-          <button onClick={handleModalClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out min-h-[44px]">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Import Members
+          </h2>
+          <button
+            onClick={handleModalClose}
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out min-h-[44px]"
+          >
             <FiX className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
@@ -308,17 +342,26 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
         {/* Content */}
         <div className="p-6 flex-grow overflow-y-auto">
           {csvData.length === 0 ? (
-            <div 
-              onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            <div
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors 
-              ${'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+              ${"border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"}`}
             >
               <FiUploadCloud className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
               <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-                Drag & drop a CSV file here, or{' '}
+                Drag & drop a CSV file here, or{" "}
                 <button
                   type="button"
                   className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
@@ -335,7 +378,7 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
                 onChange={handleFileChange}
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                Required columns: {REQUIRED_COLUMNS.join(', ')}
+                Required columns: {REQUIRED_COLUMNS.join(", ")}
               </p>
               <button
                 type="button"
@@ -378,15 +421,18 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
                         {duplicateWarnings.length} Potential Duplicate(s) Found
                       </h3>
                       <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        Review the warnings below. You can still import, but it may create duplicate members.
+                        Review the warnings below. You can still import, but it
+                        may create duplicate members.
                       </p>
                     </div>
                   </div>
                   <ul className="mt-3 space-y-1 text-sm text-yellow-700 dark:text-yellow-300 list-disc list-inside">
                     {duplicateWarnings.slice(0, 5).map((warning, i) => (
                       <li key={i}>
-                        Row {warning.rowIndex + 2}: Duplicate{' '}
-                        {warning.fields.map(f => `${f.field} "${f.value}"`).join(', ')}
+                        Row {warning.rowIndex + 2}: Duplicate{" "}
+                        {warning.fields
+                          .map((f) => `${f.field} "${f.value}"`)
+                          .join(", ")}
                       </li>
                     ))}
                     {duplicateWarnings.length > 5 && (
@@ -402,7 +448,10 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
                   <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                     <tr>
                       {Object.keys(csvData[0]).map((header) => (
-                        <th key={header} className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th
+                          key={header}
+                          className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
                           {header}
                         </th>
                       ))}
@@ -410,9 +459,19 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {csvData.slice(0, 10).map((row, i) => (
-                      <tr key={i} className={duplicateWarnings.some(w => w.rowIndex === i) ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}>
+                      <tr
+                        key={i}
+                        className={
+                          duplicateWarnings.some((w) => w.rowIndex === i)
+                            ? "bg-yellow-50 dark:bg-yellow-900/20"
+                            : ""
+                        }
+                      >
                         {Object.values(row).map((value, j) => (
-                          <td key={j} className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                          <td
+                            key={j}
+                            className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                          >
                             {String(value)}
                           </td>
                         ))}
@@ -440,21 +499,28 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
           )}
 
           {importResult && (
-            <div className={`mt-4 p-4 rounded-lg flex items-start gap-3 ${
-              importResult.success
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-            }`}>
-              {importResult.success ? <FiCheckCircle className="mt-1" /> : <FiAlertCircle className="mt-1" />}
+            <div
+              className={`mt-4 p-4 rounded-lg flex items-start gap-3 ${
+                importResult.success
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+              }`}
+            >
+              {importResult.success ? (
+                <FiCheckCircle className="mt-1" />
+              ) : (
+                <FiAlertCircle className="mt-1" />
+              )}
               <div>
-                <h3 className="font-semibold">{importResult.success ? 'Import Successful' : 'Import Failed'}</h3>
+                <h3 className="font-semibold">
+                  {importResult.success ? "Import Successful" : "Import Failed"}
+                </h3>
                 <p>{importResult.message}</p>
               </div>
             </div>
           )}
-
         </div>
-        
+
         {/* Footer */}
         {csvData.length > 0 && (
           <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-end items-center gap-4">
@@ -468,11 +534,11 @@ export default function MemberImportModal({ isOpen, onClose, onImportSuccess }: 
                          hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                          disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
-              {importing ? 'Importing...' : 'Confirm and Import'}
+              {importing ? "Importing..." : "Confirm and Import"}
             </button>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}

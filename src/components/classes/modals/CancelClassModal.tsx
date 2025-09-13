@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiX, FiAlertTriangle, FiBell, FiUsers, FiDollarSign, FiCheck } from 'react-icons/fi';
-import SmartModal from './SmartModal';
-import { FormField, SelectField, FormSection } from './SmartFormComponents';
-import { useSmartClassModal } from '../../../hooks/useSmartClassModal';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiX,
+  FiAlertTriangle,
+  FiBell,
+  FiUsers,
+  FiDollarSign,
+  FiCheck,
+} from "react-icons/fi";
+import SmartModal from "./SmartModal";
+import { FormField, SelectField, FormSection } from "./SmartFormComponents";
+import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface CancelClassModalProps {
   isOpen: boolean;
@@ -18,20 +25,17 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
   onClose,
   classId,
   onSuccess,
-  isPro = false
+  isPro = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [notifyMembers, setNotifyMembers] = useState(true);
   const [notifyTrainer, setNotifyTrainer] = useState(true);
   const [autoRefund, setAutoRefund] = useState(false);
-  const [reason, setReason] = useState('');
-  const [customReason, setCustomReason] = useState('');
+  const [reason, setReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
   const [refundAmount, setRefundAmount] = useState(0);
 
-  const {
-    classData,
-    fetchClass
-  } = useSmartClassModal({ classId, isPro });
+  const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
   // Load class data when modal opens
   useEffect(() => {
@@ -53,30 +57,30 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
     setLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Class cancelled successfully');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("Class cancelled successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error cancelling class:', error);
+      console.error("Error cancelling class:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const cancellationReasons = [
-    { value: 'trainer-unavailable', label: 'Trainer Unavailable' },
-    { value: 'low-attendance', label: 'Low Attendance' },
-    { value: 'facility-issue', label: 'Facility Issue' },
-    { value: 'schedule-conflict', label: 'Schedule Conflict' },
-    { value: 'weather', label: 'Weather Conditions' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'other', label: 'Other' }
+    { value: "trainer-unavailable", label: "Trainer Unavailable" },
+    { value: "low-attendance", label: "Low Attendance" },
+    { value: "facility-issue", label: "Facility Issue" },
+    { value: "schedule-conflict", label: "Schedule Conflict" },
+    { value: "weather", label: "Weather Conditions" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "other", label: "Other" },
   ];
 
   const getReasonLabel = (value: string) => {
-    return cancellationReasons.find(r => r.value === value)?.label || value;
+    return cancellationReasons.find((r) => r.value === value)?.label || value;
   };
 
   if (!classData) {
@@ -127,7 +131,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
               disabled={loading}
               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Cancelling...' : 'Cancel Class'}
+              {loading ? "Cancelling..." : "Cancel Class"}
             </button>
           </div>
         </div>
@@ -147,7 +151,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                 This will cancel the class permanently
               </h4>
               <p className="text-sm text-red-700 dark:text-red-200 mt-1">
-                Cancelling this class will remove it from the schedule and notify all enrolled members.
+                Cancelling this class will remove it from the schedule and
+                notify all enrolled members.
               </p>
             </div>
           </div>
@@ -160,8 +165,12 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-light-600 dark:text-dark-400">Class Name:</span>
-              <span className="ml-2 text-dark-900 dark:text-white font-medium">{classData.name}</span>
+              <span className="text-light-600 dark:text-dark-400">
+                Class Name:
+              </span>
+              <span className="ml-2 text-dark-900 dark:text-white font-medium">
+                {classData.name}
+              </span>
             </div>
             <div>
               <span className="text-light-600 dark:text-dark-400">Date:</span>
@@ -176,9 +185,11 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
               </span>
             </div>
             <div>
-              <span className="text-light-600 dark:text-dark-400">Trainer:</span>
+              <span className="text-light-600 dark:text-dark-400">
+                Trainer:
+              </span>
               <span className="ml-2 text-dark-900 dark:text-white font-medium">
-                {classData.trainer_name || 'Not assigned'}
+                {classData.trainer_name || "Not assigned"}
               </span>
             </div>
           </div>
@@ -189,7 +200,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
           <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
             Impact Assessment
           </h3>
-          
+
           {/* Enrolled Members */}
           {hasEnrolledMembers && (
             <motion.div
@@ -204,7 +215,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     {classData.enrolled_count} Enrolled Members
                   </h4>
                   <p className="text-sm text-orange-700 dark:text-orange-200 mt-1">
-                    These members will be automatically unenrolled and can be notified about the cancellation.
+                    These members will be automatically unenrolled and can be
+                    notified about the cancellation.
                   </p>
                 </div>
               </div>
@@ -226,7 +238,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     {classData.waitlist_count} Members on Waitlist
                   </h4>
                   <p className="text-sm text-blue-700 dark:text-blue-200 mt-1">
-                    These members will be removed from the waitlist automatically.
+                    These members will be removed from the waitlist
+                    automatically.
                   </p>
                 </div>
               </div>
@@ -278,8 +291,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                 ))}
               </select>
             </div>
-            
-            {reason === 'other' && (
+
+            {reason === "other" && (
               <div>
                 <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                   Custom Reason
@@ -312,11 +325,15 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                   onChange={(e) => setAutoRefund(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="auto-refund" className="text-sm text-blue-900 dark:text-blue-100">
-                  Automatically refund {classData.enrolled_count} enrolled members
+                <label
+                  htmlFor="auto-refund"
+                  className="text-sm text-blue-900 dark:text-blue-100"
+                >
+                  Automatically refund {classData.enrolled_count} enrolled
+                  members
                 </label>
               </div>
-              
+
               {autoRefund && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -330,7 +347,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-green-700 dark:text-green-200 mt-1">
-                    This will be processed automatically when the class is cancelled.
+                    This will be processed automatically when the class is
+                    cancelled.
                   </p>
                 </motion.div>
               )}
@@ -355,12 +373,16 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     onChange={(e) => setNotifyMembers(e.target.checked)}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="notify-members" className="text-sm text-blue-900 dark:text-blue-100">
-                    Send cancellation notification to {classData.enrolled_count} enrolled members
+                  <label
+                    htmlFor="notify-members"
+                    className="text-sm text-blue-900 dark:text-blue-100"
+                  >
+                    Send cancellation notification to {classData.enrolled_count}{" "}
+                    enrolled members
                   </label>
                 </div>
               )}
-              
+
               {classData.trainer_id && (
                 <div className="flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
                   <input
@@ -370,7 +392,10 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     onChange={(e) => setNotifyTrainer(e.target.checked)}
                     className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <label htmlFor="notify-trainer" className="text-sm text-green-900 dark:text-green-100">
+                  <label
+                    htmlFor="notify-trainer"
+                    className="text-sm text-green-900 dark:text-green-100"
+                  >
                     Notify trainer about class cancellation
                   </label>
                 </div>
@@ -411,4 +436,4 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
   );
 };
 
-export default CancelClassModal; 
+export default CancelClassModal;

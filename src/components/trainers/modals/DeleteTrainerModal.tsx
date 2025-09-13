@@ -1,9 +1,9 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiAlertTriangle, FiTrash2, FiX, FiUser } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
+import * as React from "react";
+import { motion } from "framer-motion";
+import { FiAlertTriangle, FiTrash2, FiX, FiUser } from "react-icons/fi";
+import { toast } from "react-hot-toast";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
 
 interface Trainer {
   id: string;
@@ -12,7 +12,7 @@ interface Trainer {
   phone: string;
   specialty: string;
   rating: number;
-  status: 'active' | 'inactive' | 'busy' | 'available';
+  status: "active" | "inactive" | "busy" | "available";
   classes: number;
   experience: string;
   avatar: string;
@@ -26,15 +26,21 @@ interface DeleteTrainerModalProps {
   isPro?: boolean;
 }
 
-export default function DeleteTrainerModal({ isOpen, onClose, trainer, onSuccess, isPro = false }: DeleteTrainerModalProps) {
+export default function DeleteTrainerModal({
+  isOpen,
+  onClose,
+  trainer,
+  onSuccess,
+  isPro = false,
+}: DeleteTrainerModalProps) {
   const [loading, setLoading] = React.useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     toast.success(`${trainer.name} has been deleted successfully!`);
     setLoading(false);
     onSuccess?.();
@@ -63,7 +69,8 @@ export default function DeleteTrainerModal({ isOpen, onClose, trainer, onSuccess
                 Are you sure you want to delete this trainer?
               </h3>
               <p className="text-sm text-red-700 mt-1">
-                This will permanently remove {trainer.name} from the system and cannot be undone.
+                This will permanently remove {trainer.name} from the system and
+                cannot be undone.
               </p>
             </div>
           </div>
@@ -73,7 +80,9 @@ export default function DeleteTrainerModal({ isOpen, onClose, trainer, onSuccess
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
-              <span className="text-white font-medium text-sm">{trainer.avatar}</span>
+              <span className="text-white font-medium text-sm">
+                {trainer.avatar}
+              </span>
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">{trainer.name}</h3>
@@ -114,7 +123,7 @@ export default function DeleteTrainerModal({ isOpen, onClose, trainer, onSuccess
           <FiX className="h-4 w-4 mr-2" />
           Cancel
         </SmartButton>
-        
+
         <SmartButton
           variant="danger"
           size="sm"
@@ -122,9 +131,9 @@ export default function DeleteTrainerModal({ isOpen, onClose, trainer, onSuccess
           loading={loading}
         >
           <FiTrash2 className="h-4 w-4 mr-2" />
-          {loading ? 'Deleting...' : 'Delete Trainer'}
+          {loading ? "Deleting..." : "Delete Trainer"}
         </SmartButton>
       </div>
     </ColorfulModalUI>
   );
-} 
+}

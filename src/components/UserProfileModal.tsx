@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiTarget, FiHeart, FiFileText, FiCamera, FiX, FiSave } from 'react-icons/fi';
-import { SmartModal } from './ui/SmartModal';
-import { SmartButton } from './ui/DesignSystem';
-import { api } from '../api/client';
-import type { UserProfile } from '../types';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiCalendar,
+  FiTarget,
+  FiHeart,
+  FiFileText,
+  FiCamera,
+  FiX,
+  FiSave,
+} from "react-icons/fi";
+import { SmartModal } from "./ui/SmartModal";
+import { SmartButton } from "./ui/DesignSystem";
+import { api } from "../api/client";
+import type { UserProfile } from "../types";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -12,11 +24,15 @@ interface UserProfileModalProps {
   user: any;
 }
 
-export default function UserProfileModal({ isOpen, onClose, user }: UserProfileModalProps) {
+export default function UserProfileModal({
+  isOpen,
+  onClose,
+  user,
+}: UserProfileModalProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isOpen && user) {
@@ -26,12 +42,12 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
 
   const fetchProfile = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const profileData = await api.fetchUserProfile();
       setProfile(profileData);
     } catch (err) {
-      setError('Failed to load profile');
+      setError("Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -39,9 +55,9 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
 
   const handleSave = async () => {
     if (!profile) return;
-    
+
     setSaving(true);
-    setError('');
+    setError("");
     try {
       const updatedProfile = await api.updateUserProfile(profile);
       if (updatedProfile) {
@@ -49,10 +65,10 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
         // Close modal after successful save
         setTimeout(() => onClose(), 1000);
       } else {
-        setError('Failed to save profile');
+        setError("Failed to save profile");
       }
     } catch (err) {
-      setError('Failed to save profile');
+      setError("Failed to save profile");
     } finally {
       setSaving(false);
     }
@@ -100,7 +116,9 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
             <div className="flex flex-col items-center space-y-4">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
-                  {profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                  {profile?.first_name?.[0]?.toUpperCase() ||
+                    user?.email?.[0]?.toUpperCase() ||
+                    "U"}
                 </div>
                 <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition">
                   <FiCamera size={14} />
@@ -117,8 +135,10 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
                   </label>
                   <input
                     type="text"
-                    value={profile?.first_name || ''}
-                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                    value={profile?.first_name || ""}
+                    onChange={(e) =>
+                      handleInputChange("first_name", e.target.value)
+                    }
                     className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"
                     placeholder="First name"
                   />
@@ -129,8 +149,10 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
                   </label>
                   <input
                     type="text"
-                    value={profile?.last_name || ''}
-                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                    value={profile?.last_name || ""}
+                    onChange={(e) =>
+                      handleInputChange("last_name", e.target.value)
+                    }
                     className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"
                     placeholder="Last name"
                   />
@@ -143,11 +165,13 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
                 </label>
                 <input
                   type="email"
-                  value={user?.email || ''}
+                  value={user?.email || ""}
                   disabled
                   className="w-full px-4 py-3 text-base font-medium text-gray-500 bg-gray-50 border border-gray-200 rounded-xl cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Email cannot be changed
+                </p>
               </div>
 
               <div>
@@ -156,8 +180,8 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
                 </label>
                 <input
                   type="tel"
-                  value={profile?.phone || ''}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  value={profile?.phone || ""}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"
                   placeholder="Phone number"
                 />
@@ -179,7 +203,7 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
                 className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiSave size={16} />
-                <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                <span>{saving ? "Saving..." : "Save Changes"}</span>
               </button>
             </div>
           </div>
@@ -187,4 +211,4 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
       )}
     </AnimatePresence>
   );
-} 
+}

@@ -1,9 +1,14 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiStar, FiTarget, FiSave, FiX } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
-import ColorfulModalUI from '../../ui/ColorfulModalUI';
-import { SmartButton } from '../../ui/DesignSystem';
+import * as React from "react";
+import {
+  FiUser,
+  FiStar,
+  FiTarget,
+  FiSave,
+  FiX,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
+import ColorfulModalUI from "../../ui/ColorfulModalUI";
+import { SmartButton } from "../../ui/DesignSystem";
 
 interface AddTrainerModalProps {
   isOpen: boolean;
@@ -19,40 +24,50 @@ interface TrainerFormData {
   specialty: string;
   experience: string;
   rating: number;
-  status: 'active' | 'inactive' | 'busy' | 'available';
+  status: "active" | "inactive" | "busy" | "available";
   classes: number;
 }
 
-export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = false }: AddTrainerModalProps) {
+export default function AddTrainerModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  isPro = false,
+}: AddTrainerModalProps) {
   const [formData, setFormData] = React.useState<TrainerFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    specialty: '',
-    experience: '',
+    name: "",
+    email: "",
+    phone: "",
+    specialty: "",
+    experience: "",
     rating: 4.5,
-    status: 'active',
+    status: "active",
     classes: 0,
   });
   const [loading, setLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Partial<TrainerFormData>>({});
 
-  const handleInputChange = (field: keyof TrainerFormData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof TrainerFormData,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
   const validateForm = (): boolean => {
     const newErrors: Partial<TrainerFormData> = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!formData.specialty.trim()) newErrors.specialty = 'Specialty is required';
-    if (!formData.experience.trim()) newErrors.experience = 'Experience is required';
+
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.phone.trim()) newErrors.phone = "Phone is required";
+    if (!formData.specialty.trim())
+      newErrors.specialty = "Specialty is required";
+    if (!formData.experience.trim())
+      newErrors.experience = "Experience is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -60,36 +75,40 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     setLoading(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // Create new trainer with generated ID and avatar
     const newTrainer = {
       ...formData,
       id: `trainer-${Date.now()}`,
-      avatar: formData.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+      avatar: formData.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase(),
     };
 
-    toast.success('Trainer added successfully!');
+    toast.success("Trainer added successfully!");
     setLoading(false);
     onSuccess?.();
     onClose();
-    
+
     // Reset form
     setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      specialty: '',
-      experience: '',
+      name: "",
+      email: "",
+      phone: "",
+      specialty: "",
+      experience: "",
       rating: 4.5,
-      status: 'active',
+      status: "active",
       classes: 0,
     });
     setErrors({});
@@ -122,9 +141,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
+                  errors.name ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="Sarah Johnson"
               />
@@ -132,7 +151,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 <p className="text-red-500 text-sm mt-1">{errors.name}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email *
@@ -140,9 +159,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
+                  errors.email ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="sarah.johnson@mtdrb.com"
               />
@@ -150,7 +169,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Phone *
@@ -158,9 +177,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.phone ? 'border-red-300' : 'border-gray-300'
+                  errors.phone ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="+1 (555) 123-4567"
               />
@@ -168,7 +187,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Experience *
@@ -176,9 +195,11 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
               <input
                 type="text"
                 value={formData.experience}
-                onChange={(e) => handleInputChange('experience', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("experience", e.target.value)
+                }
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.experience ? 'border-red-300' : 'border-gray-300'
+                  errors.experience ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="5 years"
               />
@@ -203,9 +224,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
               <input
                 type="text"
                 value={formData.specialty}
-                onChange={(e) => handleInputChange('specialty', e.target.value)}
+                onChange={(e) => handleInputChange("specialty", e.target.value)}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.specialty ? 'border-red-300' : 'border-gray-300'
+                  errors.specialty ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="Yoga & Pilates"
               />
@@ -213,14 +234,16 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 <p className="text-red-500 text-sm mt-1">{errors.specialty}</p>
               )}
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
               <select
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as any)}
+                onChange={(e) =>
+                  handleInputChange("status", e.target.value as any)
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="active">Active</option>
@@ -229,7 +252,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Rating
@@ -241,13 +264,15 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                   max="5"
                   step="0.1"
                   value={formData.rating}
-                  onChange={(e) => handleInputChange('rating', parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange("rating", parseFloat(e.target.value))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <FiStar className="text-yellow-400" />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Classes Assigned
@@ -256,7 +281,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
                 type="number"
                 min="0"
                 value={formData.classes}
-                onChange={(e) => handleInputChange('classes', parseInt(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange("classes", parseInt(e.target.value))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -275,7 +302,7 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
           <FiX className="h-4 w-4 mr-2" />
           Cancel
         </SmartButton>
-        
+
         <SmartButton
           variant="primary"
           size="sm"
@@ -283,9 +310,9 @@ export default function AddTrainerModal({ isOpen, onClose, onSuccess, isPro = fa
           loading={loading}
         >
           <FiSave className="h-4 w-4 mr-2" />
-          {loading ? 'Adding...' : 'Add Trainer'}
+          {loading ? "Adding..." : "Add Trainer"}
         </SmartButton>
       </div>
     </ColorfulModalUI>
   );
-} 
+}

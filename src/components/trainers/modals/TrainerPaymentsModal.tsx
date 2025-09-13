@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiDollarSign, FiCalendar, FiDownload, FiTrendingUp, FiShield } from "react-icons/fi";
+import {
+  FiX,
+  FiDollarSign,
+  FiCalendar,
+  FiDownload,
+  FiTrendingUp,
+  FiShield,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerPaymentsModalProps {
@@ -12,7 +19,7 @@ interface TrainerPaymentsModalProps {
 const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [paymentType, setPaymentType] = useState("");
@@ -23,34 +30,34 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
     {
       id: 1,
       type: "salary",
-      amount: 1200.00,
+      amount: 1200.0,
       date: "2024-01-20",
       status: "paid",
-      description: "January salary payment"
+      description: "January salary payment",
     },
     {
       id: 2,
       type: "bonus",
-      amount: 300.00,
+      amount: 300.0,
       date: "2024-01-15",
       status: "paid",
-      description: "Performance bonus"
+      description: "Performance bonus",
     },
     {
       id: 3,
       type: "commission",
-      amount: 150.00,
+      amount: 150.0,
       date: "2024-01-10",
       status: "pending",
-      description: "Member referral commission"
-    }
+      description: "Member referral commission",
+    },
   ];
 
   const handleProcessPayment = async () => {
     if (!paymentType || !amount) return;
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
     setPaymentType("");
     setAmount("");
@@ -94,14 +101,20 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Payment Method:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Payment Method:
+                </span>
                 <span className="font-medium">Direct Deposit</span>
               </div>
             </div>
@@ -191,11 +204,12 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Insights
+                    Smart Insights
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Payment trend analysis shows 12% increase in earnings this month. 
-                    Consider performance-based bonus structure to maintain motivation.
+                    Payment trend analysis shows 12% increase in earnings this
+                    month. Consider performance-based bonus structure to
+                    maintain motivation.
                   </p>
                 </div>
               </div>
@@ -209,7 +223,10 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
             </h3>
             <div className="space-y-3">
               {mockPayments.map((payment) => (
-                <div key={payment.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div
+                  key={payment.id}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 dark:text-white">
@@ -223,11 +240,13 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                       <span className="text-lg font-semibold text-gray-900 dark:text-white">
                         ${payment.amount.toFixed(2)}
                       </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        payment.status === 'paid' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          payment.status === "paid"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                        }`}
+                      >
                         {payment.status}
                       </span>
                     </div>
@@ -262,4 +281,4 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
   );
 };
 
-export default TrainerPaymentsModal; 
+export default TrainerPaymentsModal;

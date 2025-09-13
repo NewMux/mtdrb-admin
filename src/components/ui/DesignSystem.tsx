@@ -6,62 +6,62 @@ import { FiLoader } from "react-icons/fi";
 export const DESIGN_SYSTEM = {
   colors: {
     primary: {
-      50: '#EBF5FF',
-      100: '#E1F5FE', 
-      500: '#3B82F6',
-      600: '#2563EB',
-      700: '#1D4ED8',
-      900: '#1E3A8A'
+      50: "#EBF5FF",
+      100: "#E1F5FE",
+      500: "#3B82F6",
+      600: "#2563EB",
+      700: "#1D4ED8",
+      900: "#1E3A8A",
     },
     gray: {
-      50: '#F9FAFB',
-      100: '#F3F4F6',
-      200: '#E5E7EB',
-      300: '#D1D5DB',
-      500: '#6B7280',
-      600: '#4B5563',
-      900: '#111827'
+      50: "#F9FAFB",
+      100: "#F3F4F6",
+      200: "#E5E7EB",
+      300: "#D1D5DB",
+      500: "#6B7280",
+      600: "#4B5563",
+      900: "#111827",
     },
     success: {
-      50: '#ECFDF5',
-      500: '#10B981',
-      600: '#059669'
+      50: "#ECFDF5",
+      500: "#10B981",
+      600: "#059669",
     },
     warning: {
-      50: '#FFFBEB',
-      500: '#F97316',
-      600: '#EA580C'
+      50: "#FFFBEB",
+      500: "#F97316",
+      600: "#EA580C",
     },
     danger: {
-      50: '#FEF2F2',
-      500: '#EF4444',
-      600: '#DC2626'
-    }
-  }
+      50: "#FEF2F2",
+      500: "#EF4444",
+      600: "#DC2626",
+    },
+  },
 };
 
 // ===== ANIMATION VARIANTS =====
 export const animationVariants = {
   pageTransition: {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
+    exit: { opacity: 0, y: -10 },
   },
   cardHover: {
     rest: { scale: 1 },
-    hover: { scale: 1.02, transition: { duration: 0.2 } }
+    hover: { scale: 1.01, transition: { duration: 0.2 } },
   },
   buttonPress: {
     rest: { scale: 1 },
-    pressed: { scale: 0.98 }
+    pressed: { scale: 0.98 },
   },
   staggerContainer: {
     animate: {
       transition: {
-        staggerChildren: 0.1
-      }
-    }
-  }
+        staggerChildren: 0.1,
+      },
+    },
+  },
 };
 
 // ===== PAGE LAYOUT COMPONENT =====
@@ -78,36 +78,34 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   subtitle,
   children,
   actions,
-  className = ""
+  className = "",
 }) => (
   <motion.div
     variants={animationVariants.pageTransition}
     initial="initial"
     animate="animate"
     exit="exit"
-    className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${className}`}
+    className={`min-h-screen bg-white dark:bg-gray-900 ${className}`}
   >
     {/* Page Header */}
-    <div className="bg-white border-b border-gray-200 px-8 py-8 dark:bg-gray-900 dark:border-gray-800 transition-colors duration-300">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight dark:text-white">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {title}
+          </h1>
           {subtitle && (
-            <p className="text-gray-600 mt-3 text-lg dark:text-gray-300">{subtitle}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{subtitle}</p>
           )}
         </div>
         {actions && (
-          <div className="flex items-center space-x-4">
-            {actions}
-          </div>
+          <div className="flex items-center space-x-4">{actions}</div>
         )}
       </div>
     </div>
 
     {/* Page Content */}
-    <div className="p-8 dark:bg-gray-900 transition-colors duration-300">
-      {children}
-    </div>
+    <div className="p-6">{children}</div>
   </motion.div>
 );
 
@@ -125,7 +123,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
   className = "",
   hover = true,
   clickable = false,
-  onClick
+  onClick,
 }) => (
   <motion.div
     variants={hover ? animationVariants.cardHover : undefined}
@@ -134,9 +132,8 @@ export const SmartCard: React.FC<SmartCardProps> = ({
     whileTap={clickable ? "pressed" : undefined}
     onClick={onClick}
     className={`
-      bg-white rounded-2xl p-6 shadow-sm border border-gray-200
-      ${hover ? 'hover:shadow-lg hover:border-gray-300 transition-all duration-300 ease-in-out' : ''}
-      ${clickable ? 'cursor-pointer' : ''}
+      bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4
+      ${clickable ? "cursor-pointer" : ""}
       ${className}
     `}
   >
@@ -146,88 +143,94 @@ export const SmartCard: React.FC<SmartCardProps> = ({
 
 // ===== SMART BUTTON COMPONENT =====
 interface SmartButtonProps {
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?:
+    | "primary"
+    | "secondary"
+    | "success"
+    | "warning"
+    | "danger"
+    | "ghost";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   fullWidth?: boolean;
   children: React.ReactNode;
   className?: string;
   onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
+  title?: string;
 }
 
 export const SmartButton: React.FC<SmartButtonProps> = ({
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   loading = false,
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
   fullWidth = false,
   children,
   className = "",
   onClick,
-  disabled = false
+  disabled = false,
+  title,
 }) => {
-  const baseClasses = "font-semibold rounded-xl transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] focus:ring-4 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
-  
+  const baseClasses =
+    "inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+
   const variantClasses = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md",
-    secondary: "border border-gray-300 text-gray-700 hover:bg-gray-100",
-    success: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md",
-    warning: "bg-orange-600 hover:bg-orange-700 text-white shadow-sm hover:shadow-md",
-    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow-md",
-    ghost: "text-gray-500 hover:text-gray-700 px-4 py-2"
+    primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
+    secondary:
+      "bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white focus:ring-gray-500",
+    success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500",
+    warning:
+      "bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500",
+    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
+    ghost:
+      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-500",
   };
 
   const sizeClasses = {
-    sm: "px-4 py-2.5 text-sm",
-    md: "px-5 py-2.5 text-base",
-    lg: "px-6 py-3 text-lg"
+    sm: "px-3 py-2 text-sm",
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base",
   };
 
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
-  const widthClasses = fullWidth ? "w-full" : "";
+  const widthClass = fullWidth ? "w-full" : "";
 
   return (
     <motion.button
       variants={animationVariants.buttonPress}
       initial="rest"
-      whileTap={!disabled && !loading ? "pressed" : undefined}
-      className={`
-        ${baseClasses}
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${disabledClasses}
-        ${widthClasses}
-        ${className}
-      `}
+      whileTap="pressed"
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
       onClick={onClick}
       disabled={disabled || loading}
+      title={title}
     >
-      {loading && (
-        <FiLoader className="animate-spin" size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />
+      {loading && <FiLoader className="animate-spin mr-2 w-4 h-4" />}
+      {!loading && icon && iconPosition === "left" && (
+        <span className={`${children ? "mr-2" : ""}`}>{icon}</span>
       )}
-      {!loading && icon && iconPosition === 'left' && (
-        <span className="flex-shrink-0">{icon}</span>
-      )}
-      <span>{children}</span>
-      {!loading && icon && iconPosition === 'right' && (
-        <span className="flex-shrink-0">{icon}</span>
+      {children}
+      {!loading && icon && iconPosition === "right" && (
+        <span className={`${children ? "ml-2" : ""}`}>{icon}</span>
       )}
     </motion.button>
   );
 };
+
+
+
 
 // ===== KPI CARD COMPONENT =====
 interface KPICardProps {
   title: string;
   value: string | number;
   change?: string;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: "up" | "down" | "neutral";
   icon: React.ReactNode;
-  color?: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
+  color?: "blue" | "green" | "yellow" | "red" | "purple";
 }
 
 export const KPICard: React.FC<KPICardProps> = ({
@@ -236,46 +239,50 @@ export const KPICard: React.FC<KPICardProps> = ({
   change,
   trend,
   icon,
-  color = 'blue'
+  color = "blue",
 }) => {
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600 border-blue-200',
-    green: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-    red: 'bg-red-50 text-red-600 border-red-200',
-    purple: 'bg-purple-50 text-purple-600 border-purple-200'
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+    green:
+      "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+    yellow:
+      "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
+    purple:
+      "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
   };
 
   const trendColors = {
-    up: 'text-emerald-600',
-    down: 'text-red-600',
-    neutral: 'text-gray-600'
+    up: "text-green-600 dark:text-green-400",
+    down: "text-red-600 dark:text-red-400",
+    neutral: "text-gray-600 dark:text-gray-400",
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl border ${colorClasses[color]}`}>
+    <SmartCard className="relative overflow-hidden">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+            {title}
+          </p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">
+            {value}
+          </p>
+          {change && (
+            <p
+              className={`text-xs font-medium mt-1 ${trendColors[trend || "neutral"]}`}
+            >
+              {change}
+            </p>
+          )}
+        </div>
+        <div
+          className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center`}
+        >
           {icon}
         </div>
-        {change && (
-          <div className={`flex items-center space-x-1 text-sm font-medium ${trendColors[trend || 'neutral']}`}>
-            <span>{change}</span>
-            {trend === 'up' && <span>↗</span>}
-            {trend === 'down' && <span>↘</span>}
-          </div>
-        )}
       </div>
-      
-      <div>
-        <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-      </div>
-    </motion.div>
+    </SmartCard>
   );
 };
 
@@ -287,12 +294,12 @@ interface SmartTableProps {
 
 export const SmartTable: React.FC<SmartTableProps> = ({
   children,
-  className = ""
+  className = "",
 }) => (
-  <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
-    <div className="overflow-x-auto">
-      {children}
-    </div>
+  <div
+    className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden ${className}`}
+  >
+    {children}
   </div>
 );
 
@@ -304,12 +311,12 @@ interface FilterBarProps {
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   children,
-  className = ""
+  className = "",
 }) => (
-  <div className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-200 mb-6 ${className}`}>
-    <div className="flex items-center justify-between">
-      {children}
-    </div>
+  <div
+    className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 ${className}`}
+  >
+    {children}
   </div>
 );
 
@@ -323,17 +330,17 @@ interface StatsGridProps {
 export const StatsGrid: React.FC<StatsGridProps> = ({
   children,
   columns = 4,
-  className = ""
+  className = "",
 }) => {
   const gridClasses = {
-    2: 'grid-cols-1 md:grid-cols-2',
-    3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-    5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+    2: "grid-cols-1 md:grid-cols-2",
+    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+    5: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
   };
 
   return (
-    <div className={`grid gap-6 ${gridClasses[columns]} ${className}`}>
+    <div className={`grid ${gridClasses[columns]} gap-4 ${className}`}>
       {children}
     </div>
   );
@@ -353,21 +360,19 @@ export const Section: React.FC<SectionProps> = ({
   subtitle,
   actions,
   children,
-  className = ""
+  className = "",
 }) => (
-  <div className={`mb-8 ${className}`}>
-    <div className="flex items-center justify-between mb-6">
+  <div className={`space-y-4 ${className}`}>
+    <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {title}
+        </h2>
         {subtitle && (
-          <p className="text-gray-600 mt-2">{subtitle}</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
         )}
       </div>
-      {actions && (
-        <div className="flex items-center space-x-3">
-          {actions}
-        </div>
-      )}
+      {actions && <div className="flex items-center space-x-3">{actions}</div>}
     </div>
     {children}
   </div>
@@ -375,12 +380,12 @@ export const Section: React.FC<SectionProps> = ({
 
 // ===== LOADING COMPONENT =====
 export const SmartLoading: React.FC<{ message?: string }> = ({
-  message = "Loading..."
+  message = "Loading...",
 }) => (
-  <div className="flex items-center justify-center py-12">
+  <div className="flex items-center justify-center p-6">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600 font-medium">{message}</p>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
     </div>
   </div>
 );
@@ -397,18 +402,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   icon,
   title,
   description,
-  action
+  action,
 }) => (
-  <div className="text-center py-12">
-    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
-      <div className="text-gray-400 text-2xl">{icon}</div>
+  <div className="text-center py-8">
+    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-3">
+      <div className="text-gray-500 dark:text-gray-400 text-xl">{icon}</div>
     </div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-    <p className="text-gray-600 mb-6 max-w-md mx-auto">{description}</p>
-    {action && (
-      <div className="flex justify-center">
-        {action}
-      </div>
-    )}
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      {title}
+    </h3>
+    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+      {description}
+    </p>
+    {action && <div className="flex justify-center">{action}</div>}
   </div>
 );

@@ -24,79 +24,142 @@ const TrainerModalsDemo = () => {
   // State for each modal
   const [open, setOpen] = React.useState<string | null>(null);
   // Mock data for demonstration
-  const mockTrainer = { id: 1, name: "Jane Doe", email: "jane@fit.com", status: "active" };
+  const mockTrainer = {
+    id: 1,
+    name: "Jane Doe",
+    email: "jane@fit.com",
+    status: "active",
+  };
 
   return (
     <div className="space-y-8 p-8 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Trainer Modals Demo</h1>
       {/* AddTrainerModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("add")}>Open Add Trainer Modal</button>
+        <button className="btn" onClick={() => setOpen("add")}>
+          Open Add Trainer Modal
+        </button>
         <AddTrainerModal open={open === "add"} onClose={() => setOpen(null)} />
       </section>
       {/* EditTrainerModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("edit")}>Open Edit Trainer Modal</button>
-        <EditTrainerModal open={open === "edit"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("edit")}>
+          Open Edit Trainer Modal
+        </button>
+        <EditTrainerModal
+          open={open === "edit"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* DeleteTrainerModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("delete")}>Open Delete Trainer Modal</button>
-        <DeleteTrainerModal open={open === "delete"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("delete")}>
+          Open Delete Trainer Modal
+        </button>
+        <DeleteTrainerModal
+          open={open === "delete"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* AssignClassesModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("assign")}>Open Assign Classes Modal</button>
-        <AssignClassesModal open={open === "assign"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("assign")}>
+          Open Assign Classes Modal
+        </button>
+        <AssignClassesModal
+          open={open === "assign"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* ViewTrainerProfileModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("profile")}>Open View Trainer Profile Modal</button>
-        <ViewTrainerProfileModal open={open === "profile"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("profile")}>
+          Open View Trainer Profile Modal
+        </button>
+        <ViewTrainerProfileModal
+          open={open === "profile"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* UpdateTrainerStatusModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("status")}>Open Update Trainer Status Modal</button>
-        <UpdateTrainerStatusModal open={open === "status"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("status")}>
+          Open Update Trainer Status Modal
+        </button>
+        <UpdateTrainerStatusModal
+          open={open === "status"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* ExportTrainerDataModal */}
       <section>
-        <button className="btn" onClick={() => setOpen("export")}>Open Export Trainer Data Modal</button>
-        <ExportTrainerDataModal open={open === "export"} onClose={() => setOpen(null)} trainer={mockTrainer} />
+        <button className="btn" onClick={() => setOpen("export")}>
+          Open Export Trainer Data Modal
+        </button>
+        <ExportTrainerDataModal
+          open={open === "export"}
+          onClose={() => setOpen(null)}
+          trainer={mockTrainer}
+        />
       </section>
       {/* Placeholders for not-yet-implemented modals */}
       <section>
-        <button className="btn btn-disabled" disabled>Remove Trainer Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Remove Trainer Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Restore Trainer Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Restore Trainer Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Activity Log Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Activity Log Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Notes Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Notes Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Payments Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Payments Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Schedule Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Schedule Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Requests Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Requests Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer KPI Card Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer KPI Card Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Analytics Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Analytics Modal (Not yet implemented)
+        </button>
       </section>
       <section>
-        <button className="btn btn-disabled" disabled>Trainer Automation Modal (Not yet implemented)</button>
+        <button className="btn btn-disabled" disabled>
+          Trainer Automation Modal (Not yet implemented)
+        </button>
       </section>
     </div>
   );
 };
 
-export default TrainerModalsDemo; 
+export default TrainerModalsDemo;

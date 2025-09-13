@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiCreditCard, FiDollarSign, FiCheckCircle, FiAlertTriangle, FiShield, FiBarChart2 } from "react-icons/fi";
+import {
+  FiX,
+  FiCreditCard,
+  FiDollarSign,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiShield,
+  FiBarChart2,
+} from "react-icons/fi";
 import { SmartBillingModal } from "./SmartBillingModal";
 import { useSmartBillingModal } from "./useSmartBillingModal";
 
@@ -25,12 +33,12 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   onClose,
   memberId,
   invoiceId,
-  amount = 0
+  amount = 0,
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState("");
   const [paymentAmount, setPaymentAmount] = useState(amount);
-  const [reference, setReference] = useState('');
-  const [notes, setNotes] = useState('');
+  const [reference, setReference] = useState("");
+  const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showBalanceCheck, setShowBalanceCheck] = useState(false);
 
@@ -41,48 +49,50 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     suggestions,
     isProUser,
     updateData,
-    fetchRelatedData
+    fetchRelatedData,
   } = useSmartBillingModal({ memberId, invoiceId, amount });
 
   const paymentMethods: PaymentMethod[] = [
     {
-      id: 'cash',
-      name: 'Cash',
+      id: "cash",
+      name: "Cash",
       icon: <FiDollarSign className="w-4 h-4" />,
-      description: 'Physical cash payment',
-      processingFee: 0
+      description: "Physical cash payment",
+      processingFee: 0,
     },
     {
-      id: 'card',
-      name: 'Credit/Debit Card',
+      id: "card",
+      name: "Credit/Debit Card",
       icon: <FiCreditCard className="w-4 h-4" />,
-      description: 'Card payment via terminal',
-      processingFee: 2.5
+      description: "Card payment via terminal",
+      processingFee: 2.5,
     },
     {
-      id: 'online',
-      name: 'Online Payment',
+      id: "online",
+      name: "Online Payment",
       icon: <FiCheckCircle className="w-4 h-4" />,
-      description: 'Stripe, PayPal, or bank transfer',
-      processingFee: 3.0
+      description: "Stripe, PayPal, or bank transfer",
+      processingFee: 3.0,
     },
     {
-      id: 'bank',
-      name: 'Bank Transfer',
+      id: "bank",
+      name: "Bank Transfer",
       icon: <FiDollarSign className="w-4 h-4" />,
-      description: 'Direct bank transfer',
-      processingFee: 1.0
-    }
+      description: "Direct bank transfer",
+      processingFee: 1.0,
+    },
   ];
 
   const mockMemberBalance = 250;
-  const processingFee = selectedMethod ? paymentMethods.find(m => m.id === selectedMethod)?.processingFee || 0 : 0;
-  const totalAmount = paymentAmount + (paymentAmount * processingFee / 100);
+  const processingFee = selectedMethod
+    ? paymentMethods.find((m) => m.id === selectedMethod)?.processingFee || 0
+    : 0;
+  const totalAmount = paymentAmount + (paymentAmount * processingFee) / 100;
 
   const handleProcessPayment = async () => {
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
     onClose();
   };
@@ -136,24 +146,29 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                   Payment Amount
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    $
+                  </span>
                   <input
                     type="number"
                     value={paymentAmount}
-                    onChange={(e) => handleAmountChange(parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleAmountChange(parseFloat(e.target.value) || 0)
+                    }
                     className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="0.00"
                   />
                 </div>
               </div>
-              
+
               {showBalanceCheck && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                   <div className="flex items-start space-x-2">
                     <FiAlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                     <div>
                       <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                        Payment amount exceeds member's outstanding balance (${mockMemberBalance})
+                        Payment amount exceeds member's outstanding balance ($
+                        {mockMemberBalance})
                       </p>
                     </div>
                   </div>
@@ -174,8 +189,8 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                   onClick={() => setSelectedMethod(method.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     selectedMethod === method.id
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -195,11 +210,13 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                         </p>
                       )}
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 ${
-                      selectedMethod === method.id
-                        ? 'border-green-500 bg-green-500'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        selectedMethod === method.id
+                          ? "border-green-500 bg-green-500"
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    >
                       {selectedMethod === method.id && (
                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -220,18 +237,28 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">Payment Amount:</span>
-                  <span className="font-medium">${paymentAmount.toFixed(2)}</span>
+                  <span className="text-blue-700 dark:text-blue-300">
+                    Payment Amount:
+                  </span>
+                  <span className="font-medium">
+                    ${paymentAmount.toFixed(2)}
+                  </span>
                 </div>
                 {processingFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-blue-700 dark:text-blue-300">Processing Fee ({processingFee}%):</span>
-                    <span className="font-medium">${(paymentAmount * processingFee / 100).toFixed(2)}</span>
+                    <span className="text-blue-700 dark:text-blue-300">
+                      Processing Fee ({processingFee}%):
+                    </span>
+                    <span className="font-medium">
+                      ${((paymentAmount * processingFee) / 100).toFixed(2)}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-semibold border-t border-blue-200 dark:border-blue-700 pt-2">
                   <span>Total:</span>
-                  <span className="text-blue-800 dark:text-blue-200">${totalAmount.toFixed(2)}</span>
+                  <span className="text-blue-800 dark:text-blue-200">
+                    ${totalAmount.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -272,7 +299,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Payment Insights
+                    Smart Payment Insights
                   </h3>
                   <div className="space-y-2 mt-2">
                     <p className="text-sm text-blue-600 dark:text-blue-300">
@@ -319,4 +346,4 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   );
 };
 
-export default ProcessPaymentModal; 
+export default ProcessPaymentModal;

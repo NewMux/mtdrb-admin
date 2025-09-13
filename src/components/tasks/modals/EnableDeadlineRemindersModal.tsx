@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiBell, FiMessageSquare, FiMail, FiSmartphone, FiZap, FiAlertTriangle } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiBell,
+  FiMessageSquare,
+  FiMail,
+  FiSmartphone,
+  FiZap,
+  FiAlertTriangle,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface EnableDeadlineRemindersModalProps {
   open: boolean;
@@ -10,16 +17,10 @@ interface EnableDeadlineRemindersModalProps {
   isPro?: boolean;
 }
 
-export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModalProps> = ({
-  open,
-  onClose,
-  isPro = false,
-}) => {
-  const {
-    loading,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ isPro });
+export const EnableDeadlineRemindersModal: React.FC<
+  EnableDeadlineRemindersModalProps
+> = ({ open, onClose, isPro = false }) => {
+  const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
   const [reminderSettings, setReminderSettings] = React.useState({
     enabled: true,
@@ -39,86 +40,89 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
 
   const deliveryMethods = [
     {
-      key: 'app',
-      label: 'In-App Notification',
-      description: 'Push notifications within the app',
-      icon: '📱',
+      key: "app",
+      label: "In-App Notification",
+      description: "Push notifications within the app",
+      icon: "📱",
     },
     {
-      key: 'email',
-      label: 'Email',
-      description: 'Email notifications',
-      icon: '📧',
+      key: "email",
+      label: "Email",
+      description: "Email notifications",
+      icon: "📧",
     },
     {
-      key: 'whatsapp',
-      label: 'WhatsApp',
-      description: 'WhatsApp messages (Pro only)',
-      icon: '💬',
+      key: "whatsapp",
+      label: "WhatsApp",
+      description: "WhatsApp messages (Pro only)",
+      icon: "💬",
       isPro: true,
     },
   ];
 
   const messageTemplates = [
     {
-      id: 'default',
-      label: 'Default',
+      id: "default",
+      label: "Default",
       message: 'Your task "{task_name}" is due in {days} days.',
     },
     {
-      id: 'urgent',
-      label: 'Urgent',
-      message: 'URGENT: Task "{task_name}" is due in {days} days. Please prioritize.',
+      id: "urgent",
+      label: "Urgent",
+      message:
+        'URGENT: Task "{task_name}" is due in {days} days. Please prioritize.',
     },
     {
-      id: 'friendly',
-      label: 'Friendly',
-      message: 'Hi! Just a friendly reminder that "{task_name}" is due in {days} days.',
+      id: "friendly",
+      label: "Friendly",
+      message:
+        'Hi! Just a friendly reminder that "{task_name}" is due in {days} days.',
     },
     {
-      id: 'custom',
-      label: 'Custom',
+      id: "custom",
+      label: "Custom",
       message: reminderSettings.message,
     },
   ];
 
   const missingDeadlines = [
     {
-      id: '1',
-      title: 'Setup new member onboarding',
-      assignee: 'Mike Chen',
-      originalDeadline: '2024-01-10',
+      id: "1",
+      title: "Setup new member onboarding",
+      assignee: "Mike Chen",
+      originalDeadline: "2024-01-10",
       daysOverdue: 5,
     },
     {
-      id: '2',
-      title: 'Monthly equipment maintenance',
-      assignee: 'David Rodriguez',
-      originalDeadline: '2024-01-12',
+      id: "2",
+      title: "Monthly equipment maintenance",
+      assignee: "David Rodriguez",
+      originalDeadline: "2024-01-12",
       daysOverdue: 3,
     },
     {
-      id: '3',
-      title: 'Member complaint resolution',
-      assignee: 'Emma Wilson',
-      originalDeadline: '2024-01-15',
+      id: "3",
+      title: "Member complaint resolution",
+      assignee: "Emma Wilson",
+      originalDeadline: "2024-01-15",
       daysOverdue: 0,
     },
   ];
 
   const handleDeliveryMethodToggle = (method: string) => {
-    setReminderSettings(prev => ({
+    setReminderSettings((prev) => ({
       ...prev,
       deliveryMethods: {
         ...prev.deliveryMethods,
-        [method]: !prev.deliveryMethods[method as keyof typeof prev.deliveryMethods],
+        [method]:
+          !prev.deliveryMethods[method as keyof typeof prev.deliveryMethods],
       },
     }));
   };
 
   const handleTemplateSelect = (template: any) => {
-    if (template.id === 'custom') return;
-    setReminderSettings(prev => ({
+    if (template.id === "custom") return;
+    setReminderSettings((prev) => ({
       ...prev,
       message: template.message,
     }));
@@ -127,14 +131,14 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     onClose();
   };
 
   const getPreviewMessage = () => {
     return reminderSettings.message
-      .replace('{task_name}', 'Setup new member onboarding')
-      .replace('{days}', reminderSettings.daysBefore.toString());
+      .replace("{task_name}", "Setup new member onboarding")
+      .replace("{days}", reminderSettings.daysBefore.toString());
   };
 
   return (
@@ -152,9 +156,11 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -176,7 +182,12 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
               <input
                 type="checkbox"
                 checked={reminderSettings.enabled}
-                onChange={(e) => setReminderSettings(prev => ({ ...prev, enabled: e.target.checked }))}
+                onChange={(e) =>
+                  setReminderSettings((prev) => ({
+                    ...prev,
+                    enabled: e.target.checked,
+                  }))
+                }
                 className="text-blue-600 focus:ring-blue-500"
               />
               <div className="flex items-center space-x-2">
@@ -199,13 +210,20 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
               Send Reminder
             </label>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Days before deadline:</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Days before deadline:
+              </span>
               <input
                 type="number"
                 min="1"
                 max="7"
                 value={reminderSettings.daysBefore}
-                onChange={(e) => setReminderSettings(prev => ({ ...prev, daysBefore: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setReminderSettings((prev) => ({
+                    ...prev,
+                    daysBefore: parseInt(e.target.value),
+                  }))
+                }
                 className="w-16 px-2 py-1 border border-gray-300 rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               />
             </div>
@@ -224,8 +242,8 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                   onClick={() => handleTemplateSelect(template)}
                   className={`w-full p-3 rounded-lg border text-left transition-all ${
                     reminderSettings.message === template.message
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <div className="text-sm font-medium">{template.label}</div>
@@ -244,7 +262,12 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
             </label>
             <textarea
               value={reminderSettings.message}
-              onChange={(e) => setReminderSettings(prev => ({ ...prev, message: e.target.value }))}
+              onChange={(e) =>
+                setReminderSettings((prev) => ({
+                  ...prev,
+                  message: e.target.value,
+                }))
+              }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               placeholder="Enter custom message..."
@@ -264,14 +287,20 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                 <label
                   key={method.key}
                   className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                    reminderSettings.deliveryMethods[method.key as keyof typeof reminderSettings.deliveryMethods]
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-600'
+                    reminderSettings.deliveryMethods[
+                      method.key as keyof typeof reminderSettings.deliveryMethods
+                    ]
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={reminderSettings.deliveryMethods[method.key as keyof typeof reminderSettings.deliveryMethods]}
+                    checked={
+                      reminderSettings.deliveryMethods[
+                        method.key as keyof typeof reminderSettings.deliveryMethods
+                      ]
+                    }
                     onChange={() => handleDeliveryMethodToggle(method.key)}
                     disabled={method.isPro && !isPro}
                     className="text-blue-600 focus:ring-blue-500 disabled:opacity-50"
@@ -280,7 +309,9 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                     <span className="text-lg">{method.icon}</span>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">{method.label}</span>
+                        <span className="text-sm font-medium">
+                          {method.label}
+                        </span>
                         {method.isPro && (
                           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
                             Pro
@@ -307,7 +338,12 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                 <input
                   type="checkbox"
                   checked={reminderSettings.smartDetection}
-                  onChange={(e) => setReminderSettings(prev => ({ ...prev, smartDetection: e.target.checked }))}
+                  onChange={(e) =>
+                    setReminderSettings((prev) => ({
+                      ...prev,
+                      smartDetection: e.target.checked,
+                    }))
+                  }
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -315,11 +351,11 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                 </span>
               </label>
             </div>
-            
+
             {reminderSettings.smartDetection && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2 text-sm text-gray-600 dark:text-gray-400"
               >
                 <p>• Detect tasks without deadlines</p>
@@ -338,29 +374,35 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                   Missing Deadlines Detected
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  {missingDeadlines.length} tasks in the last 30 days had missing or overdue deadlines.
+                  {missingDeadlines.length} tasks in the last 30 days had
+                  missing or overdue deadlines.
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowMissingDeadlines(!showMissingDeadlines)}
                   className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 mt-2"
                 >
-                  {showMissingDeadlines ? 'Hide' : 'View'} details
+                  {showMissingDeadlines ? "Hide" : "View"} details
                 </button>
               </div>
             </div>
-            
+
             {showMissingDeadlines && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="mt-3 space-y-2"
               >
                 {missingDeadlines.map((task) => (
-                  <div key={task.id} className="bg-white rounded p-2 dark:bg-gray-800">
+                  <div
+                    key={task.id}
+                    className="bg-white rounded p-2 dark:bg-gray-800"
+                  >
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{task.title}</span>
-                      <span className="text-red-600">{task.daysOverdue} days overdue</span>
+                      <span className="text-red-600">
+                        {task.daysOverdue} days overdue
+                      </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {task.assignee} • Due: {task.originalDeadline}
@@ -382,25 +424,29 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? 'Hide' : 'Show'} preview
+                {showPreview ? "Hide" : "Show"} preview
               </button>
             </div>
-            
+
             {showPreview && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 className="space-y-3"
               >
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
-                  <div className="text-sm font-medium mb-2">Sample Reminder</div>
+                  <div className="text-sm font-medium mb-2">
+                    Sample Reminder
+                  </div>
                   <div className="text-sm text-gray-700 dark:text-gray-300">
                     {getPreviewMessage()}
                   </div>
                 </div>
-                
+
                 <div className="text-xs text-blue-700 dark:text-blue-300">
-                  This message will be sent {reminderSettings.daysBefore} day{reminderSettings.daysBefore !== 1 ? 's' : ''} before the deadline.
+                  This message will be sent {reminderSettings.daysBefore} day
+                  {reminderSettings.daysBefore !== 1 ? "s" : ""} before the
+                  deadline.
                 </div>
               </motion.div>
             )}
@@ -412,7 +458,12 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {Object.values(reminderSettings.deliveryMethods).filter(Boolean).length} delivery methods
+                  {
+                    Object.values(reminderSettings.deliveryMethods).filter(
+                      Boolean,
+                    ).length
+                  }{" "}
+                  delivery methods
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -429,7 +480,7 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiBell className="w-4 h-4" />
-                  <span>{loading ? 'Enabling...' : 'Enable Reminders'}</span>
+                  <span>{loading ? "Enabling..." : "Enable Reminders"}</span>
                 </button>
               </div>
             </div>
@@ -438,4 +489,4 @@ export const EnableDeadlineRemindersModal: React.FC<EnableDeadlineRemindersModal
       </div>
     </SmartTaskModal>
   );
-}; 
+};

@@ -1,8 +1,30 @@
-import React, { useState, useMemo } from 'react';
-import { FiEdit, FiTrash2, FiEye, FiUserPlus, FiMessageCircle, FiClock, FiAlertTriangle, FiCheckCircle, FiXCircle, FiTrendingUp, FiTrendingDown, FiSend, FiFileText, FiFilter, FiDownload, FiX, FiUser, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
-import { SmartButton } from '../ui/DesignSystem';
-import toast from 'react-hot-toast';
+import React, { useState, useMemo } from "react";
+import {
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiUserPlus,
+  FiMessageCircle,
+  FiClock,
+  FiAlertTriangle,
+  FiCheckCircle,
+  FiXCircle,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiSend,
+  FiFileText,
+  FiFilter,
+  FiDownload,
+  FiX,
+  FiUser,
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
+} from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
+import { SmartButton } from "../ui/DesignSystem";
+import toast from "react-hot-toast";
 
 interface Member {
   id: string;
@@ -15,7 +37,7 @@ interface Member {
   planEnd: string;
   lastCheckIn: string;
   checkInCount: number;
-  status: 'active' | 'expired' | 'payment_issue' | 'inactive';
+  status: "active" | "expired" | "payment_issue" | "inactive";
   membershipPrice: number;
   formsSubmitted: string[];
   isTrial: boolean;
@@ -33,7 +55,7 @@ interface SmartMemberTableProps {
   onAssignTrainer: (member: Member) => void;
   loading?: boolean;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
   onSort?: (field: string) => void;
   // Pagination props
   currentPage?: number;
@@ -45,19 +67,42 @@ interface SmartMemberTableProps {
 }
 
 // Status Badge Component
-export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({ status, daysLeft }) => {
+export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({
+  status,
+  daysLeft,
+}) => {
   const getStatusConfig = () => {
     switch (status) {
-      case 'active':
-        return { color: 'bg-green-100 text-green-800', icon: FiCheckCircle, text: 'Active' };
-      case 'expired':
-        return { color: 'bg-red-100 text-red-800', icon: FiXCircle, text: 'Expired' };
-      case 'payment_issue':
-        return { color: 'bg-yellow-100 text-yellow-800', icon: FiAlertTriangle, text: 'Payment Issue' };
-      case 'inactive':
-        return { color: 'bg-gray-100 text-gray-800', icon: FiClock, text: 'Inactive' };
+      case "active":
+        return {
+          color: "bg-green-100 text-green-800",
+          icon: FiCheckCircle,
+          text: "Active",
+        };
+      case "expired":
+        return {
+          color: "bg-red-100 text-red-800",
+          icon: FiXCircle,
+          text: "Expired",
+        };
+      case "payment_issue":
+        return {
+          color: "bg-yellow-100 text-yellow-800",
+          icon: FiAlertTriangle,
+          text: "Payment Issue",
+        };
+      case "inactive":
+        return {
+          color: "bg-gray-100 text-gray-800",
+          icon: FiClock,
+          text: "Inactive",
+        };
       default:
-        return { color: 'bg-gray-100 text-gray-800', icon: FiClock, text: 'Unknown' };
+        return {
+          color: "bg-gray-100 text-gray-800",
+          icon: FiClock,
+          text: "Unknown",
+        };
     }
   };
 
@@ -65,7 +110,9 @@ export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({ s
   const Icon = config.icon;
 
   return (
-    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+    <div
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+    >
       <Icon className="w-3 h-3 mr-1" />
       {config.text}
       {daysLeft !== undefined && daysLeft <= 30 && daysLeft > 0 && (
@@ -76,26 +123,31 @@ export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({ s
 };
 
 // Tag Pill Component
-export const TagPill: React.FC<{ tag: string; onRemove?: () => void }> = ({ tag, onRemove }) => {
+export const TagPill: React.FC<{ tag: string; onRemove?: () => void }> = ({
+  tag,
+  onRemove,
+}) => {
   const getTagColor = (tag: string) => {
     switch (tag.toLowerCase()) {
-      case 'trial':
-        return 'bg-blue-100 text-blue-800';
-      case 'loyal':
-        return 'bg-purple-100 text-purple-800';
-      case 'high performer':
-        return 'bg-green-100 text-green-800';
-      case 'at risk':
-        return 'bg-red-100 text-red-800';
-      case 'new':
-        return 'bg-orange-100 text-orange-800';
+      case "trial":
+        return "bg-blue-100 text-blue-800";
+      case "loyal":
+        return "bg-purple-100 text-purple-800";
+      case "high performer":
+        return "bg-green-100 text-green-800";
+      case "at risk":
+        return "bg-red-100 text-red-800";
+      case "new":
+        return "bg-orange-100 text-orange-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+    >
       {tag}
       {onRemove && (
         <button
@@ -110,33 +162,42 @@ export const TagPill: React.FC<{ tag: string; onRemove?: () => void }> = ({ tag,
 };
 
 // Trend Sparkline Component
-export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({ data, memberId }) => {
+export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({
+  data,
+  memberId,
+}) => {
   const getTrendDirection = (data: string[]) => {
-    if (!data || !Array.isArray(data) || data.length < 2) return 'stable';
-    
+    if (!data || !Array.isArray(data) || data.length < 2) return "stable";
+
     const recent = data.slice(-7).length;
     const previous = data.slice(-14, -7).length;
-    
-    if (recent > previous * 1.2) return 'up';
-    if (recent < previous * 0.8) return 'down';
-    return 'stable';
+
+    if (recent > previous * 1.2) return "up";
+    if (recent < previous * 0.8) return "down";
+    return "stable";
   };
 
   const safeData = data || [];
   const trend = getTrendDirection(safeData);
-  const Icon = trend === 'up' ? FiTrendingUp : trend === 'down' ? FiTrendingDown : FiClock;
+  const Icon =
+    trend === "up" ? FiTrendingUp : trend === "down" ? FiTrendingDown : FiClock;
 
   return (
     <div className="flex items-center space-x-2">
-      <Icon className={`w-4 h-4 ${trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-gray-500'}`} />
+      <Icon
+        className={`w-4 h-4 ${trend === "up" ? "text-green-500" : trend === "down" ? "text-red-500" : "text-gray-500"}`}
+      />
       <span className="text-xs text-gray-600">{safeData.length} visits</span>
     </div>
   );
 };
 
 // Document Checklist Component
-export const DocumentChecklist: React.FC<{ formsSubmitted: string[]; memberId: string }> = ({ formsSubmitted, memberId }) => {
-  const requiredDocs = ['waiver', 'id_document', 'emergency_contact'];
+export const DocumentChecklist: React.FC<{
+  formsSubmitted: string[];
+  memberId: string;
+}> = ({ formsSubmitted, memberId }) => {
+  const requiredDocs = ["waiver", "id_document", "emergency_contact"];
   const safeFormsSubmitted = formsSubmitted || [];
   const completedDocs = safeFormsSubmitted.length;
   const totalDocs = requiredDocs.length;
@@ -149,7 +210,9 @@ export const DocumentChecklist: React.FC<{ formsSubmitted: string[]; memberId: s
     <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-1">
         <FiFileText className="w-4 h-4 text-gray-500" />
-        <span className="text-xs text-gray-600">{completedDocs}/{totalDocs}</span>
+        <span className="text-xs text-gray-600">
+          {completedDocs}/{totalDocs}
+        </span>
       </div>
       {completedDocs < totalDocs && (
         <button
@@ -164,15 +227,20 @@ export const DocumentChecklist: React.FC<{ formsSubmitted: string[]; memberId: s
 };
 
 // WhatsApp CRM Button Component
-export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({ member, template }) => {
+export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({
+  member,
+  template,
+}) => {
   const handleSendWhatsApp = () => {
     const templates = {
       inactive: `Hi ${member.name}, we noticed you haven't been to the gym recently. We miss you! 🏋️‍♂️`,
       expiry: `Hi ${member.name}, your membership expires in ${getDaysLeft(member.planEnd)} days. Renew now to keep your progress! 💪`,
-      custom: `Hi ${member.name}, we have a special offer just for you! 🎉`
+      custom: `Hi ${member.name}, we have a special offer just for you! 🎉`,
     };
 
-    toast.success(`Mock WhatsApp sent to ${member.phone}: ${templates[template as keyof typeof templates]}`);
+    toast.success(
+      `Mock WhatsApp sent to ${member.phone}: ${templates[template as keyof typeof templates]}`,
+    );
   };
 
   return (
@@ -202,7 +270,7 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   totalItems,
   itemsPerPage,
-  onItemsPerPageChange
+  onItemsPerPageChange,
 }) => {
   const getVisiblePages = () => {
     const delta = 2;
@@ -214,12 +282,16 @@ const Pagination: React.FC<PaginationProps> = ({
       return [1];
     }
 
-    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
       range.push(i);
     }
 
     if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...');
+      rangeWithDots.push(1, "...");
     } else {
       rangeWithDots.push(1);
     }
@@ -227,7 +299,7 @@ const Pagination: React.FC<PaginationProps> = ({
     rangeWithDots.push(...range);
 
     if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages);
+      rangeWithDots.push("...", totalPages);
     } else if (totalPages > 1) {
       rangeWithDots.push(totalPages);
     }
@@ -286,15 +358,15 @@ const Pagination: React.FC<PaginationProps> = ({
         {/* Page numbers */}
         {getVisiblePages().map((page, index) => (
           <React.Fragment key={index}>
-            {page === '...' ? (
+            {page === "..." ? (
               <span className="px-3 py-2 text-gray-500">...</span>
             ) : (
               <button
                 onClick={() => onPageChange(page as number)}
                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 {page}
@@ -332,7 +404,7 @@ const getDaysLeft = (planEnd: string) => {
   if (!planEnd) {
     return 0; // Return 0 if no plan end date
   }
-  
+
   const now = new Date();
   const end = new Date(planEnd);
   const diffTime = end.getTime() - now.getTime();
@@ -341,39 +413,44 @@ const getDaysLeft = (planEnd: string) => {
 
 const getStatus = (member: Member) => {
   const now = new Date();
-  
+
   if (!member.planEnd || !member.lastCheckIn) {
-    return member.status || 'inactive';
+    return member.status || "inactive";
   }
-  
+
   const planEnd = new Date(member.planEnd);
   const lastCheckIn = new Date(member.lastCheckIn);
-  const daysSinceCheckIn = (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24);
+  const daysSinceCheckIn =
+    (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24);
 
-  if (now > planEnd) return 'expired';
-  if (daysSinceCheckIn > 10) return 'inactive';
-  return 'active';
+  if (now > planEnd) return "expired";
+  if (daysSinceCheckIn > 10) return "inactive";
+  return "active";
 };
 
 const isInactive = (member: Member) => {
   if (!member.lastCheckIn) return true;
-  
+
   const now = new Date();
   const lastCheckIn = new Date(member.lastCheckIn);
-  const daysSinceCheckIn = (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24);
-  
+  const daysSinceCheckIn =
+    (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24);
+
   return daysSinceCheckIn > 10;
 };
 
 const generateTags = (member: Member) => {
   const tags = [];
-  
-  if (member.isTrial) tags.push('Trial');
-  if (member.checkInCount > 20) tags.push('Loyal');
-  if (member.checkInCount > 30) tags.push('High Performer');
-  if (isInactive(member)) tags.push('At Risk');
-  if (new Date(member.joinDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) tags.push('New');
-  
+
+  if (member.isTrial) tags.push("Trial");
+  if (member.checkInCount > 20) tags.push("Loyal");
+  if (member.checkInCount > 30) tags.push("High Performer");
+  if (isInactive(member)) tags.push("At Risk");
+  if (
+    new Date(member.joinDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  )
+    tags.push("New");
+
   return tags;
 };
 
@@ -397,17 +474,17 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   itemsPerPage = 10,
   onPageChange = () => {},
   onItemsPerPageChange = () => {},
-  totalItems = 0
+  totalItems = 0,
 }) => {
   // Enhanced members with computed properties
   const enhancedMembers = useMemo(() => {
-    return members.map(member => ({
+    return members.map((member) => ({
       ...member,
       computedStatus: getStatus(member),
       computedTags: generateTags(member),
       daysLeft: getDaysLeft(member.planEnd),
       isInactive: isInactive(member),
-      hasCompletedDocs: hasCompletedDocs(member)
+      hasCompletedDocs: hasCompletedDocs(member),
     }));
   }, [members]);
 
@@ -477,10 +554,15 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                          <div className="text-sm text-gray-500">{member.phone}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {member.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {member.phone}
+                          </div>
                           <div className="text-xs text-gray-400">
-                            Joined {new Date(member.joinDate).toLocaleDateString()}
+                            Joined{" "}
+                            {new Date(member.joinDate).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -488,8 +570,8 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
 
                     {/* Status Badge */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge 
-                        status={member.computedStatus} 
+                      <StatusBadge
+                        status={member.computedStatus}
                         daysLeft={member.daysLeft}
                       />
                     </td>
@@ -501,7 +583,10 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                           {new Date(member.lastCheckIn).toLocaleDateString()}
                         </span>
                         {member.isInactive && (
-                          <FiAlertTriangle className="w-4 h-4 text-red-500" title="Inactive for more than 10 days" />
+                          <FiAlertTriangle
+                            className="w-4 h-4 text-red-500"
+                            title="Inactive for more than 10 days"
+                          />
                         )}
                       </div>
                     </td>
@@ -509,7 +594,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                     {/* Tags */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
-                        {member.computedTags.map(tag => (
+                        {member.computedTags.map((tag) => (
                           <TagPill key={tag} tag={tag} />
                         ))}
                       </div>
@@ -525,7 +610,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
-                        
+
                         <button
                           onClick={() => onEdit(member)}
                           className="text-gray-600 hover:text-gray-900"
@@ -535,7 +620,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         </button>
 
                         <WhatsAppButton member={member} template="inactive" />
-                        
+
                         <button
                           onClick={() => onDelete(member)}
                           className="text-red-600 hover:text-red-900"
@@ -545,7 +630,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         </button>
                       </div>
                     </td>
-                                    </motion.tr>
+                  </motion.tr>
                 ))}
               </AnimatePresence>
             </tbody>
@@ -556,7 +641,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
         {filteredMembers.length === 0 && (
           <div className="text-center py-12">
             <FiUser className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No members found</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No members found
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
               Get started by creating a new member
             </p>
@@ -575,65 +662,8 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
           />
         )}
       </div>
-
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FiUser className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Members</p>
-              <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FiCheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredMembers.filter(m => m.computedStatus === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FiAlertTriangle className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">At Risk</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredMembers.filter(m => m.isInactive).length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <FiClock className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Expiring Soon</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredMembers.filter(m => m.daysLeft <= 30 && m.daysLeft > 0).length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default SmartMemberTable; 
+export default SmartMemberTable;

@@ -1,5 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { errorHandler, ErrorContext } from '../services/errorHandler';
+import { supabase } from "../supabaseClient";
+import { errorHandler, ErrorContext } from "../services/errorHandler";
 import {
   validateInput,
   validateUUID,
@@ -31,11 +31,11 @@ import {
   type UpdateInvoiceData,
   type PaginationParams,
   type MemberFilterParams,
-  type ClassFilterParams
-} from './validation';
-import type { ApiResponse } from '../types';
-import { mockClasses } from './mockClassData';
-const isDev = import.meta.env.MODE === 'development';
+  type ClassFilterParams,
+} from "./validation";
+import type { ApiResponse } from "../types";
+import { mockClasses } from "./mockClassData";
+const isDev = import.meta.env.MODE === "development";
 
 // Rate limiting implementation
 class RateLimiter {
@@ -46,10 +46,12 @@ class RateLimiter {
   isAllowed(identifier: string): boolean {
     const now = Date.now();
     const userRequests = this.requests.get(identifier) || [];
-    
+
     // Remove old requests outside the window
-    const validRequests = userRequests.filter(time => now - time < this.windowMs);
-    
+    const validRequests = userRequests.filter(
+      (time) => now - time < this.windowMs,
+    );
+
     if (validRequests.length >= this.maxRequests) {
       return false;
     }
@@ -62,7 +64,9 @@ class RateLimiter {
   getRemainingRequests(identifier: string): number {
     const userRequests = this.requests.get(identifier) || [];
     const now = Date.now();
-    const validRequests = userRequests.filter(time => now - time < this.windowMs);
+    const validRequests = userRequests.filter(
+      (time) => now - time < this.windowMs,
+    );
     return Math.max(0, this.maxRequests - validRequests.length);
   }
 }
@@ -82,13 +86,16 @@ interface SecureApiResponse<T> extends ApiResponse<T> {
 // Base secure API client
 class SecureApiClient {
   private async checkAuth(): Promise<{ user: any; tenantId: string }> {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
     if (error || !user) {
       throw errorHandler.processError(
-        new Error('Authentication required'),
+        new Error("Authentication required"),
         ErrorContext.AUTHENTICATION,
-        false
+        false,
       );
     }
 
@@ -96,11 +103,11 @@ class SecureApiClient {
     let tenantId = user.user_metadata?.tenant_id;
     if (!tenantId) {
       const { data: membershipData } = await supabase
-        .from('memberships')
-        .select('tenant_id')
-        .eq('user_id', user.id)
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
         .single();
-      
+
       if (membershipData) {
         tenantId = membershipData.tenant_id;
       }
@@ -108,9 +115,9 @@ class SecureApiClient {
 
     if (!tenantId) {
       throw errorHandler.processError(
-        new Error('No tenant access'),
+        new Error("No tenant access"),
         ErrorContext.AUTHORIZATION,
-        false
+        false,
       );
     }
 
@@ -120,9 +127,9 @@ class SecureApiClient {
   private async checkRateLimit(userId: string): Promise<void> {
     if (!rateLimiter.isAllowed(userId)) {
       throw errorHandler.processError(
-        new Error('Rate limit exceeded'),
+        new Error("Rate limit exceeded"),
         ErrorContext.GENERAL,
-        false
+        false,
       );
     }
   }
@@ -131,7 +138,11 @@ class SecureApiClient {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private wrapResponse<T>(data: T, error: any, userId: string): SecureApiResponse<T> {
+  private wrapResponse<T>(
+    data: T,
+    error: any,
+    userId: string,
+  ): SecureApiResponse<T> {
     return {
       data,
       error,
@@ -139,50 +150,66 @@ class SecureApiClient {
       timestamp: Date.now(),
       rateLimit: {
         remaining: rateLimiter.getRemainingRequests(userId),
-        reset: Date.now() + 60000 // 1 minute from now
-      }
+        reset: Date.now() + 60000, // 1 minute from now
+      },
     };
   }
 
   // Secure member operations
-  async getMembers(filters?: MemberFilterParams, pagination?: PaginationParams): Promise<SecureApiResponse<any[]>> {
+  async getMembers(
+    filters?: MemberFilterParams,
+    pagination?: PaginationParams,
+  ): Promise<SecureApiResponse<any[]>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
     try {
       // Validate filters and pagination
-      const validatedFilters = filters ? validateInput(memberFilterSchema, filters) : { success: true, data: {} };
-      const validatedPagination = pagination ? validateInput(paginationSchema, pagination) : { success: true, data: { page: 1, limit: 20 } };
+      const validatedFilters = filters
+        ? validateInput(memberFilterSchema, filters)
+        : { success: true, data: {} };
+      const validatedPagination = pagination
+        ? validateInput(paginationSchema, pagination)
+        : { success: true, data: { page: 1, limit: 20 } };
 
       if (!validatedFilters.success) {
-        throw new Error(`Invalid filters: ${validatedFilters.errors.join(', ')}`);
+        throw new Error(
+          `Invalid filters: ${validatedFilters.errors.join(", ")}`,
+        );
       }
 
       if (!validatedPagination.success) {
-        throw new Error(`Invalid pagination: ${validatedPagination.errors.join(', ')}`);
+        throw new Error(
+          `Invalid pagination: ${validatedPagination.errors.join(", ")}`,
+        );
       }
 
       let query = supabase
-        .from('members')
-        .select('*')
-        .eq('tenant_id', tenantId);
+        .from("members")
+        .select("*")
+        .eq("tenant_id", tenantId);
 
       // Apply filters
       if (validatedFilters.data.status) {
-        query = query.eq('status', validatedFilters.data.status);
+        query = query.eq("status", validatedFilters.data.status);
       }
       if (validatedFilters.data.membership_type) {
-        query = query.eq('membership_type', validatedFilters.data.membership_type);
+        query = query.eq(
+          "membership_type",
+          validatedFilters.data.membership_type,
+        );
       }
       if (validatedFilters.data.trainer_id) {
-        query = query.eq('trainer_id', validatedFilters.data.trainer_id);
+        query = query.eq("trainer_id", validatedFilters.data.trainer_id);
       }
       if (validatedFilters.data.branch_id) {
-        query = query.eq('assigned_branch_id', validatedFilters.data.branch_id);
+        query = query.eq("assigned_branch_id", validatedFilters.data.branch_id);
       }
       if (validatedFilters.data.search) {
         const searchTerm = sanitizeInput(validatedFilters.data.search);
-        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+        query = query.or(
+          `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
+        );
       }
 
       // Apply pagination
@@ -191,73 +218,91 @@ class SecureApiClient {
       const to = from + limit - 1;
       query = query.range(from, to);
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order("created_at", {
+        ascending: false,
+      });
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
 
-  async createMember(memberData: CreateMemberData): Promise<SecureApiResponse<any>> {
+  async createMember(
+    memberData: CreateMemberData,
+  ): Promise<SecureApiResponse<any>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
     try {
       // Validate input data
-      const validation = validateInput(createMemberSchema, { ...memberData, tenant_id: tenantId });
+      const validation = validateInput(createMemberSchema, {
+        ...memberData,
+        tenant_id: tenantId,
+      });
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
       }
 
       // Check for duplicate email
       const { data: existingMember } = await supabase
-        .from('members')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .eq('email', validation.data.email)
+        .from("members")
+        .select("id")
+        .eq("tenant_id", tenantId)
+        .eq("email", validation.data.email)
         .single();
 
       if (existingMember) {
-        throw new Error('A member with this email already exists');
+        throw new Error("A member with this email already exists");
       }
 
       // Validate trainer assignment if provided
       if (validation.data.trainer_id) {
         const { data: trainer } = await supabase
-          .from('trainers')
-          .select('id')
-          .eq('id', validation.data.trainer_id)
-          .eq('tenant_id', tenantId)
-          .eq('status', 'active')
+          .from("trainers")
+          .select("id")
+          .eq("id", validation.data.trainer_id)
+          .eq("tenant_id", tenantId)
+          .eq("status", "active")
           .single();
 
         if (!trainer) {
-          throw new Error('Invalid or inactive trainer assignment');
+          throw new Error("Invalid or inactive trainer assignment");
         }
       }
 
       const { data, error } = await supabase
-        .from('members')
+        .from("members")
         .insert(validation.data)
         .select()
         .single();
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
 
-  async updateMember(memberId: string, memberData: UpdateMemberData): Promise<SecureApiResponse<any>> {
+  async updateMember(
+    memberId: string,
+    memberData: UpdateMemberData,
+  ): Promise<SecureApiResponse<any>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
     try {
       // Validate member ID
-      const uuidValidation = validateUUID(memberId, 'Member ID');
+      const uuidValidation = validateUUID(memberId, "Member ID");
       if (!uuidValidation.success) {
         throw new Error(uuidValidation.error);
       }
@@ -265,50 +310,54 @@ class SecureApiClient {
       // Validate input data
       const validation = validateInput(updateMemberSchema, memberData);
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
       }
 
       // Check member exists and belongs to tenant
       const { data: existingMember } = await supabase
-        .from('members')
-        .select('id, tenant_id')
-        .eq('id', memberId)
+        .from("members")
+        .select("id, tenant_id")
+        .eq("id", memberId)
         .single();
 
       if (!existingMember) {
-        throw new Error('Member not found');
+        throw new Error("Member not found");
       }
 
       if (!validateTenantAccess(tenantId, existingMember.tenant_id)) {
-        throw new Error('Access denied');
+        throw new Error("Access denied");
       }
 
       // Check for duplicate email if email is being updated
       if (validation.data.email) {
         const { data: duplicateMember } = await supabase
-          .from('members')
-          .select('id')
-          .eq('tenant_id', tenantId)
-          .eq('email', validation.data.email)
-          .neq('id', memberId)
+          .from("members")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .eq("email", validation.data.email)
+          .neq("id", memberId)
           .single();
 
         if (duplicateMember) {
-          throw new Error('A member with this email already exists');
+          throw new Error("A member with this email already exists");
         }
       }
 
       const { data, error } = await supabase
-        .from('members')
+        .from("members")
         .update(validation.data)
-        .eq('id', memberId)
-        .eq('tenant_id', tenantId)
+        .eq("id", memberId)
+        .eq("tenant_id", tenantId)
         .select()
         .single();
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
@@ -319,98 +368,115 @@ class SecureApiClient {
 
     try {
       // Validate member ID
-      const uuidValidation = validateUUID(memberId, 'Member ID');
+      const uuidValidation = validateUUID(memberId, "Member ID");
       if (!uuidValidation.success) {
         throw new Error(uuidValidation.error);
       }
 
       // Check member exists and belongs to tenant
       const { data: existingMember } = await supabase
-        .from('members')
-        .select('id, tenant_id')
-        .eq('id', memberId)
+        .from("members")
+        .select("id, tenant_id")
+        .eq("id", memberId)
         .single();
 
       if (!existingMember) {
-        throw new Error('Member not found');
+        throw new Error("Member not found");
       }
 
       if (!validateTenantAccess(tenantId, existingMember.tenant_id)) {
-        throw new Error('Access denied');
+        throw new Error("Access denied");
       }
 
       // Check if member has active bookings
       const { data: activeBookings } = await supabase
-        .from('class_bookings')
-        .select('id')
-        .eq('member_id', memberId)
-        .eq('tenant_id', tenantId)
-        .in('status', ['booked', 'checked_in']);
+        .from("class_bookings")
+        .select("id")
+        .eq("member_id", memberId)
+        .eq("tenant_id", tenantId)
+        .in("status", ["booked", "checked_in"]);
 
       if (activeBookings && activeBookings.length > 0) {
-        throw new Error('Cannot delete member with active class bookings');
+        throw new Error("Cannot delete member with active class bookings");
       }
 
       const { data, error } = await supabase
-        .from('members')
+        .from("members")
         .delete()
-        .eq('id', memberId)
-        .eq('tenant_id', tenantId);
+        .eq("id", memberId)
+        .eq("tenant_id", tenantId);
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.MEMBER_MANAGEMENT, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.MEMBER_MANAGEMENT,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
 
   // Secure class operations
-  async getClasses(filters?: ClassFilterParams, pagination?: PaginationParams): Promise<SecureApiResponse<any[]>> {
+  async getClasses(
+    filters?: ClassFilterParams,
+    pagination?: PaginationParams,
+  ): Promise<SecureApiResponse<any[]>> {
     if (isDev) {
-      return this.wrapResponse(mockClasses, null, 'mock-user');
+      return this.wrapResponse(mockClasses, null, "mock-user");
     }
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
     try {
       // Validate filters and pagination
-      const validatedFilters = filters ? validateInput(classFilterSchema, filters) : { success: true, data: {} };
-      const validatedPagination = pagination ? validateInput(paginationSchema, pagination) : { success: true, data: { page: 1, limit: 20 } };
+      const validatedFilters = filters
+        ? validateInput(classFilterSchema, filters)
+        : { success: true, data: {} };
+      const validatedPagination = pagination
+        ? validateInput(paginationSchema, pagination)
+        : { success: true, data: { page: 1, limit: 20 } };
 
       if (!validatedFilters.success) {
-        throw new Error(`Invalid filters: ${validatedFilters.errors.join(', ')}`);
+        throw new Error(
+          `Invalid filters: ${validatedFilters.errors.join(", ")}`,
+        );
       }
 
       if (!validatedPagination.success) {
-        throw new Error(`Invalid pagination: ${validatedPagination.errors.join(', ')}`);
+        throw new Error(
+          `Invalid pagination: ${validatedPagination.errors.join(", ")}`,
+        );
       }
 
       let query = supabase
-        .from('classes')
-        .select(`
+        .from("classes")
+        .select(
+          `
           *,
           trainers(first_name, last_name, email)
-        `)
-        .eq('tenant_id', tenantId);
+        `,
+        )
+        .eq("tenant_id", tenantId);
 
       // Apply filters
       if (validatedFilters.data.trainer_id) {
-        query = query.eq('trainer_id', validatedFilters.data.trainer_id);
+        query = query.eq("trainer_id", validatedFilters.data.trainer_id);
       }
       if (validatedFilters.data.status) {
-        query = query.eq('status', validatedFilters.data.status);
+        query = query.eq("status", validatedFilters.data.status);
       }
       if (validatedFilters.data.class_type) {
-        query = query.eq('class_type', validatedFilters.data.class_type);
+        query = query.eq("class_type", validatedFilters.data.class_type);
       }
       if (validatedFilters.data.skill_level) {
-        query = query.eq('skill_level', validatedFilters.data.skill_level);
+        query = query.eq("skill_level", validatedFilters.data.skill_level);
       }
       if (validatedFilters.data.start_date) {
-        query = query.gte('start_time', validatedFilters.data.start_date);
+        query = query.gte("start_time", validatedFilters.data.start_date);
       }
       if (validatedFilters.data.end_date) {
-        query = query.lte('end_time', validatedFilters.data.end_date);
+        query = query.lte("end_time", validatedFilters.data.end_date);
       }
 
       // Apply pagination
@@ -419,54 +485,79 @@ class SecureApiClient {
       const to = from + limit - 1;
       query = query.range(from, to);
 
-      const { data, error } = await query.order('start_time', { ascending: true });
+      const { data, error } = await query.order("start_time", {
+        ascending: true,
+      });
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.CLASS_SCHEDULING, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.CLASS_SCHEDULING,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
 
-  async createClass(classData: CreateClassData): Promise<SecureApiResponse<any>> {
+  async createClass(
+    classData: CreateClassData,
+  ): Promise<SecureApiResponse<any>> {
     if (isDev) {
-      return this.wrapResponse({ ...classData, id: `mock-${Date.now()}`, created_at: new Date().toISOString() }, null, 'mock-user');
+      return this.wrapResponse(
+        {
+          ...classData,
+          id: `mock-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        },
+        null,
+        "mock-user",
+      );
     }
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
     try {
       // Validate input data
-      const validation = validateInput(createClassSchema, { ...classData, tenant_id: tenantId });
+      const validation = validateInput(createClassSchema, {
+        ...classData,
+        tenant_id: tenantId,
+      });
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
       }
 
       // Check trainer availability
       const { data: conflictingClasses } = await supabase
-        .from('classes')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .eq('trainer_id', validation.data.trainer_id)
-        .or(`start_time.lte.${validation.data.end_time},end_time.gte.${validation.data.start_time}`)
-        .neq('status', 'cancelled');
+        .from("classes")
+        .select("id")
+        .eq("tenant_id", tenantId)
+        .eq("trainer_id", validation.data.trainer_id)
+        .or(
+          `start_time.lte.${validation.data.end_time},end_time.gte.${validation.data.start_time}`,
+        )
+        .neq("status", "cancelled");
 
       if (conflictingClasses && conflictingClasses.length > 0) {
-        throw new Error('Trainer is not available during this time slot');
+        throw new Error("Trainer is not available during this time slot");
       }
 
       const { data, error } = await supabase
-        .from('classes')
+        .from("classes")
         .insert({
           ...validation.data,
-          current_bookings: 0
+          current_bookings: 0,
         })
         .select()
         .single();
 
       return this.wrapResponse(data, error, user.id);
     } catch (error) {
-      const processedError = errorHandler.processError(error, ErrorContext.CLASS_SCHEDULING, false);
+      const processedError = errorHandler.processError(
+        error,
+        ErrorContext.CLASS_SCHEDULING,
+        false,
+      );
       return this.wrapResponse(null, processedError, user.id);
     }
   }
@@ -476,18 +567,18 @@ class SecureApiClient {
     try {
       const { user } = await this.checkAuth();
       const userMetadata = user.user_metadata;
-      
+
       const rolePermissions = {
-        admin: ['all'],
-        manager: ['read', 'write', 'manage_staff'],
-        trainer: ['read', 'write_classes'],
-        staff: ['read']
+        admin: ["all"],
+        manager: ["read", "write", "manage_staff"],
+        trainer: ["read", "write_classes"],
+        staff: ["read"],
       };
 
-      const userRole = userMetadata?.role || 'staff';
-      const permissions = rolePermissions[userRole] || ['read'];
+      const userRole = userMetadata?.role || "staff";
+      const permissions = rolePermissions[userRole] || ["read"];
 
-      return permissions.includes(permission) || permissions.includes('all');
+      return permissions.includes(permission) || permissions.includes("all");
     } catch {
       return false;
     }
@@ -498,4 +589,4 @@ class SecureApiClient {
 export const secureApi = new SecureApiClient();
 
 // Export validation functions for use in components
-export { validateInput, validateUUID, sanitizeInput } from './validation'; 
+export { validateInput, validateUUID, sanitizeInput } from "./validation";

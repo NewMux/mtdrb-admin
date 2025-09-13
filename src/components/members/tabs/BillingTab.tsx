@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface BillingTabProps {
   plan: any;
@@ -8,10 +8,18 @@ interface BillingTabProps {
   onCreditNote: () => void;
 }
 
-const BillingTab: React.FC<BillingTabProps> = ({ plan, invoices, onSendPaymentLink, onMarkPaid, onCreditNote }) => {
+const BillingTab: React.FC<BillingTabProps> = ({
+  plan,
+  invoices,
+  onSendPaymentLink,
+  onMarkPaid,
+  onCreditNote,
+}) => {
   return (
-    <div className="p-6">{/* TODO: Plan details, invoices table, actions */}</div>
+    <div className="p-6">
+      {/* TODO: Plan details, invoices table, actions */}
+    </div>
   );
 };
 
-export default BillingTab; 
+export default BillingTab;

@@ -1,8 +1,14 @@
-import * as React from 'react';
-import { motion } from 'framer-motion';
-import { FiTrash2, FiArchive, FiAlertTriangle, FiLink, FiZap } from 'react-icons/fi';
-import { SmartTaskModal } from './SmartTaskModal';
-import { useSmartTaskModal } from './useSmartTaskModal';
+import * as React from "react";
+import { motion } from "framer-motion";
+import {
+  FiTrash2,
+  FiArchive,
+  FiAlertTriangle,
+  FiLink,
+  FiZap,
+} from "react-icons/fi";
+import { SmartTaskModal } from "./SmartTaskModal";
+import { useSmartTaskModal } from "./useSmartTaskModal";
 
 interface DeleteTaskModalProps {
   open: boolean;
@@ -17,16 +23,15 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
-  const {
-    loading,
-    task,
-    deleteTask,
-    alerts,
-    clearAlerts,
-  } = useSmartTaskModal({ taskId, isPro });
+  const { loading, task, deleteTask, alerts, clearAlerts } = useSmartTaskModal({
+    taskId,
+    isPro,
+  });
 
-  const [deleteType, setDeleteType] = React.useState<'delete' | 'archive'>('delete');
-  const [confirmationText, setConfirmationText] = React.useState('');
+  const [deleteType, setDeleteType] = React.useState<"delete" | "archive">(
+    "delete",
+  );
+  const [confirmationText, setConfirmationText] = React.useState("");
 
   const hasAutomation = task?.automation?.enabled;
   const isLinkedToAutomation = hasAutomation;
@@ -35,15 +40,15 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
     e.preventDefault();
     if (!task) return;
 
-    const result = await deleteTask(task.id, deleteType === 'archive');
+    const result = await deleteTask(task.id, deleteType === "archive");
     if (result.success) {
       onClose();
     }
   };
 
-  const handleDeleteTypeChange = (type: 'delete' | 'archive') => {
+  const handleDeleteTypeChange = (type: "delete" | "archive") => {
     setDeleteType(type);
-    setConfirmationText('');
+    setConfirmationText("");
   };
 
   if (!task) {
@@ -54,8 +59,8 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title={deleteType === 'archive' ? 'Archive Task' : 'Delete Task'}
-      subtitle={`${deleteType === 'archive' ? 'Archive' : 'Delete'}: ${task.title}`}
+      title={deleteType === "archive" ? "Archive Task" : "Delete Task"}
+      subtitle={`${deleteType === "archive" ? "Archive" : "Delete"}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -65,9 +70,11 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  alert.type === 'error' ? 'bg-red-50 text-red-700' :
-                  alert.type === 'warning' ? 'bg-yellow-50 text-yellow-700' :
-                  'bg-blue-50 text-blue-700'
+                  alert.type === "error"
+                    ? "bg-red-50 text-red-700"
+                    : alert.type === "warning"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                 }`}
               >
                 {alert.message}
@@ -88,13 +95,14 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                {deleteType === 'archive' ? 'Archive Task' : 'Delete Task Permanently'}
+                {deleteType === "archive"
+                  ? "Archive Task"
+                  : "Delete Task Permanently"}
               </h4>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                {deleteType === 'archive' 
-                  ? 'This task will be moved to archive and can be restored later.'
-                  : 'This action cannot be undone. The task will be permanently deleted.'
-                }
+                {deleteType === "archive"
+                  ? "This task will be moved to archive and can be restored later."
+                  : "This action cannot be undone. The task will be permanently deleted."}
               </p>
             </div>
           </div>
@@ -112,25 +120,35 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Type:</span>
-              <span className="font-medium capitalize">{task.type.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.type.replace("_", " ")}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Priority:
+              </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Status:</span>
-              <span className="font-medium capitalize">{task.status.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {task.status.replace("_", " ")}
+              </span>
             </div>
             {task.assignedTo && (
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Assigned to:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Assigned to:
+                </span>
                 <span className="font-medium">{task.assignedTo}</span>
               </div>
             )}
             {task.dueDate && (
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Due date:</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Due date:
+                </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
                 </span>
@@ -149,7 +167,8 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                   Linked to Automation
                 </h4>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  This task is part of an automated workflow. Deleting it may affect the automation.
+                  This task is part of an automated workflow. Deleting it may
+                  affect the automation.
                 </p>
                 <div className="mt-2">
                   <button className="text-sm text-yellow-600 hover:text-yellow-700 dark:text-yellow-400">
@@ -172,8 +191,8 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 type="radio"
                 name="deleteType"
                 value="archive"
-                checked={deleteType === 'archive'}
-                onChange={() => handleDeleteTypeChange('archive')}
+                checked={deleteType === "archive"}
+                onChange={() => handleDeleteTypeChange("archive")}
                 className="text-blue-600 focus:ring-blue-500"
               />
               <div className="flex items-center space-x-2">
@@ -188,14 +207,14 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 </div>
               </div>
             </label>
-            
+
             <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer dark:border-gray-600">
               <input
                 type="radio"
                 name="deleteType"
                 value="delete"
-                checked={deleteType === 'delete'}
-                onChange={() => handleDeleteTypeChange('delete')}
+                checked={deleteType === "delete"}
+                onChange={() => handleDeleteTypeChange("delete")}
                 className="text-red-600 focus:ring-red-500"
               />
               <div className="flex items-center space-x-2">
@@ -219,14 +238,16 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             Confirmation
           </label>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            Type <strong>{deleteType === 'archive' ? 'ARCHIVE' : 'DELETE'}</strong> to confirm
+            Type{" "}
+            <strong>{deleteType === "archive" ? "ARCHIVE" : "DELETE"}</strong>{" "}
+            to confirm
           </p>
           <input
             type="text"
             value={confirmationText}
             onChange={(e) => setConfirmationText(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            placeholder={deleteType === 'archive' ? 'ARCHIVE' : 'DELETE'}
+            placeholder={deleteType === "archive" ? "ARCHIVE" : "DELETE"}
           />
         </div>
 
@@ -236,7 +257,9 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {isLinkedToAutomation ? 'Automation linked' : 'No automation linked'}
+                {isLinkedToAutomation
+                  ? "Automation linked"
+                  : "No automation linked"}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -249,23 +272,27 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={loading || confirmationText !== (deleteType === 'archive' ? 'ARCHIVE' : 'DELETE')}
+                disabled={
+                  loading ||
+                  confirmationText !==
+                    (deleteType === "archive" ? "ARCHIVE" : "DELETE")
+                }
                 className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
-                  deleteType === 'archive'
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-red-600 text-white hover:bg-red-700'
+                  deleteType === "archive"
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-red-600 text-white hover:bg-red-700"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                 onClick={handleSubmit}
               >
-                {deleteType === 'archive' ? (
+                {deleteType === "archive" ? (
                   <>
                     <FiArchive className="w-4 h-4" />
-                    <span>{loading ? 'Archiving...' : 'Archive Task'}</span>
+                    <span>{loading ? "Archiving..." : "Archive Task"}</span>
                   </>
                 ) : (
                   <>
                     <FiTrash2 className="w-4 h-4" />
-                    <span>{loading ? 'Deleting...' : 'Delete Task'}</span>
+                    <span>{loading ? "Deleting..." : "Delete Task"}</span>
                   </>
                 )}
               </button>
@@ -275,4 +302,4 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
       </div>
     </SmartTaskModal>
   );
-}; 
+};

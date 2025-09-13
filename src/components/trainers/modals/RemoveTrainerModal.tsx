@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiAlertTriangle, FiUserMinus, FiShield, FiCheckCircle } from "react-icons/fi";
+import {
+  FiX,
+  FiAlertTriangle,
+  FiUserMinus,
+  FiShield,
+  FiCheckCircle,
+} from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface RemoveTrainerModalProps {
@@ -12,7 +18,7 @@ interface RemoveTrainerModalProps {
 const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
   open,
   onClose,
-  trainer
+  trainer,
 }) => {
   const [reason, setReason] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -25,7 +31,7 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
     }
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
     onClose();
   };
@@ -69,7 +75,8 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
                   This action cannot be undone
                 </h3>
                 <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                  Removing this trainer will permanently delete their profile, schedule, and all associated data.
+                  Removing this trainer will permanently delete their profile,
+                  schedule, and all associated data.
                 </p>
               </div>
             </div>
@@ -83,15 +90,23 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Name:</span>
-                <span className="font-medium">{trainer?.name || "John Doe"}</span>
+                <span className="font-medium">
+                  {trainer?.name || "John Doe"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Email:</span>
-                <span className="font-medium">{trainer?.email || "john@fit.com"}</span>
+                <span className="font-medium">
+                  {trainer?.email || "john@fit.com"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">Active</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Status:
+                </span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  Active
+                </span>
               </div>
             </div>
           </div>
@@ -125,7 +140,9 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
                     AI Recommendation
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Consider scheduling a final performance review before removal. This trainer has shown consistent improvement in recent months.
+                    Consider scheduling a final performance review before
+                    removal. This trainer has shown consistent improvement in
+                    recent months.
                   </p>
                 </div>
               </div>
@@ -173,4 +190,4 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
   );
 };
 
-export default RemoveTrainerModal; 
+export default RemoveTrainerModal;
