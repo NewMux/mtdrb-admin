@@ -145,7 +145,7 @@ const Members: React.FC = () => {
             email: m.email,
             phone: m.phone || "",
             age: 25, // TODO: Calculate from metadata or add age field
-            gender: ((m.metadata?.gender as any) || "Other") as "Male" | "Female" | "Other",
+            gender: (["Male", "Female", "Other"].includes(m.metadata?.gender) ? m.metadata.gender : "Other") as "Male" | "Female" | "Other",
             joinDate: m.join_date || m.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
             planEnd: m.expiry_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
             lastCheckIn: m.metadata?.last_check_in || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
@@ -514,14 +514,12 @@ const Members: React.FC = () => {
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
-                pagination={{
-                  currentPage,
-                  totalPages,
-                  totalItems,
-                  itemsPerPage,
-                  onPageChange: handlePageChange,
-                  onItemsPerPageChange: handleItemsPerPageChange,
-                }}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={convertedMembers.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
               />
             </div>
           </div>
