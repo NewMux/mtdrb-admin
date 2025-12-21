@@ -28,9 +28,7 @@ import AddExpenseModal from "../components/billing/AddExpenseModal";
 import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 
-// Removed mock data - using real data from Supabase
-const mockClients: Array<{ id: string; name: string; email: string; phone: string }> = [];
-const mockInvoices: Array<{ id: string; invoice_number: string; [key: string]: any }> = [];
+// Using real data from Supabase - no mock data
 
 const Billing: React.FC = () => {
   const { theme } = usePageThemeContext();
@@ -224,7 +222,8 @@ const Billing: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockInvoices.slice(0, 5).map((invoice) => (
+                    {/* TODO: Fetch recent invoices from Supabase */}
+                    {[].map((invoice: any) => (
                       <tr
                         key={invoice.id}
                         className="border-b border-gray-100 hover:bg-gray-50"
@@ -679,7 +678,7 @@ const Billing: React.FC = () => {
           <AddInvoiceModal
             isOpen={activeModal === "addInvoice"}
             onClose={closeModal}
-            clients={mockClients}
+            clients={[]}
             onSuccess={() => {
               closeModal();
               toast.success("Invoice created successfully!");

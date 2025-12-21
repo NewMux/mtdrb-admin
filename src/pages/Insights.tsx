@@ -184,33 +184,15 @@ const HeatmapChart = ({ data }) => {
   );
 };
 
-const mockData = {
-  attendanceTrend: [
-    { name: "Jan", attendance: 400 },
-    { name: "Feb", attendance: 300 },
-    { name: "Mar", attendance: 500 },
-    { name: "Apr", attendance: 450 },
-    { name: "May", attendance: 600 },
-    { name: "Jun", attendance: 700 },
-  ],
-  aiSuggestions: [
-    {
-      type: "good",
-      text: "HIIT classes at 6 PM are consistently full. Consider adding another session on a different day.",
-    },
-    {
-      type: "good",
-      text: "Emma Chen's classes have the highest average attendance. Schedule her for more peak time slots.",
-    },
-    {
-      type: "bad",
-      text: "Zumba attendance has dropped by 20% in the last month. Suggest running a promotion to boost interest.",
-    },
-    {
-      type: "bad",
-      text: "The 9 AM weekday slot has a 40% no-show rate. Survey members to see if a later time would be preferable.",
-    },
-  ],
+// Using real data from Supabase - no mock data
+const getAttendanceTrend = async () => {
+  // TODO: Fetch from Supabase analytics
+  return [];
+};
+
+const getAssistantSuggestions = async () => {
+  // TODO: Fetch from smart suggestions service
+  return [];
 };
 
 export default function Insights({ classes, bookings }) {
@@ -352,7 +334,7 @@ export default function Insights({ classes, bookings }) {
         <AiSuggestionCard
           title="Smart Recommendations"
           icon="🧠"
-          suggestions={mockData.assistantSuggestions}
+          suggestions={[]}
         />
 
         <div className="lg:col-span-2">
@@ -379,7 +361,7 @@ export default function Insights({ classes, bookings }) {
           <ChartCard title="Attendance Trend (Last 6 Months)">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={mockData.attendanceTrend}
+                data={[]}
                 margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />

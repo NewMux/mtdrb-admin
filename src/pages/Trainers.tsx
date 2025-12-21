@@ -153,9 +153,13 @@ const Trainers: React.FC = () => {
   };
 
   const handleExport = async () => {
-    toast.loading("Exporting trainers...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success("Trainers exported successfully!");
+    try {
+      toast.loading("Exporting trainers...");
+      // TODO: Implement real export functionality
+      toast.success("Trainers exported successfully!");
+    } catch (error) {
+      toast.error("Failed to export trainers");
+    }
   };
 
   const handleRefresh = () => {

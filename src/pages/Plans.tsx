@@ -138,54 +138,8 @@ export default function Plans() {
 
   const fetchPlans = async () => {
     try {
-      // Mock data for now since plans table might not exist
-      const mockPlans: Plan[] = [
-        {
-          id: "1",
-          name: "Basic Membership",
-          description: "Access to gym equipment and basic classes",
-          price: 29.99,
-          duration: 30,
-          features: ["Gym Equipment Access", "Basic Classes", "Locker Room"],
-          status: "active",
-          members_count: 45,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          name: "Premium Membership",
-          description: "Full access with personal training sessions",
-          price: 59.99,
-          duration: 30,
-          features: [
-            "All Basic Features",
-            "Personal Training",
-            "Nutrition Consultation",
-            "Premium Classes",
-          ],
-          status: "active",
-          members_count: 23,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          name: "VIP Membership",
-          description: "Unlimited access with exclusive perks",
-          price: 99.99,
-          duration: 30,
-          features: [
-            "All Premium Features",
-            "Priority Booking",
-            "Guest Passes",
-            "Spa Access",
-          ],
-          status: "active",
-          members_count: 12,
-          created_at: new Date().toISOString(),
-        },
-      ];
-
-      setPlans(mockPlans);
+      // TODO: Fetch plans from Supabase when plans table is available
+      setPlans([]);
     } catch (error) {
       console.error("Error fetching plans:", error);
       toast.error("Failed to load plans");
