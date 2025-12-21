@@ -27,7 +27,7 @@ import TrainerPerformanceDashboard from "../components/trainers/TrainerPerforman
 import TrainerAutomationEngine from "../components/trainers/TrainerAutomationEngine";
 import FilterButton from "../components/ui/FilterButton";
 import TabsNav from "../components/ui/TabsNav";
-import { AddButton } from "../components/ui/AddButton";
+import AddButton from "../components/ui/AddButton";
 import { SmartButton } from "../components/ui/DesignSystem";
 
 // Removed mock data - using real data from Supabase

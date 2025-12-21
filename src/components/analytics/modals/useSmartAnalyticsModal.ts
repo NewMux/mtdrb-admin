@@ -100,7 +100,11 @@ export const useSmartAnalyticsModal = (
       try {
         const { getAnalyticsInsights } = await import("../../../services/smartSuggestionsService");
         const realInsights = await getAnalyticsInsights();
-        setSmartInsights(realInsights);
+        // Map to ensure isPro is always boolean
+        setSmartInsights(realInsights.map(insight => ({
+          ...insight,
+          isPro: insight.isPro ?? false
+        })));
       } catch (error) {
         console.error("Error loading insights:", error);
         setSmartInsights([]);

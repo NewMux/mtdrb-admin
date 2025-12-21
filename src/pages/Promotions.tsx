@@ -54,7 +54,7 @@ export default function Promotions() {
     setShowCreateModal(true);
   };
 
-  const handleEditPromoCode = (promoCode) => {
+  const handleEditPromoCode = (promoCode: any) => {
     setSelectedPromoCode(promoCode);
     setShowEditModal(true);
   };

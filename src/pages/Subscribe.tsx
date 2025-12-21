@@ -3,10 +3,11 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiTrendingUp, FiStar } from "react-icons/fi";
+import type { User } from "@supabase/supabase-js";
 
 // ===== SUBSCRIBE PAGE =====
 export default function Subscribe() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("starter");
@@ -23,7 +24,7 @@ export default function Subscribe() {
           navigate("/login");
           return;
         }
-        setUser(data.user);
+        setUser(data.user as User);
         // Check paid status - preserve original destination
         if (data.user.user_metadata && data.user.user_metadata.paid) {
           const from = (location.state as any)?.from?.pathname || "/dashboard";

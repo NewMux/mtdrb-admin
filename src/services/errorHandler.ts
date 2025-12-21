@@ -105,7 +105,7 @@ class ErrorHandler {
     } else if (error instanceof Error) {
       processedError = this.handleGenericError(error, context);
     } else {
-      processedError = this.handleUnknownError(error, context);
+      processedError = this.handleUnknownError(error instanceof Error ? error : new Error(String(error)), context);
     }
 
     // Log error if needed

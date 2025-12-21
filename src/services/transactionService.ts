@@ -383,7 +383,7 @@ class TransactionService {
           if (error) throw error;
           results.push(member);
         } catch (error) {
-          errors.push({ memberData, error: error.message });
+          errors.push({ memberData, error: error instanceof Error ? error.message : String(error) });
         }
       }
 
@@ -393,7 +393,7 @@ class TransactionService {
         "member",
         "Batch Member Import",
         `Imported ${results.length} members, ${errors.length} failed`,
-        errors.length === 0 ? "success" : "partial",
+        errors.length === 0 ? "success" : "failed",
         { successful: results.length, failed: errors.length, errors },
       );
 

@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
+import type { User } from "@supabase/supabase-js";
 
 // ===== PROFILE PAGE (SCAFFOLD) =====
 export default function Profile() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 

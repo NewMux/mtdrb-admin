@@ -744,7 +744,7 @@ const Members: React.FC = () => {
           <AddMemberModal
             isOpen={modalState.addMember}
             onClose={() => closeModal("addMember")}
-            onSuccess={handleAddMemberSuccess}
+            onSuccess={async (memberData: any) => { await handleAddMemberSuccess(memberData); }}
           />
         )}
 
@@ -753,7 +753,7 @@ const Members: React.FC = () => {
             isOpen={modalState.editMember}
             onClose={() => closeModal("editMember")}
             member={modalData.selectedMember}
-            onSuccess={handleEditMemberSuccess}
+            onSuccess={async (member: any) => { await handleEditMemberSuccess(member); }}
           />
         )}
 
@@ -762,7 +762,7 @@ const Members: React.FC = () => {
             isOpen={modalState.deleteMember}
             onClose={() => closeModal("deleteMember")}
             member={modalData.selectedMember}
-            onSuccess={handleDeleteMemberSuccess}
+            onSuccess={async () => { handleDeleteMemberSuccess(); }}
           />
         )}
 
@@ -771,7 +771,7 @@ const Members: React.FC = () => {
             isOpen={modalState.viewProfile}
             onClose={() => closeModal("viewProfile")}
             member={modalData.selectedMember}
-            onSuccess={handleViewMember}
+            onSuccess={async (member: any) => { handleViewMember(member); }}
           />
         )}
 
@@ -779,7 +779,7 @@ const Members: React.FC = () => {
           <ImportMembersModal
             isOpen={modalState.importMembers}
             onClose={() => closeModal("importMembers")}
-            onSuccess={handleImportMembersSuccess}
+            onSuccess={async () => { handleImportMembersSuccess(); }}
           />
         )}
 
@@ -788,7 +788,7 @@ const Members: React.FC = () => {
             isOpen={modalState.assignTrainer}
             onClose={() => closeModal("assignTrainer")}
             member={modalData.selectedMember}
-            onSuccess={handleAssignTrainerSuccess}
+            onSuccess={async () => { handleAssignTrainerSuccess(); }}
           />
         )}
       </AnimatePresence>

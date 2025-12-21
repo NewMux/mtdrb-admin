@@ -190,13 +190,15 @@ export function AddExpenseModal({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       title: "",
-      amount: "",
+      amount: 0,
       date: new Date().toISOString().split("T")[0],
       category: "Other",
       payment_method: "card",
       vendor: "",
       description: "",
       status: "pending",
+      recurring: false,
+      vat_included: false,
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
@@ -246,7 +248,7 @@ export function AddExpenseModal({
     if (editingExpense && isOpen) {
       reset({
         title: editingExpense.title || "",
-        amount: editingExpense.amount.toString(),
+        amount: typeof editingExpense.amount === 'number' ? editingExpense.amount : parseFloat(String(editingExpense.amount)) || 0,
         date: editingExpense.date || new Date().toISOString().split("T")[0],
         category: editingExpense.category || "Other",
         payment_method: editingExpense.payment_method || "card",
@@ -476,7 +478,7 @@ export function AddExpenseModal({
 
   // Calculate VAT amount
   const calculateVatAmount = () => {
-    const amount = parseFloat(watchedAmount) || 0;
+    const amount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
     const vatRate = watch("vat_rate") || 15;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
@@ -576,7 +578,7 @@ export function AddExpenseModal({
     }
   };
 
-  const totalAmount = parseFloat(watchedAmount) || 0;
+  const totalAmount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
   const vatAmount = calculateVatAmount();
   const finalAmount = totalAmount + vatAmount;
 

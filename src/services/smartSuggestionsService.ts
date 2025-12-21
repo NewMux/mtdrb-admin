@@ -292,7 +292,7 @@ export async function getMemberEngagementInsights(
     // Get active members
     const { data: members, error: membersError } = await supabase
       .from("members")
-      .select("id, first_name, last_name, status, join_date, expiry_date")
+      .select("id, created_at, tenant_id, first_name, last_name, email, phone, status, join_date, expiry_date, membership_type")
       .eq("tenant_id", tId)
       .eq("status", "active");
 
