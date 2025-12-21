@@ -195,7 +195,7 @@ const getAssistantSuggestions = async () => {
   return [];
 };
 
-export default function Insights({ classes, bookings }) {
+export default function Insights({ classes, bookings }: { classes: any[]; bookings: any[] }) {
   const {
     totalBookings,
     fillRate,
@@ -217,12 +217,12 @@ export default function Insights({ classes, bookings }) {
       };
     }
 
-    const classBookingCounts = bookings.reduce((acc, booking) => {
+    const classBookingCounts = bookings.reduce((acc: Record<string, number>, booking: any) => {
       acc[booking.class_id] = (acc[booking.class_id] || 0) + 1;
       return acc;
     }, {});
 
-    const heatmap = classes.reduce((acc, classInfo) => {
+    const heatmap = classes.reduce((acc: Record<number, Record<number, number>>, classInfo: any) => {
       const dayOfWeek = dayjs(classInfo.startTime).day(); // 0 for Sunday, 6 for Saturday
       const hour = dayjs(classInfo.startTime).hour();
       const attendance = classBookingCounts[classInfo.id] || 0;
@@ -234,7 +234,7 @@ export default function Insights({ classes, bookings }) {
       return acc;
     }, {});
 
-    const trainerStats = classes.reduce((acc, classInfo) => {
+    const trainerStats = classes.reduce((acc: Record<string, { name: string; classCount: number; totalAttendance: number }>, classInfo: any) => {
       const trainerName = classInfo.trainer || "Unknown Trainer";
       if (!acc[trainerName]) {
         acc[trainerName] = {
@@ -259,7 +259,7 @@ export default function Insights({ classes, bookings }) {
 
     const popularity = Object.entries(classBookingCounts)
       .map(([classId, count]) => {
-        const classInfo = classes.find((c) => c.id === classId);
+        const classInfo = classes.find((c: any) => c.id === classId);
         return {
           name: classInfo?.name || "Unknown Class",
           attendance: count,
@@ -268,7 +268,7 @@ export default function Insights({ classes, bookings }) {
       .sort((a: any, b: any) => b.attendance - a.attendance);
 
     const totalCapacity = classes.reduce(
-      (acc, c) => acc + (c.capacity || 0),
+      (acc: number, c: any) => acc + (c.capacity || 0),
       0,
     );
     const currentTotalBookings = bookings.length;

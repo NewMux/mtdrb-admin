@@ -20,7 +20,7 @@ import SmartMemberTable from "../components/members/SmartMemberTable";
 import MemberProfileDrawer from "../components/members/MemberProfileDrawer";
 import FilterButton from "../components/ui/FilterButton";
 import TabsNav from "../components/ui/TabsNav";
-import { AddButton } from "../components/ui/AddButton";
+import AddButton from "../components/ui/AddButton";
 import { SmartButton } from "../components/ui/DesignSystem";
 import ToastContainer from "../components/ui/Toast";
 import { useToast } from "../hooks/useToast";
@@ -43,6 +43,27 @@ import { useSmartMemberModal } from "../hooks/useSmartMemberModal";
 import MemberModal from "../components/members/MemberModal";
 import AnalyticsTab from "../components/members/tabs/AnalyticsTab";
 import { usePermissions } from "../hooks/usePermissions";
+// Using SmartMemberTable's Member type for converted members
+type TableMember = {
+  id: string;
+  name: string;
+  email?: string;
+  phone: string;
+  age: number;
+  gender: string;
+  joinDate: string;
+  planEnd: string;
+  lastCheckIn: string;
+  checkInCount: number;
+  status: "active" | "expired" | "payment_issue" | "inactive";
+  membershipPrice: number;
+  formsSubmitted: string[];
+  isTrial: boolean;
+  attendance: string[];
+  tags: string[];
+  assignedTrainerId?: string;
+  fitnessGoal?: string;
+};
 
 // Removed mock member conversion - using real data from Supabase
 
@@ -75,7 +96,7 @@ const Members: React.FC = () => {
   }, [showAdvancedFilters]);
 
   // State management for members
-  const [members, setMembers] = React.useState<Member[]>([]);
+  const [members, setMembers] = React.useState<TableMember[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState("all");
   const [sortBy, setSortBy] = React.useState("name");
@@ -118,13 +139,13 @@ const Members: React.FC = () => {
 
           if (error) throw error;
           
-          const convertedMembers: Member[] = (data || []).map((m: any) => ({
+          const convertedMembers: TableMember[] = (data || []).map((m: any) => ({
             id: m.id,
             name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
             email: m.email,
             phone: m.phone || "",
             age: 25, // TODO: Calculate from metadata or add age field
-            gender: (m.metadata?.gender as any) || "other",
+            gender: ((m.metadata?.gender as any) || "Other") as "Male" | "Female" | "Other",
             joinDate: m.join_date || m.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
             planEnd: m.expiry_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
             lastCheckIn: m.metadata?.last_check_in || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
@@ -150,7 +171,7 @@ const Members: React.FC = () => {
             active: convertedMembers.filter(m => m.status === "active").length,
             inactive: convertedMembers.filter(m => m.status === "inactive").length,
             newThisMonth: convertedMembers.filter(m => {
-              const joinDate = new Date(m.joinDate);
+              const joinDate = new Date(m.join_date || m.joined_at || m.start_date || "");
               return joinDate >= monthAgo;
             }).length,
           });
@@ -174,8 +195,8 @@ const Members: React.FC = () => {
     // Apply search
     if (searchTerm) {
       filtered = filtered.filter(m => 
-        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (m.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (m.email || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -186,8 +207,8 @@ const Members: React.FC = () => {
     
     // Apply sorting
     filtered = [...filtered].sort((a, b) => {
-      const aVal = a[sortBy as keyof Member];
-      const bVal = b[sortBy as keyof Member];
+      const aVal = a[sortBy as keyof TableMember] ?? "";
+      const bVal = b[sortBy as keyof TableMember] ?? "";
       if (sortOrder === "asc") {
         return aVal > bVal ? 1 : -1;
       }
@@ -427,16 +448,14 @@ const Members: React.FC = () => {
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onView={handleViewMember}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 loading={loading}
-                pagination={{
-                  currentPage: 1,
-                  totalPages: 1,
-                  totalItems: 5,
-                  itemsPerPage: 5,
-                  onPageChange: () => {},
-                  onItemsPerPageChange: () => {},
-                }}
+                currentPage={1}
+                totalPages={1}
+                totalItems={5}
+                itemsPerPage={5}
+                onPageChange={() => {}}
+                onItemsPerPageChange={() => {}}
               />
             </div>
           </div>
@@ -493,7 +512,7 @@ const Members: React.FC = () => {
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onView={handleViewMember}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 loading={loading}
                 pagination={{
                   currentPage,
@@ -744,7 +763,7 @@ const Members: React.FC = () => {
           <AddMemberModal
             isOpen={modalState.addMember}
             onClose={() => closeModal("addMember")}
-            onSuccess={async (memberData: any) => { await handleAddMemberSuccess(memberData); }}
+            onSuccess={async (memberData: any) => { handleAddMemberSuccess(); }}
           />
         )}
 
@@ -753,7 +772,7 @@ const Members: React.FC = () => {
             isOpen={modalState.editMember}
             onClose={() => closeModal("editMember")}
             member={modalData.selectedMember}
-            onSuccess={async (member: any) => { await handleEditMemberSuccess(member); }}
+            onSuccess={async (member: any) => { handleEditMemberSuccess(); }}
           />
         )}
 
@@ -771,7 +790,6 @@ const Members: React.FC = () => {
             isOpen={modalState.viewProfile}
             onClose={() => closeModal("viewProfile")}
             member={modalData.selectedMember}
-            onSuccess={async (member: any) => { handleViewMember(member); }}
           />
         )}
 
