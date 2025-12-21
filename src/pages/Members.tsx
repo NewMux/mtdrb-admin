@@ -50,7 +50,7 @@ type TableMember = {
   email?: string;
   phone: string;
   age: number;
-  gender: string;
+  gender: "Male" | "Female" | "Other";
   joinDate: string;
   planEnd: string;
   lastCheckIn: string;
