@@ -53,8 +53,8 @@ const snapshots = [
 
 const TodaysSnapshot: React.FC = () => (
   <section className="mb-8">
-    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-      <FiZap className="text-blue-500 dark:text-blue-300" /> Today's Snapshot
+    <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <FiZap className="text-blue-500" /> Today's Snapshot
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {snapshots.map((item, idx) => (

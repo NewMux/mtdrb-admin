@@ -17,6 +17,6 @@ export {
   FormField,
   SelectField,
   FormSection,
-  AIRecommendationCard,
+  SmartRecommendationCard,
   ConflictAlert,
 } from "./SmartFormComponents";

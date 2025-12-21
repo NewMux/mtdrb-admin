@@ -113,7 +113,7 @@ export default function UpdateTrainerStatusModal({
           placeholder="Add a note..."
         />
       </div>
-      {/* AI/Pro: Suggest backup trainers if On Leave */}
+      {/* Smart/Pro: Suggest backup trainers if On Leave */}
       {status === "on_leave" && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -123,7 +123,7 @@ export default function UpdateTrainerStatusModal({
             </span>
           </div>
           <div className="text-gray-500 text-sm">
-            (Pro) AI will suggest available backup trainers for this period.
+            (Pro) System will suggest available backup trainers for this period.
           </div>
         </div>
       )}

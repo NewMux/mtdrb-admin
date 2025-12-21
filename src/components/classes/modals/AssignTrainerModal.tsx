@@ -160,7 +160,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Trainer assigned successfully");
       onSuccess?.();
       onClose();
     } catch (error) {

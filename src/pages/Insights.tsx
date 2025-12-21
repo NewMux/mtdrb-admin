@@ -76,13 +76,13 @@ const AiSuggestionCard = ({ title, icon, suggestions }) => (
 );
 
 const TrainerPerformanceCard = ({ trainers }) => (
-  <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-    <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <h3 className="text-lg font-bold mb-4 text-gray-900">
       Trainer Performance
     </h3>
     <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-        <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-700">
+      <table className="w-full text-sm text-left text-gray-500">
+        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3">
               Trainer
@@ -102,21 +102,21 @@ const TrainerPerformanceCard = ({ trainers }) => (
           {trainers.map((trainer, index) => (
             <tr
               key={index}
-              className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              className="bg-white border-b border-gray-200 hover:bg-gray-50"
             >
               <th
                 scope="row"
-                className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
               >
                 {trainer.name}
               </th>
-              <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
+              <td className="px-6 py-4 text-gray-700">
                 {trainer.classCount}
               </td>
-              <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
+              <td className="px-6 py-4 text-gray-700">
                 {trainer.totalAttendance}
               </td>
-              <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
+              <td className="px-6 py-4 text-gray-700">
                 {trainer.avgAttendance.toFixed(1)}
               </td>
             </tr>
@@ -343,7 +343,7 @@ export default function Insights({ classes, bookings }) {
         />
       </div>
 
-      {/* Charts & AI Suggestions */}
+      {/* Charts & Smart Suggestions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <HeatmapChart data={heatmapData} />
@@ -352,7 +352,7 @@ export default function Insights({ classes, bookings }) {
         <AiSuggestionCard
           title="Smart Recommendations"
           icon="🧠"
-          suggestions={mockData.aiSuggestions}
+          suggestions={mockData.assistantSuggestions}
         />
 
         <div className="lg:col-span-2">

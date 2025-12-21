@@ -181,7 +181,7 @@ const PromotionBuilder: React.FC<PromotionBuilderProps> = ({ refreshKey }) => {
           "🎉 Exclusive offer just for you! Don&apos;t miss out on this amazing deal.",
       }));
     } catch (error) {
-      console.error("Error generating AI copy:", error);
+      console.error("Error generating Smart copy:", error);
       setFormData((prev) => ({
         ...prev,
         aiCopy:
@@ -474,13 +474,13 @@ const PromotionBuilder: React.FC<PromotionBuilderProps> = ({ refreshKey }) => {
               </div>
             </div>
 
-            {/* AI Copy Generator */}
+            {/* Smart Copy Generator */}
             <div className="mt-6 p-4 bg-purple-50 rounded-2xl">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <FiCpu className="h-5 w-5 text-purple-600" />
                   <h3 className="font-semibold text-gray-900">
-                    AI Copy Suggestion
+                    Smart Copy Suggestion
                   </h3>
                 </div>
                 <button
@@ -491,9 +491,9 @@ const PromotionBuilder: React.FC<PromotionBuilderProps> = ({ refreshKey }) => {
                   {isGeneratingCopy ? "Generating..." : "Generate Copy"}
                 </button>
               </div>
-              {formData.aiCopy && (
+              {formData.assistantCopy && (
                 <div className="bg-white p-4 rounded-xl border border-purple-200">
-                  <p className="text-gray-700 mb-3">{formData.aiCopy}</p>
+                  <p className="text-gray-700 mb-3">{formData.assistantCopy}</p>
                   <button className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center space-x-1">
                     <FiCopy className="h-4 w-4" />
                     <span>Copy to clipboard</span>

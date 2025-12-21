@@ -33,22 +33,22 @@ const insights = [
 ];
 
 const colorBg = {
-  blue: "bg-blue-50 dark:bg-blue-950",
-  green: "bg-green-50 dark:bg-green-950",
-  purple: "bg-purple-50 dark:bg-purple-950",
-  red: "bg-red-50 dark:bg-red-950",
+  blue: "bg-blue-50",
+  green: "bg-green-50",
+  purple: "bg-purple-50",
+  red: "bg-red-50",
 };
 const colorText = {
-  blue: "text-blue-600 dark:text-blue-300",
-  green: "text-green-600 dark:text-green-300",
-  purple: "text-purple-600 dark:text-purple-300",
-  red: "text-red-600 dark:text-red-300",
+  blue: "text-blue-600",
+  green: "text-green-600",
+  purple: "text-purple-600",
+  red: "text-red-600",
 };
 
 const SmartInsightsPanel: React.FC = () => (
   <section className="mb-8">
-    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-      <FiZap className="text-purple-500 dark:text-purple-300" /> Smart Insights
+    <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <FiZap className="text-purple-500" /> Smart Insights
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {insights.map((insight, idx) => (
@@ -58,7 +58,7 @@ const SmartInsightsPanel: React.FC = () => (
         >
           <div className="flex items-center gap-3 mb-2">
             <div
-              className={`p-2 rounded-xl ${colorBg[insight.color]} dark:bg-opacity-80`}
+              className={`p-2 rounded-xl ${colorBg[insight.color]}`}
             >
               {insight.icon}
             </div>

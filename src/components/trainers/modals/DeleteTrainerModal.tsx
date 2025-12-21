@@ -54,39 +54,44 @@ export default function DeleteTrainerModal({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={handleClose}
+      onAction={handleDelete}
+      actionLabel={loading ? "Deleting..." : "Delete Trainer"}
+      actionVariant="danger"
       title="Delete Trainer"
       subtitle="This action cannot be undone"
     >
       <div className="space-y-6">
         {/* Warning Message */}
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <FiAlertTriangle className="text-red-500 mt-0.5 flex-shrink-0" />
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <FiAlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            </div>
             <div>
-              <h3 className="text-sm font-medium text-red-800">
+              <h3 className="text-base font-semibold text-red-900 mb-1">
                 Are you sure you want to delete this trainer?
               </h3>
-              <p className="text-sm text-red-700 mt-1">
-                This will permanently remove {trainer.name} from the system and
-                cannot be undone.
+              <p className="text-sm text-red-700 leading-relaxed">
+                This will permanently remove <strong>{trainer.name}</strong> from the system and
+                cannot be undone. All associated data will be lost.
               </p>
             </div>
           </div>
         </div>
 
         {/* Trainer Information */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
-              <span className="text-white font-medium text-sm">
+        <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-2 ring-sky-100">
+              <span className="text-white font-semibold text-base">
                 {trainer.avatar}
               </span>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{trainer.name}</h3>
-              <p className="text-sm text-gray-600">{trainer.email}</p>
+              <h3 className="font-bold text-gray-900 text-lg mb-1">{trainer.name}</h3>
+              <p className="text-sm text-gray-600 font-medium">{trainer.email}</p>
               <p className="text-sm text-gray-600">{trainer.specialty}</p>
             </div>
           </div>
@@ -112,28 +117,6 @@ export default function DeleteTrainerModal({
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-        <SmartButton
-          variant="secondary"
-          size="sm"
-          onClick={handleClose}
-          disabled={loading}
-        >
-          <FiX className="h-4 w-4 mr-2" />
-          Cancel
-        </SmartButton>
-
-        <SmartButton
-          variant="danger"
-          size="sm"
-          onClick={handleDelete}
-          loading={loading}
-        >
-          <FiTrash2 className="h-4 w-4 mr-2" />
-          {loading ? "Deleting..." : "Delete Trainer"}
-        </SmartButton>
-      </div>
     </ColorfulModalUI>
   );
 }

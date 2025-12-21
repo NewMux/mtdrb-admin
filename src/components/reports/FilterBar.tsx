@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiCalendar, FiMapPin, FiBarChart, FiFilter } from "react-icons/fi";
-import { getBranches, getMetricTypes } from "../../api/mockReports";
+// Removed import from mockReports - define functions locally
+const getBranches = async (): Promise<Array<{ id: string; name: string }>> => {
+  // TODO: Fetch from Supabase
+  return [];
+};
+
+const getMetricTypes = async (): Promise<Array<{ id: string; name: string }>> => {
+  // TODO: Fetch from Supabase
+  return [];
+};
 
 interface FilterBarProps {
   onFiltersChange: (filters: {

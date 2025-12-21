@@ -20,7 +20,7 @@ const HowItWorks: React.FC = () => {
     {
       icon: FiTrendingUp,
       title: "Automate and Grow",
-      description: "Let AI handle routine tasks while you focus on growing your business and member experience."
+      description: "Let automation handle routine tasks while you focus on growing your business and member experience."
     }
   ];
 

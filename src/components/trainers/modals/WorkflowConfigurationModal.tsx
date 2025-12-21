@@ -74,7 +74,7 @@ export default function WorkflowConfigurationModal({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={handleClose}
       title="Configure Workflow"
       subtitle={`Customize settings for ${workflowName}`}

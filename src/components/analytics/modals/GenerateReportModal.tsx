@@ -84,7 +84,7 @@ export default function GenerateReportModal({
     loading,
     filters,
     setFilters,
-    aiInsights,
+    smartInsights,
     reportPreview,
     alerts,
     generatePreview,
@@ -176,10 +176,10 @@ export default function GenerateReportModal({
       ))}
 
       {/* Smart Insights (Pro) */}
-      {aiInsights.length > 0 && (
+      {smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {aiInsights.map((insight) => (
+            {smartInsights.map((insight) => (
               <div
                 key={insight.id}
                 className={`p-4 rounded-lg border ${

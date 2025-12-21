@@ -30,7 +30,7 @@ import TabsNav from "../components/ui/TabsNav";
 import { AddButton } from "../components/ui/AddButton";
 import { SmartButton } from "../components/ui/DesignSystem";
 
-import { mockTrainerTableData } from "../api/mockTrainerData";
+// Removed mock data - using real data from Supabase
 
 // Import all modals
 import {
@@ -72,9 +72,7 @@ const Trainers: React.FC = () => {
   const [selectedTrainer, setSelectedTrainer] = React.useState<Trainer | null>(
     null,
   );
-  const [trainers, setTrainers] = React.useState<Trainer[]>(
-    mockTrainerTableData || [],
-  );
+  const [trainers, setTrainers] = React.useState<Trainer[]>([]);
   const [refreshKey, setRefreshKey] = React.useState(0);
 
   // Ensure trainers is always an array
@@ -107,10 +105,11 @@ const Trainers: React.FC = () => {
     },
   ];
 
-  // Modal handlers
   const handleOpenModal = (type: ModalType, trainer?: Trainer) => {
     setActiveModal(type);
-    if (trainer) setSelectedTrainer(trainer);
+    if (trainer) {
+      setSelectedTrainer(trainer);
+    }
   };
 
   const handleCloseModal = () => {
@@ -212,17 +211,17 @@ const Trainers: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         {stat.name}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         {stat.value}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-gray-500 mt-1">
                         {stat.change}
                       </p>
                     </div>
@@ -237,14 +236,14 @@ const Trainers: React.FC = () => {
             </div>
 
             {/* All Trainers Section */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-gray-900">
                   All Trainers
                 </h2>
                 <button
                   onClick={() => handleTabChange("list")}
-                  className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-blue-600 text-sm font-medium hover:text-blue-700"
                 >
                   View All Trainers
                 </button>
@@ -272,20 +271,20 @@ const Trainers: React.FC = () => {
       case "list":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-gray-900">
                     Trainer Management
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     Manage all trainers, schedules, and assignments
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={handleExport}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
                   >
                     <FiDownload className="w-4 h-4" />
                     <span>Export</span>
@@ -299,7 +298,7 @@ const Trainers: React.FC = () => {
                   </button>
                   <button
                     onClick={handleRefresh}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
                   >
                     <FiRefreshCw className="w-4 h-4" />
                     <span>Refresh</span>
@@ -328,13 +327,13 @@ const Trainers: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               🚀 Smart Trainer Management
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-gray-600 mt-1">
               Intelligent scheduling • Performance tracking • Zero Excel
             </p>
           </div>
@@ -342,7 +341,7 @@ const Trainers: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => handleTabChange("list")}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
               <FiTarget className="w-4 h-4" />
               <span>View Schedule</span>
@@ -359,7 +358,7 @@ const Trainers: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -369,7 +368,7 @@ const Trainers: React.FC = () => {
               placeholder="Search trainers by name, specialty, or availability..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
@@ -378,7 +377,7 @@ const Trainers: React.FC = () => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {filters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -387,7 +386,7 @@ const Trainers: React.FC = () => {
               ))}
             </select>
 
-            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <button className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
               <FiFilter className="w-4 h-4" />
             </button>
           </div>
@@ -395,7 +394,7 @@ const Trainers: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-2 shadow-sm border border-gray-200">
         <div className="flex space-x-1">
           {tabs.map((tab) => (
             <button
@@ -403,8 +402,8 @@ const Trainers: React.FC = () => {
               onClick={() => handleTabChange(tab.id)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
             >
               <tab.icon className="w-4 h-4" />

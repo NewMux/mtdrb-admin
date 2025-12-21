@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiFilter,
@@ -361,7 +361,6 @@ export default function AnalyticsFilterBar({
 
   const handleApplyFilters = () => {
     // Placeholder for actual filter application logic
-    console.log("Applying filters:", filters);
     setIsExpanded(false);
   };
 

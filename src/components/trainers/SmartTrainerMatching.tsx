@@ -148,11 +148,11 @@ export default function SmartTrainerMatching({
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">
-            AI Matching Results
+            Smart Matching Results
           </h3>
           <div className="flex items-center gap-2">
             <FiZap className="text-yellow-500" />
-            <span className="text-sm text-gray-600">Powered by AI</span>
+            <span className="text-sm text-gray-600">Powered by Smart</span>
           </div>
         </div>
 

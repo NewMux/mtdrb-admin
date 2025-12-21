@@ -95,11 +95,9 @@ export default function MemberProfileDrawer({
     ],
   });
 
-  // Simulate data fetching
   useEffect(() => {
     if (isOpen && member) {
       setIsLoading(true);
-      // Simulate API calls
       setTimeout(() => {
         // Update data based on member status
         if (member.membership_status === "active") {
@@ -130,13 +128,11 @@ export default function MemberProfileDrawer({
   }, [isOpen, member]);
 
   const handleViewInvoices = () => {
-    // Handle view invoices action
-    console.log("View invoices for member:", member.id);
+    // TODO: Implement view invoices functionality
   };
 
   const handleSendMessage = () => {
-    // Handle send re-engagement message
-    console.log("Send re-engagement message to member:", member.id);
+    // TODO: Implement send message functionality
   };
 
   const handleRefresh = async () => {
@@ -144,7 +140,6 @@ export default function MemberProfileDrawer({
     if (onRefresh) {
       await onRefresh();
     }
-    // Simulate refresh delay
     setTimeout(() => setIsLoading(false), 1000);
   };
 
@@ -158,9 +153,9 @@ export default function MemberProfileDrawer({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/50 backdrop-blur-md"
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           onClick={onClose}
-          style={{ cursor: "pointer" }}
         />
 
         {/* Drawer */}
@@ -168,11 +163,12 @@ export default function MemberProfileDrawer({
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-3xl border-0 outline-none flex flex-col"
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-3xl flex flex-col"
           role="dialog"
           aria-modal="true"
           aria-labelledby="member-profile-title"
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header Section */}
           <div className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 px-6 py-6 rounded-tl-3xl flex-shrink-0">

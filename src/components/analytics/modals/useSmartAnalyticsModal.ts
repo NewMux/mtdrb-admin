@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../../../supabaseClient";
 
 export interface AnalyticsFilters {
   dateRange: {
@@ -24,7 +25,7 @@ export interface AnalyticsFilters {
   deliveryMethod?: "email" | "slack";
 }
 
-export interface AIInsight {
+export interface SmartInsight {
   id: string;
   type: "prediction" | "recommendation" | "alert" | "trend";
   title: string;
@@ -83,7 +84,7 @@ export const useSmartAnalyticsModal = (
     includeVisuals: true,
   });
 
-  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [smartInsights, setSmartInsights] = useState<SmartInsight[]>([]);
   const [reportTemplates, setReportTemplates] = useState<ReportTemplate[]>([]);
   const [reportPreview, setReportPreview] = useState<ReportPreview | null>(
     null,
@@ -92,94 +93,55 @@ export const useSmartAnalyticsModal = (
     Array<{ type: "error" | "warning" | "info"; message: string }>
   >([]);
 
-  // Mock data for development
-  const mockAiInsights: AIInsight[] = [
-    {
-      id: "1",
-      type: "prediction",
-      title: "Member Churn Risk",
-      description:
-        "5 members show signs of potential churn in the next 30 days",
-      confidence: 85,
-      impact: "high",
-      action: "Send re-engagement campaign",
-      isPro: true,
-    },
-    {
-      id: "2",
-      type: "recommendation",
-      title: "Revenue Optimization",
-      description: "Adding 2 evening classes could increase revenue by 15%",
-      confidence: 92,
-      impact: "high",
-      action: "Schedule new classes",
-      isPro: true,
-    },
-    {
-      id: "3",
-      type: "alert",
-      title: "Low Class Attendance",
-      description: "Yoga classes have 30% lower attendance this month",
-      confidence: 78,
-      impact: "medium",
-      action: "Review class timing",
-      isPro: false,
-    },
-  ];
-
-  const mockReportTemplates: ReportTemplate[] = [
-    {
-      id: "1",
-      name: "Member Overview",
-      description: "Comprehensive member activity and engagement metrics",
-      sections: ["Attendance", "Payments", "Progress", "Engagement"],
-      isCustom: false,
-      lastUsed: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Financial Summary",
-      description: "Revenue, expenses, and profit analysis",
-      sections: ["Revenue", "Expenses", "Profit", "VAT"],
-      isCustom: false,
-      lastUsed: "2024-01-10",
-    },
-    {
-      id: "3",
-      name: "Custom Report",
-      description: "Your custom report template",
-      sections: ["Attendance", "Payment", "Trainer Feedback"],
-      isCustom: true,
-      lastUsed: "2024-01-12",
-    },
-  ];
-
-  const mockReportPreview: ReportPreview = {
-    totalRecords: 1247,
-    topMetrics: [
-      { label: "Total Members", value: 1247, change: 12, trend: "up" },
-      { label: "Active Classes", value: 89, change: -3, trend: "down" },
-      { label: "Revenue", value: "$45,230", change: 8, trend: "up" },
-      { label: "Attendance Rate", value: "78%", change: 2, trend: "up" },
-    ],
-    estimatedSize: "2.3 MB",
-    processingTime: 3,
-  };
-
-  // Load initial data
+  // Load initial data from real sources only
   useEffect(() => {
-    setAiInsights(mockAiInsights);
-    setReportTemplates(mockReportTemplates);
-    setReportPreview(mockReportPreview);
+    // Load real insights from service
+    const loadInsights = async () => {
+      try {
+        const { getAnalyticsInsights } = await import("../../../services/smartSuggestionsService");
+        const realInsights = await getAnalyticsInsights();
+        setSmartInsights(realInsights);
+      } catch (error) {
+        console.error("Error loading insights:", error);
+        setSmartInsights([]);
+      }
+    };
+
+    // Load report templates from database
+    const loadTemplates = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: membership } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (membership?.tenant_id) {
+          // TODO: Create report_templates table and fetch from there
+          // For now, return empty array
+          setReportTemplates([]);
+        }
+      } catch (error) {
+        console.error("Error loading templates:", error);
+        setReportTemplates([]);
+      }
+    };
+
+    loadInsights();
+    loadTemplates();
+    // Report preview will be generated when user creates a report
+    setReportPreview(null);
   }, []);
 
   // Generate report preview
   const generatePreview = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setReportPreview(mockReportPreview);
+      // Report preview will be generated from real data when user creates a report
+      setReportPreview(null);
       setAlerts([
         { type: "info", message: "Report preview generated successfully" },
       ]);
@@ -194,8 +156,7 @@ export const useSmartAnalyticsModal = (
   const generateReport = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // TODO: Implement real report generation and export
       setAlerts([
         { type: "info", message: "Report generated and exported successfully" },
       ]);
@@ -216,8 +177,7 @@ export const useSmartAnalyticsModal = (
   }) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Implement real report scheduling
       setAlerts([{ type: "info", message: "Report scheduled successfully" }]);
       return { success: true };
     } catch (error) {
@@ -232,8 +192,7 @@ export const useSmartAnalyticsModal = (
   const saveTemplate = async (template: Omit<ReportTemplate, "id">) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // TODO: Save template to Supabase when report_templates table is available
       const newTemplate = { ...template, id: Date.now().toString() };
       setReportTemplates((prev) => [...prev, newTemplate]);
       setAlerts([{ type: "info", message: "Template saved successfully" }]);
@@ -246,12 +205,11 @@ export const useSmartAnalyticsModal = (
     }
   };
 
-  // Apply AI recommendation
+  // Apply Smart recommendation
   const applyRecommendation = async (insightId: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Implement real recommendation application
       setAlerts([
         { type: "info", message: "Recommendation applied successfully" },
       ]);
@@ -268,7 +226,7 @@ export const useSmartAnalyticsModal = (
     loading,
     filters,
     setFilters,
-    aiInsights,
+    smartInsights,
     reportTemplates,
     reportPreview,
     alerts,

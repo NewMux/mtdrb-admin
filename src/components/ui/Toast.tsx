@@ -34,43 +34,43 @@ const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
     switch (toast.type) {
       case "success":
         return {
-          bg: "bg-green-50 dark:bg-green-900/20",
-          border: "border-green-200 dark:border-green-800",
-          icon: "text-green-600 dark:text-green-400",
-          title: "text-green-800 dark:text-green-200",
-          message: "text-green-700 dark:text-green-300",
+          bg: "bg-green-50",
+          border: "border-green-200",
+          icon: "text-green-600",
+          title: "text-green-800",
+          message: "text-green-700",
         };
       case "error":
         return {
-          bg: "bg-red-50 dark:bg-red-900/20",
-          border: "border-red-200 dark:border-red-800",
-          icon: "text-red-600 dark:text-red-400",
-          title: "text-red-800 dark:text-red-200",
-          message: "text-red-700 dark:text-red-300",
+          bg: "bg-red-50",
+          border: "border-red-200",
+          icon: "text-red-600",
+          title: "text-red-800",
+          message: "text-red-700",
         };
       case "warning":
         return {
-          bg: "bg-yellow-50 dark:bg-yellow-900/20",
-          border: "border-yellow-200 dark:border-yellow-800",
-          icon: "text-yellow-600 dark:text-yellow-400",
-          title: "text-yellow-800 dark:text-yellow-200",
-          message: "text-yellow-700 dark:text-yellow-300",
+          bg: "bg-yellow-50",
+          border: "border-yellow-200",
+          icon: "text-yellow-600",
+          title: "text-yellow-800",
+          message: "text-yellow-700",
         };
       case "info":
         return {
-          bg: "bg-blue-50 dark:bg-blue-900/20",
-          border: "border-blue-200 dark:border-blue-800",
-          icon: "text-blue-600 dark:text-blue-400",
-          title: "text-blue-800 dark:text-blue-200",
-          message: "text-blue-700 dark:text-blue-300",
+          bg: "bg-blue-50",
+          border: "border-blue-200",
+          icon: "text-blue-600",
+          title: "text-blue-800",
+          message: "text-blue-700",
         };
       default:
         return {
-          bg: "bg-gray-50 dark:bg-gray-900/20",
-          border: "border-gray-200 dark:border-gray-800",
-          icon: "text-gray-600 dark:text-gray-400",
-          title: "text-gray-800 dark:text-gray-200",
-          message: "text-gray-700 dark:text-gray-300",
+          bg: "bg-gray-50",
+          border: "border-gray-200",
+          icon: "text-gray-600",
+          title: "text-gray-800",
+          message: "text-gray-700",
         };
     }
   };

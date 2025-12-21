@@ -26,7 +26,7 @@ import {
   GenerateMemberReportModal,
   GenerateTrainerReportModal,
   GenerateClassReportModal,
-  ViewAIInsightsModal,
+  ViewSmartInsightsModal,
   ApplyRecommendationModal,
   LearnMoreInsightModal,
 } from "../components/analytics/modals";
@@ -161,7 +161,6 @@ export default function AnalyticsModalsDemo() {
   };
 
   const handleSuccess = () => {
-    console.log("Modal action completed successfully");
   };
 
   return (
@@ -351,7 +350,7 @@ export default function AnalyticsModalsDemo() {
         isPro={isPro}
       />
 
-      <ViewAIInsightsModal
+      <ViewSmartInsightsModal
         open={activeModal === "ai_insights"}
         onClose={handleCloseModal}
         onSuccess={handleSuccess}

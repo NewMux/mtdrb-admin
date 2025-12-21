@@ -45,32 +45,32 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       case "available":
-        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200";
+        return "bg-sky-100 text-sky-800";
       case "busy":
-        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+        return "bg-gold-100 text-gold-800";
       case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getSpecialtyColor = (specialty: string) => {
     switch (specialty) {
       case "Yoga & Pilates":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        return "bg-purple-100 text-purple-800";
       case "HIIT & Cardio":
-        return "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200";
+        return "bg-rose-100 text-rose-800";
       case "Strength Training":
-        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+        return "bg-gold-100 text-gold-800";
       case "CrossFit":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       case "Zumba & Dance":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200";
+        return "bg-pink-100 text-pink-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -83,7 +83,7 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
             ? "text-yellow-400 fill-current"
             : i < rating
               ? "text-yellow-400 fill-current opacity-50"
-              : "text-gray-300 dark:text-gray-600"
+              : "text-gray-300"
         }`}
       />
     ));
@@ -95,12 +95,12 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
   if (safeTrainers.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500 dark:text-gray-400 mb-4">
+        <div className="text-gray-500 mb-4">
           <FiUser className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+          <h3 className="text-lg font-medium text-gray-900">
             No trainers found
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500">
             Get started by adding your first trainer
           </p>
         </div>
@@ -109,38 +109,38 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+    <div className="overflow-hidden rounded-2xl border border-gray-200">
       <table className="w-full">
-        <thead className="bg-gray-50 dark:bg-gray-800">
+        <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
               Trainer
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
               Contact
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
               Specialty
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
               Rating
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
               Status
             </th>
-            <th className="px-6 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-right text-sm font-medium text-gray-700">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody className="divide-y divide-gray-100">
           {safeTrainers.map((trainer, index) => (
             <tr
               key={trainer.id}
-              className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 ${
+              className={`hover:bg-gray-50 transition-colors duration-200 ${
                 index % 2 === 0
-                  ? "bg-white dark:bg-gray-900"
-                  : "bg-gray-50/50 dark:bg-gray-800/50"
+                  ? "bg-white"
+                  : "bg-gray-50/50/50"
               }`}
               onMouseEnter={() => setHoveredRow(trainer.id)}
               onMouseLeave={() => setHoveredRow(null)}
@@ -153,10 +153,10 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
                     </span>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="text-sm font-medium text-gray-900">
                       {trainer.name}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500">
                       {trainer.experience} experience
                     </div>
                   </div>
@@ -165,10 +165,10 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
 
               <td className="px-6 py-4">
                 <div className="space-y-1">
-                  <div className="text-sm text-gray-900 dark:text-white">
+                  <div className="text-sm text-gray-900">
                     {trainer.email}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500">
                     {trainer.phone}
                   </div>
                 </div>
@@ -187,7 +187,7 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
                   <div className="flex space-x-1">
                     {renderStars(trainer.rating)}
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-gray-600">
                     {trainer.rating}
                   </span>
                 </div>
@@ -201,7 +201,7 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
                     {trainer.status.charAt(0).toUpperCase() +
                       trainer.status.slice(1)}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500">
                     {trainer.classes} classes
                   </span>
                 </div>
@@ -210,36 +210,45 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
               <td className="px-6 py-4 text-right">
                 <div
                   className={`flex items-center justify-end space-x-2 transition-opacity duration-200 ${
-                    hoveredRow === trainer.id ? "opacity-100" : "opacity-0"
+                    hoveredRow === trainer.id ? "opacity-100" : "opacity-40"
                   }`}
                 >
-                  <SmartButton
-                    size="sm"
-                    variant="ghost"
-                    icon={<FiEye size={16} />}
+                  <button
+                    type="button"
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-900"
                     title="View"
                     onClick={(e) => {
-                      e.stopPropagation(); /* TODO: View handler */
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onView?.(trainer);
                     }}
-                  />
-                  <SmartButton
-                    size="sm"
-                    variant="ghost"
-                    icon={<FiEdit2 size={16} />}
+                  >
+                    <FiEye size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-900"
                     title="Edit"
                     onClick={(e) => {
-                      e.stopPropagation(); /* TODO: Edit handler */
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onEdit?.(trainer);
                     }}
-                  />
-                  <SmartButton
-                    size="sm"
-                    variant="ghost"
-                    icon={<FiTrash2 size={16} />}
+                  >
+                    <FiEdit2 size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-red-600"
                     title="Delete"
                     onClick={(e) => {
-                      e.stopPropagation(); /* TODO: Delete handler */
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDelete?.(trainer);
                     }}
-                  />
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
                 </div>
               </td>
             </tr>

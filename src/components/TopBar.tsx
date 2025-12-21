@@ -22,7 +22,6 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
-  const { isDarkMode } = useTheme();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
 
@@ -68,20 +67,20 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left Section */}
           <div className="flex items-center space-x-4">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
               aria-label="Toggle menu"
             >
-              <FiMenu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <FiMenu className="w-5 h-5 text-gray-600" />
             </button>
 
             {/* Page Title */}
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-semibold text-gray-900">
               Dashboard
             </h1>
           </div>
@@ -93,7 +92,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
@@ -101,8 +100,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           {/* Right Section */}
           <div className="flex items-center space-x-3">
             {/* Notifications */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 relative">
-              <FiBell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative">
+              <FiBell className="w-5 h-5 text-gray-600" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
 
@@ -110,7 +109,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             <div className="relative dropdown-container">
               <button
                 onClick={handleUserMenuClick}
-                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
               >
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-medium text-sm">
@@ -129,10 +128,10 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
                   >
-                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-900">
                         {user?.user_metadata?.full_name || user?.email}
                       </p>
                     </div>
@@ -140,7 +139,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                     <div className="py-1">
                       <button
                         onClick={handleSettingsClick}
-                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiSettings className="w-4 h-4" />
                         <span>Settings</span>
@@ -148,7 +147,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <FiLogOut className="w-4 h-4" />
                         <span>Sign out</span>
@@ -171,19 +170,19 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       >
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-3">
-            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <FiUser className="w-5 h-5 text-gray-500" />
               <span className="text-sm font-medium">Profile Settings</span>
             </button>
-            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <FiShield className="w-5 h-5 text-gray-500" />
               <span className="text-sm font-medium">Security</span>
             </button>
-            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <FiCreditCard className="w-5 h-5 text-gray-500" />
               <span className="text-sm font-medium">Billing</span>
             </button>
-            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            <button className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <FiBell className="w-5 h-5 text-gray-500" />
               <span className="text-sm font-medium">Notifications</span>
             </button>

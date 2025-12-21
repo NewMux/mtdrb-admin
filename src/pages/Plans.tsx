@@ -111,13 +111,13 @@ export default function Plans() {
     {
       label: "Plan Analytics",
       icon: <FiBarChart className="h-4 w-4" />,
-      onClick: () => navigate("/analytics"),
+      onClick: () => navigate("/dashboard/analytics"),
       variant: "secondary" as const,
     },
     {
       label: "Member Plans",
       icon: <FiUsers className="h-4 w-4" />,
-      onClick: () => navigate("/members"),
+      onClick: () => navigate("/dashboard/members"),
       variant: "ghost" as const,
     },
   ];

@@ -59,30 +59,30 @@ const ClassTable: React.FC<ClassTableProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "upcoming":
-        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200";
+        return "bg-sky-100 text-sky-800";
       case "active":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       case "completed":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
       case "cancelled":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case "Yoga":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        return "bg-purple-100 text-purple-800";
       case "Cardio":
-        return "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200";
+        return "bg-rose-100 text-rose-800";
       case "Strength":
-        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+        return "bg-gold-100 text-gold-800";
       case "Pilates":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -133,7 +133,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
   if (loading) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+      <div className="overflow-hidden rounded-2xl border border-gray-200">
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading classes...</p>
@@ -144,7 +144,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
   if (error) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+      <div className="overflow-hidden rounded-2xl border border-gray-200">
         <div className="p-8 text-center">
           <div className="text-red-600 mb-4">
             <FiEye className="h-8 w-8 mx-auto mb-2" />
@@ -178,12 +178,12 @@ const ClassTable: React.FC<ClassTableProps> = ({
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+      <div className="overflow-hidden rounded-2xl border border-gray-200">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50">
             <tr>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort("name")}
               >
                 <div className="flex items-center space-x-1">
@@ -196,7 +196,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </div>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort("trainer_id")}
               >
                 <div className="flex items-center space-x-1">
@@ -209,7 +209,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </div>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort("start_time")}
               >
                 <div className="flex items-center space-x-1">
@@ -222,7 +222,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </div>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort("enrolled_count")}
               >
                 <div className="flex items-center space-x-1">
@@ -235,7 +235,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </div>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort("status")}
               >
                 <div className="flex items-center space-x-1">
@@ -247,22 +247,22 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   )}
                 </div>
               </th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+              <th className="px-6 py-4 text-right text-sm font-medium text-gray-700">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-100">
             {paginatedClasses.map((classItem, index) => (
               <motion.tr
                 key={classItem.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 ${
+                className={`hover:bg-gray-50 transition-colors duration-200 ${
                   index % 2 === 0
-                    ? "bg-white dark:bg-gray-900"
-                    : "bg-gray-50/50 dark:bg-gray-800/50"
+                    ? "bg-white"
+                    : "bg-gray-50/50/50"
                 }`}
                 onMouseEnter={() => setHoveredRow(classItem.id)}
                 onMouseLeave={() => setHoveredRow(null)}
@@ -273,7 +273,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                       <FiUsers className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium text-gray-900">
                         {classItem.name}
                       </div>
                       <div className="flex items-center space-x-2 mt-1">
@@ -282,7 +282,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                         >
                           {classItem.type}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-gray-500">
                           {classItem.description || "No description"}
                         </span>
                       </div>
@@ -291,10 +291,10 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </td>
 
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 dark:text-white">
+                  <div className="text-sm text-gray-900">
                     {classItem.trainer_id}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500">
                     {classItem.location}
                   </div>
                 </td>
@@ -302,7 +302,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-2">
                     <FiClock className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-900 dark:text-white">
+                    <span className="text-sm text-gray-900">
                       {classItem.start_time}
                     </span>
                   </div>
@@ -311,11 +311,11 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 <td className="px-6 py-4">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-900 dark:text-white">
+                      <span className="text-gray-900">
                         {(classItem as any).enrolled_count || 0}/
                         {classItem.capacity}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                      <span className="text-gray-500">
                         {getEnrollmentPercentage(
                           (classItem as any).enrolled_count || 0,
                           classItem.capacity,
@@ -323,7 +323,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                         %
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-sky-500 h-2 rounded-full transition-all duration-300"
                         style={{
@@ -351,27 +351,27 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   >
                     {/* View Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => onView(classItem)}
                       title="View Details"
                       aria-label="View class details"
                     >
-                      <FiEye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <FiEye className="w-4 h-4 text-gray-500" />
                     </button>
 
                     {/* Edit Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => onEdit(classItem)}
                       title="Edit Class"
                       aria-label="Edit class"
                     >
-                      <FiEdit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <FiEdit className="w-4 h-4 text-gray-500" />
                     </button>
 
                     {/* Schedule Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-blue-100 transition-colors duration-200"
                       onClick={() => onSchedule(classItem)}
                       title="Schedule Class"
                       aria-label="Schedule class"
@@ -381,27 +381,27 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
                     {/* Assign Trainer Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => onAssignTrainer(classItem)}
                       title="Assign Trainer"
                       aria-label="Assign trainer to class"
                     >
-                      <FiUser className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <FiUser className="w-4 h-4 text-gray-500" />
                     </button>
 
                     {/* Waitlist Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => onWaitlist(classItem)}
                       title="Manage Waitlist"
                       aria-label="Manage class waitlist"
                     >
-                      <FiUsers className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <FiUsers className="w-4 h-4 text-gray-500" />
                     </button>
 
                     {/* Cancel Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-orange-100 transition-colors duration-200"
                       onClick={() => onCancel(classItem)}
                       title="Cancel Class"
                       aria-label="Cancel class"
@@ -411,7 +411,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
                     {/* Export Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-green-100 transition-colors duration-200"
                       onClick={() => onExport(classItem)}
                       title="Export Data"
                       aria-label="Export class data"
@@ -421,17 +421,17 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
                     {/* Settings Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                       onClick={() => onSettings(classItem)}
                       title="Class Settings"
                       aria-label="Class settings"
                     >
-                      <FiSettings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <FiSettings className="w-4 h-4 text-gray-500" />
                     </button>
 
                     {/* Delete Button */}
                     <button
-                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
+                      className="p-2 rounded-lg hover:bg-red-100 transition-colors duration-200"
                       onClick={() => onDelete(classItem)}
                       title="Delete Class"
                       aria-label="Delete class"
@@ -448,8 +448,8 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg">
+          <div className="text-sm text-gray-700">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, sortedClasses.length)} of{" "}
             {sortedClasses.length} classes
@@ -462,7 +462,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
             >
               Previous
             </button>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-gray-700">
               Page {currentPage} of {totalPages}
             </span>
             <button

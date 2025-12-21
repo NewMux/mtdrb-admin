@@ -11,7 +11,7 @@ const Layout: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 ${isDark ? "dark" : ""}`}
+      className={`min-h-screen bg-gray-50 transition-colors duration-300`}
     >
       <PageThemeDetector />
       <div className="flex h-screen">
@@ -24,7 +24,7 @@ const Layout: React.FC = () => {
           {/* Top Bar */}
           <TopBar onMenuClick={() => {}} />
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950">
+          <main className="flex-1 overflow-y-auto bg-gray-50">
             <div className="p-6 max-w-6xl mx-auto">
               <AnimatePresence mode="wait">
                 <motion.div

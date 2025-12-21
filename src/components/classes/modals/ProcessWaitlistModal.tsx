@@ -173,7 +173,6 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Waitlist processed successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -423,7 +422,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         {isPro && (
           <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl">
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              AI Suggestions
+              Smart Suggestions
             </h3>
             <div className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
               <p>• Consider prioritizing VIP members for better retention</p>

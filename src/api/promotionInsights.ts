@@ -1,5 +1,5 @@
 // Smart Promotion Insights API
-// Provides AI-driven campaign recommendations and analytics
+// Provides Smart-driven campaign recommendations and analytics
 
 export interface SmartInsight {
   id: string;
@@ -44,7 +44,7 @@ export interface AutomationWorkflow {
   expectedRevenue: number;
 }
 
-// Mock API functions - in production, these would call real AI services
+// Mock API functions - in production, these would call real Assistant services
 export const getSmartPromotionInsights = async (): Promise<SmartInsight[]> => {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -296,8 +296,8 @@ export const getAutomationWorkflows = async (): Promise<
 
 export const generateAICopy = async (
   campaignType: string,
-  targetAudience: string,
-  discount: any,
+  _targetAudience: string,
+  _discount: any,
 ): Promise<string[]> => {
   await new Promise((resolve) => setTimeout(resolve, 1500));
 

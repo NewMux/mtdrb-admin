@@ -69,7 +69,6 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
-  // Load class data when modal opens
   useEffect(() => {
     if (isOpen && classId) {
       fetchClass();
@@ -77,7 +76,6 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     }
   }, [isOpen, classId]);
 
-  // Load current settings from class data
   const loadCurrentSettings = () => {
     if (classData) {
       setSettings({
@@ -112,10 +110,8 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
     setLoading(true);
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Settings updated successfully");
       toast.success("Class settings updated successfully");
       setHasChanges(false);
       onSuccess?.();
@@ -212,22 +208,22 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     >
       <div className="space-y-6">
         {/* Class Info */}
-        <div className="p-4 bg-light-50 dark:bg-dark-700 rounded-xl border border-light-200 dark:border-dark-600">
+        <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+              <h3 className="text-sm font-semibold text-dark-900text-white">
                 {classData.name}
               </h3>
-              <p className="text-sm text-light-600 dark:text-dark-400">
+              <p className="text-sm text-light-600text-dark-400">
                 {new Date(classData.date).toLocaleDateString()} •{" "}
                 {classData.start_time} - {classData.end_time}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-light-600 dark:text-dark-400">
+              <div className="text-sm text-light-600text-dark-400">
                 Current Capacity
               </div>
-              <div className="text-lg font-semibold text-dark-900 dark:text-white">
+              <div className="text-lg font-semibold text-dark-900text-white">
                 {classData.capacity}
               </div>
             </div>
@@ -235,7 +231,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-light-200 dark:border-dark-600">
+        <div className="border-b border-light-200border-dark-600">
           <nav className="flex space-x-8">
             {[
               {
@@ -255,7 +251,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? "border-brand-500 text-brand-600"
-                    : "border-transparent text-light-600 dark:text-dark-400 hover:text-light-900 dark:hover:text-dark-200"
+                    : "border-transparent text-light-600text-dark-400 hover:text-light-900hover:text-dark-200"
                 }`}
               >
                 {tab.icon}
@@ -339,7 +335,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-dark-900text-white mb-2">
                     Description
                   </label>
                   <textarea
@@ -349,7 +345,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                     }
                     placeholder="Describe the class, what to expect, and any requirements..."
                     rows={4}
-                    className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-light-200border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50bg-dark-700 text-dark-900text-white"
                   />
                 </div>
               </FormSection>
@@ -392,7 +388,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-dark-900text-white mb-2">
                     Trainer Requirements
                   </label>
                   <div className="space-y-2">
@@ -421,7 +417,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                         />
                         <label
                           htmlFor={`req-${idx}`}
-                          className="text-sm text-dark-900 dark:text-white"
+                          className="text-sm text-dark-900text-white"
                         >
                           {req}
                         </label>
@@ -431,7 +427,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-dark-900text-white mb-2">
                     Equipment Needed
                   </label>
                   <div className="space-y-2">
@@ -459,7 +455,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                           />
                           <label
                             htmlFor={`equipment-${idx}`}
-                            className="text-sm text-dark-900 dark:text-white"
+                            className="text-sm text-dark-900text-white"
                           >
                             {equipment}
                           </label>
@@ -470,7 +466,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+                  <label className="block text-sm font-medium text-dark-900text-white mb-2">
                     Special Instructions
                   </label>
                   <textarea
@@ -483,7 +479,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                     }
                     placeholder="Any special instructions for participants or trainers..."
                     rows={3}
-                    className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-light-200border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50bg-dark-700 text-dark-900text-white"
                   />
                 </div>
               </FormSection>
@@ -493,14 +489,14 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
         {/* Validation Errors */}
         {validationErrors.length > 0 && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl">
+          <div className="p-4 bg-red-50bg-red-900/10 border border-red-200border-red-800 rounded-xl">
             <div className="flex items-start space-x-3">
-              <FiAlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              <FiAlertTriangle className="h-5 w-5 text-red-600text-red-400 mt-0.5" />
               <div>
-                <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">
+                <h4 className="text-sm font-semibold text-red-900text-red-100">
                   Validation Errors
                 </h4>
-                <ul className="text-sm text-red-700 dark:text-red-200 mt-1 space-y-1">
+                <ul className="text-sm text-red-700text-red-200 mt-1 space-y-1">
                   {validationErrors.map((error, idx) => (
                     <li key={idx}>• {error}</li>
                   ))}
@@ -512,11 +508,11 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
         {/* Smart Suggestions */}
         {isPro && (
-          <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
-            <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
+          <div className="p-4 bg-green-50bg-green-900/10 border border-green-200border-green-800 rounded-xl">
+            <h3 className="text-sm font-semibold text-green-900text-green-100 mb-2">
               Smart Recommendations
             </h3>
-            <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
+            <div className="space-y-2 text-sm text-green-700text-green-300">
               <p>• Consider increasing capacity based on historical demand</p>
               <p>
                 • Set minimum attendance to 20% of capacity for optimal

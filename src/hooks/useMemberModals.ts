@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { MockMember } from "./useMockMembers";
+// Removed MockMember - using real Member type from types
+import { Member } from "../types/member";
 
 interface ModalState {
   addMember: boolean;
@@ -11,7 +12,7 @@ interface ModalState {
 }
 
 interface ModalData {
-  selectedMember: MockMember | null;
+  selectedMember: Member | null;
   memberId: string | null;
 }
 
@@ -32,7 +33,7 @@ export const useMemberModals = () => {
 
   // Generic modal open/close functions
   const openModal = useCallback(
-    (modalName: keyof ModalState, member?: MockMember) => {
+    (modalName: keyof ModalState, member?: Member) => {
       setModalState((prev) => ({ ...prev, [modalName]: true }));
       if (member) {
         setModalData({ selectedMember: member, memberId: member.id });
@@ -64,21 +65,21 @@ export const useMemberModals = () => {
   }, [openModal]);
 
   const openEditMemberModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal("editMember", member);
     },
     [openModal],
   );
 
   const openDeleteMemberModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal("deleteMember", member);
     },
     [openModal],
   );
 
   const openViewProfileModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal("viewProfile", member);
     },
     [openModal],
@@ -89,7 +90,7 @@ export const useMemberModals = () => {
   }, [openModal]);
 
   const openAssignTrainerModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal("assignTrainer", member);
     },
     [openModal],

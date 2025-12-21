@@ -226,7 +226,7 @@ const CinematicShowcase: React.FC = () => {
     },
     {
       title: "Smart\nscheduling.\nReal-time.",
-      subtitle: "AI-powered calendar, real-time attendance, and filters.",
+      subtitle: "Smart-powered calendar, real-time attendance, and filters.",
     },
     {
       title: "Empower\nyour staff.",

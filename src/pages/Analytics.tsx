@@ -32,7 +32,7 @@ import { usePageThemeContext } from "../contexts/PageThemeContext";
 import MemberAnalytics from "../components/analytics/MemberAnalytics";
 import RevenueOverview from "../components/analytics/RevenueOverview";
 import SmartKPIHeader from "../components/analytics/SmartKPIHeader";
-import AIInsights from "../components/analytics/AIInsights";
+import SmartInsights from "../components/analytics/AIInsights";
 
 // Report Components
 import SmartReportsDashboard from "../components/reports/SmartReportsDashboard";
@@ -44,18 +44,17 @@ import KPIGroup from "../components/reports/KPIGroup";
 import ReportTemplates from "../components/reports/ReportTemplates";
 import FilterBar from "../components/reports/FilterBar";
 
-// Mock API
-import {
-  getSmartInsights,
-  getWeeklySummary,
-  getChartMetrics,
-  getKPIStats,
-  getReportTemplates,
-  getBranches,
-  getMetricTypes,
-  SmartInsight,
-  ReportTemplate,
-} from "../api/mockReports";
+// TODO: Replace with real API calls when reports tables are created
+// For now, using empty data
+const getSmartInsights = async () => [];
+const getWeeklySummary = async () => ({});
+const getChartMetrics = async () => ({});
+const getKPIStats = async () => ({});
+const getReportTemplates = async () => [];
+const getBranches = async () => [];
+const getMetricTypes = async () => [];
+type SmartInsight = any;
+type ReportTemplate = any;
 
 // Import all modal components
 import {
@@ -66,7 +65,7 @@ import {
   DownloadReportModal,
   ShareReportModal,
   GenerateVATReportModal,
-  ViewAIInsightsModal,
+  ViewSmartInsightsModal,
   CreateCustomReportModal,
   PrintReportModal,
 } from "../components/analytics/modals";
@@ -89,7 +88,7 @@ export default function Analytics() {
   >("overview");
   const [weeklySummary, setWeeklySummary] = useState<string>("");
   const [insights, setInsights] = useState<SmartInsight[]>([]);
-  const [aiInsightsEnabled, setAiInsightsEnabled] = useState(true);
+  const [smartInsightsEnabled, setSmartInsightsEnabled] = useState(true);
   const [dateRange, setDateRange] = useState("30d");
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
@@ -104,10 +103,10 @@ export default function Analytics() {
     downloadReport: false,
     shareReport: false,
     vatReport: false,
-    aiInsights: false,
+    smartInsights: false,
     customReport: false,
     printReport: false,
-    askAI: false,
+    askSystem: false,
     viewDetails: false,
   });
   const [viewDetailsData, setViewDetailsData] = useState({
@@ -243,14 +242,14 @@ export default function Analytics() {
     toast.success("Filters updated");
   };
 
-  const toggleAiInsights = () => {
-    setAiInsightsEnabled(!aiInsightsEnabled);
+  const toggleSmartInsights = () => {
+    setSmartInsightsEnabled(!smartInsightsEnabled);
     localStorage.setItem(
-      "ai-insights-enabled",
-      (!aiInsightsEnabled).toString(),
+      "smart-insights-enabled",
+      (!smartInsightsEnabled).toString(),
     );
     toast.success(
-      `Smart Insights ${!aiInsightsEnabled ? "enabled" : "disabled"}`,
+      `Smart Insights ${!smartInsightsEnabled ? "enabled" : "disabled"}`,
     );
   };
 
@@ -334,17 +333,17 @@ export default function Analytics() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         {stat.name}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         {stat.value}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-gray-500 mt-1">
                         {stat.change}
                       </p>
                     </div>
@@ -358,33 +357,33 @@ export default function Analytics() {
               ))}
             </div>
 
-            {/* AI Insights */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            {/* Smart Insights */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  🤖 AI Insights
+                <h2 className="text-xl font-semibold text-gray-900">
+                  💡 Smart Insights
                 </h2>
                 <button
-                  onClick={toggleAiInsights}
+                  onClick={toggleSmartInsights}
                   className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    aiInsightsEnabled
-                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                    smartInsightsEnabled
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-700"
                   }`}
                 >
                   <FiToggleRight className="w-4 h-4" />
-                  <span>{aiInsightsEnabled ? "Enabled" : "Disabled"}</span>
+                  <span>{smartInsightsEnabled ? "Enabled" : "Disabled"}</span>
                 </button>
               </div>
-              <AIInsights
+              <SmartInsights
                 insights={insights}
                 onActionClick={handleInsightAction}
               />
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 ⚡ Quick Actions
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -392,14 +391,14 @@ export default function Analytics() {
                   onClick={() =>
                     setModalState((prev) => ({ ...prev, generateReport: true }))
                   }
-                  className="flex items-center space-x-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
                 >
-                  <FiFileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <FiFileText className="w-6 h-6 text-blue-600" />
                   <div className="text-left">
-                    <h3 className="font-medium text-blue-900 dark:text-blue-100">
+                    <h3 className="font-medium text-blue-900">
                       Generate Report
                     </h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="text-sm text-blue-700">
                       Create custom analytics report
                     </p>
                   </div>
@@ -409,14 +408,14 @@ export default function Analytics() {
                   onClick={() =>
                     setModalState((prev) => ({ ...prev, export: true }))
                   }
-                  className="flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                  className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
                 >
-                  <FiDownload className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  <FiDownload className="w-6 h-6 text-green-600" />
                   <div className="text-left">
-                    <h3 className="font-medium text-green-900 dark:text-green-100">
+                    <h3 className="font-medium text-green-900">
                       Export Data
                     </h3>
-                    <p className="text-sm text-green-700 dark:text-green-300">
+                    <p className="text-sm text-green-700">
                       Download analytics data
                     </p>
                   </div>
@@ -426,14 +425,14 @@ export default function Analytics() {
                   onClick={() =>
                     setModalState((prev) => ({ ...prev, scheduleReport: true }))
                   }
-                  className="flex items-center space-x-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                  className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
                 >
-                  <FiClock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <FiClock className="w-6 h-6 text-purple-600" />
                   <div className="text-left">
-                    <h3 className="font-medium text-purple-900 dark:text-purple-100">
+                    <h3 className="font-medium text-purple-900">
                       Schedule Report
                     </h3>
-                    <p className="text-sm text-purple-700 dark:text-purple-300">
+                    <p className="text-sm text-purple-700">
                       Set up automated reports
                     </p>
                   </div>
@@ -460,11 +459,11 @@ export default function Analytics() {
       case "classes":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Class Analytics
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600">
                 Class analytics content will be displayed here.
               </p>
             </div>
@@ -474,8 +473,8 @@ export default function Analytics() {
       case "insights":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Smart Insights
               </h2>
               <SmartInsightCards
@@ -510,13 +509,13 @@ export default function Analytics() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               📊 Smart Analytics Dashboard
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-gray-600 mt-1">
               Smart-powered insights • Real-time data • Actionable reports
             </p>
           </div>
@@ -526,7 +525,7 @@ export default function Analytics() {
               onClick={() =>
                 setModalState((prev) => ({ ...prev, export: true }))
               }
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
               <FiDownload className="w-4 h-4" />
               <span>Export</span>
@@ -545,7 +544,7 @@ export default function Analytics() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Date Range Filter */}
           <div className="flex-1">
@@ -554,7 +553,7 @@ export default function Analytics() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
               }
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {dateFilters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -571,7 +570,7 @@ export default function Analytics() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, branch: e.target.value }))
               }
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               <option value="all">All Branches</option>
               <option value="main">Main Branch</option>
@@ -579,7 +578,7 @@ export default function Analytics() {
               <option value="south">South Branch</option>
             </select>
 
-            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <button className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
               <FiFilter className="w-4 h-4" />
             </button>
           </div>
@@ -587,7 +586,7 @@ export default function Analytics() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-2 shadow-sm border border-gray-200">
         <div className="flex space-x-1">
           {tabs.map((tab) => (
             <button
@@ -595,8 +594,8 @@ export default function Analytics() {
               onClick={() => setActiveView(tab.id as any)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeView === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
             >
               <tab.icon className="w-4 h-4" />

@@ -143,7 +143,6 @@ export function SubscriptionProvider({
 
   const upgradePrompt = () => {
     // This would typically open a modal or redirect to upgrade page
-    console.log("Upgrade prompt triggered");
   };
 
   const value: SubscriptionContextType = {

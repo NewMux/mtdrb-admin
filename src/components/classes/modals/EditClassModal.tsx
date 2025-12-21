@@ -19,7 +19,7 @@ import {
   TimeField,
   DateField,
   FormSection,
-  AIRecommendationCard,
+  SmartRecommendationCard,
   ConflictAlert,
 } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
@@ -203,14 +203,14 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
       title="Edit Class"
       subtitle={`Update ${classData.name} details`}
       isPro={isPro}
-      proFeature="AI Optimized"
+      proFeature="Smart Optimized"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {isPro && recommendations.length > 0 && (
               <div className="flex items-center space-x-1 text-sm text-blue-600">
                 <FiZap className="h-4 w-4" />
-                <span>{recommendations.length} AI suggestions</span>
+                <span>{recommendations.length} Smart suggestions</span>
               </div>
             )}
             {hasChanges() && (
@@ -265,7 +265,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
           </div>
         </div>
 
-        {/* AI Recommendations */}
+        {/* Smart Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
             title="Smart Recommendations"
@@ -276,15 +276,11 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
           >
             <div className="space-y-3">
               {recommendations.map((recommendation) => (
-                <AIRecommendationCard
+                <SmartRecommendationCard
                   key={recommendation.id}
                   recommendation={recommendation}
                   onApply={() => {
                     // Apply recommendation logic
-                    console.log(
-                      "Applying recommendation:",
-                      recommendation.action,
-                    );
                   }}
                 />
               ))}

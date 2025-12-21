@@ -357,7 +357,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   );
 };
 
-interface AIRecommendationCardProps {
+interface SmartRecommendationCardProps {
   recommendation: {
     id: string;
     type: string;
@@ -370,7 +370,7 @@ interface AIRecommendationCardProps {
   onApply?: () => void;
 }
 
-export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
+export const SmartRecommendationCard: React.FC<SmartRecommendationCardProps> = ({
   recommendation,
   onApply,
 }) => {

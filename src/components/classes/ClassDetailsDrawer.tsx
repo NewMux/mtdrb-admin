@@ -95,14 +95,22 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       if (memberIds.length > 0) {
         const { data: membersData, error: membersError } = await supabase
           .from("members")
-          .select("id, name, email, phone")
+          .select("id, first_name, last_name, email, phone")
           .in("id", memberIds);
         if (membersError) throw membersError;
         memberDetails = membersData || [];
       }
 
       // Create a map for quick member lookup
-      const memberMap = new Map(memberDetails.map((m) => [m.id, m]));
+      const memberMap = new Map(
+        memberDetails.map((m) => [
+          m.id,
+          {
+            ...m,
+            name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email || 'Unknown',
+          },
+        ])
+      );
 
       // Combine booking data with member details
       const bookingsWithMembers = (bookingData || []).map((booking) => ({
@@ -230,9 +238,9 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl flex flex-col">
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <Dialog.Title className="text-lg font-medium text-gray-900">
+            <Dialog.Panel className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-3xl flex flex-col">
+              <div className="sticky top-0 z-10 flex items-center justify-between px-8 py-6 bg-white border-b border-gray-100">
+                <Dialog.Title className="text-2xl font-bold text-gray-900">
                   Class Profile
                 </Dialog.Title>
                 <div className="flex items-center gap-2">
@@ -260,10 +268,10 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
-                    className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 ease-in-out ${
-                      activeTab === "details"
-                        ? "bg-blue-50 dark:bg-blue-900/30 border-b-2 border-blue-600 text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-800"
-                        : "text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                    className={`px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? "bg-blue-50 border-b-2 border-blue-600 text-blue-700"
+                        : "text-gray-500 hover:text-blue-600 hover:bg-gray-50"
                     }`}
                     onClick={() => setActiveTab(tab.id)}
                   >

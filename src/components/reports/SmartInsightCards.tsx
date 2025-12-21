@@ -8,7 +8,17 @@ import {
   FiCalendar,
   FiZap,
 } from "react-icons/fi";
-import { SmartInsight } from "../../api/mockReports";
+// Removed import from mockReports - define type locally
+interface SmartInsight {
+  id: string;
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
+  category: string;
+  action: string;
+  value?: number;
+  trend?: "up" | "down" | "stable";
+}
 import { toast } from "react-hot-toast";
 
 interface SmartInsightCardsProps {

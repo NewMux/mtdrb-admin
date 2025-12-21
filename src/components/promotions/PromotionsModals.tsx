@@ -66,7 +66,7 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
     channels: template?.channels || [],
     startDate: template?.startDate || "",
     endDate: template?.endDate || "",
-    aiCopy: template?.aiCopy || "",
+    aiCopy: template?.assistantCopy || "",
     enableAutomation: template?.enableAutomation || false,
   });
 
@@ -126,7 +126,7 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
 
   const generateAICopy = async () => {
     setIsGeneratingCopy(true);
-    // Simulate AI copy generation
+    // Simulate Smart copy generation
     setTimeout(() => {
       setFormData((prev) => ({
         ...prev,
@@ -139,7 +139,6 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
 
   const handleSubmit = () => {
     // Handle campaign creation
-    console.log("Creating campaign:", formData);
     onClose();
   };
 
@@ -390,17 +389,17 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
                   </div>
                 </div>
 
-                {/* AI Copy Generator */}
+                {/* Smart Copy Generator */}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    AI Copy Generation
+                    Smart Copy Generation
                   </h3>
                   <div className="bg-purple-50 rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
                         <FiCpu className="h-5 w-5 text-purple-600" />
                         <span className="font-medium text-gray-900">
-                          AI Copy Suggestion
+                          Smart Copy Suggestion
                         </span>
                       </div>
                       <button
@@ -411,9 +410,9 @@ export const CampaignBuilderModal: React.FC<CampaignBuilderModalProps> = ({
                         {isGeneratingCopy ? "Generating..." : "Generate Copy"}
                       </button>
                     </div>
-                    {formData.aiCopy && (
+                    {formData.assistantCopy && (
                       <div className="bg-white p-4 rounded-xl border border-purple-200">
-                        <p className="text-gray-700 mb-3">{formData.aiCopy}</p>
+                        <p className="text-gray-700 mb-3">{formData.assistantCopy}</p>
                         <button className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center space-x-1">
                           <FiCopy className="h-4 w-4" />
                           <span>Copy to clipboard</span>
@@ -528,7 +527,6 @@ export const WorkflowModal: React.FC<WorkflowModalProps> = ({
   ];
 
   const handleSubmit = () => {
-    console.log("Creating workflow:", formData);
     onClose();
   };
 
@@ -675,13 +673,13 @@ export const WorkflowModal: React.FC<WorkflowModalProps> = ({
                   </div>
                 </div>
 
-                {/* AI Suggestions Panel */}
+                {/* Smart Suggestions Panel */}
                 <div className="lg:col-span-1">
                   <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-4 border border-purple-200">
                     <div className="flex items-center space-x-2 mb-3">
                       <FiCpu className="h-5 w-5 text-purple-600" />
                       <h3 className="font-semibold text-gray-900">
-                        AI Suggestions
+                        Smart Suggestions
                       </h3>
                     </div>
                     <div className="space-y-3">
@@ -853,10 +851,10 @@ export const CampaignPreviewModal: React.FC<CampaignPreviewModalProps> = ({
                   </div>
                 </div>
 
-                {/* AI Copy Preview */}
+                {/* Smart Copy Preview */}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    AI Copy Preview
+                    Smart Copy Preview
                   </h3>
                   <div className="bg-white border border-gray-200 rounded-2xl p-4">
                     <div className="flex items-center space-x-2 mb-3">
@@ -865,7 +863,7 @@ export const CampaignPreviewModal: React.FC<CampaignPreviewModalProps> = ({
                         Generated Copy
                       </span>
                     </div>
-                    <p className="text-gray-700 mb-3">{campaign.aiCopy}</p>
+                    <p className="text-gray-700 mb-3">{campaign.assistantCopy}</p>
                     <button className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center space-x-1">
                       <FiCopy className="h-4 w-4" />
                       <span>Copy to clipboard</span>

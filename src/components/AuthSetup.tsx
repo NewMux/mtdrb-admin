@@ -15,15 +15,11 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
   useEffect(() => {
     // Prevent double execution
     if (hasRunRef.current) {
-      console.log("🔧 AuthSetup - Already running, skipping...");
       return;
     }
     hasRunRef.current = true;
 
     // TEMPORARY: Bypass setup for immediate dashboard access
-    console.log(
-      "🔧 AuthSetup - TEMPORARY BYPASS: Showing dashboard immediately",
-    );
     setIsSetupComplete(true);
     setIsLoading(false);
     return;
@@ -38,21 +34,16 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
     }, 10000); // 10 second timeout
 
     const runSetup = async () => {
-      console.log("🔧 AuthSetup wrapper starting...");
-
       try {
         // First, check and fix user metadata
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        console.log("🔧 AuthSetup - User check:", user ? "Found" : "Not found");
 
         if (user) {
           const metadata = user.user_metadata;
-          console.log("🔧 AuthSetup - User metadata:", metadata);
 
           if (!metadata.tenant_id && metadata.tenantId) {
-            console.log("Incorrect tenantId key found. Migrating...");
             toast.loading("Updating your user profile...");
 
             const { error: updateError } = await supabase.auth.updateUser({
@@ -88,29 +79,19 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
 
     const setupUserMembership = async () => {
       try {
-        console.log("🔧 AuthSetup - Starting membership setup...");
-
         // Test Supabase connection first
         try {
-          console.log("🔧 AuthSetup - Testing connection...");
           const connectionPromise = supabase
             .from("tenants")
             .select("id")
             .limit(1);
-          console.log(
-            "🔧 AuthSetup - Connection promise created:",
-            connectionPromise,
-          );
 
           const { error: pingError } = await connectionPromise;
-          console.log("🔧 AuthSetup - Connection test result:", { pingError });
           if (pingError) {
-            console.error("Failed to connect to Supabase:", pingError);
             throw new Error(
               "Database connection failed. Please check your internet connection and try again.",
             );
           }
-          console.log("🔧 AuthSetup - Connection test passed");
         } catch (pingError) {
           console.error("Connection test failed:", pingError);
           throw new Error(
@@ -118,42 +99,30 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           );
         }
 
-        console.log("🔧 AuthSetup - Getting user...");
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
-        console.log("🔧 AuthSetup - Get user result:", { user, userError });
 
         if (userError) {
-          console.error("Error getting user:", userError);
           throw new Error(
             "Unable to verify your account. Please try logging in again.",
           );
         }
 
         if (!user) {
-          console.log("🔧 AuthSetup - No user found, setup complete");
           setIsSetupComplete(true);
           clearTimeout(timeoutId);
           return;
         }
 
-        console.log("🔧 AuthSetup - User found:", user.id);
-
         // Check if user already has a membership
-        console.log("🔧 AuthSetup - Checking for existing membership...");
         const { data: existingMembership, error: membershipError } =
           await supabase
             .from("memberships")
             .select("id, tenant_id, role")
             .eq("user_id", user.id)
             .single();
-
-        console.log("🔧 AuthSetup - Membership check result:", {
-          existingMembership,
-          membershipError,
-        });
 
         if (membershipError && membershipError.code !== "PGRST116") {
           console.error("Error checking membership:", membershipError);
@@ -163,33 +132,18 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
         }
 
         if (existingMembership) {
-          console.log(
-            "🔧 AuthSetup - Existing membership found:",
-            existingMembership,
-          );
-          console.log("🔧 AuthSetup - Setting isSetupComplete to true");
           setIsSetupComplete(true);
           clearTimeout(timeoutId);
           return;
         }
 
-        console.log(
-          "🔧 AuthSetup - No existing membership found, creating new one...",
-        );
-
         // User doesn&apos;t have membership, create one
         // First, check if there&apos;s an existing tenant or create one
-        console.log("🔧 AuthSetup - Checking for existing tenant...");
         let { data: tenantData, error: tenantError } = await supabase
           .from("tenants")
           .select("id, name")
           .limit(1)
           .single();
-
-        console.log("🔧 AuthSetup - Tenant check result:", {
-          tenantData,
-          tenantError,
-        });
 
         if (tenantError && tenantError.code !== "PGRST116") {
           console.error("Error checking tenants:", tenantError);
@@ -199,7 +153,6 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
         }
 
         if (!tenantData) {
-          console.log("🔧 AuthSetup - No tenant exists, creating one...");
           const { data: newTenant, error: newTenantError } = await supabase
             .from("tenants")
             .insert({
@@ -212,18 +165,15 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
             .single();
 
           if (newTenantError) {
-            console.error("Error creating tenant:", newTenantError);
             throw new Error(
               "Unable to create your organization. Please try again.",
             );
           }
 
-          console.log("🔧 AuthSetup - New tenant created:", newTenant);
           tenantData = newTenant;
         }
 
         // Create membership for the user
-        console.log("🔧 AuthSetup - Creating membership for user...");
         const { data: newMembership, error: insertError } = await supabase
           .from("memberships")
           .insert({
@@ -234,11 +184,6 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           .select("id, tenant_id, role")
           .single();
 
-        console.log("🔧 AuthSetup - Membership creation result:", {
-          newMembership,
-          insertError,
-        });
-
         if (insertError) {
           console.error("Error creating membership:", insertError);
           // If membership creation fails, try to clean up the tenant
@@ -248,35 +193,30 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           throw new Error("Unable to set up your account. Please try again.");
         }
 
-        console.log("🔧 AuthSetup - New membership created:", newMembership);
-
-        // Update user metadata with tenant ID
-        console.log("🔧 AuthSetup - Updating user metadata...");
+        // Update user metadata with tenant ID AND role
+        // This ensures PermissionGuard can check the user's role
         const { error: updateError } = await supabase.auth.updateUser({
-          data: { tenant_id: tenantData.id },
+          data: { 
+            tenant_id: tenantData.id,
+            role: "admin", // Set role in user_metadata so PermissionGuard works
+          },
         });
 
         if (updateError) {
-          console.error("Error updating user metadata:", updateError);
           throw new Error(
             "Unable to complete account setup. Please try again.",
           );
         }
 
-        console.log(
-          "🔧 AuthSetup - Setup complete, setting isSetupComplete to true",
-        );
         setIsSetupComplete(true);
         clearTimeout(timeoutId);
       } catch (err) {
-        console.error("🔧 AuthSetup - Setup error:", err);
         setError(
           (err as Error).message ||
             "An unexpected error occurred. Please try again.",
         );
         clearTimeout(timeoutId);
       } finally {
-        console.log("🔧 AuthSetup - Setting isLoading to false");
         setIsLoading(false);
       }
     };

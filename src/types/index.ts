@@ -8,11 +8,13 @@ export {
   COMMON_TAGS,
 } from "./member";
 
+import { UserRole } from "./roles";
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "owner" | "trainer" | "staff";
+  role: UserRole;
   metadata: {
     paid: boolean;
     tenantId: string;

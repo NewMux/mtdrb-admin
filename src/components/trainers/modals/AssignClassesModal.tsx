@@ -43,57 +43,7 @@ interface ClassAssignment {
   assigned: boolean;
 }
 
-const mockClasses: ClassAssignment[] = [
-  {
-    id: "1",
-    name: "Morning Yoga",
-    time: "7:00 AM",
-    day: "Monday",
-    capacity: 15,
-    assigned: false,
-  },
-  {
-    id: "2",
-    name: "HIIT Training",
-    time: "8:00 AM",
-    day: "Tuesday",
-    capacity: 12,
-    assigned: true,
-  },
-  {
-    id: "3",
-    name: "Strength Training",
-    time: "6:00 PM",
-    day: "Wednesday",
-    capacity: 10,
-    assigned: false,
-  },
-  {
-    id: "4",
-    name: "Cardio Blast",
-    time: "7:00 PM",
-    day: "Thursday",
-    capacity: 18,
-    assigned: false,
-  },
-  {
-    id: "5",
-    name: "Pilates",
-    time: "9:00 AM",
-    day: "Friday",
-    capacity: 14,
-    assigned: true,
-  },
-  {
-    id: "6",
-    name: "CrossFit",
-    time: "8:00 AM",
-    day: "Saturday",
-    capacity: 16,
-    assigned: false,
-  },
-];
-
+// Removed mock classes - fetch from Supabase
 export default function AssignClassesModal({
   isOpen,
   onClose,
@@ -101,7 +51,7 @@ export default function AssignClassesModal({
   onSuccess,
   isPro = false,
 }: AssignClassesModalProps) {
-  const [classes, setClasses] = React.useState<ClassAssignment[]>(mockClasses);
+  const [classes, setClasses] = React.useState<ClassAssignment[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [selectedClasses, setSelectedClasses] = React.useState<string[]>([]);
 
@@ -146,7 +96,7 @@ export default function AssignClassesModal({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={handleClose}
       title="Assign Classes"
       subtitle={`Assign classes to ${trainer.name}`}

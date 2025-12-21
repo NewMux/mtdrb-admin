@@ -8,6 +8,8 @@ import {
   FiBarChart2,
   FiClock,
   FiZap,
+  FiCheckCircle,
+  FiDownload,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
@@ -46,7 +48,7 @@ const classData = {
     difficultyLevel: "Advanced",
     energyLevel: "High",
   },
-  aiInsights: [
+  smartInsights: [
     {
       type: "alert",
       title: "High Demand - Consider Duplicate",
@@ -257,11 +259,11 @@ export default function GenerateClassReportModal({
         </div>
       </Section>
 
-      {/* AI Insights */}
-      {isPro && classData.aiInsights.length > 0 && (
-        <Section title="AI Insights">
+      {/* Smart Insights */}
+      {isPro && classData.smartInsights.length > 0 && (
+        <Section title="Smart Insights">
           <div className="space-y-3">
-            {classData.aiInsights.map((insight, index) => (
+            {classData.smartInsights.map((insight: any, index: number) => (
               <div
                 key={index}
                 className={`p-4 border rounded-lg ${

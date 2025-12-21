@@ -257,7 +257,7 @@ const GymSuiteScrollShowcase: React.FC = () => {
     },
     {
       title: "Smart\nclass\nscheduling.",
-      subtitle: "AI-powered calendar, real-time attendance, and filters.",
+      subtitle: "Smart-powered calendar, real-time attendance, and filters.",
     },
     {
       title: "Train the\ntrainers.",

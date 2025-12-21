@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { MockMember } from "./useMockMembers";
+import { Member } from "../types/member";
 
 export type ModalType =
   | "addMember"
@@ -19,7 +19,7 @@ interface ModalState {
 }
 
 interface ModalData {
-  selectedMember: MockMember | null;
+  selectedMember: Member | null;
   memberId: string | null;
   additionalData?: any;
 }
@@ -105,7 +105,7 @@ export const useSmartMemberModal = () => {
   }, [openModal]);
 
   const openEditMemberModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal({
         type: "editMember",
         data: { selectedMember: member, memberId: member.id },
@@ -115,7 +115,7 @@ export const useSmartMemberModal = () => {
   );
 
   const openDeleteMemberModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal({
         type: "deleteMember",
         data: { selectedMember: member, memberId: member.id },
@@ -125,7 +125,7 @@ export const useSmartMemberModal = () => {
   );
 
   const openViewProfileModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal({
         type: "viewProfile",
         data: { selectedMember: member, memberId: member.id },
@@ -139,7 +139,7 @@ export const useSmartMemberModal = () => {
   }, [openModal]);
 
   const openAssignTrainerModal = useCallback(
-    (member: MockMember) => {
+    (member: Member) => {
       openModal({
         type: "assignTrainer",
         data: { selectedMember: member, memberId: member.id },

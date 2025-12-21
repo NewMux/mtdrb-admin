@@ -702,9 +702,7 @@ const PromoCodeAnalytics: React.FC<PromoCodeAnalyticsProps> = ({
   const [analyticsData, setAnalyticsData] = useState(mockCampaignAnalyticsData);
 
   useEffect(() => {
-    // In a real app, this would fetch data from an API
     const fetchCampaignAnalytics = async () => {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setAnalyticsData(mockCampaignAnalyticsData);
     };

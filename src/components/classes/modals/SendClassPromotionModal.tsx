@@ -63,48 +63,50 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   const [members, setMembers] = useState<Member[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
 
-  // Mock members data
-  const mockMembers: Member[] = [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      status: "active",
-      lastClass: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Mike Chen",
-      email: "mike@example.com",
-      status: "active",
-      lastClass: "2024-01-10",
-    },
-    {
-      id: "3",
-      name: "Emma Davis",
-      email: "emma@example.com",
-      status: "inactive",
-      lastClass: "2023-12-20",
-    },
-    {
-      id: "4",
-      name: "James Wilson",
-      email: "james@example.com",
-      status: "active",
-      lastClass: "2024-01-12",
-    },
-    {
-      id: "5",
-      name: "Lisa Brown",
-      email: "lisa@example.com",
-      status: "waitlist",
-      lastClass: "2024-01-08",
-    },
-  ];
-
+  // Fetch members from Supabase
   useEffect(() => {
+    const fetchMembers = async () => {
+      if (!isOpen) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        let tenantId = user.user_metadata?.tenant_id;
+        if (!tenantId) {
+          const { data: membershipData } = await supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", user.id)
+            .single();
+          tenantId = membershipData?.tenant_id;
+        }
+
+        if (tenantId) {
+          const { data, error } = await supabase
+            .from("members")
+            .select("id, first_name, last_name, email, status")
+            .eq("tenant_id", tenantId);
+
+          if (error) throw error;
+          
+          const formattedMembers: Member[] = (data || []).map((m: any) => ({
+            id: m.id,
+            name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
+            email: m.email,
+            status: m.status,
+            lastClass: undefined, // TODO: Fetch from class_bookings
+          }));
+          
+          setMembers(formattedMembers);
+        }
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        setMembers([]);
+      }
+    };
+
     if (isOpen) {
-      setMembers(mockMembers);
+      fetchMembers();
       // Set default title and message based on class
       setFormData((prev) => ({
         ...prev,
@@ -196,7 +198,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title="Send Class Promotion"
       subtitle="Create targeted promotions to boost class attendance"

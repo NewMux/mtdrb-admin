@@ -291,7 +291,7 @@ export default function SmartClassFormModal({
   const analyzeGymProblems = async () => {
     setAnalyzing(true);
 
-    // Simulate AI analysis of gym data
+    // Simulate Smart analysis of gym data
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const problems: GymProblem[] = [

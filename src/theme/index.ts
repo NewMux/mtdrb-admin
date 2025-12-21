@@ -295,7 +295,7 @@ export const pageThemes = {
 
   insights: {
     name: "Insights",
-    description: "AI-powered insights and recommendations",
+    description: "Smart-powered insights and recommendations",
     primary: {
       50: "#f0f9ff",
       100: "#e0f2fe",

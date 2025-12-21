@@ -21,10 +21,7 @@ import {
   FiActivity,
   FiZap,
 } from "react-icons/fi";
-import {
-  mockBillingMetrics,
-  mockRevenueGrowth,
-} from "../../api/mockBillingData";
+// Removed mock data - using real data from Supabase
 import toast from "react-hot-toast";
 
 interface SmartBillingDashboardProps {
@@ -80,9 +77,20 @@ export default function SmartBillingDashboard({
     try {
       setLoading(true);
 
-      // Use mock data instead of backend calls
-      setMetrics(mockBillingMetrics);
-      setRevenueGrowth(mockRevenueGrowth);
+      // TODO: Fetch billing metrics from Supabase
+      setMetrics({
+        totalRevenue: 0,
+        monthlyRecurringRevenue: 0,
+        averageRevenuePerUser: 0,
+        churnRate: 0,
+        activeSubscriptions: 0,
+        pendingInvoices: 0,
+      });
+      setRevenueGrowth({
+        current: 0,
+        previous: 0,
+        percentage: 0,
+      });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
       toast.error("Failed to load dashboard data");

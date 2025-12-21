@@ -19,7 +19,6 @@ export default function Subscribe() {
     supabase.auth
       .getUser()
       .then(async ({ data }) => {
-        console.log("Fetched user on mount:", data.user);
         if (!data.user) {
           navigate("/login");
           return;
@@ -78,7 +77,6 @@ export default function Subscribe() {
 
   // Handle subscription
   const handleSubscribe = async (planId: string) => {
-    console.log("Subscribe button clicked for plan:", planId);
     setSubscribing(true);
     setError("");
     try {
@@ -89,19 +87,24 @@ export default function Subscribe() {
           subscription_start: new Date().toISOString()
         },
       });
-      console.log("updateUser result error:", error);
       if (error) {
         setError(error.message);
       } else {
         const { data } = await supabase.auth.getUser();
-        console.log("User after update:", data.user);
         if (
           data.user &&
           data.user.user_metadata &&
           data.user.user_metadata.paid
         ) {
-          const from = (location.state as any)?.from?.pathname || "/onboarding";
-          navigate(from);
+          // Check if onboarding is completed
+          if (data.user.user_metadata.onboarding_completed) {
+            // Go to dashboard if onboarding is done
+            const from = (location.state as any)?.from?.pathname || "/dashboard";
+            navigate(from);
+          } else {
+            // Go to onboarding if not completed
+            navigate("/onboarding");
+          }
         }
       }
     } catch (e) {

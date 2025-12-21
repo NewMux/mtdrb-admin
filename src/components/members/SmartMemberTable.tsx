@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartButton } from "../ui/DesignSystem";
 import toast from "react-hot-toast";
+import { usePermissions } from "../../hooks/usePermissions";
 
 interface Member {
   id: string;
@@ -476,6 +477,8 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   onItemsPerPageChange = () => {},
   totalItems = 0,
 }) => {
+  // Permission checks
+  const { canEdit, canDelete } = usePermissions();
   // Enhanced members with computed properties
   const enhancedMembers = useMemo(() => {
     return members.map((member) => ({
@@ -611,23 +614,27 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                           <FiEye className="w-4 h-4" />
                         </button>
 
-                        <button
-                          onClick={() => onEdit(member)}
-                          className="text-gray-600 hover:text-gray-900"
-                          title="Edit Member"
-                        >
-                          <FiEdit className="w-4 h-4" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => onEdit(member)}
+                            className="text-gray-600 hover:text-gray-900"
+                            title="Edit Member"
+                          >
+                            <FiEdit className="w-4 h-4" />
+                          </button>
+                        )}
 
                         <WhatsAppButton member={member} template="inactive" />
 
-                        <button
-                          onClick={() => onDelete(member)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete Member"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => onDelete(member)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete Member"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

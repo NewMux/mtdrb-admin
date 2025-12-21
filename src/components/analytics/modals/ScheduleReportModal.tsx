@@ -9,6 +9,7 @@ import {
   FiZap,
   FiLock,
   FiCheckCircle,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";

@@ -1,5 +1,4 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { supabase } from "../supabaseClient";
@@ -8,8 +7,26 @@ import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "r
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Check if user is already authenticated and redirect if needed
+  // Only redirect if user is fully set up (paid and onboarded)
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Only redirect if user is fully set up (paid and onboarded)
+        // Otherwise, let them complete the signup flow
+        if (user.user_metadata?.paid && user.user_metadata?.onboarding_completed) {
+          navigate("/dashboard", { replace: true });
+        }
+        // If user is paid but not onboarded, they should go through onboarding
+        // If user is not paid, they should go through subscribe
+        // In both cases, let the signup flow handle it
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   // ===== FORM STATE =====
   const [name, setName] = React.useState("");
@@ -22,6 +39,7 @@ export default function Signup() {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
+  const [signedUpUser, setSignedUpUser] = React.useState<any>(null);
 
   // ===== HANDLE SIGNUP SUBMIT =====
   const handleSignup = async (e: React.FormEvent) => {
@@ -37,17 +55,46 @@ export default function Signup() {
     }
     
     // Sign up with Supabase
+    // Use production domain for email redirects, fallback to current origin
+    const redirectUrl = import.meta.env.PROD 
+      ? 'https://www.mtdrb.fit/dashboard'
+      : `${window.location.origin}/dashboard`;
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name, gym_name: gymName } },
+      options: { 
+        data: { name, gym_name: gymName },
+        emailRedirectTo: redirectUrl,
+      },
     });
     setLoading(false);
     if (error) {
       setError(error.message);
+    } else if (data?.user) {
+      // Store the user and session from signup response
+      setSignedUpUser(data.user);
+      // If session is available, it's already set in Supabase client
+      // If email confirmation is required, session might be null
+      if (data.session) {
+        // Session is available - user can proceed immediately
+        // Show onboarding step
+        setShowOnboarding(true);
+      } else {
+        // Email confirmation might be required
+        // Check Supabase settings - if email confirmation is disabled, session should be available
+        // Wait a moment for session to establish, then check
+        setTimeout(async () => {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session) {
+            setShowOnboarding(true);
+          } else {
+            setError("Please check your email to confirm your account, then try again.");
+          }
+        }, 1000);
+      }
     } else {
-      // Show onboarding step
-      setShowOnboarding(true);
+      setError("Signup successful but user data not available. Please try signing in.");
     }
   };
 
@@ -57,13 +104,50 @@ export default function Signup() {
     setOnboardingLoading(true);
     setOnboardingError("");
     try {
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
+      // First, ensure we have a valid session (required for authenticated requests)
+      let session = null;
+      let user = signedUpUser;
       
-      // Create Tenant/org
+      // Try to get session first (this is what provides the auth token)
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionData?.session) {
+        session = sessionData.session;
+        user = session.user;
+      } else if (sessionError) {
+        // If no session, try to refresh or get user
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          user = userData.user;
+          // Try to refresh session
+          await supabase.auth.refreshSession();
+          const { data: refreshedSession } = await supabase.auth.getSession();
+          session = refreshedSession?.session || null;
+        }
+      }
+      
+      // If still no user, use stored user (but this won't have auth token)
+      if (!user && signedUpUser) {
+        user = signedUpUser;
+      }
+      
+      if (!user) {
+        throw new Error("User not found. Please try signing up again.");
+      }
+      
+      // If we don't have a session, wait a moment and try again
+      // (session might be establishing after signup)
+      if (!session) {
+        // Wait a bit for session to establish
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const { data: retrySession } = await supabase.auth.getSession();
+        if (!retrySession?.session) {
+          throw new Error("Session not available. Please try signing in again.");
+        }
+        session = retrySession.session;
+      }
+      
+      // Create Tenant/org (now with valid session/auth token)
       const { data: tenantData, error: tenantError } = await supabase
         .from("tenants")
         .insert({
@@ -80,8 +164,14 @@ export default function Signup() {
         role: "admin",
       });
       
-      // Update user metadata with tenantId
-      await supabase.auth.updateUser({ data: { tenant_id: tenantData.id } });
+      // Update user metadata with tenantId AND role
+      // This ensures PermissionGuard can check the user's role
+      await supabase.auth.updateUser({ 
+        data: { 
+          tenant_id: tenantData.id,
+          role: "admin", // Set role in user_metadata so PermissionGuard works
+        } 
+      });
       
       // Redirect to subscribe
       navigate("/subscribe");

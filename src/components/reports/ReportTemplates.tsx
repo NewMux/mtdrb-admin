@@ -8,7 +8,19 @@ import {
   FiBarChart,
   FiZap,
 } from "react-icons/fi";
-import { getReportTemplates, ReportTemplate } from "../../api/mockReports";
+// Removed import from mockReports - define types locally
+interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: React.ReactNode;
+}
+
+const getReportTemplates = async (): Promise<ReportTemplate[]> => {
+  // TODO: Fetch from Supabase
+  return [];
+};
 import { toast } from "react-hot-toast";
 
 interface ReportTemplatesProps {

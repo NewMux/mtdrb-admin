@@ -9,7 +9,23 @@ import {
   FiTrendingDown,
   FiMoreVertical,
 } from "react-icons/fi";
-import { getKPIStats, KPIStats } from "../../api/mockReports";
+// Removed import from mockReports - define types locally
+interface KPIStats {
+  revenue: { value: number; change: number };
+  members: { value: number; change: number };
+  classes: { value: number; change: number };
+  attendance: { value: number; change: number };
+}
+
+const getKPIStats = async (): Promise<KPIStats> => {
+  // TODO: Fetch from Supabase
+  return {
+    revenue: { value: 0, change: 0 },
+    members: { value: 0, change: 0 },
+    classes: { value: 0, change: 0 },
+    attendance: { value: 0, change: 0 },
+  };
+};
 import { toast } from "react-hot-toast";
 
 interface KPIGroupProps {

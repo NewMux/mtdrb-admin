@@ -37,7 +37,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isInView }) => {
             className="inline-flex items-center space-x-2 bg-blue-500/20 text-blue-400 px-4 py-2 rounded-full text-sm font-semibold mb-8 border border-blue-500/30"
           >
             <FiZap className="w-4 h-4" />
-            <span>World's Most Adopted Gym AI</span>
+            <span>World's Most Adopted Gym Assistant</span>
           </motion.div>
 
           <motion.h1
@@ -46,7 +46,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isInView }) => {
             transition={{ duration: 1, delay: 0.4 }}
             className="text-6xl md:text-8xl font-black tracking-tight mb-8 text-white"
           >
-            Revolutionizing <span className="mtdrb-gradient-text">Gym Management</span> with AI
+            Revolutionizing <span className="mtdrb-gradient-text">Gym Management</span> with Smart Technology
           </motion.h1>
 
           <motion.p

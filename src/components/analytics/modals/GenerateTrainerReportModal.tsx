@@ -9,6 +9,8 @@ import {
   FiAlertTriangle,
   FiZap,
   FiLock,
+  FiCheckCircle,
+  FiDownload,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
@@ -41,7 +43,7 @@ const trainerData = {
     clientSatisfaction: 4.7,
     revenueGenerated: 12500,
   },
-  aiInsights: [
+  smartInsights: [
     {
       type: "alert",
       title: "Low Engagement This Month",
@@ -248,11 +250,11 @@ export default function GenerateTrainerReportModal({
         </div>
       </Section>
 
-      {/* AI Insights */}
-      {isPro && trainerData.aiInsights.length > 0 && (
+      {/* Smart Insights */}
+      {isPro && trainerData.smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {trainerData.aiInsights.map((insight, index) => (
+            {trainerData.smartInsights.map((insight: any, index: number) => (
               <div
                 key={index}
                 className={`p-4 border rounded-lg ${

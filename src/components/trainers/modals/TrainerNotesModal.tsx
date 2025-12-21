@@ -192,14 +192,14 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
             </div>
           </div>
 
-          {/* AI Recommendation for Pro Users */}
+          {/* Smart Recommendation for Pro Users */}
           {isProUser && (
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    AI Suggestion
+                    Smart Suggestion
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
                     Consider adding a note about the recent improvement in class

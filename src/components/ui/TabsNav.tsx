@@ -33,8 +33,8 @@ const TabsNav: React.FC<TabsNavProps> = ({
         className={`text-sm font-medium px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap
           ${
             activeTab === tab.id
-              ? "bg-blue-100 text-blue-700 shadow-sm dark:bg-gray-800 dark:text-blue-300"
-              : "text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800"
+              ? "bg-lunaLight/30 text-lunaCyan shadow-sm border border-lunaLight/50"
+              : "text-lunaNavy/70 hover:bg-gray-100 hover:text-lunaNavy"
           }
         `}
       >

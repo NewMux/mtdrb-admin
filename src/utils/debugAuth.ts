@@ -7,11 +7,9 @@ export async function debugAuth() {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-    console.log("Current user:", user);
     if (userError) console.error("User error:", userError);
 
     if (!user) {
-      console.log("No authenticated user found");
       return { user: null, membership: null, tenant: null };
     }
 
@@ -22,7 +20,6 @@ export async function debugAuth() {
       .eq("user_id", user.id)
       .single();
 
-    console.log("Membership:", membership);
     if (membershipError) console.error("Membership error:", membershipError);
 
     return { user, membership, tenant: membership?.tenant || null };
@@ -34,29 +31,17 @@ export async function debugAuth() {
 
 export async function checkDatabaseTables() {
   try {
-    console.log("Checking database tables...");
-
     // Check if classes table exists and is accessible
     const { data: classesTest, error: classesError } = await supabase
       .from("classes")
       .select("count")
       .limit(1);
 
-    console.log("Classes table test:", {
-      data: classesTest,
-      error: classesError,
-    });
-
     // Check if trainers table exists and is accessible
     const { data: trainersTest, error: trainersError } = await supabase
       .from("trainers")
       .select("count")
       .limit(1);
-
-    console.log("Trainers table test:", {
-      data: trainersTest,
-      error: trainersError,
-    });
 
     // Check if class_bookings table exists and is accessible
     let bookingsTest = null;
@@ -71,11 +56,6 @@ export async function checkDatabaseTables() {
     } catch (err) {
       bookingsError = err;
     }
-
-    console.log("Class bookings table test:", {
-      data: bookingsTest,
-      error: bookingsError,
-    });
 
     return {
       classes: { exists: !classesError, error: classesError },
@@ -187,12 +167,9 @@ export async function createTestMembership(userId: string) {
         await supabase.from("classes").upsert(classItem).select().single();
       }
     } else {
-      console.log(
-        "Trainers table not accessible, skipping trainer and class creation",
-      );
+      // Trainers table not accessible, skipping trainer and class creation
     }
 
-    console.log("Created test data:", { membership, tenant });
     return membership;
   } catch (error) {
     console.error("Error creating test membership:", error);

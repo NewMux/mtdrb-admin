@@ -244,7 +244,7 @@ export default function SmartClassesDashboard({
           <div className="flex items-center gap-3 mb-4">
             <FiCpu className="text-blue-600 dark:text-blue-300 text-xl" />
             <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
-              AI Smart Insights
+              Smart Insights
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

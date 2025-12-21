@@ -186,16 +186,16 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
-              <FiUsers className="h-4 w-4 text-blue-700 dark:text-blue-300" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            <div className="flex items-center space-x-2 px-3 py-2 bg-blue-100bg-blue-900/30 rounded-lg border border-blue-200border-blue-800">
+              <FiUsers className="h-4 w-4 text-blue-700text-blue-300" />
+              <span className="text-sm font-medium text-blue-800text-blue-200">
                 {analytics?.total_enrolled || 0} enrolled
               </span>
             </div>
             {analytics?.total_waitlist > 0 && (
-              <div className="flex items-center space-x-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
-                <FiClock className="h-4 w-4 text-amber-700 dark:text-amber-300" />
-                <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              <div className="flex items-center space-x-2 px-3 py-2 bg-amber-100bg-amber-900/30 rounded-lg border border-amber-200border-amber-800">
+                <FiClock className="h-4 w-4 text-amber-700text-amber-300" />
+                <span className="text-sm font-medium text-amber-800text-amber-200">
                   {analytics.total_waitlist} on waitlist
                 </span>
               </div>
@@ -259,7 +259,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-light-200 dark:border-dark-600">
+        <div className="border-b border-light-200border-dark-600">
           <nav className="flex space-x-8">
             {[
               {
@@ -283,8 +283,8 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/10"
-                    : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600 bg-blue-50bg-blue-900/10"
+                    : "border-transparent text-gray-600text-gray-400 hover:text-gray-900hover:text-gray-200 hover:border-gray-300"
                 }`}
               >
                 {tab.icon}
@@ -304,48 +304,48 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             >
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-5 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl border border-green-200 dark:border-green-800/30 hover:shadow-md transition-all duration-200">
+                <div className="p-5 bg-gradient-to-br from-green-50 to-green-100from-green-900/20to-green-800/20 rounded-xl border border-green-200border-green-800/30 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-3">
                     <div className="p-3 bg-green-500 rounded-xl">
                       <FiTrendingUp className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                      <p className="text-sm text-green-600text-green-400 font-medium">
                         Attendance Rate
                       </p>
-                      <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                      <p className="text-xl font-bold text-green-700text-green-300">
                         {analytics?.attendance_rate || 0}%
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl border border-blue-200 dark:border-blue-800/30 hover:shadow-md transition-all duration-200">
+                <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100from-blue-900/20to-blue-800/20 rounded-xl border border-blue-200border-blue-800/30 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-3">
                     <div className="p-3 bg-blue-500 rounded-xl">
                       <FiUsers className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                      <p className="text-sm text-blue-600text-blue-400 font-medium">
                         Capacity Utilization
                       </p>
-                      <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                      <p className="text-xl font-bold text-blue-700text-blue-300">
                         {analytics?.capacity_utilization || 0}%
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl border border-yellow-200 dark:border-yellow-800/30 hover:shadow-md transition-all duration-200">
+                <div className="p-5 bg-gradient-to-br from-yellow-50 to-yellow-100from-yellow-900/20to-yellow-800/20 rounded-xl border border-yellow-200border-yellow-800/30 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-3">
                     <div className="p-3 bg-yellow-500 rounded-xl">
                       <FiStar className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                      <p className="text-sm text-yellow-600text-yellow-400 font-medium">
                         Trainer Rating
                       </p>
-                      <p className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
+                      <p className="text-xl font-bold text-yellow-700text-yellow-300">
                         {analytics?.trainer_rating || 0}/5
                       </p>
                     </div>
@@ -355,90 +355,90 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
 
               {/* Class Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 bg-white dark:bg-dark-800 rounded-xl border border-light-200 dark:border-dark-600 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="p-5 bg-whitebg-dark-800 rounded-xl border border-light-200border-dark-600 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="p-2 bg-brand-100 dark:bg-brand-900/20 rounded-lg">
+                    <div className="p-2 bg-brand-100bg-brand-900/20 rounded-lg">
                       <FiCalendar className="h-4 w-4 text-brand-600" />
                     </div>
-                    <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+                    <h3 className="text-sm font-semibold text-dark-900text-white">
                       Class Information
                     </h3>
                   </div>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Class Type:
                       </span>
-                      <span className="text-dark-900 dark:text-white font-medium">
+                      <span className="text-dark-900text-white font-medium">
                         {classData.type || classData.class_type || "General"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Duration:
                       </span>
-                      <span className="text-dark-900 dark:text-white font-medium">
+                      <span className="text-dark-900text-white font-medium">
                         60 minutes
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Location:
                       </span>
-                      <span className="text-dark-900 dark:text-white font-medium">
+                      <span className="text-dark-900text-white font-medium">
                         {classData.location || "Studio A"}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Difficulty:
                       </span>
-                      <span className="text-dark-900 dark:text-white font-medium">
+                      <span className="text-dark-900text-white font-medium">
                         Intermediate
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 bg-white dark:bg-dark-800 rounded-xl border border-light-200 dark:border-dark-600 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="p-5 bg-whitebg-dark-800 rounded-xl border border-light-200border-dark-600 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                    <div className="p-2 bg-green-100bg-green-900/20 rounded-lg">
                       <FiDollarSign className="h-4 w-4 text-green-600" />
                     </div>
-                    <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+                    <h3 className="text-sm font-semibold text-dark-900text-white">
                       Financial Summary
                     </h3>
                   </div>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Revenue:
                       </span>
-                      <span className="text-green-600 dark:text-green-400 font-semibold">
+                      <span className="text-green-600text-green-400 font-semibold">
                         ${analytics?.revenue || 0}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Cost per Member:
                       </span>
-                      <span className="text-dark-900 dark:text-white font-medium">
+                      <span className="text-dark-900text-white font-medium">
                         $45
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Profit Margin:
                       </span>
-                      <span className="text-green-600 dark:text-green-400 font-semibold">
+                      <span className="text-green-600text-green-400 font-semibold">
                         65%
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100 dark:border-dark-700 last:border-b-0">
-                      <span className="text-light-600 dark:text-dark-400">
+                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
+                      <span className="text-light-600text-dark-400">
                         Popular Time:
                       </span>
-                      <span className={`font-medium ${analytics?.popular_time_slot ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                      <span className={`font-medium ${analytics?.popular_time_slot ? 'text-green-600text-green-400' : 'text-orange-600text-orange-400'}`}>
                         {analytics?.popular_time_slot ? "Yes" : "No"}
                       </span>
                     </div>
@@ -455,14 +455,14 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               className="space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+                <h3 className="text-sm font-semibold text-dark-900text-white">
                   Class Members ({members.length})
                 </h3>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-light-600 dark:text-dark-400">
+                  <span className="text-xs text-light-600text-dark-400">
                     Filter:
                   </span>
-                  <select className="text-xs border border-light-200 dark:border-dark-600 rounded-lg px-2 py-1 bg-light-50 dark:bg-dark-700">
+                  <select className="text-xs border border-light-200border-dark-600 rounded-lg px-2 py-1 bg-light-50bg-dark-700">
                     <option value="all">All Members</option>
                     <option value="enrolled">Enrolled</option>
                     <option value="waitlist">Waitlist</option>
@@ -478,7 +478,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="p-4 border border-light-200 dark:border-dark-600 rounded-xl bg-light-50 dark:bg-dark-700"
+                    className="p-4 border border-light-200border-dark-600 rounded-xl bg-light-50bg-dark-700"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -492,14 +492,14 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
+                            <h4 className="text-sm font-semibold text-dark-900text-white">
                               {member.name}
                             </h4>
                             {member.is_vip && (
                               <FiStar className="h-3 w-3 text-yellow-500" />
                             )}
                           </div>
-                          <p className="text-xs text-light-600 dark:text-dark-400">
+                          <p className="text-xs text-light-600text-dark-400">
                             {member.email}
                           </p>
                         </div>
@@ -507,18 +507,18 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
 
                       <div className="flex items-center space-x-4 text-xs">
                         <div className="text-center">
-                          <div className="text-light-600 dark:text-dark-400">
+                          <div className="text-light-600text-dark-400">
                             Joined
                           </div>
-                          <div className="font-medium text-dark-900 dark:text-white">
+                          <div className="font-medium text-dark-900text-white">
                             {new Date(member.joined_date).toLocaleDateString()}
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-light-600 dark:text-dark-400">
+                          <div className="text-light-600text-dark-400">
                             Attendance
                           </div>
-                          <div className="font-medium text-dark-900 dark:text-white">
+                          <div className="font-medium text-dark-900text-white">
                             {member.attendance_history}%
                           </div>
                         </div>
@@ -538,22 +538,22 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             >
               {/* Analytics Charts Placeholder */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-light-50 dark:bg-dark-700 rounded-xl border border-light-200 dark:border-dark-600">
-                  <h3 className="text-sm font-semibold text-dark-900 dark:text-white mb-3">
+                <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
+                  <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
                     Enrollment Trend
                   </h3>
-                  <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                  <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
                     <span className="text-sm text-gray-500">
                       Chart Placeholder
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-light-50 dark:bg-dark-700 rounded-xl border border-light-200 dark:border-dark-600">
-                  <h3 className="text-sm font-semibold text-dark-900 dark:text-white mb-3">
+                <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
+                  <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
                     Attendance Pattern
                   </h3>
-                  <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                  <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
                     <span className="text-sm text-gray-500">
                       Chart Placeholder
                     </span>
@@ -562,8 +562,8 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               </div>
 
               {/* Performance Metrics */}
-              <div className="p-4 bg-light-50 dark:bg-dark-700 rounded-xl border border-light-200 dark:border-dark-600">
-                <h3 className="text-sm font-semibold text-dark-900 dark:text-white mb-3">
+              <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
+                <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
                   Performance Metrics
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -571,7 +571,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     <div className="text-2xl font-bold text-green-600">
                       {analytics?.attendance_rate || 0}%
                     </div>
-                    <div className="text-light-600 dark:text-dark-400">
+                    <div className="text-light-600text-dark-400">
                       Attendance Rate
                     </div>
                   </div>
@@ -579,7 +579,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     <div className="text-2xl font-bold text-blue-600">
                       {analytics?.capacity_utilization || 0}%
                     </div>
-                    <div className="text-light-600 dark:text-dark-400">
+                    <div className="text-light-600text-dark-400">
                       Capacity Used
                     </div>
                   </div>
@@ -587,7 +587,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     <div className="text-2xl font-bold text-yellow-600">
                       {analytics?.trainer_rating || 0}/5
                     </div>
-                    <div className="text-light-600 dark:text-dark-400">
+                    <div className="text-light-600text-dark-400">
                       Trainer Rating
                     </div>
                   </div>
@@ -595,7 +595,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     <div className="text-2xl font-bold text-purple-600">
                       ${analytics?.revenue || 0}
                     </div>
-                    <div className="text-light-600 dark:text-dark-400">
+                    <div className="text-light-600text-dark-400">
                       Revenue
                     </div>
                   </div>

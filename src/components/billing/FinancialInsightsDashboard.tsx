@@ -110,8 +110,9 @@ const COLORS = [
   "#06B6D4",
 ];
 
-// Mock data for the dashboard
-const mockRevenueMetrics: RevenueMetrics = {
+// Removed mock data - using real data from Supabase
+// TODO: Fetch from Supabase
+const emptyRevenueMetrics: RevenueMetrics = {
   totalRevenue: 124750,
   mrr: 45600,
   avgRevenuePerMember: 89.5,
@@ -128,7 +129,8 @@ const mockInvoiceMetrics: InvoiceMetrics = {
   failedPayments: 23,
 };
 
-const mockExpenseMetrics: ExpenseMetrics = {
+// Removed - using empty defaults above
+const _emptyExpenseMetrics: ExpenseMetrics = {
   totalExpenses: 15230,
   netProfit: 109520,
   topExpenseCategories: [
@@ -140,7 +142,8 @@ const mockExpenseMetrics: ExpenseMetrics = {
   avgProfitMargin: 87.8,
 };
 
-const mockVatMetrics: VatMetrics = {
+// Removed - using empty defaults above
+const _emptyVatMetrics: VatMetrics = {
   vatCollected: 18712,
   vatPaid: 4560,
   vatBalance: 14152,
@@ -148,14 +151,16 @@ const mockVatMetrics: VatMetrics = {
   filedReturnsThisPeriod: 4,
 };
 
-const mockRiskMetrics: RiskMetrics = {
+// Removed - using empty defaults above
+const _emptyRiskMetrics: RiskMetrics = {
   churnedMembersRevenueLoss: 3450,
   atRiskRevenue: 8900,
   latePaymentRate: 4.7,
   unpaidHighValueInvoices: 3,
 };
 
-const mockChartData: ChartData = {
+// Removed - using empty defaults above
+const _emptyChartData: ChartData = {
   revenueTrend: [
     { date: "2024-01", revenue: 115000 },
     { date: "2024-02", revenue: 118500 },

@@ -62,7 +62,7 @@ export default function SmartReportsDashboard({
   const fetchSmartInsights = async () => {
     setLoading(true);
     try {
-      // Generate AI insights for reporting
+      // Generate Smart insights for reporting
       const performanceData = [
         { name: "Jan", automated: 12, manual: 8, efficiency: 60 },
         { name: "Feb", automated: 15, manual: 6, efficiency: 71 },
@@ -138,7 +138,7 @@ export default function SmartReportsDashboard({
 
   return (
     <div className="space-y-6">
-      {/* AI Header */}
+      {/* Smart Header */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-white bg-opacity-20 p-3 rounded-xl">

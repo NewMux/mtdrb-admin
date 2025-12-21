@@ -1,7 +1,7 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiUser,
+  FiUsers,
   FiMail,
   FiPhone,
   FiStar,
@@ -46,15 +46,15 @@ export default function ViewTrainerProfileModal({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       case "available":
-        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200";
+        return "bg-sky-100 text-sky-800";
       case "busy":
-        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+        return "bg-yellow-100 text-yellow-800";
       case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -67,7 +67,7 @@ export default function ViewTrainerProfileModal({
             ? "text-yellow-400 fill-current"
             : i < rating
               ? "text-yellow-400 fill-current opacity-50"
-              : "text-gray-300 dark:text-gray-600"
+              : "text-gray-300"
         }`}
       />
     ));
@@ -75,44 +75,44 @@ export default function ViewTrainerProfileModal({
 
   const handleEdit = () => {
     onClose();
-    // This would typically open the edit modal
     toast.success("Edit functionality would open here");
   };
 
   const handleMessage = () => {
     onClose();
-    // This would typically open the message modal
     toast.success("Message functionality would open here");
   };
 
+  if (!isOpen) return null;
+
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       title="Trainer Profile"
       subtitle={`View ${trainer.name}'s complete profile information`}
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header with Avatar and Basic Info */}
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
-            <span className="text-white font-medium text-lg">
+        <div className="flex items-start gap-5 pb-6 border-b border-gray-100">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-4 ring-sky-100">
+            <span className="text-white font-semibold text-xl">
               {trainer.avatar}
             </span>
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900">{trainer.name}</h2>
-            <p className="text-gray-600">{trainer.specialty}</p>
-            <div className="flex items-center gap-2 mt-2">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">{trainer.name}</h2>
+            <p className="text-gray-600 font-medium mb-3">{trainer.specialty}</p>
+            <div className="flex items-center gap-3">
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(trainer.status)}`}
+                className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getStatusColor(trainer.status)}`}
               >
                 {trainer.status.charAt(0).toUpperCase() +
                   trainer.status.slice(1)}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {renderStars(trainer.rating)}
-                <span className="text-sm text-gray-600 ml-1">
+                <span className="text-sm font-semibold text-gray-700 ml-1">
                   {trainer.rating}
                 </span>
               </div>
@@ -123,22 +123,26 @@ export default function ViewTrainerProfileModal({
         {/* Contact Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FiUser className="text-blue-500" />
+            <FiUser className="w-5 h-5 text-blue-500" />
             Contact Information
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiMail className="text-gray-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiMail className="w-4 h-4 text-gray-500" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Email</p>
-                <p className="text-sm text-gray-600">{trainer.email}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Email</p>
+                <p className="text-sm font-medium text-gray-900">{trainer.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiPhone className="text-gray-400" />
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiPhone className="w-4 h-4 text-gray-500" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Phone</p>
-                <p className="text-sm text-gray-600">{trainer.phone}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Phone</p>
+                <p className="text-sm font-medium text-gray-900">{trainer.phone}</p>
               </div>
             </div>
           </div>
@@ -147,43 +151,49 @@ export default function ViewTrainerProfileModal({
         {/* Professional Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FiTarget className="text-green-500" />
+            <FiTarget className="w-5 h-5 text-green-500" />
             Professional Information
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiTarget className="text-gray-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiTarget className="w-4 h-4 text-gray-500" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Specialty</p>
-                <p className="text-sm text-gray-600">{trainer.specialty}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Specialty</p>
+                <p className="text-sm font-medium text-gray-900">{trainer.specialty}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiClock className="text-gray-400" />
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiClock className="w-4 h-4 text-gray-500" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Experience</p>
-                <p className="text-sm text-gray-600">{trainer.experience}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Experience</p>
+                <p className="text-sm font-medium text-gray-900">{trainer.experience}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiStar className="text-gray-400" />
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiStar className="w-4 h-4 text-yellow-500" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Rating</p>
-                <div className="flex items-center gap-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Rating</p>
+                <div className="flex items-center gap-1.5">
                   {renderStars(trainer.rating)}
-                  <span className="text-sm text-gray-600 ml-1">
+                  <span className="text-sm font-semibold text-gray-700">
                     {trainer.rating}/5
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FiClock className="text-gray-400" />
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+              <div className="p-2 bg-white rounded-lg">
+                <FiUsers className="w-4 h-4 text-gray-500" />
+              </div>
               <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Classes Assigned</p>
                 <p className="text-sm font-medium text-gray-900">
-                  Classes Assigned
-                </p>
-                <p className="text-sm text-gray-600">
                   {trainer.classes} classes
                 </p>
               </div>
@@ -193,47 +203,45 @@ export default function ViewTrainerProfileModal({
 
         {/* Performance Summary */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <FiTarget className="w-5 h-5 text-purple-500" />
             Performance Summary
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-5 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
+              <div className="text-3xl font-bold text-blue-600 mb-1">
                 {trainer.classes}
               </div>
-              <div className="text-sm text-blue-600">Classes This Month</div>
+              <div className="text-sm font-medium text-blue-700">Classes This Month</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-5 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
+              <div className="text-3xl font-bold text-green-600 mb-1">
                 {trainer.rating}
               </div>
-              <div className="text-sm text-green-600">Average Rating</div>
+              <div className="text-sm font-medium text-green-700">Average Rating</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">95%</div>
-              <div className="text-sm text-purple-600">Attendance Rate</div>
+            <div className="text-center p-5 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
+              <div className="text-3xl font-bold text-purple-600 mb-1">95%</div>
+              <div className="text-sm font-medium text-purple-700">Attendance Rate</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer Actions */}
-      <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-        <SmartButton variant="secondary" size="sm" onClick={onClose}>
-          <FiX className="h-4 w-4 mr-2" />
-          Close
-        </SmartButton>
-
-        <SmartButton variant="secondary" size="sm" onClick={handleMessage}>
-          <FiMessageSquare className="h-4 w-4 mr-2" />
-          Send Message
-        </SmartButton>
-
-        <SmartButton variant="primary" size="sm" onClick={handleEdit}>
-          <FiEdit className="h-4 w-4 mr-2" />
-          Edit Profile
-        </SmartButton>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+          <SmartButton variant="secondary" size="sm" onClick={onClose}>
+            <FiX className="h-4 w-4 mr-2" />
+            Close
+          </SmartButton>
+          <SmartButton variant="primary" size="sm" onClick={handleEdit}>
+            <FiEdit className="h-4 w-4 mr-2" />
+            Edit Profile
+          </SmartButton>
+        </div>
       </div>
     </ColorfulModalUI>
   );
 }
+
+
+

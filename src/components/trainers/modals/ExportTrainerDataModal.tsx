@@ -112,7 +112,7 @@ export default function ExportTrainerDataModal({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={handleClose}
       title="Export Trainer Data"
       subtitle="Select the data you want to export"

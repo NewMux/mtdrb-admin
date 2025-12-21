@@ -98,7 +98,6 @@ export default function PrintReportModal({
     try {
       // Simulate PDF generation
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Downloading PDF...");
     } finally {
       setPrinting(false);
     }

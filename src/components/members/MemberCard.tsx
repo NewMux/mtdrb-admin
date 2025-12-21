@@ -292,7 +292,6 @@ const MemberCard: React.FC<MemberCardProps> = ({
               size="sm"
               onClick={() => {
                 // Handle reminder action
-                console.log("Send reminder to", member.name);
               }}
               className="text-yellow-700 hover:text-yellow-800"
             >

@@ -1775,12 +1775,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     const errors: string[] = [];
     const currentValues = watch();
 
-    console.log(
-      "🔍 Validating step",
-      currentStep,
-      "with values:",
-      currentValues,
-    );
 
     // Only validate the most essential fields for member creation
     if (!currentValues.name?.trim()) errors.push("Full Name is required");
@@ -1791,7 +1785,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     if (!currentValues.membership_status)
       errors.push("Membership Status is required");
 
-    console.log("❌ Validation errors found:", errors);
     setValidationErrors(errors);
     return errors.length === 0;
   }, [watch]);
@@ -2001,9 +1994,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     setIsLoading(true);
     setError(null);
 
-    console.log("🔍 Form submission started with data:", data);
-    console.log("🔍 Current step:", currentStep);
-    console.log("🔍 Validation errors:", validationErrors);
 
     // 1. Check Supabase connection
     if (!supabase) {
@@ -2097,11 +2087,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             vat: 0, // Default VAT rate
           };
 
-          console.log(
-            "Attempting to create invoice with payload:",
-            invoicePayload,
-          );
-
           const { error: invoiceError } = await supabase
             .from("invoices")
             .insert(invoicePayload);
@@ -2141,13 +2126,9 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             throw new Error("No user session found. Please log in again.");
           }
 
-          console.log("👤 User found:", user.id);
           tenant_id = user.user_metadata?.tenant_id;
 
           if (!tenant_id) {
-            console.log(
-              "🔍 No tenant_id in metadata, checking memberships table...",
-            );
             // Fallback: fetch from memberships table
             const { data: membershipData, error: membershipError } =
               await supabase
@@ -2164,9 +2145,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             }
 
             tenant_id = membershipData?.tenant_id;
-            console.log("🏢 Tenant ID from memberships:", tenant_id);
-          } else {
-            console.log("🏢 Tenant ID from metadata:", tenant_id);
           }
 
           if (!tenant_id) {
@@ -2179,10 +2157,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           throw new Error(`Tenant ID error: ${tenantError.message}`);
         }
 
-        console.log("📝 Inserting member with payload:", {
-          ...payload,
-          tenant_id,
-        });
 
         result = await supabase
           .from("members")
@@ -2196,7 +2170,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         }
 
         savedMember = result.data;
-        console.log("✅ Member created successfully:", savedMember);
 
         // 3. Create invoice if requested
         if (create_invoice && savedMember) {
@@ -2214,11 +2187,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             notes: `Invoice created during member registration`,
             vat: 0, // Default VAT rate
           };
-
-          console.log(
-            "Attempting to create invoice with payload:",
-            invoicePayload,
-          );
 
           const { error: invoiceError } = await supabase
             .from("invoices")

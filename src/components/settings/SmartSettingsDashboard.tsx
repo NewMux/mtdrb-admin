@@ -97,7 +97,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiSettings className="h-6 w-6 text-blue-600" />,
       status: "configured" as const,
       lastUpdated: "2 hours ago",
-      onClick: () => console.log("System settings"),
     },
     {
       title: "User Preferences",
@@ -106,7 +105,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiUser className="h-6 w-6 text-green-600" />,
       status: "configured" as const,
       lastUpdated: "1 day ago",
-      onClick: () => console.log("User preferences"),
     },
     {
       title: "Notification Settings",
@@ -115,7 +113,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiBell className="h-6 w-6 text-purple-600" />,
       status: "incomplete" as const,
       lastUpdated: "3 days ago",
-      onClick: () => console.log("Notification settings"),
     },
     {
       title: "Security & Privacy",
@@ -124,7 +121,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiShield className="h-6 w-6 text-red-600" />,
       status: "configured" as const,
       lastUpdated: "1 week ago",
-      onClick: () => console.log("Security settings"),
     },
     {
       title: "Billing Configuration",
@@ -133,7 +129,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiCreditCard className="h-6 w-6 text-orange-600" />,
       status: "incomplete" as const,
       lastUpdated: "5 days ago",
-      onClick: () => console.log("Billing settings"),
     },
     {
       title: "Integrations",
@@ -142,7 +137,6 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
       icon: <FiLink className="h-6 w-6 text-indigo-600" />,
       status: "disabled" as const,
       lastUpdated: "Never",
-      onClick: () => console.log("Integration settings"),
     },
   ];
 
@@ -161,7 +155,7 @@ export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
     },
     {
       title: "Smart Recommendations",
-      description: "Get AI-powered optimization suggestions",
+      description: "Get Smart-powered optimization suggestions",
       icon: <FiZap className="h-5 w-5 text-purple-600" />,
       action: "Get Suggestions",
     },

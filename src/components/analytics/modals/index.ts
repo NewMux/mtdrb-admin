@@ -20,7 +20,7 @@ export { default as GenerateMemberReportModal } from "./GenerateMemberReportModa
 export { default as GenerateTrainerReportModal } from "./GenerateTrainerReportModal";
 export { default as GenerateClassReportModal } from "./GenerateClassReportModal";
 
-// AI Insights Modals
-export { default as ViewAIInsightsModal } from "./ViewAIInsightsModal";
+// Smart Insights Modals
+export { default as ViewSmartInsightsModal } from "./ViewAIInsightsModal";
 export { default as ApplyRecommendationModal } from "./ApplyRecommendationModal";
 export { default as LearnMoreInsightModal } from "./LearnMoreInsightModal";

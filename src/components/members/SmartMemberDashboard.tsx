@@ -164,7 +164,7 @@ export default function SmartMemberDashboard({
       const totalMembers = members.length;
       const activeMembers = members.filter((m) => m.status === "active").length;
 
-      // Churn risk calculation (AI-powered simulation)
+      // Churn risk calculation (Smart-powered simulation)
       const churnRiskAnalysis = members.map((member) => {
         let riskScore = 0;
 
@@ -239,7 +239,7 @@ export default function SmartMemberDashboard({
             : 0, // Real conversion rate
       };
 
-      // Predictions (AI simulation)
+      // Predictions (Smart simulation)
       const nextMonthRevenue =
         membershipPrices.reduce((sum, price) => sum + price, 0) * 1.05; // 5% growth estimate
       const expectedChurn = Math.round(highRisk * 0.7 + mediumRisk * 0.3); // Churn probability
@@ -372,7 +372,7 @@ export default function SmartMemberDashboard({
         return;
       }
 
-      // Generate AI insights (simulated with smart logic)
+      // Generate Smart insights (simulated with smart logic)
       const generatedInsights: AutomationInsight[] = [];
 
       members.forEach((member) => {

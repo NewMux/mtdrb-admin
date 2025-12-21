@@ -2,13 +2,11 @@ import { supabase } from "../supabaseClient";
 import {
   VatTransaction,
   VatReturn,
-  VatReturnLineItem,
   VatComplianceAudit,
   GccVatRate,
   VatDashboardData,
   VatReportFilters,
   VatReportData,
-  VatRate,
 } from "../types";
 
 // =============================================
@@ -635,7 +633,6 @@ export const exportVatReport = async (
     // 3. Uploading to storage
     // 4. Returning download URL
 
-    console.log("Exporting VAT report:", { format, filters, reportData });
 
     // Placeholder return
     return `vat-report-${Date.now()}.${format}`;
@@ -659,7 +656,11 @@ export const getVatInsights = async (
   try {
     const dashboardData = await getVatDashboardData(tenantId);
 
-    const insights = {
+    const insights: {
+      trends: string[];
+      recommendations: string[];
+      alerts: string[];
+    } = {
       trends: [],
       recommendations: [],
       alerts: [],

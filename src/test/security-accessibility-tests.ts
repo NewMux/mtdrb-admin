@@ -174,7 +174,7 @@ export const testChecklist = {
     "Invalid date formats are rejected": "✅",
   },
   xssProtection: {
-    "AI query input sanitization": "✅",
+    "Smart query input sanitization": "✅",
     "HTML tag removal": "✅",
     "JavaScript injection blocking": "✅",
     "Event handler removal": "✅",

@@ -133,7 +133,6 @@ export default function DownloadReportModal({
       // Simulate download
       await new Promise((resolve) => setTimeout(resolve, 2000));
       // In real app, trigger actual download
-      console.log("Downloading:", downloadUrl);
       onSuccess?.();
     } finally {
       setDownloading(null);
@@ -142,7 +141,6 @@ export default function DownloadReportModal({
 
   const handleArchive = async (reportId: string) => {
     // Simulate archive action
-    console.log("Archiving report:", reportId);
   };
 
   const filteredDownloads = availableDownloads.filter((report) => {
@@ -407,7 +405,6 @@ export default function DownloadReportModal({
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={() => {
               // Refresh downloads
-              console.log("Refreshing downloads...");
             }}
             disabled={loading}
           >

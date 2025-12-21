@@ -1,5 +1,13 @@
-export { default as HeroSection } from './HeroSection';
-export { default as Navigation } from './Navigation';
-export { default as FeaturesSection } from './FeaturesSection';
-export { default as Footer } from './Footer';
-export { default as ScrollStorySection } from './ScrollStorySection'; 
+/**
+ * Landing Page Components
+ * Centralized exports for all landing page components
+ */
+
+export { default as Hero } from "./Hero";
+export { default as WhatIsIdara } from "./WhatIsIdara";
+export { default as Features } from "./Features";
+export { default as SocialProof } from "./SocialProof";
+export { default as Pricing } from "./Pricing";
+export { default as FAQ } from "./FAQ";
+export { default as CTA } from "./CTA";
+export { default as Footer } from "./Footer";

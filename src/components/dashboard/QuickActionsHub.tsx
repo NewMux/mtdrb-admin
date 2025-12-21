@@ -20,19 +20,16 @@ export const QuickActionsHub: React.FC<QuickActionsHubProps> = ({
     {
       title: "Add Member",
       icon: <FiUsers className="h-5 w-5" />,
-      onClick: () => console.log("Add member"),
       variant: "primary",
     },
     {
       title: "Schedule Class",
       icon: <FiCalendar className="h-5 w-5" />,
-      onClick: () => console.log("Schedule class"),
       variant: "secondary",
     },
     {
       title: "Process Payment",
       icon: <FiDollarSign className="h-5 w-5" />,
-      onClick: () => console.log("Process payment"),
       variant: "secondary",
     },
   ];

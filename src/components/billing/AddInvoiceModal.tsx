@@ -99,7 +99,6 @@ const SMART_CATEGORIZATION = {
   ASSESSMENT: { category: "PT", description: "Fitness Assessment" },
   PERSONAL: { category: "PT", description: "Personal Training" },
   GROUP: { category: "Class", description: "Group Class" },
-  SUPPLEMENT: { category: "Other", description: "Supplement" },
   MERCH: { category: "Other", description: "Merchandise" },
   CONSULT: { category: "PT", description: "Consultation" },
   ASSESS: { category: "PT", description: "Assessment" },

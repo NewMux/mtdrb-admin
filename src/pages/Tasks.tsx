@@ -44,12 +44,10 @@ const Tasks: React.FC = () => {
   ];
 
   const handleAddTask = () => {
-    console.log("🚀 Tasks: Add Task button clicked");
     setShowAddTaskModal(true);
   };
 
   const handleTaskSuccess = () => {
-    console.log("✅ Task created successfully");
     setRefreshKey((prev) => prev + 1);
     setShowAddTaskModal(false);
   };
@@ -59,10 +57,10 @@ const Tasks: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900">
             Tasks
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 mt-1">
             Manage your gym operations and tasks
           </p>
         </div>
@@ -140,10 +138,10 @@ const Tasks: React.FC = () => {
                 <div className="card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         Total Tasks
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         45
                       </p>
                     </div>
@@ -156,10 +154,10 @@ const Tasks: React.FC = () => {
                 <div className="card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         Pending
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         12
                       </p>
                     </div>
@@ -172,10 +170,10 @@ const Tasks: React.FC = () => {
                 <div className="card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         In Progress
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         8
                       </p>
                     </div>
@@ -188,10 +186,10 @@ const Tasks: React.FC = () => {
                 <div className="card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         Completed
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         25
                       </p>
                     </div>
@@ -205,10 +203,10 @@ const Tasks: React.FC = () => {
               {/* Task Table */}
               <div className="card">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Recent Tasks
                   </h3>
-                  <button className="text-sm text-sky-600 hover:text-sky-700 dark:text-sky-400">
+                  <button className="text-sm text-sky-600 hover:text-sky-700">
                     View All Tasks
                   </button>
                 </div>
@@ -226,25 +224,25 @@ const Tasks: React.FC = () => {
           {activeTab === "schedule" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Task Schedule
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center p-6 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="text-center p-6 rounded-xl bg-gray-50">
                     <div className="text-3xl font-bold text-sky-600">15</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <div className="text-sm text-gray-600 mt-1">
                       Due Today
                     </div>
                   </div>
-                  <div className="text-center p-6 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="text-center p-6 rounded-xl bg-gray-50">
                     <div className="text-3xl font-bold text-gold-600">8</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <div className="text-sm text-gray-600 mt-1">
                       Due This Week
                     </div>
                   </div>
-                  <div className="text-center p-6 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="text-center p-6 rounded-xl bg-gray-50">
                     <div className="text-3xl font-bold text-rose-600">3</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <div className="text-sm text-gray-600 mt-1">
                       Overdue
                     </div>
                   </div>
@@ -253,7 +251,7 @@ const Tasks: React.FC = () => {
 
               {/* Task Automation Engine */}
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Task Automation
                 </h3>
                 <TaskAutomationEngine refreshKey={refreshKey} />

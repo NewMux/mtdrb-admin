@@ -134,7 +134,6 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      console.log("Export completed successfully");
       toast.success("Data exported successfully");
       onSuccess?.();
       onClose();
@@ -495,7 +494,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         {isPro && selectedExport && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              AI Suggestions
+              Smart Suggestions
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
               <p>

@@ -80,10 +80,10 @@ const Settings: React.FC = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               Settings
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-gray-600 mt-1">
               Manage your gym's configuration and preferences
             </p>
           </div>
@@ -91,7 +91,7 @@ const Settings: React.FC = () => {
         <div className="card">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-400">
+            <span className="ml-3 text-gray-600">
               Loading settings...
             </span>
           </div>
@@ -105,10 +105,10 @@ const Settings: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900">
             Settings
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 mt-1">
             Manage your gym's configuration and preferences
           </p>
         </div>
@@ -144,11 +144,11 @@ const Settings: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4"
+          className="bg-amber-50 border border-amber-200 rounded-xl p-4"
         >
           <div className="flex items-center space-x-2">
             <FiAlertCircle className="h-5 w-5 text-amber-600" />
-            <span className="text-sm text-amber-800 dark:text-amber-200">
+            <span className="text-sm text-amber-800">
               You have unsaved changes. Click "Save Changes" to apply them.
             </span>
           </div>
@@ -178,21 +178,21 @@ const Settings: React.FC = () => {
           {activeTab === "general" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   General Settings
                 </h3>
 
                 <div className="space-y-6">
                   {/* Gym Name */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="gym-name"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Gym Name *
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Your gym's display name
                       </p>
                     </div>
@@ -228,15 +228,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Timezone */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="timezone"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Timezone
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Your local timezone
                       </p>
                     </div>
@@ -263,15 +263,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Currency */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="currency"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Currency
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Default currency for billing
                       </p>
                     </div>
@@ -298,15 +298,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Language */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="language"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Language
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Interface language
                       </p>
                     </div>
@@ -333,15 +333,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Dark Mode Toggle */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="dark-mode"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Dark Mode
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Switch between light and dark themes
                       </p>
                     </div>
@@ -370,7 +370,7 @@ const Settings: React.FC = () => {
           {activeTab === "profile" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Profile Settings
                 </h3>
 
@@ -381,10 +381,10 @@ const Settings: React.FC = () => {
                       <span className="text-white font-bold text-lg">A</span>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Profile Picture
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500">
                         Upload a new profile picture
                       </p>
                     </div>
@@ -508,18 +508,18 @@ const Settings: React.FC = () => {
           {activeTab === "security" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Security Settings
                 </h3>
 
                 <div className="space-y-4">
                   {/* Two-Factor Authentication */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Two-Factor Authentication
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Add an extra layer of security
                       </p>
                     </div>
@@ -543,15 +543,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Password Expiry */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
                       <label
                         htmlFor="password-expiry"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Password Expiry (days)
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Days before password expires
                       </p>
                     </div>
@@ -588,15 +588,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Session Timeout */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
                       <label
                         htmlFor="session-timeout"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Session Timeout (minutes)
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Inactive session timeout
                       </p>
                     </div>
@@ -633,12 +633,12 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Change Password */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Change Password
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Update your account password
                       </p>
                     </div>
@@ -648,12 +648,12 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Login History */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Login History
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         View recent login activity
                       </p>
                     </div>
@@ -669,18 +669,18 @@ const Settings: React.FC = () => {
           {activeTab === "billing" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Billing Information
                 </h3>
 
                 <div className="space-y-4">
                   {/* Current Plan */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Current Plan
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         {settings.billing.currentPlan}
                       </p>
                     </div>
@@ -690,12 +690,12 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Payment Method */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Payment Method
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         {settings.billing.paymentMethod}
                       </p>
                     </div>
@@ -705,12 +705,12 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Auto Renewal */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Auto Renewal
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Automatically renew subscription
                       </p>
                     </div>
@@ -734,12 +734,12 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Billing History */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                      <h4 className="text-sm font-medium text-gray-900">
                         Billing History
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         View past invoices
                       </p>
                     </div>
@@ -755,22 +755,22 @@ const Settings: React.FC = () => {
           {activeTab === "integrations" && (
             <div className="space-y-6">
               <div className="card">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">
                   Third-Party Integrations
                 </h3>
 
                 <div className="space-y-4">
                   {/* Google Calendar */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
                         <FiGlobe className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        <h4 className="text-sm font-medium text-gray-900">
                           Google Calendar
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           Sync class schedules
                         </p>
                       </div>
@@ -795,16 +795,16 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Stripe Payments */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
                         <FiDatabase className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        <h4 className="text-sm font-medium text-gray-900">
                           Stripe Payments
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           Process payments
                         </p>
                       </div>
@@ -816,16 +816,16 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Slack */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center">
                         <FiBell className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        <h4 className="text-sm font-medium text-gray-900">
                           Slack
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           Team notifications
                         </p>
                       </div>
@@ -850,15 +850,15 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Webhook URL */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex-1">
                       <label
                         htmlFor="webhook-url"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
+                        className="block text-sm font-medium text-gray-900"
                       >
                         Webhook URL
                       </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Custom webhook endpoint
                       </p>
                     </div>

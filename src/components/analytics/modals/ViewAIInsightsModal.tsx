@@ -14,14 +14,14 @@ import {
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
-interface ViewAIInsightsModalProps {
+interface ViewSmartInsightsModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
   isPro?: boolean;
 }
 
-const aiInsights = [
+const smartInsights = [
   {
     id: "1",
     type: "prediction",
@@ -90,35 +90,35 @@ const aiInsights = [
 ];
 
 const insightCategories = [
-  { id: "all", label: "All Insights", count: aiInsights.length },
+  { id: "all", label: "All Insights", count: smartInsights.length },
   {
     id: "retention",
     label: "Retention",
-    count: aiInsights.filter((i) => i.category === "retention").length,
+    count: smartInsights.filter((i) => i.category === "retention").length,
   },
   {
     id: "revenue",
     label: "Revenue",
-    count: aiInsights.filter((i) => i.category === "revenue").length,
+    count: smartInsights.filter((i) => i.category === "revenue").length,
   },
   {
     id: "operations",
     label: "Operations",
-    count: aiInsights.filter((i) => i.category === "operations").length,
+    count: smartInsights.filter((i) => i.category === "operations").length,
   },
   {
     id: "performance",
     label: "Performance",
-    count: aiInsights.filter((i) => i.category === "performance").length,
+    count: smartInsights.filter((i) => i.category === "performance").length,
   },
 ];
 
-export default function ViewAIInsightsModal({
+export default function ViewSmartInsightsModal({
   open,
   onClose,
   onSuccess,
   isPro,
-}: ViewAIInsightsModalProps) {
+}: ViewSmartInsightsModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
   const [selectedCategory, setSelectedCategory] = React.useState("all");
@@ -140,7 +140,6 @@ export default function ViewAIInsightsModal({
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Applying action:", action);
       onSuccess?.();
     } finally {
       setApplyingAction(null);
@@ -149,8 +148,8 @@ export default function ViewAIInsightsModal({
 
   const filteredInsights =
     selectedCategory === "all"
-      ? aiInsights
-      : aiInsights.filter((insight) => insight.category === selectedCategory);
+      ? smartInsights
+      : smartInsights.filter((insight) => insight.category === selectedCategory);
 
   const getInsightColor = (color: string) => {
     switch (color) {
@@ -265,8 +264,8 @@ export default function ViewAIInsightsModal({
         </div>
       </Section>
 
-      {/* AI Insights */}
-      <Section title="AI Insights">
+      {/* Smart Insights */}
+      <Section title="Smart Insights">
         <div className="space-y-4">
           {filteredInsights.map((insight) => {
             const Icon = insight.icon;
@@ -331,7 +330,7 @@ export default function ViewAIInsightsModal({
         </div>
       </Section>
 
-      {/* AI Summary */}
+      {/* Smart Summary */}
       <Section title="Smart Summary">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg p-4 border">
@@ -407,7 +406,6 @@ export default function ViewAIInsightsModal({
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={() => {
               // Apply all recommendations
-              console.log("Applying all recommendations");
             }}
             disabled={loading}
           >

@@ -60,7 +60,6 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
           fetchError.code === "PGRST116" ||
           fetchError.message.includes("does not exist")
         ) {
-          console.log("Activities table not found, using fallback data");
           setActivities(generateFallbackActivities(tenantId));
           return;
         }

@@ -5,37 +5,22 @@ import {
   validateUUID,
   validateTenantAccess,
   sanitizeInput,
-  securityHeaders,
   createMemberSchema,
   updateMemberSchema,
   createClassSchema,
-  updateClassSchema,
-  createTrainerSchema,
-  updateTrainerSchema,
-  createBookingSchema,
-  updateBookingSchema,
-  createInvoiceSchema,
-  updateInvoiceSchema,
   paginationSchema,
   memberFilterSchema,
   classFilterSchema,
   type CreateMemberData,
   type UpdateMemberData,
   type CreateClassData,
-  type UpdateClassData,
-  type CreateTrainerData,
-  type UpdateTrainerData,
-  type CreateBookingData,
-  type UpdateBookingData,
-  type CreateInvoiceData,
-  type UpdateInvoiceData,
   type PaginationParams,
   type MemberFilterParams,
   type ClassFilterParams,
 } from "./validation";
 import type { ApiResponse } from "../types";
-import { mockClasses } from "./mockClassData";
-const isDev = import.meta.env.MODE === "development";
+// Removed mock data - using real data from Supabase
+// Removed isDev - always use real Supabase
 
 // Rate limiting implementation
 class RateLimiter {
@@ -173,14 +158,16 @@ class SecureApiClient {
         : { success: true, data: { page: 1, limit: 20 } };
 
       if (!validatedFilters.success) {
+        const errors = 'errors' in validatedFilters ? validatedFilters.errors : [];
         throw new Error(
-          `Invalid filters: ${validatedFilters.errors.join(", ")}`,
+          `Invalid filters: ${errors.join(", ") || "Invalid filter parameters"}`,
         );
       }
 
       if (!validatedPagination.success) {
+        const errors = 'errors' in validatedPagination ? validatedPagination.errors : [];
         throw new Error(
-          `Invalid pagination: ${validatedPagination.errors.join(", ")}`,
+          `Invalid pagination: ${errors.join(", ") || "Invalid pagination parameters"}`,
         );
       }
 
@@ -190,30 +177,27 @@ class SecureApiClient {
         .eq("tenant_id", tenantId);
 
       // Apply filters
-      if (validatedFilters.data.status) {
-        query = query.eq("status", validatedFilters.data.status);
+      const filterData = validatedFilters.data as MemberFilterParams;
+      if (filterData.status) {
+        query = query.eq("status", filterData.status);
       }
-      if (validatedFilters.data.membership_type) {
+      if (filterData.membership_type) {
         query = query.eq(
           "membership_type",
-          validatedFilters.data.membership_type,
+          filterData.membership_type,
         );
       }
-      if (validatedFilters.data.trainer_id) {
-        query = query.eq("trainer_id", validatedFilters.data.trainer_id);
-      }
-      if (validatedFilters.data.branch_id) {
-        query = query.eq("assigned_branch_id", validatedFilters.data.branch_id);
-      }
-      if (validatedFilters.data.search) {
-        const searchTerm = sanitizeInput(validatedFilters.data.search);
+      if (filterData.search) {
+        const searchTerm = sanitizeInput(filterData.search);
         query = query.or(
           `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`,
         );
       }
 
       // Apply pagination
-      const { page, limit } = validatedPagination.data;
+      const paginationData = validatedPagination.data as PaginationParams;
+      const page = paginationData.page ?? 1;
+      const limit = paginationData.limit ?? 20;
       const from = (page - 1) * limit;
       const to = from + limit - 1;
       query = query.range(from, to);
@@ -222,14 +206,14 @@ class SecureApiClient {
         ascending: false,
       });
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
@@ -246,7 +230,8 @@ class SecureApiClient {
         tenant_id: tenantId,
       });
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+        const errors = 'errors' in validation ? validation.errors : [];
+        throw new Error(`Validation failed: ${errors.join(", ")}`);
       }
 
       // Check for duplicate email
@@ -261,20 +246,8 @@ class SecureApiClient {
         throw new Error("A member with this email already exists");
       }
 
-      // Validate trainer assignment if provided
-      if (validation.data.trainer_id) {
-        const { data: trainer } = await supabase
-          .from("trainers")
-          .select("id")
-          .eq("id", validation.data.trainer_id)
-          .eq("tenant_id", tenantId)
-          .eq("status", "active")
-          .single();
-
-        if (!trainer) {
-          throw new Error("Invalid or inactive trainer assignment");
-        }
-      }
+      // Validate trainer assignment if provided (trainer_id is not in member schema, skip this check)
+      // Note: trainer_id would need to be added to CreateMemberData type if needed
 
       const { data, error } = await supabase
         .from("members")
@@ -282,14 +255,14 @@ class SecureApiClient {
         .select()
         .single();
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
@@ -310,7 +283,8 @@ class SecureApiClient {
       // Validate input data
       const validation = validateInput(updateMemberSchema, memberData);
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+        const errors = 'errors' in validation ? validation.errors : [];
+        throw new Error(`Validation failed: ${errors.join(", ")}`);
       }
 
       // Check member exists and belongs to tenant
@@ -351,18 +325,18 @@ class SecureApiClient {
         .select()
         .single();
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
-  async deleteMember(memberId: string): Promise<SecureApiResponse<null>> {
+  async deleteMember(memberId: string): Promise<SecureApiResponse<any[]>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -404,16 +378,17 @@ class SecureApiClient {
         .from("members")
         .delete()
         .eq("id", memberId)
-        .eq("tenant_id", tenantId);
+        .eq("tenant_id", tenantId)
+        .select();
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
@@ -422,9 +397,7 @@ class SecureApiClient {
     filters?: ClassFilterParams,
     pagination?: PaginationParams,
   ): Promise<SecureApiResponse<any[]>> {
-    if (isDev) {
-      return this.wrapResponse(mockClasses, null, "mock-user");
-    }
+    // Always use real Supabase
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -438,14 +411,16 @@ class SecureApiClient {
         : { success: true, data: { page: 1, limit: 20 } };
 
       if (!validatedFilters.success) {
+        const errors = 'errors' in validatedFilters ? validatedFilters.errors : [];
         throw new Error(
-          `Invalid filters: ${validatedFilters.errors.join(", ")}`,
+          `Invalid filters: ${errors.join(", ") || "Invalid filter parameters"}`,
         );
       }
 
       if (!validatedPagination.success) {
+        const errors = 'errors' in validatedPagination ? validatedPagination.errors : [];
         throw new Error(
-          `Invalid pagination: ${validatedPagination.errors.join(", ")}`,
+          `Invalid pagination: ${errors.join(", ") || "Invalid pagination parameters"}`,
         );
       }
 
@@ -460,27 +435,27 @@ class SecureApiClient {
         .eq("tenant_id", tenantId);
 
       // Apply filters
-      if (validatedFilters.data.trainer_id) {
-        query = query.eq("trainer_id", validatedFilters.data.trainer_id);
+      const filterData = validatedFilters.data as ClassFilterParams;
+      if (filterData.trainer_id) {
+        query = query.eq("trainer_id", filterData.trainer_id);
       }
-      if (validatedFilters.data.status) {
-        query = query.eq("status", validatedFilters.data.status);
+      if (filterData.status) {
+        query = query.eq("status", filterData.status);
       }
-      if (validatedFilters.data.class_type) {
-        query = query.eq("class_type", validatedFilters.data.class_type);
+      if (filterData.class_type) {
+        query = query.eq("class_type", filterData.class_type);
       }
-      if (validatedFilters.data.skill_level) {
-        query = query.eq("skill_level", validatedFilters.data.skill_level);
+      if (filterData.date_from) {
+        query = query.gte("start_time", filterData.date_from);
       }
-      if (validatedFilters.data.start_date) {
-        query = query.gte("start_time", validatedFilters.data.start_date);
-      }
-      if (validatedFilters.data.end_date) {
-        query = query.lte("end_time", validatedFilters.data.end_date);
+      if (filterData.date_to) {
+        query = query.lte("end_time", filterData.date_to);
       }
 
       // Apply pagination
-      const { page, limit } = validatedPagination.data;
+      const paginationData = validatedPagination.data as PaginationParams;
+      const page = paginationData.page ?? 1;
+      const limit = paginationData.limit ?? 20;
       const from = (page - 1) * limit;
       const to = from + limit - 1;
       query = query.range(from, to);
@@ -489,31 +464,21 @@ class SecureApiClient {
         ascending: true,
       });
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.CLASS_SCHEDULING,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
   async createClass(
     classData: CreateClassData,
   ): Promise<SecureApiResponse<any>> {
-    if (isDev) {
-      return this.wrapResponse(
-        {
-          ...classData,
-          id: `mock-${Date.now()}`,
-          created_at: new Date().toISOString(),
-        },
-        null,
-        "mock-user",
-      );
-    }
+    // Always use real Supabase
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -524,17 +489,19 @@ class SecureApiClient {
         tenant_id: tenantId,
       });
       if (!validation.success) {
-        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+        const errors = 'errors' in validation ? validation.errors : [];
+        throw new Error(`Validation failed: ${errors.join(", ")}`);
       }
 
-      // Check trainer availability
+      // Type assertion for validated data
+      const validatedClassData = validation.data as CreateClassData;
       const { data: conflictingClasses } = await supabase
         .from("classes")
         .select("id")
         .eq("tenant_id", tenantId)
-        .eq("trainer_id", validation.data.trainer_id)
+        .eq("trainer_id", validatedClassData.trainer_id)
         .or(
-          `start_time.lte.${validation.data.end_time},end_time.gte.${validation.data.start_time}`,
+          `start_time.lte.${validatedClassData.end_time},end_time.gte.${validatedClassData.start_time}`,
         )
         .neq("status", "cancelled");
 
@@ -545,20 +512,20 @@ class SecureApiClient {
       const { data, error } = await supabase
         .from("classes")
         .insert({
-          ...validation.data,
+          ...validatedClassData,
           current_bookings: 0,
         })
         .select()
         .single();
 
-      return this.wrapResponse(data, error, user.id);
+      return this.wrapResponse(data || [], error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.CLASS_SCHEDULING,
         false,
       );
-      return this.wrapResponse(null, processedError, user.id);
+      return this.wrapResponse([], processedError, user.id);
     }
   }
 
@@ -568,14 +535,14 @@ class SecureApiClient {
       const { user } = await this.checkAuth();
       const userMetadata = user.user_metadata;
 
-      const rolePermissions = {
+      const rolePermissions: Record<string, string[]> = {
         admin: ["all"],
         manager: ["read", "write", "manage_staff"],
         trainer: ["read", "write_classes"],
         staff: ["read"],
       };
 
-      const userRole = userMetadata?.role || "staff";
+      const userRole = (userMetadata?.role || "staff") as string;
       const permissions = rolePermissions[userRole] || ["read"];
 
       return permissions.includes(permission) || permissions.includes("all");

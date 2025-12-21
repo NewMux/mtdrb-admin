@@ -49,16 +49,16 @@ const KPICard: React.FC<KPICardProps> = ({
   const getTrendColor = (trend: "up" | "down" | "neutral") => {
     switch (trend) {
       case "up":
-        return "text-emerald-600 dark:text-emerald-400";
+        return "text-emerald-600";
       case "down":
-        return "text-red-600 dark:text-red-400";
+        return "text-red-600";
       default:
-        return "text-gray-600 dark:text-gray-400";
+        return "text-gray-600";
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-300 ease-in-out">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-xl border ${getColorClasses(color)}`}>
           {icon}
@@ -72,13 +72,13 @@ const KPICard: React.FC<KPICardProps> = ({
         </div>
       </div>
       <div>
-        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+        <h3 className="text-sm font-medium text-gray-600 mb-1">
           {title}
         </h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <p className="text-2xl font-bold text-gray-900">
           {value}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           {subtitle}
         </p>
       </div>
@@ -235,7 +235,7 @@ export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
             Smart Tasks Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            AI-powered task management and productivity insights
+            Smart-powered task management and productivity insights
           </p>
         </div>
         <div className="flex space-x-3">
@@ -256,26 +256,26 @@ export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors text-left">
-            <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-2" />
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          <button className="p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors text-left">
+            <FiUsers className="h-6 w-6 text-blue-600 mb-2" />
+            <h3 className="font-semibold text-gray-900">
               Schedule Member Calls
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Auto-assign follow-up calls
             </p>
           </button>
-          <button className="p-4 bg-green-50 dark:bg-green-900/30 rounded-2xl hover:bg-green-100 dark:hover:bg-green-800/50 transition-colors text-left">
-            <FiCheckSquare className="h-6 w-6 text-green-600 dark:text-green-400 mb-2" />
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          <button className="p-4 bg-green-50 rounded-2xl hover:bg-green-100 transition-colors text-left">
+            <FiCheckSquare className="h-6 w-6 text-green-600 mb-2" />
+            <h3 className="font-semibold text-gray-900">
               Bulk Task Creation
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Create recurring tasks
             </p>
           </button>
@@ -287,10 +287,10 @@ export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
         </div>
       </div>
 
-      {/* AI Insights */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      {/* Smart Insights */}
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">AI Task Insights</h2>
+          <h2 className="text-xl font-bold text-gray-900">Smart Task Insights</h2>
           <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
             Live Updates
           </span>
@@ -304,7 +304,7 @@ export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Task Categories
           </h3>
@@ -361,7 +361,7 @@ export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Team Performance
           </h3>

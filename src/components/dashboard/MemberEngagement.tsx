@@ -27,14 +27,14 @@ const MemberEngagement: React.FC = () => {
   ];
 
   return (
-    <section className="bg-white border border-gray-100 rounded-2xl p-6 dark:bg-gray-900 dark:border-gray-800 transition-colors duration-300">
+    <section className="bg-white border border-gray-100 rounded-2xl p-6 transition-colors duration-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-blue-50 rounded-xl">
             <FiUserCheck className="text-blue-600 text-xl" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 tracking-tight dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
               Member Engagement
             </h2>
             <p className="text-sm text-gray-600">Member activity and growth</p>

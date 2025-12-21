@@ -53,19 +53,14 @@ const ChartPlaceholder = ({
   data: any[];
   type?: "line" | "bar" | "pie";
 }) => {
-  // Handler for exporting chart data
   const handleExportChart = () => {
-    console.log(`Exporting ${title} chart data...`);
-    // TODO: Implement actual export functionality
+    // TODO: Implement export functionality
   };
 
-  // Handler for viewing chart details
   const handleViewDetails = () => {
-    console.log(`Viewing details for ${title}...`);
     // TODO: Implement details view functionality
   };
 
-  // Add null/undefined check
   if (!data || !Array.isArray(data)) {
     return (
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -158,13 +153,9 @@ const VATSummaryCard = ({
 }: {
   vatSummary: RevenueOverviewProps["vatSummary"];
 }) => {
-  // Handler for generating VAT report
   const handleGenerateVATReport = () => {
-    console.log("Generating VAT report...");
     // TODO: Implement VAT report generation
   };
-
-  // Add null/undefined check
   if (!vatSummary || typeof vatSummary !== "object") {
     return (
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -271,13 +262,9 @@ const TopProductsTable = ({
 }: {
   products: RevenueOverviewProps["topProducts"];
 }) => {
-  // Handler for viewing all products
   const handleViewAll = () => {
-    console.log("Viewing all products...");
     // TODO: Implement view all products functionality
   };
-
-  // Add null/undefined check
   if (!products || !Array.isArray(products)) {
     return (
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -388,16 +375,12 @@ export default function RevenueOverview({
     "overview" | "breakdown" | "products"
   >("overview");
 
-  // Handler for exporting revenue report
   const handleExportReport = () => {
-    console.log("Exporting revenue report...");
-    // TODO: Implement actual export functionality
+    // TODO: Implement export functionality
   };
 
-  // Handler for generating invoice
   const handleGenerateInvoice = () => {
-    console.log("Generating invoice...");
-    // TODO: Implement invoice generation functionality
+    // TODO: Implement invoice generation
   };
 
   return (
@@ -497,7 +480,6 @@ export default function RevenueOverview({
   );
 }
 
-// Default data for demonstration
 export const defaultRevenueData: RevenueOverviewProps = {
   timeSeriesData: [
     { period: "Jan", revenue: 45000, change: 12.5 },

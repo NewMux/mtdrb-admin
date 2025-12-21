@@ -3,6 +3,18 @@
 
 export const PROTECTED_ROUTES = [
   "/dashboard",
+  "/dashboard/members",
+  "/dashboard/classes",
+  "/dashboard/trainers",
+  "/dashboard/billing",
+  "/dashboard/analytics",
+  "/dashboard/reports",
+  "/dashboard/settings",
+  "/dashboard/plans",
+  "/dashboard/tasks",
+  "/dashboard/notifications",
+  "/dashboard/profile",
+  // Legacy routes (will redirect)
   "/members",
   "/classes",
   "/trainers",
@@ -12,8 +24,6 @@ export const PROTECTED_ROUTES = [
   "/settings",
   "/plans",
   "/tasks",
-  "/promotions",
-  "/notifications",
   "/profile",
 ];
 

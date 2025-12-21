@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiUser, FiAlertTriangle, FiTrash2, FiX } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
-import { MockMember } from "../../../hooks/useMockMembers";
+import { Member } from "../../../types/member";
 
 interface DeleteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member?: MockMember | null;
-  onSuccess: (member: MockMember) => Promise<void>;
+  member?: Member | null;
+  onSuccess: (member: Member) => Promise<void>;
   loading?: boolean;
   modalRef?: React.RefObject<HTMLDivElement>;
 }

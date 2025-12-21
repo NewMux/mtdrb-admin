@@ -58,7 +58,7 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
   // Add null/undefined check
   if (!funnel || !Array.isArray(funnel)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-blue-100 rounded-lg">
             <FiBarChart className="w-6 h-6 text-blue-600" />
@@ -83,7 +83,7 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-blue-100 rounded-lg">
           <FiBarChart className="w-6 h-6 text-blue-600" />
@@ -130,7 +130,7 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
   // Add null/undefined check
   if (!memberStatus || !Array.isArray(memberStatus)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-green-100 rounded-lg">
             <FiPieChart className="w-6 h-6 text-green-600" />
@@ -157,7 +157,7 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-green-100 rounded-lg">
           <FiPieChart className="w-6 h-6 text-green-600" />
@@ -221,7 +221,7 @@ const MembersTable = ({
   // Add null/undefined check
   if (!members || !Array.isArray(members)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
           <div>
@@ -242,7 +242,7 @@ const MembersTable = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
         <div>
@@ -313,7 +313,7 @@ const NoShowsTable = ({
   // Add null/undefined check
   if (!noShows || !Array.isArray(noShows)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-red-100 rounded-lg">
             <FiUserX className="w-6 h-6 text-red-600" />
@@ -338,7 +338,7 @@ const NoShowsTable = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-red-100 rounded-lg">
           <FiUserX className="w-6 h-6 text-red-600" />
@@ -394,7 +394,7 @@ const LTVTrendChart = ({
   // Add null/undefined check
   if (!ltvTrend || !Array.isArray(ltvTrend)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-purple-100 rounded-lg">
             <FiDollarSign className="w-6 h-6 text-purple-600" />
@@ -421,7 +421,7 @@ const LTVTrendChart = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-purple-100 rounded-lg">
           <FiDollarSign className="w-6 h-6 text-purple-600" />
@@ -475,13 +475,11 @@ export default function MemberAnalytics({
 
   // Handler for exporting member data
   const handleExportData = () => {
-    console.log("Exporting member analytics data...");
     // TODO: Implement actual export functionality
   };
 
   // Handler for member campaign
   const handleMemberCampaign = () => {
-    console.log("Starting member campaign...");
     // TODO: Implement member campaign functionality
   };
 

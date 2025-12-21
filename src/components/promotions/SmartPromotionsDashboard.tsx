@@ -313,7 +313,7 @@ const SmartPromotionsDashboard: React.FC<SmartPromotionsDashboardProps> = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <button className="p-4 bg-purple-50 rounded-2xl hover:bg-purple-100 transition-colors text-left">
@@ -339,11 +339,11 @@ const SmartPromotionsDashboard: React.FC<SmartPromotionsDashboardProps> = ({
         </div>
       </div>
 
-      {/* AI Insights */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      {/* Smart Insights */}
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">
-            AI Promotion Insights
+            Smart Promotion Insights
           </h2>
           <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
             Live Updates
@@ -358,7 +358,7 @@ const SmartPromotionsDashboard: React.FC<SmartPromotionsDashboardProps> = ({
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Top Performing Promotions
           </h3>
@@ -383,7 +383,7 @@ const SmartPromotionsDashboard: React.FC<SmartPromotionsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Channel Performance
           </h3>

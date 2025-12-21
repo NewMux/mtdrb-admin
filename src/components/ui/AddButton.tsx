@@ -25,7 +25,7 @@ const AddButton: React.FC<AddButtonProps> = ({
   const variantClasses = {
     primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
     secondary:
-      "bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white focus:ring-gray-500",
+      "bg-gray-100 hover:bg-gray-200 text-lunaNavy focus:ring-gray-500",
     floating:
       "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-lg hover:shadow-xl",
   };

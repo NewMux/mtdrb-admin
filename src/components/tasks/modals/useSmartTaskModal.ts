@@ -40,7 +40,7 @@ export interface TaskFilters {
   };
 }
 
-export interface AISuggestion {
+export interface SmartSuggestion {
   id: string;
   type: "assignment" | "deadline" | "priority" | "automation" | "escalation";
   title: string;
@@ -75,110 +75,31 @@ export interface useSmartTaskModalProps {
 export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   const [loading, setLoading] = useState(false);
   const [task, setTask] = useState<Task | null>(null);
-  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [smartSuggestions, setSmartSuggestions] = useState<SmartSuggestion[]>([]);
   const [automations, setAutomations] = useState<TaskAutomation[]>([]);
   const [alerts, setAlerts] = useState<
     Array<{ type: "error" | "warning" | "info"; message: string }>
   >([]);
 
-  // Mock data for development
-  const mockTask: Task = {
-    id: "1",
-    title: "Setup new member onboarding",
-    description:
-      "Complete onboarding process for Sarah Johnson including equipment orientation and class introduction",
-    type: "onboarding",
-    priority: "high",
-    status: "pending",
-    assignedTo: "mike.chen@mtdrb.com",
-    createdBy: "admin@mtdrb.com",
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-15T10:30:00Z",
-    dueDate: "2024-01-17T18:00:00Z",
-    tags: ["member", "onboarding", "priority"],
-    automation: {
-      id: "auto_1",
-      type: "triggered",
-      enabled: true,
-    },
-  };
-
-  const mockAiSuggestions: AISuggestion[] = [
-    {
-      id: "1",
-      type: "assignment",
-      title: "Smart Assignment",
-      description: "Mike Chen is most available for onboarding tasks this week",
-      confidence: 92,
-      impact: "high",
-      action: "Assign to Mike Chen",
-      isPro: true,
-    },
-    {
-      id: "2",
-      type: "deadline",
-      title: "Optimal Deadline",
-      description: "Recommended deadline: 48 hours (based on similar tasks)",
-      confidence: 88,
-      impact: "medium",
-      action: "Set deadline to 48 hours",
-      isPro: false,
-    },
-    {
-      id: "3",
-      type: "priority",
-      title: "Priority Adjustment",
-      description: "This task type typically requires high priority",
-      confidence: 85,
-      impact: "medium",
-      action: "Set priority to high",
-      isPro: false,
-    },
-  ];
-
-  const mockAutomations: TaskAutomation[] = [
-    {
-      id: "1",
-      name: "Daily Cleaning Checklist",
-      type: "recurring",
-      description: "Automated daily cleaning tasks for gym maintenance",
-      enabled: true,
-      schedule: "daily 6:00 AM",
-      assignee: "cleaning@mtdrb.com",
-      priority: "medium",
-      isPro: false,
-    },
-    {
-      id: "2",
-      name: "Member Onboarding",
-      type: "triggered",
-      description: "Automated onboarding tasks when new member joins",
-      enabled: true,
-      trigger: "new_member_registration",
-      assignee: "trainer@mtdrb.com",
-      priority: "high",
-      isPro: true,
-    },
-    {
-      id: "3",
-      name: "Monthly Equipment Check",
-      type: "scheduled",
-      description: "Monthly equipment maintenance and safety checks",
-      enabled: false,
-      schedule: "monthly 1st 9:00 AM",
-      assignee: "maintenance@mtdrb.com",
-      priority: "medium",
-      isPro: false,
-    },
-  ];
-
-  // Load initial data
+  // Load initial data from database
   useEffect(() => {
-    if (props.taskId) {
-      setTask(mockTask);
-    }
-    setAiSuggestions(mockAiSuggestions);
-    setAutomations(mockAutomations);
+    const loadTask = async () => {
+      if (props.taskId) {
+        try {
+          // TODO: Fetch task from Supabase when tasks table is available
+          // For now, return null
+          setTask(null);
+        } catch (error) {
+          console.error("Error loading task:", error);
+          setTask(null);
+        }
+      }
+    };
+
+    loadTask();
+    // No mock data - return empty arrays until tasks table is implemented
+    setSmartSuggestions([]);
+    setAutomations([]);
   }, [props.taskId]);
 
   // Create new task
@@ -187,8 +108,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   ) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Save to Supabase when tasks table is available
       const newTask: Task = {
         ...taskData,
         id: Date.now().toString(),
@@ -210,10 +130,14 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Update in Supabase when tasks table is available
+      if (!task) {
+        setAlerts([{ type: "error", message: "No task selected" }]);
+        return { success: false };
+      }
+      
       const updatedTask = {
-        ...mockTask,
+        ...task,
         ...updates,
         updatedAt: new Date().toISOString(),
       };
@@ -232,8 +156,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   const deleteTask = async (taskId: string, archive = false) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Delete from Supabase when tasks table is available
       setAlerts([
         {
           type: "info",
@@ -259,10 +182,14 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   ) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Update in Supabase when tasks table is available
+      if (!task) {
+        setAlerts([{ type: "error", message: "No task selected" }]);
+        return { success: false };
+      }
+      
       const updatedTask = {
-        ...mockTask,
+        ...task,
         status,
         updatedAt: new Date().toISOString(),
         completedAt:
@@ -285,10 +212,14 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   const assignTask = async (taskId: string, assignee: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Update in Supabase when tasks table is available
+      if (!task) {
+        setAlerts([{ type: "error", message: "No task selected" }]);
+        return { success: false };
+      }
+      
       const updatedTask = {
-        ...mockTask,
+        ...task,
         assignedTo: assignee,
         updatedAt: new Date().toISOString(),
       };
@@ -310,8 +241,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   ) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // TODO: Implement real export functionality when tasks table is available
       setAlerts([{ type: "info", message: "Task data exported successfully" }]);
       return { success: true, downloadUrl: "/api/tasks/export/123" };
     } catch (error) {
@@ -326,8 +256,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   const createAutomation = async (automation: Omit<TaskAutomation, "id">) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Create automation in Supabase when tasks table is available
       const newAutomation: TaskAutomation = {
         ...automation,
         id: Date.now().toString(),
@@ -343,14 +272,13 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
     }
   };
 
-  // Apply AI suggestion
+  // Apply Smart suggestion
   const applySuggestion = async (suggestionId: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // TODO: Apply suggestion when tasks table is available
       setAlerts([
-        { type: "info", message: "AI suggestion applied successfully" },
+        { type: "info", message: "Smart suggestion applied successfully" },
       ]);
       return { success: true };
     } catch (error) {
@@ -364,7 +292,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
   return {
     loading,
     task,
-    aiSuggestions,
+    smartSuggestions,
     automations,
     alerts,
     createTask,

@@ -10,13 +10,14 @@ import {
 } from "react-icons/fi";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
-import { MockMember } from "../../../hooks/useMockMembers";
+import { Member } from "../../../types/member";
+import { supabase } from "../../../supabaseClient";
 
 interface AssignTrainerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member?: MockMember | null;
-  onSuccess: (member: MockMember, trainerId: string) => Promise<void>;
+  member?: Member | null;
+  onSuccess: (member: Member, trainerId: string) => Promise<void>;
   loading?: boolean;
   modalRef?: React.RefObject<HTMLDivElement>;
 }
@@ -44,53 +45,68 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   const [selectedTrainer, setSelectedTrainer] = React.useState<string>("");
   const [isAssigning, setIsAssigning] = React.useState(false);
 
-  // Mock trainers data
-  const trainers: Trainer[] = [
-    {
-      id: "trainer-1",
-      name: "Sarah Johnson",
-      specialization: "Personal Training, HIIT",
-      rating: 4.9,
-      experience: "8 years",
-      availability: "Mon-Fri, 6AM-8PM",
-      currentMembers: 12,
-      maxMembers: 15,
-      avatar: "SJ",
-    },
-    {
-      id: "trainer-2",
-      name: "Mike Chen",
-      specialization: "Strength & Conditioning",
-      rating: 4.8,
-      experience: "6 years",
-      availability: "Mon-Sat, 7AM-9PM",
-      currentMembers: 8,
-      maxMembers: 12,
-      avatar: "MC",
-    },
-    {
-      id: "trainer-3",
-      name: "Emma Davis",
-      specialization: "Yoga & Pilates",
-      rating: 4.7,
-      experience: "5 years",
-      availability: "Mon-Fri, 9AM-7PM",
-      currentMembers: 15,
-      maxMembers: 18,
-      avatar: "ED",
-    },
-    {
-      id: "trainer-4",
-      name: "Alex Rodriguez",
-      specialization: "Cardio & Endurance",
-      rating: 4.6,
-      experience: "4 years",
-      availability: "Mon-Sun, 5AM-10PM",
-      currentMembers: 10,
-      maxMembers: 15,
-      avatar: "AR",
-    },
-  ];
+  // Fetch trainers from Supabase
+  React.useEffect(() => {
+    const fetchTrainers = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        let tenantId = user.user_metadata?.tenant_id;
+        if (!tenantId) {
+          const { data: membershipData } = await supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", user.id)
+            .single();
+          tenantId = membershipData?.tenant_id;
+        }
+
+        if (tenantId) {
+          const { data, error } = await supabase
+            .from("trainers")
+            .select("id, first_name, last_name, email, specialties, hourly_rate")
+            .eq("tenant_id", tenantId)
+            .eq("status", "active");
+
+          if (error) throw error;
+
+          // Get member counts for each trainer
+          const trainersWithCounts = await Promise.all(
+            (data || []).map(async (t: any) => {
+              const { count } = await supabase
+                .from("members")
+                .select("*", { count: "exact", head: true })
+                .eq("trainer_id", t.id)
+                .eq("status", "active");
+
+              return {
+                id: t.id,
+                name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email,
+                specialization: (t.specialties || []).join(", "),
+                rating: 4.5, // TODO: Calculate from reviews
+                experience: "N/A", // TODO: Add experience field
+                availability: "Mon-Fri, 6AM-8PM", // TODO: Fetch from schedule
+                currentMembers: count || 0,
+                maxMembers: 15, // TODO: Add max_members field to trainers table
+                avatar: `${t.first_name?.[0] || ''}${t.last_name?.[0] || ''}`.toUpperCase() || "T",
+              };
+            })
+          );
+
+          setTrainers(trainersWithCounts);
+        }
+      } catch (error) {
+        console.error("Error fetching trainers:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchTrainers();
+    }
+  }, [isOpen]);
+
+  const [trainers, setTrainers] = React.useState<Trainer[]>([]);
 
   React.useEffect(() => {
     if (member?.trainer_id) {
@@ -150,7 +166,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <ColorfulModalUI
-          isOpen={isOpen}
+          open={isOpen}
           onClose={handleClose}
           title="Assign Personal Trainer"
           subtitle={`Assign a trainer to ${member.name}`}

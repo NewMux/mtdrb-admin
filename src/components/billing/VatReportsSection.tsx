@@ -6,10 +6,7 @@ import {
   FiShield,
   FiTrendingUp,
 } from "react-icons/fi";
-import {
-  mockVatTransactions,
-  mockVatDashboardData,
-} from "../../api/mockBillingData";
+// Removed mock data - using real data from Supabase
 import { VatTransaction, VatDashboardData } from "../../types";
 import { toast } from "react-hot-toast";
 
@@ -43,8 +40,8 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
     try {
       setLoading(true);
 
-      // Use mock data instead of backend calls
-      let filteredTransactions = [...mockVatTransactions];
+      // TODO: Fetch VAT transactions from Supabase
+      let filteredTransactions: VatTransaction[] = [];
 
       // Apply search filter
       if (searchQuery) {
@@ -99,9 +96,17 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
     fetchTransactions();
   }, [fetchTransactions, refreshKey]);
 
-  // Set dashboard data from mock data
+  // TODO: Fetch dashboard data from Supabase
   useEffect(() => {
-    setDashboardData(mockVatDashboardData);
+    // TODO: Fetch VAT dashboard data from Supabase
+    setDashboardData({
+      totalVatCollected: 0,
+      totalVatPaid: 0,
+      netVat: 0,
+      vatRate: 0,
+      monthlyBreakdown: [],
+      topVatCategories: [],
+    });
   }, [refreshKey]);
 
   const handleDownloadReport = async () => {

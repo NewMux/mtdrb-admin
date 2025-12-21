@@ -121,7 +121,6 @@ const ClassModalsDemo: React.FC = () => {
   };
 
   const handleSuccess = () => {
-    console.log("Modal action completed successfully");
     handleCloseModal();
   };
 

@@ -296,7 +296,7 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
             </div>
           )}
 
-          {/* AI Suggestions for Pro Users */}
+          {/* Smart Suggestions for Pro Users */}
           {isProUser && selectedMember && (
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start space-x-3">

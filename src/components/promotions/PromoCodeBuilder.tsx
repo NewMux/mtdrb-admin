@@ -108,7 +108,6 @@ const PromoCodeBuilder: React.FC = () => {
 
     // Simulate API call
     toast.success("Promo code created successfully!");
-    console.log("Creating promo code:", formData);
   };
 
   const handleInputChange = (field: keyof PromoCodeFormData, value: any) => {

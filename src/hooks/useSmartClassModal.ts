@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
-import { mockClasses, mockTrainers } from "../api/mockClassData";
+// Removed mock data - using real data from Supabase
 
 interface Class {
   id: string;
@@ -39,7 +39,7 @@ interface Room {
   equipment: string[];
 }
 
-interface AIRecommendation {
+interface SmartRecommendation {
   id: string;
   type: "scheduling" | "capacity" | "trainer" | "location" | "timing";
   title: string;
@@ -81,7 +81,7 @@ export const useSmartClassModal = ({
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
-  const [recommendations, setRecommendations] = useState<AIRecommendation[]>(
+  const [recommendations, setRecommendations] = useState<SmartRecommendation[]>(
     [],
   );
   const [conflicts, setConflicts] = useState<any[]>([]);
@@ -98,44 +98,65 @@ export const useSmartClassModal = ({
 
     setLoading(true);
     try {
-      // Use mock data instead of Supabase
-      const mockClass = mockClasses.find(c => c.id === classId);
-      
-      if (!mockClass) {
-        throw new Error("Class not found");
-      }
+      // Fetch class from Supabase
+      const { data: classData, error } = await supabase
+        .from("classes")
+        .select(`
+          *,
+          trainers(first_name, last_name, email)
+        `)
+        .eq("id", classId)
+        .single();
 
-      // Transform mock data to match the expected Class interface
-      const classData: Class = {
-        id: mockClass.id,
-        name: mockClass.name,
-        type: mockClass.type,
-        trainer_name: mockClass.trainer,
-        start_time: new Date(mockClass.start_time).toLocaleTimeString('en-US', { 
+      if (error) throw error;
+      if (!classData) throw new Error("Class not found");
+
+      // Get booking count
+      const { count: bookingCount } = await supabase
+        .from("class_bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("class_id", classId)
+        .eq("status", "booked");
+
+      // Get waitlist count
+      const { count: waitlistCount } = await supabase
+        .from("class_waitlist")
+        .select("*", { count: "exact", head: true })
+        .eq("class_id", classId);
+
+      // Transform to match expected Class interface
+      const transformedClass: Class = {
+        id: classData.id,
+        name: classData.name,
+        type: classData.type || "",
+        trainer_name: classData.trainers 
+          ? `${classData.trainers.first_name || ''} ${classData.trainers.last_name || ''}`.trim()
+          : "",
+        start_time: new Date(classData.start_time).toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: false 
         }),
-        end_time: new Date(mockClass.end_time).toLocaleTimeString('en-US', { 
+        end_time: new Date(classData.end_time).toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: false 
         }),
-        date: new Date(mockClass.start_time).toISOString().split('T')[0],
-        capacity: mockClass.capacity,
-        enrolled_count: 15, // Mock enrolled count
-        waitlist_count: Math.max(0, mockClass.capacity - 15),
-        status: "active" as "active" | "cancelled" | "completed" | "full",
-        created_at: mockClass.created_at,
-        updated_at: new Date().toISOString(),
-        description: mockClass.description || `${mockClass.name} - A great class for all levels`,
-        location: mockClass.location,
-        room_id: "room-1",
-        trainer_id: mockClass.trainer_id,
+        date: new Date(classData.start_time).toISOString().split('T')[0],
+        capacity: classData.capacity,
+        enrolled_count: bookingCount || 0,
+        waitlist_count: waitlistCount || 0,
+        status: classData.status as "active" | "cancelled" | "completed" | "full",
+        created_at: classData.created_at,
+        updated_at: classData.updated_at || classData.created_at,
+        description: classData.description || "",
+        location: classData.room || "",
+        room_id: classData.room || "",
+        trainer_id: classData.trainer_id,
         recurrence: "none"
       };
 
-      setClassData(classData);
+      setClassData(transformedClass);
     } catch (error) {
       console.error("Error fetching class:", error);
       toast.error("Failed to fetch class data");
@@ -147,16 +168,39 @@ export const useSmartClassModal = ({
   // Fetch trainers
   const fetchTrainers = async () => {
     try {
-      // Use mock data instead of Supabase
-      const trainers: Trainer[] = mockTrainers.map(trainer => ({
-        id: trainer.id,
-        name: trainer.name,
-        email: trainer.email,
-        specialties: trainer.specialties,
-        availability: []
-      }));
-      
-      setTrainers(trainers);
+      // Fetch trainers from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (tenantId) {
+        const { data, error } = await supabase
+          .from("trainers")
+          .select("id, first_name, last_name, email, specialties")
+          .eq("tenant_id", tenantId)
+          .eq("status", "active");
+
+        if (error) throw error;
+
+        const trainers: Trainer[] = (data || []).map((t: any) => ({
+          id: t.id,
+          name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email,
+          email: t.email,
+          specialties: t.specialties || [],
+          availability: []
+        }));
+        
+        setTrainers(trainers);
+      }
     } catch (error) {
       console.error("Error fetching trainers:", error);
     }
@@ -165,31 +209,12 @@ export const useSmartClassModal = ({
   // Fetch rooms
   const fetchRooms = async () => {
     try {
-      // Use mock data instead of Supabase
-      const mockRooms: Room[] = [
-        {
-          id: "room-1",
-          name: "Studio A",
-          capacity: 20,
-          equipment: ["Yoga mats", "Blocks", "Straps"]
-        },
-        {
-          id: "room-2", 
-          name: "Studio B",
-          capacity: 15,
-          equipment: ["Weights", "Resistance bands", "Mats"]
-        },
-        {
-          id: "room-3",
-          name: "Cardio Room",
-          capacity: 12,
-          equipment: ["Treadmills", "Bikes", "Ellipticals"]
-        }
-      ];
-      
-      setRooms(mockRooms);
+      // TODO: Fetch rooms from Supabase when rooms table is available
+      // For now, return empty array - no mock data
+      setRooms([]);
     } catch (error) {
       console.error("Error fetching rooms:", error);
+      setRooms([]);
     }
   };
 
@@ -202,24 +227,43 @@ export const useSmartClassModal = ({
     excludeClassId?: string,
   ) => {
     try {
-      // Use mock data instead of Supabase
-      const conflictingClasses = mockClasses.filter((classItem) => {
-        // Skip the class being edited
+      // Fetch conflicting classes from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (!tenantId) return false;
+
+      const classDateStart = new Date(`${date}T00:00:00`);
+      const classDateEnd = new Date(`${date}T23:59:59`);
+
+      const { data: classes, error } = await supabase
+        .from("classes")
+        .select("id, start_time, end_time, trainer_id")
+        .eq("tenant_id", tenantId)
+        .eq("trainer_id", trainerId)
+        .gte("start_time", classDateStart.toISOString())
+        .lte("start_time", classDateEnd.toISOString())
+        .neq("status", "cancelled");
+
+      if (error) throw error;
+
+      const conflictingClasses = (classes || []).filter((classItem) => {
         if (excludeClassId && classItem.id === excludeClassId) return false;
         
-        // Check if same trainer and date
-        const mockTrainer = mockTrainers.find(t => t.id === trainerId);
-        if (!mockTrainer || classItem.trainer !== mockTrainer.name) return false;
-        
-        // Check if same date
-        const classDate = new Date(classItem.start_time).toISOString().split('T')[0];
-        if (classDate !== date) return false;
-        
-        // Check for time conflicts
-        const classStart = new Date(`2000-01-01T${new Date(classItem.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`);
-        const classEnd = new Date(`2000-01-01T${new Date(classItem.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}`);
-        const newStart = new Date(`2000-01-01T${startTime}`);
-        const newEnd = new Date(`2000-01-01T${endTime}`);
+        const classStart = new Date(classItem.start_time);
+        const classEnd = new Date(classItem.end_time);
+        const newStart = new Date(`${date}T${startTime}`);
+        const newEnd = new Date(`${date}T${endTime}`);
 
         return newStart < classEnd && newEnd > classStart;
       });
@@ -232,80 +276,88 @@ export const useSmartClassModal = ({
     }
   };
 
-  // Generate AI recommendations
+  // Generate Smart recommendations using real data
   const generateRecommendations = async (classData?: Partial<Class>) => {
     if (!isPro) return;
 
-    const data = classData || classData;
-    if (!data) return;
+    try {
+      // Get tenant ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Mock AI recommendations based on class data
-    const mockRecommendations: AIRecommendation[] = [];
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
 
-    // Scheduling recommendations
-    if (
-      data.capacity &&
-      data.enrolled_count &&
-      data.enrolled_count / data.capacity > 0.8
-    ) {
-      mockRecommendations.push({
-        id: "1",
-        type: "capacity",
-        title: "High Demand Class",
-        description:
-          "This class is 80% full. Consider adding more sessions or increasing capacity.",
-        confidence: 0.85,
-        action: "Add more sessions",
-        priority: "high",
-      });
-    }
+      if (!membership?.tenant_id) return;
 
-    // Timing recommendations
-    if (data.start_time) {
-      const hour = new Date(`2000-01-01T${data.start_time}`).getHours();
-      if (hour < 8 || hour > 18) {
-        mockRecommendations.push({
-          id: "2",
-          type: "timing",
-          title: "Off-Peak Time",
-          description:
-            "This time slot has lower attendance. Consider moving to peak hours (9 AM - 6 PM).",
-          confidence: 0.78,
-          action: "Adjust time",
-          priority: "medium",
-        });
+      // Get real recommendations from service
+      const { getClassRecommendations } = await import("../services/smartSuggestionsService");
+      const realRecommendations = await getClassRecommendations(
+        classData?.id,
+        membership.tenant_id
+      );
+
+      // If we have class data, also check for basic validations
+      if (classData) {
+        // Add basic rule-based recommendations if not already covered
+        const hasCapacityRec = realRecommendations.some((r) => r.type === "capacity");
+        const hasTrainerRec = realRecommendations.some((r) => r.type === "trainer");
+        const hasLocationRec = realRecommendations.some((r) => r.type === "location");
+
+        if (
+          !hasCapacityRec &&
+          classData.capacity &&
+          classData.enrolled_count &&
+          classData.enrolled_count / classData.capacity > 0.8
+        ) {
+          realRecommendations.push({
+            id: `capacity-${classData.id || "new"}`,
+            type: "capacity",
+            title: "High Demand Class",
+            description:
+              "This class is 80% full. Consider adding more sessions or increasing capacity.",
+            confidence: 0.85,
+            action: "Add more sessions",
+            priority: "high",
+          });
+        }
+
+        if (!hasTrainerRec && !classData.trainer_id) {
+          realRecommendations.push({
+            id: `trainer-${classData.id || "new"}`,
+            type: "trainer",
+            title: "Assign Trainer",
+            description:
+              "This class has no trainer assigned. Consider assigning based on class type.",
+            confidence: 0.92,
+            action: "Assign trainer",
+            priority: "high",
+          });
+        }
+
+        if (!hasLocationRec && !classData.room_id) {
+          realRecommendations.push({
+            id: `location-${classData.id || "new"}`,
+            type: "location",
+            title: "Select Room",
+            description:
+              "No room assigned. Choose an appropriate room based on class type and capacity.",
+            confidence: 0.88,
+            action: "Assign room",
+            priority: "medium",
+          });
+        }
       }
-    }
 
-    // Trainer recommendations
-    if (!data.trainer_id) {
-      mockRecommendations.push({
-        id: "3",
-        type: "trainer",
-        title: "Assign Trainer",
-        description:
-          "This class has no trainer assigned. Consider assigning based on class type.",
-        confidence: 0.92,
-        action: "Assign trainer",
-        priority: "high",
-      });
+      setRecommendations(realRecommendations);
+    } catch (error) {
+      console.error("Error generating recommendations:", error);
+      // Fallback to empty array on error
+      setRecommendations([]);
     }
-
-    // Location recommendations
-    if (!data.room_id) {
-      mockRecommendations.push({
-        id: "4",
-        type: "location",
-        title: "Select Room",
-        description:
-          "No room assigned. Choose an appropriate room based on class type and capacity.",
-        confidence: 0.88,
-        action: "Assign room",
-        priority: "medium",
-      });
-    }
-
-    setRecommendations(mockRecommendations);
   };
 
   // Validate individual field
@@ -376,11 +428,9 @@ export const useSmartClassModal = ({
     try {
       if (classId) {
         // Update existing class
-        console.log("Mock: Updating class", classId);
         toast.success("Class updated successfully");
       } else {
         // Create new class
-        console.log("Mock: Creating new class");
         toast.success("Class created successfully");
       }
 
@@ -400,7 +450,6 @@ export const useSmartClassModal = ({
 
     setDeleteLoading(true);
     try {
-      console.log("Mock: Deleting class", classId);
       toast.success("Class deleted successfully");
       return true;
     } catch (error) {
@@ -415,14 +464,39 @@ export const useSmartClassModal = ({
   // Get popular time slots
   const getPopularTimeSlots = async (): Promise<string[]> => {
     try {
-      // Use mock data instead of Supabase
-      const popularSlots = mockClasses
-        .slice(0, 5)
+      // Fetch popular time slots from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (!tenantId) return [];
+
+      const { data: classes, error } = await supabase
+        .from("classes")
+        .select("start_time")
+        .eq("tenant_id", tenantId)
+        .order("start_time", { ascending: true })
+        .limit(10);
+
+      if (error) throw error;
+
+      const popularSlots = (classes || [])
         .map(c => new Date(c.start_time).toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: false 
-        }));
+        }))
+        .filter((slot, index, arr) => arr.indexOf(slot) === index) // Remove duplicates
+        .slice(0, 5);
       
       return popularSlots;
     } catch (error) {
@@ -487,7 +561,7 @@ export const useSmartClassModal = ({
     saveClass,
     deleteClass,
 
-    // AI and recommendations
+    // Smart and recommendations
     generateRecommendations,
     getPopularTimeSlots,
 

@@ -37,7 +37,6 @@ export const MTDRBModalExample: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    console.log('Form submitted:', formData);
     setIsOpen(false);
   };
 

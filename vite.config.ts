@@ -21,7 +21,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          mui: ['@mui/material', '@mui/icons-material'],
+          mui: ['@mui/material'],
           utils: ['date-fns', 'i18next', 'react-i18next'],
         },
       },

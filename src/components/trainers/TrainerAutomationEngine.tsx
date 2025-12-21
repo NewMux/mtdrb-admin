@@ -17,10 +17,6 @@ import {
   FiActivity,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import {
-  mockTrainerAutomationWorkflows,
-  mockAutomationMetrics,
-} from "../../api/mockTrainerData";
 import WorkflowConfigurationModal from "./modals/WorkflowConfigurationModal";
 
 interface TrainerAutomationEngineProps {
@@ -47,6 +43,10 @@ interface AutomationMetric {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
 }
+
+// Removed import from mockTrainerData - using empty arrays
+const mockTrainerAutomationWorkflows: AutomationWorkflow[] = [];
+const mockAutomationMetrics: AutomationMetric[] = [];
 
 export default function TrainerAutomationEngine({
   refreshKey,

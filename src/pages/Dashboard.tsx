@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiActivity, FiBarChart2 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
@@ -7,24 +7,29 @@ import { DashboardTabs } from "../components/dashboard/DashboardTabs";
 import { DashboardOverview } from "../components/dashboard/DashboardOverview";
 import { DashboardAnalytics } from "../components/dashboard/DashboardAnalytics";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Dashboard: React.FC = () => {
   const { theme } = usePageThemeContext();
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"overview" | "analytics">("overview");
   const [refreshKey, setRefreshKey] = useState(Date.now());
+  const notificationShownRef = useRef(false);
 
-  // Show welcome message if coming from onboarding
+  // Show welcome message if coming from onboarding (only once)
   useEffect(() => {
-    if (location.state?.message) {
+    if (location.state?.message && !notificationShownRef.current) {
+      notificationShownRef.current = true;
       toast.success(location.state.message, {
         duration: 5000,
         icon: '🎉',
       });
+      // Clear the state to prevent showing again on re-renders
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state]);
+  }, [location.state, location.pathname, navigate]);
 
   const handleRefresh = () => {
     setRefreshKey(Date.now());

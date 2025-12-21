@@ -1,18 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FiMessageCircle, FiSend, FiX, FiZap } from "react-icons/fi";
+import { useState, useRef, useEffect } from "react";
+import { FiSend, FiX, FiZap } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUI } from "../../contexts/UIContext";
 
 const PLACEHOLDER_RESPONSES = [
-  "Hello! I&apos;m MTDRB AI. How can I help you today?",
+  "Hello! I&apos;m MTDRB Assistant. How can I help you today?",
   "I can provide insights, reports, suggestions, and answer questions about your gym data.",
-  "(ChatGPT integration coming soon!)",
+  "(Chat integration coming soon!)",
 ];
 
 export default function MtdrbAIChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "ai", text: PLACEHOLDER_RESPONSES[0] },
+    { role: "assistant", text: PLACEHOLDER_RESPONSES[0] },
   ]);
   const [input, setInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -31,7 +31,7 @@ export default function MtdrbAIChat() {
       ...msgs,
       { role: "user", text: input },
       {
-        role: "ai",
+        role: "assistant",
         text: PLACEHOLDER_RESPONSES[msgs.length % PLACEHOLDER_RESPONSES.length],
       },
     ]);
@@ -48,11 +48,11 @@ export default function MtdrbAIChat() {
         <button
           className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 focus:outline-none"
           onClick={() => setOpen(true)}
-          aria-label="Open MTDRB AI Chat"
+          aria-label="Open MTDRB Assistant Chat"
           style={{ boxShadow: "0 8px 32px 0 rgba(21,95,217,0.18)" }}
         >
           <FiZap className="text-2xl" />
-          <span className="font-semibold hidden md:inline">MTDRB AI</span>
+          <span className="font-semibold hidden md:inline">MTDRB Assistant</span>
         </button>
       )}
       {/* Chat Bot Panel */}
@@ -69,7 +69,7 @@ export default function MtdrbAIChat() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100 bg-blue-50 rounded-t-2xl">
               <div className="flex items-center gap-2 text-blue-700 font-bold text-base">
-                <FiZap className="text-blue-500" /> MTDRB AI
+                <FiZap className="text-blue-500" /> MTDRB Assistant
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -102,7 +102,7 @@ export default function MtdrbAIChat() {
               <input
                 type="text"
                 className="flex-1 px-3 py-2 rounded-lg border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                placeholder="Ask MTDRB AI anything..."
+                placeholder="Ask MTDRB Assistant anything..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

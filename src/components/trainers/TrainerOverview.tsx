@@ -56,7 +56,6 @@ export default function TrainerOverview({ stats, onSelectTrainer }: Props) {
         if (schedulesError) {
           // If trainer_schedule table doesn&apos;t exist, just use empty schedules
           if (schedulesError.message.includes("does not exist")) {
-            console.log("Trainer schedule table not available yet");
             schedules = [];
           } else {
             throw schedulesError;
@@ -66,7 +65,6 @@ export default function TrainerOverview({ stats, onSelectTrainer }: Props) {
         }
       } catch (scheduleError: any) {
         // If any error occurs with trainer_schedule, just use empty schedules
-        console.log("Could not fetch trainer schedule:", scheduleError.message);
         schedules = [];
       }
 

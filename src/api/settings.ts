@@ -1,5 +1,4 @@
 import { supabase } from "../supabaseClient";
-import { toast } from "react-hot-toast";
 
 export interface GymSettings {
   id?: string;

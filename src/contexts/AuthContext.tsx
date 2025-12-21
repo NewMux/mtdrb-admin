@@ -10,6 +10,7 @@ import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { supabase, getCurrentUser } from "../supabaseClient";
+import { UserRole, isValidRole, getDefaultRole } from "../types/roles";
 
 // Enhanced error types
 interface AuthErrorState {
@@ -22,7 +23,7 @@ interface AuthErrorState {
 interface UserMetadata {
   tenant_id: string;
   paid: boolean;
-  role: "admin" | "manager" | "trainer" | "staff";
+  role: UserRole;
   subscription_tier: "free" | "basic" | "premium" | "enterprise";
 }
 
@@ -65,7 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       details: authError.stack,
     };
     setError(errorState);
-    console.error("Auth error:", errorState);
+    // Only log auth errors in development or if they're critical
+    if (import.meta.env.DEV || errorState.code !== "DEFAULT") {
+      console.error("Auth error:", errorState);
+    }
     return errorState;
   }, []);
 
@@ -77,10 +81,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Validate and sanitize user role
+    const rawRole = user.user_metadata?.role;
+    const validatedRole: UserRole = isValidRole(rawRole)
+      ? rawRole
+      : getDefaultRole();
+
     const metadata: UserMetadata = {
       tenant_id: user.user_metadata?.tenant_id || user.user_metadata?.tenantId,
       paid: user.user_metadata?.paid || false,
-      role: user.user_metadata?.role || "staff",
+      role: validatedRole,
       subscription_tier: user.user_metadata?.subscription_tier || "free",
     };
 
@@ -97,22 +107,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
       handleUserMetadata(user);
 
-      // Subscription check with grace period
+      // Don't redirect from checkAuth for public routes - let the pages handle their own redirects
+      // This allows pages to render first before redirecting
+      const publicRoutes = ["/", "/login", "/signup", "/subscribe", "/onboarding"];
+      if (publicRoutes.includes(location.pathname)) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Subscription check with grace period (only for protected routes)
       if (user && !user.user_metadata?.paid) {
         const gracePeriod = new Date(user.user_metadata?.trial_end || 0);
         const now = new Date();
         if (now > gracePeriod) {
-          navigate("/subscribe");
+          navigate("/subscribe", { replace: true });
         }
       }
     } catch (err) {
       const errorState = handleAuthError(err);
-      navigate("/login", {
-        state: {
-          error: errorState.message,
-          return_to: location.pathname,
-        },
-      });
+      // Don't redirect if user is on a public route (signup, login, landing)
+      const publicRoutes = ["/", "/login", "/signup", "/subscribe", "/onboarding"];
+      if (!publicRoutes.includes(location.pathname)) {
+        navigate("/login", {
+          replace: true,
+          state: {
+            error: errorState.message,
+            return_to: location.pathname,
+          },
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +154,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       switch (event) {
         case "SIGNED_IN":
-          if (!user?.user_metadata?.paid) {
+          // Only redirect if this is a NEW sign-in (not an existing session on page load)
+          // We check this by seeing if the event was triggered by an actual sign-in action
+          // vs. just detecting an existing session
+          if (!user) break;
+          
+          // Don't redirect if user is on signup page - let the signup flow handle it
+          if (location.pathname === "/signup") {
+            break;
+          }
+          
+          if (!user.user_metadata?.paid) {
             const gracePeriod = new Date(user.user_metadata?.trial_end || 0);
             const now = new Date();
             if (now > gracePeriod) {
@@ -140,12 +173,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
           // Check if onboarding is completed
-          if (user?.user_metadata?.paid && !user?.user_metadata?.onboarding_completed) {
+          if (user.user_metadata?.paid && !user.user_metadata?.onboarding_completed) {
             navigate("/onboarding");
             break;
           }
-          // Only redirect to dashboard if on auth pages
-          const authPages = ["/login", "/signup", "/subscribe", "/"];
+          // Only redirect to dashboard if on auth pages (but not on initial load)
+          // The checkAuth function handles initial load redirects
+          const authPages = ["/login"];
           if (authPages.includes(location.pathname)) {
             navigate("/dashboard");
           }

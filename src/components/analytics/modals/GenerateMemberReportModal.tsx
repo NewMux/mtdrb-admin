@@ -47,7 +47,7 @@ const memberData = {
     enduranceImprovement: 25,
     goals: ["Lose 10kg", "Run 5km", "Complete 50 pushups"],
   },
-  aiInsights: [
+  smartInsights: [
     {
       type: "prediction",
       title: "High Engagement Risk",
@@ -245,11 +245,11 @@ export default function GenerateMemberReportModal({
         </div>
       </Section>
 
-      {/* AI Insights */}
-      {isPro && memberData.aiInsights.length > 0 && (
+      {/* Smart Insights */}
+      {isPro && memberData.smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {memberData.aiInsights.map((insight, index) => (
+            {memberData.smartInsights.map((insight: any, index: number) => (
               <div
                 key={index}
                 className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg"

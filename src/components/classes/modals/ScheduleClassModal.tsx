@@ -15,7 +15,7 @@ import {
   TimeField,
   DateField,
   FormSection,
-  AIRecommendationCard,
+  SmartRecommendationCard,
   ConflictAlert,
 } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
@@ -155,7 +155,6 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      console.log("Schedule created successfully");
       toast.success("Recurring classes scheduled successfully");
       onSuccess?.();
       onClose();
@@ -217,14 +216,14 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       title="Schedule Recurring Classes"
       subtitle="Create a series of classes with advanced scheduling"
       isPro={isPro}
-      proFeature="AI Optimized"
+      proFeature="Smart Optimized"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {isPro && recommendations.length > 0 && (
               <div className="flex items-center space-x-1 text-sm text-blue-600">
                 <FiZap className="h-4 w-4" />
-                <span>{recommendations.length} AI suggestions</span>
+                <span>{recommendations.length} Smart suggestions</span>
               </div>
             )}
             {schedulePreview.length > 0 && (
@@ -255,7 +254,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       }
     >
       <div className="space-y-6">
-        {/* AI Recommendations */}
+        {/* Smart Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
             title="Smart Recommendations"
@@ -266,14 +265,11 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
           >
             <div className="space-y-3">
               {recommendations.map((recommendation) => (
-                <AIRecommendationCard
+                <SmartRecommendationCard
                   key={recommendation.id}
                   recommendation={recommendation}
                   onApply={() => {
-                    console.log(
-                      "Applying recommendation:",
-                      recommendation.action,
-                    );
+                    // Apply recommendation logic
                   }}
                 />
               ))}

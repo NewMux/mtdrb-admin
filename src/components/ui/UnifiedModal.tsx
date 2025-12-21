@@ -141,7 +141,7 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
                   {subtitle && (
                     <p
                       id="modal-subtitle"
-                      className="text-sm text-gray-600 dark:text-gray-400 mt-1"
+                      className="text-sm text-lunaNavy/70 mt-1"
                     >
                       {subtitle}
                     </p>

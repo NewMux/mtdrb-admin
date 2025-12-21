@@ -25,6 +25,7 @@ interface UIContextType {
   showLoadingSpinner: (message?: string) => void;
   hideLoadingSpinner: () => void;
   setBottomUIHeight: (height: number) => void;
+  bottomUIHeight: number;
   drawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
 }
@@ -140,6 +141,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     showLoadingSpinner,
     hideLoadingSpinner,
     setBottomUIHeight,
+    bottomUIHeight,
     drawerOpen,
     setDrawerOpen,
   };
@@ -148,7 +150,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     <UIContext.Provider value={value}>
       {children}
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-center text-gray-600">{loadingMessage}</p>

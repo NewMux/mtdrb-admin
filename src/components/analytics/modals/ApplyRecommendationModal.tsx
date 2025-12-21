@@ -45,7 +45,7 @@ const actionOptions = [
     id: "auto_apply",
     label: "Auto-Apply Recommendation",
     description:
-      "Apply the AI recommendation automatically with default settings",
+      "Apply the Smart recommendation automatically with default settings",
     icon: FiPlay,
     color: "green",
   },
@@ -97,7 +97,6 @@ export default function ApplyRecommendationModal({
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log("Applying recommendation:", selectedAction, customSettings);
       onSuccess?.();
       onClose();
     } finally {
@@ -379,7 +378,7 @@ export default function ApplyRecommendationModal({
             <FiZap className="text-yellow-600 mt-1" />
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
-                AI Suggestions
+                Smart Suggestions
               </h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">

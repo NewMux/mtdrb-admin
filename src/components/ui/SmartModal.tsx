@@ -59,7 +59,8 @@ export const SmartModal: React.FC<SmartModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={closeOnOverlayClick ? onClose : () => {}}
           />
 
@@ -69,31 +70,32 @@ export const SmartModal: React.FC<SmartModalProps> = ({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative h-full w-full max-w-4xl bg-gradient-to-br from-gray-50 via-white to-gray-100 shadow-xl rounded-l-3xl flex flex-col"
+            className={`relative h-full w-full ${maxWidth || sizeClasses[size]} bg-white shadow-2xl rounded-l-3xl flex flex-col`}
             role="document"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative px-8 py-6 rounded-tl-3xl rounded-tr-none bg-gradient-to-r from-white/90 to-gray-100/80 text-gray-900 flex items-center justify-between shadow-sm border-b border-gray-200">
-              <div className="flex items-center space-x-3">
+            <div className="sticky top-0 z-10 px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
                 {isProFeature && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <FiLock className="w-4 h-4 text-yellow-500" />
-                    <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-lg">
+                    <span className="text-xs font-semibold text-yellow-700 bg-yellow-50 px-2.5 py-1 rounded-lg border border-yellow-200">
                       PRO
                     </span>
                   </div>
                 )}
-                <div>
+                <div className="flex-1">
                   <h2
                     id="modal-title"
-                    className="text-2xl font-bold tracking-tight"
+                    className="text-2xl font-bold text-gray-900 tracking-tight"
                   >
                     {title}
                   </h2>
                   {subtitle && (
                     <p
                       id="modal-subtitle"
-                      className="text-sm text-gray-600 dark:text-gray-400 mt-1"
+                      className="text-sm text-gray-500 mt-1.5"
                     >
                       {subtitle}
                     </p>
@@ -103,23 +105,25 @@ export const SmartModal: React.FC<SmartModalProps> = ({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="ml-4 p-2 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   aria-label="Close modal"
                 >
-                  <FiX className="w-6 h-6" />
+                  <FiX className="w-5 h-5 text-gray-500" />
                 </button>
               )}
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
-              {children}
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className="space-y-6">
+                {children}
+              </div>
             </div>
 
             {/* Footer */}
             {footer && (
-              <div className="px-8 py-6 border-t border-gray-200">
-                <div className="flex justify-end space-x-4">
+              <div className="sticky bottom-0 px-8 py-5 bg-white border-t border-gray-100">
+                <div className="flex justify-end gap-3">
                   {footer}
                 </div>
               </div>

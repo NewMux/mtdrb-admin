@@ -359,12 +359,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             )}
           </div>
 
-          {/* AI Suggestions */}
+          {/* Smart Suggestions */}
           {aiSuggestions.length > 0 && (
             <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  AI Suggestions
+                  Smart Suggestions
                 </h3>
                 <button
                   type="button"

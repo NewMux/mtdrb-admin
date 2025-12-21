@@ -197,7 +197,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
             </button>
           </div>
 
-          {/* AI Insights for Pro Users */}
+          {/* Smart Insights for Pro Users */}
           {isProUser && (
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start space-x-3">

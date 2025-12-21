@@ -8,6 +8,7 @@ export enum ErrorContext {
   BILLING = "billing",
   TRAINER_MANAGEMENT = "trainer_management",
   AUTHENTICATION = "authentication",
+  AUTHORIZATION = "authorization",
   GENERAL = "general",
 }
 
@@ -54,6 +55,12 @@ const ERROR_MESSAGES: Record<string, Record<string, string>> = {
     weak_password: "Password must be at least 8 characters long",
     signup_disabled: "New registrations are currently disabled",
     session_expired: "Your session has expired. Please log in again",
+  },
+  [ErrorContext.AUTHORIZATION]: {
+    permission_denied: "You do not have permission to perform this action",
+    insufficient_permissions: "You do not have sufficient permissions",
+    tenant_access_denied: "You do not have access to this tenant",
+    no_tenant_access: "No tenant access available",
   },
   [ErrorContext.GENERAL]: {
     network_error:

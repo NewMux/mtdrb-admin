@@ -20,8 +20,8 @@ import type {
   AutomationSettings,
   Task,
 } from "../types";
-import { mockClasses, mockBookings } from "./mockClassData";
-const isDev = import.meta.env.MODE === "development";
+// Removed mock data - using real data from Supabase
+// Removed isDev - always use real Supabase
 
 export const api = {
   auth: {
@@ -86,46 +86,23 @@ export const api = {
 
   classes: {
     getAll: async (): Promise<ApiResponse<Class[]>> => {
-      if (isDev) return { data: mockClasses, error: null };
       return supabase
         .from("classes")
         .select("*")
         .order("start_time", { ascending: true });
     },
     getById: async (id: string): Promise<ApiResponse<Class>> => {
-      if (isDev)
-        return {
-          data: mockClasses.find((c) => c.id === id) || null,
-          error: null,
-        };
       return supabase.from("classes").select("*").eq("id", id).single();
     },
     create: async (
       data: Omit<Class, "id" | "created_at">,
     ): Promise<ApiResponse<Class>> => {
-      if (isDev)
-        return {
-          data: {
-            ...data,
-            id: `mock-${Date.now()}`,
-            created_at: new Date().toISOString(),
-          } as Class,
-          error: null,
-        };
       return supabase.from("classes").insert(data).select().single();
     },
     update: async (
       id: string,
       data: Partial<Class>,
     ): Promise<ApiResponse<Class>> => {
-      if (isDev)
-        return {
-          data: {
-            ...(mockClasses.find((c) => c.id === id) || {}),
-            ...data,
-          } as Class,
-          error: null,
-        };
       return supabase
         .from("classes")
         .update(data)
@@ -134,20 +111,12 @@ export const api = {
         .single();
     },
     delete: async (id: string): Promise<ApiResponse<null>> => {
-      if (isDev) return { data: null, error: null };
       return supabase.from("classes").delete().eq("id", id);
     },
     getByDateRange: async (
       start: string,
       end: string,
     ): Promise<ApiResponse<Class[]>> => {
-      if (isDev)
-        return {
-          data: mockClasses.filter(
-            (c) => c.start_time >= start && c.end_time <= end,
-          ),
-          error: null,
-        };
       return supabase
         .from("classes")
         .select("*")
@@ -190,7 +159,6 @@ export const api = {
 
   bookings: {
     getAll: async (): Promise<ApiResponse<ClassBooking[]>> => {
-      if (isDev) return { data: mockBookings, error: null };
       return supabase
         .from("class_bookings")
         .select("*")
@@ -199,11 +167,6 @@ export const api = {
     getByClassId: async (
       classId: string,
     ): Promise<ApiResponse<ClassBooking[]>> => {
-      if (isDev)
-        return {
-          data: mockBookings.filter((b) => b.class_id === classId),
-          error: null,
-        };
       return supabase
         .from("class_bookings")
         .select("*")
@@ -213,30 +176,12 @@ export const api = {
     create: async (
       data: Omit<ClassBooking, "id" | "created_at">,
     ): Promise<ApiResponse<ClassBooking>> => {
-      if (isDev)
-        return {
-          data: {
-            ...data,
-            id: `mock-booking-${Date.now()}`,
-            created_at: new Date().toISOString(),
-            status: "booked",
-          } as ClassBooking,
-          error: null,
-        };
       return supabase.from("class_bookings").insert(data).select().single();
     },
     update: async (
       id: string,
       data: Partial<ClassBooking>,
     ): Promise<ApiResponse<ClassBooking>> => {
-      if (isDev)
-        return {
-          data: {
-            ...(mockBookings.find((b) => b.id === id) || {}),
-            ...data,
-          } as ClassBooking,
-          error: null,
-        };
       return supabase
         .from("class_bookings")
         .update(data)
@@ -245,7 +190,6 @@ export const api = {
         .single();
     },
     delete: async (id: string): Promise<ApiResponse<null>> => {
-      if (isDev) return { data: null, error: null };
       return supabase.from("class_bookings").delete().eq("id", id);
     },
   },

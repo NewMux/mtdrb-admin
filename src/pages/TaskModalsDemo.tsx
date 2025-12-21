@@ -134,14 +134,14 @@ const TaskModalsDemo: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Task Management Modals Demo
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             Interactive demo of all smart task management modals with
             Apple-inspired design
           </p>
@@ -157,7 +157,7 @@ const TaskModalsDemo: React.FC = () => {
                 onChange={(e) => setIsPro(e.target.checked)}
                 className="text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-gray-700">
                 Pro Features
               </span>
             </label>
@@ -171,7 +171,7 @@ const TaskModalsDemo: React.FC = () => {
 
         {/* Task Management Modals */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Task Management Modals
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -180,7 +180,7 @@ const TaskModalsDemo: React.FC = () => {
                 key={modal.name}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
               >
                 <div className="flex items-start space-x-3">
                   <div
@@ -189,10 +189,10 @@ const TaskModalsDemo: React.FC = () => {
                     <modal.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                    <h3 className="text-sm font-medium text-gray-900">
                       {modal.title}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       {modal.description}
                     </p>
                     <button
@@ -210,7 +210,7 @@ const TaskModalsDemo: React.FC = () => {
 
         {/* Automation Modals */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Task Automation Modals
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -219,7 +219,7 @@ const TaskModalsDemo: React.FC = () => {
                 key={modal.name}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
               >
                 <div className="flex items-start space-x-3">
                   <div
@@ -228,10 +228,10 @@ const TaskModalsDemo: React.FC = () => {
                     <modal.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                    <h3 className="text-sm font-medium text-gray-900">
                       {modal.title}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       {modal.description}
                     </p>
                     <button

@@ -97,7 +97,7 @@ const SmartInsightsPanel: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              AI Campaign Insights
+              Smart Campaign Insights
             </h2>
             <p className="text-sm text-gray-600">
               Smart recommendations to boost your campaigns
@@ -185,7 +185,7 @@ const SmartInsightsPanel: React.FC = () => {
       <div className="mt-6 pt-4 border-t border-gray-100">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>
-            💡 AI analyzed{" "}
+            💡 Smart analyzed{" "}
             {insights
               .reduce((sum, insight) => sum + insight.dataPoints, 0)
               .toLocaleString()}{" "}

@@ -11,7 +11,7 @@ export const TaskGenerator: React.FC<TaskGeneratorProps> = ({ refreshKey }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            AI Task Generator
+            Smart Task Generator
           </h1>
           <p className="text-gray-600 mt-1">
             Generate smart task sequences from templates

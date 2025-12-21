@@ -1971,7 +1971,6 @@ function PerformanceModal({
   );
 }
 
-// Add mock data import at the top
 const MOCK_WORKFLOWS = [
   {
     id: "wf-1",
@@ -2027,7 +2026,7 @@ export default function AutomationEngine({
       },
       {
         id: "churn_prevention",
-        name: "Churn Prevention AI",
+        name: "Churn Prevention Assistant",
         description:
           "Automatically detect and engage at-risk members with personalized interventions",
         type: "retention",

@@ -10,7 +10,7 @@ const WhyIdara: React.FC = () => {
     {
       icon: FiZap,
       title: "Smart Automation",
-      description: "AI-powered workflows that handle routine tasks automatically, saving hours every day."
+      description: "Smart-powered workflows that handle routine tasks automatically, saving hours every day."
     },
     {
       icon: FiBarChart2,
@@ -20,7 +20,7 @@ const WhyIdara: React.FC = () => {
     {
       icon: FiMessageCircle,
       title: "WhatsApp Bot",
-      description: "24/7 AI assistant that handles member inquiries, bookings, and support automatically."
+      description: "24/7 Assistant that handles member inquiries, bookings, and support automatically."
     },
     {
       icon: FiShield,

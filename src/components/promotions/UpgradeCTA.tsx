@@ -12,7 +12,7 @@ const UpgradeCTA: React.FC = () => {
   const features = [
     {
       icon: <FiCpu className="h-5 w-5" />,
-      title: "AI Campaign Suggestions",
+      title: "Smart Campaign Suggestions",
       description: "Get personalized campaign recommendations",
     },
     {
@@ -46,7 +46,7 @@ const UpgradeCTA: React.FC = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold">
-                Unlock AI Campaigns & Automation
+                Unlock Smart Campaigns & Automation
               </h2>
               <p className="text-purple-100 mt-1">
                 Take your promotions to the next level with smart features

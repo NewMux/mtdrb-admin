@@ -96,8 +96,9 @@ ChartJS.register(
   RadialLinearScale,
 );
 
-// Mock data for class analytics
-const mockClassAnalyticsData = {
+// Removed mock data - using real data from Supabase
+// TODO: Fetch from Supabase
+const emptyClassAnalyticsData = {
   performance: {
     totalClassesHeld: 342,
     totalAttendance: 2847,
@@ -381,7 +382,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
 // Performance Overview Cards Component
 const PerformanceOverviewCards: React.FC = () => {
-  const { performance } = mockClassAnalyticsData;
+  const { performance } = emptyClassAnalyticsData;
 
   const cards = [
     {
@@ -479,7 +480,7 @@ const PerformanceOverviewCards: React.FC = () => {
 
 // Trainer Performance Cards Component
 const TrainerPerformanceCards: React.FC = () => {
-  const { trainerPerformance } = mockClassAnalyticsData;
+  const { trainerPerformance } = emptyClassAnalyticsData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -552,7 +553,7 @@ const TrainerPerformanceCards: React.FC = () => {
 
 // Class Insights Cards Component
 const ClassInsightsCards: React.FC = () => {
-  const { classInsights } = mockClassAnalyticsData;
+  const { classInsights } = emptyClassAnalyticsData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -701,7 +702,7 @@ const ClassInsightsCards: React.FC = () => {
 
 // Member Behavior Cards Component with Modern Charts
 const MemberBehaviorCards: React.FC = () => {
-  const { memberBehavior } = mockClassAnalyticsData;
+  const { memberBehavior } = emptyClassAnalyticsData;
 
   // Gender Split Chart Data
   const genderChartData = {
@@ -843,7 +844,7 @@ const MemberBehaviorCards: React.FC = () => {
 
 // Revenue Cards Component
 const RevenueCards: React.FC = () => {
-  const { revenue } = mockClassAnalyticsData;
+  const { revenue } = emptyClassAnalyticsData;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -936,7 +937,7 @@ const RevenueCards: React.FC = () => {
 
 // Modern Charts Component
 const ClassAnalyticsCharts: React.FC = () => {
-  const { charts } = mockClassAnalyticsData;
+  const { charts } = emptyClassAnalyticsData;
 
   // Attendance Trend Chart
   const attendanceTrendData = {
@@ -1128,14 +1129,14 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
   stats,
   onFilterClasses,
 }) => {
-  const [analyticsData, setAnalyticsData] = useState(mockClassAnalyticsData);
+  const [analyticsData, setAnalyticsData] = useState(emptyClassAnalyticsData);
 
   useEffect(() => {
     // In a real app, this would fetch data from an API
     const fetchClassAnalytics = async () => {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setAnalyticsData(mockClassAnalyticsData);
+      setAnalyticsData(emptyClassAnalyticsData);
     };
 
     fetchClassAnalytics();

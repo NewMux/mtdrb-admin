@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
-import { MockMember } from "../../../hooks/useMockMembers";
+import { Member } from "../../../types/member";
 
 type EditMemberForm = {
   name: string;
@@ -57,10 +57,10 @@ const schema = z.object({
 interface EditMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member?: MockMember | null;
+  member?: Member | null;
   onSuccess: (
     memberId: string,
-    memberData: Partial<MockMember>,
+    memberData: Partial<Member>,
   ) => Promise<void>;
   loading?: boolean;
 }
@@ -127,7 +127,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const onSubmit = async (data: EditMemberForm) => {
     setIsLoading(true);
     try {
-      const updatedData: Partial<MockMember> = {
+      const updatedData: Partial<Member> = {
         ...data,
         idDocument: uploadedFile || undefined,
       };

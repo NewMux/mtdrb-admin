@@ -376,7 +376,6 @@ const MemberModal: React.FC<MemberModalProps> = ({
   useEffect(() => {
     if (mode === "edit" && Object.keys(formData).length > 0) {
       // Auto-save logic here
-      console.log("Auto-saving...", formData);
     }
   }, [formData, mode]);
 

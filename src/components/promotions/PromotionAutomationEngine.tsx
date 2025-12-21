@@ -268,7 +268,7 @@ const PromotionAutomationEngine: React.FC<PromotionAutomationEngineProps> = ({
         </motion.div>
       </div>
 
-      {/* AI Suggestions */}
+      {/* Smart Suggestions */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-3xl p-6 border border-purple-100">
         <div className="flex items-center space-x-3 mb-4">
           <div className="p-2 bg-purple-100 rounded-xl">
@@ -276,7 +276,7 @@ const PromotionAutomationEngine: React.FC<PromotionAutomationEngineProps> = ({
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              AI Automation Suggestions
+              Smart Automation Suggestions
             </h2>
             <p className="text-gray-600">
               Smart recommendations to boost your automation

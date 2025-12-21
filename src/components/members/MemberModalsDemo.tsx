@@ -95,7 +95,6 @@ const MemberModalsDemo: React.FC = () => {
   };
 
   const handleSuccess = () => {
-    console.log("Modal action completed successfully");
     // You could add toast notifications here
   };
 
@@ -197,7 +196,7 @@ const MemberModalsDemo: React.FC = () => {
               </ul>
             </div>
             <div className="space-y-2">
-              <h3 className="font-medium text-gray-900">AI & Smart Features</h3>
+              <h3 className="font-medium text-gray-900">Smart Features</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Smart-powered recommendations</li>
                 <li>• Smart defaults and suggestions</li>

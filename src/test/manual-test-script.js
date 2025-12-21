@@ -99,8 +99,8 @@
       addTestResult('Generate Report', 'Button exists', 'FAIL', 'Generate Report button not found');
     }
 
-    // Test Ask AI Button
-    const askAIButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Ask AI'));
+    // Test Ask Assistant Button
+    const askAIButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Ask Assistant'));
     
     if (askAIButton) {
       askAIButton.click();
@@ -108,26 +108,26 @@
       
       const modal = document.querySelector('[role="dialog"]') || document.querySelector('.modal');
       if (modal) {
-        addTestResult('Ask AI', 'Modal opens', 'PASS', 'AI modal opened');
+        addTestResult('Ask Assistant', 'Modal opens', 'PASS', 'Smart modal opened');
         
         // Test input validation
         const textarea = modal.querySelector('textarea');
         if (textarea) {
           textarea.value = '';
-          const submitButton = modal.querySelector('button:contains("Ask AI")') || 
-                             Array.from(modal.querySelectorAll('button')).find(btn => btn.textContent.includes('Ask AI'));
+          const submitButton = modal.querySelector('button:contains("Ask Assistant")') || 
+                             Array.from(modal.querySelectorAll('button')).find(btn => btn.textContent.includes('Ask Assistant'));
           
           if (submitButton && submitButton.disabled) {
-            addTestResult('Ask AI', 'Empty input validation', 'PASS', 'Submit button disabled for empty input');
+            addTestResult('Ask Assistant', 'Empty input validation', 'PASS', 'Submit button disabled for empty input');
           } else {
-            addTestResult('Ask AI', 'Empty input validation', 'FAIL', 'Submit button not disabled for empty input');
+            addTestResult('Ask Assistant', 'Empty input validation', 'FAIL', 'Submit button not disabled for empty input');
           }
         }
       } else {
-        addTestResult('Ask AI', 'Modal opens', 'FAIL', 'AI modal not opened');
+        addTestResult('Ask Assistant', 'Modal opens', 'FAIL', 'Smart modal not opened');
       }
     } else {
-      addTestResult('Ask AI', 'Button exists', 'FAIL', 'Ask AI button not found');
+      addTestResult('Ask Assistant', 'Button exists', 'FAIL', 'Ask Assistant button not found');
     }
 
     // Test Settings Button
@@ -171,7 +171,7 @@
     
     const modals = [
       { name: 'Export', button: 'Export' },
-      { name: 'AI', button: 'Ask AI' },
+      { name: 'Smart', button: 'Ask Assistant' },
       { name: 'Reports', button: 'Generate Report' },
       { name: 'Settings', button: 'Settings' }
     ];
@@ -243,7 +243,7 @@
       { name: 'Members', id: 'members' },
       { name: 'Revenue', id: 'revenue' },
       { name: 'Classes', id: 'classes' },
-      { name: 'AI Insights', id: 'insights' }
+      { name: 'Smart Insights', id: 'insights' }
     ];
     
     for (const tab of tabs) {

@@ -12,19 +12,19 @@ import {
   FiChevronDown,
   FiSearch,
 } from "react-icons/fi";
-import { MockMember } from "../../hooks/useMockMembers";
+import { Member } from "../../types/member";
 import { SmartButton, EmptyState } from "../ui/DesignSystem";
 
 interface MemberTableProps {
-  members: MockMember[];
-  onEdit?: (member: MockMember) => void;
-  onDelete?: (member: MockMember) => void;
-  onView?: (member: MockMember) => void;
-  onAssignTrainer?: (member: MockMember) => void;
+  members: Member[];
+  onEdit?: (member: Member) => void;
+  onDelete?: (member: Member) => void;
+  onView?: (member: Member) => void;
+  onAssignTrainer?: (member: Member) => void;
   loading?: boolean;
-  sortBy?: keyof MockMember;
+  sortBy?: keyof Member;
   sortOrder?: "asc" | "desc";
-  onSort?: (field: keyof MockMember) => void;
+  onSort?: (field: keyof Member) => void;
 }
 
 const MemberTable: React.FC<MemberTableProps> = ({
@@ -44,40 +44,40 @@ const MemberTable: React.FC<MemberTableProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+        return "bg-emerald-100 text-emerald-800";
       case "inactive":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
       case "pending":
-        return "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200";
+        return "bg-gold-100 text-gold-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getMembershipColor = (type: string) => {
     switch (type) {
       case "Premium":
-        return "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200";
+        return "bg-rose-100 text-rose-800";
       case "Standard":
-        return "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200";
+        return "bg-sky-100 text-sky-800";
       case "Basic":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
       case "VIP":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        return "bg-purple-100 text-purple-800";
       case "Student":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const handleSort = (field: keyof MockMember) => {
+  const handleSort = (field: keyof Member) => {
     if (onSort) {
       onSort(field);
     }
   };
 
-  const getSortIcon = (field: keyof MockMember) => {
+  const getSortIcon = (field: keyof Member) => {
     if (sortBy !== field) return null;
     return sortOrder === "asc" ? (
       <FiChevronUp className="w-4 h-4" />
@@ -86,7 +86,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
     );
   };
 
-  const getSortLabel = (field: keyof MockMember) => {
+  const getSortLabel = (field: keyof Member) => {
     const currentSort = sortBy === field ? sortOrder : "none";
     return `${field} sorted ${currentSort}`;
   };
@@ -97,13 +97,13 @@ const MemberTable: React.FC<MemberTableProps> = ({
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <div className="relative">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
-          <div className="absolute inset-0 rounded-full border-2 border-gray-200 dark:border-gray-700"></div>
+          <div className="absolute inset-0 rounded-full border-2 border-gray-200"></div>
         </div>
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 font-medium">
+          <p className="text-gray-600 font-medium">
             Loading members...
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Please wait while we fetch the latest data
           </p>
         </div>
@@ -129,18 +129,18 @@ const MemberTable: React.FC<MemberTableProps> = ({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+    <div className="overflow-hidden rounded-2xl border border-gray-200">
       <div className="overflow-x-auto">
         <table className="w-full" role="table" aria-label="Members table">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50">
             <tr>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                 scope="col"
               >
                 <button
                   onClick={() => handleSort("name")}
-                  className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
+                  className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("name")}
                   aria-sort={sortBy === "name" ? sortOrder : "none"}
                 >
@@ -149,12 +149,12 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </button>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                 scope="col"
               >
                 <button
                   onClick={() => handleSort("email")}
-                  className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
+                  className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("email")}
                   aria-sort={sortBy === "email" ? sortOrder : "none"}
                 >
@@ -163,12 +163,12 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </button>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                 scope="col"
               >
                 <button
                   onClick={() => handleSort("status")}
-                  className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
+                  className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("status")}
                   aria-sort={sortBy === "status" ? sortOrder : "none"}
                 >
@@ -177,12 +177,12 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </button>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                 scope="col"
               >
                 <button
                   onClick={() => handleSort("membershipType")}
-                  className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
+                  className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("membershipType")}
                   aria-sort={sortBy === "membershipType" ? sortOrder : "none"}
                 >
@@ -191,12 +191,12 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </button>
               </th>
               <th
-                className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                 scope="col"
               >
                 <button
                   onClick={() => handleSort("lastVisit")}
-                  className="flex items-center space-x-1 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
+                  className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("lastVisit")}
                   aria-sort={sortBy === "lastVisit" ? sortOrder : "none"}
                 >
@@ -205,24 +205,24 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </button>
               </th>
               <th
-                className="px-6 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="px-6 py-4 text-right text-sm font-medium text-gray-700"
                 scope="col"
               >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-gray-100">
             {members.map((member, index) => (
               <motion.tr
                 key={member.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 ${
+                className={`hover:bg-gray-50 transition-colors duration-200 ${
                   index % 2 === 0
-                    ? "bg-white dark:bg-gray-900"
-                    : "bg-gray-50/50 dark:bg-gray-800/50"
+                    ? "bg-white"
+                    : "bg-gray-50/50/50"
                 } ${
                   focusedRow === member.id
                     ? "ring-2 ring-sky-500 ring-inset"
@@ -247,10 +247,10 @@ const MemberTable: React.FC<MemberTableProps> = ({
                       </span>
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="text-sm font-medium text-gray-900">
                         {member.name}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-xs text-gray-500">
                         Joined {new Date(member.joinDate).toLocaleDateString()}
                       </div>
                     </div>
@@ -259,19 +259,19 @@ const MemberTable: React.FC<MemberTableProps> = ({
 
                 <td className="px-6 py-4">
                   <div className="space-y-1">
-                    <div className="text-sm text-gray-900 dark:text-white">
+                    <div className="text-sm text-gray-900">
                       <a
                         href={`mailto:${member.email}`}
-                        className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                        className="hover:text-sky-600 transition-colors"
                         aria-label={`Send email to ${member.name}`}
                       >
                         {member.email}
                       </a>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500">
                       <a
                         href={`tel:${member.phone}`}
-                        className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                        className="hover:text-sky-600 transition-colors"
                         aria-label={`Call ${member.name}`}
                       >
                         {member.phone}
@@ -300,7 +300,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </td>
 
                 <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 dark:text-white">
+                  <div className="text-sm text-gray-900">
                     {member.lastVisit === "Never"
                       ? "Never"
                       : new Date(member.lastVisit).toLocaleDateString()}

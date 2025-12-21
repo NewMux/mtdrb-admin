@@ -154,8 +154,8 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
         ? "bg-orange-100 text-orange-700"
         : "bg-green-100 text-green-700";
 
-  // Generate AI insights
-  const getAiInsights = () => {
+  // Generate Smart insights
+  const getSmartInsights = () => {
     const insights = [];
 
     // Revenue insights
@@ -206,7 +206,7 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
     return insights;
   };
 
-  const aiInsights = getAiInsights();
+  const smartInsights = getSmartInsights();
 
   const handleExportReport = async () => {
     try {
@@ -320,13 +320,13 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
         </div>
       </div>
 
-      {/* AI Insights */}
+      {/* Smart Insights */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <div className="text-blue-400 dark:text-blue-300 text-xs mb-3">
           Smart Insights
         </div>
         <div className="space-y-3">
-          {aiInsights.map((insight, index) => (
+          {smartInsights.map((insight, index) => (
             <div key={index} className="flex items-start gap-3">
               {insight.type === "good" ? (
                 <FiCheckCircle className="mt-1 text-green-500 dark:text-green-400" />

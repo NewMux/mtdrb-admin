@@ -33,11 +33,10 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
-import {
-  mockTrainerPerformance,
-  mockPerformanceMetrics,
-  mockRevenueData,
-} from "../../api/mockTrainerData";
+// Removed import from mockTrainerData - using empty arrays/defaults
+const mockTrainerPerformance: TrainerPerformance[] = [];
+const mockPerformanceMetrics: PerformanceMetric[] = [];
+const mockRevenueData: Array<{ month: string; revenue: number }> = [];
 
 interface SmartTrainerAnalyticsProps {
   refreshKey: number;

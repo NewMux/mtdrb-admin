@@ -85,17 +85,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
     initial="initial"
     animate="animate"
     exit="exit"
-    className={`min-h-screen bg-white dark:bg-gray-900 ${className}`}
+    className={`min-h-screen bg-white ${className}`}
   >
     {/* Page Header */}
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-6">
+    <div className="bg-white border-b border-gray-200 px-6 py-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-lunaNavy">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-gray-600 dark:text-gray-400 mt-2">{subtitle}</p>
+            <p className="text-lunaNavy/70 mt-2">{subtitle}</p>
           )}
         </div>
         {actions && (
@@ -132,7 +132,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
     whileTap={clickable ? "pressed" : undefined}
     onClick={onClick}
     className={`
-      bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4
+      bg-white rounded-lg shadow-sm border border-gray-200 p-4
       ${clickable ? "cursor-pointer" : ""}
       ${className}
     `}
@@ -179,15 +179,15 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
     "inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantClasses = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
+    primary: "bg-lunaMid hover:bg-lunaMid/90 text-white focus:ring-lunaCyan",
     secondary:
-      "bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white focus:ring-gray-500",
+      "bg-gray-100 hover:bg-gray-200 text-lunaNavy focus:ring-gray-500",
     success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500",
     warning:
       "bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500",
     danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
     ghost:
-      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-500",
+      "bg-transparent hover:bg-gray-100 text-lunaNavy/80 focus:ring-gray-500",
   };
 
   const sizeClasses = {
@@ -242,30 +242,27 @@ export const KPICard: React.FC<KPICardProps> = ({
   color = "blue",
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-    green:
-      "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400",
-    yellow:
-      "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400",
-    red: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400",
-    purple:
-      "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400",
+    blue: "bg-blue-50 text-blue-600",
+    green: "bg-green-50 text-green-600",
+    yellow: "bg-yellow-50 text-yellow-600",
+    red: "bg-red-50 text-red-600",
+    purple: "bg-purple-50 text-purple-600",
   };
 
   const trendColors = {
-    up: "text-green-600 dark:text-green-400",
-    down: "text-red-600 dark:text-red-400",
-    neutral: "text-gray-600 dark:text-gray-400",
+    up: "text-green-600",
+    down: "text-red-600",
+    neutral: "text-lunaNavy/70",
   };
 
   return (
     <SmartCard className="relative overflow-hidden">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <p className="text-sm font-medium text-lunaNavy/70 mb-1">
             {title}
           </p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">
+          <p className="text-xl font-bold text-lunaNavy">
             {value}
           </p>
           {change && (
@@ -297,7 +294,7 @@ export const SmartTable: React.FC<SmartTableProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden ${className}`}
+    className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}
   >
     {children}
   </div>
@@ -314,7 +311,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 ${className}`}
+    className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}
   >
     {children}
   </div>
@@ -365,11 +362,11 @@ export const Section: React.FC<SectionProps> = ({
   <div className={`space-y-4 ${className}`}>
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-lunaNavy">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
+          <p className="text-lunaNavy/70 mt-1">{subtitle}</p>
         )}
       </div>
       {actions && <div className="flex items-center space-x-3">{actions}</div>}
@@ -385,7 +382,7 @@ export const SmartLoading: React.FC<{ message?: string }> = ({
   <div className="flex items-center justify-center p-6">
     <div className="text-center">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-      <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
+      <p className="text-lunaNavy/70 text-sm">{message}</p>
     </div>
   </div>
 );
@@ -405,13 +402,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => (
   <div className="text-center py-8">
-    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-3">
-      <div className="text-gray-500 dark:text-gray-400 text-xl">{icon}</div>
+    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+      <div className="text-lunaNavy/60 text-xl">{icon}</div>
     </div>
-    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+    <h3 className="text-lg font-semibold text-lunaNavy mb-2">
       {title}
     </h3>
-    <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+    <p className="text-lunaNavy/70 mb-4 max-w-md mx-auto">
       {description}
     </p>
     {action && <div className="flex justify-center">{action}</div>}

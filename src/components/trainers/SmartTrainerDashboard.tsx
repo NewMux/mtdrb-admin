@@ -24,10 +24,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import {
-  mockTrainerInsights,
-  mockTrainerAIRecommendations,
-} from "../../api/mockTrainerData";
+// No mock data - all data comes from Supabase
 
 interface SmartTrainerDashboardProps {
   refreshKey: number;
@@ -51,11 +48,9 @@ export default function SmartTrainerDashboard({
   stats,
 }: SmartTrainerDashboardProps) {
   const [insights, setInsights] =
-    useState<TrainerInsight[]>(mockTrainerInsights);
+    useState<TrainerInsight[]>([]);
   const [loading, setLoading] = useState(false);
-  const [aiRecommendations, setAiRecommendations] = useState<string[]>(
-    mockTrainerAIRecommendations,
-  );
+  const [smartRecommendations, setSmartRecommendations] = useState<string[]>([]);
 
   useEffect(() => {
     // Mock data is already loaded
@@ -72,14 +67,14 @@ export default function SmartTrainerDashboard({
 
   return (
     <div className="space-y-6">
-      {/* AI Header */}
+      {/* Smart Header */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-white bg-opacity-20 p-3 rounded-xl">
             <FiCpu className="text-2xl" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">AI Trainer Intelligence</h2>
+            <h2 className="text-2xl font-bold">Smart Trainer Intelligence</h2>
             <p className="text-blue-100">
               Smart insights and predictive analytics for optimal trainer
               management
@@ -126,7 +121,7 @@ export default function SmartTrainerDashboard({
         </div>
       </div>
 
-      {/* Live AI Insights */}
+      {/* Live Smart Insights */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <FiMessageSquare className="text-blue-600 text-xl" />
@@ -139,7 +134,7 @@ export default function SmartTrainerDashboard({
         </div>
 
         <div className="space-y-3">
-          {aiRecommendations.map((insight, index) => (
+          {smartRecommendations.map((insight, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, x: -20 }}

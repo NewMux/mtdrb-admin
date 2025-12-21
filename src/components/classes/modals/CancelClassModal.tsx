@@ -59,7 +59,6 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Class cancelled successfully");
       onSuccess?.();
       onClose();
     } catch (error) {

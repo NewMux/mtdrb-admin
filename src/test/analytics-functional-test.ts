@@ -26,7 +26,6 @@ class AnalyticsFunctionalTest {
 
   // Test 1: Button Functionality Matrix
   async testButtonFunctionality() {
-    console.log("🧪 Testing Button Functionality Matrix...");
 
     // Primary Actions Tests
     await this.testExportButton();
@@ -364,7 +363,7 @@ class AnalyticsFunctionalTest {
     this.startTimer();
 
     try {
-      // Test 4.1: Ask AI - Input Validation
+      // Test 4.1: Ask Assistant - Input Validation
       const aiInput =
         document.querySelector('textarea[name="aiQuestion"]') ||
         document.querySelector('input[name="aiQuestion"]');
@@ -373,7 +372,7 @@ class AnalyticsFunctionalTest {
         // Test empty query
         aiInput.value = "";
         const submitButton = document.querySelector(
-          'button:contains("Ask AI")',
+          'button:contains("Ask Assistant")',
         );
         if (submitButton) {
           submitButton.click();
@@ -382,14 +381,14 @@ class AnalyticsFunctionalTest {
           const isDisabled = submitButton.hasAttribute("disabled");
           if (isDisabled) {
             this.addResult(
-              "Ask AI",
+              "Ask Assistant",
               "Empty query validation",
               "PASS",
               "Submit button disabled for empty queries",
             );
           } else {
             this.addResult(
-              "Ask AI",
+              "Ask Assistant",
               "Empty query validation",
               "FAIL",
               "Submit button not disabled for empty queries",
@@ -398,17 +397,17 @@ class AnalyticsFunctionalTest {
         }
       } else {
         this.addResult(
-          "Ask AI",
+          "Ask Assistant",
           "Input field exists",
           "FAIL",
-          "AI input field not found",
+          "Smart input field not found",
         );
       }
 
-      // Test 4.2: Ask AI - Modal Content
+      // Test 4.2: Ask Assistant - Modal Content
       const aiModal =
-        document.querySelector('[data-testid="ai-modal"]') ||
-        document.querySelector(".ai-modal");
+        document.querySelector('[data-testid="assistant-modal"]') ||
+        document.querySelector(".assistant-modal");
 
       if (aiModal) {
         const hasQueryHistory =
@@ -420,35 +419,35 @@ class AnalyticsFunctionalTest {
 
         if (hasQueryHistory && hasResponseFormatting) {
           this.addResult(
-            "Ask AI",
+            "Ask Assistant",
             "Modal content",
             "PASS",
-            "AI modal shows query history and response formatting",
+            "Smart modal shows query history and response formatting",
           );
         } else {
           this.addResult(
-            "Ask AI",
+            "Ask Assistant",
             "Modal content",
             "WARNING",
-            "AI modal missing some expected content",
+            "Smart modal missing some expected content",
           );
         }
       } else {
-        this.addResult("Ask AI", "Modal content", "FAIL", "AI modal not found");
+        this.addResult("Ask Assistant", "Modal content", "FAIL", "Smart modal not found");
       }
 
-      // Test 4.3: Ask AI - Edge Case: Special Characters
+      // Test 4.3: Ask Assistant - Edge Case: Special Characters
       const specialCharTest = await this.testSpecialCharactersInAI();
       if (specialCharTest) {
         this.addResult(
-          "Ask AI",
+          "Ask Assistant",
           "Special characters handling",
           "PASS",
           "Properly handles special characters in queries",
         );
       } else {
         this.addResult(
-          "Ask AI",
+          "Ask Assistant",
           "Special characters handling",
           "WARNING",
           "Special characters handling not tested",
@@ -456,14 +455,14 @@ class AnalyticsFunctionalTest {
       }
     } catch (error) {
       this.addResult(
-        "Ask AI",
+        "Ask Assistant",
         "General functionality",
         "FAIL",
         `Error: ${error.message}`,
       );
     }
 
-    this.endTimer("Ask AI");
+    this.endTimer("Ask Assistant");
   }
 
   private async testSettingsButton() {
@@ -664,9 +663,8 @@ class AnalyticsFunctionalTest {
 
   // Test 2: Modal Test Protocol
   async testModalProtocol() {
-    console.log("🧪 Testing Modal Protocol...");
 
-    const modalTypes = ["Export", "AI", "Reports", "Settings"];
+    const modalTypes = ["Export", "Smart", "Reports", "Settings"];
 
     for (const modalType of modalTypes) {
       await this.testModalType(modalType);
@@ -809,7 +807,6 @@ class AnalyticsFunctionalTest {
 
   // Test 3: Tab System Verification
   async testTabSystem() {
-    console.log("🧪 Testing Tab System...");
 
     // Test 3.1: Tab Switching
     const tabs = ["overview", "members", "revenue", "classes", "insights"];
@@ -985,8 +982,8 @@ class AnalyticsFunctionalTest {
     return true; // Placeholder
   }
 
-  private async testSpecialCharactersInAI(): Promise<boolean> {
-    // Test special characters in AI queries
+  private async testSpecialCharactersInSmart(): Promise<boolean> {
+    // Test special characters in smart queries
     return true; // Placeholder
   }
 
@@ -1041,7 +1038,6 @@ class AnalyticsFunctionalTest {
 
   // Run All Tests
   async runAllTests(): Promise<TestSuite> {
-    console.log("🚀 Starting Analytics Dashboard Functional Tests...");
 
     await this.testButtonFunctionality();
     await this.testModalProtocol();
@@ -1049,11 +1045,6 @@ class AnalyticsFunctionalTest {
 
     const report = this.generateReport();
 
-    console.log("📊 Test Results:");
-    console.log(`Total: ${report.summary.total}`);
-    console.log(`Passed: ${report.summary.passed}`);
-    console.log(`Failed: ${report.summary.failed}`);
-    console.log(`Warnings: ${report.summary.warnings}`);
 
     return report;
   }

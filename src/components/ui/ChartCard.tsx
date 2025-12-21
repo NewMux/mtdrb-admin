@@ -22,21 +22,21 @@ const ChartCard: React.FC<ChartCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       whileHover={onClick ? { scale: 1.02, y: -2 } : {}}
       className={`
-        bg-white dark:bg-dark-800 rounded-2xl p-6 
-        border border-light-200 dark:border-dark-700 
-        shadow-soft dark:shadow-lg
+        bg-white rounded-2xl p-6 
+        border border-gray-200 
+        shadow-sm
         transition-all duration-300 ease-out
-        ${onClick ? "cursor-pointer hover:shadow-medium" : ""}
+        ${onClick ? "cursor-pointer hover:shadow-md" : ""}
         ${className}
       `}
       onClick={onClick}
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-gray-900">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-sm text-light-600 dark:text-dark-400 mt-1">
+          <p className="text-sm text-gray-600 mt-1">
             {subtitle}
           </p>
         )}

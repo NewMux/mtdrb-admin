@@ -72,8 +72,8 @@ export const EnablePrioritySortingModal: React.FC<
     },
     {
       key: "aiWeight",
-      label: "AI Weight Scoring",
-      description: "AI-powered priority scoring based on historical data",
+      label: "Smart Weight Scoring",
+      description: "Smart-powered priority scoring based on historical data",
       icon: "🤖",
       isPro: true,
     },
@@ -398,7 +398,7 @@ export const EnablePrioritySortingModal: React.FC<
                     Pro Features Available
                   </h4>
                   <div className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-                    <p>• AI Weight Scoring for smarter prioritization</p>
+                    <p>• Smart Weight Scoring for smarter prioritization</p>
                     <p>• Advanced analytics and insights</p>
                     <p>• Custom sorting algorithms</p>
                   </div>

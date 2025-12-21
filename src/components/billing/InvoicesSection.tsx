@@ -20,7 +20,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
-import { mockInvoices } from "../../api/mockBillingData";
+// Removed mock data - using real data from Supabase
 import { Invoice } from "../../types";
 import { toast } from "react-hot-toast";
 import { AppleInput, AppleSelect, AppleButton } from "../AppleStyleModal";
@@ -57,7 +57,8 @@ export default function InvoicesSection({
       setLoading(true);
 
       // Use mock data instead of backend calls
-      let filteredInvoices = [...mockInvoices];
+      // TODO: Fetch invoices from Supabase
+      let filteredInvoices: any[] = [];
 
       // Apply search filter
       if (search) {
@@ -129,7 +130,6 @@ export default function InvoicesSection({
   const handleSendReminder = async (invoiceId: string) => {
     try {
       // TODO: Implement send reminder functionality
-      console.log("Sending reminder for invoice:", invoiceId);
       toast.success("Reminder sent successfully");
     } catch (error) {
       console.error("Error sending reminder:", error);
@@ -410,7 +410,8 @@ export default function InvoicesSection({
                         icon={<FiEye size={16} />}
                         title="View"
                         onClick={(e) => {
-                          e.stopPropagation(); /* TODO: View handler */
+                          e.stopPropagation();
+                          toast.info("View invoice functionality coming soon");
                         }}
                       />
                       <SmartButton
@@ -419,7 +420,8 @@ export default function InvoicesSection({
                         icon={<FiEdit2 size={16} />}
                         title="Edit"
                         onClick={(e) => {
-                          e.stopPropagation(); /* TODO: Edit handler */
+                          e.stopPropagation();
+                          toast.info("Edit invoice functionality coming soon");
                         }}
                       />
                       <SmartButton
@@ -438,7 +440,8 @@ export default function InvoicesSection({
                         icon={<FiDownload size={16} />}
                         title="Download"
                         onClick={(e) => {
-                          e.stopPropagation(); /* TODO: Download handler */
+                          e.stopPropagation();
+                          toast.info("Download invoice functionality coming soon");
                         }}
                       />
                       <SmartButton

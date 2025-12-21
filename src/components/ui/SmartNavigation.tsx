@@ -11,7 +11,6 @@ import {
   FiBell,
   FiTrendingUp,
   FiClipboard,
-  FiGift,
   FiFileText,
   FiTarget,
   FiChevronRight,
@@ -31,77 +30,70 @@ export const navigationConfig = {
   members: {
     title: "Members",
     icon: <FiUsers className="h-5 w-5" />,
-    path: "/members",
+    path: "/dashboard/members",
     description: "Member management and analytics",
     connections: ["classes", "billing", "trainers", "analytics"],
   },
   classes: {
     title: "Classes",
     icon: <FiCalendar className="h-5 w-5" />,
-    path: "/classes",
+    path: "/dashboard/classes",
     description: "Class scheduling and management",
     connections: ["members", "trainers", "analytics", "dashboard"],
   },
   trainers: {
     title: "Trainers",
     icon: <FiUserCheck className="h-5 w-5" />,
-    path: "/trainers",
+    path: "/dashboard/trainers",
     description: "Trainer management and performance",
     connections: ["classes", "members", "analytics", "billing"],
   },
   billing: {
     title: "Billing",
     icon: <FiCreditCard className="h-5 w-5" />,
-    path: "/billing",
+    path: "/dashboard/billing",
     description: "Payments and financial management",
     connections: ["members", "analytics", "reports", "dashboard"],
   },
   analytics: {
     title: "Analytics",
     icon: <FiTrendingUp className="h-5 w-5" />,
-    path: "/analytics",
+    path: "/dashboard/analytics",
     description: "Business insights and reports",
     connections: ["dashboard", "members", "classes", "billing"],
   },
   tasks: {
     title: "Tasks",
     icon: <FiClipboard className="h-5 w-5" />,
-    path: "/tasks",
+    path: "/dashboard/tasks",
     description: "Task management and automation",
     connections: ["dashboard", "members", "notifications"],
   },
   notifications: {
     title: "Notifications",
     icon: <FiBell className="h-5 w-5" />,
-    path: "/notifications",
+    path: "/dashboard/notifications",
     description: "Communication and alerts",
     connections: ["members", "tasks", "promotions"],
-  },
-  promotions: {
-    title: "Promotions",
-    icon: <FiGift className="h-5 w-5" />,
-    path: "/promotions",
-    description: "Marketing campaigns and offers",
-    connections: ["members", "notifications", "analytics"],
   },
   reports: {
     title: "Reports",
     icon: <FiFileText className="h-5 w-5" />,
-    path: "/reports",
+    path: "/dashboard/reports",
     description: "Custom reports and exports",
     connections: ["analytics", "billing", "members"],
   },
   insights: {
     title: "Insights",
     icon: <FiTarget className="h-5 w-5" />,
-    path: "/insights",
-    description: "AI-powered business insights",
+    path: "/dashboard/insights",
+    description: "Smart-powered business insights",
     connections: ["dashboard", "analytics", "members"],
   },
   settings: {
     title: "Settings",
     icon: <FiSettings className="h-5 w-5" />,
-    path: "/settings",
+    path: "/dashboard/settings",
     description: "System configuration",
     connections: ["notifications", "billing"],
   },
@@ -241,14 +233,14 @@ export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
         {
           title: "Schedule Classes",
           description: "Create classes based on member preferences",
-          path: "/classes",
+          path: "/dashboard/classes",
           icon: <FiCalendar className="h-5 w-5" />,
           priority: "high",
         },
         {
           title: "Send Notifications",
           description: "Communicate with your members",
-          path: "/notifications",
+          path: "/dashboard/notifications",
           icon: <FiBell className="h-5 w-5" />,
           priority: "medium",
         },
@@ -260,14 +252,14 @@ export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
         {
           title: "View Analytics",
           description: "Analyze revenue trends and patterns",
-          path: "/analytics",
+          path: "/dashboard/analytics",
           icon: <FiTrendingUp className="h-5 w-5" />,
           priority: "high",
         },
         {
           title: "Generate Reports",
           description: "Create financial reports and statements",
-          path: "/reports",
+          path: "/dashboard/reports",
           icon: <FiFileText className="h-5 w-5" />,
           priority: "medium",
         },
@@ -288,7 +280,7 @@ export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
           Smart Suggestions
         </h3>
         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-          AI Powered
+          Smart Powered
         </span>
       </div>
 
@@ -336,11 +328,11 @@ export const usePageNavigation = () => {
 
   const getCurrentPage = () => {
     const path = location.pathname;
-    return (
-      Object.entries(navigationConfig).find(
-        ([key, config]) => config.path === path,
-      )?.[0] || "dashboard"
+    // Match exact path or path that starts with the config path
+    const match = Object.entries(navigationConfig).find(
+      ([key, config]) => path === config.path || path.startsWith(config.path + "/"),
     );
+    return match?.[0] || "dashboard";
   };
 
   const navigateToPage = (pageKey: string) => {

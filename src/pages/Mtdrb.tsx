@@ -9,8 +9,8 @@ const PROJECT_KB = [
       "• Membership plans and trainers are fetched live from the backend (no more hardcoded lists).",
       "• End date for memberships is auto-calculated based on the selected plan duration.",
       "• Add Member flow is robust: all fields are validated, backend-integrated, and invoices can be auto-generated.",
-      "• Global UIContext tracks when any drawer/modal is open, enabling smart repositioning of the MTDRB AI button.",
-      "• Responsive bottom padding ensures action buttons are never hidden behind the AI widget, but avoids excessive empty space.",
+      "• Global UIContext tracks when any drawer/modal is open, enabling smart repositioning of the MTDRB Assistant button.",
+      "• Responsive bottom padding ensures action buttons are never hidden behind the Assistant widget, but avoids excessive empty space.",
       "• All drawers and modals have consistent, beautiful Apple-style UX.",
       "• Fixed all React hook order issues for robust, error-free rendering.",
       "• Knowledge base is always up to date with the latest features and best practices.",
@@ -29,7 +29,7 @@ const PROJECT_KB = [
       "• Modern delete confirmation modal with animation.",
       "• Color tag picker uses simple color swatches (no color picker).",
       "• Consistent navigation and actions across Members and Classes.",
-      "• MTDRB AI: Floating chat bot widget for insights, reporting, and suggestions (ChatGPT integration ready).",
+      "• MTDRB Assistant: Floating chat bot widget for insights, reporting, and suggestions (Chat integration ready).",
     ].join("\n"),
   },
   {
@@ -58,10 +58,10 @@ const PROJECT_KB = [
       "Easy to add new features, tables, analytics. Component-based UI. All business logic in migrations/functions.",
   },
   {
-    title: "AI & Automation",
+    title: "Smart Features & Automation",
     content: [
-      "• MTDRB AI: Floating chat bot widget, always accessible.",
-      "• Ready for ChatGPT/LLM integration for insights, reporting, and suggestions.",
+      "• MTDRB Assistant: Floating chat bot widget, always accessible.",
+      "• Ready for chat integration for insights, reporting, and suggestions.",
       '• Context-aware features planned (e.g., "Ask about this page").',
     ].join("\n"),
   },
@@ -139,7 +139,7 @@ export default function Mtdrb() {
   const [answer, setAnswer] = useState("");
 
   const handleAsk = () => {
-    // Placeholder: In production, this would call the AI assistant backend
+    // Placeholder: In production, this would call the assistant backend
     setAnswer(
       "Smart Assistant: This is a placeholder answer. In production, I would answer your question about the MTDRB project using my knowledge base.",
     );

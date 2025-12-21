@@ -6,7 +6,7 @@ export default function Reports() {
 
   useEffect(() => {
     // Redirect to the unified Analytics page
-    navigate("/analytics?tab=reports");
+    navigate("/dashboard/analytics?tab=reports", { replace: true });
   }, [navigate]);
 
   return null;

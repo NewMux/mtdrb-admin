@@ -71,8 +71,8 @@ const ScrollStorySection: React.FC = () => {
       visual: <HardwarePageVisual />
     },
     {
-      id: "ai-bot",
-      title: "AI WhatsApp Bot",
+      id: "assistant-bot",
+      title: "Smart WhatsApp Bot",
       subheadline: "Your 24/7 receptionist. In every member's pocket.",
       color: "teal",
       visual: <WhatsAppBotVisual />
@@ -381,7 +381,7 @@ const HardwarePageVisual: React.FC = () => (
 const WhatsAppBotVisual: React.FC = () => (
   <div className="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-2xl w-full max-w-md">
     <div className="flex items-center justify-between mb-6">
-      <h3 className="text-xl font-bold text-white">AI Assistant</h3>
+      <h3 className="text-xl font-bold text-white">Smart Assistant</h3>
       <div className="text-teal-400 text-sm">Online</div>
     </div>
     

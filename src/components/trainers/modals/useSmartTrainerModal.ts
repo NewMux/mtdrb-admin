@@ -35,8 +35,8 @@ export function useSmartTrainerModal({
         activeMembers: 12,
       });
       setAIRecommendations([
-        "AI: Suggest reducing schedule due to high workload.",
-        "AI: Recommend assigning to morning classes for higher attendance.",
+        "System: Suggest reducing schedule due to high workload.",
+        "System: Recommend assigning to morning classes for higher attendance.",
       ]);
       setAlerts([
         { type: "info", message: "Trainer is available for new assignments." },

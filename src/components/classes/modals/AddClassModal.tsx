@@ -19,7 +19,7 @@ import {
   SelectField,
   TimeField,
   DateField,
-  AIRecommendationCard,
+  SmartRecommendationCard,
   ConflictAlert,
 } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
@@ -167,7 +167,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center space-x-2">
                 {conflicts.length > 0 && (
-                  <div className="flex items-center space-x-1 text-sm text-orange-600 dark:text-orange-400">
+                  <div className="flex items-center space-x-1 text-sm text-orange-600">
                     <FiAlertTriangle className="h-4 w-4" />
                     <span>{conflicts.length} conflicts detected</span>
                   </div>
@@ -202,7 +202,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
               handleSave();
             }}
           >
-            {/* Pro-only AI Recommendations */}
+            {/* Pro-only Smart Recommendations */}
             {isPro && recommendations.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -223,14 +223,11 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                 </div>
                 <div className="space-y-3">
                   {recommendations.map((recommendation) => (
-                    <AIRecommendationCard
+                    <SmartRecommendationCard
                       key={recommendation.id}
                       recommendation={recommendation}
                       onApply={() => {
-                        console.log(
-                          "Applying recommendation:",
-                          recommendation.action,
-                        );
+                        // TODO: Implement recommendation application
                       }}
                     />
                   ))}

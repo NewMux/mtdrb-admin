@@ -21,7 +21,7 @@ const features: Feature[] = [
   {
     icon: FiUsers,
     title: "Member Domination",
-    description: "Crush churn with AI-powered retention. Turn every member into a profit center. Predict behavior before it happens.",
+    description: "Crush churn with Smart-powered retention. Turn every member into a profit center. Predict behavior before it happens.",
     color: "blue",
     stats: "2.3x LTV Increase",
     benefits: ["Automated conquest", "Smart retention", "Predictive domination"],
@@ -30,7 +30,7 @@ const features: Feature[] = [
   {
     icon: FiCalendar,
     title: "Schedule Mastery",
-    description: "AI that fills every class. Optimizes capacity. Maximizes revenue. Your schedule becomes a money machine.",
+    description: "Smart system that fills every class. Optimizes capacity. Maximizes revenue. Your schedule becomes a money machine.",
     color: "green",
     stats: "89% Attendance Rate",
     benefits: ["Revenue optimization", "Capacity domination", "Auto-fill magic"],

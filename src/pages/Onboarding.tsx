@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
+import toast from "react-hot-toast";
 import { 
   FiHome, 
   FiMapPin, 
@@ -134,8 +135,17 @@ export default function Onboarding() {
     
     try {
       // Save onboarding data to Supabase
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting user:", userError);
+        throw new Error(`Authentication error: ${userError.message}`);
+      }
+      
+      if (!user) {
+        console.error("No user found");
+        throw new Error("User not found. Please sign in again.");
+      }
 
       // Get or create tenant
       let tenantId = user.user_metadata?.tenant_id;
@@ -146,91 +156,168 @@ export default function Onboarding() {
           .from("tenants")
           .insert({
             name: formData.gymName || "My Gym",
-            onboarding_completed: true,
+            metadata: {
+              country: formData.country,
+              language: formData.language,
+              vat_enabled: formData.vatEnabled,
+              vat_number: formData.vatNumber,
+              currency: formData.currency,
+              timezone: formData.timezone,
+              onboarding_completed: true
+            }
           })
           .select("id")
           .single();
 
-        if (tenantCreateError) throw tenantCreateError;
+        if (tenantCreateError) {
+          console.error("Error creating tenant:", tenantCreateError);
+          throw new Error(`Failed to create organization: ${tenantCreateError.message}`);
+        }
+        
+        if (!tenantData || !tenantData.id) {
+          throw new Error("Failed to create organization: No tenant ID returned");
+        }
+        
         tenantId = tenantData.id;
 
         // Create membership
-        await supabase.from("memberships").insert({
+        const { error: membershipError } = await supabase.from("memberships").insert({
           user_id: user.id,
           tenant_id: tenantId,
           role: "admin",
         });
 
-        // Update user metadata
+        if (membershipError) {
+          console.error("Error creating membership:", membershipError);
+          throw new Error(`Failed to create membership: ${membershipError.message}`);
+        }
+
+        // Update user metadata with tenantId AND role
         await supabase.auth.updateUser({
-          data: { tenant_id: tenantId }
+          data: { 
+            tenant_id: tenantId,
+            role: "admin" // Set role so PermissionGuard works
+          }
         });
       } else {
         // Update existing tenant with onboarding data
+        // Store additional data in metadata JSONB field
         const { error: tenantError } = await supabase
           .from("tenants")
           .update({
             name: formData.gymName,
-            country: formData.country,
-            language: formData.language,
-            vat_enabled: formData.vatEnabled,
-            vat_number: formData.vatNumber,
-            currency: formData.currency,
-            timezone: formData.timezone,
-            onboarding_completed: true,
-            updated_at: new Date().toISOString()
+            metadata: {
+              country: formData.country,
+              language: formData.language,
+              vat_enabled: formData.vatEnabled,
+              vat_number: formData.vatNumber,
+              currency: formData.currency,
+              timezone: formData.timezone,
+              onboarding_completed: true
+            }
           })
           .eq("id", tenantId);
 
-        if (tenantError) throw tenantError;
+        if (tenantError) {
+          console.error("Error updating tenant:", tenantError);
+          // Continue anyway - metadata update is not critical
+        }
       }
 
       // Create branch if branch name is provided
+      // Note: branches table may not exist in all setups, so we'll store in tenant metadata if needed
       if (formData.branchName) {
-        const { error: branchError } = await supabase
-          .from("branches")
-          .insert({
-            tenant_id: tenantId,
-            name: formData.branchName,
-            address: formData.branchAddress,
-            phone: formData.branchPhone,
-            email: formData.branchEmail,
-            operating_hours: formData.operatingHours
-          });
+        try {
+          const { error: branchError } = await supabase
+            .from("branches")
+            .insert({
+              tenant_id: tenantId,
+              name: formData.branchName,
+              address: formData.branchAddress || null,
+              phone: formData.branchPhone || null,
+              email: formData.branchEmail || null,
+              is_active: true
+            });
 
-        if (branchError) throw branchError;
+          if (branchError) {
+            // If branches table doesn't exist, store in tenant metadata instead
+            console.warn("Branches table not available, storing in tenant metadata:", branchError);
+            const { error: metadataError } = await supabase
+              .from("tenants")
+              .update({
+                metadata: {
+                  branch: {
+                    name: formData.branchName,
+                    address: formData.branchAddress,
+                    phone: formData.branchPhone,
+                    email: formData.branchEmail,
+                    operating_hours: formData.operatingHours
+                  }
+                }
+              })
+              .eq("id", tenantId);
+            
+            if (metadataError) {
+              console.error("Error storing branch in metadata:", metadataError);
+              // Continue anyway - branch info is optional
+            }
+          }
+        } catch (err) {
+          console.error("Error creating branch:", err);
+          // Continue anyway - branch creation is optional
+        }
       }
 
       // Create owner as trainer if owner name is provided
       if (formData.ownerName) {
+        // Split name into first and last name
+        const nameParts = formData.ownerName.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
         const { error: ownerError } = await supabase
           .from("trainers")
           .insert({
             tenant_id: tenantId,
-            name: formData.ownerName,
-            email: formData.ownerEmail,
-            phone: formData.ownerPhone,
-            role: "owner",
-            specialization: "General Management"
+            first_name: firstName,
+            last_name: lastName,
+            email: formData.ownerEmail || "",
+            phone: formData.ownerPhone || null,
+            status: "active",
+            specialties: ["General Management"],
+            hourly_rate: 0
           });
 
-        if (ownerError) throw ownerError;
+        if (ownerError) {
+          console.error("Error creating owner trainer:", ownerError);
+          // Don't throw - this is optional, continue with onboarding
+        }
       }
 
       // Create additional trainer if provided
       if (formData.trainerName) {
+        // Split name into first and last name
+        const nameParts = formData.trainerName.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
         const { error: trainerError } = await supabase
           .from("trainers")
           .insert({
             tenant_id: tenantId,
-            name: formData.trainerName,
-            email: formData.trainerEmail,
-            phone: formData.trainerPhone,
-            role: "trainer",
-            specialization: formData.trainerSpecialization
+            first_name: firstName,
+            last_name: lastName,
+            email: formData.trainerEmail || "",
+            phone: formData.trainerPhone || null,
+            status: "active",
+            specialties: [formData.trainerSpecialization || "General Fitness"],
+            hourly_rate: 0
           });
 
-        if (trainerError) throw trainerError;
+        if (trainerError) {
+          console.error("Error creating trainer:", trainerError);
+          // Don't throw - this is optional, continue with onboarding
+        }
       }
 
       // Update user metadata to mark onboarding as completed
@@ -241,15 +328,22 @@ export default function Onboarding() {
         }
       });
 
+      // Show success message
+      toast.success("Welcome to MTDRB! Your gym has been successfully set up.");
+      
       // Redirect to dashboard with success message
       navigate("/dashboard", { 
+        replace: true,
         state: { 
           message: "Welcome to MTDRB! Your gym has been successfully set up." 
         } 
       });
 
     } catch (err: any) {
-      setError(err.message || "Failed to complete onboarding");
+      console.error("Onboarding completion error:", err);
+      const errorMessage = err.message || err.error?.message || err.code || "Failed to complete onboarding";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -396,9 +490,14 @@ export default function Onboarding() {
                   </button>
                 ) : (
                   <button
-                    onClick={handleComplete}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleComplete();
+                    }}
                     disabled={loading}
-                    className="flex items-center px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-60 transition-colors"
+                    className="flex items-center px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   >
                     {loading ? (
                       <>

@@ -46,97 +46,28 @@ const PromoCodeManagement: React.FC<PromoCodeManagementProps> = ({
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Mock data - replace with actual API calls
+  // Fetch promo codes from API
   useEffect(() => {
-    const mockPromoCodes: PromoCode[] = [
-      {
-        id: "1",
-        code: "NEWYEAR2024",
-        type: "percentage",
-        value: 20,
-        maxUses: 100,
-        usedCount: 67,
-        status: "active",
-        expiryDate: "2024-02-29",
-        createdAt: "2024-01-01",
-        revenue: 4450,
-        conversionRate: 24.5,
-        description: "New Year fitness challenge discount",
-      },
-      {
-        id: "2",
-        code: "FRIEND50",
-        type: "flat",
-        value: 50,
-        maxUses: 50,
-        usedCount: 23,
-        status: "active",
-        expiryDate: "2024-03-15",
-        createdAt: "2024-01-15",
-        revenue: 3350,
-        conversionRate: 18.2,
-        description: "Friend referral bonus",
-      },
-      {
-        id: "3",
-        code: "STUDENT25",
-        type: "percentage",
-        value: 25,
-        maxUses: 200,
-        usedCount: 34,
-        status: "active",
-        expiryDate: "2024-06-30",
-        createdAt: "2024-01-10",
-        revenue: 1700,
-        conversionRate: 12.8,
-        description: "Student discount program",
-      },
-      {
-        id: "4",
-        code: "HOLIDAY30",
-        type: "percentage",
-        value: 30,
-        maxUses: 75,
-        usedCount: 75,
-        status: "expired",
-        expiryDate: "2024-01-31",
-        createdAt: "2023-12-01",
-        revenue: 2250,
-        conversionRate: 31.5,
-        description: "Holiday season special",
-      },
-      {
-        id: "5",
-        code: "WELCOME10",
-        type: "percentage",
-        value: 10,
-        maxUses: 150,
-        usedCount: 12,
-        status: "scheduled",
-        expiryDate: "2024-04-30",
-        createdAt: "2024-02-01",
-        revenue: 600,
-        conversionRate: 8.5,
-        description: "Welcome discount for new members",
-      },
-      {
-        id: "6",
-        code: "SUMMER20",
-        type: "percentage",
-        value: 20,
-        maxUses: 80,
-        usedCount: 0,
-        status: "inactive",
-        expiryDate: "2024-08-31",
-        createdAt: "2024-02-15",
-        revenue: 0,
-        conversionRate: 0,
-        description: "Summer fitness promotion",
-      },
-    ];
+    const fetchPromoCodes = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API call when promo_codes table is created
+        // const { data, error } = await supabase
+        //   .from("promo_codes")
+        //   .select("*")
+        //   .order("created_at", { ascending: false });
+        // if (error) throw error;
+        // setPromoCodes(data || []);
+        setPromoCodes([]);
+      } catch (error) {
+        console.error("Error fetching promo codes:", error);
+        setPromoCodes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setPromoCodes(mockPromoCodes);
-    setLoading(false);
+    fetchPromoCodes();
   }, []);
 
   const getStatusColor = (status: string) => {

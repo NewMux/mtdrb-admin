@@ -15,12 +15,12 @@ import {
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
-import { MockMember } from "../../../hooks/useMockMembers";
+import { Member } from "../../../types/member";
 
 interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (memberData: Omit<MockMember, "id">) => Promise<void>;
+  onSuccess: (memberData: Omit<Member, "id">) => Promise<void>;
   loading?: boolean;
   modalRef?: React.RefObject<HTMLDivElement>;
 }
@@ -293,45 +293,49 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <div className="p-2 bg-blue-100bg-blue-900/30 rounded-lg">
               <FiUser className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Basic Info
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Member's personal details
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Full Name *
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                className={`form-input ${errors.name ? "border-red-500" : ""}`}
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.name ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
                 placeholder="Enter full name"
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.name}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Email *
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`form-input ${errors.email ? "border-red-500" : ""}`}
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.email ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
                 placeholder="email@example.com"
               />
               {errors.email && (
@@ -339,14 +343,16 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Phone Number *
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`form-input ${errors.phone ? "border-red-500" : ""}`}
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.phone ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
                 placeholder="+973 XXXX XXXX"
               />
               {errors.phone && (
@@ -354,7 +360,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Gender *
               </label>
               <select
@@ -368,7 +374,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Date of Birth
               </label>
               <input
@@ -377,11 +383,11 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("date_of_birth", e.target.value)
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 National ID
               </label>
               <input
@@ -390,12 +396,12 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("national_id", e.target.value)
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Enter national ID"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Emergency Contact
               </label>
               <input
@@ -404,12 +410,12 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("emergency_contact", e.target.value)
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Emergency contact number"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Preferred Language *
               </label>
               <select
@@ -422,37 +428,37 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Address
               </label>
               <input
                 type="text"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Enter full address"
               />
             </div>
           </div>
         </div>
         {/* Health & Fitness Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+            <div className="p-2 bg-pink-100bg-pink-900/30 rounded-lg">
               <FiHeart className="h-5 w-5 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Health & Fitness
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Member's health and fitness details
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Current Weight (kg)
               </label>
               <input
@@ -464,13 +470,13 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                     parseFloat(e.target.value) || undefined,
                   )
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Enter current weight"
                 step="0.1"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Target Weight (kg)
               </label>
               <input
@@ -482,13 +488,13 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                     parseFloat(e.target.value) || undefined,
                   )
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Enter target weight"
                 step="0.1"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Height (cm)
               </label>
               <input
@@ -500,7 +506,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                     parseFloat(e.target.value) || undefined,
                   )
                 }
-                className="form-input"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
                 placeholder="Enter height"
               />
             </div>
@@ -517,7 +523,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   }
                   className="form-checkbox"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700text-gray-300">
                   Previous Gym Experience
                 </span>
               </label>
@@ -525,16 +531,16 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           </div>
         </div>
         {/* Goals & Preferences Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+            <div className="p-2 bg-yellow-100bg-yellow-900/30 rounded-lg">
               <FiTarget className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Goals & Preferences
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Member's goals and workout preferences
               </p>
             </div>
@@ -550,7 +556,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   }
                   className="form-checkbox"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700text-gray-300">
                   {goal.label}
                 </span>
               </label>
@@ -558,16 +564,16 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           </div>
         </div>
         {/* Health Conditions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+            <div className="p-2 bg-pink-100bg-pink-900/30 rounded-lg">
               <FiHeart className="h-5 w-5 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Health Conditions
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Member's health conditions and previous injuries
               </p>
             </div>
@@ -590,7 +596,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   }
                   className="form-checkbox"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700text-gray-300">
                   {condition.label}
                 </span>
               </label>
@@ -598,23 +604,23 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           </div>
         </div>
         {/* Medical Conditions & Injuries */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+            <div className="p-2 bg-red-100bg-red-900/30 rounded-lg">
               <FiHeart className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Medical Information
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Member's medical conditions and previous injuries
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Medical Conditions
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -643,7 +649,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       }
                       className="form-checkbox"
                     />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">
+                    <span className="text-xs text-gray-700text-gray-300">
                       {condition}
                     </span>
                   </label>
@@ -651,7 +657,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Previous Injuries
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -673,7 +679,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       }
                       className="form-checkbox"
                     />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">
+                    <span className="text-xs text-gray-700text-gray-300">
                       {injury}
                     </span>
                   </label>
@@ -683,23 +689,23 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           </div>
         </div>
         {/* Notes */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-gray-100 dark:bg-gray-900/30 rounded-lg">
+            <div className="p-2 bg-gray-100bg-gray-900/30 rounded-lg">
               <FiFileText className="h-5 w-5 text-gray-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900text-white">
                 Additional Notes
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600text-gray-400">
                 Notes and staff information
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Staff Notes
               </label>
               <textarea
@@ -713,7 +719,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Medical Notes
               </label>
               <textarea
@@ -728,7 +734,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700text-gray-300 mb-2">
               General Notes
             </label>
             <textarea

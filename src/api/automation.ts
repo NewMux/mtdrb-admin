@@ -1,7 +1,5 @@
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
-import { mockClasses } from "./mockClassData";
-const isDev = import.meta.env.MODE === "development";
 
 // ============================================================================
 // TYPES
@@ -300,6 +298,8 @@ export const createRecentActivity = async (
 export const getSmartInsights = async (
   tenantId: string,
 ): Promise<SmartInsight[]> => {
+  if (!tenantId) return [];
+  
   try {
     const { data, error } = await supabase
       .from("smart_insights")
@@ -309,10 +309,18 @@ export const getSmartInsights = async (
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false });
 
+    // Handle 404 (table doesn't exist) gracefully
+    if (error && (error.code === 'PGRST116' || error.code === '42P01')) {
+      return [];
+    }
+    
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error("Error fetching smart insights:", error);
+    // Silently handle missing table errors
+    if (import.meta.env.DEV) {
+      console.warn("smart_insights table not found (optional feature):", error);
+    }
     return [];
   }
 };
@@ -362,18 +370,8 @@ export const updateSmartInsight = async (
 export const getClassCategories = async (
   tenantId: string,
 ): Promise<ClassCategory[]> => {
-  if (isDev) {
-    return [
-      {
-        id: "cat-1",
-        tenant_id: tenantId,
-        category_type: "popular",
-        class_ids: mockClasses.map((c) => c.id),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
+  if (!tenantId) return [];
+  
   try {
     const { data, error } = await supabase
       .from("class_categories")
@@ -381,10 +379,18 @@ export const getClassCategories = async (
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false });
 
+    // Handle 404 (table doesn't exist) gracefully
+    if (error && (error.code === 'PGRST116' || error.code === '42P01')) {
+      return [];
+    }
+    
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error("Error fetching class categories:", error);
+    // Silently handle missing table errors
+    if (import.meta.env.DEV) {
+      console.warn("class_categories table not found (optional feature):", error);
+    }
     return [];
   }
 };
@@ -415,18 +421,6 @@ export const getClassAnalytics = async (
   tenantId: string,
   analyticsType?: string,
 ): Promise<ClassAnalytics[]> => {
-  if (isDev) {
-    return [
-      {
-        id: "analytics-1",
-        tenant_id: tenantId,
-        analytics_type: analyticsType || "attendance",
-        analytics_data: { total: mockClasses.length },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
   try {
     let query = supabase
       .from("class_analytics")
@@ -485,14 +479,26 @@ export const getDefaultWorkflows = (
       color: "text-blue-600",
       bg_color: "bg-blue-50",
       triggers: [
-        "24 hours before class",
-        "Member books class",
-        "Class changes",
-      ],
+        {id: "", type: "", conditions: {}} as AutomationTrigger,
+        {id: "", type: "", conditions: {}} as AutomationTrigger,
+        {id: "", type: "", conditions: {}} as AutomationTrigger,
+      ] as any,
       actions: [
-        "Send email notification",
-        "Push notification",
-        "Add to calendar",
+        {
+          id: "action-email",
+          type: "send_email_notification",
+          parameters: {},
+        },
+        {
+          id: "action-push",
+          type: "push_notification",
+          parameters: {},
+        },
+        {
+          id: "action-calendar",
+          type: "add_to_calendar",
+          parameters: {},
+        },
       ],
       settings: {
         reminderTime: 24,
@@ -501,10 +507,9 @@ export const getDefaultWorkflows = (
         weatherIntegration: true,
       },
       stats: {
-        triggered: 127,
-        successful: 119,
-        revenue: 0,
-        lastRun: "2 hours ago",
+        total_executions: 127,
+        success_rate: 94,
+        last_executed: "2 hours ago",
       },
     },
     {
@@ -518,15 +523,31 @@ export const getDefaultWorkflows = (
       color: "text-green-600",
       bg_color: "bg-green-50",
       triggers: [
-        "90% capacity reached",
-        "Waitlist > 5 people",
-        "High demand pattern",
-      ],
+        "24 hours before class",
+        "Member books class",
+        "Class changes",
+      ] as any,
       actions: [
-        "Create additional session",
-        "Increase capacity",
-        "Notify trainers",
-        "Auto-book from waitlist",
+        {
+          id: "action-1",
+          type: "create_session",
+          parameters: {},
+        },
+        {
+          id: "action-2",
+          type: "increase_capacity",
+          parameters: {},
+        },
+        {
+          id: "action-3",
+          type: "notify_trainers",
+          parameters: {},
+        },
+        {
+          id: "action-4",
+          type: "auto_book_waitlist",
+          parameters: {},
+        },
       ],
       settings: {
         capacityThreshold: 90,
@@ -535,32 +556,47 @@ export const getDefaultWorkflows = (
         trainerNotification: true,
       },
       stats: {
-        triggered: 23,
-        successful: 21,
-        revenue: 1840,
-        lastRun: "6 hours ago",
+        total_executions: 23,
+        success_rate: 21,
+        last_executed: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
       },
     },
     {
       tenant_id: tenantId,
       name: "Smart Class Scheduling",
       description:
-        "AI-powered scheduling that analyzes member preferences, trainer availability, and historical data to optimize class times.",
+        "Smart-powered scheduling that analyzes member preferences, trainer availability, and historical data to optimize class times.",
       type: "schedule_optimization",
       status: "active",
       icon: "FiCalendar",
       color: "text-purple-600",
       bg_color: "bg-purple-50",
       triggers: [
-        "Weekly schedule review",
-        "Low attendance pattern",
-        "Trainer availability change",
-      ],
+        "24 hours before class",
+        "Member books class",
+        "Class changes",
+      ] as any,
       actions: [
-        "Suggest optimal times",
-        "Auto-reschedule",
-        "Send schedule updates",
-        "Notify affected members",
+        {
+          id: "action-5",
+          type: "suggest_optimal_times",
+          parameters: {},
+        },
+        {
+          id: "action-6",
+          type: "auto_reschedule",
+          parameters: {},
+        },
+        {
+          id: "action-7",
+          type: "send_schedule_updates",
+          parameters: {},
+        },
+        {
+          id: "action-8",
+          type: "notify_affected_members",
+          parameters: {},
+        },
       ],
       settings: {
         aiOptimization: true,
@@ -569,10 +605,9 @@ export const getDefaultWorkflows = (
         historicalData: true,
       },
       stats: {
-        triggered: 8,
-        successful: 7,
-        revenue: 560,
-        lastRun: "1 day ago",
+        total_executions: 8,
+        success_rate: 7,
+        last_executed: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       },
     },
     {
@@ -586,15 +621,31 @@ export const getDefaultWorkflows = (
       color: "text-orange-600",
       bg_color: "bg-orange-50",
       triggers: [
-        "Class < 50% capacity",
-        "Member inactive 2 weeks",
-        "New class launch",
-      ],
+        "24 hours before class",
+        "Member books class",
+        "Class changes",
+      ] as any,
       actions: [
-        "Send promotional email",
-        "Create discount code",
-        "Social media post",
-        "In-app notification",
+        {
+          id: "action-9",
+          type: "send_promotional_email",
+          parameters: {},
+        },
+        {
+          id: "action-10",
+          type: "create_discount_code",
+          parameters: {},
+        },
+        {
+          id: "action-11",
+          type: "social_media_post",
+          parameters: {},
+        },
+        {
+          id: "action-12",
+          type: "in_app_notification",
+          parameters: {},
+        },
       ],
       settings: {
         discountPercentage: 15,
@@ -603,10 +654,9 @@ export const getDefaultWorkflows = (
         maxPromotions: 3,
       },
       stats: {
-        triggered: 34,
-        successful: 29,
-        revenue: 2340,
-        lastRun: "4 hours ago",
+        total_executions: 34,
+        success_rate: 29,
+        last_executed: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
       },
     },
     {
@@ -619,12 +669,44 @@ export const getDefaultWorkflows = (
       icon: "FiUsers",
       color: "text-red-600",
       bg_color: "bg-red-50",
-      triggers: ["Member no-show", "Last-minute cancellation", "Class ends"],
+      triggers: [
+        {
+          id: "trigger-1",
+          type: "no_show",
+          conditions: {},
+        },
+        {
+          id: "trigger-2",
+          type: "cancellation",
+          conditions: {},
+        },
+        {
+          id: "trigger-3",
+          type: "waitlist_full",
+          conditions: {},
+        },
+      ],
       actions: [
-        "Mark attendance",
-        "Send follow-up",
-        "Apply penalties",
-        "Promote from waitlist",
+        {
+          id: "action-13",
+          type: "send_follow_up",
+          parameters: {},
+        },
+        {
+          id: "action-14",
+          type: "promote_waitlist",
+          parameters: {},
+        },
+        {
+          id: "action-15",
+          type: "apply_penalty",
+          parameters: {},
+        },
+        {
+          id: "action-16",
+          type: "track_attendance",
+          parameters: {},
+        },
       ],
       settings: {
         noShowPenalty: true,
@@ -633,10 +715,9 @@ export const getDefaultWorkflows = (
         attendanceRewards: false,
       },
       stats: {
-        triggered: 67,
-        successful: 64,
-        revenue: 0,
-        lastRun: "30 minutes ago",
+        total_executions: 67,
+        success_rate: 64,
+        last_executed: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
       },
     },
   ];
@@ -653,9 +734,6 @@ export const initializeAutomationData = async (
     // Check if workflows already exist
     const existingWorkflows = await getAutomationWorkflows(tenantId);
     if (existingWorkflows.length > 0) {
-      console.log(
-        "Automation workflows already exist, skipping initialization",
-      );
       return true;
     }
 
@@ -695,10 +773,8 @@ export const initializeAutomationData = async (
       await upsertAutomationSetting(setting);
     }
 
-    console.log("Automation data initialized successfully");
     return true;
   } catch (error) {
-    console.error("Error initializing automation data:", error);
     return false;
   }
 };

@@ -26,8 +26,6 @@ const PageThemeDetector: React.FC = () => {
       pageName = "billing";
     } else if (pathname.includes("/analytics")) {
       pageName = "analytics";
-    } else if (pathname.includes("/promotions")) {
-      pageName = "promotions";
     } else if (pathname.includes("/reports")) {
       pageName = "reports";
     } else if (pathname.includes("/tasks")) {
@@ -44,7 +42,6 @@ const PageThemeDetector: React.FC = () => {
     setCurrentPage(pageName);
 
     // Log theme change for debugging
-    console.log(`🎨 Page theme changed to: ${pageName}`);
   }, [location.pathname, setCurrentPage]);
 
   // This component doesn&apos;t render anything

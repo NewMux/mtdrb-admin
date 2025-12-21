@@ -1,8 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 import { Class, ClassBooking } from "../types";
-import { mockClasses, mockBookings, mockTrainers } from "./mockClassData";
-const isDev = import.meta.env.MODE === "development";
 
 // ============================================================================
 // TYPES
@@ -58,14 +56,13 @@ export interface ClassWithBookings extends Class {
 // ============================================================================
 
 export const getAllClasses = async (): Promise<Class[]> => {
-  if (isDev) return mockClasses;
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .order("start_time", { ascending: true });
@@ -80,14 +77,13 @@ export const getAllClasses = async (): Promise<Class[]> => {
 };
 
 export const getClassById = async (id: string): Promise<Class | null> => {
-  if (isDev) return mockClasses.find((c) => c.id === id) || null;
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .eq("id", id)
@@ -105,12 +101,6 @@ export const getClassById = async (id: string): Promise<Class | null> => {
 export const createClass = async (
   classData: Omit<Class, "id" | "created_at">,
 ): Promise<Class | null> => {
-  if (isDev)
-    return {
-      ...classData,
-      id: `mock-${Date.now()}`,
-      created_at: new Date().toISOString(),
-    } as Class;
   try {
     const { data, error } = await supabase
       .from("classes")
@@ -132,11 +122,6 @@ export const updateClass = async (
   id: string,
   updates: Partial<Class>,
 ): Promise<Class | null> => {
-  if (isDev)
-    return {
-      ...(mockClasses.find((c) => c.id === id) || {}),
-      ...updates,
-    } as Class;
   try {
     const { data, error } = await supabase
       .from("classes")
@@ -156,7 +141,6 @@ export const updateClass = async (
 };
 
 export const deleteClass = async (id: string): Promise<boolean> => {
-  if (isDev) return true;
   try {
     const { error } = await supabase.from("classes").delete().eq("id", id);
 
@@ -177,7 +161,6 @@ export const deleteClass = async (id: string): Promise<boolean> => {
 export const getClassBookings = async (
   classId: string,
 ): Promise<ClassBooking[]> => {
-  if (isDev) return mockBookings.filter((b) => b.class_id === classId);
   try {
     const { data, error } = await supabase
       .from("class_bookings")
@@ -201,21 +184,13 @@ export const getClassBookings = async (
 export const getClassesWithBookings = async (): Promise<
   ClassWithBookings[]
 > => {
-  if (isDev)
-    return mockClasses.map((c) => ({
-      ...c,
-      bookedCount: mockBookings.filter(
-        (b) => b.class_id === c.id && b.status === "booked",
-      ).length,
-      trainer_name: mockTrainers.find((t) => t.id === c.trainer_id)?.name || "",
-    }));
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name),
+        trainers(first_name, last_name, email),
         class_bookings(count)
       `,
       )
@@ -226,7 +201,9 @@ export const getClassesWithBookings = async (): Promise<
     return (data || []).map((classItem) => ({
       ...classItem,
       bookedCount: classItem.class_bookings?.[0]?.count || 0,
-      trainer_name: classItem.trainers?.name,
+      trainer_name: classItem.trainers 
+        ? `${classItem.trainers.first_name || ''} ${classItem.trainers.last_name || ''}`.trim()
+        : '',
     }));
   } catch (error) {
     console.error("Error fetching classes with bookings:", error);
@@ -238,14 +215,6 @@ export const bookClass = async (
   classId: string,
   memberId: string,
 ): Promise<ClassBooking | null> => {
-  if (isDev)
-    return {
-      id: `mock-booking-${Date.now()}`,
-      class_id: classId,
-      member_id: memberId,
-      status: "booked",
-      created_at: new Date().toISOString(),
-    };
   try {
     const { data, error } = await supabase
       .from("class_bookings")
@@ -268,7 +237,6 @@ export const bookClass = async (
 };
 
 export const cancelBooking = async (bookingId: string): Promise<boolean> => {
-  if (isDev) return true;
   try {
     const { error } = await supabase
       .from("class_bookings")
@@ -289,7 +257,6 @@ export const markAttendance = async (
   bookingId: string,
   attended: boolean,
 ): Promise<boolean> => {
-  if (isDev) return true;
   try {
     const { error } = await supabase
       .from("class_bookings")
@@ -311,31 +278,6 @@ export const markAttendance = async (
 // ============================================================================
 
 export const getClassStats = async (): Promise<ClassStats> => {
-  if (isDev) {
-    const totalClasses = mockClasses.length;
-    const totalCapacity = mockClasses.reduce(
-      (sum, c) => sum + (c.capacity || 0),
-      0,
-    );
-    const bookedSpots = mockBookings.filter(
-      (b) => b.status === "booked",
-    ).length;
-    const now = new Date();
-    const upcomingClasses = mockClasses.filter(
-      (c) => new Date(c.start_time) > now,
-    ).length;
-    const revenue = mockClasses.reduce((sum, c) => sum + (c.price || 0), 0);
-    const utilization =
-      totalCapacity > 0 ? (bookedSpots / totalCapacity) * 100 : 0;
-    return {
-      totalClasses,
-      totalCapacity,
-      bookedSpots,
-      upcomingClasses,
-      revenue,
-      utilization,
-    };
-  }
   try {
     const { data: classes, error } = await supabase.from("classes").select("*");
 
@@ -383,20 +325,6 @@ export const getClassStats = async (): Promise<ClassStats> => {
 };
 
 export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
-  if (isDev) {
-    // Simple mock analytics
-    return {
-      popularTimes: { morning: 1, afternoon: 1, evening: 1, night: 0 },
-      classTypes: { strength: 1, cardio: 1, yoga: 1, other: 0 },
-      classRating: { average: 4.5, totalReviews: 12 },
-      weeklyTrends: [
-        { week: "2024-05-06", totalClasses: 2, attendance: 1.4 },
-        { week: "2024-05-13", totalClasses: 1, attendance: 0.7 },
-      ],
-      capacityStats: { thisWeek: 2, totalCapacity: 47 },
-      revenueGrowth: 10.5,
-    };
-  }
   try {
     const { data: classes, error } = await supabase.from("classes").select("*");
 
@@ -498,19 +426,13 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
 // ============================================================================
 
 export const searchClasses = async (query: string): Promise<Class[]> => {
-  if (isDev)
-    return mockClasses.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query.toLowerCase()) ||
-        c.description?.toLowerCase().includes(query.toLowerCase()),
-    );
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
@@ -528,17 +450,13 @@ export const getClassesByDateRange = async (
   startDate: string,
   endDate: string,
 ): Promise<Class[]> => {
-  if (isDev)
-    return mockClasses.filter(
-      (c) => c.start_time >= startDate && c.end_time <= endDate,
-    );
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .gte("start_time", startDate)
@@ -556,14 +474,13 @@ export const getClassesByDateRange = async (
 export const getClassesByTrainer = async (
   trainerId: string,
 ): Promise<Class[]> => {
-  if (isDev) return mockClasses.filter((c) => c.trainer_id === trainerId);
   try {
     const { data, error } = await supabase
       .from("classes")
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .eq("trainer_id", trainerId)
@@ -584,14 +501,6 @@ export const getClassesByTrainer = async (
 export const checkClassCapacity = async (
   classId: string,
 ): Promise<{ available: boolean; booked: number; capacity: number }> => {
-  if (isDev) {
-    const c = mockClasses.find((c) => c.id === classId);
-    const booked = mockBookings.filter(
-      (b) => b.class_id === classId && b.status === "booked",
-    ).length;
-    const capacity = c?.capacity || 0;
-    return { available: booked < capacity, booked, capacity };
-  }
   try {
     const { data: classData, error: classError } = await supabase
       .from("classes")
@@ -623,10 +532,6 @@ export const checkClassCapacity = async (
 export const getUpcomingClasses = async (
   limit: number = 10,
 ): Promise<Class[]> => {
-  if (isDev) {
-    const now = new Date().toISOString();
-    return mockClasses.filter((c) => c.start_time >= now).slice(0, limit);
-  }
   try {
     const now = new Date().toISOString();
 
@@ -635,7 +540,7 @@ export const getUpcomingClasses = async (
       .select(
         `
         *,
-        trainers!inner(name)
+        trainers(first_name, last_name, email)
       `,
       )
       .gte("start_time", now)

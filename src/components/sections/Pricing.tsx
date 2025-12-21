@@ -19,7 +19,7 @@ const Pricing: React.FC = () => {
         "Up to 500 members",
         "Basic analytics",
         "Email support",
-        "WhatsApp AI bot"
+        "WhatsApp Assistant bot"
       ],
       popular: false
     },

@@ -53,7 +53,7 @@ const KPICard: React.FC<KPICardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 ease-in-out">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-xl border ${getColorClasses(color)}`}>
           {icon}
@@ -72,7 +72,7 @@ const KPICard: React.FC<KPICardProps> = ({
   );
 };
 
-interface AIInsightProps {
+interface SmartInsightProps {
   icon: React.ReactNode;
   title: string;
   description: string;
@@ -81,7 +81,7 @@ interface AIInsightProps {
   value?: string;
 }
 
-const AIInsight: React.FC<AIInsightProps> = ({
+const SmartInsight: React.FC<SmartInsightProps> = ({
   icon,
   title,
   description,
@@ -163,7 +163,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
     },
   ];
 
-  const aiInsights = [
+  const smartInsights = [
     {
       icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
       title: "Peak Hour Optimization",
@@ -194,7 +194,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Smart Dashboard</h2>
-            <p className="text-gray-600">AI-powered insights for your gym</p>
+            <p className="text-gray-600">Smart-powered insights for your gym</p>
           </div>
         </div>
       </div>
@@ -213,7 +213,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
         ))}
       </div>
 
-      {/* AI Insights - Enhanced Single Column */}
+      {/* Smart Insights - Enhanced Single Column */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
@@ -223,14 +223,14 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           </div>
         </div>
         <div className="space-y-4">
-          {aiInsights.map((insight, index) => (
+          {smartInsights.map((insight, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.2, duration: 0.3 }}
             >
-              <AIInsight {...insight} />
+              <SmartInsight {...insight} />
             </motion.div>
           ))}
         </div>

@@ -134,8 +134,6 @@ export function NewInvoiceModal({
   onSave,
   invoice: editingInvoice,
 }: NewInvoiceModalProps) {
-  console.log("NewInvoiceModal rendered with isOpen:", isOpen);
-  console.log("Number of clients:", clients.length);
 
   // Invoice Details State
   const [invoiceData, setInvoiceData] = useState({

@@ -91,20 +91,24 @@ const NetworkStatus: React.FC = () => {
           setShowOfflineBanner(true);
         })
         .subscribe((status) => {
-          console.log("NetworkStatus subscription status:", status);
-          if (status === "CHANNEL_ERROR") {
-            console.error("NetworkStatus subscription error - retrying...");
-            // Retry after a delay
-            setTimeout(() => {
-              if (subscriptionRef.current) {
-                subscriptionRef.current.unsubscribe();
-                subscriptionRef.current = null;
-              }
-            }, 5000);
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            // Silently handle Realtime connection errors - don't spam console
+            // Realtime is optional for network status monitoring
+            if (subscriptionRef.current) {
+              subscriptionRef.current.unsubscribe();
+              subscriptionRef.current = null;
+            }
+          } else if (status === "SUBSCRIBED") {
+            setIsBackendHealthy(true);
+            setShowOfflineBanner(false);
           }
         });
     } catch (error) {
-      console.error("Failed to create subscription:", error);
+      // Silently handle Realtime subscription errors - it's optional
+      // The health check will still work via HTTP requests
+      if (import.meta.env.DEV) {
+        console.warn("Realtime subscription unavailable (optional feature):", error);
+      }
     }
 
     return () => {

@@ -32,7 +32,7 @@ export default function ClassOptimization(_props: Props) {
   const calculateOptimalSchedule = (): {
     recommendations: ScheduleRecommendation[];
   } => {
-    // This would typically call an AI service to optimize the schedule
+    // This would typically call an Assistant service to optimize the schedule
     // For now, we&apos;ll return mock data
     return {
       recommendations: [
@@ -115,13 +115,13 @@ export default function ClassOptimization(_props: Props) {
 
   return (
     <div className="space-y-8">
-      {/* AI Recommendations Summary */}
+      {/* Smart Recommendations Summary */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h2 className="text-xl font-semibold text-blue-900 mb-4">
           Smart-Powered Optimization Insights
         </h2>
         <p className="text-blue-700">
-          Our AI has analyzed your class data and member behavior to provide the
+          Our system has analyzed your class data and member behavior to provide the
           following recommendations for optimizing your class schedule and
           capacity.
         </p>

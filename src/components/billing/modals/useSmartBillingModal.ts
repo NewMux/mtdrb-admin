@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../../../supabaseClient";
 
 interface BillingData {
   memberId?: string;
@@ -16,7 +17,7 @@ interface ValidationResult {
   warnings: string[];
 }
 
-interface AISuggestion {
+interface SmartSuggestion {
   type: "pricing" | "payment" | "reminder" | "optimization";
   message: string;
   priority: "low" | "medium" | "high";
@@ -31,8 +32,32 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     errors: [],
     warnings: [],
   });
-  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
-  const [isProUser, setIsProUser] = useState(true); // Mock Pro user status
+  const [suggestions, setSuggestions] = useState<SmartSuggestion[]>([]);
+  // Get Pro user status from user profile/membership
+  const [isProUser, setIsProUser] = useState(false);
+  
+  useEffect(() => {
+    const checkProStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: membership } = await supabase
+          .from("memberships")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+
+        // Pro users are owners/admins/managers
+        const proRoles = ["owner", "admin", "manager"];
+        setIsProUser(proRoles.includes(membership?.role || ""));
+      } catch (error) {
+        console.error("Error checking Pro status:", error);
+        setIsProUser(false);
+      }
+    };
+    checkProStatus();
+  }, []);
 
   // VAT calculation
   const calculateVAT = (amount: number, vatRate: number = 15) => {
@@ -64,37 +89,93 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     return errors;
   };
 
-  // AI-powered suggestions
+  // Smart-powered suggestions using real data
   const generateSuggestions = async (context: string) => {
     setLoading(true);
 
-    // Simulate AI analysis
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Get tenant ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-    const mockSuggestions: AISuggestion[] = [
-      {
-        type: "pricing",
-        message:
-          "Similar services in your area average $75-85. Consider adjusting pricing.",
-        priority: "medium",
-        action: "Update pricing",
-      },
-      {
-        type: "payment",
-        message: "Member has 2 overdue invoices. Recommend payment plan.",
-        priority: "high",
-        action: "Setup payment plan",
-      },
-      {
-        type: "optimization",
-        message: "VAT rate should be 15% for this service type.",
-        priority: "low",
-        action: "Apply correct VAT",
-      },
-    ];
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
 
-    setSuggestions(mockSuggestions);
-    setLoading(false);
+      if (!membership?.tenant_id) {
+        setLoading(false);
+        return;
+      }
+
+      const realSuggestions: SmartSuggestion[] = [];
+
+      // Check for overdue invoices
+      if (context.includes("member") || context.includes("invoice")) {
+        const { data: invoices } = await supabase
+          .from("invoices")
+          .select("id, member_id, amount, status, due_date")
+          .eq("tenant_id", membership.tenant_id)
+          .eq("status", "unpaid")
+          .lt("due_date", new Date().toISOString().split("T")[0]);
+
+        if (invoices && invoices.length > 0) {
+          const overdueCount = invoices.length;
+          const totalOverdue = invoices.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+
+          realSuggestions.push({
+            id: "overdue-invoices",
+            type: "escalation",
+            title: "Overdue Invoices",
+            description: `${overdueCount} invoice(s) totaling ${totalOverdue.toFixed(2)} are overdue. Recommend payment plan.`,
+            confidence: 0.95,
+            impact: totalOverdue > 1000 ? "high" : "medium",
+            action: "Setup payment plan",
+            isPro: false,
+          });
+        }
+      }
+
+      // VAT rate suggestion (standard 15% for UAE)
+      if (context.includes("vat") || context.includes("tax")) {
+        realSuggestions.push({
+          id: "vat-rate",
+          type: "optimization",
+          title: "VAT Rate",
+          description: "VAT rate should be 15% for this service type in UAE.",
+          confidence: 1.0,
+          impact: "low",
+          action: "Apply correct VAT",
+          isPro: false,
+        });
+      }
+
+      // If no real suggestions, use basic defaults
+      if (realSuggestions.length === 0) {
+        realSuggestions.push({
+          id: "default-vat",
+          type: "optimization",
+          title: "VAT Rate",
+          description: "VAT rate should be 15% for this service type.",
+          confidence: 1.0,
+          impact: "low",
+          action: "Apply correct VAT",
+          isPro: false,
+        });
+      }
+
+      setSuggestions(realSuggestions);
+    } catch (error) {
+      console.error("Error generating suggestions:", error);
+      // Fallback to empty array on error
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Auto-calculate totals
@@ -110,19 +191,59 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     };
   };
 
-  // Smart defaults
-  const getSmartDefaults = (memberId?: string) => {
-    if (!memberId) return {};
+  // Smart defaults from real data
+  const getSmartDefaults = async (memberId?: string) => {
+    if (!memberId) {
+      return {
+        vatRate: 15, // Standard UAE VAT rate
+        currency: "AED",
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0], // 30 days from now
+        paymentTerms: "Net 30",
+      };
+    }
 
-    // Mock member data
-    return {
-      vatRate: 15,
-      currency: "AED",
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0], // 30 days from now
-      paymentTerms: "Net 30",
-    };
+    try {
+      // Get member data from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return {};
+
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!membership?.tenant_id) return {};
+
+      const { data: member } = await supabase
+        .from("members")
+        .select("id, membership_type")
+        .eq("id", memberId)
+        .eq("tenant_id", membership.tenant_id)
+        .single();
+
+      return {
+        vatRate: 15, // Standard UAE VAT rate
+        currency: "AED",
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        paymentTerms: "Net 30",
+        membershipType: member?.membership_type,
+      };
+    } catch (error) {
+      console.error("Error fetching member defaults:", error);
+      return {
+        vatRate: 15,
+        currency: "AED",
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        paymentTerms: "Net 30",
+      };
+    }
   };
 
   // Update data with validation
@@ -154,7 +275,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     });
   };
 
-  // Fetch related data
+  // Fetch related data from Supabase
   const fetchRelatedData = async (
     type: "member" | "invoice" | "plan",
     id?: string,
@@ -163,36 +284,83 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
 
     setLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return null;
+      }
 
-    const mockData = {
-      member: {
-        id,
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "+971501234567",
-        membershipType: "Premium",
-        outstandingBalance: 250,
-      },
-      invoice: {
-        id,
-        number: "INV-2024-001",
-        amount: 1500,
-        status: "pending",
-        dueDate: "2024-02-15",
-      },
-      plan: {
-        id,
-        name: "Premium Fitness",
-        price: 299,
-        duration: "monthly",
-        features: ["Gym Access", "Personal Training", "Classes"],
-      },
-    };
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
 
-    setLoading(false);
-    return mockData[type];
+      if (!membership?.tenant_id) {
+        setLoading(false);
+        return null;
+      }
+
+      if (type === "member") {
+        const { data: member } = await supabase
+          .from("members")
+          .select("id, first_name, last_name, email, phone, membership_type")
+          .eq("id", id)
+          .eq("tenant_id", membership.tenant_id)
+          .single();
+
+        if (member) {
+          // Calculate outstanding balance from unpaid invoices
+          const { data: unpaidInvoices } = await supabase
+            .from("invoices")
+            .select("amount")
+            .eq("member_id", id)
+            .eq("tenant_id", membership.tenant_id)
+            .eq("status", "unpaid");
+
+          const outstandingBalance = unpaidInvoices?.reduce(
+            (sum, inv) => sum + (Number(inv.amount) || 0),
+            0
+          ) || 0;
+
+          setLoading(false);
+          return {
+            id: member.id,
+            name: `${member.first_name} ${member.last_name}`,
+            email: member.email,
+            phone: member.phone,
+            membershipType: member.membership_type,
+            outstandingBalance,
+          };
+        }
+      } else if (type === "invoice") {
+        const { data: invoice } = await supabase
+          .from("invoices")
+          .select("*")
+          .eq("id", id)
+          .eq("tenant_id", membership.tenant_id)
+          .single();
+
+        if (invoice) {
+          setLoading(false);
+          return {
+            id: invoice.id,
+            number: invoice.invoice_number || `INV-${invoice.id.slice(0, 8)}`,
+            amount: Number(invoice.amount) || 0,
+            status: invoice.status,
+            dueDate: invoice.due_date,
+          };
+        }
+      }
+      // Plans would need a plans table - return null for now
+      setLoading(false);
+      return null;
+    } catch (error) {
+      console.error("Error fetching related data:", error);
+      setLoading(false);
+      return null;
+    }
   };
 
   return {

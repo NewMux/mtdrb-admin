@@ -121,7 +121,7 @@ export default function AddTrainerModal({
 
   return (
     <ColorfulModalUI
-      isOpen={isOpen}
+      open={isOpen}
       onClose={handleClose}
       title="Add New Trainer"
       subtitle="Create a new trainer profile with all necessary information"

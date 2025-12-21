@@ -17,7 +17,7 @@ export default function TablePageLayout({
 }: TablePageLayoutProps) {
   return (
     <div
-      className="min-h-screen w-full flex flex-col bg-gradient-to-br from-white via-blue-50 to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 font-sans antialiased text-blue-900 dark:text-blue-100"
+      className="min-h-screen w-full flex flex-col bg-gradient-to-br from-white via-blue-50 to-gray-100 font-sans antialiased text-blue-900"
       style={{
         fontFamily:
           "Inter, SF Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
@@ -25,7 +25,7 @@ export default function TablePageLayout({
     >
       <main className="flex-1 p-8 bg-transparent min-h-[calc(100vh-80px)]">
         <div
-          className="max-w-6xl mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-lg p-8 dark:shadow-lg"
+          className="max-w-6xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg p-8"
           style={{
             borderRadius: 12,
             boxShadow: "0 4px 24px 0 rgba(21,95,217,0.06)",
@@ -35,14 +35,14 @@ export default function TablePageLayout({
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
             <div>
               <h1
-                className="text-2xl font-semibold text-blue-900 dark:text-blue-100 mb-1 tracking-tight"
+                className="text-2xl font-semibold text-blue-900 mb-1 tracking-tight"
                 style={{ fontWeight: 500 }}
               >
                 {title}
               </h1>
               {description && (
                 <p
-                  className="text-gray-500 dark:text-gray-400 text-sm max-w-2xl"
+                  className="text-gray-500 text-sm max-w-2xl"
                   style={{ fontWeight: 400 }}
                 >
                   {description}

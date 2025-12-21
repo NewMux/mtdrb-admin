@@ -14,8 +14,8 @@ const WhatIsIdara: React.FC = () => {
     },
     {
       icon: FiMessageCircle,
-      title: "WhatsApp AI",
-      description: "24/7 AI assistant that handles member inquiries and bookings automatically."
+      title: "WhatsApp Assistant",
+      description: "24/7 Assistant that handles member inquiries and bookings automatically."
     },
     {
       icon: FiShield,

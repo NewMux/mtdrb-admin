@@ -169,7 +169,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <ColorfulModalUI
-          isOpen={isOpen}
+          open={isOpen}
           onClose={handleClose}
           title="Import Members"
           subtitle="Upload a CSV file to import multiple members at once"
@@ -178,13 +178,13 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
           <div className="space-y-6">
             {/* File Upload */}
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-gray-300border-gray-600 rounded-lg p-6 text-center">
                 <FiUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <div className="space-y-2">
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">
+                  <p className="text-lg font-medium text-gray-900text-white">
                     {file ? file.name : "Drop your CSV file here"}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500text-gray-400">
                     or click to browse
                   </p>
                   <input
@@ -196,7 +196,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                   />
                   <label
                     htmlFor="file-upload"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700text-gray-300 bg-whitebg-gray-800 hover:bg-gray-50hover:bg-gray-700 cursor-pointer"
                   >
                     Choose File
                   </label>
@@ -204,13 +204,13 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
               </div>
 
               {/* Template Download */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="bg-blue-50bg-blue-900/20 border border-blue-200border-blue-800 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    <h4 className="text-sm font-medium text-blue-800text-blue-200">
                       Need a template?
                     </h4>
-                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    <p className="text-xs text-blue-600text-blue-300 mt-1">
                       Download our CSV template with example data
                     </p>
                   </div>
@@ -228,14 +228,14 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
 
             {/* Errors */}
             {errors.length > 0 && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="bg-red-50bg-red-900/20 border border-red-200border-red-800 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <FiAlertCircle className="w-5 h-5 text-red-600text-red-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                    <h4 className="text-sm font-medium text-red-800text-red-200 mb-2">
                       Import Errors ({errors.length})
                     </h4>
-                    <ul className="space-y-1 text-xs text-red-700 dark:text-red-300">
+                    <ul className="space-y-1 text-xs text-red-700text-red-300">
                       {errors.map((error, index) => (
                         <li key={index} className="flex items-start space-x-2">
                           <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
@@ -252,7 +252,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
             {importedData.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900text-white">
                     Preview ({importedData.length} members)
                   </h3>
                   <SmartButton
@@ -265,45 +265,45 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                 </div>
 
                 {previewMode && (
-                  <div className="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="max-h-64 overflow-y-auto border border-gray-200border-gray-700 rounded-lg">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 dark:bg-gray-800">
+                      <thead className="bg-gray-50bg-gray-800">
                         <tr>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
                             Name
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
                             Email
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
                             Status
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
+                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
                             Type
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      <tbody className="divide-y divide-gray-200divide-gray-700">
                         {importedData.slice(0, 10).map((member, index) => (
-                          <tr key={index} className="bg-white dark:bg-gray-900">
-                            <td className="px-4 py-2 text-gray-900 dark:text-white">
+                          <tr key={index} className="bg-whitebg-gray-900">
+                            <td className="px-4 py-2 text-gray-900text-white">
                               {member.name}
                             </td>
-                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                            <td className="px-4 py-2 text-gray-600text-gray-400">
                               {member.email}
                             </td>
                             <td className="px-4 py-2">
                               <span
                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                   member.status === "active"
-                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
-                                    : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                                    ? "bg-emerald-100 text-emerald-800bg-emerald-900text-emerald-200"
+                                    : "bg-gray-100 text-gray-800bg-gray-900text-gray-200"
                                 }`}
                               >
                                 {member.status}
                               </span>
                             </td>
-                            <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                            <td className="px-4 py-2 text-gray-600text-gray-400">
                               {member.membershipType}
                             </td>
                           </tr>
@@ -311,17 +311,17 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                       </tbody>
                     </table>
                     {importedData.length > 10 && (
-                      <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+                      <div className="px-4 py-2 text-xs text-gray-500text-gray-400 text-center">
                         Showing first 10 of {importedData.length} members
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="bg-green-50bg-green-900/20 border border-green-200border-green-800 rounded-lg p-4">
                   <div className="flex items-center space-x-2">
-                    <FiCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                    <FiCheck className="w-5 h-5 text-green-600text-green-400" />
+                    <span className="text-sm font-medium text-green-800text-green-200">
                       {importedData.length} members ready to import
                     </span>
                   </div>
@@ -330,7 +330,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200border-gray-700">
               <SmartButton
                 variant="secondary"
                 onClick={handleClose}

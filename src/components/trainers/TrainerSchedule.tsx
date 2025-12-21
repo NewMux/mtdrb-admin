@@ -151,11 +151,9 @@ export default function TrainerSchedule() {
   };
 
   const handleEventClick = (event: Event) => {
-    console.log("Event clicked:", event);
   };
 
   const handleSelect = ({ start, end }: { start: Date; end: Date }) => {
-    console.log("Date range selected:", { start, end });
   };
 
   const eventStyleGetter = (event: Event) => {

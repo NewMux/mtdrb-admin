@@ -352,28 +352,28 @@ export default function ClassList({
       )}
       {/* Table/List */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-blue-100 dark:divide-gray-700">
+        <table className="min-w-full divide-y divide-blue-100">
           <thead>
-            <tr className="bg-blue-50 dark:bg-gray-700">
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+            <tr className="bg-blue-50">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Name
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Trainer
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Date/Time
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Capacity
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Booked
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
                 Status
               </th>
-              <th className="px-4 py-2 text-right text-xs font-semibold text-blue-500 dark:text-blue-300">
+              <th className="px-4 py-2 text-right text-xs font-semibold text-blue-500">
                 Actions
               </th>
             </tr>
@@ -383,7 +383,7 @@ export default function ClassList({
               <tr>
                 <td
                   colSpan={7}
-                  className="text-center py-8 text-blue-300 dark:text-blue-400"
+                  className="text-center py-8 text-blue-300"
                 >
                   No classes found.
                 </td>
@@ -394,7 +394,7 @@ export default function ClassList({
                   key={classItem.id}
                   ref={(el) => (rowRefs.current[i] = el)}
                   tabIndex={0}
-                  className={`hover:bg-blue-50 dark:hover:bg-gray-700/50 focus:bg-blue-100 dark:focus:bg-gray-600 transition cursor-pointer ${selectedClassId === classItem.id ? "bg-blue-100 dark:bg-gray-600 ring-2 ring-blue-300 dark:ring-blue-500" : ""}`}
+                  className={`hover:bg-blue-50 focus:bg-blue-100 transition cursor-pointer ${selectedClassId === classItem.id ? "bg-blue-100 ring-2 ring-blue-300" : ""}`}
                   onClick={(e) => {
                     if ((e.target as HTMLElement).closest("button")) return;
                     onView(classItem);
@@ -404,27 +404,27 @@ export default function ClassList({
                   }}
                   aria-selected={selectedClassId === classItem.id}
                 >
-                  <td className="px-4 py-3 font-medium text-blue-900 dark:text-blue-100">
+                  <td className="px-4 py-3 font-medium text-blue-900">
                     {classItem.name}
                   </td>
-                  <td className="px-4 py-3 text-blue-700 dark:text-blue-300">
+                  <td className="px-4 py-3 text-blue-700">
                     {classItem.trainer?.name || "-"}
                   </td>
-                  <td className="px-4 py-3 text-blue-700 dark:text-blue-300">
+                  <td className="px-4 py-3 text-blue-700">
                     {new Date(classItem.starttime).toLocaleString([], {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
                   </td>
-                  <td className="px-4 py-3 text-blue-700 dark:text-blue-300">
+                  <td className="px-4 py-3 text-blue-700">
                     {classItem.capacity ?? "∞"}
                   </td>
-                  <td className="px-4 py-3 text-blue-700 dark:text-blue-300">
+                  <td className="px-4 py-3 text-blue-700">
                     {classItem.bookedCount ?? 0}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${classItem.status === "active" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${classItem.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}
                     >
                       {classItem.status
                         ? classItem.status.charAt(0).toUpperCase() +

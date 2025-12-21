@@ -110,23 +110,23 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     <SmartBillingModal open={open} onClose={onClose}>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <FiDollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-green-100bg-green-900/20 rounded-lg">
+              <FiDollarSign className="w-5 h-5 text-green-600text-green-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-gray-900text-white">
                 Process Payment
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500text-gray-400">
                 Record and process member payment
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100hover:bg-gray-800 rounded-lg transition-colors"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -135,14 +135,14 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Payment Amount */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+          <div className="bg-gray-50bg-gray-800 rounded-lg p-4">
+            <h3 className="font-medium text-gray-900text-white mb-4 flex items-center">
               <FiBarChart2 className="w-4 h-4 mr-2" />
               Payment Details
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700text-gray-300 mb-2">
                   Payment Amount
                 </label>
                 <div className="relative">
@@ -155,18 +155,18 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                     onChange={(e) =>
                       handleAmountChange(parseFloat(e.target.value) || 0)
                     }
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparentbg-gray-700text-white"
                     placeholder="0.00"
                   />
                 </div>
               </div>
 
               {showBalanceCheck && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <div className="bg-yellow-50bg-yellow-900/10 border border-yellow-200border-yellow-800 rounded-lg p-3">
                   <div className="flex items-start space-x-2">
-                    <FiAlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <FiAlertTriangle className="w-4 h-4 text-yellow-600text-yellow-400 mt-0.5" />
                     <div>
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      <p className="text-sm text-yellow-800text-yellow-200">
                         Payment amount exceeds member's outstanding balance ($
                         {mockMemberBalance})
                       </p>
@@ -179,7 +179,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
 
           {/* Payment Method Selection */}
           <div>
-            <h3 className="font-medium text-gray-900 dark:text-white mb-4">
+            <h3 className="font-medium text-gray-900text-white mb-4">
               Payment Method
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -189,23 +189,23 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                   onClick={() => setSelectedMethod(method.id)}
                   className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     selectedMethod === method.id
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                      ? "border-green-500 bg-green-50bg-green-900/20"
+                      : "border-gray-200border-gray-600 hover:border-gray-300hover:border-gray-500"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                    <div className="p-2 bg-green-100bg-green-900/20 rounded-lg">
                       {method.icon}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 dark:text-white">
+                      <h4 className="font-medium text-gray-900text-white">
                         {method.name}
                       </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-gray-600text-gray-400">
                         {method.description}
                       </p>
                       {method.processingFee > 0 && (
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                        <p className="text-xs text-gray-500text-gray-500">
                           {method.processingFee}% processing fee
                         </p>
                       )}
@@ -214,7 +214,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                       className={`w-5 h-5 rounded-full border-2 ${
                         selectedMethod === method.id
                           ? "border-green-500 bg-green-500"
-                          : "border-gray-300 dark:border-gray-600"
+                          : "border-gray-300border-gray-600"
                       }`}
                     >
                       {selectedMethod === method.id && (
@@ -231,13 +231,13 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
 
           {/* Payment Summary */}
           {selectedMethod && (
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-3">
+            <div className="bg-blue-50bg-blue-900/10 border border-blue-200border-blue-800 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800text-blue-200 mb-3">
                 Payment Summary
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-blue-700 dark:text-blue-300">
+                  <span className="text-blue-700text-blue-300">
                     Payment Amount:
                   </span>
                   <span className="font-medium">
@@ -246,7 +246,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                 </div>
                 {processingFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-blue-700 dark:text-blue-300">
+                    <span className="text-blue-700text-blue-300">
                       Processing Fee ({processingFee}%):
                     </span>
                     <span className="font-medium">
@@ -254,9 +254,9 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-semibold border-t border-blue-200 dark:border-blue-700 pt-2">
+                <div className="flex justify-between text-lg font-semibold border-t border-blue-200border-blue-700 pt-2">
                   <span>Total:</span>
-                  <span className="text-blue-800 dark:text-blue-200">
+                  <span className="text-blue-800text-blue-200">
                     ${totalAmount.toFixed(2)}
                   </span>
                 </div>
@@ -267,45 +267,45 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
           {/* Additional Details */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700text-gray-300 mb-2">
                 Reference Number
               </label>
               <input
                 type="text"
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparentbg-gray-700text-white"
                 placeholder="Transaction reference or receipt number"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700text-gray-300 mb-2">
                 Notes
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparentbg-gray-700text-white"
                 placeholder="Add any additional notes about this payment..."
               />
             </div>
           </div>
 
-          {/* AI Suggestions for Pro Users */}
+          {/* Smart Suggestions for Pro Users */}
           {isProUser && (
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="bg-blue-50bg-blue-900/10 border border-blue-200border-blue-800 rounded-lg p-4">
               <div className="flex items-start space-x-3">
-                <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <FiShield className="w-5 h-5 text-blue-600text-blue-400 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-blue-800 dark:text-blue-200">
+                  <h3 className="font-medium text-blue-800text-blue-200">
                     Smart Payment Insights
                   </h3>
                   <div className="space-y-2 mt-2">
-                    <p className="text-sm text-blue-600 dark:text-blue-300">
+                    <p className="text-sm text-blue-600text-blue-300">
                       Member typically pays via card on weekdays between 2-4 PM.
                     </p>
-                    <p className="text-sm text-blue-600 dark:text-blue-300">
+                    <p className="text-sm text-blue-600text-blue-300">
                       Consider offering payment plan for amounts over $500.
                     </p>
                   </div>
@@ -316,15 +316,15 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-t border-gray-200border-gray-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="px-4 py-2 text-gray-700text-gray-300 hover:bg-gray-100hover:bg-gray-800 rounded-lg transition-colors"
           >
             Cancel
           </button>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
+            <button className="px-4 py-2 bg-gray-100bg-gray-700 hover:bg-gray-200hover:bg-gray-600 text-gray-700text-gray-300 rounded-lg transition-colors">
               Save Draft
             </button>
             <button

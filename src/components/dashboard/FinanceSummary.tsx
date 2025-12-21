@@ -47,9 +47,9 @@ const latestExpenses = [
 ];
 
 const LatestExpensesCard: React.FC = () => (
-  <div className="p-6 rounded-2xl shadow-sm gap-2 flex flex-col items-start bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 transition-colors duration-300 ease-in-out">
+  <div className="p-6 rounded-2xl shadow-sm gap-2 flex flex-col items-start bg-blue-50 text-blue-600 transition-colors duration-300 ease-in-out">
     <div className="flex items-center gap-3 mb-2">
-      <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950 dark:bg-opacity-80">
+      <div className="p-2 rounded-xl bg-blue-50">
         <FiAlertCircle />
       </div>
       <span className="text-sm font-medium opacity-80">Latest Expenses</span>
@@ -73,8 +73,8 @@ const LatestExpensesCard: React.FC = () => (
 
 const FinanceSummary: React.FC<{ role: string }> = () => (
   <section className="mb-8">
-    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-      <FiDollarSign className="text-green-500 dark:text-green-300" /> Finance
+    <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <FiDollarSign className="text-green-500" /> Finance
       Summary
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

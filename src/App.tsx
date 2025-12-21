@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,6 +17,8 @@ import { WorkoutPlansProvider } from "./contexts/WorkoutPlansContext";
 import { Toaster, toast } from "react-hot-toast";
 import NetworkStatus from "./components/NetworkStatus";
 import { checkSupabaseHealth } from "./supabaseClient";
+import { errorHandler } from "./services/errorHandler";
+import { ErrorContext } from "./services/errorHandler";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -35,7 +37,6 @@ import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import Plans from "./pages/Plans";
 import Tasks from "./pages/Tasks";
-import Promotions from "./pages/Promotions";
 import NotFound from "./pages/NotFound";
 import MemberModalsDemo from "./components/members/MemberModalsDemo";
 import ClassModalsDemo from "./components/classes/ClassModalsDemo";
@@ -43,6 +44,7 @@ import ClassModalsDemo from "./components/classes/ClassModalsDemo";
 // Components
 import Layout from "./components/Layout";
 import AuthSetup from "./components/AuthSetup";
+import PermissionGuard from "./components/auth/PermissionGuard";
 
 const App = () => {
   // Check Supabase connectivity on initial load
@@ -54,6 +56,58 @@ const App = () => {
         toast.error("Cannot reach backend");
       }
     });
+  }, []);
+
+  // Global async error handling
+  // React Error Boundaries don't catch async errors, so we need to handle them globally
+  useEffect(() => {
+    /**
+     * Handle unhandled promise rejections
+     * These occur when promises are rejected but no .catch() handler is attached
+     */
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Prevent default browser error logging
+      event.preventDefault();
+
+      // Process the error through our error handler
+      const error = event.reason;
+      errorHandler.processError(
+        error,
+        ErrorContext.GENERAL,
+        true, // Show toast notification
+      );
+
+      // Log to console in development
+      if (import.meta.env.DEV) {
+        console.error("Unhandled Promise Rejection:", error);
+      }
+    };
+
+    /**
+     * Handle uncaught errors in async code
+     * These occur when errors are thrown in async functions without try/catch
+     */
+    const handleError = (event: ErrorEvent) => {
+      // Only handle errors that aren't already handled by ErrorBoundary
+      // ErrorBoundary handles React component errors, so we focus on async errors
+      if (event.error && event.error instanceof Error) {
+        errorHandler.processError(
+          event.error,
+          ErrorContext.GENERAL,
+          true, // Show toast notification
+        );
+      }
+    };
+
+    // Register global error handlers
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    window.addEventListener("error", handleError);
+
+    // Cleanup: Remove event listeners on unmount
+    return () => {
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      window.removeEventListener("error", handleError);
+    };
   }, []);
 
   return (
@@ -124,18 +178,105 @@ const App = () => {
                           </AuthSetup>
                         }
                       >
-                        <Route index element={<Dashboard />} />
-                        <Route path="profile" element={<Profile />} />
-                        <Route path="members" element={<Members />} />
-                        <Route path="classes" element={<Classes />} />
-                        <Route path="trainers" element={<Trainers />} />
-                        <Route path="analytics" element={<Analytics />} />
-                        <Route path="reports" element={<Reports />} />
-                        <Route path="settings" element={<Settings />} />
-                        <Route path="billing" element={<Billing />} />
-                        <Route path="plans" element={<Plans />} />
-                        <Route path="tasks" element={<Tasks />} />
-                        <Route path="promotions" element={<Promotions />} />
+                        {/* Dashboard - accessible to all authenticated users */}
+                        <Route 
+                          index 
+                          element={
+                            <PermissionGuard requiredRole="staff" fallbackPath="/login">
+                              <Dashboard />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Profile - accessible to all authenticated users */}
+                        <Route 
+                          path="profile" 
+                          element={
+                            <PermissionGuard requiredRole="staff" fallbackPath="/dashboard">
+                              <Profile />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Members - requires manager or higher */}
+                        <Route 
+                          path="members" 
+                          element={
+                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                              <Members />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Classes - requires trainer or higher */}
+                        <Route 
+                          path="classes" 
+                          element={
+                            <PermissionGuard requiredRole="trainer" fallbackPath="/dashboard">
+                              <Classes />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Trainers - requires manager or higher */}
+                        <Route 
+                          path="trainers" 
+                          element={
+                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                              <Trainers />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Analytics - requires manager or higher */}
+                        <Route 
+                          path="analytics" 
+                          element={
+                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                              <Analytics />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Reports - requires manager or higher */}
+                        <Route 
+                          path="reports" 
+                          element={
+                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                              <Reports />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Settings - requires admin or higher */}
+                        <Route 
+                          path="settings" 
+                          element={
+                            <PermissionGuard requiredRole="admin" fallbackPath="/dashboard">
+                              <Settings />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Billing - requires manager or higher */}
+                        <Route 
+                          path="billing" 
+                          element={
+                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                              <Billing />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Plans - requires admin or higher */}
+                        <Route 
+                          path="plans" 
+                          element={
+                            <PermissionGuard requiredRole="admin" fallbackPath="/dashboard">
+                              <Plans />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Tasks - requires trainer or higher */}
+                        <Route 
+                          path="tasks" 
+                          element={
+                            <PermissionGuard requiredRole="trainer" fallbackPath="/dashboard">
+                              <Tasks />
+                            </PermissionGuard>
+                          } 
+                        />
                       </Route>
 
                       {/* Redirect root dashboard to /dashboard */}
@@ -174,12 +315,6 @@ const App = () => {
                       <Route
                         path="/tasks"
                         element={<Navigate to="/dashboard/tasks" replace />}
-                      />
-                      <Route
-                        path="/promotions"
-                        element={
-                          <Navigate to="/dashboard/promotions" replace />
-                        }
                       />
                       <Route
                         path="/profile"

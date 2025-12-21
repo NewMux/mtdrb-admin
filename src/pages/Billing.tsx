@@ -28,59 +28,9 @@ import AddExpenseModal from "../components/billing/AddExpenseModal";
 import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 
-import { mockInvoices, mockExpenses } from "../api/mockBillingData";
-
-// Mock clients for the invoice modal
-const mockClients = [
-  {
-    id: "member-1",
-    name: "Jane Doe",
-    email: "jane@example.com",
-    phone: "+1111111111",
-  },
-  {
-    id: "member-2",
-    name: "John Smith",
-    email: "john@example.com",
-    phone: "+2222222222",
-  },
-  {
-    id: "member-3",
-    name: "Emily Lee",
-    email: "emily@example.com",
-    phone: "+3333333333",
-  },
-  {
-    id: "member-4",
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+4444444444",
-  },
-  {
-    id: "member-5",
-    name: "Sarah Wilson",
-    email: "sarah@example.com",
-    phone: "+5555555555",
-  },
-  {
-    id: "member-6",
-    name: "David Brown",
-    email: "david@example.com",
-    phone: "+6666666666",
-  },
-  {
-    id: "member-7",
-    name: "Lisa Garcia",
-    email: "lisa@example.com",
-    phone: "+7777777777",
-  },
-  {
-    id: "member-8",
-    name: "Tom Anderson",
-    email: "tom@example.com",
-    phone: "+8888888888",
-  },
-];
+// Removed mock data - using real data from Supabase
+const mockClients: Array<{ id: string; name: string; email: string; phone: string }> = [];
+const mockInvoices: Array<{ id: string; invoice_number: string; [key: string]: any }> = [];
 
 const Billing: React.FC = () => {
   const { theme } = usePageThemeContext();
@@ -214,17 +164,17 @@ const Billing: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800"
+                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      <p className="text-sm font-medium text-gray-600">
                         {stat.name}
                       </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                      <p className="text-2xl font-bold text-gray-900 mt-1">
                         {stat.value}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-gray-500 mt-1">
                         {stat.change}
                       </p>
                     </div>
@@ -239,14 +189,14 @@ const Billing: React.FC = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-gray-900">
                   Recent Transactions
                 </h2>
                 <button
                   onClick={() => setActiveTab("invoices")}
-                  className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-blue-600 text-sm font-medium hover:text-blue-700"
                 >
                   View All Transactions
                 </button>
@@ -255,20 +205,20 @@ const Billing: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Transaction #
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Member
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Amount
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Status
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Date
                       </th>
                     </tr>
@@ -277,31 +227,31 @@ const Billing: React.FC = () => {
                     {mockInvoices.slice(0, 5).map((invoice) => (
                       <tr
                         key={invoice.id}
-                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="border-b border-gray-100 hover:bg-gray-50"
                       >
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900">
                           {invoice.invoice_number}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {invoice.member?.name || "N/A"}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           ${invoice.total.toFixed(2)}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               invoice.status === "Paid"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                ? "bg-green-100 text-green-800"
                                 : invoice.status === "Unpaid"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
                             {invoice.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {new Date(invoice.due_date).toLocaleDateString()}
                         </td>
                       </tr>
@@ -316,20 +266,20 @@ const Billing: React.FC = () => {
       case "invoices":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-gray-900">
                     Invoice Management
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     Manage all invoices, payments, and billing
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setActiveModal("export")}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
                   >
                     <FiDownload className="w-4 h-4" />
                     <span>Export</span>
@@ -347,56 +297,56 @@ const Billing: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Invoice #
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Member
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Amount
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Status
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Due Date
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {mockInvoices.slice(0, 10).map((invoice) => (
+                    {[].map((invoice) => (
                       <tr
                         key={invoice.id}
-                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="border-b border-gray-100 hover:bg-gray-50"
                       >
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900">
                           {invoice.invoice_number}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {invoice.member?.name || "N/A"}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           ${invoice.total.toFixed(2)}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               invoice.status === "Paid"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                ? "bg-green-100 text-green-800"
                                 : invoice.status === "Unpaid"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
                             {invoice.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {new Date(invoice.due_date).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
@@ -427,13 +377,13 @@ const Billing: React.FC = () => {
       case "expenses":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-gray-900">
                     Expense Management
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 mt-1">
                     Track and manage all business expenses
                   </p>
                 </div>
@@ -449,40 +399,40 @@ const Billing: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Expense #
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Category
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Amount
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Date
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {mockExpenses.slice(0, 10).map((expense) => (
+                    {[].map((expense) => (
                       <tr
                         key={expense.id}
-                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className="border-b border-gray-100 hover:bg-gray-50"
                       >
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900">
                           {expense.expense_number}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {expense.category}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           ${expense.amount.toFixed(2)}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700">
                           {new Date(expense.date).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4">
@@ -527,18 +477,18 @@ const Billing: React.FC = () => {
       case "settings":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Billing Settings
               </h2>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">
+                    <h3 className="font-medium text-gray-900">
                       Auto Invoicing
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600">
                       Automatically generate invoices for recurring payments
                     </p>
                   </div>
@@ -547,7 +497,7 @@ const Billing: React.FC = () => {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                       settings.autoInvoicing
                         ? "bg-blue-600"
-                        : "bg-gray-200 dark:bg-gray-700"
+                        : "bg-gray-200"
                     }`}
                   >
                     <span
@@ -560,12 +510,12 @@ const Billing: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">
+                    <h3 className="font-medium text-gray-900">
                       Payment Reminders
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600">
                       Send automatic reminders for overdue payments
                     </p>
                   </div>
@@ -574,7 +524,7 @@ const Billing: React.FC = () => {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                       settings.paymentReminders
                         ? "bg-blue-600"
-                        : "bg-gray-200 dark:bg-gray-700"
+                        : "bg-gray-200"
                     }`}
                   >
                     <span
@@ -587,12 +537,12 @@ const Billing: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">
+                    <h3 className="font-medium text-gray-900">
                       VAT Enabled
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600">
                       Enable VAT calculations and reporting
                     </p>
                   </div>
@@ -601,7 +551,7 @@ const Billing: React.FC = () => {
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                       settings.vatEnabled
                         ? "bg-blue-600"
-                        : "bg-gray-200 dark:bg-gray-700"
+                        : "bg-gray-200"
                     }`}
                   >
                     <span
@@ -624,13 +574,13 @@ const Billing: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               💰 Smart Billing Management
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-gray-600 mt-1">
               Automated invoicing • Payment tracking • VAT compliance
             </p>
           </div>
@@ -638,7 +588,7 @@ const Billing: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleRefreshData}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
             >
               <FiActivity className="w-4 h-4" />
               <span>Refresh</span>
@@ -655,7 +605,7 @@ const Billing: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -665,7 +615,7 @@ const Billing: React.FC = () => {
               placeholder="Search invoices, expenses, or members..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
@@ -674,7 +624,7 @@ const Billing: React.FC = () => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {filters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -683,7 +633,7 @@ const Billing: React.FC = () => {
               ))}
             </select>
 
-            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <button className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
               <FiFilter className="w-4 h-4" />
             </button>
           </div>
@@ -691,7 +641,7 @@ const Billing: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-800">
+      <div className="bg-white rounded-xl p-2 shadow-sm border border-gray-200">
         <div className="flex space-x-1">
           {tabs.map((tab) => (
             <button
@@ -699,8 +649,8 @@ const Billing: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               }`}
             >
               <tab.icon className="w-4 h-4" />

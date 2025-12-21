@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   FiZap,
   FiTrendingUp,
-  FiUsers,
-  FiDollarSign,
-  FiCalendar,
-  FiTarget,
   FiAlertCircle,
   FiCheckCircle,
 } from "react-icons/fi";
@@ -22,7 +18,7 @@ interface Insight {
   category: string;
 }
 
-interface AIInsightsProps {
+interface SmartInsightsProps {
   insights: Insight[];
   onActionClick: (id: string, action: string) => void;
 }
@@ -113,7 +109,7 @@ const InsightCard = ({
   );
 };
 
-const AskAIModal = ({
+const AskAssistantModal = ({
   isOpen,
   onClose,
   onSubmit,
@@ -163,7 +159,7 @@ const AskAIModal = ({
             className="flex-1"
             disabled={!question.trim()}
           >
-            Ask AI
+            Ask Assistant
           </SmartButton>
         </div>
       </motion.div>
@@ -171,53 +167,25 @@ const AskAIModal = ({
   );
 };
 
-export default function AIInsights({
+export default function SmartInsights({
   insights,
   onActionClick,
-}: AIInsightsProps) {
+}: SmartInsightsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [aiResponse, setAiResponse] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAskAI = async (question: string) => {
-    setIsLoading(true);
+  const handleAskAssistant = async (question: string) => {
     try {
-      // Simulate AI API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Mock AI response based on question
-      let response = "";
-      if (question.toLowerCase().includes("revenue")) {
-        response =
-          "Based on your revenue data, I can see a 12.5% increase this month. The main drivers are increased membership signups and higher average transaction values. Consider focusing on retention strategies to maintain this growth.";
-      } else if (question.toLowerCase().includes("member")) {
-        response =
-          "Your member analytics show 18 at-risk members who haven't attended in 2+ weeks. I recommend sending personalized re-engagement campaigns and offering special incentives to bring them back.";
-      } else if (question.toLowerCase().includes("class")) {
-        response =
-          "Class attendance is at 85% average, which is good. However, evening classes (6-8 PM) are consistently full. Consider adding more sessions during peak hours to maximize capacity utilization.";
-      } else {
-        response =
-          "I've analyzed your gym's performance data. Overall, you're showing positive trends with room for optimization. Would you like me to dive deeper into any specific area?";
-      }
-
-      setAiResponse(response);
-      console.log("AI Question:", question);
-      console.log("AI Response:", response);
+      // TODO: Implement real assistant API call when backend is ready
+      // Placeholder for future implementation
     } catch (error) {
-      console.error("AI query failed:", error);
-      setAiResponse(
-        "Sorry, I encountered an error processing your question. Please try again.",
-      );
-    } finally {
-      setIsLoading(false);
+      console.error("Error asking assistant:", error);
     }
   };
 
   // Add null/undefined check
   if (!insights || !Array.isArray(insights)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -238,7 +206,7 @@ export default function AIInsights({
             onClick={() => setIsModalOpen(true)}
             icon={<FiZap className="w-4 h-4" />}
           >
-            Ask AI
+            Ask Assistant
           </SmartButton>
         </div>
 
@@ -266,17 +234,17 @@ export default function AIInsights({
           ))}
         </div>
 
-        <AskAIModal
+        <AskAssistantModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={handleAskAI}
+          onSubmit={handleAskAssistant}
         />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">
@@ -297,7 +265,7 @@ export default function AIInsights({
           onClick={() => setIsModalOpen(true)}
           icon={<FiZap className="w-4 h-4" />}
         >
-          Ask AI
+          Ask Assistant
         </SmartButton>
       </div>
 
@@ -314,10 +282,10 @@ export default function AIInsights({
         ))}
       </div>
 
-      <AskAIModal
+      <AskAssistantModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAskAI}
+        onSubmit={handleAskAssistant}
       />
     </div>
   );
