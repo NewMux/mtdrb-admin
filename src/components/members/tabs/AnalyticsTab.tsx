@@ -1205,8 +1205,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       for (let i = 3; i >= 0; i--) {
         const monthDate = now.subtract(i, "months");
-        const monthStart = monthDate.startOf("month").toDate();
-        const monthEnd = monthDate.endOf("month").toDate();
+        const monthStart = new Date(monthDate.year(), monthDate.month(), 1);
+        const monthEnd = new Date(monthDate.year(), monthDate.month() + 1, 0, 23, 59, 59, 999);
         const monthName = monthDate.format("MMM");
 
         // Active members at end of month
