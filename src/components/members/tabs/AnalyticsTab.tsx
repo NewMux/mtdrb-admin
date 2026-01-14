@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiTrendingUp,
@@ -33,6 +33,8 @@ import {
   FiHeart,
   FiShield,
 } from "react-icons/fi";
+import { supabase } from "../../../supabaseClient";
+import dayjs from "dayjs";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -140,7 +142,7 @@ const mockAnalyticsData = {
 const AnalyticsFilters: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
-    branch: [],
+    branch: "all",
     membershipType: "all",
     joinDateRange: "last30days",
     gender: "all",
@@ -287,8 +289,17 @@ const AnalyticsFilters: React.FC = () => {
 };
 
 // Overview Cards Component
-const OverviewCards: React.FC = () => {
-  const { overview } = mockAnalyticsData;
+interface OverviewCardsProps {
+  overview: {
+    activeMembers: number;
+    newThisPeriod: number;
+    churnedThisPeriod: number;
+    avgRetentionRate: number;
+  };
+  loading?: boolean;
+}
+
+const OverviewCards: React.FC<OverviewCardsProps> = ({ overview, loading }) => {
 
   const cards = [
     {
@@ -369,8 +380,16 @@ const OverviewCards: React.FC = () => {
 };
 
 // Engagement Cards Component
-const EngagementCards: React.FC = () => {
-  const { engagement } = mockAnalyticsData;
+interface EngagementCardsProps {
+  engagement: {
+    sessionsBooked: number;
+    avgSessionsPerMember: number;
+    topClasses: Array<{ name: string; sessions: number }>;
+  };
+  loading?: boolean;
+}
+
+const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement, loading }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -448,8 +467,16 @@ const EngagementCards: React.FC = () => {
 };
 
 // Demographic Cards Component with Modern Charts
-const DemographicCards: React.FC = () => {
-  const { demographics } = mockAnalyticsData;
+interface DemographicCardsProps {
+  demographics: {
+    genderSplit: Array<{ gender: string; count: number; percentage: number }>;
+    ageDistribution: Array<{ range: string; count: number }>;
+    membershipTypes: Array<{ type: string; count: number; percentage: number }>;
+  };
+  loading?: boolean;
+}
+
+const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loading }) => {
 
   // Gender Split Chart Data
   const genderChartData = {
@@ -588,8 +615,18 @@ const DemographicCards: React.FC = () => {
 };
 
 // Risk & Opportunity Cards Component
-const RiskOpportunityCards: React.FC = () => {
-  const { riskOpportunity } = mockAnalyticsData;
+interface RiskOpportunityCardsProps {
+  riskOpportunity: {
+    inactiveMembers: number;
+    almostChurned: number;
+    highValue: number;
+    referralActive: number;
+    unengagedNew: number;
+  };
+  loading?: boolean;
+}
+
+const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportunity, loading }) => {
 
   const cards = [
     {
@@ -667,8 +704,16 @@ const RiskOpportunityCards: React.FC = () => {
 };
 
 // Revenue Cards Component
-const RevenueCards: React.FC = () => {
-  const { revenue } = mockAnalyticsData;
+interface RevenueCardsProps {
+  revenue: {
+    totalRevenue: number;
+    avgRevenuePerMember: number;
+    estimatedLTV: number;
+  };
+  loading?: boolean;
+}
+
+const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -739,8 +784,16 @@ const RevenueCards: React.FC = () => {
 };
 
 // Modern Charts Component
-const AnalyticsCharts: React.FC = () => {
-  const { charts } = mockAnalyticsData;
+interface AnalyticsChartsProps {
+  charts: {
+    memberGrowth: Array<{ month: string; active: number }>;
+    churnTrend: Array<{ month: string; churned: number }>;
+    revenueTrend: Array<{ month: string; revenue: number }>;
+  };
+  loading?: boolean;
+}
+
+const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) => {
 
   // Member Growth Chart
   const memberGrowthData = {
@@ -877,25 +930,388 @@ interface AnalyticsTabProps {
   members: any[];
   stats: any;
   onFilterMembers?: (filter: any) => void;
+  refreshKey?: number;
+}
+
+interface AnalyticsData {
+  overview: {
+    activeMembers: number;
+    newThisPeriod: number;
+    churnedThisPeriod: number;
+    avgRetentionRate: number;
+  };
+  engagement: {
+    sessionsBooked: number;
+    avgSessionsPerMember: number;
+    topClasses: Array<{ name: string; sessions: number }>;
+  };
+  demographics: {
+    genderSplit: Array<{ gender: string; count: number; percentage: number }>;
+    ageDistribution: Array<{ range: string; count: number }>;
+    membershipTypes: Array<{ type: string; count: number; percentage: number }>;
+  };
+  riskOpportunity: {
+    inactiveMembers: number;
+    almostChurned: number;
+    highValue: number;
+    referralActive: number;
+    unengagedNew: number;
+  };
+  revenue: {
+    totalRevenue: number;
+    avgRevenuePerMember: number;
+    estimatedLTV: number;
+  };
+  charts: {
+    memberGrowth: Array<{ month: string; active: number }>;
+    churnTrend: Array<{ month: string; churned: number }>;
+    revenueTrend: Array<{ month: string; revenue: number }>;
+  };
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   members,
   stats,
   onFilterMembers,
+  refreshKey = 0,
 }) => {
-  const [analyticsData, setAnalyticsData] = useState(mockAnalyticsData);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAnalyticsData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setError("User not authenticated");
+        return;
+      }
+
+      // Get tenant_id
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (!tenantId) {
+        setError("Tenant ID not found");
+        return;
+      }
+
+      const formatDate = (date: Date) => date.toISOString().split("T")[0];
+      const now = dayjs();
+      const periodStart = now.subtract(30, "days").toDate();
+      const periodEnd = now.toDate();
+
+      // Fetch all necessary data in parallel
+      const [
+        allMembersResult,
+        newMembersResult,
+        bookingsResult,
+        classesResult,
+        invoicesResult,
+      ] = await Promise.all([
+        // All members
+        supabase
+          .from("members")
+          .select("id, status, created_at, join_date, expiry_date, membership_type, metadata")
+          .eq("tenant_id", tenantId),
+        // New members this period
+        supabase
+          .from("members")
+          .select("id, status, created_at, join_date")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(periodStart))
+          .lte("created_at", formatDate(periodEnd)),
+        // Bookings
+        supabase
+          .from("class_bookings")
+          .select("id, class_id, member_id, created_at, status")
+          .eq("tenant_id", tenantId)
+          .in("status", ["booked", "checked_in", "completed"]),
+        // Classes with names
+        supabase
+          .from("classes")
+          .select("id, name")
+          .eq("tenant_id", tenantId),
+        // Invoices for revenue
+        supabase
+          .from("invoices")
+          .select("amount, created_at, status")
+          .eq("tenant_id", tenantId)
+          .eq("status", "paid"),
+      ]);
+
+      const allMembers = allMembersResult.data || [];
+      const newMembers = newMembersResult.data || [];
+      const bookings = bookingsResult.data || [];
+      const classes = classesResult.data || [];
+      const invoices = invoicesResult.data || [];
+
+      // Calculate overview metrics
+      const activeMembers = allMembers.filter(
+        (m) => m.status === "active" || m.status === "Active"
+      ).length;
+
+      const newThisPeriod = newMembers.length;
+
+      // Calculate churned (members who became inactive this period)
+      // This is a simplification - ideally track status changes
+      const churnedThisPeriod = allMembers.filter((m) => {
+        if (m.status !== "inactive") return false;
+        const expiryDate = m.expiry_date ? dayjs(m.expiry_date) : null;
+        if (expiryDate && expiryDate.isAfter(dayjs(periodStart)) && expiryDate.isBefore(dayjs(periodEnd))) {
+          return true;
+        }
+        return false;
+      }).length;
+
+      // Calculate retention rate
+      const totalMembers = allMembers.length;
+      const retainedMembers = allMembers.filter((m) => {
+        if (m.status === "inactive") return false;
+        const expiryDate = m.expiry_date ? dayjs(m.expiry_date) : null;
+        if (expiryDate && expiryDate.isBefore(now)) return false;
+        return true;
+      }).length;
+      const avgRetentionRate = totalMembers > 0 ? (retainedMembers / totalMembers) * 100 : 0;
+
+      // Calculate engagement metrics
+      const sessionsBooked = bookings.length;
+      const avgSessionsPerMember = activeMembers > 0 ? sessionsBooked / activeMembers : 0;
+
+      // Calculate top classes
+      const classMap = new Map(classes.map((c) => [c.id, c.name]));
+      const classBookingsCount = new Map<string, number>();
+      bookings.forEach((booking) => {
+        const className = classMap.get(booking.class_id) || "Unknown";
+        classBookingsCount.set(className, (classBookingsCount.get(className) || 0) + 1);
+      });
+      const topClasses = Array.from(classBookingsCount.entries())
+        .map(([name, sessions]) => ({ name, sessions }))
+        .sort((a, b) => b.sessions - a.sessions)
+        .slice(0, 3);
+
+      // Calculate demographics
+      const genderCounts = new Map<string, number>();
+      const ageRanges = {
+        "18-24": 0,
+        "25-34": 0,
+        "35-44": 0,
+        "45-54": 0,
+        "55+": 0,
+      };
+      const membershipTypeCounts = new Map<string, number>();
+
+      allMembers.forEach((member) => {
+        // Gender from metadata
+        const gender = (member.metadata as any)?.gender || "Other";
+        genderCounts.set(gender, (genderCounts.get(gender) || 0) + 1);
+
+        // Age from metadata or calculate from join_date
+        const age = (member.metadata as any)?.age;
+        if (age) {
+          if (age >= 18 && age <= 24) ageRanges["18-24"]++;
+          else if (age >= 25 && age <= 34) ageRanges["25-34"]++;
+          else if (age >= 35 && age <= 44) ageRanges["35-44"]++;
+          else if (age >= 45 && age <= 54) ageRanges["45-54"]++;
+          else if (age >= 55) ageRanges["55+"]++;
+        }
+
+        // Membership type
+        const membershipType = member.membership_type || "Monthly";
+        membershipTypeCounts.set(membershipType, (membershipTypeCounts.get(membershipType) || 0) + 1);
+      });
+
+      const totalForGender = Array.from(genderCounts.values()).reduce((a, b) => a + b, 0);
+      const genderSplit = Array.from(genderCounts.entries()).map(([gender, count]) => ({
+        gender,
+        count,
+        percentage: totalForGender > 0 ? Math.round((count / totalForGender) * 100) : 0,
+      }));
+
+      const ageDistribution = Object.entries(ageRanges).map(([range, count]) => ({
+        range,
+        count,
+      }));
+
+      const totalForMembership = Array.from(membershipTypeCounts.values()).reduce((a, b) => a + b, 0);
+      const membershipTypes = Array.from(membershipTypeCounts.entries()).map(([type, count]) => ({
+        type,
+        count,
+        percentage: totalForMembership > 0 ? Math.round((count / totalForMembership) * 100) : 0,
+      }));
+
+      // Calculate risk & opportunity
+      const fourteenDaysAgo = now.subtract(14, "days");
+      const inactiveMembers = allMembers.filter((m) => {
+        if (m.status === "inactive") return true;
+        const lastCheckIn = (m.metadata as any)?.last_check_in;
+        if (lastCheckIn && dayjs(lastCheckIn).isBefore(fourteenDaysAgo)) return true;
+        return false;
+      }).length;
+
+      const sevenDaysFromNow = now.add(7, "days");
+      const almostChurned = allMembers.filter((m) => {
+        const expiryDate = m.expiry_date ? dayjs(m.expiry_date) : null;
+        if (!expiryDate) return false;
+        return expiryDate.isBefore(sevenDaysFromNow) && expiryDate.isAfter(now);
+      }).length;
+
+      // High value: members with 4+ sessions/week (simplified)
+      const highValue = Math.floor(activeMembers * 0.1); // 10% of active members
+
+      // Referral active (from metadata)
+      const referralActive = allMembers.filter((m) => {
+        const referrals = (m.metadata as any)?.referrals || [];
+        return referrals.length > 0;
+      }).length;
+
+      // Unengaged new: joined 30 days ago, ≤1 session
+      const thirtyDaysAgo = now.subtract(30, "days");
+      const unengagedNew = allMembers.filter((m) => {
+        const joinDate = m.join_date ? dayjs(m.join_date) : dayjs(m.created_at);
+        if (!joinDate.isAfter(thirtyDaysAgo)) return false;
+        const memberBookings = bookings.filter((b) => b.member_id === m.id);
+        return memberBookings.length <= 1;
+      }).length;
+
+      // Calculate revenue
+      const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+      const avgRevenuePerMember = activeMembers > 0 ? totalRevenue / activeMembers : 0;
+      // Estimated LTV: average monthly revenue * 12 months
+      const estimatedLTV = avgRevenuePerMember * 12;
+
+      // Calculate chart data (last 4 months)
+      const chartData: {
+        memberGrowth: Array<{ month: string; active: number }>;
+        churnTrend: Array<{ month: string; churned: number }>;
+        revenueTrend: Array<{ month: string; revenue: number }>;
+      } = {
+        memberGrowth: [],
+        churnTrend: [],
+        revenueTrend: [],
+      };
+
+      for (let i = 3; i >= 0; i--) {
+        const monthDate = now.subtract(i, "months");
+        const monthStart = monthDate.startOf("month").toDate();
+        const monthEnd = monthDate.endOf("month").toDate();
+        const monthName = monthDate.format("MMM");
+
+        // Active members at end of month
+        const activeAtMonthEnd = allMembers.filter((m) => {
+          const joinDate = m.join_date ? dayjs(m.join_date) : dayjs(m.created_at);
+          return joinDate.isBefore(monthEnd) && (m.status === "active" || m.status === "Active");
+        }).length;
+
+        // Churned in month
+        const churnedInMonth = allMembers.filter((m) => {
+          if (m.status !== "inactive") return false;
+          const expiryDate = m.expiry_date ? dayjs(m.expiry_date) : null;
+          if (!expiryDate) return false;
+          return expiryDate.isAfter(monthStart) && expiryDate.isBefore(monthEnd);
+        }).length;
+
+        // Revenue in month
+        const revenueInMonth = invoices
+          .filter((inv) => {
+            const invDate = dayjs(inv.created_at);
+            return invDate.isAfter(monthStart) && invDate.isBefore(monthEnd);
+          })
+          .reduce((sum, inv) => sum + (inv.amount || 0), 0);
+
+        chartData.memberGrowth.push({ month: monthName, active: activeAtMonthEnd });
+        chartData.churnTrend.push({ month: monthName, churned: churnedInMonth });
+        chartData.revenueTrend.push({ month: monthName, revenue: revenueInMonth });
+      }
+
+      const data: AnalyticsData = {
+        overview: {
+          activeMembers,
+          newThisPeriod,
+          churnedThisPeriod,
+          avgRetentionRate: Math.round(avgRetentionRate * 10) / 10,
+        },
+        engagement: {
+          sessionsBooked,
+          avgSessionsPerMember: Math.round(avgSessionsPerMember * 10) / 10,
+          topClasses,
+        },
+        demographics: {
+          genderSplit,
+          ageDistribution,
+          membershipTypes,
+        },
+        riskOpportunity: {
+          inactiveMembers,
+          almostChurned,
+          highValue,
+          referralActive,
+          unengagedNew,
+        },
+        revenue: {
+          totalRevenue: Math.round(totalRevenue),
+          avgRevenuePerMember: Math.round(avgRevenuePerMember * 10) / 10,
+          estimatedLTV: Math.round(estimatedLTV),
+        },
+        charts: chartData,
+      };
+
+      setAnalyticsData(data);
+    } catch (err) {
+      console.error("Error fetching analytics data:", err);
+      setError("Failed to load analytics data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // In a real app, this would fetch data from an API
-    const fetchAnalyticsData = async () => {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setAnalyticsData(mockAnalyticsData);
-    };
-
     fetchAnalyticsData();
-  }, []);
+  }, [fetchAnalyticsData, refreshKey]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center gap-4">
+          <FiRefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-gray-600">Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center gap-4">
+          <FiAlertCircle className="w-8 h-8 text-red-600" />
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => fetchAnalyticsData()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analyticsData) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -905,19 +1321,19 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       {/* Overview Cards */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">🎯 Overview</h2>
-        <OverviewCards />
+        <OverviewCards overview={analyticsData.overview} loading={loading} />
       </div>
 
       {/* Engagement Cards */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">📊 Engagement</h2>
-        <EngagementCards />
+        <EngagementCards engagement={analyticsData.engagement} loading={loading} />
       </div>
 
       {/* Demographic Cards */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">👥 Demographics</h2>
-        <DemographicCards />
+        <DemographicCards demographics={analyticsData.demographics} loading={loading} />
       </div>
 
       {/* Risk & Opportunity Cards */}
@@ -925,19 +1341,19 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         <h2 className="text-xl font-semibold text-gray-900">
           ⚠️ Risk & Opportunity
         </h2>
-        <RiskOpportunityCards />
+        <RiskOpportunityCards riskOpportunity={analyticsData.riskOpportunity} loading={loading} />
       </div>
 
       {/* Revenue Cards */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">💰 Revenue</h2>
-        <RevenueCards />
+        <RevenueCards revenue={analyticsData.revenue} loading={loading} />
       </div>
 
       {/* Charts */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">📈 Charts</h2>
-        <AnalyticsCharts />
+        <AnalyticsCharts charts={analyticsData.charts} loading={loading} />
       </div>
     </div>
   );

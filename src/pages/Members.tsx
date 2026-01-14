@@ -467,6 +467,7 @@ const Members: React.FC = () => {
             <AnalyticsTab
               members={convertedMembers}
               stats={stats}
+              refreshKey={refreshKey}
               onFilterMembers={(filter) => {
                 // Handle filter logic here
               }}
