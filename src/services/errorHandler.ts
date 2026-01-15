@@ -130,7 +130,7 @@ class ErrorHandler {
     );
   }
 
-  private isNetworkError(error: unknown): boolean {
+  private isNetworkError(error: unknown): error is Error {
     return (
       error instanceof Error &&
       (error.message.includes("fetch") ||
@@ -264,7 +264,7 @@ class ErrorHandler {
     });
 
     // Log to external service in production
-    if (process.env.NODE_ENV === "production") {
+    if (import.meta.env.PROD) {
       // Send to logging service (e.g., Sentry, LogRocket, etc.)
       this.sendToLoggingService(error);
     }

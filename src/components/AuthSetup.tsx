@@ -19,11 +19,6 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
     }
     hasRunRef.current = true;
 
-    // TEMPORARY: Bypass setup for immediate dashboard access
-    setIsSetupComplete(true);
-    setIsLoading(false);
-    return;
-
     // Add a timeout to detect if setup is stuck
     const timeoutId = setTimeout(() => {
       console.error(
@@ -139,12 +134,13 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
 
         // User doesn&apos;t have membership, create one
         // First, check if there&apos;s an existing tenant or create one
-        let { data: tenantData, error: tenantError } = await supabase
+        const { data: initialTenantData, error: tenantError } = await supabase
           .from("tenants")
           .select("id, name")
           .limit(1)
           .single();
 
+        let tenantData = initialTenantData;
         if (tenantError && tenantError.code !== "PGRST116") {
           console.error("Error checking tenants:", tenantError);
           throw new Error(
@@ -174,7 +170,7 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
         }
 
         // Create membership for the user
-        const { data: newMembership, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("memberships")
           .insert({
             user_id: user.id,

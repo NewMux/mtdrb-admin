@@ -155,7 +155,7 @@ export const LANDING_CONTENT = {
         features: [
           "All core features",
           "Single location",
-          "Up to 500 members",
+          "+$20 USD per extra location",
           "Basic analytics",
           "Email support",
           "WhatsApp Assistant bot",
@@ -170,7 +170,7 @@ export const LANDING_CONTENT = {
         description: "For growing gym chains",
         features: [
           "Everything in Starter",
-          "Unlimited locations",
+          "$10 USD per extra location",
           "Unlimited members",
           "Advanced analytics",
           "Priority support",
@@ -251,7 +251,7 @@ export const LANDING_CONTENT = {
     },
     secondary: {
       text: "Schedule Demo",
-      href: "/demo",
+      href: "/signup",
     },
   },
 
@@ -262,22 +262,22 @@ export const LANDING_CONTENT = {
       product: [
         { text: "Features", href: "#features" },
         { text: "Pricing", href: "#pricing" },
-        { text: "Demo", href: "/demo" },
-        { text: "API", href: "/api" },
+        { text: "Demo", href: "/signup" },
+        { text: "API", href: "#features" },
       ],
       company: [
-        { text: "About", href: "/about" },
-        { text: "Contact", href: "/contact" },
-        { text: "Support", href: "/support" },
-        { text: "Careers", href: "/careers" },
+        { text: "About", href: "#features" },
+        { text: "Contact", href: "/login" },
+        { text: "Support", href: "/login" },
+        { text: "Careers", href: "#features" },
       ],
       legal: [
-        { text: "Privacy", href: "/privacy" },
-        { text: "Terms", href: "/terms" },
-        { text: "Security", href: "/security" },
+        { text: "Privacy", href: "#features" },
+        { text: "Terms", href: "#features" },
+        { text: "Security", href: "#features" },
       ],
     },
-    copyright: "© 2024 MTDRB. All rights reserved.",
+    copyright: `© ${new Date().getFullYear()} MTDRB. All rights reserved.`,
     social: {
       twitter: "https://twitter.com/mtdrb",
       linkedin: "https://linkedin.com/company/mtdrb",

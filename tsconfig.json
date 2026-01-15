@@ -24,9 +24,15 @@
     "noImplicitThis": true,
 
     /* Vite specific */
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src"],
+  "include": ["src", "src/vite-env.d.ts"],
   "exclude": [
     "src/test/**/*",
     "src/**/*.test.ts",
