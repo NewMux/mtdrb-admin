@@ -198,8 +198,6 @@ export function AddExpenseModal({
       description: "",
       status: "pending",
       recurring: false,
-      vat_included: false,
-      recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
       vat_rate: 15,
