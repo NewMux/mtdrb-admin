@@ -1,13 +1,30 @@
+/**
+ * Debug Authentication Utilities
+ * 
+ * WARNING: These functions are for DEVELOPMENT USE ONLY.
+ * They will not execute in production builds.
+ */
 import { supabase } from "../supabaseClient";
 
+const isDevelopment = import.meta.env.DEV;
+
+/**
+ * Debug current authentication state
+ * Only works in development mode
+ */
 export async function debugAuth() {
+  if (!isDevelopment) {
+    console.warn("debugAuth() is only available in development mode");
+    return { user: null, membership: null, tenant: null };
+  }
+
   try {
     // Check current user
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-    if (userError) console.error("User error:", userError);
+    if (userError) console.error("[DEV] User error:", userError);
 
     if (!user) {
       return { user: null, membership: null, tenant: null };
@@ -20,38 +37,45 @@ export async function debugAuth() {
       .eq("user_id", user.id)
       .single();
 
-    if (membershipError) console.error("Membership error:", membershipError);
+    if (membershipError) console.error("[DEV] Membership error:", membershipError);
 
     return { user, membership, tenant: membership?.tenant || null };
   } catch (error) {
-    console.error("Debug auth error:", error);
+    console.error("[DEV] Debug auth error:", error);
     return { user: null, membership: null, tenant: null };
   }
 }
 
+/**
+ * Check database tables accessibility
+ * Only works in development mode
+ */
 export async function checkDatabaseTables() {
+  if (!isDevelopment) {
+    console.warn("checkDatabaseTables() is only available in development mode");
+    return { error: "Development only" };
+  }
+
   try {
     // Check if classes table exists and is accessible
-    const { data: classesTest, error: classesError } = await supabase
+    const { error: classesError } = await supabase
       .from("classes")
       .select("count")
       .limit(1);
 
     // Check if trainers table exists and is accessible
-    const { data: trainersTest, error: trainersError } = await supabase
+    const { error: trainersError } = await supabase
       .from("trainers")
       .select("count")
       .limit(1);
 
     // Check if class_bookings table exists and is accessible
-    let bookingsTest = null;
     let bookingsError = null;
     try {
       const result = await supabase
         .from("class_bookings")
         .select("count")
         .limit(1);
-      bookingsTest = result.data;
       bookingsError = result.error;
     } catch (err) {
       bookingsError = err;
@@ -63,14 +87,23 @@ export async function checkDatabaseTables() {
       bookings: { exists: !bookingsError, error: bookingsError },
     };
   } catch (error) {
-    console.error("Database check error:", error);
+    console.error("[DEV] Database check error:", error);
     return { error };
   }
 }
 
+/**
+ * Create test membership data for development
+ * WARNING: Only works in development mode
+ */
 export async function createTestMembership(userId: string) {
+  if (!isDevelopment) {
+    console.warn("createTestMembership() is only available in development mode");
+    throw new Error("Development only function");
+  }
+
   try {
-    // Create a test tenant if it doesn&apos;t exist
+    // Create a test tenant if it doesn't exist
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
       .upsert({
@@ -99,7 +132,7 @@ export async function createTestMembership(userId: string) {
     if (membershipError) throw membershipError;
 
     // Check if trainers table exists before trying to create trainers
-    const { data: trainersTest, error: trainersError } = await supabase
+    const { error: trainersError } = await supabase
       .from("trainers")
       .select("count")
       .limit(1);
@@ -166,13 +199,11 @@ export async function createTestMembership(userId: string) {
       for (const classItem of classes) {
         await supabase.from("classes").upsert(classItem).select().single();
       }
-    } else {
-      // Trainers table not accessible, skipping trainer and class creation
     }
 
     return membership;
   } catch (error) {
-    console.error("Error creating test membership:", error);
+    console.error("[DEV] Error creating test membership:", error);
     throw error;
   }
 }

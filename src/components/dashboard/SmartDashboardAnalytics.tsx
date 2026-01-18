@@ -4,7 +4,6 @@ import {
   FiBarChart,
   FiTrendingUp,
   FiTrendingDown,
-  FiActivity,
   FiDollarSign,
   FiUsers,
   FiCalendar,
@@ -181,7 +180,7 @@ export default function SmartDashboardAnalytics({
       setRevenueData({ current: currentRevenue, previous: previousRevenue });
 
       // Fetch member data
-      const [allMembers, newCurrentMembers, newPreviousMembers] = await Promise.all([
+      const [allMembers, newCurrentMembers] = await Promise.all([
         supabase
           .from("members")
           .select("id, status, created_at")
@@ -361,64 +360,64 @@ export default function SmartDashboardAnalytics({
       setDashboardMetrics(metrics);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      // Fallback to default metrics on error
+      // Set empty metrics on error instead of hardcoded fallback
       setDashboardMetrics([
         {
           name: "Total Revenue",
-          current: 45280,
-          previous: 40120,
-          target: 50000,
-          trend: "up",
+          current: 0,
+          previous: 0,
+          target: 0,
+          trend: "stable",
           format: "currency",
           icon: <FiDollarSign className="h-5 w-5" />,
           color: "green",
         },
         {
           name: "Active Members",
-          current: 1247,
-          previous: 1189,
-          target: 1300,
-          trend: "up",
+          current: 0,
+          previous: 0,
+          target: 0,
+          trend: "stable",
           format: "number",
           icon: <FiUsers className="h-5 w-5" />,
           color: "blue",
         },
         {
           name: "Class Attendance",
-          current: 78,
-          previous: 72,
+          current: 0,
+          previous: 0,
           target: 85,
-          trend: "up",
+          trend: "stable",
           format: "percentage",
           icon: <FiCalendar className="h-5 w-5" />,
           color: "purple",
         },
         {
           name: "Trainer Rating",
-          current: 4.7,
-          previous: 4.5,
+          current: 0,
+          previous: 0,
           target: 4.8,
-          trend: "up",
+          trend: "stable",
           format: "decimal",
           icon: <FiStar className="h-5 w-5" />,
           color: "yellow",
         },
         {
           name: "Member Retention",
-          current: 87,
-          previous: 89,
+          current: 0,
+          previous: 0,
           target: 90,
-          trend: "down",
+          trend: "stable",
           format: "percentage",
           icon: <FiTarget className="h-5 w-5" />,
           color: "red",
         },
         {
           name: "Gym Health Score",
-          current: 92,
-          previous: 88,
+          current: 0,
+          previous: 0,
           target: 95,
-          trend: "up",
+          trend: "stable",
           format: "percentage",
           icon: <FiZap className="h-5 w-5" />,
           color: "indigo",

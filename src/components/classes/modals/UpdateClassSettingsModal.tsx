@@ -3,11 +3,7 @@ import { motion } from "framer-motion";
 import {
   FiSettings,
   FiUsers,
-  FiDollarSign,
-  FiCalendar,
-  FiClock,
   FiAlertTriangle,
-  FiCheck,
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
 import { FormField, SelectField, FormSection } from "./SmartFormComponents";
@@ -74,6 +70,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
       fetchClass();
       loadCurrentSettings();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId]);
 
   const loadCurrentSettings = () => {
@@ -83,7 +80,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         price: 25, // Mock price
         duration: 60,
         difficulty: "intermediate",
-        class_type: classData.class_type || "Yoga",
+        class_type: classData.type || "Yoga",
         location: "Studio A",
         description: classData.description || "",
         auto_waitlist: true,
@@ -97,7 +94,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     }
   };
 
-  const handleSettingChange = (key: keyof ClassSettings, value: any) => {
+  const handleSettingChange = (key: keyof ClassSettings, value: string | number | boolean | string[]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
@@ -247,7 +244,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as "basic" | "advanced")}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? "border-brand-500 text-brand-600"

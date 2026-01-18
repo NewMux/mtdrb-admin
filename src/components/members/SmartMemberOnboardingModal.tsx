@@ -102,8 +102,9 @@ const SmartMemberOnboardingModal: React.FC<SmartMemberOnboardingModalProps> = ({
     }
   };
 
-  const getError = (field: string) => {
-    return errors[field as keyof typeof errors]?.message;
+  const getError = (field: string): string | undefined => {
+    const error = errors[field as keyof typeof errors];
+    return typeof error?.message === "string" ? error.message : undefined;
   };
 
   return (

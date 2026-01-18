@@ -2,7 +2,9 @@ import { z } from "zod";
 
 // Base schemas
 export const emailSchema = z.string().email("Invalid email format");
-export const phoneSchema = z.string().regex(/^\+?[\d\s\-\(\)]+$/, "Invalid phone format");
+export const phoneSchema = z
+  .string()
+  .regex(/^\+?[\d\s\-()]+$/, "Invalid phone format");
 export const nameSchema = z.string().min(1, "Name is required").max(100, "Name too long");
 export const uuidSchema = z.string().uuid("Invalid UUID format");
 
@@ -151,7 +153,13 @@ export const validateUUID = (
 };
 
 export const sanitizeInput = (input: string): string => {
-  return input.trim().replace(/[<>]/g, "");
+  return input
+    .trim()
+    .replace(/<[^>]*>?/gm, "") // Remove HTML tags
+    .replace(/javascript:/gi, "") // Block JS injections
+    .replace(/on\w+\s*=/gi, "") // Remove event handlers
+    .replace(/data:/gi, "") // Block data URI injections
+    .replace(/vbscript:/gi, ""); // Block VBScript
 };
 
 export const validateTenantAccess = (

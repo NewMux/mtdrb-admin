@@ -8,17 +8,7 @@ import {
   AppleToggle,
 } from "../AppleStyleModal";
 import { PaymentMethodType } from "../../types";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiDollarSign,
-  FiCalendar,
-  FiUsers,
-  FiCheck,
-  FiX,
-  FiEdit2,
-  FiTrash2,
-  FiAlertCircle,
-} from "react-icons/fi";
+import { FiAlertCircle } from "react-icons/fi";
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 
@@ -29,7 +19,7 @@ type subscription_status =
   | "Cancelled"
   | "Expired"
   | "Draft";
-type billing_cycle = "Weekly" | "Monthly" | "Annually";
+type billing_cycle = "monthly" | "quarterly" | "semi-annual" | "annual";
 type subscription_plan_type = "Membership" | "PT" | "Class Pack" | "Online";
 
 interface Subscription {
@@ -57,17 +47,35 @@ interface Subscription {
   trial_days?: number;
 }
 
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Plan {
-  id: string;
+type SubscriptionFormData = {
+  member_id: string;
+  plan_id: string | null;
+  plan_name: string;
+  plan_type: subscription_plan_type;
+  status: subscription_status;
+  start_date: string;
+  end_date: string | null;
+  next_billing_date: string | null;
+  billing_cycle: billing_cycle;
+  amount: number;
+  currency: string;
+  auto_renew: boolean;
+  payment_method: PaymentMethodType | null;
+  vat_percentage: number;
   name: string;
   price: number;
-}
+  duration_months: number;
+  description: string;
+  auto_renewal: boolean;
+  trial_enabled: boolean;
+  trial_days: number;
+};
+
+type SubscriptionFeature = {
+  name: string;
+  included: boolean;
+  limit: string;
+};
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
@@ -85,10 +93,8 @@ export function AddSubscriptionModal({
   subscription,
 }: AddSubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
-
-  const [formData, setFormData] = useState({
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<SubscriptionFormData>({
     member_id: "",
     plan_id: null as string | null,
     plan_name: "",
@@ -97,7 +103,7 @@ export function AddSubscriptionModal({
     start_date: "",
     end_date: null as string | null,
     next_billing_date: null as string | null,
-    billing_cycle: "Monthly" as billing_cycle,
+    billing_cycle: "monthly" as billing_cycle,
     amount: 0,
     currency: "BHD",
     auto_renew: true,
@@ -112,8 +118,7 @@ export function AddSubscriptionModal({
     trial_days: 0,
   });
 
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [features, setFeatures] = useState([
+  const [features, setFeatures] = useState<SubscriptionFeature[]>([
     { name: "Gym Access", included: true, limit: "Unlimited" },
     { name: "Group Classes", included: true, limit: "Unlimited" },
     { name: "Personal Training", included: false, limit: "0" },
@@ -121,6 +126,9 @@ export function AddSubscriptionModal({
   ]);
 
   useEffect(() => {
+    if (isOpen) {
+      setSubmitError(null);
+    }
     if (subscription) {
       setFormData({
         member_id: subscription.member_id,
@@ -137,6 +145,13 @@ export function AddSubscriptionModal({
         auto_renew: subscription.auto_renew,
         payment_method: subscription.payment_method,
         vat_percentage: subscription.vat_percentage,
+        name: subscription.name || "",
+        price: subscription.price || 0,
+        duration_months: subscription.duration_months || 1,
+        description: subscription.description || "",
+        auto_renewal: subscription.auto_renewal ?? subscription.auto_renew,
+        trial_enabled: subscription.trial_enabled || false,
+        trial_days: subscription.trial_days || 0,
       });
     } else {
       setFormData({
@@ -148,55 +163,25 @@ export function AddSubscriptionModal({
         start_date: "",
         end_date: null,
         next_billing_date: null,
-        billing_cycle: "Monthly",
+        billing_cycle: "monthly",
         amount: 0,
         currency: "BHD",
         auto_renew: true,
         payment_method: null,
         vat_percentage: 0,
+        name: "",
+        price: 0,
+        duration_months: 1,
+        description: "",
+        auto_renewal: true,
+        trial_enabled: false,
+        trial_days: 0,
       });
     }
-  }, [subscription]);
+  }, [subscription, isOpen]);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("members")
-          .select("id, name, email")
-          .eq("tenant_id", tenantId);
-
-        if (error) throw error;
-        setMembers(data || []);
-      } catch (error) {
-        console.error("Error fetching members:", error);
-        toast.error("Failed to fetch members");
-      }
-    };
-
-    const fetchPlans = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("plans")
-          .select("id, name, price")
-          .eq("tenant_id", tenantId);
-
-        if (error) throw error;
-        setPlans(data || []);
-      } catch (error) {
-        console.error("Error fetching plans:", error);
-        toast.error("Failed to fetch plans");
-      }
-    };
-
-    if (isOpen) {
-      fetchMembers();
-      fetchPlans();
-    }
-  }, [isOpen, tenantId]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setLoading(true);
 
     try {
@@ -269,25 +254,31 @@ export function AddSubscriptionModal({
       onSave();
       onClose();
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save subscription";
       console.error("Error saving subscription:", error);
-      toast.error((error as Error).message || "Failed to save subscription");
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   // Add form validation
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof SubscriptionFormData>(
+    field: K,
+    value: SubscriptionFormData[K],
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleFeatureChange = (
+  const handleFeatureChange = <K extends "included" | "limit">(
     index: number,
-    field: "included" | "limit",
-    value: any,
+    field: K,
+    value: SubscriptionFeature[K],
   ) => {
     setFeatures((prev) =>
       prev.map((feature, i) =>
@@ -295,30 +286,6 @@ export function AddSubscriptionModal({
       ),
     );
   };
-
-  const validateForm = () => {
-    const errors: string[] = [];
-
-    if (!formData.member_id) errors.push("Member is required");
-    if (!formData.plan_id) errors.push("Plan is required");
-    if (!formData.start_date) errors.push("Start date is required");
-    if (formData.amount <= 0) errors.push("Amount must be greater than 0");
-    if (
-      formData.end_date &&
-      new Date(formData.end_date) <= new Date(formData.start_date)
-    ) {
-      errors.push("End date must be after start date");
-    }
-
-    return errors;
-  };
-
-  // Add real-time validation feedback
-  const [errors, setErrors] = useState<string[]>([]);
-
-  useEffect(() => {
-    setErrors(validateForm());
-  }, [formData]);
 
   return (
     <SmartModal
@@ -332,7 +299,10 @@ export function AddSubscriptionModal({
           </SmartButton>
           <SmartButton
             variant="primary"
-            onClick={handleSubmit}
+            onClick={(e) => {
+              e?.preventDefault();
+              handleSubmit();
+            }}
             loading={loading}
           >
             Save Subscription
@@ -352,7 +322,7 @@ export function AddSubscriptionModal({
               label="Plan Name"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("name", e.target.value)}
               required
             />
             <AppleInput
@@ -360,7 +330,7 @@ export function AddSubscriptionModal({
               name="price"
               type="number"
               value={formData.price}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("price", Number(e.target.value))}
               required
             />
           </div>
@@ -370,7 +340,9 @@ export function AddSubscriptionModal({
               label="Billing Cycle"
               name="billing_cycle"
               value={formData.billing_cycle}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                handleChange("billing_cycle", e.target.value as billing_cycle)
+              }
               required
             >
               <option value="">Select billing cycle</option>
@@ -384,7 +356,7 @@ export function AddSubscriptionModal({
               name="duration_months"
               type="number"
               value={formData.duration_months}
-              onChange={handleChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("duration_months", Number(e.target.value))}
               required
             />
           </div>
@@ -393,7 +365,7 @@ export function AddSubscriptionModal({
             label="Description"
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange("description", e.target.value)}
             rows={3}
           />
         </div>
@@ -454,7 +426,6 @@ export function AddSubscriptionModal({
               </div>
               <AppleToggle
                 label=""
-                name="auto_renewal"
                 checked={formData.auto_renewal}
                 onChange={(checked) => handleChange("auto_renewal", checked)}
               />
@@ -471,7 +442,6 @@ export function AddSubscriptionModal({
               </div>
               <AppleToggle
                 label=""
-                name="trial_enabled"
                 checked={formData.trial_enabled}
                 onChange={(checked) => handleChange("trial_enabled", checked)}
               />
@@ -485,7 +455,7 @@ export function AddSubscriptionModal({
                 name="trial_days"
                 type="number"
                 value={formData.trial_days}
-                onChange={handleChange}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("trial_days", Number(e.target.value))}
               />
             </div>
           )}

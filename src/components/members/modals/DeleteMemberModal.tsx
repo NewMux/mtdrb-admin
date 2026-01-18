@@ -96,7 +96,13 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
                     <span className="text-white font-medium text-sm">
-                      {member.avatar}
+                      {(member.name ?? "M")
+                        .split(" ")
+                        .filter(Boolean)
+                        .map((part) => part[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
                     </span>
                   </div>
                   <div className="text-left">
@@ -109,18 +115,23 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
                     <div className="flex items-center space-x-2 mt-1">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          member.status === "active"
+                          (member.status ?? "inactive") === "active"
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
-                            : member.status === "inactive"
+                            : (member.status ?? "inactive") === "inactive"
                               ? "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
                               : "bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200"
                         }`}
                       >
-                        {member.status.charAt(0).toUpperCase() +
-                          member.status.slice(1)}
+                        {(member.status ?? "inactive")
+                          .charAt(0)
+                          .toUpperCase() +
+                          (member.status ?? "inactive").slice(1)}
                       </span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {member.membershipType} Member
+                        {member.membership_type ??
+                          member.membershipType ??
+                          "Standard"}{" "}
+                        Member
                       </span>
                     </div>
                   </div>

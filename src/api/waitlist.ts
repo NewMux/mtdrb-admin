@@ -1,5 +1,18 @@
 import { supabase } from "../supabaseClient";
 
+interface WaitlistRow {
+  id: string;
+  member_id: string;
+  created_at: string;
+  status: string;
+  members?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  } | null;
+}
+
 /**
  * Get the waitlist for a class
  */
@@ -10,11 +23,12 @@ export async function getClassWaitlist(classId: string) {
     .eq("class_id", classId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data || []).map((w: any) => ({
+  const rows = (data || []) as WaitlistRow[];
+  return rows.map((w) => ({
     id: w.id,
     memberId: w.member_id,
-    name: w.members 
-      ? `${w.members.first_name || ''} ${w.members.last_name || ''}`.trim() 
+    name: w.members
+      ? `${w.members.first_name || ""} ${w.members.last_name || ""}`.trim()
       : "",
     contact: w.members?.phone || w.members?.email || "",
     addedAt: w.created_at,

@@ -190,7 +190,10 @@ class RealtimeService {
 
       if (error) throw error;
     } catch (error) {
-      console.error("Failed to send notification:", error);
+      // Only log in development to prevent info leakage
+      if (import.meta.env.DEV) {
+        console.error("Failed to send notification:", error);
+      }
     }
   }
 
@@ -378,7 +381,9 @@ class RealtimeService {
       if (error) throw error;
       return data?.length || 0;
     } catch (error) {
-      console.error("Failed to get classes in session:", error);
+      if (import.meta.env.DEV) {
+        console.error("Failed to get classes in session:", error);
+      }
       return 0;
     }
   }

@@ -1,26 +1,17 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   FiUsers,
   FiTrendingUp,
-  FiTrendingDown,
   FiBarChart,
   FiPieChart,
-  FiCalendar,
-  FiFilter,
-  FiDownload,
-  FiRefreshCw,
-  FiArrowUp,
-  FiArrowDown,
-  FiActivity,
   FiClock,
   FiDollarSign,
-  FiUserCheck,
   FiUserX,
-  FiUserMinus,
-  FiUserPlus,
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
+
+type ActiveTab = "overview" | "performance" | "engagement";
 
 interface MemberFunnel {
   stage: string;
@@ -445,7 +436,7 @@ const LTVTrendChart = ({
       </div>
 
       <div className="space-y-2">
-        {ltvTrend.slice(-3).map((data, index) => (
+        {ltvTrend.slice(-3).map((data) => (
           <div
             key={data.month}
             className="flex items-center justify-between text-sm"
@@ -469,19 +460,25 @@ export default function MemberAnalytics({
   ltvTrend,
   noShows,
 }: MemberAnalyticsProps) {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "performance" | "engagement"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
 
-  // Handler for exporting member data
-  const handleExportData = () => {
-    // TODO: Implement actual export functionality
-  };
-
-  // Handler for member campaign
-  const handleMemberCampaign = () => {
-    // TODO: Implement member campaign functionality
-  };
+  const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <FiBarChart className="w-4 h-4" />,
+    },
+    {
+      id: "performance",
+      label: "Performance",
+      icon: <FiTrendingUp className="w-4 h-4" />,
+    },
+    {
+      id: "engagement",
+      label: "Engagement",
+      icon: <FiUsers className="w-4 h-4" />,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -498,26 +495,10 @@ export default function MemberAnalytics({
 
       {/* Tabs */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        {[
-          {
-            id: "overview",
-            label: "Overview",
-            icon: <FiBarChart className="w-4 h-4" />,
-          },
-          {
-            id: "performance",
-            label: "Performance",
-            icon: <FiTrendingUp className="w-4 h-4" />,
-          },
-          {
-            id: "engagement",
-            label: "Engagement",
-            icon: <FiUsers className="w-4 h-4" />,
-          },
-        ].map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-white text-blue-600 shadow-sm"
@@ -566,107 +547,3 @@ export default function MemberAnalytics({
 }
 
 // Default data for demonstration
-export const defaultMemberData: MemberAnalyticsProps = {
-  funnel: [
-    { stage: "Leads", count: 1000, percentage: 100, color: "bg-blue-500" },
-    { stage: "Trials", count: 300, percentage: 30, color: "bg-green-500" },
-    { stage: "Paid", count: 180, percentage: 18, color: "bg-yellow-500" },
-    { stage: "Retained", count: 150, percentage: 15, color: "bg-purple-500" },
-  ],
-  memberStatus: [
-    { status: "Active", count: 1247, percentage: 65, color: "#10B981" },
-    { status: "Trial", count: 89, percentage: 5, color: "#F59E0B" },
-    { status: "Frozen", count: 156, percentage: 8, color: "#EF4444" },
-    { status: "At-Risk", count: 18, percentage: 1, color: "#DC2626" },
-    { status: "Expired", count: 420, percentage: 22, color: "#6B7280" },
-  ],
-  topSpenders: [
-    {
-      name: "Ahmed Hassan",
-      email: "ahmed@example.com",
-      spend: 8500,
-      joinDate: "2023-01-15",
-      status: "Active",
-    },
-    {
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      spend: 7200,
-      joinDate: "2023-03-22",
-      status: "Active",
-    },
-    {
-      name: "Mike Chen",
-      email: "mike@example.com",
-      spend: 6800,
-      joinDate: "2023-02-10",
-      status: "Active",
-    },
-    {
-      name: "Lisa Ahmed",
-      email: "lisa@example.com",
-      spend: 5900,
-      joinDate: "2023-04-05",
-      status: "Active",
-    },
-    {
-      name: "David Wilson",
-      email: "david@example.com",
-      spend: 5200,
-      joinDate: "2023-01-30",
-      status: "Active",
-    },
-  ],
-  longestMembers: [
-    {
-      name: "Fatima Ali",
-      email: "fatima@example.com",
-      spend: 4500,
-      joinDate: "2020-06-15",
-      status: "Active",
-    },
-    {
-      name: "Omar Khalil",
-      email: "omar@example.com",
-      spend: 3800,
-      joinDate: "2020-08-22",
-      status: "Active",
-    },
-    {
-      name: "Nour Hassan",
-      email: "nour@example.com",
-      spend: 4200,
-      joinDate: "2020-09-10",
-      status: "Active",
-    },
-    {
-      name: "Yara Ahmed",
-      email: "yara@example.com",
-      spend: 3600,
-      joinDate: "2020-11-05",
-      status: "Active",
-    },
-    {
-      name: "Zainab Ali",
-      email: "zainab@example.com",
-      spend: 3900,
-      joinDate: "2021-01-20",
-      status: "Active",
-    },
-  ],
-  ltvTrend: [
-    { month: "Jan", ltv: 450 },
-    { month: "Feb", ltv: 480 },
-    { month: "Mar", ltv: 520 },
-    { month: "Apr", ltv: 490 },
-    { month: "May", ltv: 550 },
-    { month: "Jun", ltv: 580 },
-  ],
-  noShows: [
-    { name: "Ahmed Hassan", count: 5, lastSeen: "2 weeks ago" },
-    { name: "Sarah Johnson", count: 3, lastSeen: "1 week ago" },
-    { name: "Mike Chen", count: 4, lastSeen: "3 weeks ago" },
-    { name: "Lisa Ahmed", count: 2, lastSeen: "1 week ago" },
-    { name: "David Wilson", count: 6, lastSeen: "4 weeks ago" },
-  ],
-};

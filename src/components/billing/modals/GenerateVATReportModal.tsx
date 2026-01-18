@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiCalendar,
@@ -26,8 +25,7 @@ const GenerateVATReportModal: React.FC<GenerateVATReportModalProps> = ({
   const [exportFormat, setExportFormat] = useState("pdf");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data, loading, validation, suggestions, isProUser, updateData } =
-    useSmartBillingModal({});
+  const { isProUser } = useSmartBillingModal({});
 
   const reportTypes = [
     {

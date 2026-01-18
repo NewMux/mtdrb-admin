@@ -1,7 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
-  FiUser,
   FiCalendar,
   FiDollarSign,
   FiTrendingUp,
@@ -75,7 +73,6 @@ const reportSections = [
 export default function GenerateMemberReportModal({
   open,
   onClose,
-  memberId = "1",
   memberName = "Sarah Johnson",
   onSuccess,
   isPro,
@@ -120,16 +117,6 @@ export default function GenerateMemberReportModal({
 
   const handleRemoveSection = (sectionId: string) => {
     setSelectedSections(selectedSections.filter((id) => id !== sectionId));
-  };
-
-  const getSectionIcon = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.icon || FiUser;
-  };
-
-  const getSectionLabel = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.label || sectionId;
   };
 
   function Section({
@@ -249,7 +236,7 @@ export default function GenerateMemberReportModal({
       {isPro && memberData.smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {memberData.smartInsights.map((insight: any, index: number) => (
+            {memberData.smartInsights.map((insight, index) => (
               <div
                 key={index}
                 className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg"
@@ -396,12 +383,7 @@ export default function GenerateMemberReportModal({
           </div>
 
           {sendEmail && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-2"
-            >
+            <div className="space-y-2">
               <label className="block text-sm font-medium flex items-center gap-2">
                 <FiMail /> Email Recipient
               </label>
@@ -412,7 +394,7 @@ export default function GenerateMemberReportModal({
                 onChange={(e) => setEmailRecipient(e.target.value)}
                 placeholder="member@email.com"
               />
-            </motion.div>
+            </div>
           )}
         </div>
       </Section>

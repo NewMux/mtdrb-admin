@@ -108,7 +108,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
         fitnessGoal:
           (member.fitnessGoal as EditMemberForm["fitnessGoal"]) ||
           "General Fitness",
-        injuries: member.injuries || "",
+        injuries: Array.isArray(member.injuries)
+          ? member.injuries.join(", ")
+          : member.injuries || "",
         staffNotes: member.staffNotes || "",
         idDocument: null,
       });
@@ -127,8 +129,15 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
   const onSubmit = async (data: EditMemberForm) => {
     setIsLoading(true);
     try {
+      const injuries = data.injuries
+        ? data.injuries
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : undefined;
       const updatedData: Partial<Member> = {
         ...data,
+        injuries,
         idDocument: uploadedFile || undefined,
       };
       await onSuccess(member?.id || "", updatedData);

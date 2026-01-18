@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { FiCheck } from "react-icons/fi";
 import { LANDING_CONTENT } from "../../lib/constants/landingPage";
+import { Link } from "react-router-dom";
 
 /**
  * Pricing Section Component

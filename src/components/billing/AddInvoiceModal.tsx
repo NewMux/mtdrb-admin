@@ -1,52 +1,31 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   FiDollarSign,
-  FiCalendar,
-  FiTag,
   FiFileText,
   FiUpload,
-  FiX,
-  FiCheck,
   FiAlertCircle,
-  FiInfo,
-  FiSearch,
-  FiClock,
-  FiTrendingUp,
   FiShield,
   FiBarChart2,
-  FiZap,
-  FiStar,
-  FiTarget,
-  FiActivity,
-  FiHeart,
-  FiSave,
-  FiArrowRight,
-  FiArrowLeft,
-  FiRefreshCw,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleSelect,
   AppleTextarea,
   AppleButton,
-  AppleButtonGroup,
   AppleToggle,
 } from "../AppleStyleModal";
 import {
   Invoice,
   InvoiceType,
   InvoiceStatus,
-  RecurringFrequency,
   PaymentMethodType,
 } from "../../types";
-import { Database } from "../../types/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { SmartModal } from "../ui/SmartModal";
 
@@ -126,31 +105,12 @@ const invoiceSchema = z.object({
   invoice_file: z.any().optional(),
 });
 
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
-
-interface RecentClient {
-  id: string;
-  name: string;
-  category: string;
-  last_used: string;
-  total_invoices: number;
-}
-
-interface SimilarInvoice {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  client: string;
-  date: string;
-  similarity_score: number;
-}
+type InvoiceFormData = z.input<typeof invoiceSchema>;
 
 export function AddInvoiceModal({
   isOpen,
   onClose,
   onInvoiceAdded,
-  tenantId,
   invoice: editingInvoice,
 }: AddInvoiceModalProps) {
   const { user } = useAuth();
@@ -158,11 +118,6 @@ export function AddInvoiceModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [recentClients, setRecentClients] = useState<RecentClient[]>([]);
-  const [similarInvoices, setSimilarInvoices] = useState<SimilarInvoice[]>([]);
-  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
-  const [showSimilarInvoices, setShowSimilarInvoices] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clientInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,14 +127,12 @@ export function AddInvoiceModal({
     watch,
     setValue,
     reset,
-    control,
     formState: { errors, isValid, isDirty },
-    trigger,
   } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       title: "",
-      amount: "",
+      amount: 0,
       date: new Date().toISOString().split("T")[0],
       category: "Other",
       payment_method: "card",
@@ -198,21 +151,9 @@ export function AddInvoiceModal({
 
   const watchedTitle = watch("title");
   const watchedDescription = watch("description");
-  const watchedCategory = watch("category");
-  const watchedClient = watch("client");
-  const watchedRecurring = watch("recurring");
-  const watchedVatIncluded = watch("vat_included");
+  const watchedRecurring = Boolean(watch("recurring"));
+  const watchedVatIncluded = Boolean(watch("vat_included"));
   const watchedAmount = watch("amount");
-
-  // Load recent clients and similar invoices
-  useEffect(() => {
-    if (isOpen) {
-      loadRecentClients();
-      if (watchedTitle || watchedDescription) {
-        findSimilarInvoices();
-      }
-    }
-  }, [isOpen, watchedTitle, watchedDescription]);
 
   // Auto-categorization based on title and description
   useEffect(() => {
@@ -235,7 +176,7 @@ export function AddInvoiceModal({
     if (editingInvoice && isOpen) {
       reset({
         title: editingInvoice.title || "",
-        amount: editingInvoice.amount?.toString() || "",
+        amount: typeof editingInvoice.amount === 'number' ? editingInvoice.amount : (typeof editingInvoice.total === 'number' ? editingInvoice.total : 0),
         date:
           editingInvoice.issue_date || new Date().toISOString().split("T")[0],
         category: editingInvoice.type || "Other",
@@ -253,197 +194,53 @@ export function AddInvoiceModal({
     }
   }, [editingInvoice, isOpen, reset]);
 
-  // Load recent clients from database
-  const loadRecentClients = async () => {
-    try {
-      const { data } = await supabase
-        .from("invoices")
-        .select("member, type, created_at, amount")
-        .not("member", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (data) {
-        const clients = data.reduce((acc: RecentClient[], invoice) => {
-          const memberName = invoice.member?.name || "Unknown";
-          const existing = acc.find((c) => c.name === memberName);
-          if (existing) {
-            existing.total_invoices += invoice.amount || 0;
-          } else {
-            acc.push({
-              id: memberName,
-              name: memberName,
-              category: invoice.type || "Other",
-              last_used: invoice.created_at,
-              total_invoices: invoice.amount || 0,
-            });
-          }
-          return acc;
-        }, []);
-
-        setRecentClients(clients.slice(0, 5));
-      }
-    } catch (error) {
-      console.error("Error loading recent clients:", error);
-    }
-  };
-
-  // Find similar invoices for duplicate detection
-  const findSimilarInvoices = async () => {
-    if (!watchedTitle && !watchedDescription) return;
-
-    setIsAnalyzing(true);
-    try {
-      const { data } = await supabase
-        .from("invoices")
-        .select("*")
-        .or(`title.ilike.%${watchedTitle}%,notes.ilike.%${watchedDescription}%`)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (data) {
-        const similar = data
-          .map((invoice) => ({
-            id: invoice.id || "",
-            title: invoice.title || "",
-            amount: invoice.amount || 0,
-            category: invoice.type || "",
-            client: invoice.member?.name || "",
-            date: invoice.issue_date || "",
-            similarity_score: calculateSimilarity(invoice),
-          }))
-          .filter((invoice) => invoice.similarity_score > 0.3);
-
-        setSimilarInvoices(similar);
-        setShowSimilarInvoices(similar.length > 0);
-      }
-    } catch (error) {
-      console.error("Error finding similar invoices:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Calculate similarity score between current form and existing invoice
-  const calculateSimilarity = (invoice: any): number => {
-    let score = 0;
-    const currentText = `${watchedTitle} ${watchedDescription}`.toLowerCase();
-    const invoiceText =
-      `${invoice.title || ""} ${invoice.notes || ""}`.toLowerCase();
-
-    // Title similarity
-    if (watchedTitle && invoice.title) {
-      const titleSimilarity = similarity(
-        watchedTitle.toLowerCase(),
-        invoice.title.toLowerCase(),
-      );
-      score += titleSimilarity * 0.4;
-    }
-
-    // Description similarity
-    if (watchedDescription && invoice.notes) {
-      const descSimilarity = similarity(
-        watchedDescription.toLowerCase(),
-        invoice.notes.toLowerCase(),
-      );
-      score += descSimilarity * 0.3;
-    }
-
-    // Category match
-    if (watchedCategory === invoice.type) {
-      score += 0.2;
-    }
-
-    // Client match
-    if (
-      watchedClient &&
-      invoice.member?.name &&
-      watchedClient.toLowerCase() === invoice.member.name.toLowerCase()
-    ) {
-      score += 0.1;
-    }
-
-    return score;
-  };
-
-  // Simple string similarity function
-  const similarity = (s1: string, s2: string): number => {
-    const longer = s1.length > s2.length ? s1 : s2;
-    const shorter = s1.length > s2.length ? s2 : s1;
-    if (longer.length === 0) return 1.0;
-    return (longer.length - editDistance(longer, shorter)) / longer.length;
-  };
-
-  const editDistance = (s1: string, s2: string): number => {
-    const costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-      let lastValue = i;
-      for (let j = 0; j <= s2.length; j++) {
-        if (i === 0) {
-          costs[j] = j;
-        } else if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          }
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-      if (i > 0) costs[s2.length] = lastValue;
-    }
-    return costs[s2.length];
-  };
-
   // Handle file upload with preview
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "application/pdf",
-      ];
-      if (!validTypes.includes(file.type)) {
-        toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
-        return;
-      }
+  const handleFileSelection = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
 
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size must be less than 10MB");
-        return;
-      }
-
-      setSelectedFile(file);
-      setValue("invoice_file", file);
-
-      // Create preview for images
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview(null);
-      }
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+    setValue("invoice_file", file);
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFilePreview(event.target?.result?.toString() || null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(e.target.files);
   };
 
   // Handle drag and drop
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = fileInputRef.current;
-      if (input) {
-        input.files = e.dataTransfer.files;
-        handleFileChange({ target: { files: e.dataTransfer.files } } as any);
-      }
+    const input = fileInputRef.current;
+    if (input) {
+      input.files = e.dataTransfer.files;
     }
+    handleFileSelection(e.dataTransfer.files);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -454,24 +251,22 @@ export function AddInvoiceModal({
   const handleClientInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue("client", value);
-    setShowClientSuggestions(value.length > 0);
-  };
-
-  const selectClient = (client: RecentClient) => {
-    setValue("client", client.name);
-    setValue("category", client.category as InvoiceType);
-    setShowClientSuggestions(false);
   };
 
   // Calculate VAT amount
   const calculateVatAmount = () => {
-    const amount = parseFloat(watchedAmount) || 0;
+    const amount =
+      typeof watchedAmount === "number"
+        ? watchedAmount
+        : typeof watchedAmount === "string"
+          ? parseFloat(watchedAmount)
+          : 0;
     const vatRate = watch("vat_rate") || 15;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
   // Handle form submission
-  const onSubmit = async (data: InvoiceFormData) => {
+  const onSubmit: SubmitHandler<InvoiceFormData> = async (data) => {
     if (isSubmitting) return;
 
     if (!authTenantId) {
@@ -485,7 +280,7 @@ export function AddInvoiceModal({
       let invoiceUrl = null;
       if (selectedFile) {
         const fileName = `invoices/${authTenantId}/${Date.now()}_${selectedFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("invoice-files")
           .upload(fileName, selectedFile);
 
@@ -563,7 +358,7 @@ export function AddInvoiceModal({
     }
   };
 
-  const totalAmount = parseFloat(watchedAmount) || 0;
+  const totalAmount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
   const vatAmount = calculateVatAmount();
   const finalAmount = totalAmount + vatAmount;
 
@@ -873,9 +668,12 @@ export function AddInvoiceModal({
                   </p>
                 </div>
                 <ul className="text-sm text-red-600 space-y-1">
-                  {Object.values(errors).map((error, index) => (
-                    <li key={index}>• {error?.message}</li>
-                  ))}
+                  {Object.values(errors).map((error, index) => {
+                    const errorMessage = error && typeof error === 'object' && 'message' in error 
+                      ? String(error.message) 
+                      : String(error || 'Unknown error');
+                    return <li key={index}>• {errorMessage}</li>;
+                  })}
                 </ul>
               </motion.div>
             )}

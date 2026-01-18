@@ -67,6 +67,25 @@ interface AutomationInsight {
   timeframe: string;
 }
 
+interface MemberRecord {
+  id: string;
+  name: string;
+  status?: string | null;
+  last_attendance?: string | null;
+  payment_status?: string | null;
+  assigned_trainer_id?: string | null;
+  app_last_login?: string | null;
+  fitness_level?: string | null;
+  welcome_sequence_completed?: boolean | null;
+  membership_price?: string | number | null;
+  workout_reminders?: boolean | null;
+  class_attendance_last_30_days?: number | null;
+  personal_training_interested?: boolean | null;
+  created_at?: string | null;
+  send_welcome_sequence?: boolean | null;
+  premium_services_offered?: boolean | null;
+}
+
 interface SmartMemberDashboardProps {
   refreshKey: number;
   onMemberClick: (memberId: string) => void;
@@ -114,17 +133,17 @@ export default function SmartMemberDashboard({
       }
 
       // If still no tenant_id, fetch all members (for testing purposes)
-      let members;
+      let members: MemberRecord[] = [];
       if (tenantId) {
         const { data } = await supabase
           .from("members")
           .select("*")
           .eq("tenant_id", tenantId);
-        members = data;
+        members = (data ?? []) as MemberRecord[];
       } else {
         // Fallback: fetch all members for demo
         const { data } = await supabase.from("members").select("*");
-        members = data;
+        members = (data ?? []) as MemberRecord[];
       }
 
       if (members.length === 0) {
@@ -182,7 +201,7 @@ export default function SmartMemberDashboard({
         )
           riskScore += 20;
         if (
-          member.fitness_level === "beginner" &&
+          member.fitness_level?.toLowerCase() === "beginner" &&
           !member.welcome_sequence_completed
         )
           riskScore += 10;
@@ -200,7 +219,7 @@ export default function SmartMemberDashboard({
 
       // Lifetime value calculation (safe division)
       const membershipPrices = members.map(
-        (m) => parseFloat(m.membership_price || "0") || 0,
+        (m) => Number(m.membership_price ?? 0) || 0,
       );
       const averageLTV =
         membershipPrices.length > 0
@@ -400,7 +419,7 @@ export default function SmartMemberDashboard({
 
         // Upsell opportunity
         if (
-          member.fitness_level === "intermediate" &&
+          member.fitness_level?.toLowerCase() === "intermediate" &&
           !member.personal_training_interested
         ) {
           generatedInsights.push({

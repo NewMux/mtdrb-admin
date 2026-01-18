@@ -19,9 +19,12 @@ import AddButton from "../components/ui/AddButton";
 import { SmartButton } from "../components/ui/DesignSystem";
 import { AddTaskModal } from "../components/tasks/modals/AddTaskModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../supabaseClient";
 
 const Tasks: React.FC = () => {
   const { theme } = usePageThemeContext();
+  const { tenantId } = useAuth();
 
   const [activeTab, setActiveTab] = React.useState("overview");
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -29,6 +32,17 @@ const Tasks: React.FC = () => {
   const [showAddTaskModal, setShowAddTaskModal] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [taskStats, setTaskStats] = React.useState({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+  });
+  const [scheduleStats, setScheduleStats] = React.useState({
+    dueToday: 0,
+    dueThisWeek: 0,
+    overdue: 0,
+  });
 
   const tabs = [
     { id: "overview", name: "Overview", icon: FiCheckSquare },
@@ -36,12 +50,101 @@ const Tasks: React.FC = () => {
     { id: "schedule", name: "Schedule", icon: FiClock },
   ];
 
-  const filters = [
-    { id: "all", name: "All Tasks", count: 45 },
-    { id: "pending", name: "Pending", count: 12 },
-    { id: "in-progress", name: "In Progress", count: 8 },
-    { id: "completed", name: "Completed", count: 25 },
-  ];
+  const [filters, setFilters] = React.useState([
+    { id: "all", name: "All Tasks", count: 0 },
+    { id: "pending", name: "Pending", count: 0 },
+    { id: "in-progress", name: "In Progress", count: 0 },
+    { id: "completed", name: "Completed", count: 0 },
+  ]);
+
+  // Fetch task statistics
+  React.useEffect(() => {
+    const fetchTaskStats = async () => {
+      if (!tenantId) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // Try to fetch from member_tasks table
+        let taskData = null;
+        let taskError = null;
+        
+        try {
+          const result = await supabase
+            .from("member_tasks")
+            .select("id, status, due_date")
+            .eq("tenant_id", tenantId);
+          taskData = result.data;
+          taskError = result.error;
+        } catch (err: any) {
+          // Table might not exist
+          if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
+            console.warn("member_tasks table does not exist");
+            setTaskStats({ total: 0, pending: 0, inProgress: 0, completed: 0 });
+            setFilters([
+              { id: "all", name: "All Tasks", count: 0 },
+              { id: "pending", name: "Pending", count: 0 },
+              { id: "in-progress", name: "In Progress", count: 0 },
+              { id: "completed", name: "Completed", count: 0 },
+            ]);
+            setIsLoading(false);
+            return;
+          }
+          throw err;
+        }
+
+        if (taskError && taskError.code !== "PGRST116") {
+          throw taskError;
+        }
+
+        const tasks = taskData || [];
+        const total = tasks.length;
+        const pending = tasks.filter(t => t.status === "pending").length;
+        const inProgress = tasks.filter(t => t.status === "in_progress").length;
+        const completed = tasks.filter(t => t.status === "completed").length;
+
+        setTaskStats({ total, pending, inProgress, completed });
+        setFilters([
+          { id: "all", name: "All Tasks", count: total },
+          { id: "pending", name: "Pending", count: pending },
+          { id: "in-progress", name: "In Progress", count: inProgress },
+          { id: "completed", name: "Completed", count: completed },
+        ]);
+
+        // Calculate schedule stats
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        const dueToday = tasks.filter(t => {
+          if (!t.due_date) return false;
+          const dueDate = new Date(t.due_date);
+          return dueDate >= today && dueDate < new Date(today.getTime() + 24 * 60 * 60 * 1000) &&
+                 t.status !== "completed";
+        }).length;
+
+        const dueThisWeek = tasks.filter(t => {
+          if (!t.due_date) return false;
+          const dueDate = new Date(t.due_date);
+          return dueDate >= today && dueDate < weekFromNow && t.status !== "completed";
+        }).length;
+
+        const overdue = tasks.filter(t => {
+          if (!t.due_date) return false;
+          const dueDate = new Date(t.due_date);
+          return dueDate < today && t.status !== "completed";
+        }).length;
+
+        setScheduleStats({ dueToday, dueThisWeek, overdue });
+      } catch (error) {
+        console.error("Error fetching task stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTaskStats();
+  }, [tenantId, refreshKey]);
 
   const handleAddTask = () => {
     setShowAddTaskModal(true);
@@ -142,7 +245,7 @@ const Tasks: React.FC = () => {
                         Total Tasks
                       </p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">
-                        45
+                        {isLoading ? "..." : taskStats.total}
                       </p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-sky-500 flex items-center justify-center">
@@ -158,7 +261,7 @@ const Tasks: React.FC = () => {
                         Pending
                       </p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">
-                        12
+                        {isLoading ? "..." : taskStats.pending}
                       </p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-gold-500 flex items-center justify-center">
@@ -174,7 +277,7 @@ const Tasks: React.FC = () => {
                         In Progress
                       </p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">
-                        8
+                        {isLoading ? "..." : taskStats.inProgress}
                       </p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center">
@@ -190,7 +293,7 @@ const Tasks: React.FC = () => {
                         Completed
                       </p>
                       <p className="text-2xl font-bold text-gray-900 mt-1">
-                        25
+                        {isLoading ? "..." : taskStats.completed}
                       </p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center">
@@ -210,7 +313,7 @@ const Tasks: React.FC = () => {
                     View All Tasks
                   </button>
                 </div>
-                <TaskTable />
+                <TaskTable refreshKey={refreshKey} />
               </div>
             </div>
           )}
@@ -229,19 +332,25 @@ const Tasks: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center p-6 rounded-xl bg-gray-50">
-                    <div className="text-3xl font-bold text-sky-600">15</div>
+                    <div className="text-3xl font-bold text-sky-600">
+                      {isLoading ? "..." : scheduleStats.dueToday}
+                    </div>
                     <div className="text-sm text-gray-600 mt-1">
                       Due Today
                     </div>
                   </div>
                   <div className="text-center p-6 rounded-xl bg-gray-50">
-                    <div className="text-3xl font-bold text-gold-600">8</div>
+                    <div className="text-3xl font-bold text-gold-600">
+                      {isLoading ? "..." : scheduleStats.dueThisWeek}
+                    </div>
                     <div className="text-sm text-gray-600 mt-1">
                       Due This Week
                     </div>
                   </div>
                   <div className="text-center p-6 rounded-xl bg-gray-50">
-                    <div className="text-3xl font-bold text-rose-600">3</div>
+                    <div className="text-3xl font-bold text-rose-600">
+                      {isLoading ? "..." : scheduleStats.overdue}
+                    </div>
                     <div className="text-sm text-gray-600 mt-1">
                       Overdue
                     </div>

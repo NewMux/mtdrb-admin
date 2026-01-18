@@ -8,7 +8,6 @@ import {
   FiSettings,
   FiAlertTriangle,
   FiCheck,
-  FiX,
   FiZap,
   FiStar,
   FiTrendingUp,
@@ -32,13 +31,28 @@ interface AddClassModalProps {
   isPro?: boolean;
 }
 
+type RecurrenceOption = "none" | "daily" | "weekly" | "biweekly" | "monthly";
+
+interface ClassFormData {
+  name: string;
+  description: string;
+  type: string;
+  trainer_id: string;
+  room_id: string;
+  start_time: string;
+  end_time: string;
+  date: string;
+  recurrence: RecurrenceOption;
+  capacity: number;
+}
+
 const AddClassModal: React.FC<AddClassModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
   isPro = false,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ClassFormData>({
     name: "",
     description: "",
     type: "",
@@ -60,7 +74,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
     errors,
     recommendations,
     conflicts,
-    isValid,
     checkConflicts,
     validateForm,
     getPopularTimeSlots,
@@ -72,7 +85,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
       setPopularTimeSlots(slots);
     };
     fetchPopularSlots();
-  }, []);
+  }, [getPopularTimeSlots]);
 
   useEffect(() => {
     if (
@@ -93,6 +106,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
     formData.start_time,
     formData.end_time,
     formData.date,
+    checkConflicts,
   ]);
 
   const handleInputChange = (field: string, value: string | number) => {

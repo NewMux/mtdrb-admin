@@ -19,7 +19,39 @@ import type {
   AutomationWorkflow,
   AutomationSettings,
   Task,
+  Expense,
+  VatReturn,
 } from "../types";
+
+/** Activity record type for tracking user/system actions */
+interface Activity {
+  id: string;
+  tenant_id: string;
+  type: string;
+  action: string;
+  entity_type?: string;
+  entity_id?: string;
+  user_id?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+/** Gym settings configuration type */
+interface GymSettings {
+  id: string;
+  tenant_id: string;
+  name?: string;
+  timezone?: string;
+  currency?: string;
+  language?: string;
+  logo_url?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
 // Removed mock data - using real data from Supabase
 // Removed isDev - always use real Supabase
 
@@ -530,6 +562,163 @@ export const api = {
         .select("*")
         .eq("assigned_to", assigneeId)
         .order("due_date", { ascending: true });
+    },
+  },
+
+  expenses: {
+    getAll: async (): Promise<ApiResponse<Expense[]>> => {
+      return supabase
+        .from("expenses")
+        .select("*")
+        .order("date", { ascending: false });
+    },
+    getById: async (id: string): Promise<ApiResponse<Expense>> => {
+      return supabase.from("expenses").select("*").eq("id", id).single();
+    },
+    create: async (data: Omit<Expense, "id" | "created_at">): Promise<ApiResponse<Expense>> => {
+      return supabase.from("expenses").insert(data).select().single();
+    },
+    update: async (id: string, data: Partial<Expense>): Promise<ApiResponse<Expense>> => {
+      return supabase
+        .from("expenses")
+        .update(data)
+        .eq("id", id)
+        .select()
+        .single();
+    },
+    delete: async (id: string): Promise<ApiResponse<null>> => {
+      return supabase.from("expenses").delete().eq("id", id);
+    },
+    getByDateRange: async (
+      start: string,
+      end: string,
+    ): Promise<ApiResponse<Expense[]>> => {
+      return supabase
+        .from("expenses")
+        .select("*")
+        .gte("date", start)
+        .lte("date", end)
+        .order("date", { ascending: false });
+    },
+    getByCategory: async (category: string): Promise<ApiResponse<Expense[]>> => {
+      return supabase
+        .from("expenses")
+        .select("*")
+        .eq("category", category)
+        .order("date", { ascending: false });
+    },
+  },
+
+  activities: {
+    getAll: async (): Promise<ApiResponse<Activity[]>> => {
+      return supabase
+        .from("activities")
+        .select("*")
+        .order("created_at", { ascending: false });
+    },
+    getRecent: async (limit: number = 20): Promise<ApiResponse<Activity[]>> => {
+      return supabase
+        .from("activities")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+    },
+    create: async (data: Omit<Activity, "id" | "created_at">): Promise<ApiResponse<Activity>> => {
+      return supabase.from("activities").insert(data).select().single();
+    },
+    getByType: async (type: string): Promise<ApiResponse<Activity[]>> => {
+      return supabase
+        .from("activities")
+        .select("*")
+        .eq("type", type)
+        .order("created_at", { ascending: false });
+    },
+  },
+
+  vatReturns: {
+    getAll: async (): Promise<ApiResponse<VatReturn[]>> => {
+      return supabase
+        .from("vat_returns")
+        .select("*")
+        .order("period_start", { ascending: false });
+    },
+    getById: async (id: string): Promise<ApiResponse<VatReturn>> => {
+      return supabase.from("vat_returns").select("*").eq("id", id).single();
+    },
+    create: async (data: Omit<VatReturn, "id" | "created_at">): Promise<ApiResponse<VatReturn>> => {
+      return supabase.from("vat_returns").insert(data).select().single();
+    },
+    update: async (id: string, data: Partial<VatReturn>): Promise<ApiResponse<VatReturn>> => {
+      return supabase
+        .from("vat_returns")
+        .update(data)
+        .eq("id", id)
+        .select()
+        .single();
+    },
+    delete: async (id: string): Promise<ApiResponse<null>> => {
+      return supabase.from("vat_returns").delete().eq("id", id);
+    },
+    getByPeriod: async (
+      periodStart: string,
+      periodEnd: string,
+    ): Promise<ApiResponse<VatReturn[]>> => {
+      return supabase
+        .from("vat_returns")
+        .select("*")
+        .gte("period_start", periodStart)
+        .lte("period_end", periodEnd)
+        .order("period_start", { ascending: false });
+    },
+    submit: async (id: string): Promise<ApiResponse<VatReturn>> => {
+      return supabase
+        .from("vat_returns")
+        .update({ status: "submitted", filed_date: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+    },
+  },
+
+  branches: {
+    getAll: async (): Promise<ApiResponse<Branch[]>> => {
+      return supabase
+        .from("branches")
+        .select("*")
+        .order("name", { ascending: true });
+    },
+    getById: async (id: string): Promise<ApiResponse<Branch>> => {
+      return supabase.from("branches").select("*").eq("id", id).single();
+    },
+    create: async (data: Omit<Branch, "id" | "created_at">): Promise<ApiResponse<Branch>> => {
+      return supabase.from("branches").insert(data).select().single();
+    },
+    update: async (id: string, data: Partial<Branch>): Promise<ApiResponse<Branch>> => {
+      return supabase
+        .from("branches")
+        .update(data)
+        .eq("id", id)
+        .select()
+        .single();
+    },
+    delete: async (id: string): Promise<ApiResponse<null>> => {
+      return supabase.from("branches").delete().eq("id", id);
+    },
+    getActive: async (): Promise<ApiResponse<Branch[]>> => {
+      return supabase
+        .from("branches")
+        .select("*")
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+    },
+  },
+
+  gymSettings: {
+    get: async (): Promise<ApiResponse<GymSettings>> => {
+      return supabase.from("gym_settings").select("*").single();
+    },
+    update: async (data: Partial<GymSettings>): Promise<ApiResponse<GymSettings>> => {
+      return supabase.from("gym_settings").upsert(data).select().single();
     },
   },
 };

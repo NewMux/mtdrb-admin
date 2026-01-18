@@ -1,30 +1,116 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiUsers,
   FiUserPlus,
   FiUserCheck,
   FiArrowUpRight,
 } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 const MemberEngagement: React.FC = () => {
-  const engagementMetrics = [
+  interface EngagementMetric {
+    title: string;
+    value: string;
+    icon: React.ReactNode;
+    color: "blue" | "green";
+    change: number;
+    trend: "up" | "down";
+  }
+
+  const { tenantId } = useAuth();
+  const [engagementMetrics, setEngagementMetrics] = useState<
+    EngagementMetric[]
+  >([
     {
       title: "Active Members",
-      value: "247",
+      value: "0",
       icon: <FiUsers className="h-5 w-5" />,
       color: "blue",
-      change: "+5",
+      change: 0,
       trend: "up",
     },
     {
       title: "New Signups",
-      value: "12",
+      value: "0",
       icon: <FiUserPlus className="h-5 w-5" />,
       color: "green",
-      change: "+2",
+      change: 0,
       trend: "up",
     },
-  ];
+  ]);
+
+  const fetchData = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      const lastWeek = new Date();
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+      // Fetch active members
+      const [currentMembers, previousMembers, newSignups, previousNewSignups] = await Promise.all([
+        supabase
+          .from("members")
+          .select("id, status, membership_status")
+          .eq("tenant_id", tenantId)
+          .in("status", ["active"])
+          .in("membership_status", ["active", "trial"]),
+        supabase
+          .from("members")
+          .select("id, status, membership_status")
+          .eq("tenant_id", tenantId)
+          .in("status", ["active"])
+          .in("membership_status", ["active", "trial"])
+          .gte("created_at", formatDate(lastWeek)),
+        supabase
+          .from("members")
+          .select("id, created_at")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(lastMonth)),
+        supabase
+          .from("members")
+          .select("id, created_at")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(new Date(lastMonth.getTime() - 30 * 24 * 60 * 60 * 1000)))
+          .lte("created_at", formatDate(lastMonth)),
+      ]);
+
+      const currentCount = (currentMembers.data || []).length;
+      const previousCount = (previousMembers.data || []).length;
+      const memberChange = currentCount - previousCount;
+
+      const newSignupsCount = (newSignups.data || []).length;
+      const previousNewSignupsCount = (previousNewSignups.data || []).length;
+      const signupsChange = newSignupsCount - previousNewSignupsCount;
+
+      setEngagementMetrics([
+        {
+          title: "Active Members",
+          value: currentCount.toString(),
+          icon: <FiUsers className="h-5 w-5" />,
+          color: "blue",
+          change: memberChange,
+          trend: memberChange >= 0 ? "up" : "down",
+        },
+        {
+          title: "New Signups",
+          value: newSignupsCount.toString(),
+          icon: <FiUserPlus className="h-5 w-5" />,
+          color: "green",
+          change: signupsChange,
+          trend: signupsChange >= 0 ? "up" : "down",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error fetching member engagement:", error);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <section className="bg-white border border-gray-100 rounded-2xl p-6 transition-colors duration-300">

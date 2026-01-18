@@ -10,20 +10,34 @@ import {
   FiMoreVertical,
 } from "react-icons/fi";
 // Removed import from mockReports - define types locally
+interface KPIValue {
+  value: number;
+  change: number;
+  trend?: string;
+}
+
 interface KPIStats {
-  revenue: { value: number; change: number };
-  members: { value: number; change: number };
-  classes: { value: number; change: number };
-  attendance: { value: number; change: number };
+  revenue: KPIValue;
+  members: KPIValue;
+  classes: KPIValue;
+  attendance: KPIValue;
+  generatedReports: KPIValue;
+  downloads: KPIValue;
+  scheduledReports: KPIValue;
+  autoReports: KPIValue;
 }
 
 const getKPIStats = async (): Promise<KPIStats> => {
   // TODO: Fetch from Supabase
   return {
-    revenue: { value: 0, change: 0 },
-    members: { value: 0, change: 0 },
-    classes: { value: 0, change: 0 },
-    attendance: { value: 0, change: 0 },
+    revenue: { value: 0, change: 0, trend: "+0%" },
+    members: { value: 0, change: 0, trend: "+0%" },
+    classes: { value: 0, change: 0, trend: "+0%" },
+    attendance: { value: 0, change: 0, trend: "+0%" },
+    generatedReports: { value: 0, change: 0, trend: "+0%" },
+    downloads: { value: 0, change: 0, trend: "+0%" },
+    scheduledReports: { value: 0, change: 0, trend: "+0%" },
+    autoReports: { value: 0, change: 0, trend: "+0%" },
   };
 };
 import { toast } from "react-hot-toast";

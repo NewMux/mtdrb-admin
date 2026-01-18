@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FiCalendar,
   FiClock,
   FiRepeat,
   FiZap,
-  FiAlertCircle,
   FiCheck,
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
@@ -37,7 +35,23 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
-  const [formData, setFormData] = useState({
+  type RecurrenceOption = "daily" | "weekly" | "biweekly" | "monthly";
+
+  interface ScheduleFormData {
+    name: string;
+    type: string;
+    trainer_id: string;
+    room_id: string;
+    start_time: string;
+    end_time: string;
+    start_date: string;
+    end_date: string;
+    recurrence: RecurrenceOption;
+    days_of_week: string[];
+    max_occurrences: number;
+  }
+
+  const [formData, setFormData] = useState<ScheduleFormData>({
     name: "",
     type: "",
     trainer_id: "",
@@ -47,62 +61,24 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
     start_date: "",
     end_date: "",
     recurrence: "weekly",
-    days_of_week: [] as string[],
+    days_of_week: [],
     max_occurrences: 12,
   });
 
   const [loading, setLoading] = useState(false);
-  const [conflicts, setConflicts] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_conflicts, _setConflicts] = useState<{ date: string; reason: string }[]>([]);
   const [optimalTimes, setOptimalTimes] = useState<string[]>([]);
-  const [schedulePreview, setSchedulePreview] = useState<any[]>([]);
+  const [schedulePreview, setSchedulePreview] = useState<{ date: string; time: string; dayOfWeek: string }[]>([]);
 
   const {
     trainers,
     rooms,
     errors,
     recommendations,
-    checkConflicts,
     validateForm,
     getPopularTimeSlots,
   } = useSmartClassModal({ classId, isPro });
-
-  // Get optimal times on mount
-  useEffect(() => {
-    const fetchOptimalTimes = async () => {
-      const times = await getPopularTimeSlots();
-      setOptimalTimes(times);
-    };
-    fetchOptimalTimes();
-  }, []);
-
-  // Generate schedule preview when form data changes
-  useEffect(() => {
-    if (
-      formData.start_date &&
-      formData.end_date &&
-      formData.days_of_week.length > 0
-    ) {
-      generateSchedulePreview();
-    }
-  }, [
-    formData.start_date,
-    formData.end_date,
-    formData.days_of_week,
-    formData.recurrence,
-  ]);
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleDayToggle = (day: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      days_of_week: prev.days_of_week.includes(day)
-        ? prev.days_of_week.filter((d) => d !== day)
-        : [...prev.days_of_week, day],
-    }));
-  };
 
   const generateSchedulePreview = () => {
     if (
@@ -116,24 +92,24 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
     const startDate = new Date(formData.start_date);
     const endDate = new Date(formData.end_date);
-    const preview: any[] = [];
-    let currentDate = new Date(startDate);
+    const preview: { date: string; time: string; dayOfWeek: string }[] = [];
+    const currentDate = new Date(startDate);
     let occurrenceCount = 0;
+
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     while (
       currentDate <= endDate &&
-      occurrenceCount < formData.max_occurrences
+      (formData.max_occurrences === 0 || occurrenceCount < formData.max_occurrences)
     ) {
-      const dayOfWeek = currentDate
-        .toLocaleDateString("en-US", { weekday: "long" })
-        .toLowerCase();
+      const dayIndex = currentDate.getDay();
+      const dayName = dayNames[dayIndex];
 
-      if (formData.days_of_week.includes(dayOfWeek)) {
+      if (formData.days_of_week.includes(dayName)) {
         preview.push({
-          date: new Date(currentDate),
-          day: dayOfWeek,
-          time: `${formData.start_time} - ${formData.end_time}`,
-          occurrence: occurrenceCount + 1,
+          date: currentDate.toISOString().split("T")[0],
+          time: formData.start_time || "09:00",
+          dayOfWeek: dayName,
         });
         occurrenceCount++;
       }
@@ -142,6 +118,50 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
     }
 
     setSchedulePreview(preview);
+  };
+
+  // Get optimal times on mount
+  useEffect(() => {
+    const fetchOptimalTimes = async () => {
+      const times = await getPopularTimeSlots();
+      setOptimalTimes(times);
+    };
+    fetchOptimalTimes();
+  }, [getPopularTimeSlots]);
+
+  // Generate schedule preview when form data changes
+  useEffect(() => {
+    if (
+      formData.start_date &&
+      formData.end_date &&
+      formData.days_of_week.length > 0
+    ) {
+      generateSchedulePreview();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    formData.start_date,
+    formData.end_date,
+    formData.days_of_week,
+    formData.recurrence,
+    formData.max_occurrences,
+    formData.start_time,
+  ]);
+
+  const handleInputChange = <K extends keyof ScheduleFormData>(
+    field: K,
+    value: ScheduleFormData[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleDayToggle = (day: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      days_of_week: prev.days_of_week.includes(day)
+        ? prev.days_of_week.filter((d) => d !== day)
+        : [...prev.days_of_week, day],
+    }));
   };
 
   const handleSave = async () => {
@@ -215,8 +235,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       onClose={onClose}
       title="Schedule Recurring Classes"
       subtitle="Create a series of classes with advanced scheduling"
-      isPro={isPro}
-      proFeature="Smart Optimized"
+      isProFeature={isPro}
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -413,7 +432,9 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             <SelectField
               label="Recurrence Type"
               value={formData.recurrence}
-              onChange={(value) => handleInputChange("recurrence", value)}
+              onChange={(value) =>
+                handleInputChange("recurrence", value as RecurrenceOption)
+              }
               options={recurrenceOptions}
               required
             />
@@ -468,7 +489,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-dark-900 dark:text-white">
-                        {session.date.toLocaleDateString("en-US", {
+                        {new Date(session.date).toLocaleDateString("en-US", {
                           weekday: "long",
                           month: "short",
                           day: "numeric",
@@ -479,7 +500,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
                       </span>
                     </div>
                     <span className="text-xs text-light-500 dark:text-dark-500">
-                      #{session.occurrence}
+                      {session.dayOfWeek}
                     </span>
                   </div>
                 </div>
@@ -494,7 +515,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         )}
 
         {/* Conflict Alert */}
-        <ConflictAlert conflicts={conflicts} />
+        <ConflictAlert conflicts={_conflicts} />
       </div>
     </SmartModal>
   );

@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../../AppleStyleModal";
-import { FiDollarSign, FiCalendar, FiTag, FiFileText } from "react-icons/fi";
+
+type ExpenseFormData = {
+  vendor: string;
+  description: string;
+  amount: string;
+  category: string;
+  date: string;
+  receipt: File | null;
+};
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -15,7 +23,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ExpenseFormData>({
     vendor: "",
     description: "",
     amount: "",
@@ -24,14 +32,19 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     receipt: null as File | null,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    e?: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>,
+  ) => {
+    e?.preventDefault();
     // TODO: Implement expense creation logic
     onSuccess();
     onClose();
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof ExpenseFormData>(
+    field: K,
+    value: ExpenseFormData[K],
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,

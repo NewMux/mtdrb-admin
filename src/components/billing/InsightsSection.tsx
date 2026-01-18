@@ -92,7 +92,7 @@ export const InsightsSection: React.FC<InsightsSectionProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, page, tenantId, selectedStatus]);
+  }, [searchQuery, page, tenantId, selectedStatus, dateRange]);
 
   const fetchMetrics = useCallback(async () => {
     try {

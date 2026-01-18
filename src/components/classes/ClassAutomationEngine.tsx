@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiZap,
@@ -7,17 +7,10 @@ import {
   FiSettings,
   FiUsers,
   FiCalendar,
-  FiClock,
   FiBell,
   FiTrendingUp,
   FiTarget,
-  FiMessageSquare,
-  FiSend,
-  FiCheckCircle,
-  FiAlertTriangle,
-  FiBarChart,
 } from "react-icons/fi";
-import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface AutomationWorkflow {
@@ -37,7 +30,10 @@ interface AutomationWorkflow {
     revenue: number;
     lastRun: string;
   };
-  settings: Record<string, any>;
+  settings: Record<
+    string,
+    string | number | boolean | Array<string | number | boolean> | undefined
+  >;
 }
 
 interface ClassAutomationEngineProps {
@@ -55,7 +51,7 @@ export default function ClassAutomationEngine({
   const { user } = useAuth();
 
   // Predefined smart workflows
-  const defaultWorkflows: AutomationWorkflow[] = [
+  const defaultWorkflows = useMemo<AutomationWorkflow[]>(() => [
     {
       id: "smart-booking-reminders",
       name: "Smart Booking Reminders",
@@ -222,25 +218,25 @@ export default function ClassAutomationEngine({
         attendanceRewards: false,
       },
     },
-  ];
+  ], []);
 
   useEffect(() => {
-    loadWorkflows();
-  }, [user, refreshKey]);
-
-  const loadWorkflows = async () => {
     if (!user) return;
 
-    try {
-      setLoading(true);
-      // For now, use default workflows. In production, load from database
-      setWorkflows(defaultWorkflows);
-    } catch (error) {
-      console.error("Error loading workflows:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadWorkflows = async () => {
+      try {
+        setLoading(true);
+        // For now, use default workflows. In production, load from database
+        setWorkflows(defaultWorkflows);
+      } catch (error) {
+        console.error("Error loading workflows:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWorkflows();
+  }, [user, refreshKey, defaultWorkflows]);
 
   const toggleWorkflow = async (workflowId: string) => {
     setWorkflows((prev) =>
@@ -535,7 +531,9 @@ export default function ClassAutomationEngine({
                         ) : (
                           <input
                             type="text"
-                            defaultValue={value}
+                            defaultValue={
+                              Array.isArray(value) ? value.join(", ") : value ?? ""
+                            }
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           />
                         )}

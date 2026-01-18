@@ -228,7 +228,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ isInView, onScrollToS
               Ready to Dominate Your Market?
             </h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Join the gym owners who've already started crushing the competition with Idara.
+              Join the gym owners who&apos;ve already started crushing the competition with Idara.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button

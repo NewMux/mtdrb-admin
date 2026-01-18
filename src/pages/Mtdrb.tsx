@@ -40,7 +40,7 @@ const PROJECT_KB = [
   {
     title: "Key Features",
     content:
-      "Memberships, Classes, Billing, Trainers, Reports, Tasks, Promotions, Notifications. Each feature has its own page, components, and database tables.",
+      "Memberships, Classes, Billing, Trainers, Reports, Tasks, Notifications. Each feature has its own page, components, and database tables.",
   },
   {
     title: "UI/UX Patterns",

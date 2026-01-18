@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiTrendingUp,
   FiUsers,
@@ -9,6 +9,8 @@ import {
   FiArrowUpRight,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -28,7 +30,7 @@ const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
   change,
-  trend,
+  trend: _trend,
   icon,
   color,
   subtitle,
@@ -124,65 +126,249 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
 export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
   refreshKey,
 }) => {
-  const kpis = [
+  const { tenantId } = useAuth();
+  const [kpis, setKpis] = useState<KPICardProps[]>([
     {
       title: "Active Members",
-      value: 1247,
-      change: "+12.5%",
-      trend: "up" as const,
+      value: 0,
+      change: "Loading...",
+      trend: "neutral",
       icon: <FiUsers className="h-6 w-6 text-blue-600" />,
       color: "blue",
       subtitle: "vs last month",
     },
     {
       title: "Monthly Revenue",
-      value: "₹24.5k",
-      change: "+18.2%",
-      trend: "up" as const,
+      value: "0",
+      change: "Loading...",
+      trend: "neutral",
       icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
       color: "green",
-      subtitle: "Target: ₹25k",
+      subtitle: "This month",
     },
     {
       title: "Class Attendance",
-      value: "89.4%",
-      change: "+5.3%",
-      trend: "up" as const,
+      value: "0%",
+      change: "Loading...",
+      trend: "neutral",
       icon: <FiCalendar className="h-6 w-6 text-purple-600" />,
       color: "purple",
       subtitle: "Average this week",
     },
     {
       title: "Member Retention",
-      value: "94.2%",
-      change: "+2.1%",
-      trend: "up" as const,
+      value: "0%",
+      change: "Loading...",
+      trend: "neutral",
       icon: <FiTarget className="h-6 w-6 text-orange-600" />,
       color: "orange",
       subtitle: "12-month average",
     },
-  ];
+  ]);
+  const [smartInsights, setSmartInsights] = useState<unknown[]>([]);
+  const [, setLoading] = useState(true);
 
-  const smartInsights = [
-    {
-      icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
-      title: "Peak Hour Optimization",
-      description:
-        "Tuesday 6-7 PM shows 40% higher attendance. Consider adding more classes during this time to maximize revenue.",
-      action: "Schedule Class",
-      priority: "high" as const,
-      value: "+40% attendance",
-    },
-    {
-      icon: <FiUsers className="h-6 w-6 text-blue-600" />,
-      title: "Member Churn Risk",
-      description:
-        "12 members haven't visited in 14+ days. Send personalized re-engagement campaigns to retain them.",
-      action: "Send Campaign",
-      priority: "medium" as const,
-      value: "12 at-risk",
-    },
-  ];
+  const fetchData = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      setLoading(true);
+
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+      // Get current week dates
+      const dayOfWeek = now.getDay();
+      const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), diff);
+      weekStart.setHours(0, 0, 0, 0);
+
+      // Fetch data
+      const [
+        currentMembers,
+        previousMembers,
+        currentInvoices,
+        previousInvoices,
+        weekBookings,
+        allMembers,
+      ] = await Promise.all([
+        supabase
+          .from("members")
+          .select("id, status, membership_status, created_at")
+          .eq("tenant_id", tenantId)
+          .in("status", ["active"])
+          .in("membership_status", ["active", "trial"]),
+        supabase
+          .from("members")
+          .select("id, status, membership_status, created_at")
+          .eq("tenant_id", tenantId)
+          .in("status", ["active"])
+          .in("membership_status", ["active", "trial"])
+          .gte("created_at", formatDate(previousMonthStart))
+          .lte("created_at", formatDate(previousMonthEnd)),
+        supabase
+          .from("invoices")
+          .select("amount, total, status")
+          .eq("tenant_id", tenantId)
+          .eq("status", "paid")
+          .gte("created_at", formatDate(currentMonthStart)),
+        supabase
+          .from("invoices")
+          .select("amount, total, status")
+          .eq("tenant_id", tenantId)
+          .eq("status", "paid")
+          .gte("created_at", formatDate(previousMonthStart))
+          .lte("created_at", formatDate(previousMonthEnd)),
+        supabase
+          .from("class_bookings")
+          .select("id, status, created_at")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(weekStart)),
+        supabase
+          .from("members")
+          .select("id, created_at, join_date")
+          .eq("tenant_id", tenantId),
+      ]);
+
+      // Calculate metrics
+      const currentMemberCount = (currentMembers.data || []).length;
+      const previousMemberCount = (previousMembers.data || []).length;
+      const memberChange = previousMemberCount > 0
+        ? ((currentMemberCount - previousMemberCount) / previousMemberCount) * 100
+        : 0;
+
+      const currentRevenue = (currentInvoices.data || []).reduce(
+        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+        0
+      );
+      const previousRevenue = (previousInvoices.data || []).reduce(
+        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+        0
+      );
+      const revenueChange = previousRevenue > 0
+        ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
+        : 0;
+
+      const weekAttended = (weekBookings.data || []).filter(
+        b => b.status === "checked_in" || b.status === "completed"
+      ).length;
+      const weekTotal = (weekBookings.data || []).length;
+      const weekAttendanceRate = weekTotal > 0 ? (weekAttended / weekTotal) * 100 : 0;
+
+      // Calculate retention (members who joined 90+ days ago and are still active)
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const retainedMembers = (allMembers.data || []).filter(m => {
+        const joinDate = new Date(m.join_date || m.created_at);
+        return joinDate <= ninetyDaysAgo;
+      }).length;
+      const totalOldMembers = (allMembers.data || []).filter(m => {
+        const joinDate = new Date(m.join_date || m.created_at);
+        return joinDate <= ninetyDaysAgo;
+      }).length;
+      const retentionRate = totalOldMembers > 0 ? (retainedMembers / totalOldMembers) * 100 : 0;
+
+      // Get currency
+      const { data: settings } = await supabase
+        .from("gym_settings")
+        .select("currency")
+        .eq("tenant_id", tenantId)
+        .single();
+
+      const currency = settings?.currency || "AED";
+      const currencySymbol = currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : "$";
+
+      // Find inactive members (haven't visited in 14+ days)
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const { data: recentBookings } = await supabase
+        .from("class_bookings")
+        .select("member_id")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDate(fourteenDaysAgo));
+
+      const activeMemberIds = new Set((recentBookings || []).map(b => b.member_id));
+      const inactiveMembers = (currentMembers.data || []).filter(
+        m => !activeMemberIds.has(m.id)
+      ).length;
+
+      setKpis([
+        {
+          title: "Active Members",
+          value: currentMemberCount,
+          change: memberChange >= 0 ? `+${memberChange.toFixed(1)}%` : `${memberChange.toFixed(1)}%`,
+          trend: memberChange >= 0 ? "up" : "down",
+          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          color: "blue",
+          subtitle: "vs last month",
+        },
+        {
+          title: "Monthly Revenue",
+          value: `${currencySymbol} ${(currentRevenue / 1000).toFixed(1)}k`,
+          change: revenueChange >= 0 ? `+${revenueChange.toFixed(1)}%` : `${revenueChange.toFixed(1)}%`,
+          trend: revenueChange >= 0 ? "up" : "down",
+          icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
+          color: "green",
+          subtitle: `Target: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+        },
+        {
+          title: "Class Attendance",
+          value: `${weekAttendanceRate.toFixed(1)}%`,
+          change: "This week",
+          trend: "up",
+          icon: <FiCalendar className="h-6 w-6 text-purple-600" />,
+          color: "purple",
+          subtitle: "Average this week",
+        },
+        {
+          title: "Member Retention",
+          value: `${retentionRate.toFixed(1)}%`,
+          change: "90+ days",
+          trend: retentionRate >= 85 ? "up" : "down",
+          icon: <FiTarget className="h-6 w-6 text-orange-600" />,
+          color: "orange",
+          subtitle: "12-month average",
+        },
+      ]);
+
+      // Generate insights
+      const insights: SmartInsightProps[] = [];
+      
+      if (inactiveMembers > 0) {
+        insights.push({
+          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          title: "Member Churn Risk",
+          description: `${inactiveMembers} members haven't visited in 14+ days. Send personalized re-engagement campaigns to retain them.`,
+          action: "Send Campaign",
+          priority: inactiveMembers > 10 ? "high" : "medium" as const,
+          value: `${inactiveMembers} at-risk`,
+        });
+      }
+
+      if (weekAttendanceRate > 80) {
+        insights.push({
+          icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
+          title: "High Attendance Week",
+          description: `This week's attendance is ${weekAttendanceRate.toFixed(1)}%. Consider adding more classes during peak hours to maximize revenue.`,
+          action: "Schedule Class",
+          priority: "medium" as const,
+          value: `${weekAttendanceRate.toFixed(1)}% attendance`,
+        });
+      }
+
+      setSmartInsights(insights);
+    } catch (error) {
+      console.error("Error fetching dashboard overview:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, refreshKey]);
 
   return (
     <div className="space-y-8">
@@ -214,27 +400,32 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       </div>
 
       {/* Smart Insights - Enhanced Single Column */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Live Updates</span>
+      {smartInsights.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Live Updates</span>
+            </div>
           </div>
-        </div>
-        <div className="space-y-4">
-          {smartInsights.map((insight, index) => (
+          <div className="space-y-4">
+            {smartInsights.map((insight, index) => {
+              const typedInsight = insight as SmartInsightProps;
+              return (
             <motion.div
               key={index}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.2, duration: 0.3 }}
             >
-              <SmartInsight {...insight} />
+              <SmartInsight {...typedInsight} />
             </motion.div>
-          ))}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

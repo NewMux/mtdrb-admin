@@ -68,6 +68,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
     if (isOpen && classId) {
       fetchClass();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId]);
 
   const exportOptions: ExportOption[] = [
@@ -323,7 +324,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
-                      dateRange: e.target.value as any,
+                      dateRange: e.target.value as ExportFilter["dateRange"],
                     }))
                   }
                   className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"

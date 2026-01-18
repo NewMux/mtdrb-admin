@@ -339,18 +339,23 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       {member.email}
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          member.fitness_level === "beginner"
+                      {(() => {
+                        const fitnessLevel = member.fitness_level ?? "Beginner";
+                        const fitnessKey = fitnessLevel.toLowerCase();
+                        const fitnessClass =
+                          fitnessKey === "beginner"
                             ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                            : member.fitness_level === "intermediate"
+                            : fitnessKey === "intermediate"
                               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}
-                      >
-                        {member.fitness_level?.charAt(0).toUpperCase() +
-                          member.fitness_level?.slice(1) || "Beginner"}
-                      </span>
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+                        return (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${fitnessClass}`}
+                          >
+                            {fitnessLevel}
+                          </span>
+                        );
+                      })()}
                       {member.goals && member.goals.length > 0 && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           Goals: {member.goals.slice(0, 2).join(", ")}

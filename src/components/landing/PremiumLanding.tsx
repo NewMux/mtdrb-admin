@@ -62,8 +62,15 @@ const PremiumLanding: React.FC = () => {
                 Features
               </a>
               <a
-                href="#solutions"
-                className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                href="#features"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.querySelector("#features");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer"
               >
                 Solutions
               </a>
@@ -119,9 +126,16 @@ const PremiumLanding: React.FC = () => {
               Features
             </a>
             <a
-              href="#solutions"
-              className="block text-slate-600 hover:text-slate-900 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
+              href="#features"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.querySelector("#features");
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+                setMobileMenuOpen(false);
+              }}
+              className="block text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
             >
               Solutions
             </a>
@@ -133,9 +147,11 @@ const PremiumLanding: React.FC = () => {
               Pricing
             </a>
             <div className="pt-4 border-t border-slate-200">
-              <button className="w-full px-6 py-2.5 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl">
-                Get Started
-              </button>
+              <Link to="/signup" className="block">
+                <button className="w-full px-6 py-2.5 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl">
+                  Get Started
+                </button>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -183,21 +199,31 @@ const PremiumLanding: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <motion.button
+                <Link to="/signup">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-8 py-4 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    Start Free Trial
+                    <FiArrowRight className="w-5 h-5" />
+                  </motion.button>
+                </Link>
+                <motion.a
+                  href="#features"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  Start Free Trial
-                  <FiArrowRight className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const element = document.querySelector("#features");
+                    if (element) {
+                      element.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
                   className="px-8 py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-xl hover:border-slate-400 transition-all duration-200"
                 >
                   See How It Works
-                </motion.button>
+                </motion.a>
               </motion.div>
             </motion.div>
 
@@ -502,7 +528,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-3 text-slate-700">
                   <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Up to 500 members</span>
+                  <span>+$20 USD per extra location</span>
                 </li>
                 <li className="flex items-center gap-3 text-slate-700">
                   <FiCheck className="w-5 h-5 text-[#40C4FF]" />
@@ -543,7 +569,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-3 text-slate-700">
                   <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Unlimited locations</span>
+                  <span>$10 USD per extra location</span>
                 </li>
                 <li className="flex items-center gap-3 text-slate-700">
                   <FiCheck className="w-5 h-5 text-[#40C4FF]" />
@@ -562,9 +588,11 @@ const PremiumLanding: React.FC = () => {
                   <span>WhatsApp bot</span>
                 </li>
               </ul>
-              <button className="w-full px-6 py-3 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                Get Started
-              </button>
+              <Link to="/signup" className="block">
+                <button className="w-full px-6 py-3 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                  Get Started
+                </button>
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -589,17 +617,47 @@ const PremiumLanding: React.FC = () => {
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
-                  <a href="#features" className="hover:text-white transition-colors">
+                  <a 
+                    href="#features" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.querySelector("#features");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
                     Features
                   </a>
                 </li>
                 <li>
-                  <a href="#pricing" className="hover:text-white transition-colors">
+                  <a 
+                    href="#pricing" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.querySelector("#pricing");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
                     Pricing
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a 
+                    href="#features" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.querySelector("#features");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
                     Integrations
                   </a>
                 </li>
@@ -611,19 +669,19 @@ const PremiumLanding: React.FC = () => {
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <span className="text-slate-500 cursor-not-allowed">
                     About
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <span className="text-slate-500 cursor-not-allowed">
                     Blog
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <span className="text-slate-500 cursor-not-allowed">
                     Careers
-                  </a>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -633,19 +691,19 @@ const PremiumLanding: React.FC = () => {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <span className="text-slate-500 cursor-not-allowed">
                     Documentation
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <span className="text-slate-500 cursor-not-allowed">
                     Help Center
-                  </a>
+                  </span>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <Link to="/login" className="hover:text-white transition-colors">
                     Contact
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiCalendar,
   FiUsers,
@@ -80,7 +79,6 @@ const reportSections = [
 export default function GenerateClassReportModal({
   open,
   onClose,
-  classId = "1",
   className = "HIIT Blast",
   onSuccess,
   isPro,
@@ -129,16 +127,6 @@ export default function GenerateClassReportModal({
 
   const handleRemoveSection = (sectionId: string) => {
     setSelectedSections(selectedSections.filter((id) => id !== sectionId));
-  };
-
-  const getSectionIcon = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.icon || FiCalendar;
-  };
-
-  const getSectionLabel = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.label || sectionId;
   };
 
   function Section({
@@ -263,7 +251,7 @@ export default function GenerateClassReportModal({
       {isPro && classData.smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {classData.smartInsights.map((insight: any, index: number) => (
+            {classData.smartInsights.map((insight, index) => (
               <div
                 key={index}
                 className={`p-4 border rounded-lg ${

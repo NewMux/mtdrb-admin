@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiUsers,
   FiClock,
@@ -9,7 +9,6 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
-import { realtimeService } from "../../services/realtimeService";
 
 interface ClassMember {
   id: string;
@@ -51,60 +50,7 @@ export const LiveClassRoster: React.FC<LiveClassRosterProps> = ({
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const { tenantId, userMetadata } = useAuth();
 
-  // Fetch initial data
-  useEffect(() => {
-    if (classId && tenantId) {
-      fetchClassDetails();
-      fetchRoster();
-    }
-  }, [classId, tenantId]);
-
-  // Set up real-time subscriptions
-  useEffect(() => {
-    if (!classId || !tenantId) return;
-
-    // Subscribe to booking changes
-    const bookingSubscription = supabase
-      .channel(`class_roster_${classId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "class_bookings",
-          filter: `class_id=eq.${classId}`,
-        },
-        (payload) => {
-          handleRosterUpdate(payload);
-          setLastUpdate(new Date());
-        },
-      )
-      .subscribe();
-
-    // Subscribe to class updates
-    const classSubscription = supabase
-      .channel(`class_details_${classId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "classes",
-          filter: `id=eq.${classId}`,
-        },
-        (payload) => {
-          updateClassDetails(payload.new as any);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      bookingSubscription.unsubscribe();
-      classSubscription.unsubscribe();
-    };
-  }, [classId, tenantId]);
-
-  const fetchClassDetails = async () => {
+  const fetchClassDetails = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("classes")
@@ -128,9 +74,9 @@ export const LiveClassRoster: React.FC<LiveClassRosterProps> = ({
       setError("Failed to load class details");
       console.error(err);
     }
-  };
+  }, [classId, tenantId]);
 
-  const fetchRoster = async () => {
+  const fetchRoster = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -166,28 +112,18 @@ export const LiveClassRoster: React.FC<LiveClassRosterProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [classId, tenantId]);
 
-  const handleRosterUpdate = (payload: any) => {
-    if (payload.eventType === "INSERT") {
-      // New booking - fetch member details and add to roster
-      fetchMemberForBooking(payload.new);
-    } else if (payload.eventType === "UPDATE") {
-      // Update existing booking
-      setRoster((prev) =>
-        prev.map((member) =>
-          member.id === payload.new.id ? { ...member, ...payload.new } : member,
-        ),
-      );
-    } else if (payload.eventType === "DELETE") {
-      // Remove booking
-      setRoster((prev) =>
-        prev.filter((member) => member.id !== payload.old.id),
-      );
-    }
-  };
+  interface BookingPayload {
+    id: string;
+    member_id: string;
+    status: string;
+    check_in_time?: string;
+    check_out_time?: string;
+    created_at: string;
+  }
 
-  const fetchMemberForBooking = async (booking: any) => {
+  const fetchMemberForBooking = useCallback(async (booking: BookingPayload) => {
     try {
       const { data: memberData } = await supabase
         .from("members")
@@ -201,7 +137,7 @@ export const LiveClassRoster: React.FC<LiveClassRosterProps> = ({
           member_id: booking.member_id,
           member_name: `${memberData.first_name} ${memberData.last_name}`,
           member_email: memberData.email,
-          status: booking.status,
+          status: booking.status as ClassMember["status"],
           check_in_time: booking.check_in_time,
           check_out_time: booking.check_out_time,
           booking_time: booking.created_at,
@@ -212,11 +148,90 @@ export const LiveClassRoster: React.FC<LiveClassRosterProps> = ({
     } catch (error) {
       console.error("Failed to fetch member details:", error);
     }
-  };
+  }, []);
 
-  const updateClassDetails = (updatedClass: any) => {
+  const handleRosterUpdate = useCallback((payload: { eventType: string; new?: BookingPayload; old?: { id: string } }) => {
+    if (payload.eventType === "INSERT" && payload.new) {
+      // New booking - fetch member details and add to roster
+      fetchMemberForBooking(payload.new);
+    } else if (payload.eventType === "UPDATE" && payload.new) {
+      // Update existing booking
+      const updatedBooking = payload.new;
+      setRoster((prev) =>
+        prev.map((member) =>
+          member.id === updatedBooking.id 
+            ? { ...member, status: updatedBooking.status as ClassMember["status"], check_in_time: updatedBooking.check_in_time, check_out_time: updatedBooking.check_out_time } 
+            : member,
+        ),
+      );
+    } else if (payload.eventType === "DELETE" && payload.old) {
+      // Remove booking
+      setRoster((prev) =>
+        prev.filter((member) => member.id !== payload.old?.id),
+      );
+    }
+  }, [fetchMemberForBooking]);
+
+  const updateClassDetails = useCallback((updatedClass: Partial<ClassDetails>) => {
     setClassDetails((prev) => (prev ? { ...prev, ...updatedClass } : null));
-  };
+  }, []);
+
+  // Fetch initial data
+  useEffect(() => {
+    if (classId && tenantId) {
+      fetchClassDetails();
+      fetchRoster();
+    }
+  }, [classId, tenantId, fetchClassDetails, fetchRoster]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!classId || !tenantId) return;
+
+    // Subscribe to booking changes
+    const bookingSubscription = supabase
+      .channel(`class_roster_${classId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "class_bookings",
+          filter: `class_id=eq.${classId}`,
+        },
+        (payload) => {
+          handleRosterUpdate({
+            eventType: payload.eventType,
+            new: payload.new as BookingPayload | undefined,
+            old: payload.old as { id: string } | undefined,
+          });
+          setLastUpdate(new Date());
+        },
+      )
+      .subscribe();
+
+    // Subscribe to class updates
+    const classSubscription = supabase
+      .channel(`class_details_${classId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "classes",
+          filter: `id=eq.${classId}`,
+        },
+        (payload) => {
+          updateClassDetails(payload.new as Partial<ClassDetails>);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      bookingSubscription.unsubscribe();
+      classSubscription.unsubscribe();
+    };
+  }, [classId, tenantId, handleRosterUpdate, updateClassDetails]);
 
   const handleCheckIn = async (bookingId: string) => {
     try {

@@ -94,7 +94,7 @@ const MemberModalsDemo: React.FC = () => {
     setActiveModal(null);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     // You could add toast notifications here
   };
 

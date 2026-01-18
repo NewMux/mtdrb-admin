@@ -8,7 +8,7 @@ import {
   FiCheckCircle,
   FiAlertTriangle,
 } from "react-icons/fi";
-import Papa from "papaparse";
+import Papa, { type ParseResult } from "papaparse";
 import { supabase } from "../../supabaseClient";
 
 const REQUIRED_COLUMNS = ["name", "status"];
@@ -223,7 +223,7 @@ export default function MemberImportModal({
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: async (results) => {
+      complete: async (results: ParseResult<CsvData>) => {
         const headers = results.meta.fields || [];
         setCsvHeaders(headers);
         const data = results.data as CsvData[];

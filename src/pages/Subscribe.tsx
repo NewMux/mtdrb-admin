@@ -110,7 +110,7 @@ export default function Subscribe() {
       }
     } catch (e) {
       setError("Unexpected error");
-      console.error("Subscribe error:", e);
+      if (import.meta.env.DEV) console.error("Subscribe error:", e);
     }
     setSubscribing(false);
   };

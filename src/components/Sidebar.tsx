@@ -7,14 +7,11 @@ import {
   FiDollarSign,
   FiBarChart2,
   FiSettings,
-  FiFileText,
   FiCheckSquare,
   FiUser,
   FiLogOut,
 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
-import { usePageThemeContext } from "../contexts/PageThemeContext";
-import { useTheme } from "../contexts/ThemeContext";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -31,7 +28,7 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: FiSettings },
 ];
 
-function getActiveSidebarItem(pathname) {
+function getActiveSidebarItem(pathname: string): string {
   if (pathname.startsWith("/dashboard/members")) return "/dashboard/members";
   if (pathname.startsWith("/dashboard/classes")) return "/dashboard/classes";
   if (pathname.startsWith("/dashboard/trainers")) return "/dashboard/trainers";
@@ -90,14 +87,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200
                 ${
                   isActive
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-brand-primary-50 text-brand-primary-700"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }
               `}
+              style={isActive ? { 
+                backgroundColor: 'var(--brand-primary-50)', 
+                color: 'var(--brand-primary-700)' 
+              } : undefined}
               onClick={onClose}
             >
               <item.icon
-                className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-gray-500"}`}
+                className={`w-4 h-4 ${isActive ? "text-brand-primary-600" : "text-gray-500"}`}
+                style={isActive ? { color: 'var(--brand-primary-600)' } : undefined}
               />
               <span>{item.name}</span>
             </NavLink>

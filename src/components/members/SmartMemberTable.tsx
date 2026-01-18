@@ -30,7 +30,7 @@ import { usePermissions } from "../../hooks/usePermissions";
 interface Member {
   id: string;
   name: string;
-  email?: string;
+  email?: string | null;
   phone: string;
   age: number;
   gender: string;
@@ -38,7 +38,7 @@ interface Member {
   planEnd: string;
   lastCheckIn: string;
   checkInCount: number;
-  status: "active" | "expired" | "payment_issue" | "inactive";
+  status: "active" | "inactive" | "suspended" | "expired" | "trial";
   membershipPrice: number;
   formsSubmitted: string[];
   isTrial: boolean;
@@ -47,6 +47,8 @@ interface Member {
   assignedTrainerId?: string;
   fitnessGoal?: string;
 }
+
+export type SmartMember = Member;
 
 interface SmartMemberTableProps {
   members: Member[];

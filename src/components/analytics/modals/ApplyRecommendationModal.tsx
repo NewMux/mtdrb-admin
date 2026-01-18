@@ -1,13 +1,9 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiZap,
-  FiCheckCircle,
   FiSettings,
   FiPlay,
   FiAlertTriangle,
-  FiUsers,
-  FiMail,
   FiCalendar,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
@@ -76,6 +72,11 @@ export default function ApplyRecommendationModal({
 }: ApplyRecommendationModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+  const resolvedInsightTitle = insightTitle || sampleInsight.title;
+  const resolvedInsightDescription =
+    insightDescription || sampleInsight.description;
+
   const [selectedAction, setSelectedAction] = React.useState("auto_apply");
   const [customSettings, setCustomSettings] = React.useState({
     emailTemplate: "re_engagement_v1",
@@ -143,6 +144,11 @@ export default function ApplyRecommendationModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          This is a Pro feature. Upgrade to apply recommendations.
+        </div>
+      )}
 
       {/* Selected Insight */}
       <Section title="Selected Insight">
@@ -152,7 +158,7 @@ export default function ApplyRecommendationModal({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-semibold text-gray-900">
-                  {sampleInsight.title}
+                  {resolvedInsightTitle}
                 </h4>
                 <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
                   {sampleInsight.impact} impact
@@ -161,7 +167,12 @@ export default function ApplyRecommendationModal({
                   {sampleInsight.confidence}% confidence
                 </span>
               </div>
-              <p className="text-gray-700 mb-2">{sampleInsight.description}</p>
+              <p className="text-gray-700 mb-2">
+                {resolvedInsightDescription}
+              </p>
+              <div className="text-xs text-gray-500 mb-2">
+                Insight ID: {insightId}
+              </div>
               <div className="text-sm text-gray-600">
                 <strong>Recommended Action:</strong>{" "}
                 {sampleInsight.actionDetails.type
@@ -419,6 +430,7 @@ export default function ApplyRecommendationModal({
             disabled={
               loading ||
               applying ||
+              !isProUser ||
               (selectedAction === "schedule" && !scheduledDate)
             }
           >

@@ -25,7 +25,10 @@ import {
   DateField,
   SmartRecommendationCard,
 } from "../../classes/modals/SmartFormComponents";
-import { useSmartTaskModal } from "./useSmartTaskModal";
+import {
+  useSmartTaskModal,
+  type SmartSuggestion,
+} from "./useSmartTaskModal";
 import { SmartButton } from "../../ui/DesignSystem";
 // Removed mock data - using real data from Supabase
 
@@ -36,17 +39,39 @@ interface AddTaskModalProps {
   isPro?: boolean;
 }
 
+type TaskType =
+  | "onboarding"
+  | "class_setup"
+  | "maintenance"
+  | "cleaning"
+  | "equipment_check"
+  | "member_support"
+  | "admin"
+  | "custom";
+type TaskPriority = "low" | "medium" | "high" | "urgent";
+
+interface TaskFormData {
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  assignedTo: string;
+  dueDate: string;
+  tags: string;
+  estimatedHours: number;
+}
+
 const AddTaskModal: React.FC<AddTaskModalProps> = ({
   open,
   onClose,
   onSuccess,
   isPro = false,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
-    type: "",
-    priority: "medium" as const,
+    type: "custom",
+    priority: "medium",
     assignedTo: "",
     dueDate: "",
     tags: "",
@@ -59,9 +84,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     Array<{ field: string; message: string }>
   >([]);
 
-  const { createTask, aiSuggestions, alerts, clearAlerts } = useSmartTaskModal({
-    isPro,
-  });
+  const { createTask, smartSuggestions, alerts, clearAlerts } =
+    useSmartTaskModal({
+      isPro,
+    });
 
   useEffect(() => {
     const fetchRecentTasks = async () => {
@@ -181,7 +207,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   // Auto-set priority based on task type
   useEffect(() => {
     if (formData.type) {
-      let newPriority = "medium" as const;
+      let newPriority: TaskPriority = "medium";
       if (["maintenance", "equipment_check"].includes(formData.type)) {
         newPriority = "high";
       } else if (["onboarding", "member_support"].includes(formData.type)) {
@@ -241,7 +267,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             }}
           >
             {/* Pro-only Smart Recommendations */}
-            {isPro && aiSuggestions.length > 0 && (
+            {isPro && smartSuggestions.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -260,7 +286,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {aiSuggestions.map((suggestion) => (
+                  {smartSuggestions.map((suggestion: SmartSuggestion) => (
                     <div
                       key={suggestion.id}
                       className="p-3 bg-white/50 dark:bg-white/10 rounded-lg"

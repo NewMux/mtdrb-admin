@@ -1,7 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
-  FiUser,
   FiCalendar,
   FiStar,
   FiUsers,
@@ -74,7 +72,6 @@ const reportSections = [
 export default function GenerateTrainerReportModal({
   open,
   onClose,
-  trainerId = "1",
   trainerName = "Mike Chen",
   onSuccess,
   isPro,
@@ -123,16 +120,6 @@ export default function GenerateTrainerReportModal({
 
   const handleRemoveSection = (sectionId: string) => {
     setSelectedSections(selectedSections.filter((id) => id !== sectionId));
-  };
-
-  const getSectionIcon = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.icon || FiUser;
-  };
-
-  const getSectionLabel = (sectionId: string) => {
-    const section = reportSections.find((s) => s.id === sectionId);
-    return section?.label || sectionId;
   };
 
   function Section({
@@ -254,7 +241,7 @@ export default function GenerateTrainerReportModal({
       {isPro && trainerData.smartInsights.length > 0 && (
         <Section title="Smart Insights">
           <div className="space-y-3">
-            {trainerData.smartInsights.map((insight: any, index: number) => (
+            {trainerData.smartInsights.map((insight, index) => (
               <div
                 key={index}
                 className={`p-4 border rounded-lg ${

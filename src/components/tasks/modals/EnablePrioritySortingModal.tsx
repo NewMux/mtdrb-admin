@@ -1,7 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
-  FiSortAsc,
+  FiArrowUp,
   FiClock,
   FiTarget,
   FiZap,
@@ -194,7 +194,7 @@ export const EnablePrioritySortingModal: React.FC<
                 className="text-blue-600 focus:ring-blue-500"
               />
               <div className="flex items-center space-x-2">
-                <FiSortAsc className="w-4 h-4 text-blue-500" />
+                <FiArrowUp className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Enable automatic priority sorting
                 </span>
@@ -433,7 +433,7 @@ export const EnablePrioritySortingModal: React.FC<
                   disabled={loading || !sortingEnabled}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  <FiSortAsc className="w-4 h-4" />
+                  <FiArrowUp className="w-4 h-4" />
                   <span>
                     {loading ? "Enabling..." : "Enable Priority Sorting"}
                   </span>

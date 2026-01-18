@@ -15,6 +15,8 @@ interface ReportTemplate {
   description: string;
   category: string;
   icon: React.ReactNode;
+  popularity?: number;
+  color?: string;
 }
 
 const getReportTemplates = async (): Promise<ReportTemplate[]> => {
@@ -101,7 +103,8 @@ export default function ReportTemplates({
   };
 
   const handleTemplateClick = (template: ReportTemplate) => {
-    if (!isPro && template.popularity > 80) {
+    const popularity = template.popularity ?? 0;
+    if (!isPro && popularity > 80) {
       toast.error("This template requires a Pro subscription");
       return;
     }
@@ -176,8 +179,9 @@ export default function ReportTemplates({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {templates.map((template, index) => {
           const Icon = getCategoryIcon(template.category);
-          const colors = getColorClasses(template.color);
-          const isLocked = !isPro && template.popularity > 80;
+          const colors = getColorClasses(template.color ?? "blue");
+          const popularity = template.popularity ?? 0;
+          const isLocked = !isPro && popularity > 80;
 
           return (
             <motion.div

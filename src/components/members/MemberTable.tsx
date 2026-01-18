@@ -91,6 +91,11 @@ const MemberTable: React.FC<MemberTableProps> = ({
     return `${field} sorted ${currentSort}`;
   };
 
+  const getAriaSort = (field: keyof Member) => {
+    if (sortBy !== field || !sortOrder) return "none";
+    return sortOrder === "asc" ? "ascending" : "descending";
+  };
+
   // Enhanced loading state with better UX
   if (loading) {
     return (
@@ -142,7 +147,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   onClick={() => handleSort("name")}
                   className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("name")}
-                  aria-sort={sortBy === "name" ? sortOrder : "none"}
+                  aria-sort={getAriaSort("name")}
                 >
                   <span>Member</span>
                   {getSortIcon("name")}
@@ -156,7 +161,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   onClick={() => handleSort("email")}
                   className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("email")}
-                  aria-sort={sortBy === "email" ? sortOrder : "none"}
+                  aria-sort={getAriaSort("email")}
                 >
                   <span>Contact</span>
                   {getSortIcon("email")}
@@ -170,7 +175,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   onClick={() => handleSort("status")}
                   className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
                   aria-label={getSortLabel("status")}
-                  aria-sort={sortBy === "status" ? sortOrder : "none"}
+                  aria-sort={getAriaSort("status")}
                 >
                   <span>Status</span>
                   {getSortIcon("status")}
@@ -181,13 +186,13 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 scope="col"
               >
                 <button
-                  onClick={() => handleSort("membershipType")}
+                  onClick={() => handleSort("membership_type")}
                   className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
-                  aria-label={getSortLabel("membershipType")}
-                  aria-sort={sortBy === "membershipType" ? sortOrder : "none"}
+                  aria-label={getSortLabel("membership_type")}
+                  aria-sort={getAriaSort("membership_type")}
                 >
                   <span>Membership</span>
-                  {getSortIcon("membershipType")}
+                  {getSortIcon("membership_type")}
                 </button>
               </th>
               <th
@@ -195,13 +200,13 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 scope="col"
               >
                 <button
-                  onClick={() => handleSort("lastVisit")}
+                  onClick={() => handleSort("join_date")}
                   className="flex items-center space-x-1 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 rounded px-2 py-1"
-                  aria-label={getSortLabel("lastVisit")}
-                  aria-sort={sortBy === "lastVisit" ? sortOrder : "none"}
+                  aria-label={getSortLabel("join_date")}
+                  aria-sort={getAriaSort("join_date")}
                 >
                   <span>Last Visit</span>
-                  {getSortIcon("lastVisit")}
+                  {getSortIcon("join_date")}
                 </button>
               </th>
               <th
@@ -213,45 +218,59 @@ const MemberTable: React.FC<MemberTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {members.map((member, index) => (
-              <motion.tr
-                key={member.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`hover:bg-gray-50 transition-colors duration-200 ${
-                  index % 2 === 0
-                    ? "bg-white"
-                    : "bg-gray-50/50/50"
-                } ${
-                  focusedRow === member.id
-                    ? "ring-2 ring-sky-500 ring-inset"
-                    : ""
-                }`}
-                onMouseEnter={() => setHoveredRow(member.id)}
-                onMouseLeave={() => setHoveredRow(null)}
-                onFocus={() => setFocusedRow(member.id)}
-                onBlur={() => setFocusedRow(null)}
-                tabIndex={0}
-                role="row"
-                aria-label={`Member row for ${member.name}`}
-              >
+            {members.map((member, index) => {
+              const memberName = member.name ?? "Unnamed member";
+              const joinDateValue = member.join_date ?? member.created_at;
+              const initials = memberName
+                .split(" ")
+                .filter(Boolean)
+                .map((part) => part[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase();
+
+              return (
+                <motion.tr
+                  key={member.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`hover:bg-gray-50 transition-colors duration-200 ${
+                    index % 2 === 0
+                      ? "bg-white"
+                      : "bg-gray-50/50/50"
+                  } ${
+                    focusedRow === member.id
+                      ? "ring-2 ring-sky-500 ring-inset"
+                      : ""
+                  }`}
+                  onMouseEnter={() => setHoveredRow(member.id ?? null)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  onFocus={() => setFocusedRow(member.id ?? null)}
+                  onBlur={() => setFocusedRow(null)}
+                  tabIndex={0}
+                  role="row"
+                  aria-label={`Member row for ${memberName}`}
+                >
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-3">
                     <div
                       className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center"
-                      aria-label={`Avatar for ${member.name}`}
+                      aria-label={`Avatar for ${memberName}`}
                     >
                       <span className="text-white font-medium text-sm">
-                        {member.avatar}
+                        {initials || "?"}
                       </span>
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {member.name}
+                        {memberName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Joined {new Date(member.joinDate).toLocaleDateString()}
+                        Joined{" "}
+                        {joinDateValue
+                          ? new Date(joinDateValue).toLocaleDateString()
+                          : "Unknown"}
                       </div>
                     </div>
                   </div>
@@ -282,28 +301,34 @@ const MemberTable: React.FC<MemberTableProps> = ({
 
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}
-                    aria-label={`Status: ${member.status}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                      member.status ?? "inactive",
+                    )}`}
+                    aria-label={`Status: ${member.status ?? "inactive"}`}
                   >
-                    {(member.status || "").charAt(0).toUpperCase() +
-                      (member.status || "").slice(1)}
+                    {(member.status ?? "inactive").charAt(0).toUpperCase() +
+                      (member.status ?? "inactive").slice(1)}
                   </span>
                 </td>
 
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipColor(member.membershipType)}`}
-                    aria-label={`Membership type: ${member.membershipType}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipColor(
+                      member.membership_type ?? "Standard",
+                    )}`}
+                    aria-label={`Membership type: ${
+                      member.membership_type ?? "Standard"
+                    }`}
                   >
-                    {member.membershipType}
+                    {member.membership_type ?? "Standard"}
                   </span>
                 </td>
 
                 <td className="px-6 py-4">
                   <div className="text-sm text-gray-900">
-                    {member.lastVisit === "Never"
-                      ? "Never"
-                      : new Date(member.lastVisit).toLocaleDateString()}
+                  {joinDateValue
+                    ? new Date(joinDateValue).toLocaleDateString()
+                    : "Never"}
                   </div>
                 </td>
 
@@ -366,8 +391,9 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     )}
                   </div>
                 </td>
-              </motion.tr>
-            ))}
+                </motion.tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

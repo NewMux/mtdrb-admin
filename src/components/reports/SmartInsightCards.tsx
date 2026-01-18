@@ -18,6 +18,10 @@ interface SmartInsight {
   action: string;
   value?: number;
   trend?: "up" | "down" | "stable";
+  icon?: React.ReactNode;
+  badge?: string;
+  cause?: string;
+  suggestion?: string;
 }
 import { toast } from "react-hot-toast";
 

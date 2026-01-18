@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { FiWifi, FiWifiOff } from "react-icons/fi";
 import { supabase } from "../supabaseClient";
 import { checkSupabaseHealth } from "../supabaseClient";
@@ -8,7 +9,25 @@ const NetworkStatus: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isBackendHealthy, setIsBackendHealthy] = useState(true);
   const [showOfflineBanner, setShowOfflineBanner] = useState(false);
-  const subscriptionRef = useRef<any>(null);
+  const subscriptionRef = useRef<RealtimeChannel | null>(null);
+
+  const checkBackendHealth = async () => {
+    if (!navigator.onLine) return;
+
+    try {
+      const isHealthy = await checkSupabaseHealth();
+      setIsBackendHealthy(isHealthy);
+      setShowOfflineBanner(!isHealthy);
+
+      if (!isHealthy) {
+        toast.error("Backend service is unavailable");
+      }
+    } catch (error) {
+      console.error("Health check failed:", error);
+      setIsBackendHealthy(false);
+      setShowOfflineBanner(true);
+    }
+  };
 
   // Monitor online/offline status
   useEffect(() => {
@@ -36,24 +55,6 @@ const NetworkStatus: React.FC = () => {
 
   // Check backend health periodically
   useEffect(() => {
-    const checkBackendHealth = async () => {
-      if (!isOnline) return;
-
-      try {
-        const isHealthy = await checkSupabaseHealth();
-        setIsBackendHealthy(isHealthy);
-        setShowOfflineBanner(!isHealthy);
-
-        if (!isHealthy) {
-          toast.error("Backend service is unavailable");
-        }
-      } catch (error) {
-        console.error("Health check failed:", error);
-        setIsBackendHealthy(false);
-        setShowOfflineBanner(true);
-      }
-    };
-
     // Initial check
     checkBackendHealth();
 

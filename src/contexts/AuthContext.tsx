@@ -12,6 +12,43 @@ import toast from "react-hot-toast";
 import { supabase, getCurrentUser } from "../supabaseClient";
 import { UserRole, isValidRole, getDefaultRole } from "../types/roles";
 
+/**
+ * Check if the app is running on localhost
+ */
+const isLocalhost = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+};
+
+/**
+ * Create a mock user for localhost development
+ */
+const createMockUser = (): User => {
+  return {
+    id: "mock-user-localhost",
+    aud: "authenticated",
+    role: "authenticated",
+    email: "dev@localhost.local",
+    email_confirmed_at: new Date().toISOString(),
+    phone: "",
+    confirmed_at: new Date().toISOString(),
+    last_sign_in_at: new Date().toISOString(),
+    app_metadata: {},
+    user_metadata: {
+      tenant_id: "mock-tenant-id",
+      paid: true,
+      role: "admin",
+      subscription_tier: "enterprise",
+      onboarding_completed: true,
+      name: "Local Dev User",
+    },
+    identities: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as User;
+};
+
 // Enhanced error types
 interface AuthErrorState {
   code: string;
@@ -101,7 +138,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = useCallback(async () => {
     try {
       setError(null);
+      
+      // Bypass authentication on localhost for development
+      if (isLocalhost()) {
+        const mockUser = createMockUser();
+        setUser(mockUser);
+        handleUserMetadata(mockUser);
+        
+        // Don't redirect from checkAuth for public routes - let the pages handle their own redirects
+        const publicRoutes = ["/", "/login", "/signup", "/subscribe", "/onboarding"];
+        if (publicRoutes.includes(location.pathname)) {
+          setIsLoading(false);
+          return;
+        }
+        
+        setIsLoading(false);
+        return;
+      }
+      
       const { user, error } = await getCurrentUser();
+
       if (error) throw error;
 
       setUser(user);
@@ -144,28 +200,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     checkAuth();
 
+    // On localhost, skip Supabase auth state changes and use mock user
+    if (isLocalhost()) {
+      return;
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
-      handleUserMetadata(user);
+      const sessionUser = session?.user ?? null;
+
+      setUser(sessionUser);
+      handleUserMetadata(sessionUser);
       setIsLoading(false);
 
       switch (event) {
         case "SIGNED_IN":
-          // Only redirect if this is a NEW sign-in (not an existing session on page load)
-          // We check this by seeing if the event was triggered by an actual sign-in action
-          // vs. just detecting an existing session
-          if (!user) break;
-          
-          // Don't redirect if user is on signup page - let the signup flow handle it
+          if (!sessionUser) break;
+
           if (location.pathname === "/signup") {
             break;
           }
-          
-          if (!user.user_metadata?.paid) {
-            const gracePeriod = new Date(user.user_metadata?.trial_end || 0);
+
+          if (!sessionUser.user_metadata?.paid) {
+            const gracePeriod = new Date(sessionUser.user_metadata?.trial_end || 0);
             const now = new Date();
             if (now > gracePeriod) {
               navigate("/subscribe");
@@ -173,7 +231,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
           // Check if onboarding is completed
-          if (user.user_metadata?.paid && !user.user_metadata?.onboarding_completed) {
+          if (
+            sessionUser.user_metadata?.paid &&
+            !sessionUser.user_metadata?.onboarding_completed
+          ) {
             navigate("/onboarding");
             break;
           }
@@ -190,7 +251,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case "USER_UPDATED":
-          handleUserMetadata(user);
+          if (sessionUser) {
+            handleUserMetadata(sessionUser);
+          }
           break;
       }
     });
@@ -264,6 +327,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!userMetadata) return false;
 
       const rolePermissions = {
+        owner: ["all"],
         admin: ["all"],
         manager: ["read", "write", "manage_staff"],
         trainer: ["read", "write_classes"],

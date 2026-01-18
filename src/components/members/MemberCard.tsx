@@ -27,32 +27,15 @@ import {
   DocumentChecklist,
   WhatsAppButton,
 } from "./SmartMemberTable";
+import type { SmartMember } from "./SmartMemberTable";
 
-interface Member {
-  id: string;
-  name: string;
-  email?: string;
-  phone: string;
-  age: number;
-  gender: string;
-  joinDate: string;
-  planEnd: string;
-  lastCheckIn: string;
-  checkInCount: number;
-  status: "active" | "expired" | "payment_issue" | "inactive";
-  membershipPrice: number;
-  formsSubmitted: string[];
-  isTrial: boolean;
-  attendance: string[];
-  tags: string[];
-  assignedTrainerId?: string;
-  fitnessGoal?: string;
+type Member = SmartMember & {
   computedStatus?: string;
   computedTags?: string[];
   daysLeft?: number;
   isInactive?: boolean;
   hasCompletedDocs?: boolean;
-}
+};
 
 interface MemberCardProps {
   member: Member;
@@ -85,7 +68,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
     if (now > planEnd) return "expired";
     if (daysSinceCheckIn > 10) return "inactive";
-    if (member.status === "payment_issue") return "payment_issue";
+    if (member.status === "suspended") return "suspended";
     return "active";
   };
 

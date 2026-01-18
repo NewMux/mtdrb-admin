@@ -3,40 +3,14 @@ import { Dialog, Transition } from "@headlessui/react";
 import dayjs from "dayjs";
 import {
   FiPlus,
-  FiDownload,
-  FiMail,
-  FiFilter,
-  FiRefreshCw,
-  FiTrendingUp,
-  FiAlertCircle,
   FiDollarSign,
   FiCalendar,
-  FiUsers,
-  FiClock,
   FiX,
-  FiChevronDown,
-  FiChevronUp,
-  FiSearch,
-  FiSend,
-  FiEye,
-  FiEdit,
   FiTrash2,
-  FiSettings,
-  FiSave,
-  FiBookmark,
-  FiZap,
-  FiSmartphone,
   FiCreditCard,
-  FiDroplet,
-  FiHelpCircle,
-  FiArrowUp,
-  FiArrowDown,
-  FiLoader,
   FiUser,
   FiFileText,
   FiInfo,
-  FiTag,
-  FiPercent,
   FiPieChart,
   FiBarChart,
 } from "react-icons/fi";
@@ -55,7 +29,16 @@ import { SmartButton } from "../ui/DesignSystem";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Smart suggestions for line items
-const SMART_SUGGESTIONS = {
+const SMART_SUGGESTIONS: Record<
+  string,
+  {
+    description: string;
+    type: InvoiceType;
+    unitPrice: number;
+    vatRate: VatRate;
+    currency: string;
+  }
+> = {
   PT: {
     description: "Personal Training Session",
     type: "PT",
@@ -115,11 +98,17 @@ interface ClientHistory {
   overdueInvoices: number;
 }
 
+interface ClientOption {
+  id: string;
+  name: string;
+}
+
+type InvoiceSection = "details" | "items" | "summary";
+
 interface NewInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  clients: any[];
-  classes: any[];
+  clients: ClientOption[];
   tenantId: string;
   onSave: () => void;
   invoice: Invoice | null;
@@ -129,7 +118,6 @@ export function NewInvoiceModal({
   isOpen,
   onClose,
   clients,
-  classes,
   tenantId,
   onSave,
   invoice: editingInvoice,
@@ -150,7 +138,9 @@ export function NewInvoiceModal({
   });
 
   // Client State
-  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientOption | null>(
+    null,
+  );
   const [clientHistory, setClientHistory] = useState<ClientHistory>({
     lastInvoiceDate: null,
     preferredPaymentMethod: null,
@@ -175,11 +165,8 @@ export function NewInvoiceModal({
 
   // UI State
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoadingClientHistory, setIsLoadingClientHistory] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [activeSection, setActiveSection] = useState<
-    "details" | "items" | "summary"
-  >("details");
+  const [activeSection, setActiveSection] =
+    useState<InvoiceSection>("details");
 
   // Calculate totals with smart logic
   const subtotal = items.reduce(
@@ -258,7 +245,6 @@ export function NewInvoiceModal({
   }, [editingInvoice, calculateItemTotal]);
 
   const loadClientHistory = useCallback(async (clientId: string) => {
-    setIsLoadingClientHistory(true);
     try {
       const { data: lastInvoice } = await supabase
         .from("invoices")
@@ -303,8 +289,6 @@ export function NewInvoiceModal({
       }
     } catch (error) {
       console.error("Error loading client history:", error);
-    } finally {
-      setIsLoadingClientHistory(false);
     }
   }, []);
 
@@ -318,22 +302,15 @@ export function NewInvoiceModal({
     return null;
   }
 
-  const handleItemChange = (
+  const handleItemChange = <K extends keyof LineItem>(
     index: number,
-    field: string,
-    value: string | number,
+    field: K,
+    value: LineItem[K],
   ) => {
     try {
       const newItems = [...items];
       const currentItem = { ...newItems[index] };
-
-      if (field === "quantity") {
-        currentItem.quantity = value as number;
-      } else if (field === "vat_rate") {
-        currentItem.vat_rate = value as VatRate;
-      } else {
-        currentItem[field as keyof LineItem] = value as any;
-      }
+      currentItem[field] = value;
 
       currentItem.total = calculateItemTotal(currentItem);
       newItems[index] = currentItem;
@@ -426,13 +403,25 @@ export function NewInvoiceModal({
       toast.success(`Invoice ${action} successfully!`);
       onSave();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving invoice:", error);
-      toast.error(`Failed to save invoice: ${error.message}`);
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to save invoice: ${message}`);
     } finally {
       setIsSaving(false);
     }
   };
+
+  const sections: {
+    key: InvoiceSection;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
+    { key: "details", label: "Invoice Details", icon: FiFileText },
+    { key: "items", label: "Line Items", icon: FiDollarSign },
+    { key: "summary", label: "Summary", icon: FiPieChart },
+  ];
 
   return (
     <AnimatePresence>
@@ -453,7 +442,7 @@ export function NewInvoiceModal({
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-25" />
+              <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true" />
             </Transition.Child>
 
             <span
@@ -496,18 +485,10 @@ export function NewInvoiceModal({
                 {/* Navigation Tabs */}
                 <div className="border-b border-gray-200 bg-gray-50">
                   <div className="flex space-x-8 px-6">
-                    {[
-                      {
-                        key: "details",
-                        label: "Invoice Details",
-                        icon: FiFileText,
-                      },
-                      { key: "items", label: "Line Items", icon: FiDollarSign },
-                      { key: "summary", label: "Summary", icon: FiPieChart },
-                    ].map(({ key, label, icon: Icon }) => (
+                    {sections.map(({ key, label, icon: Icon }) => (
                       <button
                         key={key}
-                        onClick={() => setActiveSection(key as any)}
+                        onClick={() => setActiveSection(key)}
                         className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                           activeSection === key
                             ? "border-blue-500 text-blue-600"
@@ -880,7 +861,7 @@ export function NewInvoiceModal({
                                         handleItemChange(
                                           index,
                                           "vat_rate",
-                                          parseInt(e.target.value),
+                                          Number(e.target.value) as VatRate,
                                         )
                                       }
                                       className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"

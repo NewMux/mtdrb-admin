@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
-  FiDollarSign,
-  FiCalendar,
-  FiUsers,
-  FiCheck,
   FiX,
-  FiEdit2,
   FiTrash2,
   FiAlertTriangle,
   FiPlus,
@@ -17,10 +12,8 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleTextarea,
-  AppleButton,
   AppleButtonGroup,
   AppleSelect,
 } from "../AppleStyleModal";
@@ -84,8 +77,8 @@ export function DeleteConfirmationModal({
         <div className="flex items-center space-x-3">
           <FiAlertTriangle className="text-red-500 text-2xl" />
           <p className="text-gray-700">
-            Are you sure you want to delete the plan "{planName}"? This action
-            cannot be undone.
+            Are you sure you want to delete the plan &quot;{planName}&quot;? This
+            action cannot be undone.
           </p>
         </div>
       </div>
@@ -209,17 +202,6 @@ export function ManagePlansModal({
     }
   };
 
-  const handleEdit = (plan: Plan) => {
-    setEditingPlan(plan);
-    setFormData({
-      name: plan.name,
-      description: plan.description || "",
-      price: plan.price,
-      billing_cycle: plan.billing_cycle,
-    });
-    setShowPlanForm(true);
-  };
-
   const handleDelete = async (plan: Plan) => {
     try {
       // Check if plan has any subscriptions
@@ -243,11 +225,6 @@ export function ManagePlansModal({
       console.error("Error deleting plan:", error);
       toast.error((error as Error).message || "Failed to delete plan");
     }
-  };
-
-  const initiateDelete = (plan: Plan) => {
-    setPlanToDelete(plan);
-    setShowDeleteConfirmation(true);
   };
 
   return (

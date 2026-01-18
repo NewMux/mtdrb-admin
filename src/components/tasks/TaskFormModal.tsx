@@ -24,19 +24,38 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   onSave,
   task,
 }) => {
-  const [formData, setFormData] = useState({
+  interface TaskFormData {
+    title: string;
+    description: string;
+    priority: Task["priority"];
+    status: Task["status"];
+    dueDate: string;
+    assignedTo: string;
+    tags: string[];
+  }
+
+  const [formData, setFormData] = useState<TaskFormData>({
     title: task?.title || "",
     description: task?.description || "",
     priority: task?.priority || "medium",
     status: task?.status || "pending",
-    dueDate: task?.dueDate || "",
-    assignedTo: task?.assignedTo || "",
+    dueDate: task?.due_date || "",
+    assignedTo: task?.assigned_to || "",
     tags: task?.tags || [],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const payload: Partial<Task> = {
+      title: formData.title,
+      description: formData.description,
+      priority: formData.priority,
+      status: formData.status,
+      due_date: formData.dueDate,
+      assigned_to: formData.assignedTo,
+      tags: formData.tags,
+    };
+    onSave(payload);
     onClose();
   };
 

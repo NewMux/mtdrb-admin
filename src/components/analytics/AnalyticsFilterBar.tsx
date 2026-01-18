@@ -12,10 +12,6 @@ import {
   FiTag,
   FiX,
   FiChevronDown,
-  FiDollarSign,
-  FiTrendingUp,
-  FiRefreshCw,
-  FiDownload,
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 
@@ -338,7 +334,10 @@ export default function AnalyticsFilterBar({
 }: AnalyticsFilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const updateFilter = (key: keyof FilterState, value: any) => {
+  const updateFilter = (
+    key: keyof FilterState,
+    value: FilterState[keyof FilterState],
+  ) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 
@@ -558,16 +557,3 @@ export default function AnalyticsFilterBar({
   );
 }
 
-// Default filter state
-export const defaultFilterState: FilterState = {
-  dateRange: [null, null],
-  country: "",
-  region: "",
-  branch: "",
-  membershipStatus: [],
-  sessionType: [],
-  trainer: [],
-  paymentMethod: [],
-  source: [],
-  tags: [],
-};

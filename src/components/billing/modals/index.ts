@@ -9,10 +9,6 @@ export { default as AddExpenseModal } from "./AddExpenseModal";
 export { default as GenerateVATReportModal } from "./GenerateVATReportModal";
 export { default as ExportBillingDataModal } from "./ExportBillingDataModal";
 
-// Payment Recovery Modals
-// export { default as ProcessOverduePaymentsModal } from './ProcessOverduePaymentsModal';
-// export { default as SendCollectionNoticeModal } from './SendCollectionNoticeModal';
-// export { default as SetupPaymentPlanModal } from './SetupPaymentPlanModal';
-
-// Analytics Modals
-// export { default as ViewBillingAnalyticsModal } from './ViewBillingAnalyticsModal';
+// View/Edit Modals
+export { default as ViewExpenseModal } from "./ViewExpenseModal";
+export { default as ViewInvoiceModal } from "./ViewInvoiceModal";

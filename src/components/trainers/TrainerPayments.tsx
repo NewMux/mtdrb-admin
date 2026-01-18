@@ -172,6 +172,7 @@ export default function TrainerPayments() {
         .select("name")
         .eq("id", selectedTrainer)
         .single();
+      const trainerName = trainer?.name ?? "trainer";
 
       const headers = ["Date", "Type", "Amount", "Status", "Description"];
       const csvContent = [
@@ -191,7 +192,7 @@ export default function TrainerPayments() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${trainer.name}_payments_${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `${trainerName}_payments_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

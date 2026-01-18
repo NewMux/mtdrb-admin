@@ -3,14 +3,16 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { supabase } from "../supabaseClient";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation, Navigate } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+import { useAuth } from "../contexts/AuthContext";
 
 // ===== LOGIN PAGE =====
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isLoading } = useAuth();
 
   // ===== FORM STATE =====
   const [email, setEmail] = React.useState("");
@@ -18,6 +20,22 @@ export default function Login() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+
+  // Immediate redirect if already authenticated (including dev bypass)
+  // Use Navigate component for synchronous redirect to prevent flickering
+  if (!isLoading && user) {
+    const from = (location.state as any)?.from?.pathname || "/dashboard";
+    return <Navigate to={from} replace />;
+  }
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   // ===== HANDLE LOGIN SUBMIT =====
   const handleLogin = async (e: React.FormEvent) => {

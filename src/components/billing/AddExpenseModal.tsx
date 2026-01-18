@@ -1,52 +1,30 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   FiDollarSign,
-  FiCalendar,
-  FiTag,
   FiFileText,
   FiUpload,
-  FiX,
-  FiCheck,
   FiAlertCircle,
-  FiInfo,
-  FiSearch,
-  FiClock,
-  FiTrendingUp,
   FiShield,
   FiBarChart2,
-  FiZap,
-  FiStar,
-  FiTarget,
-  FiActivity,
-  FiHeart,
-  FiSave,
-  FiArrowRight,
-  FiArrowLeft,
-  FiRefreshCw,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleSelect,
   AppleTextarea,
   AppleButton,
-  AppleButtonGroup,
   AppleToggle,
 } from "../AppleStyleModal";
 import {
   Expense,
   ExpenseCategory,
-  ExpenseStatus,
-  RecurringFrequency,
   PaymentMethodType,
 } from "../../types";
-import { Database } from "../../types/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { SmartModal } from "../ui/SmartModal";
 
@@ -137,31 +115,12 @@ const expenseSchema = z.object({
   receipt_file: z.any().optional(),
 });
 
-type ExpenseFormData = z.infer<typeof expenseSchema>;
-
-interface RecentVendor {
-  id: string;
-  name: string;
-  category: string;
-  last_used: string;
-  total_expenses: number;
-}
-
-interface SimilarExpense {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  vendor: string;
-  date: string;
-  similarity_score: number;
-}
+type ExpenseFormData = z.input<typeof expenseSchema>;
 
 export function AddExpenseModal({
   isOpen,
   onClose,
   onExpenseAdded,
-  tenantId,
   expense: editingExpense,
 }: AddExpenseModalProps) {
   const { user } = useAuth();
@@ -169,11 +128,6 @@ export function AddExpenseModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [recentVendors, setRecentVendors] = useState<RecentVendor[]>([]);
-  const [similarExpenses, setSimilarExpenses] = useState<SimilarExpense[]>([]);
-  const [showVendorSuggestions, setShowVendorSuggestions] = useState(false);
-  const [showSimilarExpenses, setShowSimilarExpenses] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const vendorInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,9 +137,7 @@ export function AddExpenseModal({
     watch,
     setValue,
     reset,
-    control,
     formState: { errors, isValid, isDirty },
-    trigger,
   } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -209,21 +161,9 @@ export function AddExpenseModal({
 
   const watchedTitle = watch("title");
   const watchedDescription = watch("description");
-  const watchedCategory = watch("category");
-  const watchedVendor = watch("vendor");
-  const watchedRecurring = watch("recurring");
-  const watchedVatIncluded = watch("vat_included");
+  const watchedRecurring = Boolean(watch("recurring"));
+  const watchedVatIncluded = Boolean(watch("vat_included"));
   const watchedAmount = watch("amount");
-
-  // Load recent vendors and similar expenses
-  useEffect(() => {
-    if (isOpen) {
-      loadRecentVendors();
-      if (watchedTitle || watchedDescription) {
-        findSimilarExpenses();
-      }
-    }
-  }, [isOpen, watchedTitle, watchedDescription]);
 
   // Auto-categorization based on title and description
   useEffect(() => {
@@ -263,198 +203,53 @@ export function AddExpenseModal({
     }
   }, [editingExpense, isOpen, reset]);
 
-  // Load recent vendors from database
-  const loadRecentVendors = async () => {
-    try {
-      const { data } = await supabase
-        .from("expenses")
-        .select("vendor, category, created_at, amount")
-        .not("vendor", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (data) {
-        const vendors = data.reduce((acc: RecentVendor[], expense) => {
-          const existing = acc.find((v) => v.name === expense.vendor);
-          if (existing) {
-            existing.total_expenses += expense.amount || 0;
-          } else {
-            acc.push({
-              id: expense.vendor!,
-              name: expense.vendor!,
-              category: expense.category,
-              last_used: expense.created_at,
-              total_expenses: expense.amount || 0,
-            });
-          }
-          return acc;
-        }, []);
-
-        setRecentVendors(vendors.slice(0, 5));
-      }
-    } catch (error) {
-      console.error("Error loading recent vendors:", error);
-    }
-  };
-
-  // Find similar expenses for duplicate detection
-  const findSimilarExpenses = async () => {
-    if (!watchedTitle && !watchedDescription) return;
-
-    setIsAnalyzing(true);
-    try {
-      const { data } = await supabase
-        .from("expenses")
-        .select("*")
-        .or(
-          `title.ilike.%${watchedTitle}%,description.ilike.%${watchedDescription}%`,
-        )
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (data) {
-        const similar = data
-          .map((expense) => ({
-            id: expense.id,
-            title: expense.title,
-            amount: expense.amount,
-            category: expense.category,
-            vendor: expense.vendor || "",
-            date: expense.date,
-            similarity_score: calculateSimilarity(expense),
-          }))
-          .filter((expense) => expense.similarity_score > 0.3);
-
-        setSimilarExpenses(similar);
-        setShowSimilarExpenses(similar.length > 0);
-      }
-    } catch (error) {
-      console.error("Error finding similar expenses:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Calculate similarity score between current form and existing expense
-  const calculateSimilarity = (expense: any): number => {
-    let score = 0;
-    const currentText = `${watchedTitle} ${watchedDescription}`.toLowerCase();
-    const expenseText =
-      `${expense.title} ${expense.description || ""}`.toLowerCase();
-
-    // Title similarity
-    if (watchedTitle && expense.title) {
-      const titleSimilarity = similarity(
-        watchedTitle.toLowerCase(),
-        expense.title.toLowerCase(),
-      );
-      score += titleSimilarity * 0.4;
-    }
-
-    // Description similarity
-    if (watchedDescription && expense.description) {
-      const descSimilarity = similarity(
-        watchedDescription.toLowerCase(),
-        expense.description.toLowerCase(),
-      );
-      score += descSimilarity * 0.3;
-    }
-
-    // Category match
-    if (watchedCategory === expense.category) {
-      score += 0.2;
-    }
-
-    // Vendor match
-    if (
-      watchedVendor &&
-      expense.vendor &&
-      watchedVendor.toLowerCase() === expense.vendor.toLowerCase()
-    ) {
-      score += 0.1;
-    }
-
-    return score;
-  };
-
-  // Simple string similarity function
-  const similarity = (s1: string, s2: string): number => {
-    const longer = s1.length > s2.length ? s1 : s2;
-    const shorter = s1.length > s2.length ? s2 : s1;
-    if (longer.length === 0) return 1.0;
-    return (longer.length - editDistance(longer, shorter)) / longer.length;
-  };
-
-  const editDistance = (s1: string, s2: string): number => {
-    const costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-      let lastValue = i;
-      for (let j = 0; j <= s2.length; j++) {
-        if (i === 0) {
-          costs[j] = j;
-        } else if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          }
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-      if (i > 0) costs[s2.length] = lastValue;
-    }
-    return costs[s2.length];
-  };
-
   // Handle file upload with preview
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "application/pdf",
-      ];
-      if (!validTypes.includes(file.type)) {
-        toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
-        return;
-      }
+  const handleFileSelection = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
 
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size must be less than 10MB");
-        return;
-      }
-
-      setSelectedFile(file);
-      setValue("receipt_file", file);
-
-      // Create preview for images
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview(null);
-      }
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+    setValue("receipt_file", file);
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFilePreview(event.target?.result?.toString() || null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(e.target.files);
   };
 
   // Handle drag and drop
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = fileInputRef.current;
-      if (input) {
-        input.files = e.dataTransfer.files;
-        handleFileChange({ target: { files: e.dataTransfer.files } } as any);
-      }
+    const input = fileInputRef.current;
+    if (input) {
+      input.files = e.dataTransfer.files;
     }
+    handleFileSelection(e.dataTransfer.files);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -465,24 +260,20 @@ export function AddExpenseModal({
   const handleVendorInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue("vendor", value);
-    setShowVendorSuggestions(value.length > 0);
-  };
-
-  const selectVendor = (vendor: RecentVendor) => {
-    setValue("vendor", vendor.name);
-    setValue("category", vendor.category as ExpenseCategory);
-    setShowVendorSuggestions(false);
   };
 
   // Calculate VAT amount
   const calculateVatAmount = () => {
-    const amount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
+    const amount =
+      typeof watchedAmount === "number"
+        ? watchedAmount
+        : parseFloat(String(watchedAmount)) || 0;
     const vatRate = watch("vat_rate") || 15;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
   // Handle form submission
-  const onSubmit = async (data: ExpenseFormData) => {
+  const onSubmit: SubmitHandler<ExpenseFormData> = async (data) => {
     if (isSubmitting) return;
 
     if (!authTenantId) {
@@ -496,7 +287,7 @@ export function AddExpenseModal({
       let receiptUrl = null;
       if (selectedFile) {
         const fileName = `receipts/${authTenantId}/${Date.now()}_${selectedFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("expense-receipts")
           .upload(fileName, selectedFile);
 
@@ -886,9 +677,12 @@ export function AddExpenseModal({
                   </p>
                 </div>
                 <ul className="text-sm text-red-600 space-y-1">
-                  {Object.values(errors).map((error, index) => (
-                    <li key={index}>• {error?.message}</li>
-                  ))}
+                  {Object.values(errors).map((error, index) => {
+                    const errorMessage = error && typeof error === 'object' && 'message' in error 
+                      ? String(error.message) 
+                      : String(error || 'Unknown error');
+                    return <li key={index}>• {errorMessage}</li>;
+                  })}
                 </ul>
               </motion.div>
             )}

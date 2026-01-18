@@ -32,6 +32,7 @@ const SmartModal: React.FC<SmartModalProps> = ({
   footer,
   maxWidth = "4xl",
   isPro = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   proFeature,
 }) => {
   return (

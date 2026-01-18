@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiDownload,
   FiFileText,
@@ -85,6 +84,8 @@ export default function ExportReportModal({
   const { loading, generateReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+
   const [selectedReport, setSelectedReport] = React.useState<string>("");
   const [exportFormat, setExportFormat] = React.useState("csv");
   const [includeVisuals, setIncludeVisuals] = React.useState(true);
@@ -112,6 +113,7 @@ export default function ExportReportModal({
   };
 
   const handleRefreshReport = async (reportId: string) => {
+    void reportId;
     setExporting(true);
     try {
       // Simulate refresh
@@ -171,6 +173,11 @@ export default function ExportReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Exporting reports is available on Pro plans.
+        </div>
+      )}
 
       {/* Saved Reports */}
       <Section title="Select Report">
@@ -243,14 +250,11 @@ export default function ExportReportModal({
                   value={exportFormat}
                   onChange={(e) => setExportFormat(e.target.value)}
                 >
-                  {exportFormats.map((format) => {
-                    const Icon = format.icon;
-                    return (
-                      <option key={format.id} value={format.id}>
-                        {format.label} - {format.description}
-                      </option>
-                    );
-                  })}
+                  {exportFormats.map((format) => (
+                    <option key={format.id} value={format.id}>
+                      {format.label} - {format.description}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -335,7 +339,7 @@ export default function ExportReportModal({
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handleExport}
-            disabled={loading || exporting || !selectedReport}
+            disabled={loading || exporting || !selectedReport || !isProUser}
           >
             {exporting ? (
               <>

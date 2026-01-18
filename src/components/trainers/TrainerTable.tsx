@@ -29,6 +29,14 @@ interface TrainerTableProps {
   onAssign?: (trainer: Trainer) => void;
   onMessage?: (trainer: Trainer) => void;
   onSchedule?: (trainer: Trainer) => void;
+  searchTerm?: string;
+  filters?: {
+    specialty?: string;
+    status?: string;
+    gender?: string;
+    rating?: string;
+  };
+  onSelectTrainer?: (trainerId: string) => void;
 }
 
 const TrainerTable: React.FC<TrainerTableProps> = ({

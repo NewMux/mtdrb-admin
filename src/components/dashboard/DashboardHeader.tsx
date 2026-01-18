@@ -14,7 +14,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRefresh }) =
           Dashboard
         </h1>
         <p className="text-gray-600 mt-1">
-          Welcome back! Here's what's happening with your gym today.
+          Welcome back! Here&apos;s what&apos;s happening with your gym today.
         </p>
       </div>
 

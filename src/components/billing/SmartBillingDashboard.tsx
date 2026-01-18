@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,
   FiTrendingUp,
   FiTrendingDown,
-  FiUsers,
-  FiFileText,
-  FiCalendar,
   FiAlertCircle,
   FiCheckCircle,
   FiClock,
@@ -15,14 +12,14 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiShield,
-  FiCreditCard,
   FiBarChart,
   FiPieChart,
   FiActivity,
   FiZap,
 } from "react-icons/fi";
-// Removed mock data - using real data from Supabase
 import toast from "react-hot-toast";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SmartBillingDashboardProps {
   refreshKey: number;
@@ -50,6 +47,7 @@ interface RevenueGrowth {
 export default function SmartBillingDashboard({
   refreshKey,
 }: SmartBillingDashboardProps) {
+  const { tenantId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<BillingMetrics>({
     totalRevenue: 0,
@@ -69,27 +67,132 @@ export default function SmartBillingDashboard({
     value: 0,
   });
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [refreshKey]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
+    if (!tenantId) return;
     try {
       setLoading(true);
 
-      // TODO: Fetch billing metrics from Supabase
+      // Get current month and previous month date ranges
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+      // Fetch all invoices
+      const { data: allInvoices, error: invoicesError } = await supabase
+        .from("invoices")
+        .select("amount, status, created_at, items, metadata")
+        .eq("tenant_id", tenantId);
+
+      if (invoicesError) throw invoicesError;
+
+      // Fetch current month invoices
+      const { data: currentMonthInvoices } = await supabase
+        .from("invoices")
+        .select("amount, status, created_at, items, metadata")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDate(currentMonthStart))
+        .lte("created_at", formatDate(currentMonthEnd));
+
+      // Fetch previous month invoices
+      const { data: previousMonthInvoices } = await supabase
+        .from("invoices")
+        .select("amount, status, created_at, items, metadata")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDate(previousMonthStart))
+        .lte("created_at", formatDate(previousMonthEnd));
+
+      const invoices = allInvoices || [];
+      const currentInvoices = currentMonthInvoices || [];
+      const previousInvoices = previousMonthInvoices || [];
+
+      // Calculate metrics
+      const totalRevenue = invoices
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+
+      const monthlyRevenue = currentInvoices
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+
+      const previousRevenue = previousInvoices
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+
+      const revenueGrowthPercentage = previousRevenue > 0
+        ? ((monthlyRevenue - previousRevenue) / previousRevenue) * 100
+        : 0;
+
+      const outstandingAmount = invoices
+        .filter(inv => inv.status === "pending" || inv.status === "overdue")
+        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+
+      // Calculate VAT collected (assuming 5% VAT rate)
+      const vatCollected = invoices
+        .filter(inv => inv.status === "paid")
+        .reduce((sum, inv) => sum + (Number(inv.amount || 0) * 0.05), 0);
+
+      // Calculate revenue by type from invoice items/metadata
+      let membershipRevenue = 0;
+      let classRevenue = 0;
+      let ptRevenue = 0;
+
+      invoices
+        .filter(inv => inv.status === "paid")
+        .forEach(inv => {
+          const amount = Number(inv.amount || 0);
+          const metadata =
+            inv.metadata && typeof inv.metadata === "object"
+              ? (inv.metadata as Record<string, unknown>)
+              : {};
+          const itemType = Array.isArray(inv.items)
+            ? (inv.items[0] as { type?: string })?.type
+            : undefined;
+          const type =
+            (typeof metadata.type === "string" ? metadata.type : itemType) ||
+            "membership";
+          
+          if (type.toLowerCase().includes("class")) {
+            classRevenue += amount;
+          } else if (type.toLowerCase().includes("personal") || type.toLowerCase().includes("pt")) {
+            ptRevenue += amount;
+          } else {
+            membershipRevenue += amount;
+          }
+        });
+
+      const paidInvoices = invoices.filter(inv => inv.status === "paid");
+      const averageInvoiceValue = paidInvoices.length > 0
+        ? totalRevenue / paidInvoices.length
+        : 0;
+
+      const collectionRate = invoices.length > 0
+        ? (paidInvoices.length / invoices.length) * 100
+        : 0;
+
+      // VAT compliance (simplified - assume 100% if all paid invoices have VAT)
+      const vatCompliance = 100; // This would need to be calculated based on actual VAT returns
+
       setMetrics({
-        totalRevenue: 0,
-        monthlyRecurringRevenue: 0,
-        averageRevenuePerUser: 0,
-        churnRate: 0,
-        activeSubscriptions: 0,
-        pendingInvoices: 0,
+        totalRevenue,
+        monthlyRevenue,
+        vatCollected,
+        outstandingAmount,
+        membershipRevenue,
+        classRevenue,
+        ptRevenue,
+        averageInvoiceValue,
+        collectionRate,
+        vatCompliance,
       });
+
       setRevenueGrowth({
-        current: 0,
-        previous: 0,
-        percentage: 0,
+        percentage: revenueGrowthPercentage,
+        trend: revenueGrowthPercentage > 0 ? "up" : revenueGrowthPercentage < 0 ? "down" : "stable",
+        value: monthlyRevenue,
       });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -97,7 +200,11 @@ export default function SmartBillingDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData, refreshKey]);
 
   if (loading) {
     return (
@@ -210,8 +317,16 @@ export default function SmartBillingDashboard({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <FiTrendingUp className="text-purple-300" />
-            <span className="text-sm opacity-90">+12% from last month</span>
+            {revenueGrowth.trend === "up" ? (
+              <FiTrendingUp className="text-purple-300" />
+            ) : revenueGrowth.trend === "down" ? (
+              <FiTrendingDown className="text-purple-300" />
+            ) : (
+              <FiActivity className="text-purple-300" />
+            )}
+            <span className="text-sm opacity-90">
+              {revenueGrowth.percentage >= 0 ? "+" : ""}{revenueGrowth.percentage.toFixed(1)}% from last month
+            </span>
           </div>
         </motion.div>
       </div>

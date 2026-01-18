@@ -25,10 +25,16 @@ const TrainerModalsDemo = () => {
   const [open, setOpen] = React.useState<string | null>(null);
   // Mock data for demonstration
   const mockTrainer = {
-    id: 1,
+    id: "1",
     name: "Jane Doe",
     email: "jane@fit.com",
-    status: "active",
+    phone: "+973 1234 5678",
+    specialty: "Strength Training",
+    rating: 4.7,
+    status: "active" as const,
+    classes: 12,
+    experience: "5 years",
+    avatar: "JD",
   };
 
   return (
@@ -39,7 +45,10 @@ const TrainerModalsDemo = () => {
         <button className="btn" onClick={() => setOpen("add")}>
           Open Add Trainer Modal
         </button>
-        <AddTrainerModal open={open === "add"} onClose={() => setOpen(null)} />
+        <AddTrainerModal
+          isOpen={open === "add"}
+          onClose={() => setOpen(null)}
+        />
       </section>
       {/* EditTrainerModal */}
       <section>
@@ -47,7 +56,7 @@ const TrainerModalsDemo = () => {
           Open Edit Trainer Modal
         </button>
         <EditTrainerModal
-          open={open === "edit"}
+          isOpen={open === "edit"}
           onClose={() => setOpen(null)}
           trainer={mockTrainer}
         />
@@ -58,7 +67,7 @@ const TrainerModalsDemo = () => {
           Open Delete Trainer Modal
         </button>
         <DeleteTrainerModal
-          open={open === "delete"}
+          isOpen={open === "delete"}
           onClose={() => setOpen(null)}
           trainer={mockTrainer}
         />
@@ -69,7 +78,7 @@ const TrainerModalsDemo = () => {
           Open Assign Classes Modal
         </button>
         <AssignClassesModal
-          open={open === "assign"}
+          isOpen={open === "assign"}
           onClose={() => setOpen(null)}
           trainer={mockTrainer}
         />
@@ -80,7 +89,7 @@ const TrainerModalsDemo = () => {
           Open View Trainer Profile Modal
         </button>
         <ViewTrainerProfileModal
-          open={open === "profile"}
+          isOpen={open === "profile"}
           onClose={() => setOpen(null)}
           trainer={mockTrainer}
         />
@@ -93,7 +102,7 @@ const TrainerModalsDemo = () => {
         <UpdateTrainerStatusModal
           open={open === "status"}
           onClose={() => setOpen(null)}
-          trainer={mockTrainer}
+          trainerId={mockTrainer.id}
         />
       </section>
       {/* ExportTrainerDataModal */}
@@ -102,9 +111,8 @@ const TrainerModalsDemo = () => {
           Open Export Trainer Data Modal
         </button>
         <ExportTrainerDataModal
-          open={open === "export"}
+          isOpen={open === "export"}
           onClose={() => setOpen(null)}
-          trainer={mockTrainer}
         />
       </section>
       {/* Placeholders for not-yet-implemented modals */}

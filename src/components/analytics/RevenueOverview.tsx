@@ -1,19 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
-  FiDollarSign,
   FiTrendingUp,
-  FiTrendingDown,
   FiBarChart,
   FiPieChart,
-  FiCalendar,
   FiUsers,
-  FiDownload,
-  FiEye,
-  FiRefreshCw,
-  FiFileText,
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
+
+type ActiveTab = "overview" | "breakdown" | "products";
 
 interface RevenueData {
   period: string;
@@ -26,6 +21,15 @@ interface RevenueBreakdown {
   amount: number;
   percentage: number;
   color: string;
+}
+
+interface ChartPreviewItem {
+  period?: string;
+  category?: string;
+  name?: string;
+  revenue?: number;
+  amount?: number;
+  units?: number;
 }
 
 interface RevenueOverviewProps {
@@ -50,17 +54,9 @@ const ChartPlaceholder = ({
 }: {
   title: string;
   icon: React.ReactNode;
-  data: any[];
+  data: ChartPreviewItem[];
   type?: "line" | "bar" | "pie";
 }) => {
-  const handleExportChart = () => {
-    // TODO: Implement export functionality
-  };
-
-  const handleViewDetails = () => {
-    // TODO: Implement details view functionality
-  };
-
   if (!data || !Array.isArray(data)) {
     return (
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -371,17 +367,25 @@ export default function RevenueOverview({
   topProducts,
   vatSummary,
 }: RevenueOverviewProps) {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "breakdown" | "products"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
 
-  const handleExportReport = () => {
-    // TODO: Implement export functionality
-  };
-
-  const handleGenerateInvoice = () => {
-    // TODO: Implement invoice generation
-  };
+  const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <FiBarChart className="w-4 h-4" />,
+    },
+    {
+      id: "breakdown",
+      label: "Breakdown",
+      icon: <FiPieChart className="w-4 h-4" />,
+    },
+    {
+      id: "products",
+      label: "Products",
+      icon: <FiPieChart className="w-4 h-4" />,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -397,26 +401,10 @@ export default function RevenueOverview({
 
       {/* Tabs */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        {[
-          {
-            id: "overview",
-            label: "Overview",
-            icon: <FiBarChart className="w-4 h-4" />,
-          },
-          {
-            id: "breakdown",
-            label: "Breakdown",
-            icon: <FiPieChart className="w-4 h-4" />,
-          },
-          {
-            id: "products",
-            label: "Products",
-            icon: <FiPieChart className="w-4 h-4" />,
-          },
-        ].map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-white text-blue-600 shadow-sm"
@@ -480,65 +468,3 @@ export default function RevenueOverview({
   );
 }
 
-export const defaultRevenueData: RevenueOverviewProps = {
-  timeSeriesData: [
-    { period: "Jan", revenue: 45000, change: 12.5 },
-    { period: "Feb", revenue: 52000, change: 15.6 },
-    { period: "Mar", revenue: 48000, change: -7.7 },
-    { period: "Apr", revenue: 55000, change: 14.6 },
-    { period: "May", revenue: 58000, change: 5.5 },
-    { period: "Jun", revenue: 62000, change: 6.9 },
-  ],
-  membershipRevenue: [
-    { category: "Premium", amount: 25000, percentage: 40, color: "#3B82F6" },
-    { category: "Standard", amount: 18000, percentage: 29, color: "#10B981" },
-    { category: "Basic", amount: 12000, percentage: 19, color: "#F59E0B" },
-    { category: "Trial", amount: 7000, percentage: 12, color: "#EF4444" },
-  ],
-  paymentMethodRevenue: [
-    {
-      category: "Credit Card",
-      amount: 35000,
-      percentage: 56,
-      color: "#3B82F6",
-    },
-    { category: "Cash", amount: 15000, percentage: 24, color: "#10B981" },
-    {
-      category: "Bank Transfer",
-      amount: 8000,
-      percentage: 13,
-      color: "#F59E0B",
-    },
-    {
-      category: "Digital Wallet",
-      amount: 4000,
-      percentage: 7,
-      color: "#EF4444",
-    },
-  ],
-  sourceRevenue: [
-    { category: "Website", amount: 28000, percentage: 45, color: "#3B82F6" },
-    {
-      category: "Social Media",
-      amount: 18000,
-      percentage: 29,
-      color: "#10B981",
-    },
-    { category: "Referral", amount: 8000, percentage: 13, color: "#F59E0B" },
-    { category: "Walk-in", amount: 5000, percentage: 8, color: "#EF4444" },
-    { category: "Google Ads", amount: 3000, percentage: 5, color: "#8B5CF6" },
-  ],
-  topProducts: [
-    { name: "Premium Annual", revenue: 15000, units: 25 },
-    { name: "Personal Training", revenue: 12000, units: 60 },
-    { name: "Group Classes", revenue: 8000, units: 200 },
-    { name: "Equipment Rental", revenue: 5000, units: 100 },
-    { name: "Nutrition Plan", revenue: 3000, units: 30 },
-  ],
-  vatSummary: {
-    total: 62000,
-    collected: 6200,
-    refunded: 800,
-    net: 5400,
-  },
-};

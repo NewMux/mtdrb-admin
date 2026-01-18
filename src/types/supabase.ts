@@ -9,6 +9,284 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      tenants: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+          updated_at: string;
+          has_plans: boolean;
+          has_trainers: boolean;
+          has_classes: boolean;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+          updated_at?: string;
+          has_plans?: boolean;
+          has_trainers?: boolean;
+          has_classes?: boolean;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+          updated_at?: string;
+          has_plans?: boolean;
+          has_trainers?: boolean;
+          has_classes?: boolean;
+          metadata?: Json;
+        };
+      };
+      memberships: {
+        Row: {
+          id: string;
+          user_id: string;
+          tenant_id: string;
+          role: "owner" | "admin" | "manager" | "trainer" | "staff";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tenant_id: string;
+          role?: "owner" | "admin" | "manager" | "trainer" | "staff";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tenant_id?: string;
+          role?: "owner" | "admin" | "manager" | "trainer" | "staff";
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      gym_settings: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          currency: string;
+          vat_rate: number;
+          vat_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          currency?: string;
+          vat_rate?: number;
+          vat_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          currency?: string;
+          vat_rate?: number;
+          vat_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+      };
+      branches: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          address?: string;
+          phone?: string;
+          email?: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          address?: string;
+          phone?: string;
+          email?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          address?: string;
+          phone?: string;
+          email?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+      };
+      expenses: {
+        Row: {
+          id: string;
+          created_at: string;
+          tenant_id: string;
+          description: string;
+          amount: number;
+          vat_amount: number;
+          category?: string;
+          date: string;
+          status: "pending" | "approved" | "rejected" | "cancelled";
+          payment_method?: string;
+          vendor?: string;
+          receipt_url?: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          tenant_id: string;
+          description: string;
+          amount: number;
+          vat_amount?: number;
+          category?: string;
+          date: string;
+          status?: "pending" | "approved" | "rejected" | "cancelled";
+          payment_method?: string;
+          vendor?: string;
+          receipt_url?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          tenant_id?: string;
+          description?: string;
+          amount?: number;
+          vat_amount?: number;
+          category?: string;
+          date?: string;
+          status?: "pending" | "approved" | "rejected" | "cancelled";
+          payment_method?: string;
+          vendor?: string;
+          receipt_url?: string;
+          metadata?: Json;
+        };
+      };
+      vat_returns: {
+        Row: {
+          id: string;
+          created_at: string;
+          tenant_id: string;
+          period: string;
+          period_start: string;
+          period_end: string;
+          status: "draft" | "submitted" | "approved" | "rejected";
+          vat_collected: number;
+          vat_paid: number;
+          net_vat_payable: number;
+          due_date?: string;
+          filing_deadline?: string;
+          filed_date?: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          tenant_id: string;
+          period: string;
+          period_start: string;
+          period_end: string;
+          status?: "draft" | "submitted" | "approved" | "rejected";
+          vat_collected?: number;
+          vat_paid?: number;
+          net_vat_payable?: number;
+          due_date?: string;
+          filing_deadline?: string;
+          filed_date?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          tenant_id?: string;
+          period?: string;
+          period_start?: string;
+          period_end?: string;
+          status?: "draft" | "submitted" | "approved" | "rejected";
+          vat_collected?: number;
+          vat_paid?: number;
+          net_vat_payable?: number;
+          due_date?: string;
+          filing_deadline?: string;
+          filed_date?: string;
+          metadata?: Json;
+        };
+      };
+      member_tasks: {
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          tenant_id: string;
+          member_id: string;
+          title: string;
+          description?: string;
+          type: "follow_up" | "payment_reminder" | "renewal" | "check_in" | "other";
+          priority: "low" | "medium" | "high" | "urgent";
+          status: "pending" | "in_progress" | "completed" | "cancelled";
+          due_date?: string;
+          assigned_to?: string;
+          created_by: string;
+          completed_at?: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          tenant_id: string;
+          member_id: string;
+          title: string;
+          description?: string;
+          type?: "follow_up" | "payment_reminder" | "renewal" | "check_in" | "other";
+          priority?: "low" | "medium" | "high" | "urgent";
+          status?: "pending" | "in_progress" | "completed" | "cancelled";
+          due_date?: string;
+          assigned_to?: string;
+          created_by: string;
+          completed_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          tenant_id?: string;
+          member_id?: string;
+          title?: string;
+          description?: string;
+          type?: "follow_up" | "payment_reminder" | "renewal" | "check_in" | "other";
+          priority?: "low" | "medium" | "high" | "urgent";
+          status?: "pending" | "in_progress" | "completed" | "cancelled";
+          due_date?: string;
+          assigned_to?: string;
+          created_by?: string;
+          completed_at?: string;
+          metadata?: Json;
+        };
+      };
       activities: {
         Row: {
           id: string;
@@ -76,9 +354,11 @@ export interface Database {
           phone?: string;
           status: "active" | "inactive" | "pending" | "suspended";
           membership_type: string;
+          membership_status?: "active" | "inactive" | "trial" | "expired" | "suspended";
           join_date: string;
           expiry_date?: string;
           trainer_id?: string;
+          assigned_branch_id?: string;
           metadata?: Json;
         };
         Insert: {
@@ -91,9 +371,11 @@ export interface Database {
           phone?: string;
           status?: "active" | "inactive" | "pending" | "suspended";
           membership_type: string;
+          membership_status?: "active" | "inactive" | "trial" | "expired" | "suspended";
           join_date: string;
           expiry_date?: string;
           trainer_id?: string;
+          assigned_branch_id?: string;
           metadata?: Json;
         };
         Update: {
@@ -106,9 +388,11 @@ export interface Database {
           phone?: string;
           status?: "active" | "inactive" | "pending" | "suspended";
           membership_type?: string;
+          membership_status?: "active" | "inactive" | "trial" | "expired" | "suspended";
           join_date?: string;
           expiry_date?: string;
           trainer_id?: string;
+          assigned_branch_id?: string;
           metadata?: Json;
         };
       };
@@ -262,12 +546,19 @@ export interface Database {
           created_at: string;
           tenant_id: string;
           member_id: string;
+          type?: "membership" | "class" | "personal_training" | "product" | "other";
           amount: number;
+          total?: number;
+          paid_amount?: number;
+          vat_total?: number;
           currency: string;
           status: "draft" | "pending" | "paid" | "overdue" | "cancelled";
+          issue_date?: string;
           due_date: string;
           paid_date?: string;
+          payment_method?: "cash" | "card" | "bank_transfer" | "online" | "other";
           items: Json[];
+          line_items?: Json[];
           metadata?: Json;
         };
         Insert: {
@@ -275,12 +566,19 @@ export interface Database {
           created_at?: string;
           tenant_id: string;
           member_id: string;
+          type?: "membership" | "class" | "personal_training" | "product" | "other";
           amount: number;
-          currency: string;
+          total?: number;
+          paid_amount?: number;
+          vat_total?: number;
+          currency?: string;
           status?: "draft" | "pending" | "paid" | "overdue" | "cancelled";
+          issue_date?: string;
           due_date: string;
           paid_date?: string;
+          payment_method?: "cash" | "card" | "bank_transfer" | "online" | "other";
           items: Json[];
+          line_items?: Json[];
           metadata?: Json;
         };
         Update: {
@@ -288,12 +586,19 @@ export interface Database {
           created_at?: string;
           tenant_id?: string;
           member_id?: string;
+          type?: "membership" | "class" | "personal_training" | "product" | "other";
           amount?: number;
+          total?: number;
+          paid_amount?: number;
+          vat_total?: number;
           currency?: string;
           status?: "draft" | "pending" | "paid" | "overdue" | "cancelled";
+          issue_date?: string;
           due_date?: string;
           paid_date?: string;
+          payment_method?: "cash" | "card" | "bank_transfer" | "online" | "other";
           items?: Json[];
+          line_items?: Json[];
           metadata?: Json;
         };
       };

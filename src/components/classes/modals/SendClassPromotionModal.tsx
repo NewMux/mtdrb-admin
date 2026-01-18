@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FiSend,
-  FiUsers,
-  FiMessageSquare,
-  FiTarget,
-  FiCalendar,
-  FiDollarSign,
-  FiCheckCircle,
 } from "react-icons/fi";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
 
 interface SendClassPromotionModalProps {
   isOpen: boolean;
@@ -47,6 +41,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   onClose,
   onSuccess,
   classId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isPro = false,
 }) => {
   const [formData, setFormData] = useState<PromotionFormData>({
@@ -89,7 +84,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
           if (error) throw error;
           
-          const formattedMembers: Member[] = (data || []).map((m: any) => ({
+          const formattedMembers: Member[] = (data || []).map((m: { id: string; first_name: string; last_name: string; email: string; status: string }) => ({
             id: m.id,
             name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
             email: m.email,
@@ -119,7 +114,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
     }
   }, [isOpen, classId]);
 
-  const handleInputChange = (field: keyof PromotionFormData, value: any) => {
+  const handleInputChange = (field: keyof PromotionFormData, value: string | number | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

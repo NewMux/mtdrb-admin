@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiUser,
-  FiCalendar,
-  FiClock,
   FiStar,
-  FiCheck,
-  FiX,
   FiAlertTriangle,
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
-import { FormField, SelectField, FormSection } from "./SmartFormComponents";
+import { FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface Trainer {
@@ -51,20 +47,10 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   const [sortBy, setSortBy] = useState<
     "rating" | "availability" | "load" | "rate"
   >("rating");
-  const [showConflicts, setShowConflicts] = useState(false);
 
   const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
-  // Load class data when modal opens
-  useEffect(() => {
-    if (isOpen && classId) {
-      fetchClass();
-      loadTrainers();
-    }
-  }, [isOpen, classId]);
-
-  // Load mock trainers data
-  const loadTrainers = () => {
+  const loadTrainers = useCallback(() => {
     const mockTrainers: Trainer[] = [
       {
         id: "1",
@@ -87,72 +73,18 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         is_preferred: true,
         last_assigned: "2024-01-10",
       },
-      {
-        id: "2",
-        name: "Mike Chen",
-        email: "mike@mtdrb.com",
-        specialties: ["HIIT", "Cardio", "Strength Training"],
-        rating: 4.6,
-        availability: {
-          Monday: ["08:00", "13:00", "17:00"],
-          Tuesday: ["08:00", "13:00", "17:00"],
-          Wednesday: ["08:00", "13:00", "17:00"],
-          Thursday: ["08:00", "13:00"],
-          Friday: ["08:00", "13:00", "17:00"],
-          Saturday: ["09:00", "14:00"],
-          Sunday: ["09:00", "14:00"],
-        },
-        current_load: 18,
-        max_load: 25,
-        hourly_rate: 40,
-        is_preferred: false,
-        last_assigned: "2024-01-12",
-      },
-      {
-        id: "3",
-        name: "Emma Davis",
-        email: "emma@mtdrb.com",
-        specialties: ["Yoga", "Meditation", "Flexibility"],
-        rating: 4.9,
-        availability: {
-          Monday: ["10:00", "15:00", "19:00"],
-          Tuesday: ["10:00", "15:00"],
-          Wednesday: ["10:00", "15:00", "19:00"],
-          Thursday: ["10:00", "15:00", "19:00"],
-          Friday: ["10:00", "15:00"],
-          Saturday: ["11:00", "16:00"],
-          Sunday: ["11:00", "16:00"],
-        },
-        current_load: 8,
-        max_load: 15,
-        hourly_rate: 50,
-        is_preferred: true,
-        last_assigned: "2024-01-08",
-      },
-      {
-        id: "4",
-        name: "Alex Rodriguez",
-        email: "alex@mtdrb.com",
-        specialties: ["CrossFit", "Olympic Lifting", "Powerlifting"],
-        rating: 4.4,
-        availability: {
-          Monday: ["07:00", "12:00", "16:00"],
-          Tuesday: ["07:00", "12:00", "16:00"],
-          Wednesday: ["07:00", "12:00"],
-          Thursday: ["07:00", "12:00", "16:00"],
-          Friday: ["07:00", "12:00", "16:00"],
-          Saturday: ["08:00", "13:00"],
-          Sunday: ["08:00", "13:00"],
-        },
-        current_load: 22,
-        max_load: 30,
-        hourly_rate: 35,
-        is_preferred: false,
-        last_assigned: "2024-01-15",
-      },
+      // Additional trainers would be loaded from Supabase in production
     ];
     setTrainers(mockTrainers);
-  };
+  }, []);
+
+  // Load class data when modal opens
+  useEffect(() => {
+    if (isOpen && classId) {
+      fetchClass();
+      loadTrainers();
+    }
+  }, [isOpen, classId, fetchClass, loadTrainers]);
 
   const handleAssign = async () => {
     setLoading(true);
@@ -352,7 +284,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as "rating" | "availability" | "load" | "rate")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
                 <option value="rating">Highest Rating</option>

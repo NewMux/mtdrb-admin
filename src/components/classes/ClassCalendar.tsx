@@ -54,8 +54,6 @@ const ClassCalendar: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string>('');
   const [view, setView] = useState<'timeGridWeek' | 'timeGridDay' | 'dayGridMonth'>('timeGridWeek');
   const [filters, setFilters] = useState<CalendarFilters>({
     classType: [],
@@ -114,8 +112,7 @@ const ClassCalendar: React.FC = () => {
   }, [events]);
 
   const handleDateClick = useCallback((info: DateClickArg) => {
-    setSelectedDate(info.date);
-    setSelectedTime(info.dateStr.split('T')[1].slice(0, 5));
+    void info;
     setIsCreateModalOpen(true);
   }, []);
 

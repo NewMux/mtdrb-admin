@@ -12,10 +12,8 @@ import {
   FiTrendingUp,
   FiTarget,
   FiRepeat,
-  FiSend,
   FiActivity,
   FiBarChart,
-  FiPlus,
   FiCheckCircle,
 } from "react-icons/fi";
 import toast from "react-hot-toast";

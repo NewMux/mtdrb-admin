@@ -41,7 +41,14 @@ interface Room {
 
 interface SmartRecommendation {
   id: string;
-  type: "scheduling" | "capacity" | "trainer" | "location" | "timing";
+  type:
+    | "scheduling"
+    | "capacity"
+    | "trainer"
+    | "location"
+    | "timing"
+    | "engagement"
+    | "revenue";
   title: string;
   description: string;
   confidence: number;

@@ -232,6 +232,62 @@ const schema = z
     },
   );
 
+const normalizeMembershipStatus = (
+  status?: string | null,
+): MemberFormData["membership_status"] => {
+  switch ((status ?? "").toLowerCase()) {
+    case "active":
+      return "active";
+    case "trial":
+      return "trial";
+    case "paused":
+      return "paused";
+    case "cancelled":
+    case "canceled":
+      return "cancelled";
+    default:
+      return "active";
+  }
+};
+
+const normalizeBillingCycle = (
+  cycle?: string | null,
+): MemberFormData["billing_cycle"] => {
+  switch ((cycle ?? "").toLowerCase()) {
+    case "monthly":
+      return "monthly";
+    case "quarterly":
+      return "quarterly";
+    case "semi-annual":
+    case "semi annual":
+      return "semi-annual";
+    case "annual":
+      return "annual";
+    default:
+      return "monthly";
+  }
+};
+
+const normalizePaymentMethod = (
+  method?: string | null,
+): MemberFormData["payment_method"] => {
+  switch ((method ?? "").toLowerCase()) {
+    case "card":
+      return "card";
+    case "bank transfer":
+    case "bank_transfer":
+      return "bank_transfer";
+    case "digital wallet":
+    case "digital_wallet":
+      return "digital_wallet";
+    case "cheque":
+      return "cheque";
+    case "cash":
+    default:
+      return "cash";
+  }
+};
+
 interface Branch {
   id: string;
   name: string;
@@ -306,11 +362,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         national_id: member.national_id || "",
         emergency_contact: member.emergency_contact || "",
         language: (member.language as "English" | "Arabic") || "English",
-        membership_status: member.membership_status as
-          | "active"
-          | "trial"
-          | "cancelled"
-          | "paused",
+        membership_status: normalizeMembershipStatus(member.membership_status),
         start_date: member.start_date ? member.start_date.split("T")[0] : "",
         end_date: member.end_date ? member.end_date.split("T")[0] : "",
         membership_type: member.membership_type || "",
@@ -328,7 +380,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         invoice_amount: 0,
         invoice_items: "",
         invoice_due_date: dayjs().add(30, "day").format("YYYY-MM-DD"),
-        payment_method: "Cash",
+        payment_method: normalizePaymentMethod(member.payment_method_preference),
 
         // 🚀 SMART DEFAULTS FOR EXISTING MEMBER
         height: member.height || undefined,
@@ -360,22 +412,13 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             | "1_year"
             | "2_years"
             | "lifetime") || "1_month",
-        billing_cycle:
-          (member.billing_cycle as
-            | "Monthly"
-            | "Quarterly"
-            | "Semi-Annual"
-            | "Annual") || "Monthly",
+        billing_cycle: normalizeBillingCycle(member.billing_cycle),
         discount_percentage: member.discount_percentage || undefined,
         discount_amount: member.discount_amount || undefined,
         auto_renewal: member.auto_renewal || false,
-        payment_method_preference:
-          (member.payment_method_preference as
-            | "card"
-            | "bank_transfer"
-            | "cash"
-            | "digital_wallet"
-            | "cheque") || undefined,
+        payment_method_preference: normalizePaymentMethod(
+          member.payment_method_preference,
+        ),
 
         // Modern Gym SaaS Features
         access_hours:
@@ -429,7 +472,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         invoice_amount: 0,
         invoice_items: "",
         invoice_due_date: dayjs().add(30, "day").format("YYYY-MM-DD"),
-        payment_method: "Cash",
+        payment_method: "cash",
 
         // 🚀 SMART DEFAULTS FOR NEW MEMBER - Fix required fields
         height: undefined,
@@ -446,7 +489,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         // Staff Management - Membership Setup
         access_level: "Basic",
         membership_duration: "1_month",
-        billing_cycle: "Monthly",
+        billing_cycle: "monthly",
         discount_percentage: undefined,
         discount_amount: undefined,
         auto_renewal: false,
@@ -544,7 +587,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="name"
-            name="name"
             autoComplete="name"
             {...register("name")}
             type="text"
@@ -565,7 +607,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="gender"
-            name="gender"
             autoComplete="sex"
             {...register("gender")}
             className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -585,7 +626,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="date_of_birth"
-            name="date_of_birth"
             autoComplete="bday"
             {...register("date_of_birth")}
             type="date"
@@ -602,7 +642,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="phone"
-            name="phone"
             autoComplete="tel"
             {...register("phone")}
             type="tel"
@@ -623,7 +662,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="email"
-            name="email"
             autoComplete="email"
             {...register("email")}
             type="email"
@@ -644,7 +682,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="emergency_contact"
-            name="emergency_contact"
             autoComplete="tel"
             {...register("emergency_contact")}
             type="text"
@@ -662,7 +699,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="national_id"
-            name="national_id"
             autoComplete="off"
             {...register("national_id")}
             type="text"
@@ -680,7 +716,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="language"
-            name="language"
             {...register("language")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -701,7 +736,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="assigned_trainer_id"
-            name="assigned_trainer_id"
             {...register("assigned_trainer_id")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -723,7 +757,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="plan_id"
-            name="plan_id"
             {...register("plan_id")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -797,7 +830,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <textarea
             id="staff_notes"
-            name="staff_notes"
             {...register("staff_notes")}
             rows={3}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -814,7 +846,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <textarea
             id="medical_notes"
-            name="medical_notes"
             {...register("medical_notes")}
             rows={3}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -846,7 +877,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="weight"
-            name="weight"
             autoComplete="off"
             {...register("weight", { valueAsNumber: true })}
             type="number"
@@ -865,7 +895,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="target_weight"
-            name="target_weight"
             autoComplete="off"
             {...register("target_weight", { valueAsNumber: true })}
             type="number"
@@ -884,7 +913,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="height"
-            name="height"
             autoComplete="off"
             {...register("height", { valueAsNumber: true })}
             type="number"
@@ -902,7 +930,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="fitness_level"
-            name="fitness_level"
             autoComplete="off"
             {...register("fitness_level")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1796,16 +1823,37 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         // Editing an existing member
         const formattedMember = {
           ...member,
+          name: member.name ?? "",
+          email: member.email ?? "",
+          national_id: member.national_id ?? "",
+          emergency_contact: member.emergency_contact ?? "",
           date_of_birth: member.date_of_birth
             ? dayjs(member.date_of_birth).format("YYYY-MM-DD")
             : "",
           start_date: member.start_date
             ? dayjs(member.start_date).format("YYYY-MM-DD")
             : dayjs().format("YYYY-MM-DD"),
+          end_date: member.end_date ? dayjs(member.end_date).format("YYYY-MM-DD") : "",
           phone: member.phone || "+973",
           language: (member.language === "Arabic" ? "Arabic" : "English") as
             | "English"
             | "Arabic",
+          membership_status: normalizeMembershipStatus(member.membership_status),
+          membership_type: member.membership_type ?? "",
+          primary_goals: member.primary_goals ?? [],
+          preferred_workout_times: member.preferred_workout_times ?? [],
+          billing_cycle: normalizeBillingCycle(member.billing_cycle),
+          tags: member.tags ?? [],
+          staff_notes: member.staff_notes ?? "",
+          medical_notes: member.medical_notes ?? "",
+          height: member.height ?? undefined,
+          weight: member.weight ?? undefined,
+          target_weight: member.target_weight ?? undefined,
+          medical_conditions: member.medical_conditions ?? [],
+          injuries: member.injuries ?? [],
+          payment_method_preference: normalizePaymentMethod(
+            member.payment_method_preference,
+          ),
         };
         // Try to auto-detect country code from phone
         const found = COUNTRY_CODES.find((c) =>
@@ -1834,11 +1882,12 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           email: "",
           phone: "",
           language: "English",
-          membership_status: "Active",
+          membership_status: "active",
           membership_price: 0,
           start_date: dayjs().format("YYYY-MM-DD"),
           end_date: dayjs().add(1, "month").format("YYYY-MM-DD"),
           membership_type: "Monthly",
+          billing_cycle: "monthly",
           plan_id: null,
           tags: [],
           staff_notes: "",
@@ -1849,6 +1898,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           invoice_items: "",
           invoice_due_date: "",
           payment_method: "cash",
+          payment_method_preference: "cash",
           // Add default values for required fields
           fitness_level: "Beginner",
           primary_goals: ["General Fitness"],
@@ -2041,7 +2091,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
       national_id: memberData.national_id || null,
       emergency_contact: memberData.emergency_contact || null,
       language: memberData.language || "English",
-      membership_status: memberData.membership_status || "Active",
+      membership_status: memberData.membership_status || "active",
       start_date: memberData.start_date,
       end_date: memberData.end_date,
       membership_type: memberData.membership_type,
@@ -2052,7 +2102,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
       staff_notes: memberData.staff_notes || null,
       medical_notes: memberData.medical_notes || null,
       consent_signed: memberData.consent_signed || false,
-      payment_method: payment_method?.toLowerCase() || "cash",
+      payment_method: normalizePaymentMethod(payment_method),
     };
 
     try {
@@ -2274,7 +2324,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
               </SmartButton>
               <SmartButton
                 variant="primary"
-                onClick={handleSubmit}
+                onClick={handleSubmit(onSubmit)}
                 loading={isLoading}
               >
                 {isLoading
@@ -2286,7 +2336,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             </div>
           }
         >
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Progress Steps */}
             <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">

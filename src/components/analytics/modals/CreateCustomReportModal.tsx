@@ -4,7 +4,6 @@ import {
   FiPlus,
   FiTrash2,
   FiSave,
-  FiEye,
   FiZap,
   FiLock,
   FiBarChart2,

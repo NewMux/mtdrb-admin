@@ -27,11 +27,38 @@ import ExportBillingDataModal from "../components/billing/modals/ExportBillingDa
 import AddExpenseModal from "../components/billing/AddExpenseModal";
 import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../supabaseClient";
 
 // Using real data from Supabase - no mock data
+interface InvoiceRow {
+  id: string;
+  invoice_number?: string | null;
+  members?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+  } | null;
+  member?: { name?: string | null };
+  amount?: string | number | null;
+  total?: string | number | null;
+  status?: string | null;
+  due_date?: string | null;
+  created_at?: string | null;
+}
+
+interface ExpenseRow {
+  id: string;
+  expense_number?: string | null;
+  category?: string | null;
+  amount?: string | number | null;
+  date?: string | null;
+  created_at?: string | null;
+}
 
 const Billing: React.FC = () => {
   const { theme } = usePageThemeContext();
+  const { tenantId } = useAuth();
 
   const [activeTab, setActiveTab] = React.useState("overview");
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -50,6 +77,24 @@ const Billing: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = React.useState<any>(null);
   const [selectedExpense, setSelectedExpense] = React.useState<any>(null);
   const [refreshKey, setRefreshKey] = React.useState(Date.now());
+  const [loading, setLoading] = React.useState(false);
+  const [recentTransactions, setRecentTransactions] = React.useState<any[]>([]);
+  const [invoices, setInvoices] = React.useState<InvoiceRow[]>([]);
+  const [expenses, setExpenses] = React.useState<ExpenseRow[]>([]);
+  const tenantIdValue = tenantId ?? "";
+  const clientOptions = React.useMemo(
+    () =>
+      invoices
+        .map((invoice) => {
+          const name = invoice.member?.name?.trim();
+          if (!name) return null;
+          return { id: invoice.id, name };
+        })
+        .filter(
+          (client): client is { id: string; name: string } => Boolean(client),
+        ),
+    [invoices],
+  );
 
   // Settings state management
   const [settings, setSettings] = React.useState({
@@ -58,36 +103,36 @@ const Billing: React.FC = () => {
     vatEnabled: false,
   });
 
-  const billingStats = [
+  const [billingStats, setBillingStats] = React.useState([
     {
       name: "Total Revenue",
-      value: "$124,750",
-      change: "+12% from last month",
+      value: "$0",
+      change: "Loading...",
       icon: FiDollarSign,
       color: "from-green-500 to-green-600",
     },
     {
       name: "Pending Payments",
-      value: "$8,450",
-      change: "+5% from last month",
+      value: "$0",
+      change: "Loading...",
       icon: FiCreditCard,
       color: "from-yellow-500 to-orange-500",
     },
     {
       name: "Total Invoices",
-      value: "1,247",
-      change: "+8% from last month",
+      value: "0",
+      change: "Loading...",
       icon: FiFileText,
       color: "from-blue-500 to-blue-600",
     },
     {
       name: "Expenses",
-      value: "$15,230",
-      change: "-3% from last month",
+      value: "$0",
+      change: "Loading...",
       icon: FiShoppingCart,
       color: "from-red-500 to-red-600",
     },
-  ];
+  ]);
 
   const tabs = [
     { id: "overview", name: "Overview", icon: FiDollarSign },
@@ -98,12 +143,205 @@ const Billing: React.FC = () => {
     { id: "settings", name: "Settings", icon: FiSettings },
   ];
 
-  const filters = [
-    { id: "all", name: "All Transactions", count: 1247 },
-    { id: "paid", name: "Paid", count: 1189 },
-    { id: "pending", name: "Pending", count: 45 },
-    { id: "overdue", name: "Overdue", count: 13 },
-  ];
+  const [filters, setFilters] = React.useState([
+    { id: "all", name: "All Transactions", count: 0 },
+    { id: "paid", name: "Paid", count: 0 },
+    { id: "pending", name: "Pending", count: 0 },
+    { id: "overdue", name: "Overdue", count: 0 },
+  ]);
+
+  // Fetch billing data
+  React.useEffect(() => {
+    const fetchBillingData = async () => {
+      if (!tenantId) return;
+      
+      try {
+        setLoading(true);
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+        // Fetch invoices
+        const { data: allInvoices, error: invoicesError } = await supabase
+          .from("invoices")
+          .select("*, members(id, first_name, last_name, email)")
+          .eq("tenant_id", tenantId);
+
+        if (invoicesError) throw invoicesError;
+
+        // Fetch expenses
+        const { data: allExpenses, error: expensesError } = await supabase
+          .from("expenses")
+          .select("*")
+          .eq("tenant_id", tenantId);
+
+        if (expensesError) throw expensesError;
+
+        const invoiceRows = (allInvoices ?? []) as InvoiceRow[];
+        const mappedInvoices = invoiceRows.map((invoice) => {
+          const memberRecord = invoice.members;
+          const memberName = memberRecord
+            ? `${memberRecord.first_name ?? ""} ${memberRecord.last_name ?? ""}`
+                .trim() || memberRecord.email || "Member"
+            : undefined;
+          return {
+            ...invoice,
+            member: memberName ? { name: memberName } : undefined,
+          };
+        });
+        setInvoices(mappedInvoices);
+        setExpenses((allExpenses ?? []) as ExpenseRow[]);
+
+        // Calculate total revenue (from paid invoices)
+        const paidInvoices = (allInvoices || []).filter(inv => 
+          inv.status === "paid" || inv.status === "completed"
+        );
+        const totalRevenue = paidInvoices.reduce((sum, inv) => 
+          sum + parseFloat(inv.amount || inv.total || "0"), 0
+        );
+
+        // Calculate previous month revenue
+        const previousMonthInvoices = (allInvoices || []).filter(inv => {
+          const invoiceDate = new Date(inv.created_at);
+          return invoiceDate >= previousMonthStart && invoiceDate <= previousMonthEnd &&
+                 (inv.status === "paid" || inv.status === "completed");
+        });
+        const previousRevenue = previousMonthInvoices.reduce((sum, inv) => 
+          sum + parseFloat(inv.amount || inv.total || "0"), 0
+        );
+        const revenueChange = previousRevenue > 0 
+          ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 
+          : 0;
+
+        // Calculate pending payments (unpaid invoices)
+        const pendingInvoices = (allInvoices || []).filter(inv => 
+          inv.status === "pending" || inv.status === "unpaid"
+        );
+        const pendingPayments = pendingInvoices.reduce((sum, inv) => 
+          sum + parseFloat(inv.amount || inv.total || "0"), 0
+        );
+
+        // Calculate previous month pending
+        const previousPending = (allInvoices || []).filter(inv => {
+          const invoiceDate = new Date(inv.created_at);
+          return invoiceDate >= previousMonthStart && invoiceDate <= previousMonthEnd &&
+                 (inv.status === "pending" || inv.status === "unpaid");
+        }).reduce((sum, inv) => sum + parseFloat(inv.amount || inv.total || "0"), 0);
+        const pendingChange = previousPending > 0 
+          ? ((pendingPayments - previousPending) / previousPending) * 100 
+          : 0;
+
+        // Total invoices
+        const totalInvoices = (allInvoices || []).length;
+        const previousTotalInvoices = (allInvoices || []).filter(inv => {
+          const invoiceDate = new Date(inv.created_at);
+          return invoiceDate >= previousMonthStart && invoiceDate <= previousMonthEnd;
+        }).length;
+        const invoicesChange = previousTotalInvoices > 0 
+          ? ((totalInvoices - previousTotalInvoices) / previousTotalInvoices) * 100 
+          : 0;
+
+        // Total expenses
+        const totalExpenses = (allExpenses || []).reduce((sum, exp) => 
+          sum + parseFloat(exp.amount || "0"), 0
+        );
+        const previousExpenses = (allExpenses || []).filter(exp => {
+          const expenseDate = new Date(exp.date || exp.created_at);
+          return expenseDate >= previousMonthStart && expenseDate <= previousMonthEnd;
+        }).reduce((sum, exp) => sum + parseFloat(exp.amount || "0"), 0);
+        const expensesChange = previousExpenses > 0 
+          ? ((totalExpenses - previousExpenses) / previousExpenses) * 100 
+          : 0;
+
+        // Update billing stats
+        setBillingStats([
+          {
+            name: "Total Revenue",
+            value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            change: revenueChange >= 0 
+              ? `+${revenueChange.toFixed(1)}% from last month` 
+              : `${revenueChange.toFixed(1)}% from last month`,
+            icon: FiDollarSign,
+            color: "from-green-500 to-green-600",
+          },
+          {
+            name: "Pending Payments",
+            value: `$${pendingPayments.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            change: pendingChange >= 0 
+              ? `+${pendingChange.toFixed(1)}% from last month` 
+              : `${pendingChange.toFixed(1)}% from last month`,
+            icon: FiCreditCard,
+            color: "from-yellow-500 to-orange-500",
+          },
+          {
+            name: "Total Invoices",
+            value: totalInvoices.toLocaleString(),
+            change: invoicesChange >= 0 
+              ? `+${invoicesChange.toFixed(1)}% from last month` 
+              : `${invoicesChange.toFixed(1)}% from last month`,
+            icon: FiFileText,
+            color: "from-blue-500 to-blue-600",
+          },
+          {
+            name: "Expenses",
+            value: `$${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            change: expensesChange >= 0 
+              ? `+${expensesChange.toFixed(1)}% from last month` 
+              : `${expensesChange.toFixed(1)}% from last month`,
+            icon: FiShoppingCart,
+            color: "from-red-500 to-red-600",
+          },
+        ]);
+
+        // Update filters
+        const paidCount = paidInvoices.length;
+        const pendingCount = pendingInvoices.length;
+        const overdueInvoices = (allInvoices || []).filter(inv => {
+          if (inv.status === "paid" || inv.status === "completed") return false;
+          if (inv.due_date) {
+            return new Date(inv.due_date) < now;
+          }
+          return false;
+        });
+        const overdueCount = overdueInvoices.length;
+
+        setFilters([
+          { id: "all", name: "All Transactions", count: totalInvoices },
+          { id: "paid", name: "Paid", count: paidCount },
+          { id: "pending", name: "Pending", count: pendingCount },
+          { id: "overdue", name: "Overdue", count: overdueCount },
+        ]);
+
+        // Fetch recent transactions (last 10 invoices)
+        const recentInvoices = (allInvoices || [])
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 10)
+          .map(inv => ({
+            id: inv.id,
+            invoice_number: inv.invoice_number || inv.id.substring(0, 8),
+            member: inv.members ? {
+              name: `${inv.members.first_name || ''} ${inv.members.last_name || ''}`.trim() || inv.members.email
+            } : null,
+            total: parseFloat(inv.amount || inv.total || "0"),
+            status: inv.status === "paid" || inv.status === "completed" ? "Paid" 
+              : inv.status === "pending" || inv.status === "unpaid" ? "Unpaid" 
+              : "Overdue",
+            due_date: inv.due_date || inv.created_at,
+          }));
+        
+        setRecentTransactions(recentInvoices);
+      } catch (error) {
+        console.error("Error fetching billing data:", error);
+        toast.error("Failed to load billing data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBillingData();
+  }, [tenantId, refreshKey]);
 
   // Button handlers
   const handleExportReports = () => {
@@ -222,39 +460,52 @@ const Billing: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* TODO: Fetch recent invoices from Supabase */}
-                    {[].map((invoice: any) => (
-                      <tr
-                        key={invoice.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                          {invoice.invoice_number}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
-                          {invoice.member?.name || "N/A"}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
-                          ${invoice.total.toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              invoice.status === "Paid"
-                                ? "bg-green-100 text-green-800"
-                                : invoice.status === "Unpaid"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {invoice.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
-                          {new Date(invoice.due_date).toLocaleDateString()}
+                    {loading ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                          Loading transactions...
                         </td>
                       </tr>
-                    ))}
+                    ) : recentTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                          No recent transactions
+                        </td>
+                      </tr>
+                    ) : (
+                      recentTransactions.map((invoice: any) => (
+                        <tr
+                          key={invoice.id}
+                          className="border-b border-gray-100 hover:bg-gray-50"
+                        >
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                            {invoice.invoice_number}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-700">
+                            {invoice.member?.name || "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-700">
+                            ${invoice.total.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                invoice.status === "Paid"
+                                  ? "bg-green-100 text-green-800"
+                                  : invoice.status === "Unpaid"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {invoice.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-700">
+                            {new Date(invoice.due_date).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -318,7 +569,7 @@ const Billing: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {[].map((invoice) => (
+                    {invoices.map((invoice) => (
                       <tr
                         key={invoice.id}
                         className="border-b border-gray-100 hover:bg-gray-50"
@@ -330,23 +581,26 @@ const Billing: React.FC = () => {
                           {invoice.member?.name || "N/A"}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700">
-                          ${invoice.total.toFixed(2)}
+                          ${Number(invoice.total ?? invoice.amount ?? 0).toFixed(2)}
                         </td>
                         <td className="py-3 px-4">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              invoice.status === "Paid"
+                              (invoice.status ?? "unpaid").toLowerCase() === "paid"
                                 ? "bg-green-100 text-green-800"
-                                : invoice.status === "Unpaid"
+                                : (invoice.status ?? "unpaid").toLowerCase() ===
+                                    "unpaid"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {invoice.status}
+                            {invoice.status ?? "Unpaid"}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700">
-                          {new Date(invoice.due_date).toLocaleDateString()}
+                          {invoice.due_date
+                            ? new Date(invoice.due_date).toLocaleDateString()
+                            : "N/A"}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex space-x-2">
@@ -417,7 +671,7 @@ const Billing: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {[].map((expense) => (
+                    {expenses.map((expense) => (
                       <tr
                         key={expense.id}
                         className="border-b border-gray-100 hover:bg-gray-50"
@@ -429,10 +683,14 @@ const Billing: React.FC = () => {
                           {expense.category}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700">
-                          ${expense.amount.toFixed(2)}
+                          ${Number(expense.amount ?? 0).toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700">
-                          {new Date(expense.date).toLocaleDateString()}
+                          {expense.date
+                            ? new Date(expense.date).toLocaleDateString()
+                            : expense.created_at
+                              ? new Date(expense.created_at).toLocaleDateString()
+                              : "N/A"}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex space-x-2">
@@ -469,7 +727,7 @@ const Billing: React.FC = () => {
       case "vat":
         return (
           <div className="space-y-6">
-            <SmartVatDashboard />
+            <SmartVatDashboard tenantId={tenantIdValue} refreshKey={refreshKey} />
           </div>
         );
 
@@ -678,8 +936,9 @@ const Billing: React.FC = () => {
           <AddInvoiceModal
             isOpen={activeModal === "addInvoice"}
             onClose={closeModal}
-            clients={[]}
-            onSuccess={() => {
+            tenantId={tenantId}
+            invoice={null}
+            onInvoiceAdded={() => {
               closeModal();
               toast.success("Invoice created successfully!");
             }}
@@ -690,7 +949,9 @@ const Billing: React.FC = () => {
           <AddExpenseModal
             isOpen={activeModal === "expense"}
             onClose={closeModal}
-            onSuccess={() => {
+            tenantId={tenantId}
+            expense={null}
+            onExpenseAdded={() => {
               closeModal();
               toast.success("Expense added successfully!");
             }}
@@ -699,12 +960,8 @@ const Billing: React.FC = () => {
 
         {activeModal === "export" && (
           <ExportBillingDataModal
-            isOpen={activeModal === "export"}
+            open={activeModal === "export"}
             onClose={closeModal}
-            onSuccess={() => {
-              closeModal();
-              handleExportReports();
-            }}
           />
         )}
 
@@ -712,12 +969,13 @@ const Billing: React.FC = () => {
           <NewInvoiceModal
             isOpen={activeModal === "viewInvoice"}
             onClose={closeModal}
-            invoice={selectedInvoice}
-            isViewMode={true}
-            onSuccess={() => {
+            clients={clientOptions}
+            tenantId={tenantIdValue}
+            onSave={() => {
               closeModal();
               toast.success("Invoice updated successfully!");
             }}
+            invoice={selectedInvoice}
           />
         )}
 
@@ -725,12 +983,13 @@ const Billing: React.FC = () => {
           <NewInvoiceModal
             isOpen={activeModal === "editInvoice"}
             onClose={closeModal}
-            invoice={selectedInvoice}
-            isViewMode={false}
-            onSuccess={() => {
+            clients={clientOptions}
+            tenantId={tenantIdValue}
+            onSave={() => {
               closeModal();
               toast.success("Invoice updated successfully!");
             }}
+            invoice={selectedInvoice}
           />
         )}
 
@@ -739,8 +998,8 @@ const Billing: React.FC = () => {
             isOpen={activeModal === "viewExpense"}
             onClose={closeModal}
             expense={selectedExpense}
-            isViewMode={true}
-            onSuccess={() => {
+            tenantId={tenantId}
+            onExpenseAdded={() => {
               closeModal();
               toast.success("Expense updated successfully!");
             }}
@@ -752,8 +1011,8 @@ const Billing: React.FC = () => {
             isOpen={activeModal === "editExpense"}
             onClose={closeModal}
             expense={selectedExpense}
-            isViewMode={false}
-            onSuccess={() => {
+            tenantId={tenantId}
+            onExpenseAdded={() => {
               closeModal();
               toast.success("Expense updated successfully!");
             }}

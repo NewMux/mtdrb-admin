@@ -185,8 +185,13 @@ interface AutomationSettings {
 export default function SmartClassManagement() {
   const { theme } = usePageThemeContext();
 
+  type ClassRow = Class & {
+    bookings?: Array<{ count: number }>;
+    startTime?: string;
+  };
+
   // Core State
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState<ClassRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -199,12 +204,12 @@ export default function SmartClassManagement() {
 
   // Modal & Drawer State
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [selectedClass, setSelectedClass] = useState<ClassRow | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
   const [selectedWaitlistClass, setSelectedWaitlistClass] =
-    useState<Class | null>(null);
+    useState<ClassRow | null>(null);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -297,17 +302,20 @@ export default function SmartClassManagement() {
     {
       id: "upcoming",
       name: "Upcoming",
-      count: classes.filter((c) => new Date(c.startTime) > new Date()).length,
+      count: classes.filter((c) => {
+        const start = c.start_time ?? c.startTime ?? "";
+        return start ? new Date(start) > new Date() : false;
+      }).length,
     },
     {
       id: "popular",
       name: "Popular",
-      count: classes.filter((c) => c.bookings && c.bookings.length > 10).length,
+      count: classes.filter((c) => (c.bookings?.length ?? 0) > 10).length,
     },
     {
       id: "underbooked",
       name: "Underbooked",
-      count: classes.filter((c) => c.bookings && c.bookings.length < 5).length,
+      count: classes.filter((c) => (c.bookings?.length ?? 0) < 5).length,
     },
   ];
 
@@ -380,15 +388,36 @@ export default function SmartClassManagement() {
     try {
       // Get tenantId from user metadata or memberships
       const tenantId = user?.user_metadata?.tenant_id || user?.user_metadata?.tenantId;
+      const emptyCategories: ClassCategories = {
+        popular: [],
+        underbooked: [],
+        waitlisted: [],
+        high_rated: [],
+      };
       if (!tenantId) {
-        setClassCategories([]);
+        setClassCategories(emptyCategories);
         return;
       }
       const categories = await getClassCategories(tenantId);
-      setClassCategories(categories || []);
+      const nextCategories = categories.reduce<ClassCategories>(
+        (acc, category) => {
+          acc[category.category_type] = [
+            ...acc[category.category_type],
+            ...category.class_ids,
+          ];
+          return acc;
+        },
+        emptyCategories,
+      );
+      setClassCategories(nextCategories);
     } catch (error) {
       console.error("Error fetching automation data:", error);
-      setClassCategories([]);
+      setClassCategories({
+        popular: [],
+        underbooked: [],
+        waitlisted: [],
+        high_rated: [],
+      });
     }
   };
 
@@ -412,47 +441,47 @@ export default function SmartClassManagement() {
     setActiveModal("add");
   };
 
-  const handleEditClass = (classItem: Class) => {
+  const handleEditClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("edit");
   };
 
-  const handleDeleteClass = (classItem: Class) => {
+  const handleDeleteClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("delete");
   };
 
-  const handleViewClass = (classItem: Class) => {
+  const handleViewClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("view");
   };
 
-  const handleScheduleClass = (classItem?: Class) => {
-    if (classItem) setSelectedClass(classItem);
+  const handleScheduleClass = (classItem: ClassRow) => {
+    setSelectedClass(classItem);
     setActiveModal("schedule");
   };
 
-  const handleAssignTrainer = (classItem: Class) => {
+  const handleAssignTrainer = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("assign");
   };
 
-  const handleWaitlist = (classItem: Class) => {
+  const handleWaitlist = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("waitlist");
   };
 
-  const handleCancelClass = (classItem: Class) => {
+  const handleCancelClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("cancel");
   };
 
-  const handleExportClass = (classItem: Class) => {
+  const handleExportClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("export");
   };
 
-  const handleSettings = (classItem: Class) => {
+  const handleSettings = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("settings");
   };
@@ -584,7 +613,7 @@ export default function SmartClassManagement() {
                 onDelete={handleDeleteClass}
                 onView={handleViewClass}
                 onSchedule={handleScheduleClass}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 onWaitlist={handleWaitlist}
                 onCancel={handleCancelClass}
                 onExport={handleExportClass}
@@ -598,7 +627,7 @@ export default function SmartClassManagement() {
       case "analytics":
         return (
           <div className="space-y-6">
-            <ClassAnalyticsTab classes={classes} stats={classStats} />
+            <ClassAnalyticsTab classes={classes} />
           </div>
         );
 
@@ -641,7 +670,7 @@ export default function SmartClassManagement() {
                 onDelete={handleDeleteClass}
                 onView={handleViewClass}
                 onSchedule={handleScheduleClass}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 onWaitlist={handleWaitlist}
                 onCancel={handleCancelClass}
                 onExport={handleExportClass}
@@ -803,11 +832,11 @@ export default function SmartClassManagement() {
           />
         )}
 
-        {activeModal === "schedule" && (
+        {activeModal === "schedule" && selectedClass && (
           <ScheduleClassModal
             isOpen={activeModal === "schedule"}
             onClose={closeModal}
-            classItem={selectedClass}
+            classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
           />
         )}
@@ -870,17 +899,11 @@ export default function SmartClassManagement() {
       {/* Drawer */}
       {selectedClass && (
         <ClassDetailsDrawer
-          classItem={selectedClass}
+          classData={selectedClass}
           isOpen={isDrawerOpen}
           onClose={handleCloseDrawer}
           onEdit={handleEditClass}
-          onDelete={handleDeleteClass}
-          onSchedule={handleScheduleClass}
-          onAssign={handleAssignTrainer}
           onWaitlist={handleWaitlist}
-          onCancel={handleCancelClass}
-          onExport={handleExportClass}
-          onSettings={handleSettings}
         />
       )}
     </div>

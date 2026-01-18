@@ -408,6 +408,7 @@ export interface Task {
   status: "pending" | "in_progress" | "completed" | "cancelled";
   due_date: string;
   assigned_to: string;
+  tags?: string[];
   created_by: string;
   created_at: string;
   updated_at: string;

@@ -1,10 +1,8 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiClock,
   FiMail,
   FiMessageSquare,
-  FiSmartphone,
   FiCalendar,
   FiZap,
   FiLock,
@@ -12,7 +10,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
-import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
+import { useSmartAnalyticsModal, type AnalyticsFilters } from "./useSmartAnalyticsModal";
 
 interface ScheduleReportModalProps {
   open: boolean;
@@ -103,9 +101,15 @@ export default function ScheduleReportModal({
   const { loading, scheduleReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+
   const [selectedTemplate, setSelectedTemplate] = React.useState("");
-  const [frequency, setFrequency] = React.useState("weekly");
-  const [deliveryMethod, setDeliveryMethod] = React.useState("email");
+  const [frequency, setFrequency] = React.useState<
+    NonNullable<AnalyticsFilters["frequency"]>
+  >("weekly");
+  const [deliveryMethod, setDeliveryMethod] = React.useState<
+    NonNullable<AnalyticsFilters["deliveryMethod"]>
+  >("email");
   const [recipients, setRecipients] = React.useState(["admin@mtdrb.com"]);
   const [startDate, setStartDate] = React.useState(
     new Date().toISOString().split("T")[0],
@@ -124,8 +128,8 @@ export default function ScheduleReportModal({
     setScheduling(true);
     try {
       const result = await scheduleReport({
-        frequency: frequency as any,
-        deliveryMethod: deliveryMethod as any,
+        frequency,
+        deliveryMethod,
         recipients,
       });
 
@@ -187,6 +191,11 @@ export default function ScheduleReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Scheduling reports is available on Pro plans.
+        </div>
+      )}
 
       {/* Report Template Selection */}
       <Section title="Select Report Template">
@@ -247,7 +256,13 @@ export default function ScheduleReportModal({
                   name="frequency"
                   value={freq.id}
                   checked={frequency === freq.id}
-                  onChange={(e) => setFrequency(e.target.value)}
+                  onChange={(e) =>
+                    setFrequency(
+                      e.target.value as NonNullable<
+                        AnalyticsFilters["frequency"]
+                      >,
+                    )
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">
@@ -295,7 +310,13 @@ export default function ScheduleReportModal({
                   name="deliveryMethod"
                   value={method.id}
                   checked={deliveryMethod === method.id}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
+                  onChange={(e) =>
+                    setDeliveryMethod(
+                      e.target.value as NonNullable<
+                        AnalyticsFilters["deliveryMethod"]
+                      >,
+                    )
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">
@@ -441,7 +462,7 @@ export default function ScheduleReportModal({
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handleSchedule}
-            disabled={loading || scheduling || !selectedTemplate}
+            disabled={loading || scheduling || !selectedTemplate || !isProUser}
           >
             {scheduling ? (
               <>

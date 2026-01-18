@@ -4,33 +4,38 @@ import {
   FiUsers,
   FiCalendar,
   FiDollarSign,
-  FiZap,
-  FiBarChart,
-  FiPlus,
 } from "react-icons/fi";
 
 interface QuickActionsHubProps {
   refreshKey: number;
 }
 
-export const QuickActionsHub: React.FC<QuickActionsHubProps> = ({
-  refreshKey,
-}) => {
-  const quickActions = [
+export const QuickActionsHub: React.FC<QuickActionsHubProps> = () => {
+  interface QuickAction {
+    title: string;
+    icon: React.ReactNode;
+    variant: "primary" | "secondary" | "success" | "warning" | "danger" | "ghost";
+    onClick: () => void;
+  }
+
+  const quickActions: QuickAction[] = [
     {
       title: "Add Member",
       icon: <FiUsers className="h-5 w-5" />,
       variant: "primary",
+      onClick: () => {},
     },
     {
       title: "Schedule Class",
       icon: <FiCalendar className="h-5 w-5" />,
       variant: "secondary",
+      onClick: () => {},
     },
     {
       title: "Process Payment",
       icon: <FiDollarSign className="h-5 w-5" />,
       variant: "secondary",
+      onClick: () => {},
     },
   ];
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiEdit2,
   FiStar,
@@ -76,6 +76,10 @@ interface Member {
   name: string;
   email: string;
   profile_image_url?: string;
+  status?: "Active" | "Inactive" | "Suspended" | "Expired" | "Trial";
+  joined_at?: string;
+  membership_type?: string;
+  payment_status?: "Paid" | "Unpaid" | "Overdue";
 }
 
 interface Class {
@@ -83,7 +87,10 @@ interface Class {
   name: string;
   start_time: string;
   end_time: string;
-  status: string;
+  status?: string;
+  location?: string;
+  capacity?: number;
+  bookings?: Array<{ count: number }>;
 }
 
 interface Session {
@@ -122,22 +129,7 @@ export default function TrainerProfile({ trainerId }: Props) {
     lastMonth: 0,
   });
 
-  useEffect(() => {
-    if (trainerId) {
-      fetchTrainerData();
-      fetchAssignedMembers();
-      fetchRecentClasses();
-      fetchEarnings();
-    }
-  }, [
-    trainerId,
-    fetchTrainerData,
-    fetchAssignedMembers,
-    fetchRecentClasses,
-    fetchEarnings,
-  ]);
-
-  const fetchTrainerData = async () => {
+  const fetchTrainerData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -204,7 +196,7 @@ export default function TrainerProfile({ trainerId }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [trainerId]);
 
   const processPerformanceData = (data: Session[]): Performance[] => {
     const monthlyData: { [key: string]: SessionData } = {};
@@ -262,7 +254,7 @@ export default function TrainerProfile({ trainerId }: Props) {
     return revenue;
   };
 
-  const fetchAssignedMembers = async () => {
+  const fetchAssignedMembers = useCallback(async () => {
     try {
       const { data: members, error } = await supabase
         .from("members")
@@ -288,9 +280,9 @@ export default function TrainerProfile({ trainerId }: Props) {
     } catch (error) {
       console.error("Error fetching assigned members:", error);
     }
-  };
+  }, [trainerId]);
 
-  const fetchRecentClasses = async () => {
+  const fetchRecentClasses = useCallback(async () => {
     try {
       const { data: classes, error } = await supabase
         .from("classes")
@@ -319,9 +311,9 @@ export default function TrainerProfile({ trainerId }: Props) {
     } catch (error) {
       console.error("Error fetching recent classes:", error);
     }
-  };
+  }, [trainerId]);
 
-  const fetchEarnings = async () => {
+  const fetchEarnings = useCallback(async () => {
     try {
       const currentMonth = new Date();
       const lastMonth = new Date(
@@ -363,7 +355,16 @@ export default function TrainerProfile({ trainerId }: Props) {
     } catch (error) {
       console.error("Error fetching earnings:", error);
     }
-  };
+  }, [trainerId]);
+
+  useEffect(() => {
+    if (trainerId) {
+      fetchTrainerData();
+      fetchAssignedMembers();
+      fetchRecentClasses();
+      fetchEarnings();
+    }
+  }, [trainerId, fetchTrainerData, fetchAssignedMembers, fetchRecentClasses, fetchEarnings]);
 
   if (loading) {
     return (

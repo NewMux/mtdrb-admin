@@ -3,12 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
-import { useTheme } from "../contexts/ThemeContext";
 import PageThemeDetector from "./PageThemeDetector";
 
 const Layout: React.FC = () => {
-  const { isDark } = useTheme();
-
   return (
     <div
       className={`min-h-screen bg-gray-50 transition-colors duration-300`}

@@ -9,7 +9,15 @@ export interface Member {
   national_id?: string | null;
   emergency_contact?: string | null;
   language?: "English" | "Arabic";
-  membership_status?: "Active" | "Trial" | "Cancelled" | "Paused";
+  membership_status?:
+    | "Active"
+    | "Trial"
+    | "Cancelled"
+    | "Paused"
+    | "active"
+    | "trial"
+    | "cancelled"
+    | "paused";
   membership_type?: string | null;
   membership_price?: number | string | null;
   start_date?: string | null;
@@ -45,6 +53,19 @@ export interface Member {
   memberships?: { tenant_id: string; status: string }[];
   assigned_plan_id?: string;
   assigned_branch_id?: string;
+  trainer_id?: string;
+  avatar?: string;
+  goals?: string[];
+  health_conditions?: string[];
+  address?: string;
+  lastVisit?: string;
+  joinDate?: string;
+  membershipType?: string;
+  planEnd?: string;
+  age?: number;
+  fitnessGoal?: string;
+  staffNotes?: string;
+  idDocument?: string | File;
 
   // 🚀 SMART MEMBER FIELDS
   // Health & Fitness Profile

@@ -1,44 +1,59 @@
 import React from "react";
 import { FiZap } from "react-icons/fi";
 
-const insights = [
+type InsightColor = "blue" | "green" | "purple" | "red";
+
+interface InsightItem {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  description: string;
+  color: InsightColor;
+  context?: string;
+}
+
+const insights: InsightItem[] = [
   {
     icon: "📈",
     title: "Member Growth",
-    description: "+12% this month",
+    value: "+12%",
+    description: "Growth this month",
     color: "blue",
     context: "Best month this year",
   },
   {
     icon: "💰",
     title: "Revenue Opportunity",
-    description: "BHD 2,400 potential",
+    value: "BHD 2,400",
+    description: "Potential uplift",
     color: "green",
     context: "Upsell premium plans",
   },
   {
     icon: "⚡",
     title: "Peak Hours",
-    description: "6-8 PM busiest",
+    value: "6-8 PM",
+    description: "Busiest window",
     color: "purple",
     context: "Consider more classes",
   },
   {
     icon: "🎯",
     title: "Retention Alert",
-    description: "3 members at risk",
+    value: "3 members",
+    description: "At risk this week",
     color: "red",
     context: "Send engagement offers",
   },
 ];
 
-const colorBg = {
+const colorBg: Record<InsightColor, string> = {
   blue: "bg-blue-50",
   green: "bg-green-50",
   purple: "bg-purple-50",
   red: "bg-red-50",
 };
-const colorText = {
+const colorText: Record<InsightColor, string> = {
   blue: "text-blue-600",
   green: "text-green-600",
   purple: "text-purple-600",

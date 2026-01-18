@@ -7,11 +7,14 @@ import {
   FiTag,
   FiCalendar,
   FiAlertTriangle,
-  FiHistory,
+  FiActivity,
   FiZap,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
-import { useSmartTaskModal } from "./useSmartTaskModal";
+import {
+  useSmartTaskModal,
+  type SmartSuggestion,
+} from "./useSmartTaskModal";
 
 interface EditTaskModalProps {
   open: boolean;
@@ -20,20 +23,41 @@ interface EditTaskModalProps {
   isPro?: boolean;
 }
 
+type TaskType =
+  | "onboarding"
+  | "class_setup"
+  | "maintenance"
+  | "cleaning"
+  | "equipment_check"
+  | "member_support"
+  | "admin"
+  | "custom";
+type TaskPriority = "low" | "medium" | "high" | "urgent";
+
+interface TaskFormData {
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  dueDate: string;
+  assignedTo: string;
+  tags: string[];
+}
+
 export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   open,
   onClose,
   taskId,
   isPro = false,
 }) => {
-  const { loading, task, aiSuggestions, updateTask, alerts, clearAlerts } =
+  const { loading, task, smartSuggestions, updateTask, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
 
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<TaskFormData>({
     title: "",
     description: "",
-    type: "custom" as const,
-    priority: "medium" as const,
+    type: "custom",
+    priority: "medium",
     dueDate: "",
     assignedTo: "",
     tags: [] as string[],
@@ -303,7 +327,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                <FiHistory className="w-4 h-4" />
+                <FiActivity className="w-4 h-4" />
                 <span>Task History</span>
               </h3>
               <button
@@ -360,7 +384,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           </div>
 
           {/* Smart Suggestions */}
-          {aiSuggestions.length > 0 && (
+          {smartSuggestions.length > 0 && (
             <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -381,7 +405,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   animate={{ opacity: 1, height: "auto" }}
                   className="space-y-2"
                 >
-                  {aiSuggestions.map((suggestion) => (
+                  {smartSuggestions.map((suggestion: SmartSuggestion) => (
                     <div
                       key={suggestion.id}
                       className="p-3 rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"

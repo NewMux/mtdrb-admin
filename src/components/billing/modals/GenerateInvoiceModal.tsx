@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiFileText,
   FiUser,
   FiCalendar,
-  FiDollarSign,
   FiShield,
   FiZap,
 } from "react-icons/fi";
@@ -43,16 +41,10 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
   const [dueDate, setDueDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    data,
-    loading,
-    validation,
-    suggestions,
-    isProUser,
-    updateData,
-    getSmartDefaults,
-    fetchRelatedData,
-  } = useSmartBillingModal({ memberId, planId });
+  const { isProUser, getSmartDefaults } = useSmartBillingModal({
+    memberId,
+    planId,
+  });
 
   const invoiceTemplates: InvoiceTemplate[] = [
     {
@@ -121,14 +113,14 @@ const GenerateInvoiceModal: React.FC<GenerateInvoiceModalProps> = ({
     return `INV-${year}${month}-${random}`;
   };
 
-  const handleTemplateSelect = (templateId: string) => {
+  const handleTemplateSelect = async (templateId: string) => {
     setSelectedTemplate(templateId);
     const template = invoiceTemplates.find((t) => t.id === templateId);
     if (template) {
       // Auto-populate with template data
       setInvoiceNumber(generateInvoiceNumber());
-      const defaults = getSmartDefaults(selectedMember);
-      setDueDate(defaults.dueDate || "");
+      const defaults = await getSmartDefaults(selectedMember);
+      setDueDate(defaults?.dueDate || "");
     }
   };
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FiCalendar, FiClock, FiX } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiCalendar, FiClock } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 import "./DateTimeRangePicker.css";
 

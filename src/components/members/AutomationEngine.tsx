@@ -1971,7 +1971,7 @@ function PerformanceModal({
   );
 }
 
-const MOCK_WORKFLOWS = [
+const MOCK_WORKFLOWS: AutomationWorkflow[] = [
   {
     id: "wf-1",
     name: "Onboarding Sequence",
@@ -1995,7 +1995,8 @@ export default function AutomationEngine({
   onWorkflowTriggered,
 }: AutomationEngineProps) {
   // Use mock workflows
-  const [workflows, setWorkflows] = useState(MOCK_WORKFLOWS);
+  const [workflows, setWorkflows] =
+    useState<AutomationWorkflow[]>(MOCK_WORKFLOWS);
   const [automationStats, setAutomationStats] = useState({
     totalWorkflows: 0,
     activeWorkflows: 0,

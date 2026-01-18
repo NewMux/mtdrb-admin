@@ -5,7 +5,6 @@ import {
   FiCreditCard,
   FiTrendingUp,
   FiTrendingDown,
-  FiCalendar,
   FiUsers,
 } from "react-icons/fi";
 

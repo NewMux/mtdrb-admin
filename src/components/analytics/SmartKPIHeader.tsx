@@ -1,13 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  FiDollarSign,
-  FiUsers,
-  FiUserPlus,
-  FiTrendingDown,
-  FiStar,
-  FiAlertTriangle,
-} from "react-icons/fi";
 
 interface KPIMetric {
   title: string;
@@ -150,59 +142,3 @@ export default function SmartKPIHeader({ metrics }: SmartKPIHeaderProps) {
 }
 
 // Default metrics for demonstration
-export const defaultKPIMetrics: KPIMetric[] = [
-  {
-    title: "Total Revenue",
-    value: "45,280 BHD",
-    change: "+12.5%",
-    changeType: "up",
-    icon: <FiDollarSign className="w-6 h-6 text-white" />,
-    color: "blue",
-    subtitle: "vs last month",
-  },
-  {
-    title: "Active Members",
-    value: "1,247",
-    change: "+8.2%",
-    changeType: "up",
-    icon: <FiUsers className="w-6 h-6 text-white" />,
-    color: "green",
-    subtitle: "vs last month",
-  },
-  {
-    title: "New Signups",
-    value: "89",
-    change: "+15.3%",
-    changeType: "up",
-    icon: <FiUserPlus className="w-6 h-6 text-white" />,
-    color: "purple",
-    subtitle: "this month",
-  },
-  {
-    title: "Churn Rate",
-    value: "3.2%",
-    change: "-0.8%",
-    changeType: "down",
-    icon: <FiTrendingDown className="w-6 h-6 text-white" />,
-    color: "red",
-    subtitle: "vs last month",
-  },
-  {
-    title: "Top Trainer",
-    value: "Sarah Ahmed",
-    change: "4.9★",
-    changeType: "up",
-    icon: <FiStar className="w-6 h-6 text-white" />,
-    color: "yellow",
-    subtitle: "25 sessions",
-  },
-  {
-    title: "At-Risk Members",
-    value: "18",
-    change: "+5",
-    changeType: "down",
-    icon: <FiAlertTriangle className="w-6 h-6 text-white" />,
-    color: "red",
-    subtitle: "need attention",
-  },
-];

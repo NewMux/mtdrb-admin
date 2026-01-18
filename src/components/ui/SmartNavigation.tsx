@@ -74,7 +74,7 @@ export const navigationConfig = {
     icon: <FiBell className="h-5 w-5" />,
     path: "/dashboard/notifications",
     description: "Communication and alerts",
-    connections: ["members", "tasks", "promotions"],
+    connections: ["members", "tasks"],
   },
   reports: {
     title: "Reports",

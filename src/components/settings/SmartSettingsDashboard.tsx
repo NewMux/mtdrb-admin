@@ -20,7 +20,7 @@ interface SettingsCardProps {
   icon: React.ReactNode;
   status: "configured" | "incomplete" | "disabled";
   lastUpdated: string;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 const SettingsCard: React.FC<SettingsCardProps> = ({

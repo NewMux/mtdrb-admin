@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FiEdit,
   FiClock,
   FiUsers,
-  FiMapPin,
   FiUser,
   FiCalendar,
   FiZap,
@@ -32,6 +30,21 @@ interface EditClassModalProps {
   isPro?: boolean;
 }
 
+type RecurrenceOption = "none" | "daily" | "weekly" | "biweekly" | "monthly";
+
+interface ClassFormData {
+  name: string;
+  description: string;
+  type: string;
+  trainer_id: string;
+  room_id: string;
+  start_time: string;
+  end_time: string;
+  date: string;
+  recurrence: RecurrenceOption;
+  capacity: number;
+}
+
 const EditClassModal: React.FC<EditClassModalProps> = ({
   isOpen,
   onClose,
@@ -39,7 +52,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ClassFormData>({
     name: "",
     description: "",
     type: "",
@@ -54,7 +67,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [notifyMembers, setNotifyMembers] = useState(false);
-  const [originalData, setOriginalData] = useState<any>(null);
+  const [originalData, setOriginalData] = useState<Record<string, unknown> | null>(null);
 
   const {
     classData,
@@ -63,7 +76,6 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     errors,
     recommendations,
     conflicts,
-    isValid,
     checkConflicts,
     validateForm,
     fetchClass,
@@ -75,7 +87,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     if (isOpen && classId) {
       fetchClass();
     }
-  }, [isOpen, classId]);
+  }, [isOpen, classId, fetchClass]);
 
   // Populate form when class data is loaded
   useEffect(() => {
@@ -118,6 +130,8 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     formData.start_time,
     formData.end_time,
     formData.date,
+    checkConflicts,
+    classId,
   ]);
 
   const handleInputChange = (field: string, value: string | number) => {

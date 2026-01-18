@@ -34,6 +34,26 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
     return null;
   }
 
+  const memberName = member.name ?? "Member";
+  const status = member.status ?? "inactive";
+  const membershipLabel =
+    member.membership_type ?? member.membershipType ?? "Standard";
+  const fitnessLabel = member.fitness_level ?? "Beginner";
+  const fitnessKey = fitnessLabel.toLowerCase();
+  const avatarInitials = memberName
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const joinDateValue = member.join_date ?? member.joinDate ?? member.created_at;
+  const lastVisitValue =
+    member.lastVisit ?? member.join_date ?? member.created_at;
+  const goalsList = member.goals ?? member.primary_goals ?? [];
+  const healthConditions =
+    member.health_conditions ?? member.medical_conditions ?? [];
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -84,40 +104,44 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           title="Member Profile"
-          subtitle={`Viewing profile for ${member.name}`}
+          subtitle={`Viewing profile for ${memberName}`}
         >
           <div className="space-y-8">
             {/* Header with Avatar and Basic Info */}
             <div className="flex items-start gap-5 pb-6 border-b border-gray-100">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-4 ring-sky-100">
                 <span className="text-white font-semibold text-xl">
-                  {member.avatar}
+                  {avatarInitials}
                 </span>
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                  {member.name}
+                  {memberName}
                 </h2>
                 <p className="text-gray-600 font-medium mb-3">
                   {member.email}
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getStatusColor(member.status)}`}
+                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getStatusColor(
+                      status,
+                    )}`}
                   >
-                    {member.status.charAt(0).toUpperCase() +
-                      member.status.slice(1)}
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
                   </span>
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getMembershipColor(member.membershipType)}`}
+                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getMembershipColor(
+                      membershipLabel,
+                    )}`}
                   >
-                    {member.membershipType}
+                    {membershipLabel}
                   </span>
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getFitnessLevelColor(member.fitness_level || "beginner")}`}
+                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getFitnessLevelColor(
+                      fitnessKey,
+                    )}`}
                   >
-                    {member.fitness_level?.charAt(0).toUpperCase() +
-                      member.fitness_level?.slice(1) || "Beginner"}
+                    {fitnessLabel}
                   </span>
                 </div>
               </div>
@@ -200,7 +224,9 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Join Date</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {new Date(member.joinDate).toLocaleDateString()}
+                      {joinDateValue
+                        ? new Date(joinDateValue).toLocaleDateString()
+                        : "Unknown"}
                     </p>
                   </div>
                 </div>
@@ -212,9 +238,9 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Last Visit</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {member.lastVisit === "Never"
-                        ? "Never"
-                        : new Date(member.lastVisit).toLocaleDateString()}
+                      {lastVisitValue
+                        ? new Date(lastVisitValue).toLocaleDateString()
+                        : "Never"}
                     </p>
                   </div>
                 </div>
@@ -226,7 +252,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   <div>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Membership Type</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {member.membershipType}
+                      {membershipLabel}
                     </p>
                   </div>
                 </div>
@@ -241,7 +267,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {member.goals && member.goals.length > 0 && (
+                {goalsList.length > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-3">
                       <FiTarget className="w-4 h-4 text-gray-500" />
@@ -250,7 +276,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {member.goals.map((goal, index) => (
+                      {goalsList.map((goal, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -264,8 +290,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   </div>
                 )}
 
-                {member.health_conditions &&
-                  member.health_conditions.length > 0 && (
+                {healthConditions.length > 0 && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center space-x-2 mb-3">
                         <FiHeart className="w-4 h-4 text-gray-500" />
@@ -274,7 +299,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {member.health_conditions.map((condition, index) => (
+                        {healthConditions.map((condition, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"

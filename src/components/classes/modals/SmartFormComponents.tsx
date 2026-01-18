@@ -1,14 +1,10 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiAlertCircle,
-  FiCheck,
   FiClock,
-  FiUsers,
-  FiMapPin,
-  FiUser,
   FiCalendar,
-  FiZap,
+  FiChevronDown,
 } from "react-icons/fi";
 
 interface FormFieldProps {
@@ -425,7 +421,7 @@ export const SmartRecommendationCard: React.FC<SmartRecommendationCardProps> = (
 };
 
 interface ConflictAlertProps {
-  conflicts: any[];
+  conflicts: { name?: string; date?: string; reason?: string; start_time?: string; end_time?: string }[];
 }
 
 export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
@@ -453,7 +449,7 @@ export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
                 key={index}
                 className="text-xs text-red-600 dark:text-red-300"
               >
-                • {conflict.name} ({conflict.start_time} - {conflict.end_time})
+                • {conflict.name || conflict.reason || "Conflict"} {conflict.start_time && conflict.end_time ? `(${conflict.start_time} - ${conflict.end_time})` : conflict.date ? `on ${conflict.date}` : ""}
               </div>
             ))}
             {conflicts.length > 3 && (

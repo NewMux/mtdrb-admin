@@ -54,9 +54,10 @@ export function hasRole(
 
   // Validate current role
   if (!USER_ROLES.includes(currentRole as UserRole)) {
-    console.warn(
-      `Invalid role detected: ${currentRole}. Defaulting to staff.`,
-    );
+    // Only warn in development to avoid leaking info in production
+    if (import.meta.env.DEV) {
+      console.warn(`Invalid role detected: ${currentRole}. Defaulting to staff.`);
+    }
     return requiredRole === "staff";
   }
 

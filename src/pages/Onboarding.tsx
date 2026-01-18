@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
+import { useTheme } from "../contexts/ThemeContext";
 import { 
   FiHome, 
   FiMapPin, 
@@ -21,6 +22,7 @@ import {
 // ===== ONBOARDING WIZARD =====
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { saveBrandColors } = useTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -138,12 +140,12 @@ export default function Onboarding() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
-        console.error("Error getting user:", userError);
+        if (import.meta.env.DEV) console.error("Error getting user:", userError);
         throw new Error(`Authentication error: ${userError.message}`);
       }
       
       if (!user) {
-        console.error("No user found");
+        if (import.meta.env.DEV) console.error("No user found");
         throw new Error("User not found. Please sign in again.");
       }
 
@@ -170,7 +172,7 @@ export default function Onboarding() {
           .single();
 
         if (tenantCreateError) {
-          console.error("Error creating tenant:", tenantCreateError);
+          if (import.meta.env.DEV) console.error("Error creating tenant:", tenantCreateError);
           throw new Error(`Failed to create organization: ${tenantCreateError.message}`);
         }
         
@@ -188,7 +190,7 @@ export default function Onboarding() {
         });
 
         if (membershipError) {
-          console.error("Error creating membership:", membershipError);
+          if (import.meta.env.DEV) console.error("Error creating membership:", membershipError);
           throw new Error(`Failed to create membership: ${membershipError.message}`);
         }
 
@@ -241,7 +243,7 @@ export default function Onboarding() {
 
           if (branchError) {
             // If branches table doesn't exist, store in tenant metadata instead
-            console.warn("Branches table not available, storing in tenant metadata:", branchError);
+            if (import.meta.env.DEV) console.warn("Branches table not available, storing in tenant metadata:", branchError);
             const { error: metadataError } = await supabase
               .from("tenants")
               .update({
@@ -258,12 +260,12 @@ export default function Onboarding() {
               .eq("id", tenantId);
             
             if (metadataError) {
-              console.error("Error storing branch in metadata:", metadataError);
+              if (import.meta.env.DEV) console.error("Error storing branch in metadata:", metadataError);
               // Continue anyway - branch info is optional
             }
           }
         } catch (err) {
-          console.error("Error creating branch:", err);
+          if (import.meta.env.DEV) console.error("Error creating branch:", err);
           // Continue anyway - branch creation is optional
         }
       }
@@ -315,9 +317,17 @@ export default function Onboarding() {
           });
 
         if (trainerError) {
-          console.error("Error creating trainer:", trainerError);
+          if (import.meta.env.DEV) console.error("Error creating trainer:", trainerError);
           // Don't throw - this is optional, continue with onboarding
         }
+      }
+
+      // Save brand colors if provided
+      if (formData.primaryColor || formData.secondaryColor) {
+        await saveBrandColors({
+          primaryColor: formData.primaryColor || "#155FD9",
+          secondaryColor: formData.secondaryColor || "#489BFA",
+        });
       }
 
       // Update user metadata to mark onboarding as completed
@@ -340,7 +350,7 @@ export default function Onboarding() {
       });
 
     } catch (err: any) {
-      console.error("Onboarding completion error:", err);
+      if (import.meta.env.DEV) console.error("Onboarding completion error:", err);
       const errorMessage = err.message || err.error?.message || err.code || "Failed to complete onboarding";
       setError(errorMessage);
       toast.error(errorMessage);
@@ -945,28 +955,81 @@ function BrandingStep({ formData, setFormData }: { formData: any; setFormData: a
 
       {/* Preview */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Preview</h3>
-        <div className="bg-gray-50 rounded-xl p-6">
-          <div className="flex items-center space-x-4 mb-4">
-            {formData.logo && (
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-xs text-gray-500">Logo</span>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Live Preview</h3>
+        <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+          {/* Header Preview */}
+          <div 
+            className="rounded-lg p-4 text-white"
+            style={{ background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)` }}
+          >
+            <div className="flex items-center space-x-3">
+              {formData.logo ? (
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <span className="text-xs">Logo</span>
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center font-bold">
+                  {(formData.gymName || "YG").substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <h4 className="font-semibold">{formData.gymName || "Your Gym"}</h4>
+                <p className="text-sm text-white/80">Dashboard</p>
               </div>
-            )}
-            <div>
-              <h4 className="font-semibold text-gray-900">{formData.gymName || "Your Gym"}</h4>
-              <p className="text-sm text-gray-600">Gym Management Platform</p>
             </div>
           </div>
-          <div className="flex space-x-2">
-            <div 
-              className="w-6 h-6 rounded"
-              style={{ backgroundColor: formData.primaryColor }}
-            ></div>
-            <div 
-              className="w-6 h-6 rounded"
-              style={{ backgroundColor: formData.secondaryColor }}
-            ></div>
+
+          {/* UI Elements Preview */}
+          <div className="bg-white rounded-lg p-4 space-y-3">
+            <p className="text-sm text-gray-600 mb-3">Sample UI elements with your colors:</p>
+            
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <button 
+                className="px-4 py-2 text-white text-sm rounded-lg font-medium transition-opacity hover:opacity-90"
+                style={{ backgroundColor: formData.primaryColor }}
+              >
+                Primary Button
+              </button>
+              <button 
+                className="px-4 py-2 text-white text-sm rounded-lg font-medium transition-opacity hover:opacity-90"
+                style={{ backgroundColor: formData.secondaryColor }}
+              >
+                Secondary Button
+              </button>
+              <button 
+                className="px-4 py-2 text-sm rounded-lg font-medium border-2 transition-colors"
+                style={{ borderColor: formData.primaryColor, color: formData.primaryColor }}
+              >
+                Outline Button
+              </button>
+            </div>
+
+            {/* Links & Text */}
+            <div className="flex items-center gap-4 text-sm">
+              <span style={{ color: formData.primaryColor }} className="font-medium cursor-pointer hover:underline">Link Text</span>
+              <span 
+                className="px-2 py-1 rounded-full text-xs font-medium"
+                style={{ backgroundColor: `${formData.primaryColor}20`, color: formData.primaryColor }}
+              >
+                Badge
+              </span>
+            </div>
+
+            {/* Color swatches */}
+            <div className="flex items-center gap-2 pt-2">
+              <span className="text-xs text-gray-500">Colors:</span>
+              <div 
+                className="w-8 h-8 rounded-lg shadow-sm"
+                style={{ backgroundColor: formData.primaryColor }}
+                title="Primary"
+              ></div>
+              <div 
+                className="w-8 h-8 rounded-lg shadow-sm"
+                style={{ backgroundColor: formData.secondaryColor }}
+                title="Secondary"
+              ></div>
+            </div>
           </div>
         </div>
       </div>

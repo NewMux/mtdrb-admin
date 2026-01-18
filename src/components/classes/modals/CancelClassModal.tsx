@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  FiX,
   FiAlertTriangle,
   FiBell,
   FiUsers,
@@ -9,7 +8,7 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import SmartModal from "./SmartModal";
-import { FormField, SelectField, FormSection } from "./SmartFormComponents";
+import { FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface CancelClassModalProps {
@@ -42,7 +41,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
     if (isOpen && classId) {
       fetchClass();
     }
-  }, [isOpen, classId]);
+  }, [isOpen, classId, fetchClass]);
 
   // Calculate refund amount based on class data
   useEffect(() => {
@@ -409,7 +408,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
             Action Summary
           </h3>
           <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            <li>• Cancel class "{classData.name}" permanently</li>
+            <li>• Cancel class &quot;{classData.name}&quot; permanently</li>
             {hasEnrolledMembers && (
               <li>• Unenroll {classData.enrolled_count} members</li>
             )}

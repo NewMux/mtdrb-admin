@@ -17,6 +17,21 @@ interface SetupTaskAutomationModalProps {
   isPro?: boolean;
 }
 
+type AutomationType = "recurring" | "triggered" | "scheduled";
+type AutomationPriority = "low" | "medium" | "high";
+
+interface AutomationFormData {
+  name: string;
+  description: string;
+  type: AutomationType;
+  schedule: string;
+  trigger: string;
+  assignee: string;
+  priority: AutomationPriority;
+  enabled: boolean;
+  isPro: boolean;
+}
+
 export const SetupTaskAutomationModal: React.FC<
   SetupTaskAutomationModalProps
 > = ({ open, onClose, isPro = false }) => {
@@ -24,15 +39,16 @@ export const SetupTaskAutomationModal: React.FC<
     isPro,
   });
 
-  const [automationData, setAutomationData] = React.useState({
+  const [automationData, setAutomationData] = React.useState<AutomationFormData>({
     name: "",
     description: "",
-    type: "recurring" as const,
+    type: "recurring",
     schedule: "",
     trigger: "",
     assignee: "",
-    priority: "medium" as const,
+    priority: "medium",
     enabled: true,
+    isPro,
   });
 
   const [selectedTemplate, setSelectedTemplate] = React.useState("");
@@ -114,6 +130,7 @@ export const SetupTaskAutomationModal: React.FC<
       assignee: template.assignee,
       priority: template.priority,
       enabled: true,
+      isPro,
     });
     setSelectedTemplate(template.id);
   };

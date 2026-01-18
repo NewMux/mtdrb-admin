@@ -11,7 +11,6 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
-import toast from "react-hot-toast";
 
 interface LiveActivityFeedProps {
   refreshKey: number;
@@ -82,7 +81,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
     return [
       {
         id: "1",
-        type: "system" as any,
+        type: "member" as ActivityItem["type"],
         title: "System Started",
         description: "MTDRB Admin system initialized successfully",
         time: new Date(now.getTime() - 5 * 60000).toISOString(), // 5 minutes ago
@@ -200,7 +199,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
     }
   };
 
-  const getStatusBadge = (status?: string) => {
+  const getStatusBadge = (status?: ActivityItem["status"]) => {
     if (!status) return null;
 
     const colors = {

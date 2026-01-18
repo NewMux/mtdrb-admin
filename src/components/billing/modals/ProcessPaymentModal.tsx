@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiCreditCard,
@@ -42,15 +41,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showBalanceCheck, setShowBalanceCheck] = useState(false);
 
-  const {
-    data,
-    loading,
-    validation,
-    suggestions,
-    isProUser,
-    updateData,
-    fetchRelatedData,
-  } = useSmartBillingModal({ memberId, invoiceId, amount });
+  const { isProUser } = useSmartBillingModal({ memberId, invoiceId, amount });
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -167,7 +158,7 @@ const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                     <FiAlertTriangle className="w-4 h-4 text-yellow-600text-yellow-400 mt-0.5" />
                     <div>
                       <p className="text-sm text-yellow-800text-yellow-200">
-                        Payment amount exceeds member's outstanding balance ($
+                        Payment amount exceeds member&apos;s outstanding balance ($
                         {mockMemberBalance})
                       </p>
                     </div>

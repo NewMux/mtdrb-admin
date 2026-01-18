@@ -12,9 +12,14 @@ vi.mock("../../../contexts/AuthContext", () => ({
 }));
 
 // Helper to render with providers
+type AuthValue = {
+  userMetadata: { role?: UserRole } | null;
+  isLoading: boolean;
+};
+
 const renderWithProviders = (
   ui: React.ReactElement,
-  authValue: any = { userMetadata: null, isLoading: false }
+  authValue: AuthValue = { userMetadata: null, isLoading: false }
 ) => {
   mockUseAuth.mockReturnValue(authValue);
 

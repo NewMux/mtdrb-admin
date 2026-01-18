@@ -1,13 +1,11 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
-  FiMoreHorizontal,
   FiEdit,
   FiTrash2,
   FiEye,
   FiUsers,
   FiClock,
-  FiMapPin,
   FiCalendar,
   FiUser,
   FiSettings,
@@ -15,21 +13,26 @@ import {
   FiX,
 } from "react-icons/fi";
 import { Class } from "../../types";
+
+type ClassRow = Class & {
+  enrolled_count?: number;
+  status?: string;
+};
 import { SmartButton, EmptyState } from "../ui/DesignSystem";
 
 interface ClassTableProps {
-  classes: Class[];
+  classes: ClassRow[];
   loading?: boolean;
   error?: string | null;
-  onEdit: (classItem: Class) => void;
-  onDelete: (classItem: Class) => void;
-  onView: (classItem: Class) => void;
-  onSchedule: (classItem: Class) => void;
-  onAssignTrainer: (classItem: Class) => void;
-  onWaitlist: (classItem: Class) => void;
-  onCancel: (classItem: Class) => void;
-  onExport: (classItem: Class) => void;
-  onSettings: (classItem: Class) => void;
+  onEdit: (classItem: ClassRow) => void;
+  onDelete: (classItem: ClassRow) => void;
+  onView: (classItem: ClassRow) => void;
+  onSchedule: (classItem: ClassRow) => void;
+  onAssignTrainer: (classItem: ClassRow) => void;
+  onWaitlist: (classItem: ClassRow) => void;
+  onCancel: (classItem: ClassRow) => void;
+  onExport: (classItem: ClassRow) => void;
+  onSettings: (classItem: ClassRow) => void;
 }
 
 const ClassTable: React.FC<ClassTableProps> = ({
@@ -47,9 +50,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
   onSettings,
 }) => {
   const [hoveredRow, setHoveredRow] = React.useState<string | null>(null);
-  const [sortField, setSortField] = React.useState<
-    keyof Class | "enrolled_count"
-  >("start_time");
+  const [sortField, setSortField] = React.useState<keyof ClassRow>(
+    "start_time",
+  );
   const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
     "asc",
   );
@@ -90,7 +93,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
     return Math.round((enrolled / capacity) * 100);
   };
 
-  const handleSort = (field: keyof Class | "enrolled_count") => {
+  const handleSort = (field: keyof ClassRow) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -101,14 +104,8 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
   const sortedClasses = React.useMemo(() => {
     return [...classes].sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
-
-      // Handle enrolled_count field which might not exist in the Class interface
-      if (sortField === "enrolled_count") {
-        aValue = (a as any).enrolled_count || 0;
-        bValue = (b as any).enrolled_count || 0;
-      }
+      const aValue = a[sortField];
+      const bValue = b[sortField];
 
       if (typeof aValue === "string" && typeof bValue === "string") {
         return sortDirection === "asc"
@@ -166,7 +163,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
           <SmartButton
             variant="primary"
             size="sm"
-            onClick={() => onSchedule({} as Class)}
+            onClick={() => onSchedule({} as ClassRow)}
           >
             Add Your First Class
           </SmartButton>
@@ -312,12 +309,12 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-900">
-                        {(classItem as any).enrolled_count || 0}/
+                        {classItem.enrolled_count || 0}/
                         {classItem.capacity}
                       </span>
                       <span className="text-gray-500">
                         {getEnrollmentPercentage(
-                          (classItem as any).enrolled_count || 0,
+                          classItem.enrolled_count || 0,
                           classItem.capacity,
                         )}
                         %
@@ -327,7 +324,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                       <div
                         className="bg-sky-500 h-2 rounded-full transition-all duration-300"
                         style={{
-                          width: `${getEnrollmentPercentage((classItem as any).enrolled_count || 0, classItem.capacity)}%`,
+                          width: `${getEnrollmentPercentage(classItem.enrolled_count || 0, classItem.capacity)}%`,
                         }}
                       ></div>
                     </div>

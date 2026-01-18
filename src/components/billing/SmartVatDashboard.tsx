@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -19,15 +18,54 @@ import {
   FiEdit,
   FiSend,
 } from "react-icons/fi";
-// Removed mock data - using real data from Supabase
-import { VatDashboardData, VatReturn, VatReportFilters } from "../../types";
+import { VatDashboardData, VatReturn } from "../../types";
 import { toast } from "react-hot-toast";
 import { SmartButton } from "../ui/DesignSystem";
+import { supabase } from "../../supabaseClient";
 
 interface SmartVatDashboardProps {
   tenantId: string;
   refreshKey: number;
 }
+
+type VatTab = "overview" | "returns" | "compliance" | "analytics";
+
+interface InvoiceSummary {
+  amount?: number | string | null;
+  total?: number | string | null;
+  status?: string | null;
+  created_at: string;
+  metadata?: Record<string, unknown> | null;
+}
+
+interface ExpenseSummary {
+  amount?: number | string | null;
+  vat_amount?: number | string | null;
+  date?: string | null;
+  status?: string | null;
+}
+
+interface MonthlyVatBreakdown {
+  month: string;
+  vatCollected: number;
+  vatPaid: number;
+  netVat: number;
+}
+
+interface VatCategorySummary {
+  category: string;
+  vat: number;
+}
+
+const isMissingTableError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  const maybeError = error as { code?: string; message?: string };
+  return (
+    maybeError.code === "PGRST116" ||
+    (maybeError.message?.includes("relation") ?? false) ||
+    (maybeError.message?.includes("does not exist") ?? false)
+  );
+};
 
 export default function SmartVatDashboard({
   tenantId,
@@ -44,63 +82,236 @@ export default function SmartVatDashboard({
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
   const [loading, setLoading] = useState(true);
   const [complianceLoading, setComplianceLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<
-    "overview" | "returns" | "compliance" | "analytics"
-  >("overview");
+  const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
   const fetchDashboardData = useCallback(async () => {
+    if (!tenantId) {
+      console.warn("SmartVatDashboard: tenantId is missing");
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
 
-      // TODO: Fetch VAT dashboard data from Supabase
-      // TODO: Fetch VAT dashboard data from Supabase
+      // Fetch invoices to calculate VAT
+      const { data: invoices, error: invoicesError } = await supabase
+        .from("invoices")
+        .select("amount, status, created_at, metadata, total")
+        .eq("tenant_id", tenantId);
+
+      if (invoicesError) {
+        console.error("Error fetching invoices:", invoicesError);
+        throw new Error(`Failed to fetch invoices: ${invoicesError.message || JSON.stringify(invoicesError)}`);
+      }
+
+      // Fetch expenses to calculate VAT paid
+      let expenses = null;
+      let expensesError = null;
+      try {
+        const expensesResult = await supabase
+          .from("expenses")
+          .select("amount, vat_amount, date, status")
+          .eq("tenant_id", tenantId);
+        expenses = expensesResult.data;
+        expensesError = expensesResult.error;
+      } catch (err: unknown) {
+        // Table might not exist
+        if (isMissingTableError(err)) {
+          console.warn("Expenses table may not exist, continuing without expenses data");
+          expenses = [];
+        } else {
+          throw err;
+        }
+      }
+
+      if (expensesError && expensesError.code !== "PGRST116") {
+        console.warn("Expenses query warning:", expensesError);
+      }
+
+      // Fetch VAT returns if table exists
+      let vatReturnsData = null;
+      let vatReturnsError = null;
+      try {
+        const vatReturnsResult = await supabase
+          .from("vat_returns")
+          .select("*")
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: false });
+        vatReturnsData = vatReturnsResult.data;
+        vatReturnsError = vatReturnsResult.error;
+      } catch (err: unknown) {
+        // Table might not exist
+        if (isMissingTableError(err)) {
+          console.warn("VAT returns table may not exist, continuing without VAT returns data");
+          vatReturnsData = [];
+        } else {
+          throw err;
+        }
+      }
+
+      if (vatReturnsError && vatReturnsError.code !== "PGRST116") {
+        console.warn("VAT returns query warning:", vatReturnsError);
+      }
+
+      const invoiceList: InvoiceSummary[] = invoices ?? [];
+      const expenseList: ExpenseSummary[] = expenses ?? [];
+      const vatReturnsList: VatReturn[] = (vatReturnsData ?? []) as VatReturn[];
+
+      // Calculate VAT collected (5% of paid invoices)
+      const totalVatCollected = invoiceList
+        .filter(inv => inv.status === "paid" || inv.status === "completed")
+        .reduce((sum, inv) => {
+          const amount = Number(inv.amount || inv.total || 0);
+          return sum + (amount * 0.05);
+        }, 0);
+
+      // Calculate VAT paid from expenses
+      const totalVatPaid = expenseList
+        .filter(exp => exp.status !== "cancelled")
+        .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0);
+
+      const netVatPayable = totalVatCollected - totalVatPaid;
+
+      // Calculate monthly breakdown (last 6 months)
+      const monthlyBreakdown: MonthlyVatBreakdown[] = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
+
+        const monthInvoices = invoiceList.filter(inv => {
+          const invDate = new Date(inv.created_at);
+          return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
+        });
+
+        const monthVat = monthInvoices.reduce((sum, inv) => {
+          const amount = Number(inv.amount || inv.total || 0);
+          return sum + (amount * 0.05);
+        }, 0);
+        
+        monthlyBreakdown.push({
+          month: month.toISOString().substring(0, 7),
+          vatCollected: monthVat,
+          vatPaid: 0, // Would need expense data by month
+          netVat: monthVat,
+        });
+      }
+
+      // Top VAT categories (simplified - based on invoice types)
+      const categoryMap = new Map<string, number>();
+      invoiceList
+        .filter(inv => inv.status === "paid" || inv.status === "completed")
+        .forEach(inv => {
+          const metadata =
+            inv.metadata && typeof inv.metadata === "object"
+              ? (inv.metadata as Record<string, unknown>)
+              : {};
+          const type =
+            (typeof metadata.type === "string" ? metadata.type : undefined) ||
+            "membership";
+          const amount = Number(inv.amount || inv.total || 0);
+          const vat = amount * 0.05;
+          categoryMap.set(type, (categoryMap.get(type) || 0) + vat);
+        });
+
+      // Calculate top VAT categories for future use (storing in variable for potential later use)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _topVatCategories: VatCategorySummary[] = Array.from(
+        categoryMap.entries(),
+      )
+        .map(([category, vat]) => ({ category, vat }))
+        .sort((a, b) => b.vat - a.vat)
+        .slice(0, 5);
+
+      const currentPeriodVat =
+        monthlyBreakdown[monthlyBreakdown.length - 1]?.vatCollected ?? 0;
+      const previousPeriodVat =
+        monthlyBreakdown[monthlyBreakdown.length - 2]?.vatCollected ?? 0;
+      const vatGrowthPercentage =
+        previousPeriodVat > 0
+          ? ((currentPeriodVat - previousPeriodVat) / previousPeriodVat) * 100
+          : 0;
+      const overdueReturns = vatReturnsList.filter(
+        (item) => item.status === "rejected",
+      ).length;
+      const upcomingDeadlines = vatReturnsList.filter(
+        (item) => item.status === "draft",
+      ).length;
+      const criticalIssues = overdueReturns;
+      const complianceScore = Math.max(0, 100 - criticalIssues * 10);
+
+      setDashboardData({
+        totalVatCollected,
+        totalVatPaid,
+        netVatPayable,
+        complianceScore,
+        currentPeriodVat,
+        previousPeriodVat,
+        vatGrowthPercentage,
+        overdueReturns,
+        upcomingDeadlines,
+        criticalIssues,
+        vatByCountry: [],
+        recentTransactions: [],
+        complianceAlerts: [],
+      });
+
+      // Generate insights based on data
+      const trends: string[] = [];
+      const recommendations: string[] = [];
+      const alerts: string[] = [];
+
+      if (monthlyBreakdown.length >= 2) {
+        const currentMonth = monthlyBreakdown[monthlyBreakdown.length - 1].vatCollected;
+        const previousMonth = monthlyBreakdown[monthlyBreakdown.length - 2].vatCollected;
+        if (previousMonth > 0) {
+          const change = ((currentMonth - previousMonth) / previousMonth) * 100;
+          trends.push(`VAT collection ${change >= 0 ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}% this month`);
+        }
+      }
+
+      if (netVatPayable > 0) {
+        alerts.push(
+          `VAT return due: ${netVatPayable.toFixed(2)} AED payable`,
+        );
+      }
+
+      recommendations.push("Consider implementing automated VAT filing");
+      recommendations.push("Review expense categorization for better VAT recovery");
+
+      setInsights({ trends, recommendations, alerts });
+
+      setVatReturns(vatReturnsList);
+    } catch (error: unknown) {
+      console.error("Error loading VAT dashboard data:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to load VAT dashboard data: ${errorMessage}`);
+      
+      // Set empty data to prevent UI crashes
       setDashboardData({
         totalVatCollected: 0,
         totalVatPaid: 0,
-        netVat: 0,
-        vatRate: 0,
-        monthlyBreakdown: [],
-        topVatCategories: [],
+        netVatPayable: 0,
+        complianceScore: 0,
+        currentPeriodVat: 0,
+        previousPeriodVat: 0,
+        vatGrowthPercentage: 0,
+        overdueReturns: 0,
+        upcomingDeadlines: 0,
+        criticalIssues: 0,
+        vatByCountry: [],
+        recentTransactions: [],
+        complianceAlerts: [],
       });
-
-      // TODO: Fetch insights from Supabase
-      setInsights({
-        trends: [
-          "VAT collection increased by 12% this month",
-          "Compliance rate improved to 100%",
-          "New filing deadline approaching",
-        ],
-        recommendations: [
-          "Consider implementing automated VAT filing",
-          "Review expense categorization for better VAT recovery",
-          "Set up reminders for upcoming filing deadlines",
-        ],
-        alerts: [
-          "VAT return due in 5 days",
-          "New VAT rate changes effective next month",
-        ],
-      });
-
-      // TODO: Fetch VAT returns from Supabase
-      setVatReturns([
-        {
-          id: "return-001",
-          period: "2024-06",
-          status: "draft",
-          vat_collected: 6250,
-          vat_paid: 3125,
-          net_vat_payable: 3125,
-          filing_deadline: "2024-07-15T00:00:00Z",
-          created_at: "2024-06-20T10:00:00Z",
-        },
-      ]);
-    } catch (error) {
-      console.error("Error loading VAT dashboard data:", error);
-      toast.error("Failed to load VAT dashboard data");
+      setInsights({ trends: [], recommendations: [], alerts: [] });
+      setVatReturns([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -132,6 +343,7 @@ export default function SmartVatDashboard({
 
   const handleSubmitVatReturn = async (returnId: string) => {
     try {
+      void returnId;
       // TODO: Submit VAT return via Supabase
       toast.success("VAT return submitted successfully");
       fetchDashboardData(); // Refresh data
@@ -179,6 +391,13 @@ export default function SmartVatDashboard({
     if (score >= 70) return "text-yellow-600";
     return "text-red-600";
   };
+
+  const tabs: { id: VatTab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
+    { id: "overview", label: "Overview", icon: FiBarChart2 },
+    { id: "returns", label: "VAT Returns", icon: FiFileText },
+    { id: "compliance", label: "Compliance", icon: FiShield },
+    { id: "analytics", label: "Analytics", icon: FiTrendingUp },
+  ];
 
   const getComplianceIcon = (score: number) => {
     if (score >= 90) return <FiCheckCircle className="text-green-500" />;
@@ -228,29 +447,24 @@ export default function SmartVatDashboard({
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-gray-200">
         <nav
           className="flex overflow-x-auto gap-8 -mb-px"
           role="tablist"
           aria-label="VAT Dashboard Views"
         >
-          {[
-            { id: "overview", label: "Overview", icon: FiBarChart2 },
-            { id: "returns", label: "VAT Returns", icon: FiFileText },
-            { id: "compliance", label: "Compliance", icon: FiShield },
-            { id: "analytics", label: "Analytics", icon: FiTrendingUp },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               role="tab"
               aria-selected={selectedTab === tab.id}
               tabIndex={selectedTab === tab.id ? 0 : -1}
-              onClick={() => setSelectedTab(tab.id as any)}
+              onClick={() => setSelectedTab(tab.id)}
               className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-all duration-300 whitespace-nowrap
                 ${
                   selectedTab === tab.id
-                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }
               `}
             >
@@ -429,65 +643,65 @@ export default function SmartVatDashboard({
           )}
 
           {/* Recent Transactions */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Recent VAT Transactions
             </h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Reference
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       VAT Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white divide-y divide-gray-200">
                   {(dashboardData?.recentTransactions || [])
                     .slice(0, 5)
                     .map((transaction) => (
                       <tr
                         key={transaction.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        className="hover:bg-gray-50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               transaction.type === "Invoice"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
                             {transaction.type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {transaction.reference_number}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatCurrency(transaction.vat_amount)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               transaction.status === "Paid"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
                             {transaction.status}
@@ -505,9 +719,9 @@ export default function SmartVatDashboard({
       {/* VAT Returns Tab */}
       {selectedTab === "returns" && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">
                 VAT Returns
               </h3>
               <div className="flex gap-2">
@@ -523,59 +737,59 @@ export default function SmartVatDashboard({
             </div>
             {(vatReturns || []).length === 0 ? (
               <div className="text-center py-8">
-                <FiFileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                <FiFileText className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
                   No VAT returns
                 </h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-500">
                   Generate your first VAT return to get started.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Period
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Country
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Net VAT
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Due Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {(vatReturns || []).map((vatReturn) => (
                       <tr
                         key={vatReturn.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        className="hover:bg-gray-50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {vatReturn.return_period_start} -{" "}
                           {vatReturn.return_period_end}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <FiGlobe className="mr-2" />
                             {vatReturn.country_code || "BH"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatCurrency(vatReturn.net_vat_payable || 0)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {vatReturn.submitted_at
                             ? new Date(
                                 vatReturn.submitted_at,
@@ -586,12 +800,12 @@ export default function SmartVatDashboard({
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               vatReturn.status === "draft"
-                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200"
+                                ? "bg-yellow-100 text-yellow-800"
                                 : vatReturn.status === "submitted"
-                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                                  ? "bg-blue-100 text-blue-800"
                                   : vatReturn.status === "accepted"
-                                    ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                                    : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
                             }`}
                           >
                             {vatReturn.status}
@@ -637,8 +851,8 @@ export default function SmartVatDashboard({
       {/* Compliance Tab */}
       {selectedTab === "compliance" && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Compliance Overview
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -648,23 +862,23 @@ export default function SmartVatDashboard({
                 >
                   {dashboardData?.complianceScore ?? 0}%
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600">
                   Compliance Score
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+                <div className="text-3xl font-bold text-red-600">
                   {dashboardData?.overdueReturns ?? 0}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600">
                   Overdue Returns
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                <div className="text-3xl font-bold text-yellow-600">
                   {dashboardData?.upcomingDeadlines ?? 0}
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600">
                   Upcoming Deadlines
                 </p>
               </div>
@@ -672,23 +886,23 @@ export default function SmartVatDashboard({
           </div>
 
           {/* Compliance Checklist */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Compliance Checklist
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
-                  <FiCalendar className="mr-3 text-gray-400 dark:text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <FiCalendar className="mr-3 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-900">
                     VAT Returns Filed on Time
                   </span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     (dashboardData?.overdueReturns ?? 0) === 0
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                   }`}
                 >
                   {(dashboardData?.overdueReturns ?? 0) === 0
@@ -697,27 +911,27 @@ export default function SmartVatDashboard({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
-                  <FiDollarSign className="mr-3 text-gray-400 dark:text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <FiDollarSign className="mr-3 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-900">
                     VAT Payments Made on Time
                   </span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    (dashboardData?.overduePayments ?? 0) === 0
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200"
+                    (dashboardData?.overdueReturns ?? 0) === 0
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {(dashboardData?.overduePayments ?? 0) === 0
+                  {(dashboardData?.overdueReturns ?? 0) === 0
                     ? "Compliant"
-                    : `${dashboardData?.overduePayments ?? 0} Overdue`}
+                    : `${dashboardData?.overdueReturns ?? 0} Overdue`}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <FiClock className="mr-3 text-gray-400" />
                   <span className="text-sm font-medium text-gray-900">

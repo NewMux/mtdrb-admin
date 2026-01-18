@@ -175,6 +175,7 @@ export default function SmartInsights({
 
   const handleAskAssistant = async (question: string) => {
     try {
+      void question;
       // TODO: Implement real assistant API call when backend is ready
       // Placeholder for future implementation
     } catch (error) {
@@ -291,65 +292,3 @@ export default function SmartInsights({
   );
 }
 
-// Default insights for demonstration
-export const defaultInsights: Insight[] = [
-  {
-    id: "1",
-    title: "Revenue Drop Detected",
-    description:
-      "Revenue dropped 9% compared to last week. This could be due to reduced class attendance.",
-    priority: "high",
-    impact: "High Impact",
-    action: "See Details",
-    category: "revenue",
-  },
-  {
-    id: "2",
-    title: "At-Risk Members",
-    description:
-      "18 members flagged as at-risk. They haven't attended classes in 2+ weeks.",
-    priority: "medium",
-    impact: "Medium Impact",
-    action: "Start Campaign",
-    category: "members",
-  },
-  {
-    id: "3",
-    title: "Peak Hours Identified",
-    description:
-      "6-8 PM classes are consistently full. Consider adding more sessions.",
-    priority: "high",
-    impact: "High Impact",
-    action: "Optimize Schedule",
-    category: "operations",
-  },
-  {
-    id: "4",
-    title: "Trainer Performance",
-    description:
-      "Sarah Ahmed has the highest retention rate. Consider promoting her classes.",
-    priority: "medium",
-    impact: "Medium Impact",
-    action: "View Stats",
-    category: "members",
-  },
-  {
-    id: "5",
-    title: "New Signups Up",
-    description:
-      "15% increase in new signups this week. Your marketing campaign is working!",
-    priority: "low",
-    impact: "High Impact",
-    action: "View Campaign",
-    category: "revenue",
-  },
-  {
-    id: "6",
-    title: "Equipment Maintenance",
-    description: "Treadmill #3 needs maintenance. 3 members reported issues.",
-    priority: "medium",
-    impact: "Low Impact",
-    action: "Schedule Repair",
-    category: "operations",
-  },
-];

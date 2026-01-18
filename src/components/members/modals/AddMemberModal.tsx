@@ -25,6 +25,75 @@ interface AddMemberModalProps {
   modalRef?: React.RefObject<HTMLDivElement>;
 }
 
+type GenderOption = "male" | "female" | "other";
+type FitnessLevelOption = "beginner" | "intermediate" | "advanced";
+
+interface AddMemberFormData {
+  name: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive" | "suspended" | "expired" | "trial";
+  membershipType: string;
+  gender: GenderOption;
+  address: string;
+  emergency_contact: string;
+  trainer_id: string;
+  fitness_level: FitnessLevelOption;
+  health_conditions: string[];
+  goals: string[];
+  notes: string;
+  date_of_birth: string;
+  national_id: string;
+  language: "English" | "Arabic";
+  membership_status: "active" | "cancelled" | "trial" | "paused";
+  membership_price: number;
+  start_date: string;
+  end_date: string;
+  assigned_trainer_id: string;
+  add_ons: string[];
+  tags: string[];
+  staff_notes: string;
+  medical_notes: string;
+  weight: number | null;
+  target_weight: number | null;
+  height: number | null;
+  consent_signed: boolean;
+  previous_gym_experience: boolean;
+  primary_goals: string[];
+  workout_frequency_goal: number;
+  preferred_workout_times: string[];
+  medical_conditions: string[];
+  injuries: string[];
+  goal_timeline: "1_month" | "3_months" | "6_months" | "12_months";
+  access_level: "Basic" | "Standard" | "Premium";
+  membership_duration: "1_month" | "3_months" | "6_months" | "12_months";
+  billing_cycle: "monthly" | "quarterly" | "semi-annual" | "annual";
+  discount_percentage: number;
+  discount_amount?: number;
+  auto_renewal: boolean;
+  payment_method_preference?:
+    | "cash"
+    | "card"
+    | "bank_transfer"
+    | "cheque"
+    | "digital_wallet";
+  access_hours: "Standard" | "Extended" | "24/7";
+  facility_access: string[];
+  fitness_tracker_integration: boolean;
+  body_composition_tracking: boolean;
+  progress_photos_consent: boolean;
+  referral_code: string;
+  corporate_membership: boolean;
+  family_plan: boolean;
+  preferred_contact_method: "app" | "email" | "sms";
+  workout_reminders: boolean;
+  progress_tracking_consent: boolean;
+  marketing_consent: boolean;
+  auto_schedule_intro: boolean;
+  buddy_system_interest: boolean;
+  send_welcome_sequence: boolean;
+}
+
 const AddMemberModal: React.FC<AddMemberModalProps> = ({
   isOpen,
   onClose,
@@ -32,25 +101,25 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   loading = false,
   modalRef,
 }) => {
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<AddMemberFormData>({
     name: "",
     email: "",
     phone: "",
     status: "active" as const,
     membershipType: "Standard",
-    gender: "other" as const,
+    gender: "other",
     address: "",
     emergency_contact: "",
     trainer_id: "",
-    fitness_level: "beginner" as const,
+    fitness_level: "beginner",
     health_conditions: [] as string[],
     goals: [] as string[],
     notes: "",
     // Additional fields
     date_of_birth: "",
     national_id: "",
-    language: "English" as const,
-    membership_status: "active" as const,
+    language: "English",
+    membership_status: "active",
     membership_price: 0,
     start_date: "",
     end_date: "",
@@ -61,9 +130,9 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     medical_notes: "",
     consent_signed: false,
     // Health & Fitness
-    height: undefined as number | undefined,
-    weight: undefined as number | undefined,
-    target_weight: undefined as number | undefined,
+    height: null,
+    weight: null,
+    target_weight: null,
     medical_conditions: [] as string[],
     injuries: [] as string[],
     previous_gym_experience: false,
@@ -76,12 +145,13 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     access_level: "Basic" as const,
     membership_duration: "1_month" as const,
     billing_cycle: "monthly" as const,
-    discount_percentage: undefined as number | undefined,
-    discount_amount: undefined as number | undefined,
+    discount_percentage: 0,
+    discount_amount: 0,
     auto_renewal: false,
-    payment_method_preference: undefined as string | undefined,
+    payment_method_preference:
+      undefined as AddMemberFormData["payment_method_preference"],
     // Access & Features
-    access_hours: "Standard" as const,
+    access_hours: "Standard",
     facility_access: ["Gym Floor"] as string[],
     fitness_tracker_integration: false,
     body_composition_tracking: false,
@@ -166,7 +236,58 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     }
 
     try {
-      await onSuccess(formData);
+      const normalizedGender: Member["gender"] =
+        formData.gender === "male"
+          ? "Male"
+          : formData.gender === "female"
+            ? "Female"
+            : "Other";
+      const normalizedFitness: Member["fitness_level"] =
+        formData.fitness_level === "beginner"
+          ? "Beginner"
+          : formData.fitness_level === "intermediate"
+            ? "Intermediate"
+            : "Advanced";
+
+      const payload: Omit<Member, "id"> = {
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone,
+        status: formData.status,
+        membership_type: formData.membershipType,
+        gender: normalizedGender,
+        emergency_contact: formData.emergency_contact || null,
+        assigned_trainer_id:
+          formData.assigned_trainer_id || formData.trainer_id || null,
+        fitness_level: normalizedFitness,
+        medical_conditions: [
+          ...formData.health_conditions,
+          ...formData.medical_conditions,
+        ],
+        injuries: formData.injuries,
+        primary_goals: formData.goals,
+        notes: formData.notes,
+        date_of_birth: formData.date_of_birth || null,
+        national_id: formData.national_id || null,
+        language: formData.language,
+        membership_status: formData.membership_status,
+        membership_price: formData.membership_price,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
+        add_ons: formData.add_ons,
+        tags: formData.tags,
+        staff_notes: formData.staff_notes,
+        medical_notes: formData.medical_notes,
+        weight: formData.weight,
+        target_weight: formData.target_weight,
+        height: formData.height,
+        consent_signed: formData.consent_signed,
+        previous_gym_experience: formData.previous_gym_experience,
+        workout_frequency_goal: formData.workout_frequency_goal,
+        preferred_workout_times: formData.preferred_workout_times,
+      };
+
+      await onSuccess(payload);
       resetForm();
     } catch (error) {
       console.error("Failed to add member:", error);
@@ -203,9 +324,9 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
       medical_notes: "",
       consent_signed: false,
       // Health & Fitness
-      height: undefined,
-      weight: undefined,
-      target_weight: undefined,
+      height: null,
+      weight: null,
+      target_weight: null,
       medical_conditions: [],
       injuries: [],
       previous_gym_experience: false,
@@ -218,8 +339,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
       access_level: "Basic",
       membership_duration: "1_month",
       billing_cycle: "monthly",
-      discount_percentage: undefined,
-      discount_amount: undefined,
+      discount_percentage: 0,
+      discount_amount: 0,
       auto_renewal: false,
       payment_method_preference: undefined,
       // Access & Features

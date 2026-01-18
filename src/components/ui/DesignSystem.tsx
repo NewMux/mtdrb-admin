@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { FiLoader } from "react-icons/fi";
 
 // ===== DESIGN SYSTEM CONSTANTS =====
@@ -110,12 +110,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 );
 
 // ===== SMART CARD COMPONENT =====
-interface SmartCardProps {
-  children: React.ReactNode;
-  className?: string;
+interface SmartCardProps
+  extends Omit<HTMLMotionProps<"div">, "className"> {
   hover?: boolean;
   clickable?: boolean;
-  onClick?: () => void;
+  className?: string;
 }
 
 export const SmartCard: React.FC<SmartCardProps> = ({
@@ -124,6 +123,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
   hover = true,
   clickable = false,
   onClick,
+  ...rest
 }) => (
   <motion.div
     variants={hover ? animationVariants.cardHover : undefined}
@@ -131,6 +131,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
     whileHover="hover"
     whileTap={clickable ? "pressed" : undefined}
     onClick={onClick}
+    {...rest}
     className={`
       bg-white rounded-lg shadow-sm border border-gray-200 p-4
       ${clickable ? "cursor-pointer" : ""}
@@ -142,7 +143,8 @@ export const SmartCard: React.FC<SmartCardProps> = ({
 );
 
 // ===== SMART BUTTON COMPONENT =====
-interface SmartButtonProps {
+interface SmartButtonProps
+  extends Omit<HTMLMotionProps<"button">, "className"> {
   variant?:
     | "primary"
     | "secondary"
@@ -155,11 +157,8 @@ interface SmartButtonProps {
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
-  children: React.ReactNode;
   className?: string;
-  onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
-  disabled?: boolean;
-  title?: string;
+  children?: React.ReactNode;
 }
 
 export const SmartButton: React.FC<SmartButtonProps> = ({
@@ -171,9 +170,10 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
   fullWidth = false,
   children,
   className = "",
-  onClick,
   disabled = false,
   title,
+  type,
+  ...rest
 }) => {
   const baseClasses =
     "inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -204,9 +204,10 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
       initial="rest"
       whileTap="pressed"
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`}
-      onClick={onClick}
       disabled={disabled || loading}
       title={title}
+      type={type}
+      {...rest}
     >
       {loading && <FiLoader className="animate-spin mr-2 w-4 h-4" />}
       {!loading && icon && iconPosition === "left" && (

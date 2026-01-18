@@ -52,36 +52,10 @@ export default function TrainerAutomationEngine({
   refreshKey,
 }: TrainerAutomationEngineProps) {
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>(
-    mockTrainerAutomationWorkflows.map((w) => ({
-      ...w,
-      icon:
-        w.icon === "FiCalendar"
-          ? FiCalendar
-          : w.icon === "FiTrendingUp"
-            ? FiTrendingUp
-            : w.icon === "FiTarget"
-              ? FiTarget
-              : w.icon === "FiMessageSquare"
-                ? FiMessageSquare
-                : w.icon === "FiUsers"
-                  ? FiUsers
-                  : FiCalendar,
-    })),
+    mockTrainerAutomationWorkflows,
   );
   const [metrics, setMetrics] = useState<AutomationMetric[]>(
-    mockAutomationMetrics.map((m) => ({
-      ...m,
-      icon:
-        m.icon === "FiZap"
-          ? FiZap
-          : m.icon === "FiCheckCircle"
-            ? FiCheckCircle
-            : m.icon === "FiActivity"
-              ? FiActivity
-              : m.icon === "FiTrendingUp"
-                ? FiTrendingUp
-                : FiZap,
-    })),
+    mockAutomationMetrics,
   );
   const [loading, setLoading] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);

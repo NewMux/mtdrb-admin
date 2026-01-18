@@ -6,7 +6,6 @@ import {
   FiTrendingDown,
   FiAlertTriangle,
   FiUsers,
-  FiDollarSign,
   FiLock,
   FiPlay,
   FiSettings,
@@ -122,9 +121,6 @@ export default function ViewSmartInsightsModal({
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
   const [selectedCategory, setSelectedCategory] = React.useState("all");
-  const [selectedInsight, setSelectedInsight] = React.useState<string | null>(
-    null,
-  );
   const [applyingAction, setApplyingAction] = React.useState<string | null>(
     null,
   );

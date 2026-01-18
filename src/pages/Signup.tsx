@@ -55,10 +55,9 @@ export default function Signup() {
     }
     
     // Sign up with Supabase
-    // Use production domain for email redirects, fallback to current origin
-    const redirectUrl = import.meta.env.PROD 
-      ? 'https://www.mtdrb.fit/dashboard'
-      : `${window.location.origin}/dashboard`;
+    // Use VITE_APP_URL for email redirects, fallback to current origin
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const redirectUrl = `${appUrl}/dashboard`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -77,9 +76,8 @@ export default function Signup() {
       // If session is available, it's already set in Supabase client
       // If email confirmation is required, session might be null
       if (data.session) {
-        // Session is available - user can proceed immediately
-        // Show onboarding step
-        setShowOnboarding(true);
+        // Session is available - auto-create tenant and proceed
+        await createTenantAndProceed(data.user);
       } else {
         // Email confirmation might be required
         // Check Supabase settings - if email confirmation is disabled, session should be available
@@ -87,7 +85,7 @@ export default function Signup() {
         setTimeout(async () => {
           const { data: sessionData } = await supabase.auth.getSession();
           if (sessionData?.session) {
-            setShowOnboarding(true);
+            await createTenantAndProceed(data.user);
           } else {
             setError("Please check your email to confirm your account, then try again.");
           }
@@ -98,56 +96,14 @@ export default function Signup() {
     }
   };
 
-  // ===== HANDLE ONBOARDING SUBMIT =====
-  const handleOnboarding = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ===== AUTO-CREATE TENANT AND PROCEED =====
+  const createTenantAndProceed = async (user: any) => {
+    setShowOnboarding(true); // Show loading modal
     setOnboardingLoading(true);
     setOnboardingError("");
+    
     try {
-      // First, ensure we have a valid session (required for authenticated requests)
-      let session = null;
-      let user = signedUpUser;
-      
-      // Try to get session first (this is what provides the auth token)
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionData?.session) {
-        session = sessionData.session;
-        user = session.user;
-      } else if (sessionError) {
-        // If no session, try to refresh or get user
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user) {
-          user = userData.user;
-          // Try to refresh session
-          await supabase.auth.refreshSession();
-          const { data: refreshedSession } = await supabase.auth.getSession();
-          session = refreshedSession?.session || null;
-        }
-      }
-      
-      // If still no user, use stored user (but this won't have auth token)
-      if (!user && signedUpUser) {
-        user = signedUpUser;
-      }
-      
-      if (!user) {
-        throw new Error("User not found. Please try signing up again.");
-      }
-      
-      // If we don't have a session, wait a moment and try again
-      // (session might be establishing after signup)
-      if (!session) {
-        // Wait a bit for session to establish
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const { data: retrySession } = await supabase.auth.getSession();
-        if (!retrySession?.session) {
-          throw new Error("Session not available. Please try signing in again.");
-        }
-        session = retrySession.session;
-      }
-      
-      // Create Tenant/org (now with valid session/auth token)
+      // Create Tenant/org
       const { data: tenantData, error: tenantError } = await supabase
         .from("tenants")
         .insert({
@@ -155,30 +111,43 @@ export default function Signup() {
         })
         .select("id")
         .single();
-      if (tenantError) throw new Error(tenantError.message);
+      
+      if (tenantError) {
+        // Check if it's an RLS policy error
+        if (tenantError.message.includes("row-level security policy")) {
+          throw new Error("Database setup required. Please contact support or run the fix_signup_rls.sql script in Supabase.");
+        }
+        throw new Error(tenantError.message);
+      }
       
       // Create Membership (user as admin)
-      await supabase.from("memberships").insert({
+      const { error: membershipError } = await supabase.from("memberships").insert({
         user_id: user.id,
         tenant_id: tenantData.id,
         role: "admin",
       });
       
+      if (membershipError) {
+        if (import.meta.env.DEV) console.error("Membership error:", membershipError);
+        // Continue anyway - might already exist
+      }
+      
       // Update user metadata with tenantId AND role
-      // This ensures PermissionGuard can check the user's role
       await supabase.auth.updateUser({ 
         data: { 
           tenant_id: tenantData.id,
-          role: "admin", // Set role in user_metadata so PermissionGuard works
+          role: "admin",
+          gym_name: gymName,
         } 
       });
       
       // Redirect to subscribe
       navigate("/subscribe");
     } catch (err: any) {
-      setOnboardingError(err.message || "Failed to set up gym.");
+      if (import.meta.env.DEV) console.error("Tenant creation error:", err);
+      setOnboardingError(err.message || "Failed to set up gym. Please try again.");
+      setOnboardingLoading(false);
     }
-    setOnboardingLoading(false);
   };
 
   return (
@@ -459,7 +428,7 @@ export default function Signup() {
         </div>
       </div>
 
-      {/* ===== ONBOARDING MODAL ===== */}
+      {/* ===== ONBOARDING MODAL (Loading State) ===== */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
@@ -470,13 +439,24 @@ export default function Signup() {
           >
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiHome className="h-8 w-8 text-blue-600" />
+                {onboardingLoading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                ) : onboardingError ? (
+                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <FiHome className="h-8 w-8 text-blue-600" />
+                )}
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Setting up your gym
+                {onboardingError ? "Setup Failed" : "Setting up your gym"}
               </h2>
               <p className="text-gray-600">
-                We're creating your organization and preparing your dashboard.
+                {onboardingError 
+                  ? "There was an issue setting up your account."
+                  : "We're creating your organization and preparing your dashboard."
+                }
               </p>
             </div>
 
@@ -486,28 +466,32 @@ export default function Signup() {
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <span className="text-sm text-gray-700">Creating your organization</span>
+            {!onboardingError && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${onboardingLoading ? 'bg-blue-600 animate-pulse' : 'bg-green-500'}`}></div>
+                  <span className="text-sm text-gray-700">Creating your organization</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${onboardingLoading ? 'bg-blue-600 animate-pulse' : 'bg-green-500'}`}></div>
+                  <span className="text-sm text-gray-700">Setting up your account</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                  <span className="text-sm text-gray-500">Redirecting to subscription...</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <span className="text-sm text-gray-700">Setting up your account</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="text-sm text-gray-500">Redirecting to payment</span>
-              </div>
-            </div>
+            )}
 
-            <button
-              onClick={handleOnboarding}
-              disabled={onboardingLoading}
-              className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
-            >
-              {onboardingLoading ? "Setting up..." : "Continue"}
-            </button>
+            {onboardingError && (
+              <button
+                onClick={() => signedUpUser && createTenantAndProceed(signedUpUser)}
+                disabled={onboardingLoading}
+                className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
+              >
+                Try Again
+              </button>
+            )}
           </motion.div>
         </div>
       )}

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { supabase } from "../../supabaseClient";
 import { SmartButton } from "../ui/DesignSystem";
-import { FiUsers } from "react-icons/fi";
+import { FiEdit2, FiUsers } from "react-icons/fi";
 import { Class } from "../../types";
 import dayjs from "dayjs";
-import { createClassReview, getClassReviews } from "../../api/class";
+import {
+  createClassReview,
+  getClassReviews,
+  type ClassReview,
+} from "../../api/class";
 import { useAuth } from "../../contexts/AuthContext";
 
 /**
@@ -18,6 +22,36 @@ interface ClassDetailsDrawerProps {
   onEdit?: (classData: Class) => void;
   onRefresh?: () => void;
   onWaitlist?: (classData: Class) => void;
+}
+
+interface MemberRecord {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
+interface MemberSummary extends MemberRecord {
+  name: string;
+}
+
+interface BookingRow {
+  id: string;
+  member_id: string;
+  status?: string | null;
+  booked_at?: string | null;
+  attended?: boolean | null;
+  notes?: string | null;
+  member?: MemberSummary | null;
+}
+
+interface WaitlistRow {
+  id: string;
+  member_id: string;
+  status?: string | null;
+  created_at?: string | null;
+  member?: MemberSummary | null;
 }
 
 const TABS = [
@@ -39,15 +73,15 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
   onRefresh,
   onWaitlist,
 }) => {
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [waitlist, setWaitlist] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("details");
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState<ClassReview[]>([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -91,25 +125,25 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       ].filter((id, index, arr) => arr.indexOf(id) === index); // Remove duplicates
 
       // Fetch member details for all IDs
-      let memberDetails: any[] = [];
+      let memberDetails: MemberSummary[] = [];
       if (memberIds.length > 0) {
         const { data: membersData, error: membersError } = await supabase
           .from("members")
           .select("id, first_name, last_name, email, phone")
           .in("id", memberIds);
         if (membersError) throw membersError;
-        memberDetails = membersData || [];
+        memberDetails = (membersData || []).map((member) => ({
+          ...member,
+          name:
+            `${member.first_name || ""} ${member.last_name || ""}`.trim() ||
+            member.email ||
+            "Unknown",
+        }));
       }
 
       // Create a map for quick member lookup
       const memberMap = new Map(
-        memberDetails.map((m) => [
-          m.id,
-          {
-            ...m,
-            name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email || 'Unknown',
-          },
-        ])
+        memberDetails.map((member) => [member.id, member])
       );
 
       // Combine booking data with member details
@@ -126,8 +160,12 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
 
       setBookings(bookingsWithMembers);
       setWaitlist(waitlistWithMembers);
-    } catch (err: any) {
-      setError(err.message || "Failed to load class details");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to load class details";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -138,7 +176,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
     if (typeof onRefresh === "function") onRefresh();
   };
 
-  const promoteWaitlist = async (waitlistEntry: any) => {
+  const promoteWaitlist = async (waitlistEntry: WaitlistRow) => {
     if (!classData || bookings.length >= (classData.capacity || Infinity))
       return;
     setActionLoading(true);
@@ -156,34 +194,44 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       // Remove from waitlist
       await supabase.from("class_waitlist").delete().eq("id", waitlistEntry.id);
       await refreshDetails();
-    } catch (err: any) {
-      setActionError(err.message || "Failed to promote waitlist member");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to promote waitlist member";
+      setActionError(message);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const removeBooking = async (booking: any) => {
+  const removeBooking = async (booking: BookingRow) => {
     setActionLoading(true);
     setActionError(null);
     try {
       await supabase.from("class_bookings").delete().eq("id", booking.id);
       await refreshDetails();
-    } catch (err: any) {
-      setActionError(err.message || "Failed to remove booking");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to remove booking";
+      setActionError(message);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const removeWaitlist = async (waitlistEntry: any) => {
+  const removeWaitlist = async (waitlistEntry: WaitlistRow) => {
     setActionLoading(true);
     setActionError(null);
     try {
       await supabase.from("class_waitlist").delete().eq("id", waitlistEntry.id);
       await refreshDetails();
-    } catch (err: any) {
-      setActionError(err.message || "Failed to remove waitlist entry");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to remove waitlist entry";
+      setActionError(message);
     } finally {
       setActionLoading(false);
     }
@@ -192,6 +240,10 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
   const handleReviewSubmit = async () => {
     setReviewLoading(true);
     try {
+      if (!user) {
+        setActionError("Please sign in to submit a review.");
+        return;
+      }
       await createClassReview(classData.id, user.id, rating, comment);
       setComment("");
       setRating(5);
@@ -208,7 +260,11 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
     const now = dayjs();
     const start = dayjs(cls.start_time);
     const end = dayjs(cls.end_time);
-    if ((cls as any).cancelled)
+    const statusCandidate = cls as Class & {
+      cancelled?: boolean;
+      status?: string;
+    };
+    if (statusCandidate.cancelled || statusCandidate.status === "cancelled")
       return { label: "Cancelled", color: "bg-gray-300 text-gray-600" };
     if (now.isBefore(start))
       return { label: "Upcoming", color: "bg-blue-100 text-blue-700" };

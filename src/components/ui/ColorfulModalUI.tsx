@@ -8,6 +8,8 @@ interface ColorfulModalUIProps {
   onAction?: () => void;
   title?: string;
   subtitle?: string;
+  actionLabel?: string;
+  actionVariant?: "primary" | "secondary" | "danger";
   children: React.ReactNode;
   modalRef?: React.RefObject<HTMLDivElement>;
 }

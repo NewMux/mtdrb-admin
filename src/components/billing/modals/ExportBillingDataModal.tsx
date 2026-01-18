@@ -1,11 +1,8 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiX,
   FiDownload,
   FiFilter,
   FiCalendar,
-  FiUser,
   FiShield,
 } from "react-icons/fi";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
@@ -29,8 +26,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
   const [dataTypes, setDataTypes] = useState(["invoices", "expenses"]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data, loading, validation, suggestions, isProUser, updateData } =
-    useSmartBillingModal({});
+  const { isProUser } = useSmartBillingModal({});
 
   const branches = [
     "All Branches",

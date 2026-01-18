@@ -10,7 +10,7 @@ import {
 
 interface KPICardProps {
   title: string;
-  value: string;
+  value: string | number;
   subtitle: string;
   icon: React.ReactNode;
   trend: "up" | "down" | "neutral";

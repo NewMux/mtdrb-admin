@@ -10,11 +10,8 @@ import {
   FiShield,
   FiCreditCard,
 } from "react-icons/fi";
-import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { SmartModal } from "./ui/SmartModal";
-import { SmartButton } from "./ui/DesignSystem";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 interface TopBarProps {
@@ -23,7 +20,6 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const { signOut, user } = useAuth();
-  const navigate = useNavigate();
 
   // State for dropdowns and modals
   const [showUserMenu, setShowUserMenu] = React.useState(false);

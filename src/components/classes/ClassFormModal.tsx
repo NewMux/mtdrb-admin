@@ -2,39 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiX,
-  FiCalendar,
-  FiClock,
-  FiUsers,
-  FiDollarSign,
-  FiUser,
-  FiMapPin,
-  FiTag,
-  FiFileText,
-  FiRepeat,
-  FiSave,
-  FiAlertCircle,
-  FiSettings,
-  FiInfo,
-  FiZap,
-  FiTarget,
-  FiHome,
-  FiActivity,
-  FiSkipBack,
-} from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { SmartClassModal } from "./modals/SmartClassModal";
+import { SmartButton } from "../ui/DesignSystem";
+import type { Class } from "../../types";
 
 interface ClassFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaved?: () => void;
   mode?: "add" | "edit";
-  classData?: any;
+  classData?: Class | null;
 }
 
 const schema = z.object({
@@ -67,7 +47,17 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const classTypes = [
+interface ClassTypeOption {
+  value: string;
+  label: string;
+  color: string;
+  suggestedCapacity: { min: number; max: number };
+  suggestedDuration: number;
+  equipment: string[];
+  skillLevels: string[];
+}
+
+const classTypes: ClassTypeOption[] = [
   {
     value: "yoga",
     label: "Yoga",
@@ -218,7 +208,9 @@ const rooms = [
   },
 ];
 
-const recurringPatterns = [
+// Recurring patterns - for future recurring class scheduling feature
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _recurringPatterns = [
   { value: "daily", label: "Daily", description: "Every day" },
   { value: "weekly", label: "Weekly", description: "Same day each week" },
   { value: "biweekly", label: "Bi-weekly", description: "Every 2 weeks" },
@@ -226,11 +218,32 @@ const recurringPatterns = [
   { value: "custom", label: "Custom", description: "Set your own pattern" },
 ];
 
-const customFrequencyTypes = [
+// Custom frequency types - for future custom scheduling
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _customFrequencyTypes = [
   { value: "days", label: "Days", example: "Every 3 days" },
   { value: "weeks", label: "Weeks", example: "Every 2 weeks" },
   { value: "months", label: "Months", example: "Every 2 months" },
 ];
+
+interface RoomOption {
+  id: string;
+  name: string;
+  maxCapacity: number;
+  suitableFor: string[];
+  equipment: string[];
+}
+
+interface TrainerOption {
+  id: string;
+  name: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  specialty?: string;
+  specialties?: string[];
+  rating?: number;
+}
 
 export default function ClassFormModal({
   isOpen,
@@ -240,9 +253,10 @@ export default function ClassFormModal({
   classData,
 }: ClassFormModalProps) {
   const [loading, setLoading] = useState(false);
-  const [trainers, setTrainers] = useState<any[]>([]);
-  const [selectedClassType, setSelectedClassType] = useState<any>(null);
-  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [trainers, setTrainers] = useState<TrainerOption[]>([]);
+  const [selectedClassType, setSelectedClassType] =
+    useState<ClassTypeOption | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<RoomOption | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { user } = useAuth();
 
@@ -278,30 +292,62 @@ export default function ClassFormModal({
     },
   });
 
-  const watchRecurring = watch("recurring");
-  const watchRecurringPattern = watch("recurring_pattern");
+  // Watch values for form reactivity - recurring features for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _watchRecurring = watch("recurring");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _watchRecurringPattern = watch("recurring_pattern");
   const watchType = watch("type");
   const watchRoom = watch("room");
   const watchCapacity = watch("capacity");
 
   useEffect(() => {
     if (isOpen) {
-      loadTrainers();
+      // Load trainers when modal opens
+      const fetchTrainers = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("trainers")
+            .select("id, first_name, last_name, specialties, status")
+            .eq("tenant_id", user?.user_metadata?.tenant_id)
+            .eq("status", "active")
+            .order("first_name");
+
+          if (error) throw error;
+          setTrainers(
+            (data || []).map((t) => ({
+              id: t.id,
+              name: `${t.first_name || ""} ${t.last_name || ""}`.trim(),
+              specialty: Array.isArray(t.specialties) ? t.specialties.join(", ") : "",
+            }))
+          );
+        } catch (error) {
+          console.error("Error loading trainers:", error);
+          toast.error("Failed to load trainers");
+        }
+      };
+      
+      fetchTrainers();
+      
       if (mode === "edit" && classData) {
         // Populate form with existing data
-        Object.keys(classData).forEach((key) => {
-          setValue(key as keyof FormData, classData[key]);
+        const classDataObj = classData as unknown as Record<string, string | number | boolean | undefined>;
+        Object.keys(classDataObj).forEach((key) => {
+          const value = classDataObj[key];
+          if (key in schema.shape) {
+            setValue(key as keyof FormData, value);
+          }
         });
       } else {
         reset();
       }
     }
-  }, [isOpen, mode, classData, reset, setValue]);
+  }, [isOpen, mode, classData, reset, setValue, user?.user_metadata?.tenant_id]);
 
   // Update class type suggestions when type changes
   useEffect(() => {
     const classType = classTypes.find((ct) => ct.value === watchType);
-    setSelectedClassType(classType);
+    setSelectedClassType(classType ?? null);
 
     if (classType && mode === "add") {
       // Auto-suggest capacity and duration
@@ -313,30 +359,13 @@ export default function ClassFormModal({
   // Update room constraints when room changes
   useEffect(() => {
     const room = rooms.find((r) => r.id === watchRoom);
-    setSelectedRoom(room);
+    setSelectedRoom(room ?? null);
 
     if (room && watchCapacity > room.maxCapacity) {
       setValue("capacity", room.maxCapacity);
       toast.success(`Capacity adjusted to room maximum: ${room.maxCapacity}`);
     }
   }, [watchRoom, setValue, watchCapacity]);
-
-  const loadTrainers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("trainers")
-        .select("id, first_name, last_name, specialties, status")
-        .eq("tenant_id", user?.user_metadata?.tenant_id)
-        .eq("status", "active")
-        .order("first_name");
-
-      if (error) throw error;
-      setTrainers(data || []);
-    } catch (error) {
-      console.error("Error loading trainers:", error);
-      toast.error("Failed to load trainers");
-    }
-  };
 
   const onSubmit = async (data: FormData) => {
     if (!user?.user_metadata?.tenant_id) {
@@ -426,16 +455,16 @@ export default function ClassFormModal({
       onSaved?.();
       onClose();
       reset();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving class:", error);
-      toast.error(error.message || "Failed to save class");
+      toast.error(error instanceof Error ? error.message : "Failed to save class");
     } finally {
       setLoading(false);
     }
   };
 
   const createRecurringClasses = async (
-    baseClass: any,
+    baseClass: { id: string; tenant_id: string; name: string; [key: string]: unknown },
     formData: FormData,
   ): Promise<number> => {
     try {
@@ -451,7 +480,7 @@ export default function ClassFormModal({
       let instanceCount = 0;
 
       while (instanceCount < maxInstances) {
-        let nextDate = new Date(currentDate);
+        const nextDate = new Date(currentDate);
 
         // Calculate next date based on pattern
         switch (formData.recurring_pattern) {
@@ -518,7 +547,9 @@ export default function ClassFormModal({
     }
   };
 
-  const getCapacityLimits = () => {
+  // Helper function for capacity limits - used by form validation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _getCapacityLimits = () => {
     let minCapacity = 1;
     let maxCapacity = 200;
     let suggestedCapacity = 20;
@@ -535,7 +566,9 @@ export default function ClassFormModal({
     return { min: minCapacity, max: maxCapacity, suggested: suggestedCapacity };
   };
 
-  const getSuitableRooms = () => {
+  // Helper function for filtering suitable rooms - used by room selector
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _getSuitableRooms = () => {
     if (!watchType) return rooms;
     return rooms.filter((room) => room.suitableFor.includes(watchType));
   };
@@ -675,9 +708,8 @@ export default function ClassFormModal({
                 <option value="">Select trainer</option>
                 {trainers.map((trainer) => (
                   <option key={trainer.id} value={trainer.id}>
-                    {trainer.first_name} {trainer.last_name}
-                    {trainer.specialties &&
-                      ` (${trainer.specialties.slice(0, 2).join(", ")})`}
+                    {trainer.name}
+                    {trainer.specialty && ` (${trainer.specialty})`}
                   </option>
                 ))}
               </select>

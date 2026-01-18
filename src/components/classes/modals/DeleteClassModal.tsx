@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  FiTrash2,
   FiUsers,
   FiAlertTriangle,
-  FiBell,
   FiCheck,
-  FiX,
 } from "react-icons/fi";
 import SmartModal from "./SmartModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
@@ -44,7 +41,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
     if (isOpen && classId) {
       fetchClass();
     }
-  }, [isOpen, classId]);
+  }, [isOpen, classId, fetchClass]);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -362,7 +359,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
             Action Summary
           </h3>
           <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            <li>• Delete class "{classData.name}" permanently</li>
+            <li>• Delete class &quot;{classData.name}&quot; permanently</li>
             {hasEnrolledMembers && (
               <li>• Unenroll {classData.enrolled_count} members</li>
             )}

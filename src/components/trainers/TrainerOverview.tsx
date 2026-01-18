@@ -47,7 +47,7 @@ export default function TrainerOverview({ stats, onSelectTrainer }: Props) {
       if (trainersError) throw trainersError;
 
       // Try to fetch trainer schedules separately, but don't fail if table doesn&apos;t exist
-      let schedules = [];
+      let schedules: Array<{ trainer_id: string | null }> = [];
       try {
         const { data: scheduleData, error: schedulesError } = await supabase
           .from("trainer_schedule")
@@ -69,10 +69,14 @@ export default function TrainerOverview({ stats, onSelectTrainer }: Props) {
       }
 
       // Count schedules per trainer
-      const scheduleCounts = schedules.reduce((acc: any, schedule: any) => {
-        acc[schedule.trainer_id] = (acc[schedule.trainer_id] || 0) + 1;
-        return acc;
-      }, {});
+      const scheduleCounts = schedules.reduce<Record<string, number>>(
+        (acc, schedule) => {
+          if (!schedule.trainer_id) return acc;
+          acc[schedule.trainer_id] = (acc[schedule.trainer_id] || 0) + 1;
+          return acc;
+        },
+        {},
+      );
 
       // Convert data to CSV
       const headers = [

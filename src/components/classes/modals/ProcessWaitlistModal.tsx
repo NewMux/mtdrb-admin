@@ -3,11 +3,7 @@ import { motion } from "framer-motion";
 import {
   FiUsers,
   FiCheck,
-  FiX,
-  FiArrowUp,
-  FiArrowDown,
   FiStar,
-  FiClock,
 } from "react-icons/fi";
 import SmartModal from "./SmartModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
@@ -31,6 +27,32 @@ interface ProcessWaitlistModalProps {
   isPro?: boolean;
 }
 
+interface FormSectionProps {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}
+
+const FormSection: React.FC<FormSectionProps> = ({
+  title,
+  subtitle,
+  children,
+}) => (
+  <div className="space-y-4">
+    <div>
+      <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+        {title}
+      </h3>
+      {subtitle && (
+        <p className="text-sm text-light-600 dark:text-dark-400 mt-1">
+          {subtitle}
+        </p>
+      )}
+    </div>
+    {children}
+  </div>
+);
+
 const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   isOpen,
   onClose,
@@ -47,22 +69,6 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   const [availableSpots, setAvailableSpots] = useState(0);
 
   const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
-
-  // Load class data when modal opens
-  useEffect(() => {
-    if (isOpen && classId) {
-      fetchClass();
-      loadWaitlistData();
-    }
-  }, [isOpen, classId]);
-
-  // Calculate available spots
-  useEffect(() => {
-    if (classData) {
-      const available = classData.capacity - classData.enrolled_count;
-      setAvailableSpots(available);
-    }
-  }, [classData]);
 
   // Load mock waitlist data
   const loadWaitlistData = () => {
@@ -97,33 +103,29 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         is_vip: true,
         preferred_time: "09:00",
       },
-      {
-        id: "4",
-        name: "Alex Rodriguez",
-        email: "alex@example.com",
-        joined_waitlist: "2024-01-15T13:30:00Z",
-        attendance_score: 78,
-        loyalty_score: 6.8,
-        is_vip: false,
-        preferred_time: "09:00",
-      },
-      {
-        id: "5",
-        name: "Lisa Wang",
-        email: "lisa@example.com",
-        joined_waitlist: "2024-01-15T14:45:00Z",
-        attendance_score: 89,
-        loyalty_score: 8.9,
-        is_vip: false,
-        preferred_time: "09:00",
-      },
     ];
     setWaitlistMembers(mockWaitlist);
   };
 
+  // Load class data when modal opens
+  useEffect(() => {
+    if (isOpen && classId) {
+      fetchClass();
+      loadWaitlistData();
+    }
+  }, [isOpen, classId, fetchClass]);
+
+  // Calculate available spots
+  useEffect(() => {
+    if (classData) {
+      const available = classData.capacity - classData.enrolled_count;
+      setAvailableSpots(available);
+    }
+  }, [classData]);
+
   // Auto-assign based on logic
   const autoAssign = () => {
-    let sortedMembers = [...waitlistMembers];
+    const sortedMembers = [...waitlistMembers];
 
     switch (assignmentLogic) {
       case "first-come":
@@ -271,7 +273,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               </label>
               <select
                 value={assignmentLogic}
-                onChange={(e) => setAssignmentLogic(e.target.value as any)}
+                onChange={(e) => setAssignmentLogic(e.target.value as "first-come" | "engagement" | "vip" | "manual")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
                 <option value="first-come">First Come, First Served</option>
