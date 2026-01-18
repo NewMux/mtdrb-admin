@@ -87,6 +87,9 @@ export const supabase = createClient<Database>(
     global: {
       headers: {
         "x-application-name": "mtdrb-admin",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
       },
     },
   },
