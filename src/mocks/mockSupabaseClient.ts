@@ -3,7 +3,7 @@
  * Remove when connecting to the real backend.
  */
 
-import type { User } from "@supabase/supabase-js";
+import type { User, UserAttributes } from "@supabase/supabase-js";
 import { DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 
 type Filter =
@@ -339,7 +339,7 @@ export function createMockSupabaseClient() {
           error: null,
         };
       },
-      updateUser: async (attributes?: any) => {
+      updateUser: async (attributes?: UserAttributes) => {
         if (attributes?.data) {
           currentMockUser = {
             ...currentMockUser,

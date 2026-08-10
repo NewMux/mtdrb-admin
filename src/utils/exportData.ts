@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 
-export const exportJSON = (data: any, filename: string) => {
+export const exportJSON = (data: unknown, filename: string) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json",
   });
@@ -14,7 +14,10 @@ export const exportJSON = (data: any, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-export const exportCSV = (data: any[], filename: string) => {
+export const exportCSV = <T extends Record<string, unknown>>(
+  data: T[],
+  filename: string,
+) => {
   if (!data.length) return;
 
   const headers = Object.keys(data[0]);
@@ -43,7 +46,7 @@ export const exportCSV = (data: any[], filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-export const exportPDF = (data: any, filename: string, title?: string) => {
+export const exportPDF = (data: unknown, filename: string, title?: string) => {
   const doc = new jsPDF();
 
   if (title) {
@@ -75,8 +78,8 @@ export const exportPDF = (data: any, filename: string, title?: string) => {
   doc.save(`${filename}.pdf`);
 };
 
-export const exportExcel = async (
-  data: any[],
+export const exportExcel = async <T extends Record<string, unknown>>(
+  data: T[],
   filename: string,
   sheetName: string = "Sheet1",
 ) => {

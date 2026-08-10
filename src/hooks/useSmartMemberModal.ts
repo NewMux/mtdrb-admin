@@ -23,7 +23,7 @@ interface ModalState {
 interface ModalData {
   selectedMember: Member | null;
   memberId: string | null;
-  additionalData?: any;
+  additionalData?: unknown;
 }
 
 interface ModalConfig {

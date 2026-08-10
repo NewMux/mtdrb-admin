@@ -12,6 +12,7 @@ import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 import { Member } from "../../../types/member";
 import { supabase } from "../../../supabaseClient";
+import type { Database } from "../../../types/supabase";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 
@@ -35,6 +36,11 @@ interface Trainer {
   maxMembers: number;
   avatar: string;
 }
+
+type TrainerRow = Pick<
+  Database["public"]["Tables"]["trainers"]["Row"],
+  "id" | "first_name" | "last_name" | "email" | "specialties" | "hourly_rate"
+>;
 
 const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   isOpen,
@@ -76,7 +82,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
           // Get member counts for each trainer
           const trainersWithCounts = await Promise.all(
-            (data || []).map(async (t: any) => {
+            (data || []).map(async (t: TrainerRow) => {
               const { count } = await supabase
                 .from("members")
                 .select("*", { count: "exact", head: true })

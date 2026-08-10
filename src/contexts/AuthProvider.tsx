@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       tenant_id: tId,
       paid: isPaid,
       role: validatedRole,
-      subscription_tier: tier as any,
+      subscription_tier: tier as UserMetadata["subscription_tier"],
     };
 
     setUserMetadata(metadata);

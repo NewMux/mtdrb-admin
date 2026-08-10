@@ -3,7 +3,10 @@ import { FiCheckSquare, FiPlus } from "react-icons/fi";
 
 interface TaskManagementProps {
   refreshKey: number;
-  stats: any;
+  // TODO: no caller currently renders this component, so the real shape of
+  // `stats` isn't determinable from usage; narrow before use if this is
+  // wired up in the future.
+  stats: unknown;
 }
 
 export const TaskManagement: React.FC<TaskManagementProps> = () => {

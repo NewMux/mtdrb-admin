@@ -49,6 +49,13 @@ interface TaskFormData {
   estimatedHours: number;
 }
 
+interface RecentTask {
+  id: string;
+  title: string;
+  type: TaskType;
+  priority: TaskPriority;
+}
+
 const AddTaskModal: React.FC<AddTaskModalProps> = ({
   open,
   onClose,
@@ -67,7 +74,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   });
 
   const [loading, setLoading] = useState(false);
-  const [recentTasks, setRecentTasks] = useState<any[]>([]);
+  const [recentTasks, setRecentTasks] = useState<RecentTask[]>([]);
   const [errors, setErrors] = useState<
     Array<{ field: string; message: string }>
   >([]);
@@ -80,7 +87,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   useEffect(() => {
     const fetchRecentTasks = async () => {
       // TODO: Fetch recent tasks from Supabase
-      const tasks = [
+      const tasks: RecentTask[] = [
         {
           id: "1",
           title: "Setup new member onboarding for Sarah",
@@ -149,7 +156,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       const result = await createTask({
         title: formData.title,
         description: formData.description,
-        type: formData.type as any,
+        type: formData.type,
         priority: formData.priority,
         status: "pending",
         assignedTo: formData.assignedTo || undefined,
@@ -193,7 +200,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   ];
 
   // TODO: Fetch trainers from Supabase
-  const staffOptions: Array<{ value: string; label: string }> = [].map((trainer: any) => ({
+  const staffOptions: Array<{ value: string; label: string }> = (
+    [] as Array<{ id: string; name: string }>
+  ).map((trainer) => ({
     value: trainer.id,
     label: trainer.name,
   }));

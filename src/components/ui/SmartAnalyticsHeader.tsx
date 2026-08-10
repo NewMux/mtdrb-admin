@@ -48,7 +48,7 @@ export default function SmartAnalyticsHeader({
 }: SmartAnalyticsHeaderProps) {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
-  const timeRangeOptions = [
+  const timeRangeOptions: { value: "week" | "month" | "quarter" | "year"; label: string }[] = [
     { value: "week", label: t("dashboard.weekly") },
     { value: "month", label: t("dashboard.monthly") },
     { value: "quarter", label: t("dashboard.quarterly") },
@@ -82,7 +82,7 @@ export default function SmartAnalyticsHeader({
             {timeRangeOptions.map((range) => (
               <motion.button
                 key={range.value}
-                onClick={() => onTimeRangeChange(range.value as any)}
+                onClick={() => onTimeRangeChange(range.value)}
                 className={`px-4 py-2 text-sm rounded-lg transition-all duration-200 font-medium ${
                   timeRange === range.value
                     ? "bg-white text-gray-900 shadow-md"

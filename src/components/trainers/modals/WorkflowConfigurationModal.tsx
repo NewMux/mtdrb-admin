@@ -47,7 +47,7 @@ export default function WorkflowConfigurationModal({
   });
   const [loading, setLoading] = React.useState(false);
 
-  const handleInputChange = (field: keyof WorkflowConfig, value: any) => {
+  const handleInputChange = <K extends keyof WorkflowConfig>(field: K, value: WorkflowConfig[K]) => {
     setConfig((prev) => ({ ...prev, [field]: value }));
   };
 

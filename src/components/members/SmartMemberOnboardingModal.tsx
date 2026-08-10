@@ -39,10 +39,23 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+// Shape of the object built in onSubmit below: the submitted form data plus
+// the onboarding fields synthesized for a newly-created member record.
+interface OnboardedMemberData extends FormData {
+  id: string;
+  joinDate: string;
+  status: string;
+  lastCheckIn: string;
+  checkInCount: number;
+  formsSubmitted: string[];
+  isTrial: boolean;
+  membershipPrice: number;
+}
+
 interface SmartMemberOnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (member: any) => void;
+  onSuccess: (member: OnboardedMemberData) => void;
 }
 
 const SmartMemberOnboardingModal: React.FC<SmartMemberOnboardingModalProps> = ({

@@ -1,21 +1,8 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
-declare module "react-big-calendar" {
-  export const Calendar: any;
-  export const Views: any;
-  export const dateFnsLocalizer: any;
-  export const withDragAndDrop: any;
-}
-
-declare module "react-big-calendar/lib/addons/dragAndDrop" {
-  const withDragAndDrop: any;
-  export default withDragAndDrop;
-}
-
-declare module "papaparse" {
-  const Papa: any;
-  export default Papa;
-}
+// Note: "react-big-calendar" and "papaparse" ship their own types via
+// @types/react-big-calendar and @types/papaparse (both installed), so no
+// ambient module shims are declared here for them.
 
 declare global {
   interface Window {

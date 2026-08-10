@@ -47,6 +47,26 @@ interface BookingItem {
   }>;
 }
 
+interface ScheduleItem {
+  time: string;
+  class: string;
+  trainer: string;
+  spots: string;
+}
+
+interface RecentMemberItem {
+  name: string;
+  joined: string;
+  plan: string;
+  status: string;
+}
+
+interface PerformerItem {
+  name: string;
+  metric: string;
+  score: number;
+}
+
 const Widget: React.FC<WidgetProps> = ({ title, children, className = "" }) => (
   <div
     className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out ${className}`}
@@ -62,9 +82,9 @@ export default Widget;
 
 export const SmartWidgets: React.FC<SmartWidgetsProps> = ({ refreshKey }) => {
   const { tenantId } = useAuth();
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
-  const [recentMembers, setRecentMembers] = useState<any[]>([]);
-  const [topPerformers, setTopPerformers] = useState<any[]>([]);
+  const [todaySchedule, setTodaySchedule] = useState<ScheduleItem[]>([]);
+  const [recentMembers, setRecentMembers] = useState<RecentMemberItem[]>([]);
+  const [topPerformers, setTopPerformers] = useState<PerformerItem[]>([]);
   const [quickStats, setQuickStats] = useState({
     checkIns: 0,
     activeClasses: 0,

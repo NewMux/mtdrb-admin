@@ -1,8 +1,8 @@
 import React from "react";
 
 interface BillingTabProps {
-  plan: any;
-  invoices: any[];
+  plan: unknown;
+  invoices: unknown[];
   onSendPaymentLink: () => void;
   onMarkPaid: () => void;
   onCreditNote: () => void;

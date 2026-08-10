@@ -13,6 +13,7 @@ import {
   FiActivity,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import type { User } from "@supabase/supabase-js";
 
 // New unified UI components
 import {
@@ -47,7 +48,7 @@ interface Plan {
 
 export default function Plans() {
   const [loading, setLoading] = useState(true);
-  const [, setUser] = useState<any>(null);
+  const [, setUser] = useState<User | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

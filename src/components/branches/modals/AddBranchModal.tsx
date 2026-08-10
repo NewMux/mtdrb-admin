@@ -192,10 +192,12 @@ export default function AddBranchModal({
       resetForm();
       onSuccess?.();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error adding branch:", error);
       toast.error(
-        error.message || t("branches.errors.failedToAddBranch") || "Failed to add branch"
+        (error instanceof Error ? error.message : undefined) ||
+          t("branches.errors.failedToAddBranch") ||
+          "Failed to add branch"
       );
       setLoading(false);
     }

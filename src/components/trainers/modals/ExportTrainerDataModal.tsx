@@ -28,6 +28,36 @@ interface ExportOption {
   format: "csv" | "xlsx" | "pdf";
 }
 
+// The generated Database["public"]["Tables"]["trainers"|"classes"|"class_bookings"]
+// types in src/types/supabase.ts don't model every column actually queried here
+// (e.g. average_rating, date, price, attended) — these describe the real shape
+// returned/read by this component's queries.
+interface TrainerExportRecord {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  status?: string;
+  specialties?: string[] | string;
+  hourly_rate?: number;
+  created_at?: string;
+  average_rating?: number | string;
+}
+
+interface ClassExportRecord {
+  id: string;
+  status?: string;
+}
+
+interface BookingExportRecord {
+  id: string;
+  price?: number;
+  attended?: boolean;
+}
+
+type ExportRow = Record<string, string | number>;
+
 const exportOptions: ExportOption[] = [
   {
     id: "all-trainers",
@@ -136,11 +166,11 @@ export default function ExportTrainerDataModal({
         const option = exportOptions.find((opt) => opt.id === optionId);
         if (!option) continue;
 
-        let exportData: any[] = [];
-        let filename = `${option.id}-${new Date().toISOString().split("T")[0]}`;
+        let exportData: ExportRow[] = [];
+        const filename = `${option.id}-${new Date().toISOString().split("T")[0]}`;
 
         if (optionId === "all-trainers") {
-          exportData = (trainers || []).map((trainer: any) => ({
+          exportData = (trainers || []).map((trainer: TrainerExportRecord) => ({
             "First Name": trainer.first_name || "",
             "Last Name": trainer.last_name || "",
             Email: trainer.email || "",
@@ -157,7 +187,7 @@ export default function ExportTrainerDataModal({
         } else if (optionId === "trainer-performance") {
           // Fetch performance data for each trainer
           const trainersWithPerformance = await Promise.all(
-            (trainers || []).map(async (trainer: any) => {
+            (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
                 .select("id")
@@ -174,13 +204,13 @@ export default function ExportTrainerDataModal({
                 )
                 .eq("tenant_id", tenantId);
 
-              const totalRevenue = (bookings || []).reduce(
-                (sum: number, b: any) => sum + (b.price || 0),
+              const totalRevenue = ((bookings || []) as BookingExportRecord[]).reduce(
+                (sum: number, b) => sum + (b.price || 0),
                 0,
               );
 
               return {
-                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email || "",
                 Email: trainer.email || "",
                 "Total Classes": classes?.length || 0,
                 "Total Bookings": bookings?.length || 0,
@@ -195,7 +225,7 @@ export default function ExportTrainerDataModal({
         } else if (optionId === "trainer-schedule") {
           // Fetch schedule data
           const trainersWithSchedule = await Promise.all(
-            (trainers || []).map(async (trainer: any) => {
+            (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
                 .select("id, name, start_time, end_time, date, status")
@@ -205,14 +235,14 @@ export default function ExportTrainerDataModal({
                 .order("date", { ascending: true });
 
               return {
-                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email || "",
                 Email: trainer.email || "",
                 "Total Classes": classes?.length || 0,
-                "Upcoming Classes": (classes || []).filter(
-                  (c: any) => c.status === "scheduled" || c.status === "active",
+                "Upcoming Classes": ((classes || []) as ClassExportRecord[]).filter(
+                  (c) => c.status === "scheduled" || c.status === "active",
                 ).length,
-                "Completed Classes": (classes || []).filter(
-                  (c: any) => c.status === "completed",
+                "Completed Classes": ((classes || []) as ClassExportRecord[]).filter(
+                  (c) => c.status === "completed",
                 ).length,
                 Availability: "Mon-Fri, 6AM-8PM", // TODO: Fetch from schedule table
               };
@@ -223,7 +253,7 @@ export default function ExportTrainerDataModal({
         } else if (optionId === "trainer-analytics" && isPro) {
           // Comprehensive analytics (Pro only)
           const trainersWithAnalytics = await Promise.all(
-            (trainers || []).map(async (trainer: any) => {
+            (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
                 .select("id, name, date, start_time, end_time")
@@ -240,19 +270,20 @@ export default function ExportTrainerDataModal({
                 )
                 .eq("tenant_id", tenantId);
 
-              const totalRevenue = (bookings || []).reduce(
-                (sum: number, b: any) => sum + (b.price || 0),
+              const typedBookings = (bookings || []) as BookingExportRecord[];
+              const totalRevenue = typedBookings.reduce(
+                (sum: number, b) => sum + (b.price || 0),
                 0,
               );
               const attendanceRate =
-                bookings && bookings.length > 0
-                  ? ((bookings.filter((b: any) => b.attended).length /
-                      bookings.length) *
+                typedBookings.length > 0
+                  ? ((typedBookings.filter((b) => b.attended).length /
+                      typedBookings.length) *
                       100).toFixed(2)
                   : "0";
 
               return {
-                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email || "",
                 Email: trainer.email || "",
                 "Total Classes": classes?.length || 0,
                 "Total Bookings": bookings?.length || 0,

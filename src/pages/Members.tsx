@@ -42,6 +42,25 @@ import { useSmartMemberModal } from "../hooks/useSmartMemberModal";
 import AnalyticsTab from "../components/members/tabs/AnalyticsTab";
 import { usePermissions } from "../hooks/usePermissions";
 import { type Member } from "../types/member";
+import type { Database } from "../types/supabase";
+
+// Raw "members" table row as returned by Supabase (select("*"))
+type MemberRow = Database["public"]["Tables"]["members"]["Row"];
+
+// Shape of the application-specific data stored in members.metadata (jsonb)
+interface MemberRowMetadata {
+  gender?: string;
+  last_check_in?: string;
+  check_in_count?: number;
+  membership_price?: number | string;
+  forms_submitted?: string[];
+  is_trial?: boolean;
+  attendance?: string[];
+  tags?: string[];
+  fitness_goal?: string;
+  membership_type?: string;
+}
+
 // Using SmartMemberTable's Member type for converted members
 type TableMember = Member & {
   id: string;
@@ -62,6 +81,30 @@ type TableMember = Member & {
   assignedTrainerId?: string;
   fitnessGoal?: string;
 };
+
+// Payload shape built for inserting a new row into the "members" table
+interface NewMemberPayload {
+  tenant_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  status: string;
+  membership_type: string;
+  membership_status: string;
+  join_date: string;
+  expiry_date: string | null;
+  trainer_id: string | null;
+  metadata: Record<string, unknown>;
+}
+
+interface StatCard {
+  name: string;
+  value: string;
+  change: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
 
 // Removed mock member conversion - using real data from Supabase
 
@@ -87,7 +130,7 @@ const Members: React.FC = () => {
     inactive: 0,
     newThisMonth: 0,
   });
-  const [memberStats, setMemberStats] = React.useState<any[]>([]);
+  const [memberStats, setMemberStats] = React.useState<StatCard[]>([]);
 
   // Update initial memberStats when language changes
   React.useEffect(() => {
@@ -141,15 +184,17 @@ const Members: React.FC = () => {
 
         if (error) throw error;
         
-        const convertedMembers: TableMember[] = (data || []).map((m: any) => {
+        const convertedMembers: TableMember[] = (data || []).map((m: MemberRow) => {
+          const metadata = (m.metadata as MemberRowMetadata | undefined) ?? {};
+          const rawStatus = String(m.status);
           const status =
-            m.status === "active"
+            rawStatus === "active"
               ? "active"
-              : m.status === "inactive"
+              : rawStatus === "inactive"
                 ? "inactive"
-                : m.status === "suspended"
+                : rawStatus === "suspended"
                   ? "suspended"
-                  : m.status === "trial"
+                  : rawStatus === "trial"
                     ? "trial"
                     : "expired";
           return {
@@ -158,8 +203,8 @@ const Members: React.FC = () => {
             email: m.email,
             phone: m.phone || "",
             age: 25, // TODO: Calculate from metadata or add age field
-            gender: (["Male", "Female", "Other"].includes(m.metadata?.gender)
-              ? m.metadata.gender
+            gender: (["Male", "Female", "Other"].includes(metadata.gender ?? "")
+              ? metadata.gender
               : "Other") as "Male" | "Female" | "Other",
             joinDate:
               m.join_date ||
@@ -171,21 +216,21 @@ const Members: React.FC = () => {
                 .toISOString()
                 .split("T")[0],
             lastCheckIn:
-              m.metadata?.last_check_in ||
+              metadata.last_check_in ||
               new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
                 .toISOString()
                 .split("T")[0],
-            checkInCount: (m.metadata?.check_in_count as number) || 0,
+            checkInCount: metadata.check_in_count || 0,
             status,
-            membershipPrice: parseFloat(m.metadata?.membership_price as string) || 99.99,
-            formsSubmitted: (m.metadata?.forms_submitted as string[]) || [],
-            isTrial: (m.metadata?.is_trial as boolean) || false,
-            attendance: (m.metadata?.attendance as string[]) || [],
-            tags: (m.metadata?.tags as string[]) || [],
+            membershipPrice: parseFloat(String(metadata.membership_price ?? "")) || 99.99,
+            formsSubmitted: metadata.forms_submitted || [],
+            isTrial: metadata.is_trial || false,
+            attendance: metadata.attendance || [],
+            tags: metadata.tags || [],
             assignedTrainerId: m.trainer_id || undefined,
-            fitnessGoal: (m.metadata?.fitness_goal as string) || undefined,
-            membership_type: m.membership_type || m.metadata?.membership_type,
-            membership_status: m.membership_status,
+            fitnessGoal: metadata.fitness_goal || undefined,
+            membership_type: m.membership_type || metadata.membership_type,
+            membership_status: m.membership_status as Member["membership_status"],
           };
         });
 
@@ -415,10 +460,10 @@ const Members: React.FC = () => {
 
       if (error) throw error;
 
-      const exportData = (members || []).map((member: any) => ({
+      const exportData = (members || []).map((member: MemberRow) => ({
         "First Name": member.first_name || "",
         "Last Name": member.last_name || "",
-        Name: member.name || `${member.first_name || ""} ${member.last_name || ""}`.trim(),
+        Name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
         Email: member.email || "",
         Phone: member.phone || "",
         Status: member.status || "active",
@@ -445,7 +490,7 @@ const Members: React.FC = () => {
         `${t("members.failedToExport")}: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
-  }, [tenantId, showSuccess, showError]);
+  }, [tenantId, showSuccess, showError, t]);
 
   // Function to add a test member (exposed for manual use)
   const addTestMember = React.useCallback(async () => {
@@ -502,9 +547,10 @@ const Members: React.FC = () => {
         setRefreshKey((prev) => prev + 1);
         showSuccess('Test Member Added', `Ahmed Al-Mansoori has been added to your members list.`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding test member:', error);
-      showError('Error', `Failed to add test member: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      showError('Error', `Failed to add test member: ${message}`);
     }
   }, [tenantId, showSuccess, showError, setRefreshKey]);
 
@@ -524,7 +570,8 @@ const Members: React.FC = () => {
   // Expose function to window for manual use
   React.useEffect(() => {
     if (import.meta.env.DEV) {
-      (window as any).addTestMember = addTestMember;
+      (window as Window & { addTestMember?: () => Promise<void> }).addTestMember =
+        addTestMember;
       console.log('🧪 Development mode: Use window.addTestMember() to add a test member');
     }
   }, [addTestMember]);
@@ -547,7 +594,7 @@ const Members: React.FC = () => {
 
   // Enhanced member action handlers
   const handleEditMember = React.useCallback(
-    (member: any) => {
+    (member: { id: string }) => {
       try {
         const originalMember = members.find((m) => m.id === member.id);
         if (originalMember) {
@@ -561,7 +608,7 @@ const Members: React.FC = () => {
   );
 
   const handleDeleteMember = React.useCallback(
-    (member: any) => {
+    (member: { id: string }) => {
       try {
         const originalMember = members.find((m) => m.id === member.id);
         if (originalMember) {
@@ -575,7 +622,7 @@ const Members: React.FC = () => {
   );
 
   const handleViewMember = React.useCallback(
-    (member: any) => {
+    (member: { id: string }) => {
       try {
         const originalMember = members.find((m) => m.id === member.id);
         if (originalMember) {
@@ -589,7 +636,7 @@ const Members: React.FC = () => {
   );
 
   const handleAssignTrainer = React.useCallback(
-    (member: any) => {
+    (member: { id: string }) => {
       try {
         const originalMember = members.find((m) => m.id === member.id);
         if (originalMember) {
@@ -603,6 +650,23 @@ const Members: React.FC = () => {
       }
     },
     [openAssignTrainerModal, showError, members],
+  );
+
+  const handleCancelMembership = React.useCallback(
+    (member: { id: string }) => {
+      try {
+        const originalMember = members.find((m) => m.id === member.id);
+        if (originalMember) {
+          openCancelMembershipModal(originalMember);
+        }
+      } catch (error) {
+        showError(
+          "Error",
+          "Failed to open cancel membership modal. Please try again.",
+        );
+      }
+    },
+    [openCancelMembershipModal, showError, members],
   );
 
   // Handle adding a new member
@@ -622,7 +686,7 @@ const Members: React.FC = () => {
         const lastName = nameParts.slice(1).join(" ") || "";
 
         // Prepare the member data for database insertion
-        const memberPayload: any = {
+        const memberPayload: NewMemberPayload = {
           tenant_id: tenantId,
           first_name: firstName,
           last_name: lastName,
@@ -664,7 +728,7 @@ const Members: React.FC = () => {
         // Insert the member into Supabase
         const { error } = await supabase
           .from("members")
-          .insert(memberPayload)
+          .insert(memberPayload as Database["public"]["Tables"]["members"]["Insert"])
           .select()
           .single();
 
@@ -676,11 +740,12 @@ const Members: React.FC = () => {
         setRefreshKey((prev) => prev + 1);
         showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
         handleAddMemberSuccess();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to add member:", error);
+        const message = error instanceof Error ? error.message : undefined;
         showError(
           "Error",
-          error.message || "Failed to add member. Please try again.",
+          message || "Failed to add member. Please try again.",
         );
       } finally {
         setModalLoading(false);
@@ -744,7 +809,7 @@ const Members: React.FC = () => {
                 members={convertedMembers.slice(0, 5)}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
-                onCancelMembership={(m) => openCancelMembershipModal(m as any)}
+                onCancelMembership={handleCancelMembership}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
@@ -818,7 +883,7 @@ const Members: React.FC = () => {
                 members={convertedMembers}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
-                onCancelMembership={(m) => openCancelMembershipModal(m as any)}
+                onCancelMembership={handleCancelMembership}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}

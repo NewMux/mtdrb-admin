@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import type { Database } from "../../types/supabase";
 import {
   LineChart,
   Line,
@@ -59,6 +60,17 @@ interface PerformanceMetric {
   target: number;
   trend: "up" | "down" | "stable";
 }
+
+// Trainers row plus a defensive `specialty` fallback: some legacy rows store
+// a single specialty string instead of the `specialties` array.
+type TrainerRow = Database["public"]["Tables"]["trainers"]["Row"] & {
+  specialty?: string;
+};
+type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
+type ClassBookingWithClass =
+  Database["public"]["Tables"]["class_bookings"]["Row"] & {
+    classes: ClassRow | null;
+  };
 
 export default function SmartTrainerAnalytics({
   refreshKey,
@@ -124,13 +136,13 @@ export default function SmartTrainerAnalytics({
       if (invoicesError) throw invoicesError;
 
       // Calculate trainer performance
-      const trainerStats = new Map<string, any>();
-      
-      (trainers || []).forEach((trainer: any) => {
+      const trainerStats = new Map<string, TrainerPerformance>();
+
+      (trainers || []).forEach((trainer: TrainerRow) => {
         trainerStats.set(trainer.id, {
           id: trainer.id,
           name: `${trainer.first_name || ''} ${trainer.last_name || ''}`.trim() || trainer.email,
-          rating: parseFloat(trainer.rating || "0"),
+          rating: parseFloat(String(trainer.rating || "0")),
           sessions: 0,
           revenue: 0,
           retention: 85, // Would need historical data
@@ -141,7 +153,7 @@ export default function SmartTrainerAnalytics({
       });
 
       // Count sessions and attendance per trainer
-      (classes || []).forEach((cls: any) => {
+      (classes || []).forEach((cls: ClassRow) => {
         if (cls.trainer_id && cls.status === "completed") {
           const stats = trainerStats.get(cls.trainer_id);
           if (stats) {
@@ -151,7 +163,7 @@ export default function SmartTrainerAnalytics({
       });
 
       // Count bookings and calculate revenue per trainer
-      (bookings || []).forEach((booking: any) => {
+      (bookings || []).forEach((booking: ClassBookingWithClass) => {
         if (booking.classes?.trainer_id && (booking.status === "checked_in" || booking.status === "completed")) {
           const stats = trainerStats.get(booking.classes.trainer_id);
           if (stats) {
@@ -162,8 +174,8 @@ export default function SmartTrainerAnalytics({
       });
 
       // Calculate actual revenue from invoices (distributed evenly for now)
-      const totalRevenue = (invoices || []).reduce((sum, inv) => 
-        sum + parseFloat(inv.amount || inv.total || "0"), 0
+      const totalRevenue = (invoices || []).reduce((sum, inv) =>
+        sum + parseFloat(String(inv.amount || inv.total || "0")), 0
       );
       const totalSessions = Array.from(trainerStats.values()).reduce((sum, t) => sum + t.sessions, 0);
       if (totalSessions > 0) {
@@ -186,7 +198,7 @@ export default function SmartTrainerAnalytics({
         b.status === "checked_in" || b.status === "completed"
       ).length;
       const avgRating = (trainers || []).length > 0
-        ? (trainers || []).reduce((sum, t) => sum + parseFloat(t.rating || "0"), 0) / trainers.length
+        ? (trainers || []).reduce((sum, t) => sum + parseFloat(String(t.rating || "0")), 0) / trainers.length
         : 0;
 
       setPerformanceMetrics([
@@ -244,13 +256,13 @@ export default function SmartTrainerAnalytics({
       });
 
       const revenueByMonth = months.map(({ month, monthKey }) => {
-        const monthInvoices = (invoices || []).filter((inv: any) => {
+        const monthInvoices = (invoices || []).filter((inv) => {
           const invoiceDate = new Date(inv.created_at);
           const invoiceMonth = `${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, '0')}`;
           return invoiceMonth === monthKey;
         });
-        const revenue = monthInvoices.reduce((sum, inv) => 
-          sum + parseFloat(inv.amount || inv.total || "0"), 0
+        const revenue = monthInvoices.reduce((sum, inv) =>
+          sum + parseFloat(String(inv.amount || inv.total || "0")), 0
         );
         return { month, revenue };
       });
@@ -261,6 +273,7 @@ export default function SmartTrainerAnalytics({
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshKey isn't read directly but changes the callback identity to trigger a refetch
   }, [tenantId, selectedTimeRange, refreshKey]);
 
   useEffect(() => {

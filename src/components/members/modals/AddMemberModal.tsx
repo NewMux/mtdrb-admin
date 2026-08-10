@@ -366,7 +366,10 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     }
   };
 
-  const handleInputChangeDirect = (field: string, value: any) => {
+  const handleInputChangeDirect = <K extends keyof AddMemberFormData>(
+    field: K,
+    value: AddMemberFormData[K],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));

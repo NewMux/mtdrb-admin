@@ -33,8 +33,16 @@ interface SmartReportsDashboardProps {
 interface ReportInsight {
   type: "usage" | "performance" | "automation" | "trends";
   title: string;
-  data: any[];
+  data: Record<string, string | number>[];
   insight: string;
+}
+
+interface RecentReport {
+  name: string;
+  type: string;
+  status: string;
+  time: string;
+  downloads: number;
 }
 
 export default function SmartReportsDashboard({
@@ -42,7 +50,7 @@ export default function SmartReportsDashboard({
 }: SmartReportsDashboardProps) {
   const [insights, setInsights] = useState<ReportInsight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
 
   useEffect(() => {
     fetchSmartInsights();

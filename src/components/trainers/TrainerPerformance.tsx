@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -61,13 +61,6 @@ export default function TrainerPerformance() {
     fetchTrainers();
   }, []);
 
-  useEffect(() => {
-    if (selectedTrainer) {
-      fetchPerformanceData();
-      fetchTopFeedback();
-    }
-  }, [selectedTrainer, dateRange]);
-
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
@@ -86,7 +79,7 @@ export default function TrainerPerformance() {
     }
   };
 
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -188,9 +181,9 @@ export default function TrainerPerformance() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTrainer, dateRange]);
 
-  const fetchTopFeedback = async () => {
+  const fetchTopFeedback = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("trainer_feedback")
@@ -204,7 +197,14 @@ export default function TrainerPerformance() {
     } catch (err: unknown) {
       console.error("Error fetching top feedback:", err);
     }
-  };
+  }, [selectedTrainer]);
+
+  useEffect(() => {
+    if (selectedTrainer) {
+      fetchPerformanceData();
+      fetchTopFeedback();
+    }
+  }, [selectedTrainer, dateRange, fetchPerformanceData, fetchTopFeedback]);
 
   const getLatestPerformance = (): TrainerPerformance | null => {
     return performance.length > 0 ? performance[performance.length - 1] : null;

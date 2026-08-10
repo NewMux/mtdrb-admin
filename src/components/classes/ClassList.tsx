@@ -543,7 +543,7 @@ export default function ClassList({
                           const classesToInsert = [];
                           const errors: string[] = [];
 
-                          for (const row of results.data as any[]) {
+                          for (const row of results.data) {
                             if (!row.name || !row.start_time || !row.end_time) {
                               errors.push(
                                 `Row missing required fields: ${row.name || "Unknown"}`,
@@ -574,14 +574,14 @@ export default function ClassList({
 
                             classesToInsert.push({
                               tenant_id: tenantId,
-                              name: row.name,
-                              description: row.description || null,
+                              name: row.name as string,
+                              description: (row.description as string) || null,
                               trainer_id: trainerId,
                               start_time: startDateTime.toISOString(),
                               end_time: endDateTime.toISOString(),
                               date: startDateTime.toISOString().split("T")[0],
                               capacity: parseInt(row.capacity as string) || 20,
-                              status: row.status || "scheduled",
+                              status: (row.status as string) || "scheduled",
                             });
                           }
 

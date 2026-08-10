@@ -5,6 +5,23 @@ import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
 
+// Extract the intended post-login redirect path from router location state,
+// which react-router types as `unknown`.
+function getRedirectPath(state: unknown): string {
+  if (
+    state &&
+    typeof state === "object" &&
+    "from" in state &&
+    state.from &&
+    typeof state.from === "object" &&
+    "pathname" in state.from &&
+    typeof (state.from as { pathname?: unknown }).pathname === "string"
+  ) {
+    return (state.from as { pathname: string }).pathname;
+  }
+  return "/dashboard";
+}
+
 // ===== SUBSCRIBE PAGE =====
 export default function Subscribe() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +44,7 @@ export default function Subscribe() {
         setUser(data.user as User);
         // Check paid status - preserve original destination
         if (data.user.user_metadata && data.user.user_metadata.paid) {
-          const from = (location.state as any)?.from?.pathname || "/dashboard";
+          const from = getRedirectPath(location.state);
           navigate(from);
           return;
         }
@@ -131,7 +148,7 @@ export default function Subscribe() {
         // Check if onboarding is completed
         if (data.user.user_metadata.onboarding_completed) {
           // Go to dashboard if onboarding is done
-          const from = (location.state as any)?.from?.pathname || "/dashboard";
+          const from = getRedirectPath(location.state);
           navigate(from);
         } else {
           // Go to onboarding if not completed

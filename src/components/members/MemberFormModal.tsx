@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { supabase } from "../../supabaseClient";
+import type { Session } from "@supabase/supabase-js";
 import { Member } from "../../types/member";
 import dayjs from "dayjs";
+import type { ManipulateType } from "dayjs";
 import { useWorkoutPlans } from "../../contexts/WorkoutPlansContext";
 import {
   FiMail,
@@ -310,7 +312,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
   onSaved,
   member,
 }) => {
-  const [, setSession] = useState<any>(null);
+  const [, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   useWorkoutPlans();
@@ -519,7 +521,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     const basePrice = getValues("membership_price") || 0;
     const discountAmount = getValues("discount_amount") || 0;
     return Math.max(0, basePrice - discountAmount).toFixed(2);
-  }, []);
+  }, [getValues]);
 
   // Staff Form Sections
   const BasicInfoStep = () => (
@@ -1705,7 +1707,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
       if (!startDate) return dayjs().add(1, "month").format("YYYY-MM-DD");
 
       const start = dayjs(startDate);
-      const durations = {
+      const durations: Record<string, { amount: number; unit: ManipulateType }> = {
         "1_month": { amount: 1, unit: "month" },
         "3_months": { amount: 3, unit: "month" },
         "6_months": { amount: 6, unit: "month" },
@@ -1718,7 +1720,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         durations[membershipDuration as keyof typeof durations] ||
         durations["1_month"];
       return start
-        .add(duration.amount, duration.unit as any)
+        .add(duration.amount, duration.unit)
         .format("YYYY-MM-DD");
     },
     [],
@@ -2113,9 +2115,11 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
               "Could not determine tenant ID. Please log in again.",
             );
           }
-        } catch (tenantError: any) {
+        } catch (tenantError) {
           console.error("❌ Tenant ID fetch error:", tenantError);
-          throw new Error(`Tenant ID error: ${tenantError.message}`);
+          throw new Error(
+            `Tenant ID error: ${tenantError instanceof Error ? tenantError.message : String(tenantError)}`,
+          );
         }
 
 
@@ -2175,33 +2179,44 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
 
       if (onSaved) onSaved(savedMember);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error("❌ Form submission error:", err);
+
+      const errorDetails =
+        typeof err === "object" && err !== null
+          ? (err as {
+              code?: string;
+              message?: string;
+              details?: string;
+              hint?: string;
+              stack?: string;
+            })
+          : undefined;
 
       // Enhanced error handling with specific error types
       let errorMessage = "An unknown error occurred.";
 
-      if (err.code === "23505") {
+      if (errorDetails?.code === "23505") {
         errorMessage =
           "A member with this email or phone number already exists.";
-      } else if (err.code === "23502") {
+      } else if (errorDetails?.code === "23502") {
         errorMessage =
           "Required field is missing. Please check all required fields.";
-      } else if (err.code === "23503") {
+      } else if (errorDetails?.code === "23503") {
         errorMessage = "Invalid reference (e.g., trainer, plan, or branch ID).";
-      } else if (err.code === "42P01") {
+      } else if (errorDetails?.code === "42P01") {
         errorMessage = "Database table not found. Please contact support.";
-      } else if (err.message) {
-        errorMessage = err.message;
+      } else if (errorDetails?.message) {
+        errorMessage = errorDetails.message;
       }
 
       // Log detailed error information
       console.error("Error details:", {
-        message: err.message,
-        code: err.code,
-        details: err.details,
-        hint: err.hint,
-        stack: err.stack,
+        message: errorDetails?.message,
+        code: errorDetails?.code,
+        details: errorDetails?.details,
+        hint: errorDetails?.hint,
+        stack: errorDetails?.stack,
       });
 
       setError(errorMessage);

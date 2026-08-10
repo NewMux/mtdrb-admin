@@ -44,10 +44,11 @@ const Branches: React.FC = () => {
       const { data, error } = await api.branches.getAll();
       if (error) throw error;
       setBranches(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching branches:", error);
+      const message = error instanceof Error ? error.message : undefined;
       toast.error(
-        error.message || t("branches.errors.failedToFetchBranches") || "Failed to fetch branches"
+        message || t("branches.errors.failedToFetchBranches") || "Failed to fetch branches"
       );
     } finally {
       setLoading(false);

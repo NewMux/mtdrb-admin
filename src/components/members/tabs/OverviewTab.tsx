@@ -11,9 +11,17 @@ import {
   FiFileText,
 } from "react-icons/fi";
 
+interface MembershipPlan {
+  name?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  price?: number | string | null;
+  currency?: string;
+}
+
 interface OverviewTabProps {
   member: Member;
-  plan: any;
+  plan: MembershipPlan | null;
   activity: {
     lastCheckIn?: string;
     attendanceThisMonth?: number;
@@ -22,7 +30,9 @@ interface OverviewTabProps {
   payment: {
     lastPayment?: string;
     status?: string;
-    invoice?: any;
+    // TODO: Only used as a presence/truthiness check here; the real invoice
+    // shape is not consumed elsewhere in this component.
+    invoice?: unknown;
   };
   whatsapp: {
     lastMessage?: string;
@@ -138,7 +148,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             >
               {payment.status || "Unknown"}
             </span>
-            {payment.invoice && (
+            {Boolean(payment.invoice) && (
               <button className="ml-2 text-blue-500 hover:underline text-xs flex items-center gap-1">
                 <FiFileText /> View Invoice
               </button>

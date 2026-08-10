@@ -10,10 +10,15 @@ import {
 } from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
+interface TrainerSummary {
+  name: string;
+  email: string;
+}
+
 interface TrainerScheduleModalProps {
   open: boolean;
   onClose: () => void;
-  trainer?: any;
+  trainer?: TrainerSummary;
 }
 
 const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({

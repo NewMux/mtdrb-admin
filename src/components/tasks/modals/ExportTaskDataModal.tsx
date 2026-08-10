@@ -15,6 +15,28 @@ interface ExportTaskDataModalProps {
   isPro?: boolean;
 }
 
+// Shape of a `member_tasks` row joined with member/assignee profile data,
+// as selected and consumed by the export query below.
+interface ExportTaskRow {
+  title?: string;
+  description?: string;
+  type?: string;
+  priority?: string;
+  status?: string;
+  due_date?: string;
+  created_at?: string;
+  completed_at?: string;
+  member?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  } | null;
+  assignee?: {
+    first_name?: string;
+    last_name?: string;
+  } | null;
+}
+
 export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
   open,
   onClose,
@@ -115,7 +137,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
       if (error) throw error;
 
       // Format data for export
-      const exportData = (tasks || []).map((task: any) => ({
+      const exportData = ((tasks || []) as ExportTaskRow[]).map((task) => ({
         Title: task.title || "",
         Description: task.description || "",
         Type: task.type || "",
@@ -405,7 +427,11 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
                   name="exportFormat"
                   value={format.value}
                   checked={exportFormat === format.value}
-                  onChange={(e) => setExportFormat(e.target.value as any)}
+                  onChange={(e) =>
+                    setExportFormat(
+                      e.target.value as "csv" | "excel" | "json",
+                    )
+                  }
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <div>

@@ -178,7 +178,11 @@ export const MemberProfileCardsDemo: React.FC = () => {
             <div className="flex items-center space-x-4">
               <select
                 value={currentScenario}
-                onChange={(e) => setCurrentScenario(e.target.value as any)}
+                onChange={(e) =>
+                  setCurrentScenario(
+                    e.target.value as "normal" | "trial" | "high-risk",
+                  )
+                }
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="normal">Normal Member</option>

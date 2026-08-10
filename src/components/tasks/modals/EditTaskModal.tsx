@@ -81,7 +81,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     }
   }, [task]);
 
-  const taskTypes = [
+  const taskTypes: Array<{ value: TaskType; label: string; icon: string }> = [
     { value: "onboarding", label: "Member Onboarding", icon: "👋" },
     { value: "class_setup", label: "Class Setup", icon: "🏋️" },
     { value: "maintenance", label: "Equipment Maintenance", icon: "🔧" },
@@ -92,7 +92,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     { value: "custom", label: "Custom Task", icon: "📝" },
   ];
 
-  const priorities = [
+  const priorities: Array<{
+    value: TaskPriority;
+    label: string;
+    color: string;
+  }> = [
     { value: "low", label: "Low", color: "text-green-600 bg-green-50" },
     { value: "medium", label: "Medium", color: "text-yellow-600 bg-yellow-50" },
     { value: "high", label: "High", color: "text-orange-600 bg-orange-50" },
@@ -119,12 +123,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     }
   };
 
-  const handleTypeChange = (type: string) => {
-    setFormData((prev) => ({ ...prev, type: type as any }));
+  const handleTypeChange = (type: TaskType) => {
+    setFormData((prev) => ({ ...prev, type }));
   };
 
-  const handlePriorityChange = (priority: string) => {
-    setFormData((prev) => ({ ...prev, priority: priority as any }));
+  const handlePriorityChange = (priority: TaskPriority) => {
+    setFormData((prev) => ({ ...prev, priority }));
   };
 
   if (!task) {

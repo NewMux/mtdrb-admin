@@ -38,7 +38,7 @@ interface CustomReport {
   description: string;
   category: string;
   selectedFields: string[];
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   schedule: string;
   recipients: string[];
 }

@@ -51,7 +51,10 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     onClose();
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof TaskFormData>(
+    field: K,
+    value: TaskFormData[K],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -109,7 +112,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </label>
             <select
               value={formData.priority}
-              onChange={(e) => handleChange("priority", e.target.value)}
+              onChange={(e) =>
+                handleChange("priority", e.target.value as Task["priority"])
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="low">Low</option>
@@ -124,7 +129,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </label>
             <select
               value={formData.status}
-              onChange={(e) => handleChange("status", e.target.value)}
+              onChange={(e) =>
+                handleChange("status", e.target.value as Task["status"])
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="pending">Pending</option>

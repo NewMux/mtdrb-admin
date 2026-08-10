@@ -85,6 +85,10 @@ interface MemberModalProps {
   mode: "add" | "edit";
 }
 
+// A SmartField can back any Member property, whose values are always one of
+// these primitive/array shapes (see the Member interface above).
+type MemberFieldValue = string | number | boolean | string[] | undefined;
+
 // Smart Field Component
 interface SmartFieldProps {
   label: string;
@@ -101,11 +105,11 @@ interface SmartFieldProps {
   required?: boolean;
   options?: { value: string; label: string }[];
   placeholder?: string;
-  value: any;
-  onChange: (value: any) => void;
+  value: MemberFieldValue;
+  onChange: (value: MemberFieldValue) => void;
   error?: string;
-  dependencies?: { [key: string]: any };
-  onDependencyChange?: (field: string, value: any) => void;
+  dependencies?: Partial<Record<keyof Member, MemberFieldValue>>;
+  onDependencyChange?: (field: keyof Member, value: MemberFieldValue) => void;
 }
 
 const SmartField: React.FC<SmartFieldProps> = ({
@@ -122,7 +126,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleChange = (newValue: any) => {
+  const handleChange = (newValue: MemberFieldValue) => {
     onChange(newValue);
 
     // Smart behavior based on field
@@ -140,6 +144,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
 
     if (
       name === "medical_conditions" &&
+      Array.isArray(newValue) &&
       newValue.length > 0 &&
       onDependencyChange
     ) {
@@ -164,7 +169,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
         return (
           <input
             type={type}
-            value={value || ""}
+            value={(value as string | number | undefined) || ""}
             onChange={(e) => handleChange(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -177,7 +182,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
         return (
           <input
             type="number"
-            value={value || ""}
+            value={(value as string | number | undefined) || ""}
             onChange={(e) => handleChange(parseFloat(e.target.value) || 0)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -190,7 +195,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
       case "select":
         return (
           <select
-            value={value || ""}
+            value={(value as string | number | undefined) || ""}
             onChange={(e) => handleChange(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -210,7 +215,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
           <label className="flex items-center space-x-3 cursor-pointer">
             <input
               type="checkbox"
-              checked={value || false}
+              checked={Boolean(value)}
               onChange={(e) => handleChange(e.target.checked)}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
@@ -221,7 +226,7 @@ const SmartField: React.FC<SmartFieldProps> = ({
       case "textarea":
         return (
           <textarea
-            value={value || ""}
+            value={(value as string | number | undefined) || ""}
             onChange={(e) => handleChange(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -402,7 +407,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
   }
 
   const handleFieldChange = useCallback(
-    (field: keyof Member, value: any) => {
+    (field: keyof Member, value: MemberFieldValue) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
 
       // Clear error when field is updated

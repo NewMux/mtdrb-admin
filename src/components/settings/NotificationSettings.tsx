@@ -43,9 +43,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
     const keys = path.split(".");
     setSettings((prev) => {
       const updated = { ...prev };
-      let current: any = updated;
+      let current = updated as Record<string, unknown>;
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
+        current = current[keys[i]] as Record<string, unknown>;
       }
       current[keys[keys.length - 1]] = value;
       return updated;
@@ -56,9 +56,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
     const keys = path.split(".");
     setSettings((prev) => {
       const updated = { ...prev };
-      let current: any = updated;
+      let current = updated as Record<string, unknown>;
       for (let i = 0; i < keys.length - 1; i++) {
-        current = current[keys[i]];
+        current = current[keys[i]] as Record<string, unknown>;
       }
       current[keys[keys.length - 1]] = value;
       return updated;

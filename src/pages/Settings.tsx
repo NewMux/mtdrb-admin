@@ -34,6 +34,17 @@ import CancelSubscriptionModal from "../components/settings/CancelSubscriptionMo
 import { NotificationSettings } from "../components/settings/NotificationSettings";
 import { IntegrationSettings } from "../components/settings/IntegrationSettings";
 
+// Row shape for the "platform_subscriptions" table (not yet part of the
+// generated Database types, so it's modelled locally from actual usage).
+interface PlatformSubscription {
+  status?: string;
+  plan_tier?: string;
+  amount?: number;
+  currency?: string;
+  created_at?: string;
+  metadata?: { retry_count?: number } | null;
+}
+
 const Settings: React.FC = () => {
   usePageThemeContext();
   useSubscription();
@@ -74,7 +85,7 @@ const Settings: React.FC = () => {
   // Local state
   const [activeTab, setActiveTab] = useState("general");
 
-  const [platformSubscription, setPlatformSubscription] = useState<any>(null);
+  const [platformSubscription, setPlatformSubscription] = useState<PlatformSubscription | null>(null);
 
   // Fetch subscription info on mount
   const fetchSubscriptionInfo = async () => {

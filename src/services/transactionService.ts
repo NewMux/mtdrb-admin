@@ -1,7 +1,8 @@
 import { supabase } from "../supabaseClient";
 import { errorHandler, ErrorContext } from "./errorHandler";
+import type { Json, Database } from "../types/supabase";
 
-export interface TransactionResult<T = any> {
+export interface TransactionResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -24,7 +25,7 @@ export interface MembershipWithInvoiceData {
     amount: number;
     currency: string;
     due_date: string;
-    items: any[];
+    items: Json[];
   };
 }
 
@@ -347,7 +348,7 @@ class TransactionService {
     title: string,
     description: string,
     status: "success" | "pending" | "failed",
-    metadata?: any,
+    metadata?: Json,
   ): Promise<void> {
     try {
       await supabase.from("activities").insert({
@@ -365,7 +366,7 @@ class TransactionService {
 
   // Batch operations
   async batchCreateMembers(
-    members: any[],
+    members: Omit<Database["public"]["Tables"]["members"]["Insert"], "tenant_id">[],
     tenantId: string,
   ): Promise<TransactionResult> {
     try {

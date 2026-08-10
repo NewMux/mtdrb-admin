@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
@@ -21,6 +21,7 @@ import {
   FiCheckCircle,
   FiSettings,
 } from "react-icons/fi";
+import type { IconType } from "react-icons";
 import ClassTable from "../components/classes/ClassTable";
 import ClassDetailsDrawer from "../components/classes/ClassDetailsDrawer";
 import ClassCalendar from "../components/classes/ClassCalendar";
@@ -65,6 +66,14 @@ type ModalType =
   | "settings"
   | "sendPromotion"
   | null;
+
+type ClassesView =
+  | "dashboard"
+  | "insights"
+  | "analytics"
+  | "management"
+  | "calendar"
+  | "automation";
 
 interface ClassStats {
   totalClasses: number;
@@ -117,7 +126,7 @@ interface SmartInsights {
     action: string;
     potential: string;
   }>;
-  trends: any[];
+  trends: unknown[];
   automationSuggestions: Array<{
     type: string;
     title: string;
@@ -144,9 +153,7 @@ export default function SmartClassManagement() {
   useSubscription();
 
   // View State
-  const [activeView, setActiveView] = useState<
-    "dashboard" | "insights" | "analytics" | "management" | "calendar" | "automation"
-  >("dashboard");
+  const [activeView, setActiveView] = useState<ClassesView>("dashboard");
 
   // Modal & Drawer State
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -216,7 +223,7 @@ export default function SmartClassManagement() {
     },
   ];
 
-  const tabs = [
+  const tabs: { id: ClassesView; name: string; icon: IconType }[] = [
     { id: "dashboard", name: t("classes.dashboard"), icon: FiActivity },
     { id: "calendar", name: t("classes.calendar"), icon: FiCalendar },
     { id: "management", name: t("classes.classManagement"), icon: FiSettings },
@@ -276,7 +283,7 @@ export default function SmartClassManagement() {
     }
   };
 
-  const fetchSmartInsights = async () => {
+  const fetchSmartInsights = useCallback(async () => {
     try {
       // Get tenantId from user metadata or memberships
       const tenantId = user?.user_metadata?.tenant_id || user?.user_metadata?.tenantId;
@@ -307,7 +314,7 @@ export default function SmartClassManagement() {
         automationSuggestions: [],
       });
     }
-  };
+  }, [user]);
 
   // Initialize data
   useEffect(() => {
@@ -321,7 +328,7 @@ export default function SmartClassManagement() {
     };
 
     initializeData();
-  }, []);
+  }, [fetchSmartInsights]);
 
   // Modal handlers
   const handleAddClass = () => {
@@ -651,7 +658,7 @@ export default function SmartClassManagement() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
+              onClick={() => setActiveView(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeView === tab.id
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"

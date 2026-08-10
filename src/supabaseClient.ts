@@ -135,5 +135,5 @@ export const getCurrentUser = async (): Promise<{
 
 // Debug mode helper
 if (import.meta.env.DEV) {
-  (window as any).supabase = supabase;
+  window.supabase = supabase;
 }

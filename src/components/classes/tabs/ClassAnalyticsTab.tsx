@@ -826,6 +826,7 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderWidth: 2,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [memberBehavior.genderSplit, t, i18n.language]);
 
   // Time of Day Chart Data
@@ -845,6 +846,7 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderRadius: 8,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [memberBehavior.timeOfDay, t, i18n.language]);
 
   // Membership Type Chart Data
@@ -872,6 +874,7 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderWidth: 2,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [memberBehavior.attendanceByMembership, t, i18n.language]);
 
   if (loading) {
@@ -1112,6 +1115,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [charts.attendanceTrend, t, i18n.language]);
 
   // Class Type Popularity Chart
@@ -1131,6 +1135,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         borderRadius: 8,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [charts.classTypePopularity, t, i18n.language]);
 
   // Trainer Impact Chart
@@ -1154,6 +1159,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [charts.trainerImpact, t, i18n.language]);
 
   // No-Show Trend Chart
@@ -1177,6 +1183,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- i18n.language isn't read directly but forces recompute of translated labels on language switch
   }), [charts.noShowTrend, t, i18n.language]);
 
   if (loading) {
@@ -1640,7 +1647,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         const noShowTrend = last7Days.map(({ date, dateObj }) => {
           const dayStart = new Date(dateObj.setHours(0, 0, 0, 0));
           const dayEnd = new Date(dateObj.setHours(23, 59, 59, 999));
-          const dayNoShows = (allBookings || []).filter((b: any) => {
+          const dayNoShows = (allBookings || []).filter((b: BookingItem) => {
             const bookingDate = new Date(b.created_at);
             return bookingDate >= dayStart && bookingDate <= dayEnd && b.status === "no_show";
           });

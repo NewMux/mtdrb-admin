@@ -15,9 +15,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useTheme } from "../contexts/ThemeContext";
 import { FiMoon, FiSun } from "react-icons/fi";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 interface TopBarProps {
   onMenuClick: () => void;
+}
+
+// Notifications table isn't modeled in src/types/supabase.ts (feature is
+// optional / may not exist for every tenant), so we describe the shape we
+// actually read/write here based on usage in this component.
+interface AppNotification {
+  id: string;
+  title?: string;
+  message?: string;
+  body?: string;
+  created_at: string;
+  read_at?: string | null;
+  is_read?: boolean;
+  [key: string]: unknown;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
@@ -30,7 +45,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   // State for dropdowns and modals
   const [showSettingsModal, setShowSettingsModal] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
-  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [notifications, setNotifications] = React.useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
 
   // Force re-render when language changes
@@ -48,6 +63,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     if (path.includes("/settings")) return t("settings.title");
     if (path.includes("/profile")) return t("settings.profile");
     return t("dashboard.title");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- currentLang isn't read directly but forces recompute when t's translations change language
   }, [location.pathname, t, currentLang]);
 
   const isRTL = currentLang === "ar";
@@ -91,16 +107,16 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           code: error.code,
           details: error.details,
           hint: error.hint,
-          status: (error as any).status,
-          statusCode: (error as any).statusCode,
+          status: (error as PostgrestError & { status?: number; statusCode?: number }).status,
+          statusCode: (error as PostgrestError & { status?: number; statusCode?: number }).statusCode,
           fullError: error,
         });
         return;
       }
 
-      setNotifications(data || []);
+      setNotifications((data as AppNotification[] | null) || []);
       // Count unread (check for read_at or is_read field, or assume all are unread if neither exists)
-      const unread = (data || []).filter((n: any) => {
+      const unread = ((data as AppNotification[] | null) || []).filter((n) => {
         if (n.read_at !== null && n.read_at !== undefined) return false;
         if (n.is_read === false) return true;
         if (n.is_read === true) return false;
@@ -108,9 +124,19 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
         return true;
       }).length;
       setUnreadCount(unread);
-    } catch (err) {
+    } catch (err: unknown) {
       // Log detailed error information for caught errors
-      const errorDetails = err as any;
+      const errorDetails =
+        typeof err === "object" && err !== null
+          ? (err as {
+              message?: string;
+              code?: string;
+              status?: number;
+              statusCode?: number;
+              name?: string;
+              stack?: string;
+            })
+          : undefined;
       console.error("Error fetching notifications:", {
         message: errorDetails?.message || String(err),
         code: errorDetails?.code,
@@ -235,12 +261,14 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                             // Mark all as read
                             if (user?.user_metadata?.tenant_id) {
                               const unreadNotifications = notifications.filter(
-                                (n: any) => !n.read_at && n.is_read !== true
+                                (n) => !n.read_at && n.is_read !== true
                               );
-                              
+
                               // Try to update read_at first, fallback to is_read
                               for (const notif of unreadNotifications) {
-                                const update: any = {};
+                                const update: Partial<
+                                  Pick<AppNotification, "read_at" | "is_read">
+                                > = {};
                                 if (notif.read_at !== undefined) {
                                   update.read_at = new Date().toISOString();
                                 } else if (notif.is_read !== undefined) {
@@ -274,7 +302,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                         </div>
                       ) : (
                         <div className="py-2">
-                          {notifications.map((notification: any) => (
+                          {notifications.map((notification) => (
                             <div
                               key={notification.id}
                               className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 cursor-pointer ${
@@ -285,7 +313,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                               }`}
                               onClick={async () => {
                                 // Mark as read when clicked
-                                const update: any = {};
+                                const update: Partial<
+                                  Pick<AppNotification, "read_at" | "is_read">
+                                > = {};
                                 if (notification.read_at !== undefined) {
                                   update.read_at = new Date().toISOString();
                                 } else if (notification.is_read !== undefined) {

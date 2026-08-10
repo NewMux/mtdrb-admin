@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import type { Database } from "../../types/supabase";
 import { useRTL } from "../../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import {
@@ -88,6 +89,22 @@ interface ChartData {
   }>;
 }
 
+type TrainerRow = Database["public"]["Tables"]["trainers"]["Row"];
+// Classes row plus `class_type`, a column this file reads defensively as a
+// fallback (`cls.class_type || cls.name`) but that isn't modeled on the
+// hand-written classes Row type.
+type ClassRow = Database["public"]["Tables"]["classes"]["Row"] & {
+  class_type?: string;
+};
+type ClassWithTrainer = ClassRow & { trainers: TrainerRow | null };
+// Bookings joined with member + class data. `classes.trainers` is read
+// defensively below even though this query's join doesn't request it.
+type ClassBookingWithRelations =
+  Database["public"]["Tables"]["class_bookings"]["Row"] & {
+    members?: Database["public"]["Tables"]["members"]["Row"] | null;
+    classes?: (ClassRow & { trainers?: TrainerRow | null }) | null;
+  };
+
 const COLORS = [
   "#3B82F6",
   "#10B981",
@@ -139,7 +156,10 @@ const FilterBar: React.FC<{
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const updateFilter = (key: keyof FilterState, value: any) => {
+  const updateFilter = <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K],
+  ) => {
     onFilterChange({ ...filters, [key]: value });
   };
 
@@ -426,8 +446,9 @@ export default function TrainerPerformanceDashboard({
         classesQuery = classesQuery.eq("class_type", filters.classType);
       }
 
-      const { data: classes, error: classesError } = await classesQuery;
+      const { data: classesData, error: classesError } = await classesQuery;
       if (classesError) throw classesError;
+      const classes = (classesData || []) as ClassWithTrainer[];
 
       // Fetch class bookings
       let bookingsQuery = supabase
@@ -440,8 +461,9 @@ export default function TrainerPerformanceDashboard({
         bookingsQuery = bookingsQuery.eq("members.gender", filters.memberGender);
       }
 
-      const { data: bookings, error: bookingsError } = await bookingsQuery;
+      const { data: bookingsData, error: bookingsError } = await bookingsQuery;
       if (bookingsError) throw bookingsError;
+      const bookings = (bookingsData || []) as ClassBookingWithRelations[];
 
       // Fetch invoices for revenue
       const { data: invoices, error: invoicesError } = await supabase
@@ -464,8 +486,8 @@ export default function TrainerPerformanceDashboard({
       const noShows = (bookings || []).filter(b => b.status === "no_show").length;
 
       // Calculate revenue
-      const revenueGenerated = (invoices || []).reduce((sum, inv) => 
-        sum + parseFloat(inv.amount || inv.total || "0"), 0
+      const revenueGenerated = (invoices || []).reduce((sum, inv) =>
+        sum + parseFloat(String(inv.amount || inv.total || "0")), 0
       );
       const avgRevenuePerSession = totalSessions > 0 ? revenueGenerated / totalSessions : 0;
 
@@ -475,7 +497,7 @@ export default function TrainerPerformanceDashboard({
 
       // Repeat clients (members with more than 1 booking)
       const memberBookingCounts = new Map<string, number>();
-      (bookings || []).forEach((b: any) => {
+      (bookings || []).forEach((b) => {
         if (b.member_id) {
           memberBookingCounts.set(b.member_id, (memberBookingCounts.get(b.member_id) || 0) + 1);
         }
@@ -484,7 +506,7 @@ export default function TrainerPerformanceDashboard({
 
       // Top class types
       const classTypeCounts = new Map<string, number>();
-      completedClasses.forEach((cls: any) => {
+      completedClasses.forEach((cls) => {
         const type = cls.class_type || cls.name || "Unknown";
         classTypeCounts.set(type, (classTypeCounts.get(type) || 0) + 1);
       });
@@ -495,7 +517,7 @@ export default function TrainerPerformanceDashboard({
 
       // Session time distribution
       const timeDistribution = { Morning: 0, Afternoon: 0, Evening: 0 };
-      completedClasses.forEach((cls: any) => {
+      completedClasses.forEach((cls) => {
         if (cls.start_time) {
           const hour = new Date(cls.start_time).getHours();
           if (hour >= 6 && hour < 12) timeDistribution.Morning++;
@@ -525,7 +547,7 @@ export default function TrainerPerformanceDashboard({
       const avgRating =
         ratingRows.length > 0
           ? ratingRows.reduce(
-              (sum, t) => sum + parseFloat(t.rating || "0"),
+              (sum, t) => sum + parseFloat(String(t.rating || "0")),
               0,
             ) / ratingRows.length
           : 0;
@@ -541,7 +563,7 @@ export default function TrainerPerformanceDashboard({
       });
 
       const attendanceOverTime = months.map(({ date, monthKey }) => {
-        const monthBookings = (bookings || []).filter((b: any) => {
+        const monthBookings = (bookings || []).filter((b) => {
           const bookingDate = new Date(b.created_at);
           const bookingMonth = `${bookingDate.getFullYear()}-${String(bookingDate.getMonth() + 1).padStart(2, '0')}`;
           return bookingMonth === monthKey && (b.status === "checked_in" || b.status === "completed");
@@ -550,13 +572,13 @@ export default function TrainerPerformanceDashboard({
       });
 
       const revenueOverTime = months.map(({ date, monthKey }) => {
-        const monthInvoices = (invoices || []).filter((inv: any) => {
+        const monthInvoices = (invoices || []).filter((inv) => {
           const invoiceDate = new Date(inv.created_at);
           const invoiceMonth = `${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, '0')}`;
           return invoiceMonth === monthKey;
         });
-        const revenue = monthInvoices.reduce((sum, inv) => 
-          sum + parseFloat(inv.amount || inv.total || "0"), 0
+        const revenue = monthInvoices.reduce((sum, inv) =>
+          sum + parseFloat(String(inv.amount || inv.total || "0")), 0
         );
         return { date, revenue };
       });
@@ -567,14 +589,18 @@ export default function TrainerPerformanceDashboard({
       });
 
       // Top vs bottom trainers
-      const trainerStats = new Map();
-      (bookings || []).forEach((booking: any) => {
+      interface TrainerAttendanceStats {
+        attendance: number;
+        trainer: TrainerRow | null;
+      }
+      const trainerStats = new Map<string, TrainerAttendanceStats>();
+      (bookings || []).forEach((booking) => {
         if (booking.classes?.trainer_id && (booking.status === "checked_in" || booking.status === "completed")) {
           const trainerId = booking.classes.trainer_id;
           if (!trainerStats.has(trainerId)) {
             trainerStats.set(trainerId, { attendance: 0, trainer: null });
           }
-          const stats = trainerStats.get(trainerId);
+          const stats = trainerStats.get(trainerId)!;
           stats.attendance++;
           if (!stats.trainer && booking.classes.trainers) {
             stats.trainer = booking.classes.trainers;
@@ -588,7 +614,7 @@ export default function TrainerPerformanceDashboard({
         .eq("tenant_id", tenantId);
 
       const topVsBottomTrainers = Array.from(trainerStats.entries())
-        .map(([trainerId, stats]: [string, any]) => {
+        .map(([trainerId, stats]) => {
           const trainer =
             (allTrainers || []).find((t) => t.id === trainerId) ||
             stats.trainer;
@@ -598,7 +624,7 @@ export default function TrainerPerformanceDashboard({
               `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() ||
               trainer.email,
             attendance: stats.attendance,
-            rating: parseFloat(trainer.rating || "0"),
+            rating: parseFloat(String(trainer.rating || "0")),
           };
         })
         .filter(
@@ -654,6 +680,7 @@ export default function TrainerPerformanceDashboard({
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshKey isn't read directly but changes the callback identity to trigger a refetch
   }, [tenantId, filters, refreshKey]);
 
   useEffect(() => {

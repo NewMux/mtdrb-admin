@@ -94,9 +94,9 @@ export default function SmartMemberDashboard({
   const [metrics, setMetrics] = useState<SmartMetrics | null>(null);
   const [, setInsights] = useState<AutomationInsight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "predictions">(
-    "overview",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "automation" | "predictions"
+  >("overview");
   // No demo data - always use real data from backend
 
   useEffect(() => {
@@ -502,17 +502,19 @@ export default function SmartMemberDashboard({
           role="tablist"
           aria-label="Member Dashboard Views"
         >
-          {[
-            { id: "overview", label: "Overview", icon: FiActivity },
-            { id: "automation", label: "Automation", icon: FiZap },
-            { id: "predictions", label: "Predictions", icon: FiActivity },
-          ].map((tab) => (
+          {(
+            [
+              { id: "overview", label: "Overview", icon: FiActivity },
+              { id: "automation", label: "Automation", icon: FiZap },
+              { id: "predictions", label: "Predictions", icon: FiActivity },
+            ] as const
+          ).map((tab) => (
             <button
               key={tab.id}
               role="tab"
               aria-selected={activeTab === tab.id}
               tabIndex={activeTab === tab.id ? 0 : -1}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`text-sm font-medium px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap
                 ${
                   activeTab === tab.id

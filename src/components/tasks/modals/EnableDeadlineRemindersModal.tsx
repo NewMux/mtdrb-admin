@@ -57,7 +57,13 @@ export const EnableDeadlineRemindersModal: React.FC<
     },
   ];
 
-  const messageTemplates = [
+  interface MessageTemplate {
+    id: string;
+    label: string;
+    message: string;
+  }
+
+  const messageTemplates: MessageTemplate[] = [
     {
       id: "default",
       label: "Default",
@@ -117,7 +123,7 @@ export const EnableDeadlineRemindersModal: React.FC<
     }));
   };
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template: MessageTemplate) => {
     if (template.id === "custom") return;
     setReminderSettings((prev) => ({
       ...prev,

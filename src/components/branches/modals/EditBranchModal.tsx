@@ -186,10 +186,12 @@ export default function EditBranchModal({
       setLoading(false);
       onSuccess?.();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating branch:", error);
       toast.error(
-        error.message || t("branches.errors.failedToUpdateBranch") || "Failed to update branch"
+        (error instanceof Error ? error.message : undefined) ||
+          t("branches.errors.failedToUpdateBranch") ||
+          "Failed to update branch"
       );
       setLoading(false);
     }

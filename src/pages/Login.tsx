@@ -8,6 +8,23 @@ import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 
+// Extract the intended post-login redirect path from router location state,
+// which react-router types as `unknown`.
+function getRedirectPath(state: unknown): string {
+  if (
+    state &&
+    typeof state === "object" &&
+    "from" in state &&
+    state.from &&
+    typeof state.from === "object" &&
+    "pathname" in state.from &&
+    typeof (state.from as { pathname?: unknown }).pathname === "string"
+  ) {
+    return (state.from as { pathname: string }).pathname;
+  }
+  return "/dashboard";
+}
+
 // ===== LOGIN PAGE =====
 export default function Login() {
   const { t } = useTranslation();
@@ -26,7 +43,7 @@ export default function Login() {
   // Immediate redirect if already authenticated (including dev bypass)
   // Use Navigate component for synchronous redirect to prevent flickering
   if (!isLoading && user) {
-    const from = (location.state as any)?.from?.pathname || "/dashboard";
+    const from = getRedirectPath(location.state);
     return <Navigate to={from} replace />;
   }
 
@@ -61,7 +78,7 @@ export default function Login() {
         data.user.user_metadata.paid
       ) {
         // Get intended destination from URL state or default to dashboard
-        const from = (location.state as any)?.from?.pathname || "/dashboard";
+        const from = getRedirectPath(location.state);
         navigate(from);
       } else {
         navigate("/subscribe");

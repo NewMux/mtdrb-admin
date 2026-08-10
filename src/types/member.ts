@@ -28,7 +28,7 @@ export interface Member {
     id: string;
     name: string;
   };
-  add_ons?: any[];
+  add_ons?: string[];
   tags?: string[] | null;
   staff_notes?: string | null;
   medical_notes?: string | null;
