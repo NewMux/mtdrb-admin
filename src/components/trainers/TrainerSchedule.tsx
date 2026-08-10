@@ -3,14 +3,7 @@ import { Calendar, Views, dateFnsLocalizer, type View } from "react-big-calendar
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import {
-  FiPlus,
-  FiFilter,
-  FiEdit,
-  FiTrash,
-  FiClock,
-  FiMapPin,
-} from "react-icons/fi";
+import { FiPlus, FiFilter } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 
 const locales = {
@@ -43,11 +36,6 @@ interface Trainer {
   status: string;
 }
 
-interface Resource {
-  id: string;
-  title: string;
-  status: string;
-}
 
 export default function TrainerSchedule() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -153,10 +141,10 @@ export default function TrainerSchedule() {
     }
   };
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = () => {
   };
 
-  const handleSelect = ({ start, end }: { start: Date; end: Date }) => {
+  const handleSelect = () => {
   };
 
   const eventStyleGetter = (event: Event) => {

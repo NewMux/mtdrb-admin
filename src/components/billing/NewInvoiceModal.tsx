@@ -1,11 +1,9 @@
-import React, { useEffect, useState, Fragment, useCallback } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import React, { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import {
   FiPlus,
   FiDollarSign,
   FiCalendar,
-  FiX,
   FiTrash2,
   FiCreditCard,
   FiUser,
@@ -26,7 +24,10 @@ import {
 } from "../../types";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { SmartButton } from "../ui/DesignSystem";
-import { motion, AnimatePresence } from "framer-motion";
+import { SmartModal } from "../ui/SmartModal";
+import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 // Smart suggestions for line items
 const SMART_SUGGESTIONS: Record<
@@ -122,6 +123,8 @@ export function NewInvoiceModal({
   onSave,
   invoice: editingInvoice,
 }: NewInvoiceModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
 
   // Invoice Details State
   const [invoiceData, setInvoiceData] = useState({
@@ -418,657 +421,590 @@ export function NewInvoiceModal({
     label: string;
     icon: React.ComponentType<{ className?: string }>;
   }[] = [
-    { key: "details", label: "Invoice Details", icon: FiFileText },
-    { key: "items", label: "Line Items", icon: FiDollarSign },
-    { key: "summary", label: "Summary", icon: FiPieChart },
+    { key: "details", label: t("billing.invoiceDetailsTab", "تفاصيل الفاتورة"), icon: FiFileText },
+    { key: "items", label: t("billing.lineItemsTab", "بنود الفاتورة"), icon: FiDollarSign },
+    { key: "summary", label: t("billing.summaryTab", "الملخص والمالية"), icon: FiPieChart },
   ];
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-50 overflow-y-auto"
-          open={isOpen}
-          onClose={onClose}
-        >
-          <div className="min-h-screen px-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
+    <SmartModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={editingInvoice ? t("billing.editInvoice", "تعديل الفاتورة") : t("billing.createNewInvoice", "إصدار فاتورة جديدة")}
+      subtitle={t("billing.newInvoiceSubtitle", "إنشاء أو تحديث فاتورة مالية للعميل")}
+      size="xl"
+      footer={
+        <div className="flex items-center justify-between w-full gap-4" dir={isRTL ? "rtl" : "ltr"}>
+          <button
+            onClick={() => {
+              if (activeSection === "details") {
+                setActiveSection("items");
+              } else if (activeSection === "items") {
+                setActiveSection("summary");
+              } else {
+                setActiveSection("details");
+              }
+            }}
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
+          >
+            {(() => {
+              if (activeSection === "details") return `${t("common.next", "التالي")}: ${t("billing.lineItemsTab", "بنود الفاتورة")} ←`;
+              if (activeSection === "items") return `${t("common.next", "التالي")}: ${t("billing.summaryTab", "الملخص")} ←`;
+              return `→ ${t("common.backToDetails", "العودة للتفاصيل")}`;
+            })()}
+          </button>
+          <div className="flex items-center gap-3">
+            <SmartButton
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSaving}
             >
-              <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true" />
-            </Transition.Child>
+              {t("common.cancel", "إلغاء")}
+            </SmartButton>
+            <SmartButton
+              variant="secondary"
+              onClick={() => handleSave(true)}
+              loading={isSaving}
+              disabled={isSaving}
+            >
+              {t("billing.saveAsDraft", "حفظ كمسودة")}
+            </SmartButton>
+            <SmartButton
+              onClick={() => handleSave(false)}
+              loading={isSaving}
+              disabled={isSaving}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isSaving ? t("common.saving", "جاري الحفظ...") : t("billing.saveInvoice", "حفظ الفاتورة")}
+            </SmartButton>
+          </div>
+        </div>
+      }
+    >
+      {/* Navigation Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-xl mb-6" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="flex gap-4 sm:gap-8 px-4">
+          {sections.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveSection(key)}
+              className={`flex items-center gap-2 py-3 px-2 border-b-2 font-medium text-sm transition-colors cursor-pointer ${
+                activeSection === key
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              }`}
+            >
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
+      {/* Main Content */}
+      <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+        {/* Invoice Details Section */}
+        {activeSection === "details" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Client & Invoice Info */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FiUser className="text-blue-500 flex-shrink-0" />
+                <span>{t("billing.clientInvoiceInfo", "بيانات العميل والفاتورة")}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AppleInput
+                  label={t("billing.invoiceNumber", "رقم الفاتورة")}
+                  name="invoice_number"
+                  value={invoiceData.invoice_number}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      invoice_number: e.target.value,
+                    })
+                  }
+                  placeholder="INV-12345"
+                  required
+                />
+                <AppleSelect
+                  label={t("billing.status", "الحالة")}
+                  name="status"
+                  value={invoiceData.status}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      status: e.target.value as InvoiceStatus,
+                    })
+                  }
+                  required
+                >
+                  <option value="Unpaid">{t("billing.unpaid", "غير مدفوعة")}</option>
+                  <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
+                  <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
+                  <option value="Draft">{t("billing.draft", "مسودة")}</option>
+                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
+                </AppleSelect>
+                <AppleSelect
+                  label={t("billing.type", "نوع الفاتورة")}
+                  value={invoiceData.type}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      type: e.target.value as InvoiceType,
+                    })
+                  }
+                >
+                  <option value="Membership">{t("billing.membershipType", "اشتراك عضوية")}</option>
+                  <option value="PT">{t("billing.ptType", "تدريب شخصي")}</option>
+                  <option value="Class">{t("billing.classType", "حصص جماعية")}</option>
+                  <option value="Facility">{t("billing.facilityType", "مرافق وخدمات")}</option>
+                  <option value="Other">{t("billing.otherType", "أخرى")}</option>
+                </AppleSelect>
+              </div>
 
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <div className="inline-block w-full max-w-4xl h-screen align-middle text-left bg-white rounded-2xl shadow-2xl transform transition-all">
-                {/* Gradient Header */}
-                <div className="bg-gradient-to-r from-[#002D9C] via-[#0E5EF2] to-[#7DCCFF] rounded-t-2xl p-6">
-                  <div className="flex items-center justify-between">
+              {/* Client Selection */}
+              <div className="mt-6 text-start">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t("billing.client", "العميل / العضو")} <span className="text-red-500">*</span>
+                </label>
+                <AppleSelect
+                  label=""
+                  value={selectedClient?.id || ""}
+                  onChange={(e) => {
+                    try {
+                      const client = clients.find(
+                        (c) => c.id === e.target.value,
+                      );
+                      setSelectedClient(client || null);
+                    } catch (error) {
+                      console.error(
+                        "Error selecting client:",
+                        error,
+                      );
+                      toast.error("Error selecting client");
+                    }
+                  }}
+                >
+                  <option value="">{t("billing.selectClient", "اختر العميل...")}</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </AppleSelect>
+              </div>
+
+              {/* Client History */}
+              {selectedClient && (
+                <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 text-start">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FiInfo className="text-blue-500 flex-shrink-0" />
+                    <span>{t("billing.clientHistory", "سجل العميل المالية")}</span>
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <Dialog.Title className="text-2xl font-bold text-white">
-                        {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
-                      </Dialog.Title>
-                      <p className="text-blue-100 mt-1">
-                        Generate a professional invoice for your client
-                      </p>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t("billing.lastInvoice", "آخر فاتورة:")}
+                      </span>
+                      <span className="font-medium mx-2 text-gray-900 dark:text-white">
+                        {clientHistory.lastInvoiceDate
+                          ? dayjs(
+                              clientHistory.lastInvoiceDate,
+                            ).format("D MMM YYYY")
+                          : t("billing.none", "لا يوجد")}
+                      </span>
                     </div>
-                    <button
-                      onClick={onClose}
-                      className="text-white hover:text-blue-100 transition-colors"
-                    >
-                      <FiX className="h-6 w-6" />
-                    </button>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t("billing.outstandingBalance", "الرصيد المتبقي:")}
+                      </span>
+                      <span
+                        className={
+                          clientHistory.outstandingBalance > 0
+                            ? "font-medium mx-2 text-red-600 dark:text-red-400"
+                            : "font-medium mx-2 text-green-600 dark:text-green-400"
+                        }
+                      >
+                        {clientHistory.outstandingBalance.toFixed(
+                          3,
+                        )}{" "}
+                        د.ب
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t("billing.overdueInvoicesCount", "فواتير متأخرة:")}
+                      </span>
+                      <span
+                        className={
+                          clientHistory.overdueInvoices > 0
+                            ? "font-medium mx-2 text-red-600 dark:text-red-400"
+                            : "font-medium mx-2 text-green-600 dark:text-green-400"
+                        }
+                      >
+                        {clientHistory.overdueInvoices}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t("billing.preferredPayment", "الدفع المفضل:")}
+                      </span>
+                      <span className="font-medium mx-2 text-gray-900 dark:text-white">
+                        {clientHistory.preferredPaymentMethod ||
+                          t("billing.notSet", "غير محدد")}
+                      </span>
+                    </div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Navigation Tabs */}
-                <div className="border-b border-gray-200 bg-gray-50">
-                  <div className="flex space-x-8 px-6">
-                    {sections.map(({ key, label, icon: Icon }) => (
-                      <button
-                        key={key}
-                        onClick={() => setActiveSection(key)}
-                        className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                          activeSection === key
-                            ? "border-blue-500 text-blue-600"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            {/* Dates Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FiCalendar className="text-green-500 flex-shrink-0" />
+                <span>{t("billing.invoiceDates", "تواريخ الفاتورة")}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleInput
+                  label={t("billing.issueDate", "تاريخ الإصدار")}
+                  name="issue_date"
+                  type="date"
+                  value={invoiceData.issue_date}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      issue_date: e.target.value,
+                    })
+                  }
+                  required
+                />
+                <AppleInput
+                  label={t("billing.dueDate", "تاريخ الاستحقاق")}
+                  name="due_date"
+                  type="date"
+                  value={invoiceData.due_date}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      due_date: e.target.value,
+                    })
+                  }
+                  min={invoiceData.issue_date}
+                  required
+                />
+              </div>
+            </div>
 
-                {/* Main Content */}
-                <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-                  <div className="p-6 space-y-6">
-                    {/* Invoice Details Section */}
-                    {activeSection === "details" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                      >
-                        {/* Client & Invoice Info */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <FiUser className="mr-2 text-blue-500" />
-                            Client & Invoice Information
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <AppleInput
-                              label="Invoice Number"
-                              name="invoice_number"
-                              value={invoiceData.invoice_number}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  invoice_number: e.target.value,
-                                })
-                              }
-                              placeholder="INV-12345"
-                              required
-                            />
-                            <AppleSelect
-                              label="Status"
-                              name="status"
-                              value={invoiceData.status}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  status: e.target.value as InvoiceStatus,
-                                })
-                              }
-                              required
-                            >
-                              <option value="Unpaid">Unpaid</option>
-                              <option value="Paid">Paid</option>
-                              <option value="Overdue">Overdue</option>
-                              <option value="Draft">Draft</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </AppleSelect>
-                            <AppleSelect
-                              label="Type"
-                              value={invoiceData.type}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  type: e.target.value as InvoiceType,
-                                })
-                              }
-                            >
-                              <option value="Membership">Membership</option>
-                              <option value="PT">Personal Training</option>
-                              <option value="Class">Class</option>
-                              <option value="Facility">Facility</option>
-                              <option value="Other">Other</option>
-                            </AppleSelect>
-                          </div>
+            {/* Payment Info */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FiCreditCard className="text-purple-500 flex-shrink-0" />
+                <span>{t("billing.paymentInformation", "معلومات الدفع")}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AppleSelect
+                  label={t("billing.paymentMethod", "طريقة الدفع")}
+                  value={invoiceData.payment_method}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      payment_method: e.target
+                        .value as PaymentMethodType,
+                    })
+                  }
+                >
+                  <option value="">{t("billing.selectPaymentMethod", "اختر طريقة الدفع")}</option>
+                  <option value="card">{t("billing.card", "بطاقة ائتمان / خصم")}</option>
+                  <option value="bank_transfer">{t("billing.bankTransfer", "تحويل بنكي")}</option>
+                  <option value="cash">{t("billing.cash", "نقداً")}</option>
+                  <option value="digital_wallet">{t("billing.digitalWallet", "محفظة رقمية (BenefitPay)")}</option>
+                  <option value="cheque">{t("billing.cheque", "شيك")}</option>
+                </AppleSelect>
+                <AppleInput
+                  label={t("billing.paidAmount", "المبلغ المدفوع")}
+                  type="number"
+                  step="0.01"
+                  value={invoiceData.paid_amount}
+                  onChange={(e) =>
+                    setInvoiceData({
+                      ...invoiceData,
+                      paid_amount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-                          {/* Client Selection */}
-                          <div className="mt-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Client <span className="text-red-500">*</span>
-                            </label>
-                            <AppleSelect
-                              label=""
-                              value={selectedClient?.id || ""}
-                              onChange={(e) => {
-                                try {
-                                  const client = clients.find(
-                                    (c) => c.id === e.target.value,
-                                  );
-                                  setSelectedClient(client || null);
-                                } catch (error) {
-                                  console.error(
-                                    "Error selecting client:",
-                                    error,
-                                  );
-                                  toast.error("Error selecting client");
-                                }
-                              }}
-                            >
-                              <option value="">Select a client...</option>
-                              {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                  {client.name}
-                                </option>
-                              ))}
-                            </AppleSelect>
-                          </div>
+        {/* Line Items Section */}
+        {activeSection === "items" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FiDollarSign className="text-green-500 flex-shrink-0" />
+                  <span>{t("billing.lineItems", "بنود الفاتورة")}</span>
+                </h3>
+                <SmartButton
+                  onClick={addItem}
+                  variant="secondary"
+                  size="sm"
+                  icon={<FiPlus className="h-4 w-4" />}
+                >
+                  {t("billing.addItem", "إضافة بند")}
+                </SmartButton>
+              </div>
 
-                          {/* Client History */}
-                          {selectedClient && (
-                            <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                              <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                                <FiInfo className="mr-2 text-blue-500" />
-                                Client History
-                              </h4>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <span className="text-gray-600">
-                                    Last Invoice:
-                                  </span>
-                                  <span className="font-medium ml-2">
-                                    {clientHistory.lastInvoiceDate
-                                      ? dayjs(
-                                          clientHistory.lastInvoiceDate,
-                                        ).format("MMM D, YYYY")
-                                      : "None"}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">
-                                    Outstanding Balance:
-                                  </span>
-                                  <span
-                                    className={
-                                      clientHistory.outstandingBalance > 0
-                                        ? "font-medium ml-2 text-red-600"
-                                        : "font-medium ml-2 text-green-600"
-                                    }
-                                  >
-                                    {clientHistory.outstandingBalance.toFixed(
-                                      3,
-                                    )}{" "}
-                                    BHD
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">
-                                    Overdue Invoices:
-                                  </span>
-                                  <span
-                                    className={
-                                      clientHistory.overdueInvoices > 0
-                                        ? "font-medium ml-2 text-red-600"
-                                        : "font-medium ml-2 text-green-600"
-                                    }
-                                  >
-                                    {clientHistory.overdueInvoices}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600">
-                                    Preferred Payment:
-                                  </span>
-                                  <span className="font-medium ml-2">
-                                    {clientHistory.preferredPaymentMethod ||
-                                      "Not set"}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Dates Section */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <FiCalendar className="mr-2 text-green-500" />
-                            Invoice Dates
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <AppleInput
-                              label="Issue Date"
-                              name="issue_date"
-                              type="date"
-                              value={invoiceData.issue_date}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  issue_date: e.target.value,
-                                })
-                              }
-                              required
-                            />
-                            <AppleInput
-                              label="Due Date"
-                              name="due_date"
-                              type="date"
-                              value={invoiceData.due_date}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  due_date: e.target.value,
-                                })
-                              }
-                              min={invoiceData.issue_date}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        {/* Payment Info */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <FiCreditCard className="mr-2 text-purple-500" />
-                            Payment Information
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <AppleSelect
-                              label="Payment Method"
-                              value={invoiceData.payment_method}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  payment_method: e.target
-                                    .value as PaymentMethodType,
-                                })
-                              }
-                            >
-                              <option value="">Select payment method</option>
-                              <option value="card">Credit/Debit Card</option>
-                              <option value="bank_transfer">
-                                Bank Transfer
-                              </option>
-                              <option value="cash">Cash</option>
-                              <option value="digital_wallet">
-                                Digital Wallet
-                              </option>
-                              <option value="cheque">Cheque</option>
-                            </AppleSelect>
-                            <AppleInput
-                              label="Paid Amount"
-                              type="number"
-                              step="0.01"
-                              value={invoiceData.paid_amount}
-                              onChange={(e) =>
-                                setInvoiceData({
-                                  ...invoiceData,
-                                  paid_amount: parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Line Items Section */}
-                    {activeSection === "items" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                      >
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                              <FiDollarSign className="mr-2 text-green-500" />
-                              Line Items
-                            </h3>
-                            <SmartButton
-                              onClick={addItem}
-                              variant="secondary"
-                              size="sm"
-                              icon={<FiPlus className="h-4 w-4" />}
-                            >
-                              Add Item
-                            </SmartButton>
-                          </div>
-
-                          <div className="space-y-4">
-                            {items.map((item, index) => (
-                              <motion.div
-                                key={item.id}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-200"
-                              >
-                                <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-                                  {/* Description */}
-                                  <div className="lg:col-span-2">
-                                    <AppleInput
-                                      label="Description"
-                                      value={item.description}
-                                      onChange={(e) =>
-                                        handleItemChange(
-                                          index,
-                                          "description",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="Enter item description"
-                                    />
-                                    {/* Smart Suggestions */}
-                                    {!item.description && (
-                                      <div className="mt-2 flex flex-wrap gap-2">
-                                        {Object.entries(SMART_SUGGESTIONS).map(
-                                          ([key, suggestion]) => (
-                                            <button
-                                              key={key}
-                                              onClick={() =>
-                                                applySmartSuggestion(key, index)
-                                              }
-                                              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                                            >
-                                              {suggestion.description}
-                                            </button>
-                                          ),
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Quantity */}
-                                  <div>
-                                    <AppleInput
-                                      label="Quantity"
-                                      type="number"
-                                      value={item.quantity}
-                                      onChange={(e) =>
-                                        handleItemChange(
-                                          index,
-                                          "quantity",
-                                          parseInt(e.target.value),
-                                        )
-                                      }
-                                      min={1}
-                                    />
-                                  </div>
-
-                                  {/* Unit Price */}
-                                  <div>
-                                    <AppleInput
-                                      label="Unit Price"
-                                      type="number"
-                                      step="0.01"
-                                      value={item.unit_price}
-                                      onChange={(e) =>
-                                        handleItemChange(
-                                          index,
-                                          "unit_price",
-                                          parseFloat(e.target.value),
-                                        )
-                                      }
-                                      placeholder="0.00"
-                                    />
-                                  </div>
-
-                                  {/* VAT Rate */}
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                      VAT Rate
-                                    </label>
-                                    <select
-                                      value={item.vat_rate}
-                                      onChange={(e) =>
-                                        handleItemChange(
-                                          index,
-                                          "vat_rate",
-                                          Number(e.target.value) as VatRate,
-                                        )
-                                      }
-                                      className="w-full px-4 py-3 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md transition-all duration-200 ease-out"
-                                    >
-                                      {VAT_RATES.map((rate) => (
-                                        <option
-                                          key={rate.value}
-                                          value={rate.value}
-                                        >
-                                          {rate.label}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-
-                                  {/* Total */}
-                                  <div className="flex items-end">
-                                    <div className="w-full">
-                                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Total
-                                      </label>
-                                      <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl text-gray-900 font-medium border border-green-200">
-                                        {item.total.toFixed(3)} BHD
-                                      </div>
-                                    </div>
-                                    {items.length > 1 && (
-                                      <button
-                                        onClick={() => removeItem(index)}
-                                        className="ml-2 p-2 text-red-500 hover:text-red-700 transition-colors"
-                                      >
-                                        <FiTrash2 className="h-4 w-4" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Summary Section */}
-                    {activeSection === "summary" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                      >
-                        {/* Invoice Summary */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <FiBarChart className="mr-2 text-purple-500" />
-                            Invoice Summary
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Subtotal:</span>
-                                <span className="font-medium">
-                                  {subtotal.toFixed(3)} BHD
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">VAT:</span>
-                                <span className="font-medium">
-                                  {vat_total.toFixed(3)} BHD
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Discount:</span>
-                                <span className="font-medium text-red-600">
-                                  -{discount_total.toFixed(3)} BHD
-                                </span>
-                              </div>
-                              <div className="border-t pt-2">
-                                <div className="flex justify-between">
-                                  <span className="text-lg font-semibold text-gray-900">
-                                    Grand Total:
-                                  </span>
-                                  <span className="text-lg font-semibold text-blue-600">
-                                    {total.toFixed(3)} BHD
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Paid Amount:
-                                </span>
-                                <span className="font-medium">
-                                  {invoiceData.paid_amount.toFixed(3)} BHD
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                  Remaining Balance:
-                                </span>
-                                <span
-                                  className={
-                                    remaining_balance > 0
-                                      ? "font-medium text-red-600"
-                                      : "font-medium text-green-600"
-                                  }
-                                >
-                                  {remaining_balance.toFixed(3)} BHD
-                                </span>
-                              </div>
-                            </div>
-                            <div className="space-y-4">
-                              <AppleInput
-                                label="Paid Amount"
-                                type="number"
-                                step="0.01"
-                                value={invoiceData.paid_amount}
-                                onChange={(e) =>
-                                  setInvoiceData({
-                                    ...invoiceData,
-                                    paid_amount:
-                                      parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                                placeholder="0.00"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Notes Section */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <FiFileText className="mr-2 text-orange-500" />
-                            Notes
-                          </h3>
-                          <AppleTextarea
-                            label="Notes"
-                            value={invoiceData.notes}
-                            onChange={(e) =>
-                              setInvoiceData({
-                                ...invoiceData,
-                                notes: e.target.value,
-                              })
-                            }
-                            placeholder="Notes for internal use..."
-                            rows={3}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sticky Footer */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-2xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <button
-                        onClick={() => {
-                          if (activeSection === "details") {
-                            setActiveSection("items");
-                          } else if (activeSection === "items") {
-                            setActiveSection("summary");
-                          } else {
-                            setActiveSection("details");
+              <div className="space-y-4">
+                {items.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+                      {/* Description */}
+                      <div className="lg:col-span-2 text-start">
+                        <AppleInput
+                          label={t("billing.itemDescription", "الوصف / اسم الخدمة")}
+                          value={item.description}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "description",
+                              e.target.value,
+                            )
                           }
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-                      >
-                        {(() => {
-                          if (activeSection === "details")
-                            return "Next: Line Items";
-                          if (activeSection === "items") return "Next: Summary";
-                          return "Back to Details";
-                        })()}
-                      </button>
+                          placeholder={t("billing.enterDescription", "أدخل وصف الخدمة")}
+                        />
+                        {/* Smart Suggestions */}
+                        {!item.description && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {Object.entries(SMART_SUGGESTIONS).map(
+                              ([key, suggestion]) => (
+                                <button
+                                  key={key}
+                                  onClick={() =>
+                                    applySmartSuggestion(key, index)
+                                  }
+                                  className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
+                                >
+                                  {suggestion.description}
+                                </button>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quantity */}
+                      <div className="text-start">
+                        <AppleInput
+                          label={t("billing.quantity", "الكمية")}
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "quantity",
+                              parseInt(e.target.value),
+                            )
+                          }
+                          min={1}
+                        />
+                      </div>
+
+                      {/* Unit Price */}
+                      <div className="text-start">
+                        <AppleInput
+                          label={t("billing.unitPrice", "سعر الوحدة")}
+                          type="number"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "unit_price",
+                              parseFloat(e.target.value),
+                            )
+                          }
+                          placeholder="0.00"
+                        />
+                      </div>
+
+                      {/* VAT Rate */}
+                      <div className="text-start">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          {t("billing.vatRate", "نسبة الضريبة")}
+                        </label>
+                        <select
+                          value={item.vat_rate}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "vat_rate",
+                              Number(e.target.value) as VatRate,
+                            )
+                          }
+                          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                        >
+                          {VAT_RATES.map((rate) => (
+                            <option
+                              key={rate.value}
+                              value={rate.value}
+                            >
+                              {rate.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Total */}
+                      <div className="flex items-end gap-2 text-start">
+                        <div className="w-full">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {t("billing.total", "الإجمالي")}
+                          </label>
+                          <div className="px-4 py-2.5 bg-green-50 dark:bg-green-900/20 rounded-xl text-gray-900 dark:text-white font-medium border border-green-200 dark:border-green-800">
+                            {item.total.toFixed(3)} د.ب
+                          </div>
+                        </div>
+                        {items.length > 1 && (
+                          <button
+                            onClick={() => removeItem(index)}
+                            className="p-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors cursor-pointer"
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <SmartButton
-                        variant="ghost"
-                        onClick={onClose}
-                        disabled={isSaving}
-                      >
-                        Cancel
-                      </SmartButton>
-                      <SmartButton
-                        variant="secondary"
-                        onClick={() => handleSave(true)}
-                        loading={isSaving}
-                        disabled={isSaving}
-                      >
-                        Save as Draft
-                      </SmartButton>
-                      <SmartButton
-                        onClick={() => handleSave(false)}
-                        loading={isSaving}
-                        disabled={isSaving}
-                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                      >
-                        {isSaving ? "Saving..." : "Save Invoice"}
-                      </SmartButton>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Summary Section */}
+        {activeSection === "summary" && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Invoice Summary */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FiBarChart className="text-purple-500 flex-shrink-0" />
+                <span>{t("billing.invoiceSummaryTitle", "ملخص الفاتورة والحسابات")}</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">{t("billing.subtotal", "المجموع الفرعي:")}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {subtotal.toFixed(3)} د.ب
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">{t("billing.vatTotal", "إجمالي الضريبة:")}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {vat_total.toFixed(3)} د.ب
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">{t("billing.discountTotal", "الخصم:")}</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">
+                      -{discount_total.toFixed(3)} د.ب
+                    </span>
+                  </div>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {t("billing.grandTotal", "المجموع الكلي:")}
+                      </span>
+                      <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {total.toFixed(3)} د.b
+                      </span>
                     </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {t("billing.paidAmountLabel", "المبلغ المدفوع:")}
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {invoiceData.paid_amount.toFixed(3)} د.ب
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {t("billing.remainingBalanceLabel", "الرصيد المتبقي:")}
+                    </span>
+                    <span
+                      className={
+                        remaining_balance > 0
+                          ? "font-medium text-red-600 dark:text-red-400"
+                          : "font-medium text-green-600 dark:text-green-400"
+                      }
+                    >
+                      {remaining_balance.toFixed(3)} د.ب
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <AppleInput
+                    label={t("billing.paidAmount", "المبلغ المدفوع")}
+                    type="number"
+                    step="0.01"
+                    value={invoiceData.paid_amount}
+                    onChange={(e) =>
+                      setInvoiceData({
+                        ...invoiceData,
+                        paid_amount:
+                          parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                  />
                 </div>
               </div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      )}
-    </AnimatePresence>
+            </div>
+
+            {/* Notes Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FiFileText className="text-orange-500 flex-shrink-0" />
+                <span>{t("billing.notes", "الملاحظات")}</span>
+              </h3>
+              <AppleTextarea
+                label={t("billing.notes", "الملاحظات")}
+                value={invoiceData.notes}
+                onChange={(e) =>
+                  setInvoiceData({
+                    ...invoiceData,
+                    notes: e.target.value,
+                  })
+                }
+                placeholder={t("billing.notesPlaceholder", "أدخل أي ملاحظات إضافية للفاتورة...")}
+                rows={3}
+              />
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </SmartModal>
   );
 }

@@ -32,9 +32,8 @@ const smartInsights = [
     icon: FiTrendingDown,
     color: "red",
     actions: [
-      { label: "Apply Recommendation", action: "send_reengagement" },
-      { label: "Assign Automation", action: "create_automation" },
-      { label: "Expand Campaign", action: "expand_campaign" },
+      { label: "View At-Risk Members", action: "view_members" },
+      { label: "Assign Task", action: "create_task" },
     ],
   },
   {
@@ -48,9 +47,9 @@ const smartInsights = [
     icon: FiTrendingUp,
     color: "green",
     actions: [
-      { label: "Apply Recommendation", action: "optimize_pricing" },
-      { label: "Assign Automation", action: "upsell_campaign" },
-      { label: "Expand Campaign", action: "referral_program" },
+      { label: "Optimize Pricing", action: "optimize_pricing" },
+      { label: "View Packages", action: "view_packages" },
+      { label: "Referral Program", action: "referral_program" },
     ],
   },
   {
@@ -65,9 +64,9 @@ const smartInsights = [
     icon: FiUsers,
     color: "blue",
     actions: [
-      { label: "Apply Recommendation", action: "add_class" },
-      { label: "Assign Automation", action: "waitlist_management" },
-      { label: "Expand Campaign", action: "class_promotion" },
+      { label: "Add Class", action: "add_class" },
+      { label: "Waitlist Management", action: "waitlist_management" },
+      { label: "Promote Classes", action: "promote_classes" },
     ],
   },
   {
@@ -81,9 +80,9 @@ const smartInsights = [
     icon: FiAlertTriangle,
     color: "yellow",
     actions: [
-      { label: "Apply Recommendation", action: "trainer_support" },
-      { label: "Assign Automation", action: "performance_tracking" },
-      { label: "Expand Campaign", action: "training_program" },
+      { label: "Trainer Support", action: "trainer_support" },
+      { label: "Performance Tracking", action: "performance_tracking" },
+      { label: "Training Program", action: "training_program" },
     ],
   },
 ];
@@ -251,7 +250,7 @@ export default function ViewSmartInsightsModal({
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 selectedCategory === category.id
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               {category.label} ({category.count})
@@ -367,7 +366,7 @@ export default function ViewSmartInsightsModal({
                     Immediate Actions
                   </h5>
                   <ul className="space-y-1 text-gray-600">
-                    <li>• Send re-engagement emails to at-risk members</li>
+                    <li>• Review and contact at-risk members</li>
                     <li>• Schedule additional HIIT Blast sessions</li>
                     <li>• Implement waitlist management system</li>
                   </ul>
@@ -377,7 +376,7 @@ export default function ViewSmartInsightsModal({
                     Long-term Strategies
                   </h5>
                   <ul className="space-y-1 text-gray-600">
-                    <li>• Develop retention-focused marketing campaigns</li>
+                    <li>• Develop retention-focused member programs</li>
                     <li>• Optimize class scheduling based on demand</li>
                     <li>• Create trainer development programs</li>
                   </ul>
@@ -392,7 +391,7 @@ export default function ViewSmartInsightsModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading}
           >

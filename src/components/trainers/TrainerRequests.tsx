@@ -36,7 +36,7 @@ export default function TrainerRequests() {
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [affectedClasses, setAffectedClasses] = useState<AffectedClass[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState({
     type: "",
     status: "",

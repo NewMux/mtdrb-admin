@@ -131,7 +131,7 @@ const SocialProof: React.FC = () => {
 
                 {/* Testimonial Content */}
                 <blockquote className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
-                  <p>"{testimonial.content}"</p>
+                  <p>&quot;{testimonial.content}&quot;</p>
                 </blockquote>
 
                 {/* Author */}

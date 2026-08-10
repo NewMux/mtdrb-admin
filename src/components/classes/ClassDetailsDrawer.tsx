@@ -271,8 +271,8 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
     if (now.isAfter(end))
       return { label: "Completed", color: "bg-green-100 text-green-700" };
     if (now.isAfter(start) && now.isBefore(end))
-      return { label: "Live", color: "bg-yellow-100 text-yellow-800" };
-    return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
+      return { label: "Live", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" };
+    return { label: "Unknown", color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" };
   }
 
   if (!classData) return null;

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { FiCheck, FiArrowRight } from "react-icons/fi";
+import { FiCheck } from "react-icons/fi";
 
 const Pricing: React.FC = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -10,33 +10,30 @@ const Pricing: React.FC = () => {
   const plans = [
     {
       name: "Starter",
-      monthlyPrice: 79,
-      yearlyPrice: 59,
+      monthlyPrice: 80,
+      yearlyPrice: 65,
       description: "Perfect for single-location gyms",
       features: [
         "All core features",
         "Single location",
-        "Up to 500 members",
+        "+$20 USD/month per extra location",
         "Basic analytics",
-        "Email support",
-        "WhatsApp Assistant bot"
+        "Email support"
       ],
       popular: false
     },
     {
       name: "Pro",
-      monthlyPrice: 109,
-      yearlyPrice: 89,
+      monthlyPrice: 130,
+      yearlyPrice: 105,
       description: "For growing gym chains",
       features: [
         "Everything in Starter",
-        "Unlimited locations",
+        "$10 USD/month per extra location",
         "Unlimited members",
         "Advanced analytics",
         "Priority support",
-        "Custom integrations",
-        "Biometric access",
-        "White-label options"
+        "WhatsApp bot"
       ],
       popular: true
     }
@@ -59,7 +56,7 @@ const Pricing: React.FC = () => {
             Simple Pricing
           </h2>
           <p className="text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-12">
-            Choose the plan that fits your gym's needs
+            Choose the plan that fits your gym&apos;s needs
           </p>
 
           {/* Toggle */}
@@ -161,11 +158,11 @@ const Pricing: React.FC = () => {
             </div>
             <div>
               <h4 className="text-xl font-semibold text-white mb-2">Is there a setup fee?</h4>
-              <p className="text-gray-300">No setup fees. We'll help you migrate your data and get started at no additional cost.</p>
+              <p className="text-gray-300">No setup fees. We&apos;ll help you migrate your data and get started at no additional cost.</p>
             </div>
             <div>
               <h4 className="text-xl font-semibold text-white mb-2">What about VAT?</h4>
-              <p className="text-gray-300">All prices include VAT. We handle all tax compliance automatically for GCC businesses.</p>
+              <p className="text-gray-300">All prices include VAT. We handle all tax compliance automatically for MENAT businesses.</p>
             </div>
             <div>
               <h4 className="text-xl font-semibold text-white mb-2">Do you offer custom plans?</h4>

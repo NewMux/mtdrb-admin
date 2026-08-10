@@ -1,20 +1,26 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render } from '@testing-library/react';
 import GymSuiteScrollShowcase from './GymSuiteScrollShowcase';
 
 // Mock GSAP to avoid issues in test environment
-jest.mock('gsap', () => ({
-  registerPlugin: jest.fn(),
-  timeline: jest.fn(() => ({
-    scrollTrigger: jest.fn(),
-    kill: jest.fn(),
-  })),
-  set: jest.fn(),
-  to: jest.fn(),
-}));
+vi.mock('gsap', () => {
+  const gsap = {
+    registerPlugin: vi.fn(),
+    timeline: vi.fn(() => ({
+      scrollTrigger: vi.fn(),
+      kill: vi.fn(),
+    })),
+    set: vi.fn(),
+    to: vi.fn(),
+  };
+  return { default: gsap, ...gsap };
+});
 
-jest.mock('gsap/ScrollTrigger', () => ({
-  getAll: jest.fn(() => []),
+vi.mock('gsap/ScrollTrigger', () => ({
+  ScrollTrigger: {
+    getAll: vi.fn(() => []),
+  },
 }));
 
 describe('GymSuiteScrollShowcase', () => {

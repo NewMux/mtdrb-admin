@@ -1,14 +1,15 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiDownload,
   FiFileText,
   FiCalendar,
   FiUsers,
   FiX,
-  FiCheck,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
+import { exportCSV, exportPDF, exportExcel } from "../../../utils/exportData";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 
@@ -64,6 +65,7 @@ export default function ExportTrainerDataModal({
   onSuccess,
   isPro = false,
 }: ExportTrainerDataModalProps) {
+  const { tenantId } = useAuth();
   const [selectedOptions, setSelectedOptions] = React.useState<string[]>([
     "all-trainers",
   ]);
@@ -92,17 +94,205 @@ export default function ExportTrainerDataModal({
       return;
     }
 
+    if (!tenantId) {
+      toast.error("No tenant ID found");
+      return;
+    }
+
     setLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Calculate date range
+      const now = new Date();
+      let startDate: Date;
+      switch (dateRange) {
+        case "last-7-days":
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "last-30-days":
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "last-90-days":
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case "this-year":
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          startDate = new Date(0);
+      }
 
-    toast.success(
-      `Export completed! ${selectedOptions.length} file(s) downloaded.`,
-    );
-    setLoading(false);
-    onSuccess?.();
-    onClose();
+      // Fetch trainers
+      const { data: trainers, error: trainersError } = await supabase
+        .from("trainers")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false });
+
+      if (trainersError) throw trainersError;
+
+      // Export each selected option
+      for (const optionId of selectedOptions) {
+        const option = exportOptions.find((opt) => opt.id === optionId);
+        if (!option) continue;
+
+        let exportData: any[] = [];
+        let filename = `${option.id}-${new Date().toISOString().split("T")[0]}`;
+
+        if (optionId === "all-trainers") {
+          exportData = (trainers || []).map((trainer: any) => ({
+            "First Name": trainer.first_name || "",
+            "Last Name": trainer.last_name || "",
+            Email: trainer.email || "",
+            Phone: trainer.phone || "",
+            Status: trainer.status || "active",
+            "Specialties": Array.isArray(trainer.specialties)
+              ? trainer.specialties.join(", ")
+              : trainer.specialties || "",
+            "Hourly Rate": trainer.hourly_rate || 0,
+            "Join Date": trainer.created_at
+              ? new Date(trainer.created_at).toLocaleDateString()
+              : "N/A",
+          }));
+        } else if (optionId === "trainer-performance") {
+          // Fetch performance data for each trainer
+          const trainersWithPerformance = await Promise.all(
+            (trainers || []).map(async (trainer: any) => {
+              const { data: classes } = await supabase
+                .from("classes")
+                .select("id")
+                .eq("trainer_id", trainer.id)
+                .eq("tenant_id", tenantId)
+                .gte("created_at", startDate.toISOString());
+
+              const { data: bookings } = await supabase
+                .from("class_bookings")
+                .select("id, price")
+                .in(
+                  "class_id",
+                  (classes || []).map((c) => c.id),
+                )
+                .eq("tenant_id", tenantId);
+
+              const totalRevenue = (bookings || []).reduce(
+                (sum: number, b: any) => sum + (b.price || 0),
+                0,
+              );
+
+              return {
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                Email: trainer.email || "",
+                "Total Classes": classes?.length || 0,
+                "Total Bookings": bookings?.length || 0,
+                "Total Revenue": totalRevenue,
+                "Average Rating": trainer.average_rating || "N/A",
+                Status: trainer.status || "active",
+              };
+            }),
+          );
+
+          exportData = trainersWithPerformance;
+        } else if (optionId === "trainer-schedule") {
+          // Fetch schedule data
+          const trainersWithSchedule = await Promise.all(
+            (trainers || []).map(async (trainer: any) => {
+              const { data: classes } = await supabase
+                .from("classes")
+                .select("id, name, start_time, end_time, date, status")
+                .eq("trainer_id", trainer.id)
+                .eq("tenant_id", tenantId)
+                .gte("date", startDate.toISOString().split("T")[0])
+                .order("date", { ascending: true });
+
+              return {
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                Email: trainer.email || "",
+                "Total Classes": classes?.length || 0,
+                "Upcoming Classes": (classes || []).filter(
+                  (c: any) => c.status === "scheduled" || c.status === "active",
+                ).length,
+                "Completed Classes": (classes || []).filter(
+                  (c: any) => c.status === "completed",
+                ).length,
+                Availability: "Mon-Fri, 6AM-8PM", // TODO: Fetch from schedule table
+              };
+            }),
+          );
+
+          exportData = trainersWithSchedule;
+        } else if (optionId === "trainer-analytics" && isPro) {
+          // Comprehensive analytics (Pro only)
+          const trainersWithAnalytics = await Promise.all(
+            (trainers || []).map(async (trainer: any) => {
+              const { data: classes } = await supabase
+                .from("classes")
+                .select("id, name, date, start_time, end_time")
+                .eq("trainer_id", trainer.id)
+                .eq("tenant_id", tenantId)
+                .gte("created_at", startDate.toISOString());
+
+              const { data: bookings } = await supabase
+                .from("class_bookings")
+                .select("id, price, attended")
+                .in(
+                  "class_id",
+                  (classes || []).map((c) => c.id),
+                )
+                .eq("tenant_id", tenantId);
+
+              const totalRevenue = (bookings || []).reduce(
+                (sum: number, b: any) => sum + (b.price || 0),
+                0,
+              );
+              const attendanceRate =
+                bookings && bookings.length > 0
+                  ? ((bookings.filter((b: any) => b.attended).length /
+                      bookings.length) *
+                      100).toFixed(2)
+                  : "0";
+
+              return {
+                "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+                Email: trainer.email || "",
+                "Total Classes": classes?.length || 0,
+                "Total Bookings": bookings?.length || 0,
+                "Total Revenue": totalRevenue,
+                "Attendance Rate": `${attendanceRate}%`,
+                "Average Rating": trainer.average_rating || "N/A",
+                Status: trainer.status || "active",
+                "Specialties": Array.isArray(trainer.specialties)
+                  ? trainer.specialties.join(", ")
+                  : trainer.specialties || "",
+              };
+            }),
+          );
+
+          exportData = trainersWithAnalytics;
+        }
+
+        // Export based on format
+        if (option.format === "csv") {
+          exportCSV(exportData, filename);
+        } else if (option.format === "xlsx") {
+          await exportExcel(exportData, filename, option.name);
+        } else if (option.format === "pdf") {
+          exportPDF(exportData, filename, option.name);
+        }
+      }
+
+      toast.success(
+        `Export completed! ${selectedOptions.length} file(s) downloaded.`,
+      );
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error(
+        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {

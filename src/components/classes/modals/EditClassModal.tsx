@@ -10,7 +10,7 @@ import {
   FiCheck,
   FiBell,
 } from "react-icons/fi";
-import SmartModal from "./SmartModal";
+import { UnifiedModal } from "../../ui/UnifiedModal";
 import {
   FormField,
   SelectField,
@@ -21,6 +21,8 @@ import {
   ConflictAlert,
 } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface EditClassModalProps {
   isOpen: boolean;
@@ -52,6 +54,8 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [formData, setFormData] = useState<ClassFormData>({
     name: "",
     description: "",
@@ -197,62 +201,65 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
   if (!classData) {
     return (
-      <SmartModal
+      <UnifiedModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Edit Class"
-        subtitle="Loading class data..."
+        title={t("classes.editClass", "تعديل الحصة")}
+        subtitle={t("classes.loadingClassData", "جاري تحميل بيانات الحصة...")}
+        maxWidth="4xl"
+        slideFrom="right"
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </SmartModal>
+      </UnifiedModal>
     );
   }
 
   return (
-    <SmartModal
+    <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Class"
-      subtitle={`Update ${classData.name} details`}
-      isPro={isPro}
-      proFeature="Smart Optimized"
+      title={t("classes.editClass", "تعديل الحصة")}
+      subtitle={`${t("classes.update", "تحديث تفاصيل")} ${classData.name}`}
+      isProFeature={isPro}
+      maxWidth="4xl"
+      slideFrom="right"
       footer={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-4 w-full">
+          <div className="flex items-center gap-2">
             {isPro && recommendations.length > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
-                <FiZap className="h-4 w-4" />
-                <span>{recommendations.length} Smart suggestions</span>
+              <div className="flex items-center gap-1 text-sm text-blue-600">
+                <FiZap className="h-4 w-4 flex-shrink-0" />
+                <span>{t("classes.smartSuggestions", `${recommendations.length} مقترحات ذكية`)}</span>
               </div>
             )}
             {hasChanges() && (
-              <div className="flex items-center space-x-1 text-sm text-orange-600">
-                <FiAlertCircle className="h-4 w-4" />
-                <span>Changes detected</span>
+              <div className="flex items-center gap-1 text-sm text-orange-600">
+                <FiAlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{t("classes.changesDetected", "تم اكتشاف تغييرات")}</span>
               </div>
             )}
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Cancel
+              {t("common.cancel", "إلغاء")}
             </button>
             <button
               onClick={handleSave}
               disabled={!isFormValid || loading}
-              className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Updating..." : "Update Class"}
+              {loading ? t("classes.updating", "جاري التحديث...") : t("classes.updateClass", "تحديث الحصة")}
             </button>
           </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Class Status */}
         <div className="p-4 bg-light-50 dark:bg-dark-700 rounded-xl border border-light-200 dark:border-dark-600">
           <div className="flex items-center justify-between">
@@ -282,8 +289,8 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         {/* Smart Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
-            title="Smart Recommendations"
-            subtitle="Smart suggestions to optimize your class"
+            title={t("classes.smartRecommendations")}
+            subtitle={t("classes.smartSuggestionsToOptimize") || "Smart suggestions to optimize your class"}
             icon={<FiZap className="h-5 w-5" />}
             collapsible={true}
             defaultOpen={true}
@@ -338,7 +345,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
         {/* Trainer & Location */}
         <FormSection
-          title="Trainer & Location"
+          title={t("classes.trainerLocation")}
           subtitle="Assign trainer and select room"
           icon={<FiUser className="h-5 w-5" />}
         >
@@ -469,7 +476,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         {/* Conflict Alert */}
         <ConflictAlert conflicts={conflicts} />
       </div>
-    </SmartModal>
+    </UnifiedModal>
   );
 };
 

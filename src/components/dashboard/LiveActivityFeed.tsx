@@ -269,39 +269,39 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
   return (
     <div className="p-6 space-y-6">
       {/* Header with Stats */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <FiActivity className="h-6 w-6 text-green-500 mr-3" />
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Live Activity Feed
             </h2>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-4 text-sm">
               <div className="text-center">
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
                   {activityStats.total}
                 </p>
-                <p className="text-gray-600">Total</p>
+                <p className="text-gray-600 dark:text-gray-400">Total</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-blue-600">
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {activityStats.members}
                 </p>
-                <p className="text-gray-600">Members</p>
+                <p className="text-gray-600 dark:text-gray-400">Members</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   {activityStats.payments}
                 </p>
-                <p className="text-gray-600">Payments</p>
+                <p className="text-gray-600 dark:text-gray-400">Payments</p>
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-purple-600">
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                   {activityStats.classes}
                 </p>
-                <p className="text-gray-600">Classes</p>
+                <p className="text-gray-600 dark:text-gray-400">Classes</p>
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
 
         {/* Filters */}
         <div className="flex items-center space-x-2">
-          <FiFilter className="h-4 w-4 text-gray-500" />
+          <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           <div className="flex space-x-2">
             {[
               { id: "all", label: "All" },
@@ -324,7 +324,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                   filter === filterOption.id
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
                 {filterOption.label}
@@ -335,17 +335,17 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
       </div>
 
       {/* Activity Feed */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {filteredActivities.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               No activities to display
             </div>
           ) : (
             filteredActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start space-x-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+                className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div
                   className={`p-2 rounded-lg ${getActivityColor(activity.type, activity.status)}`}
@@ -355,14 +355,14 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         {activity.description}
                       </p>
                       {activity.user && (
-                        <p className="text-sm text-blue-600 mt-1">
+                        <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
                           by {activity.user}
                         </p>
                       )}
@@ -370,13 +370,13 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
                     <div className="text-right">
                       <div className="flex items-center space-x-2 mb-1">
                         {activity.amount && (
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-gray-900 dark:text-white">
                             {activity.amount}
                           </span>
                         )}
                         {getStatusBadge(activity.status)}
                       </div>
-                      <p className="text-xs text-gray-500 flex items-center">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                         <FiClock className="h-3 w-3 mr-1" />
                         {new Date(activity.created_at).toLocaleString()}
                       </p>
@@ -391,29 +391,29 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({
 
       {/* Activity Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Hourly Activity</p>
-              <p className="text-2xl font-bold text-gray-900">24</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Hourly Activity</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">24</p>
             </div>
             <FiTrendingUp className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Peak Hour</p>
-              <p className="text-2xl font-bold text-gray-900">6-7 PM</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Peak Hour</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">6-7 PM</p>
             </div>
             <FiClock className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Success Rate</p>
-              <p className="text-2xl font-bold text-gray-900">94.2%</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Success Rate</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">94.2%</p>
             </div>
             <FiActivity className="h-8 w-8 text-purple-500" />
           </div>

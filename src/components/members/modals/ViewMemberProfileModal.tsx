@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   FiUser,
   FiMail,
@@ -11,11 +11,11 @@ import {
   FiFileText,
   FiActivity,
   FiTrendingUp,
-  FiClock,
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
-import { SmartButton } from "../../ui/DesignSystem";
 import { Member } from "../../../types/member";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface ViewMemberProfileModalProps {
   isOpen: boolean;
@@ -28,18 +28,18 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
   isOpen,
   onClose,
   member,
-  modalRef,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+
   if (!member) {
     return null;
   }
 
-  const memberName = member.name ?? "Member";
+  const memberName = member.name ?? "عضو";
   const status = member.status ?? "inactive";
   const membershipLabel =
     member.membership_type ?? member.membershipType ?? "Standard";
-  const fitnessLabel = member.fitness_level ?? "Beginner";
-  const fitnessKey = fitnessLabel.toLowerCase();
   const avatarInitials = memberName
     .split(" ")
     .filter(Boolean)
@@ -84,41 +84,28 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
     }
   };
 
-  const getFitnessLevelColor = (level: string) => {
-    switch (level) {
-      case "beginner":
-        return "bg-blue-100 text-blue-800";
-      case "intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "advanced":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
         <SmartModal
           isOpen={isOpen}
           onClose={onClose}
-          title="Member Profile"
-          subtitle={`Viewing profile for ${memberName}`}
+          title={t("members.viewProfileTitle", "الملف الشخصي للعضو")}
+          subtitle={t("members.viewProfileSubtitle", `عرض الملف الشخصي للعضو ${memberName}`)}
         >
-          <div className="space-y-8">
+          <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Header with Avatar and Basic Info */}
-            <div className="flex items-start gap-5 pb-6 border-b border-gray-100">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-4 ring-sky-100">
+            <div className="flex items-start gap-5 pb-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-4 ring-sky-100 flex-shrink-0">
                 <span className="text-white font-semibold text-xl">
                   {avatarInitials}
                 </span>
               </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              <div className="flex-1 text-start">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {memberName}
                 </h2>
-                <p className="text-gray-600 font-medium mb-3">
+                <p className="text-gray-600 dark:text-gray-400 font-medium mb-3">
                   {member.email}
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -127,7 +114,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       status,
                     )}`}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {status === "active" ? t("common.active", "نشط") : t("common.inactive", "غير نشط")}
                   </span>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getMembershipColor(
@@ -136,44 +123,37 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   >
                     {membershipLabel}
                   </span>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold ${getFitnessLevelColor(
-                      fitnessKey,
-                    )}`}
-                  >
-                    {fitnessLabel}
-                  </span>
                 </div>
               </div>
             </div>
 
             {/* Contact Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <FiUser className="w-5 h-5 mr-2" />
-                Contact Information
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <FiUser className="w-5 h-5 text-blue-600" />
+                <span>{t("members.contactInformation", "معلومات الاتصال")}</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 bg-white rounded-lg">
-                    <FiMail className="w-4 h-4 text-gray-500" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div className="p-2 bg-white dark:bg-gray-700 rounded-lg flex-shrink-0">
+                    <FiMail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Email</p>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="text-start">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">{t("members.email", "البريد الإلكتروني")}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {member.email}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 bg-white rounded-lg">
-                    <FiPhone className="w-4 h-4 text-gray-500" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div className="p-2 bg-white dark:bg-gray-700 rounded-lg flex-shrink-0">
+                    <FiPhone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Phone</p>
-                    <p className="text-sm font-medium text-gray-900">
+                  <div className="text-start">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">{t("members.phone", "رقم الهاتف")}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {member.phone}
                     </p>
                   </div>

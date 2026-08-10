@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { Member } from "../../../types/member";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 type EditMemberForm = {
   name: string;
@@ -72,6 +74,8 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
   onSuccess,
   loading = false,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -161,33 +165,34 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
         <SmartModal
           isOpen={isOpen}
           onClose={onClose}
-          title="Edit Member"
-          subtitle="Update member information"
+          title={t("members.editMember")}
+          subtitle={t("members.updateMemberInfo")}
           maxWidth="max-w-3xl"
           footer={
-            <div className="flex items-center justify-end w-full">
+            <div className="flex items-center justify-end gap-3 w-full">
               <SmartButton
                 variant="secondary"
                 onClick={onClose}
                 disabled={isLoading || loading}
                 className="px-6 py-2.5"
               >
-                Cancel
+                {t("members.cancel", "إلغاء")}
               </SmartButton>
               <SmartButton
                 variant="primary"
                 onClick={handleSubmit(onSubmit)}
                 loading={isLoading || loading}
                 disabled={!isValid}
-                className="px-6 py-2.5 ml-3"
+                className="px-6 py-2.5"
               >
-                {isLoading || loading ? "Updating..." : "Update Member"}
+                {isLoading || loading ? t("members.updating", "جاري التحديث...") : t("members.updateMember", "تحديث بيانات العضو")}
               </SmartButton>
             </div>
           }
         >
           <form
-            className="space-y-10"
+            className="space-y-10 text-start"
+            dir={isRTL ? "rtl" : "ltr"}
             onSubmit={(e) => {
               e.preventDefault();
               handleSubmit(onSubmit)();
@@ -200,23 +205,23 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
               transition={{ delay: 0.1 }}
               className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 p-8 mb-6"
             >
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
                   <FiUser className="h-5 w-5 text-blue-600" />
                 </div>
-                <div>
+                <div className="text-start">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Basic Information
+                    {t("members.basicInformation", "المعلومات الأساسية")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Member's personal details
+                    {t("members.personalDetails", "البيانات الشخصية للعضو")}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
+                <div className="text-start">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Full Name *
+                    {t("members.fullName", "الاسم الكامل")} *
                   </label>
                   <Controller
                     name="name"
@@ -225,8 +230,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       <input
                         {...field}
                         type="text"
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter full name"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-start"
+                        placeholder={t("members.enterFullName", "أدخل الاسم الكامل")}
+                        dir={isRTL ? "rtl" : "ltr"}
                       />
                     )}
                   />
@@ -236,9 +242,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="text-start">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Age *
+                    {t("members.age", "العمر")} *
                   </label>
                   <Controller
                     name="age"
@@ -247,8 +253,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       <input
                         {...field}
                         type="number"
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter age"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-start"
+                        placeholder={t("members.enterAge", "أدخل العمر")}
+                        dir={isRTL ? "rtl" : "ltr"}
                       />
                     )}
                   />
@@ -258,9 +265,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="text-start">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Gender *
+                    {t("members.gender", "الجنس")} *
                   </label>
                   <Controller
                     name="gender"
@@ -268,12 +275,13 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                     render={({ field }) => (
                       <select
                         {...field}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-start"
+                        dir={isRTL ? "rtl" : "ltr"}
                       >
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="">{t("members.selectGender", "اختر الجنس")}</option>
+                        <option value="Male">{t("members.male", "ذكر")}</option>
+                        <option value="Female">{t("members.female", "أنثى")}</option>
+                        <option value="Other">{t("members.other", "آخر")}</option>
                       </select>
                     )}
                   />

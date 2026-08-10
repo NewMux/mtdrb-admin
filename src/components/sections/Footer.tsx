@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { FiGlobe } from "react-icons/fi";
 
 const Footer: React.FC = () => {
@@ -16,7 +15,7 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold">MTDRB</span>
             </div>
             <p className="text-gray-300 max-w-md leading-relaxed">
-              The gym operating system for the GCC. Built for power, designed for growth.
+              The gym operating system for MENAT. Built for power, designed for growth.
             </p>
           </div>
 

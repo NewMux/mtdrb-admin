@@ -15,7 +15,6 @@ import {
   FiX,
   FiCheck,
 } from "react-icons/fi";
-import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 
 interface ReportGeneratorProps {
@@ -707,7 +706,7 @@ export default function ReportGenerator({
 
               {/* Export Options */}
               <div className="relative group">
-                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                   <FiDownload className="text-sm" />
                   Export
                 </button>

@@ -5,7 +5,7 @@ interface TaskGeneratorProps {
   refreshKey: number;
 }
 
-export const TaskGenerator: React.FC<TaskGeneratorProps> = ({ refreshKey }) => {
+export const TaskGenerator: React.FC<TaskGeneratorProps> = () => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">

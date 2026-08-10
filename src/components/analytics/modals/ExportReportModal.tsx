@@ -8,6 +8,10 @@ import {
   FiAlertTriangle,
   FiRefreshCw,
 } from "react-icons/fi";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
+import { exportCSV, exportPDF, exportExcel, exportJSON } from "../../../utils/exportData";
+import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
@@ -81,6 +85,7 @@ export default function ExportReportModal({
   onSuccess,
   isPro,
 }: ExportReportModalProps) {
+  const { tenantId } = useAuth();
   const { loading, generateReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
 
@@ -98,15 +103,194 @@ export default function ExportReportModal({
   }, [open, clearAlerts]);
 
   const handleExport = async () => {
-    if (!selectedReport) return;
+    if (!selectedReport) {
+      toast.error("Please select a report to export");
+      return;
+    }
+
+    if (!tenantId) {
+      toast.error("No tenant ID found");
+      return;
+    }
 
     setExporting(true);
     try {
+      const report = savedReports.find((r) => r.id === selectedReport);
+      if (!report) {
+        toast.error("Report not found");
+        return;
+      }
+
+      let exportData: any[] = [];
+
+      // Generate report data based on selected report
+      if (report.id === "1") {
+        // Member Overview Report
+        const [membersResult, invoicesResult, bookingsResult] = await Promise.all([
+          supabase
+            .from("members")
+            .select("id, first_name, last_name, email, status, created_at")
+            .eq("tenant_id", tenantId),
+          supabase
+            .from("invoices")
+            .select("id, member_id, amount, status, created_at")
+            .eq("tenant_id", tenantId),
+          supabase
+            .from("class_bookings")
+            .select("id, member_id, class_id, attended, created_at")
+            .eq("tenant_id", tenantId),
+        ]);
+
+        if (membersResult.error) throw membersResult.error;
+        if (invoicesResult.error) throw invoicesResult.error;
+        if (bookingsResult.error) throw bookingsResult.error;
+
+        const members = membersResult.data || [];
+        const invoices = invoicesResult.data || [];
+        const bookings = bookingsResult.data || [];
+
+        exportData = members.map((member: any) => {
+          const memberInvoices = invoices.filter(
+            (inv: any) => inv.member_id === member.id,
+          );
+          const memberBookings = bookings.filter(
+            (book: any) => book.member_id === member.id,
+          );
+          const totalSpent = memberInvoices.reduce(
+            (sum: number, inv: any) => sum + (inv.amount || 0),
+            0,
+          );
+          const attendanceRate =
+            memberBookings.length > 0
+              ? ((memberBookings.filter((b: any) => b.attended).length /
+                  memberBookings.length) *
+                  100).toFixed(2)
+              : "0";
+
+          return {
+            "Member Name": `${member.first_name || ""} ${member.last_name || ""}`.trim() || member.email,
+            Email: member.email || "",
+            Status: member.status || "active",
+            "Join Date": member.created_at
+              ? new Date(member.created_at).toLocaleDateString()
+              : "N/A",
+            "Total Spent": totalSpent,
+            "Total Bookings": memberBookings.length,
+            "Attendance Rate": `${attendanceRate}%`,
+          };
+        });
+      } else if (report.id === "2") {
+        // Financial Summary Q4
+        const [invoicesResult, expensesResult] = await Promise.all([
+          supabase
+            .from("invoices")
+            .select("id, amount, status, created_at, vat_amount")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", "2023-10-01")
+            .lte("created_at", "2023-12-31"),
+          supabase
+            .from("expenses")
+            .select("id, amount, category, date")
+            .eq("tenant_id", tenantId)
+            .gte("date", "2023-10-01")
+            .lte("date", "2023-12-31"),
+        ]);
+
+        if (invoicesResult.error) throw invoicesResult.error;
+        if (expensesResult.error) throw expensesResult.error;
+
+        const invoices = invoicesResult.data || [];
+        const expenses = expensesResult.data || [];
+
+        const totalRevenue = invoices.reduce(
+          (sum: number, inv: any) => sum + (inv.amount || 0),
+          0,
+        );
+        const totalExpenses = expenses.reduce(
+          (sum: number, exp: any) => sum + (exp.amount || 0),
+          0,
+        );
+        const totalVAT = invoices.reduce(
+          (sum: number, inv: any) => sum + (inv.vat_amount || 0),
+          0,
+        );
+
+        exportData = [
+          {
+            Period: "Q4 2023",
+            "Total Revenue": totalRevenue,
+            "Total Expenses": totalExpenses,
+            "Total VAT": totalVAT,
+            "Net Profit": totalRevenue - totalExpenses,
+            "Profit Margin": totalRevenue > 0
+              ? `${(((totalRevenue - totalExpenses) / totalRevenue) * 100).toFixed(2)}%`
+              : "0%",
+            "Total Invoices": invoices.length,
+            "Total Expenses Count": expenses.length,
+          },
+        ];
+      } else if (report.id === "3") {
+        // Custom Report Template
+        const [membersResult, bookingsResult] = await Promise.all([
+          supabase
+            .from("members")
+            .select("id, first_name, last_name, email")
+            .eq("tenant_id", tenantId),
+          supabase
+            .from("class_bookings")
+            .select("id, member_id, class_id, attended, price, created_at")
+            .eq("tenant_id", tenantId),
+        ]);
+
+        if (membersResult.error) throw membersResult.error;
+        if (bookingsResult.error) throw bookingsResult.error;
+
+        const members = membersResult.data || [];
+        const bookings = bookingsResult.data || [];
+
+        exportData = members.map((member: any) => {
+          const memberBookings = bookings.filter(
+            (book: any) => book.member_id === member.id,
+          );
+          const totalSpent = memberBookings.reduce(
+            (sum: number, book: any) => sum + (book.price || 0),
+            0,
+          );
+
+          return {
+            "Member Name": `${member.first_name || ""} ${member.last_name || ""}`.trim() || member.email,
+            Email: member.email || "",
+            "Total Bookings": memberBookings.length,
+            "Total Spent": totalSpent,
+            "Attended Classes": memberBookings.filter((b: any) => b.attended).length,
+          };
+        });
+      }
+
+      const filename = `${report.name.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`;
+
+      // Export based on format
+      if (exportFormat === "csv") {
+        exportCSV(exportData, filename);
+      } else if (exportFormat === "excel") {
+        await exportExcel(exportData, filename, report.name);
+      } else if (exportFormat === "pdf") {
+        exportPDF(exportData, filename, report.name);
+      } else if (exportFormat === "json") {
+        exportJSON(exportData, filename);
+      }
+
       const result = await generateReport();
       if (result.success) {
+        toast.success("Report exported successfully");
         onSuccess?.();
         onClose();
       }
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error(
+        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setExporting(false);
     }
@@ -330,7 +514,7 @@ export default function ExportReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading || exporting}
           >

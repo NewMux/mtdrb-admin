@@ -11,7 +11,8 @@ import {
   FiAlertCircle,
   FiDollarSign,
 } from "react-icons/fi";
-import SmartModal from "./SmartModal";
+import { UnifiedModal } from "../../ui/UnifiedModal";
+import { useTranslation } from "react-i18next";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface ClassMember {
@@ -50,6 +51,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_loading, setLoading] = useState(false);
   const [members, setMembers] = useState<ClassMember[]>([]);
@@ -165,26 +167,29 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
 
   if (!classData) {
     return (
-      <SmartModal
+      <UnifiedModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Class Details"
-        subtitle="Loading class data..."
+        title={t("classes.classDetailsTitle")}
+        subtitle={t("classes.loading") || "Loading class data..."}
+        maxWidth="5xl"
+        slideFrom="right"
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </SmartModal>
+      </UnifiedModal>
     );
   }
 
   return (
-    <SmartModal
+    <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
       title="Class Details"
       subtitle={classData.name}
       maxWidth="5xl"
+      slideFrom="right"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -607,7 +612,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
           )}
         </div>
       </div>
-    </SmartModal>
+    </UnifiedModal>
   );
 };
 

@@ -7,13 +7,13 @@ export const LANDING_CONTENT = {
   hero: {
     badge: {
       icon: "play",
-      text: "GCC Fitness Technology",
+      text: "MENAT Fitness Technology",
     },
     headline: {
       primary: "Built for Power.",
       secondary: "Designed for Growth.",
     },
-    subtitle: "The gym operating system for the GCC",
+    subtitle: "The gym operating system for MENAT",
     cta: {
       primary: {
         text: "Book Demo",
@@ -149,34 +149,31 @@ export const LANDING_CONTENT = {
     plans: [
       {
         name: "Starter",
-        monthlyPrice: 79,
-        yearlyPrice: 59,
+        monthlyPrice: 80,
+        yearlyPrice: 65,
         description: "Perfect for single-location gyms",
         features: [
           "All core features",
           "Single location",
-          "+$20 USD per extra location",
+          "+$20 USD/month per extra location",
           "Basic analytics",
           "Email support",
-          "WhatsApp Assistant bot",
         ],
         popular: false,
         cta: "Get Started",
       },
       {
         name: "Pro",
-        monthlyPrice: 109,
-        yearlyPrice: 89,
+        monthlyPrice: 130,
+        yearlyPrice: 105,
         description: "For growing gym chains",
         features: [
           "Everything in Starter",
-          "$10 USD per extra location",
+          "$10 USD/month per extra location",
           "Unlimited members",
           "Advanced analytics",
           "Priority support",
-          "Custom integrations",
-          "Biometric access",
-          "White-label options",
+          "WhatsApp bot",
         ],
         popular: true,
         cta: "Get Started",
@@ -198,7 +195,7 @@ export const LANDING_CONTENT = {
         {
           question: "What about VAT?",
           answer:
-            "All prices include VAT. We handle all tax compliance automatically for GCC businesses.",
+            "All prices include VAT. We handle all tax compliance automatically for MENAT businesses.",
         },
         {
           question: "Do you offer custom plans?",
@@ -210,7 +207,7 @@ export const LANDING_CONTENT = {
   },
 
   socialProof: {
-    headline: "Trusted by gyms across the GCC",
+    headline: "Trusted by gyms across MENAT",
     testimonials: [
       {
         name: "Ahmed Al-Mansoori",
@@ -257,7 +254,7 @@ export const LANDING_CONTENT = {
 
   footer: {
     description:
-      "The gym operating system for the GCC. Built for power, designed for growth.",
+      "The gym operating system for MENAT. Built for power, designed for growth.",
     links: {
       product: [
         { text: "Features", href: "#features" },

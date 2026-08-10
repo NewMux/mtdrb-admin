@@ -1,47 +1,24 @@
-import React, { useEffect, useState, Fragment, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useEffect, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format, addMonths, addYears } from "date-fns";
+import { format } from "date-fns";
 import { supabase } from "../../supabaseClient";
 import { Member } from "../../types/member";
 import dayjs from "dayjs";
 import { useWorkoutPlans } from "../../contexts/WorkoutPlansContext";
 import {
-  FiX,
-  FiUser,
   FiMail,
-  FiPhone,
-  FiCalendar,
   FiDollarSign,
-  FiTag,
-  FiFileText,
   FiShield,
-  FiBriefcase,
-  FiArrowLeft,
-  FiArrowRight,
   FiCheck,
-  FiSave,
-  FiMapPin,
-  FiTarget,
   FiHeart,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { useUI } from "../../contexts/UIContext";
-import {
-  AppleStyleModal,
-  AppleInput,
-  AppleSelect,
-  AppleTextarea,
-  AppleToggle,
-  AppleButton,
-  AppleButtonGroup,
-} from "../AppleStyleModal";
-import * as Dialog from "@radix-ui/react-dialog";
 // ColorfulModalUI replaced with SmartModal
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 interface MemberFormModalProps {
   isOpen: boolean;
@@ -333,19 +310,14 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
   onSaved,
   member,
 }) => {
-  const [session, setSession] = useState<any>(null);
+  const [, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [duplicateStatus, setDuplicateStatus] = useState<{
-    loading: boolean;
-    message: string | null;
-  }>({ loading: false, message: null });
-  const { plans: workoutPlans, loading: plansLoading } = useWorkoutPlans();
+  const [, setError] = useState<string | null>(null);
+  useWorkoutPlans();
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showFitnessInfo, setShowFitnessInfo] = useState(false);
+  const [, setBranches] = useState<Branch[]>([]);
+  const [selectedTags] = useState<string[]>([]);
   const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0].code);
   // Removed setDrawerOpen - this component uses Dialog, not drawer
 
@@ -518,7 +490,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     reset,
@@ -531,7 +502,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
 
   // 🚀 MULTI-STEP NAVIGATION STATE
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
   const steps = [
     { id: 0, title: "Member Details", icon: "👤" },
@@ -539,20 +509,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     { id: 2, title: "Goals & Schedule", icon: "🎯" },
     { id: 3, title: "Setup & Features", icon: "💳" },
   ];
-
-  const nextStep = () => {
-    if (validateRequiredFields() && currentStep < steps.length - 1) {
-      setCompletedSteps((prev) => [...prev, currentStep]);
-      setCurrentStep(currentStep + 1);
-      setValidationErrors([]); // Clear errors when moving to next step
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
 
   const goToStep = (stepIndex: number) => {
     setCurrentStep(stepIndex);
@@ -573,7 +529,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Member Information
         </h3>
         <p className="text-sm text-gray-600">
-          Enter the member's basic details and contact information
+          Enter the member&apos;s basic details and contact information
         </p>
       </div>
 
@@ -863,7 +819,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Health & Fitness Profile
         </h3>
         <p className="text-sm text-gray-600">
-          Record the member's health information and fitness background
+          Record the member&apos;s health information and fitness background
         </p>
       </div>
 
@@ -1030,7 +986,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Goals & Preferences
         </h3>
         <p className="text-sm text-gray-600">
-          Configure the member's fitness goals and workout preferences
+          Configure the member&apos;s fitness goals and workout preferences
         </p>
       </div>
 
@@ -1438,7 +1394,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
               </span>
             </label>
             <p className="text-xs text-gray-500 ml-6">
-              Member's subscription will auto-renew
+              Member&apos;s subscription will auto-renew
             </p>
           </div>
 
@@ -1795,27 +1751,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     return () => subscription.unsubscribe();
   }, [watch, setValue, calculateEndDate]);
 
-  // Smart validation feedback
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  const validateRequiredFields = useCallback(() => {
-    const errors: string[] = [];
-    const currentValues = watch();
-
-
-    // Only validate the most essential fields for member creation
-    if (!currentValues.name?.trim()) errors.push("Full Name is required");
-    if (!currentValues.phone?.trim()) errors.push("Phone Number is required");
-    if (!currentValues.gender) errors.push("Gender is required");
-    if (!currentValues.start_date) errors.push("Start Date is required");
-    if (!currentValues.end_date) errors.push("End Date is required");
-    if (!currentValues.membership_status)
-      errors.push("Membership Status is required");
-
-    setValidationErrors(errors);
-    return errors.length === 0;
-  }, [watch]);
-
   // Reset form when modal opens or member changes
   useEffect(() => {
     if (isOpen) {
@@ -2015,31 +1950,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     };
   }, []);
 
-  // Duplicate Check
-  const checkDuplicate = async (field: "email" | "phone", value: string) => {
-    if (!value) return;
-    setDuplicateStatus({ loading: true, message: null });
-    const { data, error } = await supabase
-      .from("members")
-      .select("id, name")
-      .eq(field, value)
-      .limit(1);
-
-    if (data && data.length > 0 && data[0].id !== member?.id) {
-      setDuplicateStatus({
-        loading: false,
-        message: `Member with this ${field} already exists: ${data[0].name}`,
-      });
-    } else {
-      setDuplicateStatus({ loading: false, message: null });
-    }
-  };
-
-  // Phone input handler
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue("phone", e.target.value.replace(/[^0-9]/g, ""));
-  };
-
   const onSubmit = async (data: MemberFormData) => {
     setIsLoading(true);
     setError(null);
@@ -2078,6 +1988,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     const {
       create_invoice,
       invoice_amount,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       invoice_items,
       invoice_due_date,
       payment_method,
@@ -2298,12 +2209,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
   };
 
   // Removed setDrawerOpen useEffect - this component uses Dialog, not drawer

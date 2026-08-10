@@ -7,12 +7,7 @@ interface CommunicationTabProps {
   futureMessages: any[];
 }
 
-const CommunicationTab: React.FC<CommunicationTabProps> = ({
-  log,
-  staffNotes,
-  onStaffNotesChange,
-  futureMessages,
-}) => {
+const CommunicationTab: React.FC<CommunicationTabProps> = () => {
   return <div className="p-6">{/* TODO: Log, notes, future messages */}</div>;
 };
 

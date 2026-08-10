@@ -5,7 +5,7 @@ import {
   FiCheck,
   FiStar,
 } from "react-icons/fi";
-import SmartModal from "./SmartModal";
+import { UnifiedModal } from "../../ui/UnifiedModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface WaitlistMember {
@@ -189,26 +189,29 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
 
   if (!classData) {
     return (
-      <SmartModal
+      <UnifiedModal
         isOpen={isOpen}
         onClose={onClose}
         title="Process Waitlist"
         subtitle="Loading class data..."
+        maxWidth="4xl"
+        slideFrom="right"
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </SmartModal>
+      </UnifiedModal>
     );
   }
 
   return (
-    <SmartModal
+    <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
       title="Process Waitlist"
       subtitle={`Manage waitlist for ${classData.name}`}
       maxWidth="4xl"
+      slideFrom="right"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -436,7 +439,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
           </div>
         )}
       </div>
-    </SmartModal>
+    </UnifiedModal>
   );
 };
 

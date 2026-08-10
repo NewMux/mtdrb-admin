@@ -5,14 +5,11 @@ import {
   FiPackage,
   FiPlus,
   FiSearch,
-  FiFilter,
   FiDollarSign,
   FiUsers,
-  FiCalendar,
   FiTrendingUp,
   FiZap,
   FiBarChart,
-  FiList,
   FiActivity,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
@@ -50,7 +47,7 @@ interface Plan {
 
 export default function Plans() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [, setUser] = useState<any>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

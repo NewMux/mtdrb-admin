@@ -1,5 +1,4 @@
 import { supabase } from "../supabaseClient";
-import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 
 export interface RealtimeNotification {
@@ -105,8 +104,8 @@ class RealtimeService {
               start_time: updatedClass.start_time,
             };
 
-            // Only send to trainers and admins
-            if (["admin", "manager", "trainer"].includes(userRole)) {
+            // Only send to trainers, employees, and admins
+            if (["admin", "employee", "trainer"].includes(userRole)) {
               callback(alert);
               this.showCapacityAlert(alert);
             }
@@ -198,7 +197,7 @@ class RealtimeService {
   }
 
   // Send class capacity alert
-  async sendClassCapacityAlert(classId: string, tenantId: string) {
+  async sendClassCapacityAlert(classId: string) {
     const { data: classData } = await supabase
       .from("classes")
       .select("name, current_bookings, capacity, trainer_id, start_time")
@@ -214,7 +213,7 @@ class RealtimeService {
           type: "class_capacity_alert",
           title: "Class Almost Full",
           message: `${classData.name} is ${Math.round(utilizationPercent)}% full (${classData.current_bookings}/${classData.capacity})`,
-          targetRoles: ["admin", "manager", "trainer"],
+          targetRoles: ["admin", "employee", "trainer"],
           targetUsers: [classData.trainer_id],
           priority: utilizationPercent === 100 ? "urgent" : "high",
           metadata: {
@@ -323,7 +322,7 @@ class RealtimeService {
 
   // Cleanup method
   unsubscribeAll() {
-    this.subscriptions.forEach((subscription, key) => {
+    this.subscriptions.forEach((subscription) => {
       subscription.unsubscribe();
     });
     this.subscriptions.clear();

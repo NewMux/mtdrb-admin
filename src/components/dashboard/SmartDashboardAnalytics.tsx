@@ -13,6 +13,8 @@ import {
 } from "react-icons/fi";
 import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 import { supabase } from "../../supabaseClient";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface SmartDashboardAnalyticsProps {
   refreshKey: number;
@@ -111,6 +113,8 @@ const getDateRange = (
 export default function SmartDashboardAnalytics({
   refreshKey,
 }: SmartDashboardAnalyticsProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [selectedTimeRange, setSelectedTimeRange] = useState<
     "week" | "month" | "quarter" | "year"
   >("month");
@@ -296,7 +300,7 @@ export default function SmartDashboardAnalytics({
       // Build metrics array
       const metrics: DashboardMetric[] = [
         {
-          name: "Total Revenue",
+          name: t("dashboard.totalRevenue"),
           current: currentRevenue,
           previous: previousRevenue,
           target: 50000,
@@ -306,7 +310,7 @@ export default function SmartDashboardAnalytics({
           color: "green",
         },
         {
-          name: "Active Members",
+          name: t("dashboard.activeMembers"),
           current: currentActiveMembers,
           previous: previousActiveMembers,
           target: 1300,
@@ -316,7 +320,7 @@ export default function SmartDashboardAnalytics({
           color: "blue",
         },
         {
-          name: "Class Attendance",
+          name: t("dashboard.classAttendance"),
           current: currentAttendance,
           previous: previousAttendance,
           target: 85,
@@ -326,7 +330,7 @@ export default function SmartDashboardAnalytics({
           color: "purple",
         },
         {
-          name: "Trainer Rating",
+          name: t("dashboard.trainerRating"),
           current: Math.round(avgRating * 10) / 10,
           previous: Math.round(previousAvgRating * 10) / 10,
           target: 4.8,
@@ -336,7 +340,7 @@ export default function SmartDashboardAnalytics({
           color: "yellow",
         },
         {
-          name: "Member Retention",
+          name: t("dashboard.memberRetention"),
           current: retentionRate,
           previous: previousRetentionRate,
           target: 90,
@@ -346,7 +350,7 @@ export default function SmartDashboardAnalytics({
           color: "red",
         },
         {
-          name: "Gym Health Score",
+          name: t("dashboard.gymHealthScore"),
           current: healthScore,
           previous: previousHealthScore,
           target: 95,
@@ -363,7 +367,7 @@ export default function SmartDashboardAnalytics({
       // Set empty metrics on error instead of hardcoded fallback
       setDashboardMetrics([
         {
-          name: "Total Revenue",
+          name: t("dashboard.totalRevenue"),
           current: 0,
           previous: 0,
           target: 0,
@@ -373,7 +377,7 @@ export default function SmartDashboardAnalytics({
           color: "green",
         },
         {
-          name: "Active Members",
+          name: t("dashboard.activeMembers"),
           current: 0,
           previous: 0,
           target: 0,
@@ -383,7 +387,7 @@ export default function SmartDashboardAnalytics({
           color: "blue",
         },
         {
-          name: "Class Attendance",
+          name: t("dashboard.classAttendance"),
           current: 0,
           previous: 0,
           target: 85,
@@ -393,7 +397,7 @@ export default function SmartDashboardAnalytics({
           color: "purple",
         },
         {
-          name: "Trainer Rating",
+          name: t("dashboard.trainerRating"),
           current: 0,
           previous: 0,
           target: 4.8,
@@ -403,7 +407,7 @@ export default function SmartDashboardAnalytics({
           color: "yellow",
         },
         {
-          name: "Member Retention",
+          name: t("dashboard.memberRetention"),
           current: 0,
           previous: 0,
           target: 90,
@@ -413,7 +417,7 @@ export default function SmartDashboardAnalytics({
           color: "red",
         },
         {
-          name: "Gym Health Score",
+          name: t("dashboard.gymHealthScore"),
           current: 0,
           previous: 0,
           target: 95,
@@ -426,7 +430,7 @@ export default function SmartDashboardAnalytics({
     } finally {
       setLoading(false);
     }
-  }, [selectedTimeRange]);
+  }, [selectedTimeRange, t]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -435,7 +439,7 @@ export default function SmartDashboardAnalytics({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
       </div>
     );
   }
@@ -444,8 +448,8 @@ export default function SmartDashboardAnalytics({
     <div className="space-y-8">
       {/* Enhanced Header */}
       <SmartAnalyticsHeader
-        title="Analytics Dashboard"
-        subtitle="Comprehensive business insights and performance metrics"
+        title={t("dashboard.analyticsDashboard")}
+        subtitle={t("dashboard.comprehensiveBusinessInsights")}
         icon={<FiBarChart className="text-2xl" />}
         gradientFrom="purple-600"
         gradientTo="indigo-700"
@@ -456,8 +460,8 @@ export default function SmartDashboardAnalytics({
       {/* Enhanced Performance Metrics */}
       <PerformanceMetricsCard 
         metrics={dashboardMetrics}
-        title="Performance Overview"
-        subtitle="Key metrics and their progress towards targets"
+        title={t("dashboard.performanceOverview")}
+        subtitle={t("dashboard.keyMetricsProgress")}
       />
 
       {/* Additional Analytics Sections */}
@@ -467,56 +471,56 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
         >
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-green-50 rounded-xl">
-              <FiTrendingUp className="text-green-600 text-xl" />
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
+            <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
+              <FiTrendingUp className="text-green-600 dark:text-green-400 text-xl" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Revenue Trends</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t("dashboard.revenueTrends")}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedTimeRange === "week"
-                  ? "Weekly"
+                  ? t("dashboard.weekly")
                   : selectedTimeRange === "month"
-                  ? "Monthly"
+                  ? t("dashboard.monthly")
                   : selectedTimeRange === "quarter"
-                  ? "Quarterly"
-                  : "Yearly"}{" "}
-                revenue performance
+                  ? t("dashboard.quarterly")
+                  : t("dashboard.yearly")}{" "}
+                {t("dashboard.revenuePerformance")}
               </p>
             </div>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
-                This {selectedTimeRange === "week" ? "Week" : selectedTimeRange === "month" ? "Month" : selectedTimeRange === "quarter" ? "Quarter" : "Year"}
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {selectedTimeRange === "week" ? t("dashboard.thisWeek") : selectedTimeRange === "month" ? t("dashboard.thisMonth") : selectedTimeRange === "quarter" ? t("dashboard.thisQuarter") : t("dashboard.thisYear")}
               </span>
-              <span className="text-lg font-bold text-gray-900">
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 ${revenueData.current.toLocaleString()}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
-                Previous {selectedTimeRange === "week" ? "Week" : selectedTimeRange === "month" ? "Month" : selectedTimeRange === "quarter" ? "Quarter" : "Year"}
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {selectedTimeRange === "week" ? t("dashboard.previousWeek") : selectedTimeRange === "month" ? t("dashboard.previousMonth") : selectedTimeRange === "quarter" ? t("dashboard.previousQuarter") : t("dashboard.previousYear")}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-500">
                 ${revenueData.previous.toLocaleString()}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
-                className="h-2 bg-green-500 rounded-full"
+                className="h-2 bg-green-500 dark:bg-green-400 rounded-full"
                 style={{
                   width: `${Math.min(100, (revenueData.current / 50000) * 100)}%`,
                 }}
               ></div>
             </div>
             <div
-              className={`flex items-center space-x-2 text-sm ${
+              className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm ${
                 revenueData.current >= revenueData.previous
-                  ? "text-green-600"
-                  : "text-red-600"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {revenueData.current >= revenueData.previous ? (
@@ -527,7 +531,7 @@ export default function SmartDashboardAnalytics({
               <span>
                 {revenueData.previous > 0
                   ? `${((revenueData.current - revenueData.previous) / revenueData.previous * 100).toFixed(1)}%`
-                  : "0%"} vs previous {selectedTimeRange}
+                  : "0%"} {t("dashboard.vsPrevious")} {t(`dashboard.${selectedTimeRange}`)}
               </span>
             </div>
           </div>
@@ -538,45 +542,45 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
         >
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-3 bg-blue-50 rounded-xl">
-              <FiUsers className="text-blue-600 text-xl" />
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+              <FiUsers className="text-blue-600 dark:text-blue-400 text-xl" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Member Insights</h3>
-              <p className="text-sm text-gray-600">Member engagement metrics</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t("dashboard.memberInsights")}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.memberEngagementMetrics")}</p>
             </div>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Active Members</span>
-              <span className="text-lg font-bold text-gray-900">
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.activeMembers")}</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {memberData.current.toLocaleString()}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
-                New This {selectedTimeRange === "week" ? "Week" : selectedTimeRange === "month" ? "Month" : selectedTimeRange === "quarter" ? "Quarter" : "Year"}
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {selectedTimeRange === "week" ? t("dashboard.newThisWeek") : selectedTimeRange === "month" ? t("dashboard.newThisMonth") : selectedTimeRange === "quarter" ? t("dashboard.newThisQuarter") : t("dashboard.newThisYear")}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-500">
                 +{memberData.newCount}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
-                className="h-2 bg-blue-500 rounded-full"
+                className="h-2 bg-blue-500 dark:bg-blue-400 rounded-full"
                 style={{
                   width: `${Math.min(100, (memberData.current / 1300) * 100)}%`,
                 }}
               ></div>
             </div>
             <div
-              className={`flex items-center space-x-2 text-sm ${
+              className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm ${
                 memberData.current >= memberData.previous
-                  ? "text-blue-600"
-                  : "text-red-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {memberData.current >= memberData.previous ? (
@@ -587,7 +591,7 @@ export default function SmartDashboardAnalytics({
               <span>
                 {memberData.previous > 0
                   ? `${((memberData.current - memberData.previous) / memberData.previous * 100).toFixed(1)}%`
-                  : "0%"} vs previous {selectedTimeRange}
+                  : "0%"} {t("dashboard.vsPrevious")} {t(`dashboard.${selectedTimeRange}`)}
               </span>
             </div>
           </div>

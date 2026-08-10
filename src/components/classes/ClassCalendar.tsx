@@ -20,6 +20,7 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../../supabaseClient';
 import { AddClassModal, EditClassModal } from './modals';
 import './FullCalendar.css';
+import { useTranslation } from 'react-i18next';
 
 // Type definitions
 interface CalendarEvent {
@@ -50,6 +51,7 @@ interface CalendarFilters {
 const emptyClasses: CalendarEvent[] = [];
 
 const ClassCalendar: React.FC = () => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<CalendarEvent[]>(emptyClasses);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -92,7 +94,7 @@ const ClassCalendar: React.FC = () => {
       // Time of day filter
       if (filters.timeOfDay.length > 0) {
         const hour = new Date(event.start).getHours();
-        const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+        const timeOfDay = hour < 12 ? t('classes.morning') : hour < 17 ? t('classes.afternoon') : t('classes.evening');
         if (!filters.timeOfDay.includes(timeOfDay)) {
           return false;
         }
@@ -135,7 +137,7 @@ const ClassCalendar: React.FC = () => {
         : e
     );
     setEvents(updatedEvents);
-    toast.success('Class duration updated!');
+    toast.success(t('classes.classDurationUpdated'));
   }, [events]);
 
   // Keyboard navigation
@@ -215,34 +217,34 @@ const ClassCalendar: React.FC = () => {
 
   return (
     <>
-      <div className="h-full bg-white flex flex-col">
+      <div className="h-full bg-white dark:bg-gray-900 flex flex-col">
         {/* Google Calendar Style Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             {/* Left side - Navigation and View Controls */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => calendarRef.current?.getApi().prev()}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <FiChevronLeft className="w-5 h-5 text-gray-600" />
+                  <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
                 <button
                   onClick={() => calendarRef.current?.getApi().today()}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
                 >
-                  Today
+                  {t('classes.today')}
                 </button>
                 <button
                   onClick={() => calendarRef.current?.getApi().next()}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <FiChevronRight className="w-5 h-5 text-gray-600" />
+                  <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
               
-              <span className="text-xl font-semibold text-gray-900">
+              <span className="text-xl font-semibold text-gray-900 dark:text-white">
                 {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
             </div>
@@ -250,7 +252,7 @@ const ClassCalendar: React.FC = () => {
             {/* Right side - View Toggle and Create Button */}
             <div className="flex items-center space-x-4">
               {/* View Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
                   onClick={() => {
                     setView('timeGridDay');
@@ -258,11 +260,11 @@ const ClassCalendar: React.FC = () => {
                   }}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                     view === 'timeGridDay' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Day
+                  {t('classes.day')}
                 </button>
                 <button
                   onClick={() => {
@@ -271,11 +273,11 @@ const ClassCalendar: React.FC = () => {
                   }}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                     view === 'timeGridWeek' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Week
+                  {t('classes.week')}
                 </button>
                 <button
                   onClick={() => {
@@ -284,11 +286,11 @@ const ClassCalendar: React.FC = () => {
                   }}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                     view === 'dayGridMonth' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' 
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  Month
+                  {t('classes.month')}
                 </button>
               </div>
             </div>
@@ -303,9 +305,9 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   classType: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 border-0 rounded text-gray-900 focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">All Types</option>
+                <option value="">{t('classes.allTypes')}</option>
                 <option value="hiit">HIIT</option>
                 <option value="yoga">Yoga</option>
                 <option value="pilates">Pilates</option>
@@ -320,9 +322,9 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   trainer: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 border-0 rounded text-gray-900 focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">All Trainers</option>
+                <option value="">{t('classes.allTrainers')}</option>
                 <option value="ahmed">Ahmed</option>
                 <option value="lina">Lina</option>
                 <option value="mike">Mike</option>
@@ -331,35 +333,35 @@ const ClassCalendar: React.FC = () => {
               
               <input
                 type="text"
-                placeholder="Search classes..."
+                placeholder={t('classes.searchClasses')}
                 value={filters.search}
                 onChange={(e) => setFilters((prev: CalendarFilters) => ({ ...prev, search: e.target.value }))}
-                className="px-3 py-1 text-sm bg-gray-100 border-0 rounded text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
         {/* Calendar */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : filteredEvents.length === 0 ? (
             <div className="p-12 text-center">
-              <FiCalendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No classes scheduled
+              <FiCalendar className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {t('classes.noClassesScheduled')}
               </h3>
-              <p className="text-gray-600 mb-6">
-                Click on any time slot to add a new class
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {t('classes.clickOnTimeSlot')}
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium"
               >
-                Add Your First Class
+                {t('classes.addYourFirstClass')}
               </button>
             </div>
                     ) : (
@@ -408,9 +410,9 @@ const ClassCalendar: React.FC = () => {
                 year: 'numeric',
               }}
               buttonText={{
-                today: 'Today',
-                week: 'Week',
-                day: 'Day',
+                today: t('classes.today'),
+                week: t('classes.week'),
+                day: t('classes.day'),
               }}
                 />
               </div>

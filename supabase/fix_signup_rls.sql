@@ -33,8 +33,12 @@ CREATE POLICY "Users can insert memberships for their tenant"
   ON memberships FOR INSERT
   TO authenticated
   WITH CHECK (
-    -- Allow if user is creating their own membership (signup case)
-    user_id = auth.uid()
+    -- Allow if user is creating their own membership, verifying they match the JWT's tenant_id (signup case)
+    (
+      user_id = auth.uid()
+      AND
+      tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid
+    )
     OR
     -- Allow if tenant_id matches user's existing tenant (normal case)
     tenant_id = get_user_tenant_id()

@@ -20,22 +20,6 @@ interface WidgetProps {
   className?: string;
 }
 
-interface ClassScheduleItem {
-  id: string;
-  name: string;
-  time: string;
-  trainer?: string;
-  capacity?: number;
-}
-
-interface MemberItem {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
-  created_at: string;
-}
-
 interface TrainerPerformance {
   name: string;
   count: number;

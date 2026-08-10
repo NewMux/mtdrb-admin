@@ -4,11 +4,17 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import PageThemeDetector from "./PageThemeDetector";
+import { AIChatButton } from "./ai/AIChatButton";
+import { AIChatPanel } from "./ai/AIChatPanel";
+import { useRTL } from "../hooks/useRTL";
 
 const Layout: React.FC = () => {
+  const { isRTL } = useRTL();
+
   return (
     <div
-      className={`min-h-screen bg-gray-50 transition-colors duration-300`}
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      dir={isRTL ? "rtl" : "ltr"}
     >
       <PageThemeDetector />
       <div className="flex h-screen">
@@ -21,7 +27,7 @@ const Layout: React.FC = () => {
           {/* Top Bar */}
           <TopBar onMenuClick={() => {}} />
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto bg-gray-50">
+          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
             <div className="p-6 max-w-6xl mx-auto">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -38,6 +44,9 @@ const Layout: React.FC = () => {
           </main>
         </div>
       </div>
+      {/* AI Chat Assistant */}
+      <AIChatButton />
+      <AIChatPanel />
     </div>
   );
 };

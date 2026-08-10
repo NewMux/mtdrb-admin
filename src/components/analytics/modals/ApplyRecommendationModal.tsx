@@ -28,7 +28,7 @@ const sampleInsight = {
   category: "retention",
   recommendedAction: "send_reengagement",
   actionDetails: {
-    type: "email_campaign",
+    type: "email_notification",
     target: "at_risk_members",
     template: "re_engagement_v1",
     schedule: "immediate",
@@ -242,10 +242,10 @@ export default function ApplyRecommendationModal({
                 }
               >
                 <option value="re_engagement_v1">
-                  Re-engagement Campaign v1
+                  Re-engagement Message v1
                 </option>
                 <option value="re_engagement_v2">
-                  Re-engagement Campaign v2
+                  Re-engagement Message v2
                 </option>
                 <option value="personalized_offer">Personalized Offer</option>
                 <option value="class_invitation">Class Invitation</option>
@@ -418,7 +418,7 @@ export default function ApplyRecommendationModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading || applying}
           >

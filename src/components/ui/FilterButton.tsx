@@ -20,7 +20,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({ active, className, ...props
     variant={active ? "primary" : "ghost"}
     size="sm"
     icon={<FiFilter className="w-5 h-5" />}
-    className={`p-2 ${active ? "bg-blue-100 text-blue-700" : ""} ${className || ""}`}
+    className={`p-2 ${active ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" : ""} ${className || ""}`}
     {...props}
     aria-label="Filter"
   />

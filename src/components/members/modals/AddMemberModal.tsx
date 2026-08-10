@@ -1,21 +1,17 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
-  FiX,
   FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
   FiTarget,
   FiHeart,
   FiFileText,
-  FiUsers,
-  FiSettings,
+  FiAlertCircle,
 } from "react-icons/fi";
-import { SmartModal } from "../../ui/SmartModal";
+import { UnifiedModal } from "../../ui/UnifiedModal";
 import { SmartButton } from "../../ui/DesignSystem";
+import { AppleInput, AppleSelect, AppleTextarea } from "../../AppleStyleModal";
 import { Member } from "../../../types/member";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -99,8 +95,9 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   onClose,
   onSuccess,
   loading = false,
-  modalRef,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [formData, setFormData] = React.useState<AddMemberFormData>({
     name: "",
     email: "",
@@ -171,20 +168,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-  const membershipTypes = [
-    { value: "Basic", label: "Basic" },
-    { value: "Standard", label: "Standard" },
-    { value: "Premium", label: "Premium" },
-    { value: "VIP", label: "VIP" },
-    { value: "Student", label: "Student" },
-  ];
-
-  const fitnessLevels = [
-    { value: "beginner", label: "Beginner" },
-    { value: "intermediate", label: "Intermediate" },
-    { value: "advanced", label: "Advanced" },
-  ];
-
   const goalOptions = [
     { value: "weight_loss", label: "Weight Loss" },
     { value: "muscle_gain", label: "Muscle Gain" },
@@ -228,8 +211,10 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && 'preventDefault' in e) {
+      e.preventDefault();
+    }
 
     if (!validateForm()) {
       return;
@@ -369,7 +354,19 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     onClose();
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleInputChangeDirect = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -391,319 +388,273 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     }));
   };
 
+  const footer = (
+    <>
+      <SmartButton variant="secondary" onClick={handleClose} disabled={loading}>
+        {t("members.cancel")}
+      </SmartButton>
+      <SmartButton
+        variant="primary"
+        onClick={handleSubmit}
+        loading={loading}
+        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+      >
+        {loading ? t("members.addingMember") : t("members.addMember")}
+      </SmartButton>
+    </>
+  );
+
   return (
-    <SmartModal
+    <UnifiedModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add New Member"
-      subtitle="Create a new member profile with all necessary information"
-      footer={
-        <div className="flex items-center justify-end space-x-3">
-          <SmartButton variant="secondary" onClick={handleClose}>
-            Cancel
-          </SmartButton>
-          <SmartButton
-            variant="primary"
-            onClick={handleSubmit}
-            loading={loading}
-          >
-            {loading ? "Adding..." : "Add Member"}
-          </SmartButton>
-        </div>
-      }
+      title={t("members.addNewMember")}
+      subtitle={t("members.createComprehensiveProfile")}
+      footer={footer}
+      maxWidth="4xl"
+      slideFrom="right"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Info Section */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100bg-blue-900/30 rounded-lg">
-              <FiUser className="h-5 w-5 text-blue-600" />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+              <FiUser className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Basic Info
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Member's personal details
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.basicInformation")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.name ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-                placeholder="Enter full name"
-              />
-              {errors.name && (
-                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.name}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email *
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.email ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-                placeholder="email@example.com"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.phone ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-                placeholder="+973 XXXX XXXX"
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Gender *
-              </label>
-              <select
-                value={formData.gender}
-                onChange={(e) => handleInputChange("gender", e.target.value)}
-                className="form-select"
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                value={formData.date_of_birth}
-                onChange={(e) =>
-                  handleInputChange("date_of_birth", e.target.value)
-                }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                National ID
-              </label>
-              <input
-                type="text"
-                value={formData.national_id}
-                onChange={(e) =>
-                  handleInputChange("national_id", e.target.value)
-                }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Enter national ID"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Emergency Contact
-              </label>
-              <input
-                type="tel"
-                value={formData.emergency_contact}
-                onChange={(e) =>
-                  handleInputChange("emergency_contact", e.target.value)
-                }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Emergency contact number"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Preferred Language *
-              </label>
-              <select
-                value={formData.language}
-                onChange={(e) => handleInputChange("language", e.target.value)}
-                className="form-select"
-              >
-                <option value="English">English</option>
-                <option value="Arabic">Arabic</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Address
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Enter full address"
-              />
-            </div>
+            <AppleInput
+              label={t("members.fullName")}
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              aria-label={t("members.fullName")}
+              error={errors.name}
+              placeholder={t("members.enterFullName")}
+            />
+            <AppleInput
+              label={t("members.email")}
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              aria-label={t("members.emailAddress")}
+              error={errors.email}
+              placeholder={t("members.emailPlaceholder")}
+            />
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AppleInput
+              label={t("members.phoneNumber")}
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleInputChange}
+              required
+              aria-label={t("members.phoneNumber")}
+              error={errors.phone}
+              placeholder={t("members.phonePlaceholder")}
+            />
+            <AppleSelect
+              label={t("members.gender")}
+              name="gender"
+              value={formData.gender}
+              onChange={handleInputChange}
+              required
+              aria-label={t("members.gender")}
+            >
+              <option value="male">{t("members.male")}</option>
+              <option value="female">{t("members.female")}</option>
+              <option value="other">{t("members.other")}</option>
+            </AppleSelect>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AppleInput
+              label={t("members.dateOfBirth")}
+              name="date_of_birth"
+              type="date"
+              value={formData.date_of_birth}
+              onChange={handleInputChange}
+              aria-label={t("members.dateOfBirth")}
+            />
+            <AppleInput
+              label={t("members.nationalId")}
+              name="national_id"
+              value={formData.national_id}
+              onChange={handleInputChange}
+              aria-label={t("members.nationalId")}
+              placeholder={t("members.enterNationalId")}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AppleInput
+              label={t("members.emergencyContact")}
+              name="emergency_contact"
+              type="tel"
+              value={formData.emergency_contact}
+              onChange={handleInputChange}
+              aria-label={t("members.emergencyContact")}
+              placeholder={t("members.emergencyContactNumber")}
+            />
+            <AppleSelect
+              label={t("members.preferredLanguage")}
+              name="language"
+              value={formData.language}
+              onChange={handleInputChange}
+              required
+              aria-label={t("members.preferredLanguage")}
+            >
+              <option value="English">{t("members.english")}</option>
+              <option value="Arabic">{t("members.arabic")}</option>
+            </AppleSelect>
+          </div>
+
+          <AppleInput
+            label="Address"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            aria-label="Address"
+            placeholder="Enter full address"
+          />
+        </section>
         {/* Health & Fitness Section */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-pink-100bg-pink-900/30 rounded-lg">
-              <FiHeart className="h-5 w-5 text-pink-600" />
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-pink-500 to-pink-600">
+              <FiHeart className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Health & Fitness
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Member's health and fitness details
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.healthFitness")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Current Weight (kg)
-              </label>
+            <AppleInput
+              label={t("members.currentWeight")}
+              name="weight"
+              type="number"
+              value={formData.weight || ""}
+              onChange={(e) =>
+                handleInputChangeDirect(
+                  "weight",
+                  e.target.value ? parseFloat(e.target.value) : null,
+                )
+              }
+              aria-label={t("members.currentWeight")}
+              placeholder={t("members.enterCurrentWeight")}
+              step="0.1"
+            />
+            <AppleInput
+              label={t("members.targetWeight")}
+              name="target_weight"
+              type="number"
+              value={formData.target_weight || ""}
+              onChange={(e) =>
+                handleInputChangeDirect(
+                  "target_weight",
+                  e.target.value ? parseFloat(e.target.value) : null,
+                )
+              }
+              aria-label={t("members.targetWeight")}
+              placeholder={t("members.enterTargetWeight")}
+              step="0.1"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AppleInput
+              label={t("members.height")}
+              name="height"
+              type="number"
+              value={formData.height || ""}
+              onChange={(e) =>
+                handleInputChangeDirect(
+                  "height",
+                  e.target.value ? parseFloat(e.target.value) : null,
+                )
+              }
+              aria-label={t("members.height")}
+              placeholder={t("members.enterHeight")}
+            />
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 pt-8`}>
               <input
-                type="number"
-                value={formData.weight || ""}
+                type="checkbox"
+                id="previous_gym_experience"
+                checked={formData.previous_gym_experience}
                 onChange={(e) =>
-                  handleInputChange(
-                    "weight",
-                    parseFloat(e.target.value) || undefined,
+                  handleInputChangeDirect(
+                    "previous_gym_experience",
+                    e.target.checked,
                   )
                 }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Enter current weight"
-                step="0.1"
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Target Weight (kg)
-              </label>
-              <input
-                type="number"
-                value={formData.target_weight || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "target_weight",
-                    parseFloat(e.target.value) || undefined,
-                  )
-                }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Enter target weight"
-                step="0.1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Height (cm)
-              </label>
-              <input
-                type="number"
-                value={formData.height || ""}
-                onChange={(e) =>
-                  handleInputChange(
-                    "height",
-                    parseFloat(e.target.value) || undefined,
-                  )
-                }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
-                placeholder="Enter height"
-              />
-            </div>
-            <div>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={formData.previous_gym_experience}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "previous_gym_experience",
-                      e.target.checked,
-                    )
-                  }
-                  className="form-checkbox"
-                />
-                <span className="text-sm text-gray-700text-gray-300">
-                  Previous Gym Experience
-                </span>
+              <label
+                htmlFor="previous_gym_experience"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {t("members.previousGymExperience")}
               </label>
             </div>
           </div>
-        </div>
+        </section>
+
         {/* Goals & Preferences Section */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-yellow-100bg-yellow-900/30 rounded-lg">
-              <FiTarget className="h-5 w-5 text-yellow-600" />
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600">
+              <FiTarget className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Goals & Preferences
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Member's goals and workout preferences
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.goalsPreferences")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {goalOptions.map((goal) => (
-              <label key={goal.value} className="flex items-center space-x-2">
+              <label
+                key={goal.value}
+                className="flex items-center space-x-2 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={formData.goals.includes(goal.value)}
                   onChange={(e) =>
                     handleArrayChange("goals", goal.value, e.target.checked)
                   }
-                  className="form-checkbox"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700text-gray-300">
-                  {goal.label}
-                </span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{goal.label}</span>
               </label>
             ))}
           </div>
-        </div>
-        {/* Health Conditions */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-pink-100bg-pink-900/30 rounded-lg">
-              <FiHeart className="h-5 w-5 text-pink-600" />
+        </section>
+        {/* Health Conditions Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600">
+              <FiHeart className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Health Conditions
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Member's health conditions and previous injuries
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.healthConditions")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {healthConditionOptions.map((condition) => (
               <label
                 key={condition.value}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -715,33 +666,28 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       e.target.checked,
                     )
                   }
-                  className="form-checkbox"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700text-gray-300">
-                  {condition.label}
-                </span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{condition.label}</span>
               </label>
             ))}
           </div>
-        </div>
-        {/* Medical Conditions & Injuries */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-red-100bg-red-900/30 rounded-lg">
-              <FiHeart className="h-5 w-5 text-red-600" />
+        </section>
+
+        {/* Medical Information Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
+              <FiAlertCircle className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Medical Information
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Member's medical conditions and previous injuries
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.medicalInformation")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Medical Conditions
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -752,11 +698,11 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   "Hypertension",
                   "Back Pain",
                   "Knee Injury",
-                  "None",
+                  t("members.none"),
                 ].map((condition) => (
                   <label
                     key={condition}
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-2 cursor-pointer"
                   >
                     <input
                       type="checkbox"
@@ -768,18 +714,16 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                           e.target.checked,
                         )
                       }
-                      className="form-checkbox"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-xs text-gray-700text-gray-300">
-                      {condition}
-                    </span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{condition}</span>
                   </label>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Previous Injuries
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                {t("members.previousInjuries")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -789,86 +733,72 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                   "Ankle",
                   "Wrist",
                   "Hip",
-                  "None",
+                  t("members.none"),
                 ].map((injury) => (
-                  <label key={injury} className="flex items-center space-x-2">
+                  <label
+                    key={injury}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.injuries.includes(injury)}
                       onChange={(e) =>
                         handleArrayChange("injuries", injury, e.target.checked)
                       }
-                      className="form-checkbox"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-xs text-gray-700text-gray-300">
-                      {injury}
-                    </span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{injury}</span>
                   </label>
                 ))}
               </div>
             </div>
           </div>
-        </div>
-        {/* Notes */}
-        <div className="bg-whitebg-gray-800 rounded-xl border border-gray-200border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-gray-100bg-gray-900/30 rounded-lg">
-              <FiFileText className="h-5 w-5 text-gray-600" />
+        </section>
+
+        {/* Additional Information Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600">
+              <FiFileText className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900text-white">
-                Additional Notes
-              </h3>
-              <p className="text-sm text-gray-600text-gray-400">
-                Notes and staff information
-              </p>
-            </div>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              {t("members.additionalNotes")}
+            </h3>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Staff Notes
-              </label>
-              <textarea
-                value={formData.staff_notes}
-                onChange={(e) =>
-                  handleInputChange("staff_notes", e.target.value)
-                }
-                className="form-textarea"
-                rows={3}
-                placeholder="Internal staff notes about the member"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Medical Notes
-              </label>
-              <textarea
-                value={formData.medical_notes}
-                onChange={(e) =>
-                  handleInputChange("medical_notes", e.target.value)
-                }
-                className="form-textarea"
-                rows={3}
-                placeholder="Medical information and restrictions"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700text-gray-300 mb-2">
-              General Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => handleInputChange("notes", e.target.value)}
-              className="form-textarea"
-              rows={4}
-              placeholder="Add any additional notes about the member..."
+            <AppleTextarea
+              label={t("members.staffNotes")}
+              name="staff_notes"
+              value={formData.staff_notes}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder={t("members.internalStaffNotes")}
+              aria-label={t("members.staffNotes")}
+            />
+            <AppleTextarea
+              label={t("members.medicalNotes")}
+              name="medical_notes"
+              value={formData.medical_notes}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder={t("members.medicalInformation")}
+              aria-label={t("members.medicalNotes")}
             />
           </div>
-        </div>
+
+          <AppleTextarea
+            label={t("members.generalNotes")}
+            name="notes"
+            value={formData.notes}
+            onChange={handleInputChange}
+            rows={4}
+            placeholder={t("members.additionalNotes")}
+            aria-label={t("members.generalNotes")}
+          />
+        </section>
       </form>
-    </SmartModal>
+    </UnifiedModal>
   );
 };
 

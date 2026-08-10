@@ -1,15 +1,16 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   FiUpload,
-  FiFile,
   FiCheck,
   FiAlertCircle,
-  FiX,
   FiDownload,
 } from "react-icons/fi";
+import { supabase } from "../../../supabaseClient";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface ImportMembersModalProps {
   isOpen: boolean;
@@ -38,9 +39,10 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  loading = false,
   modalRef,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [file, setFile] = React.useState<File | null>(null);
   const [importedData, setImportedData] = React.useState<ImportedMember[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
@@ -122,20 +124,98 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
     setIsUploading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("No user found");
+      }
 
-      // Simulate 5% chance of failure
-      if (Math.random() < 0.05) {
-        setErrors(["Import failed. Please try again."]);
-        setIsUploading(false);
-        return;
+      // Get tenant_id from memberships table
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (membershipError || !membershipData?.tenant_id) {
+        throw new Error("Failed to get organization details");
+      }
+
+      const tenantId = membershipData.tenant_id;
+
+      // Prepare members for insertion
+      const membersToInsert = importedData.map((member) => {
+        // Split name into first_name and last_name
+        const nameParts = (member.name || "").trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        return {
+          tenant_id: tenantId,
+          first_name: firstName,
+          last_name: lastName,
+          name: member.name,
+          email: member.email,
+          phone: member.phone || null,
+          status: member.status || "active",
+          membership_type: member.membershipType || "Standard",
+          membership_status: member.status === "active" ? "active" : "inactive",
+          metadata: {
+            gender: member.gender || "other",
+            address: member.address || "",
+            emergency_contact: member.emergency_contact || "",
+            fitness_level: member.fitness_level || "beginner",
+            goals: member.goals || [],
+            health_conditions: member.health_conditions || [],
+            notes: member.notes || "",
+          },
+        };
+      });
+
+      // Insert members in batches to avoid overwhelming the database
+      const batchSize = 50;
+      const batches = [];
+      for (let i = 0; i < membersToInsert.length; i += batchSize) {
+        batches.push(membersToInsert.slice(i, i + batchSize));
+      }
+
+      let successCount = 0;
+      const importErrors: string[] = [];
+
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        const { error: insertError } = await supabase
+          .from("members")
+          .insert(batch);
+
+        if (insertError) {
+          importErrors.push(
+            `Batch ${i + 1}: ${insertError.message}`,
+          );
+        } else {
+          successCount += batch.length;
+        }
+      }
+
+      if (importErrors.length > 0 && successCount === 0) {
+        throw new Error(
+          `Import failed: ${importErrors.join("; ")}`,
+        );
+      }
+
+      if (importErrors.length > 0) {
+        setErrors([
+          `Imported ${successCount} members. Some errors occurred: ${importErrors.join("; ")}`,
+        ]);
       }
 
       await onSuccess(importedData);
     } catch (error) {
       console.error("Import failed:", error);
-      setErrors(["Import failed. Please try again."]);
+      setErrors([
+        `Import failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ]);
     } finally {
       setIsUploading(false);
     }
@@ -171,21 +251,21 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
         <ColorfulModalUI
           open={isOpen}
           onClose={handleClose}
-          title="Import Members"
-          subtitle="Upload a CSV file to import multiple members at once"
+          title={t("members.importMembers", "استيراد الأعضاء")}
+          subtitle={t("members.uploadCsvFile", "تحميل ملف CSV للاستيراد")}
           modalRef={modalRef}
         >
-          <div className="space-y-6">
+          <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* File Upload */}
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300border-gray-600 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                 <FiUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <div className="space-y-2">
-                  <p className="text-lg font-medium text-gray-900text-white">
-                    {file ? file.name : "Drop your CSV file here"}
+                  <p className="text-lg font-medium text-gray-900 dark:text-white">
+                    {file ? file.name : t("members.dropCsvHere", "اسحب ملف CSV هنا")}
                   </p>
-                  <p className="text-sm text-gray-500text-gray-400">
-                    or click to browse
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t("members.orClickToBrowse", "أو انقر للتصفح")}
                   </p>
                   <input
                     type="file"
@@ -196,22 +276,22 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                   />
                   <label
                     htmlFor="file-upload"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700text-gray-300 bg-whitebg-gray-800 hover:bg-gray-50hover:bg-gray-700 cursor-pointer"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    Choose File
+                    {t("members.chooseFile", "اختر الملف")}
                   </label>
                 </div>
               </div>
 
               {/* Template Download */}
-              <div className="bg-blue-50bg-blue-900/20 border border-blue-200border-blue-800 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-800text-blue-200">
-                      Need a template?
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-start">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      {t("members.needTemplate", "هل تحتاج إلى نموذج؟")}
                     </h4>
-                    <p className="text-xs text-blue-600text-blue-300 mt-1">
-                      Download our CSV template with example data
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                      {t("members.downloadTemplateDesc", "قم بتنزيل نموذج CSV التجريبي لترتيب البيانات")}
                     </p>
                   </div>
                   <SmartButton
@@ -220,7 +300,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                     icon={<FiDownload className="w-4 h-4" />}
                     onClick={downloadTemplate}
                   >
-                    Download Template
+                    {t("members.downloadTemplate", "تحميل النموذج")}
                   </SmartButton>
                 </div>
               </div>
@@ -228,16 +308,16 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
 
             {/* Errors */}
             {errors.length > 0 && (
-              <div className="bg-red-50bg-red-900/20 border border-red-200border-red-800 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <FiAlertCircle className="w-5 h-5 text-red-600text-red-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-medium text-red-800text-red-200 mb-2">
-                      Import Errors ({errors.length})
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-start">
+                    <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                      {t("members.importErrors", `أخطاء الاستيراد (${errors.length})`)}
                     </h4>
-                    <ul className="space-y-1 text-xs text-red-700text-red-300">
+                    <ul className="space-y-1 text-xs text-red-700 dark:text-red-300">
                       {errors.map((error, index) => (
-                        <li key={index} className="flex items-start space-x-2">
+                        <li key={index} className="flex items-start gap-2">
                           <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
                           <span>{error}</span>
                         </li>
@@ -252,15 +332,15 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
             {importedData.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900text-white">
-                    Preview ({importedData.length} members)
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {t("members.previewMembers", `معاينة (${importedData.length} عضو)`)}
                   </h3>
                   <SmartButton
                     variant="ghost"
                     size="sm"
                     onClick={() => setPreviewMode(!previewMode)}
                   >
-                    {previewMode ? "Hide Details" : "Show Details"}
+                    {previewMode ? t("members.hideDetails", "إخفاء التفاصيل") : t("members.showDetails", "عرض التفاصيل")}
                   </SmartButton>
                 </div>
 

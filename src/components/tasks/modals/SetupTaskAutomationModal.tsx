@@ -2,11 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiSettings,
-  FiClock,
-  FiRepeat,
   FiZap,
-  FiCalendar,
-  FiUsers,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
 import { useSmartTaskModal } from "./useSmartTaskModal";

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FiBarChart } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 
 interface SmartBillingAnalyticsProps {
@@ -19,6 +20,7 @@ interface BillingMetric {
 export default function SmartBillingAnalytics({
   refreshKey,
 }: SmartBillingAnalyticsProps) {
+  const { t } = useTranslation();
   const [selectedTimeRange, setSelectedTimeRange] = useState<
     "week" | "month" | "quarter" | "year"
   >("month");
@@ -27,7 +29,7 @@ export default function SmartBillingAnalytics({
   // Mock billing metrics data
   const billingMetrics: BillingMetric[] = [
     {
-      name: "Total Revenue",
+      name: t("billing.totalRevenue"),
       current: 45280,
       previous: 40120,
       target: 50000,
@@ -35,7 +37,7 @@ export default function SmartBillingAnalytics({
       format: "currency",
     },
     {
-      name: "Collection Rate",
+      name: t("billing.collectionRate"),
       current: 94,
       previous: 91,
       target: 95,
@@ -43,7 +45,7 @@ export default function SmartBillingAnalytics({
       format: "percentage",
     },
     {
-      name: "Average Invoice",
+      name: t("billing.averageInvoice"),
       current: 850,
       previous: 780,
       target: 900,
@@ -51,7 +53,7 @@ export default function SmartBillingAnalytics({
       format: "currency",
     },
     {
-      name: "Outstanding Amount",
+      name: t("billing.outstandingAmount"),
       current: 3200,
       previous: 4800,
       target: 2000,
@@ -59,16 +61,16 @@ export default function SmartBillingAnalytics({
       format: "currency",
     },
     {
-      name: "Payment Time",
+      name: t("billing.paymentTime"),
       current: 12,
       previous: 15,
       target: 10,
       trend: "down",
       format: "number",
-      suffix: " days",
+      suffix: ` ${t("billing.days")}`,
     },
     {
-      name: "Expense Ratio",
+      name: t("billing.expenseRatio"),
       current: 28,
       previous: 32,
       target: 25,
@@ -93,8 +95,8 @@ export default function SmartBillingAnalytics({
     <div className="space-y-6">
       {/* Header */}
       <SmartAnalyticsHeader
-        title="Smart Billing Analytics"
-        subtitle="Advanced financial insights and revenue optimization"
+        title={t("billing.smartBillingAnalytics")}
+        subtitle={t("billing.advancedFinancialInsights")}
         icon={<FiBarChart className="text-2xl" />}
         gradientFrom="purple-600"
         gradientTo="pink-700"

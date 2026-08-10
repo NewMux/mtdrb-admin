@@ -2,43 +2,29 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  FiTrendingUp,
   FiBarChart2,
   FiUsers,
   FiCalendar,
   FiDollarSign,
-  FiSettings,
   FiDownload,
-  FiEye,
-  FiZap,
-  FiFileText,
-  FiShare,
-  FiClock,
-  FiPrinter,
-  FiCpu,
-  FiToggleRight,
-  FiMapPin,
   FiFilter,
   FiTarget,
-  FiActivity,
-  FiStar,
   FiCheckCircle,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
 import { getSmartInsights as fetchSmartInsights } from "../api/automation";
 import type { Member, Invoice } from "../types";
 import type { SmartInsight } from "../api/automation";
+import { useRTL } from "../hooks/useRTL";
 
 // Analytics Components
 import MemberAnalytics from "../components/analytics/MemberAnalytics";
 import RevenueOverview from "../components/analytics/RevenueOverview";
-import SmartInsights from "../components/analytics/AIInsights";
-
 // Report Components
-import SmartReportsDashboard from "../components/reports/SmartReportsDashboard";
 import SmartInsightCards from "../components/reports/SmartInsightCards";
 
 type MemberAnalyticsData = React.ComponentProps<typeof MemberAnalytics>;
@@ -52,7 +38,7 @@ const toDateString = (date: Date) => date.toISOString().split("T")[0];
 /**
  * Resolve current and previous ranges based on filter.
  */
-const resolveDateRange = (rangeKey: string) => {
+const resolveDateRange = (rangeKey: string, customStart?: string, customEnd?: string) => {
   const now = new Date();
   let start = new Date(now);
   let end = new Date(now);
@@ -60,6 +46,19 @@ const resolveDateRange = (rangeKey: string) => {
   let previousEnd = new Date(now);
 
   switch (rangeKey) {
+    case "custom": {
+      start = customStart ? new Date(customStart) : start;
+      end = customEnd ? new Date(customEnd) : end;
+      // Calculate length of the custom range in days
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+      
+      previousEnd = new Date(start);
+      previousEnd.setDate(start.getDate() - 1);
+      previousStart = new Date(previousEnd);
+      previousStart.setDate(previousEnd.getDate() - diffDays);
+      break;
+    }
     case "last-7-days": {
       start = new Date(now);
       start.setDate(now.getDate() - 6);
@@ -119,46 +118,47 @@ const calculateChange = (current: number, previous: number) => {
 
 // Import all modal components
 import {
-  SmartAnalyticsModal,
   ExportReportModal,
-  GenerateReportModal,
   ScheduleReportModal,
-  DownloadReportModal,
   ShareReportModal,
-  GenerateVATReportModal,
-  ViewSmartInsightsModal,
-  CreateCustomReportModal,
   PrintReportModal,
 } from "../components/analytics/modals";
 import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
+import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 
 export default function Analytics() {
-  const { theme } = usePageThemeContext();
+  usePageThemeContext();
   const { user, isLoading: authLoading, userMetadata } = useAuth();
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const tenantId = userMetadata?.tenant_id || null;
 
-  const [loading, setLoading] = useState(true);
+  // Track loading state
+  const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<
     | "overview"
     | "members"
     | "revenue"
     | "classes"
     | "insights"
-    | "reports"
     | "generator"
     | "scheduled"
+    | "automation"
   >("overview");
   const [insights, setInsights] = useState<SmartInsight[]>([]);
-  const [smartInsightsEnabled, setSmartInsightsEnabled] = useState(true);
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
+    customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+    customEndDate: toDateString(new Date()),
     branch: "all",
     metricType: "all",
+    minRevenue: "",
+    maxRevenue: "",
   });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [modalState, setModalState] = useState({
     settings: false,
     export: false,
-    generateReport: false,
     scheduleReport: false,
     downloadReport: false,
     shareReport: false,
@@ -170,13 +170,7 @@ export default function Analytics() {
     viewDetails: false,
   });
 
-  const reportStats = {
-    totalReports: 0,
-    automatedReports: 0,
-    scheduledToday: 0,
-    totalDownloads: 0,
-  };
-  const [viewDetailsData, setViewDetailsData] = useState({
+  const [viewDetailsData] = useState({
     section: "",
     data: null,
   });
@@ -196,32 +190,35 @@ export default function Analytics() {
   const [branchOptions, setBranchOptions] = useState<
     Array<{ id: string; name: string }>
   >([]);
-  const [currencyCode, setCurrencyCode] = useState<string>("");
+  const [, setCurrencyCode] = useState<string>("");
   const navigate = useNavigate();
 
   const isPro = userMetadata?.subscription_tier === "premium" || userMetadata?.subscription_tier === "enterprise";
 
-  const tabs = [
-    { id: "overview", name: "Overview", icon: FiBarChart2 },
-    { id: "members", name: "Members", icon: FiUsers },
-    { id: "revenue", name: "Revenue", icon: FiDollarSign },
-    { id: "classes", name: "Classes", icon: FiCalendar },
-    { id: "insights", name: "Insights", icon: FiTarget },
-    { id: "reports", name: "Reports", icon: FiFileText },
-  ];
+  const tabs = React.useMemo(() => [
+    { id: "overview", name: t("analytics.overview"), icon: FiBarChart2 },
+    { id: "members", name: t("analytics.members"), icon: FiUsers },
+    { id: "revenue", name: t("analytics.revenue"), icon: FiDollarSign },
+    { id: "classes", name: t("analytics.classes"), icon: FiCalendar },
+    { id: "insights", name: t("analytics.insights"), icon: FiTarget },
+  ], [t]);
 
-  const dateFilters = [
-    { id: "last-7-days", name: "Last 7 Days", count: 0 },
-    { id: "last-30-days", name: "Last 30 Days", count: 0 },
-    { id: "last-90-days", name: "Last 90 Days", count: 0 },
-    { id: "this-year", name: "This Year", count: 0 },
-  ];
+  const dateFilters = React.useMemo(() => [
+    { id: "last-7-days", name: t("members.last7Days"), count: 0 },
+    { id: "last-30-days", name: t("members.last30Days"), count: 0 },
+    { id: "last-90-days", name: t("members.last90Days"), count: 0 },
+    { id: "this-year", name: t("members.thisYear"), count: 0 },
+    { id: "custom", name: t("analytics.customRange") || "Custom Range", count: 0 },
+  ], [t]);
+
 
   /**
    * Fetch smart insights from Supabase.
    */
   const fetchInitialData = useCallback(async () => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      return;
+    }
     try {
       const insightsData = await fetchSmartInsights(tenantId);
       setInsights(insightsData);
@@ -235,12 +232,17 @@ export default function Analytics() {
    * Fetch analytics data and prepare dashboard datasets.
    */
   const fetchDashboardData = useCallback(async () => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
 
       const { start, end, previousStart, previousEnd } = resolveDateRange(
         filters.dateRange,
+        filters.customStartDate,
+        filters.customEndDate,
       );
       const queryStart = toDateString(previousStart);
       const queryEnd = toDateString(end);
@@ -356,17 +358,28 @@ export default function Analytics() {
         Number(invoice.paid_amount) ||
         0;
 
+      // Filter invoices by minimum and maximum revenue
+      const minRev = filters.minRevenue ? parseFloat(filters.minRevenue) : null;
+      const maxRev = filters.maxRevenue ? parseFloat(filters.maxRevenue) : null;
+
+      const matchesRevenueFilter = (invoice: Invoice) => {
+        const amount = invoiceAmount(invoice);
+        if (minRev !== null && amount < minRev) return false;
+        if (maxRev !== null && amount > maxRev) return false;
+        return true;
+      };
+
       const invoicesInRange = invoices.filter((invoice) => {
         const date = invoiceDate(invoice);
         if (!date) return false;
         const created = new Date(date);
-        return created >= start && created <= end;
+        return created >= start && created <= end && matchesRevenueFilter(invoice);
       });
       const invoicesPrevious = invoices.filter((invoice) => {
         const date = invoiceDate(invoice);
         if (!date) return false;
         const created = new Date(date);
-        return created >= previousStart && created <= previousEnd;
+        return created >= previousStart && created <= previousEnd && matchesRevenueFilter(invoice);
       });
 
       const paidInvoices = invoicesInRange.filter(
@@ -632,7 +645,7 @@ export default function Analytics() {
         noShows,
       });
 
-      const paidAllInvoices = invoices.filter(
+      const paidAllInvoices = invoicesInRange.filter(
         (invoice) => (invoice.status || "").toLowerCase() === "paid",
       );
       const membershipRevenueMap = new Map<string, number>();
@@ -778,7 +791,15 @@ export default function Analytics() {
     } finally {
       setLoading(false);
     }
-  }, [filters.branch, filters.dateRange, tenantId]);
+  }, [
+    filters.branch,
+    filters.dateRange,
+    filters.customStartDate,
+    filters.customEndDate,
+    filters.minRevenue,
+    filters.maxRevenue,
+    tenantId,
+  ]);
 
   useEffect(() => {
     // Wait for auth to finish loading
@@ -798,10 +819,11 @@ export default function Analytics() {
       return;
     }
 
-    // User is authenticated and paid, fetch data
-    fetchInitialData();
-    fetchDashboardData();
-  }, [authLoading, fetchDashboardData, fetchInitialData, navigate, user, userMetadata]);
+    // User is authenticated and paid, fetch initial data
+    if (tenantId) {
+      fetchInitialData();
+    }
+  }, [authLoading, fetchInitialData, navigate, user, userMetadata, tenantId]);
 
   // Handle URL parameters for tab selection
   useEffect(() => {
@@ -815,7 +837,6 @@ export default function Analytics() {
         "revenue",
         "classes",
         "insights",
-        "reports",
         "generator",
         "scheduled",
       ].includes(tabParam)
@@ -824,10 +845,45 @@ export default function Analytics() {
     }
   }, []);
 
+  // Fetch dashboard data when tenantId is available or filters change
   useEffect(() => {
-    if (authLoading || !tenantId) return;
+    if (authLoading) {
+      // Still waiting for auth, don't fetch yet
+      return;
+    }
+
+    if (!tenantId) {
+      // No tenantId available, ensure we're not stuck in loading
+      setLoading(false);
+      return;
+    }
+
+    // We have tenantId and auth is ready, fetch data
     fetchDashboardData();
-  }, [authLoading, fetchDashboardData, filters.branch, filters.dateRange, tenantId]);
+  }, [
+    authLoading,
+    fetchDashboardData,
+    filters.branch,
+    filters.dateRange,
+    filters.customStartDate,
+    filters.customEndDate,
+    filters.minRevenue,
+    filters.maxRevenue,
+    tenantId,
+  ]);
+
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        console.warn("Analytics loading timeout - forcing loading to false");
+        setLoading(false);
+      }, 30000); // 30 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+    return undefined;
+  }, [loading]);
 
   const mapInsightPriority = (priority: number): "high" | "medium" | "low" => {
     if (priority >= 80) return "high";
@@ -874,6 +930,10 @@ export default function Analytics() {
       case "Create Campaign":
         toast.success("Opening campaign creation...");
         break;
+      case "View Members":
+        toast.success("Opening members list...");
+        navigate("/dashboard/members");
+        break;
       case "Schedule Class":
         toast.success("Opening class scheduling...");
         break;
@@ -883,22 +943,6 @@ export default function Analytics() {
       default:
         toast(`Action: ${label}`);
     }
-  };
-
-  const handleFiltersChange = (newFilters: any) => {
-    setFilters(newFilters);
-    toast.success("Filters updated");
-  };
-
-  const toggleSmartInsights = () => {
-    setSmartInsightsEnabled(!smartInsightsEnabled);
-    localStorage.setItem(
-      "smart-insights-enabled",
-      (!smartInsightsEnabled).toString(),
-    );
-    toast.success(
-      `Smart Insights ${!smartInsightsEnabled ? "enabled" : "disabled"}`,
-    );
   };
 
   const showToast = (type: "success" | "error" | "info", message: string) => {
@@ -922,14 +966,6 @@ export default function Analytics() {
     }
   };
 
-  const handleGenerateReport = async () => {
-    try {
-      // TODO: Implement real report generation
-      showToast("success", "Report generated successfully!");
-    } catch (error) {
-      showToast("error", "Failed to generate report");
-    }
-  };
 
   const handleScheduleReport = async () => {
     try {
@@ -958,11 +994,6 @@ export default function Analytics() {
     }
   };
 
-  const handleViewDetails = (section: string, data: any) => {
-    setViewDetailsData({ section, data });
-    setModalState((prev) => ({ ...prev, viewDetails: true }));
-  };
-
   const closeModal = (modalName: keyof typeof modalState) => {
     setModalState((prev) => ({ ...prev, [modalName]: false }));
   };
@@ -973,130 +1004,104 @@ export default function Analytics() {
         return (
           <div className="space-y-6">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {analyticsStats.map((stat, index) => (
-                <motion.div
-                  key={stat.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        {stat.name}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {stat.value}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {stat.change}
-                      </p>
-                    </div>
-                    <div
-                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
-                    >
-                      <stat.icon className="w-6 h-6 text-white" />
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 animate-pulse"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-3 flex-1">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+                      </div>
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Smart Insights */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  💡 Smart Insights
-                </h2>
+                ))}
+              </div>
+            ) : analyticsStats.length === 0 ? (
+              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                <FiBarChart2 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataAvailable")}
+                </h3>
+                <p className={`text-gray-600 dark:text-gray-400 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataDescription")}
+                </p>
                 <button
-                  onClick={toggleSmartInsights}
-                  className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    smartInsightsEnabled
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
+                  onClick={() => fetchDashboardData()}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
                 >
-                  <FiToggleRight className="w-4 h-4" />
-                  <span>{smartInsightsEnabled ? "Enabled" : "Disabled"}</span>
+                  {t("analytics.refreshData")}
                 </button>
               </div>
-              <SmartInsights
-                insights={uiInsights}
-                onActionClick={handleInsightAction}
-              />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                ⚡ Quick Actions
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={() =>
-                    setModalState((prev) => ({ ...prev, generateReport: true }))
-                  }
-                  className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
-                >
-                  <FiFileText className="w-6 h-6 text-blue-600" />
-                  <div className="text-left">
-                    <h3 className="font-medium text-blue-900">
-                      Generate Report
-                    </h3>
-                    <p className="text-sm text-blue-700">
-                      Create custom analytics report
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() =>
-                    setModalState((prev) => ({ ...prev, export: true }))
-                  }
-                  className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
-                >
-                  <FiDownload className="w-6 h-6 text-green-600" />
-                  <div className="text-left">
-                    <h3 className="font-medium text-green-900">
-                      Export Data
-                    </h3>
-                    <p className="text-sm text-green-700">
-                      Download analytics data
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() =>
-                    setModalState((prev) => ({ ...prev, scheduleReport: true }))
-                  }
-                  className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200 hover:bg-purple-100 transition-colors"
-                >
-                  <FiClock className="w-6 h-6 text-purple-600" />
-                  <div className="text-left">
-                    <h3 className="font-medium text-purple-900">
-                      Schedule Report
-                    </h3>
-                    <p className="text-sm text-purple-700">
-                      Set up automated reports
-                    </p>
-                  </div>
-                </button>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {analyticsStats.map((stat, index) => (
+                  <motion.div
+                    key={stat.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          {stat.name}
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                          {stat.value}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                          {stat.change}
+                        </p>
+                      </div>
+                      <div
+                        className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                      >
+                        <stat.icon className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            )}
+
+
           </div>
         );
 
       case "members":
         return (
           <div className="space-y-6">
-            {memberAnalyticsData ? (
+            {loading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>{t("analytics.loadingMemberAnalytics")}</p>
+                </div>
+              </div>
+            ) : memberAnalyticsData ? (
               <MemberAnalytics {...memberAnalyticsData} />
             ) : (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <p className="text-gray-600">Loading member analytics...</p>
+              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                <FiUsers className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataAvailable")}
+                </h3>
+                <p className={`text-gray-600 dark:text-gray-400 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataDescription")}
+                </p>
+                <button
+                  onClick={() => fetchDashboardData()}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                >
+                  {t("analytics.refreshData")}
+                </button>
               </div>
             )}
           </div>
@@ -1105,11 +1110,30 @@ export default function Analytics() {
       case "revenue":
         return (
           <div className="space-y-6">
-            {revenueOverviewData ? (
+            {loading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>{t("analytics.loadingRevenueAnalytics")}</p>
+                </div>
+              </div>
+            ) : revenueOverviewData ? (
               <RevenueOverview {...revenueOverviewData} />
             ) : (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <p className="text-gray-600">Loading revenue analytics...</p>
+              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                <FiDollarSign className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataAvailable")}
+                </h3>
+                <p className={`text-gray-600 dark:text-gray-400 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.noDataDescription")}
+                </p>
+                <button
+                  onClick={() => fetchDashboardData()}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                >
+                  {t("analytics.refreshData")}
+                </button>
               </div>
             )}
           </div>
@@ -1118,47 +1142,86 @@ export default function Analytics() {
       case "classes":
         return (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Class Analytics
-              </h2>
-              <p className="text-gray-600">
-                Class analytics content will be displayed here.
-              </p>
-            </div>
+            {loading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading class analytics...</p>
+                </div>
+              </div>
+            ) : (
+              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                <FiCalendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.classAnalytics")}
+                </h3>
+                <p className={`text-gray-600 dark:text-gray-400 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  {t("analytics.classAnalyticsContent")}
+                </p>
+                <button
+                  onClick={() => fetchDashboardData()}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                >
+                  {t("analytics.refreshData")}
+                </button>
+              </div>
+            )}
           </div>
         );
 
       case "insights":
         return (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Smart Insights
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <h2 className={`text-xl font-semibold text-gray-900 dark:text-white mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("analytics.smartInsights")}
               </h2>
-              <SmartInsightCards
-                insights={uiInsights}
-                onActionClick={(insight) =>
-                  handleInsightAction(insight.id, insight.action)
-                }
-                isPro={isPro}
-              />
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+                  <p className={`ml-3 text-gray-600 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading insights...</p>
+                </div>
+              ) : uiInsights.length === 0 ? (
+                <div className={`py-12 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  <FiTarget className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                    No Insights Available
+                  </h3>
+                  <p className={`text-gray-600 dark:text-gray-400 mb-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+                    We&apos;re analyzing your data. Insights will appear here once we have enough information.
+                  </p>
+                  <button
+                    onClick={() => {
+                      fetchInitialData();
+                      fetchDashboardData();
+                    }}
+                    className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                  >
+                    {t("analytics.refreshData")}
+                  </button>
+                </div>
+              ) : (
+                <SmartInsightCards
+                  insights={uiInsights}
+                  onActionClick={(insight) =>
+                    handleInsightAction(insight.id, insight.action)
+                  }
+                  isPro={isPro}
+                />
+              )}
             </div>
           </div>
         );
 
-      case "reports":
-        return (
-          <div className="space-y-6">
-            <SmartReportsDashboard refreshKey={0} stats={reportStats} />
-          </div>
-        );
+
 
       default:
         return null;
     }
   };
 
+  // Show loading spinner if actively loading or waiting for auth
+  // The timeout safeguard ensures we don't get stuck forever
   if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -1168,44 +1231,35 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-start">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               📊 Smart Analytics Dashboard
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               Smart-powered insights • Real-time data • Actionable reports
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() =>
                 setModalState((prev) => ({ ...prev, export: true }))
               }
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
             >
               <FiDownload className="w-4 h-4" />
-              <span>Export</span>
-            </button>
-            <button
-              onClick={() =>
-                setModalState((prev) => ({ ...prev, generateReport: true }))
-              }
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              <FiFileText className="w-4 h-4" />
-              <span>Generate Report</span>
+              <span>{t("analytics.export")}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Date Range Filter */}
           <div className="flex-1">
@@ -1214,7 +1268,8 @@ export default function Analytics() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
               }
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              dir={isRTL ? "rtl" : "ltr"}
             >
               {dateFilters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -1225,13 +1280,14 @@ export default function Analytics() {
           </div>
 
           {/* Branch Filter */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <select
               value={filters.branch}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, branch: e.target.value }))
               }
-              className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              dir={isRTL ? "rtl" : "ltr"}
             >
               <option value="all">All Branches</option>
               {branchOptions.map((branch) => (
@@ -1241,24 +1297,64 @@ export default function Analytics() {
               ))}
             </select>
 
-            <button className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`p-2 rounded-lg transition-colors ${
+                showAdvancedFilters
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+              aria-label="Advanced filters"
+            >
               <FiFilter className="w-4 h-4" />
             </button>
           </div>
         </div>
+
+        {/* Custom Date Range Row */}
+        {filters.dateRange === "custom" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 border-t border-gray-100 dark:border-gray-700/50 pt-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                {t("analytics.startDate") || "Start Date"}
+              </label>
+              <input
+                type="date"
+                value={filters.customStartDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, customStartDate: e.target.value }))
+                }
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                {t("analytics.endDate") || "End Date"}
+              </label>
+              <input
+                type="date"
+                value={filters.customEndDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, customEndDate: e.target.value }))
+                }
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl p-2 shadow-sm border border-gray-200">
-        <div className="flex space-x-1">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id as any)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeView === tab.id
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -1283,13 +1379,6 @@ export default function Analytics() {
 
       {/* Modals */}
       <AnimatePresence>
-        {modalState.generateReport && (
-          <GenerateReportModal
-            open={modalState.generateReport}
-            onClose={() => closeModal("generateReport")}
-            onSuccess={handleGenerateReport}
-          />
-        )}
 
         {modalState.export && (
           <ExportReportModal
@@ -1333,6 +1422,121 @@ export default function Analytics() {
           />
         )}
       </AnimatePresence>
+
+      {/* Filter Modal */}
+      <AdvancedFilterModal
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
+        title={t("analytics.advancedFilters")}
+        clearLabel={t("analytics.clearAllFilters")}
+        onClear={() => {
+          setFilters({
+            dateRange: "last-30-days",
+            customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+            customEndDate: toDateString(new Date()),
+            branch: "all",
+            metricType: "all",
+            minRevenue: "",
+            maxRevenue: "",
+          });
+        }}
+      >
+        {/* Metric Type Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("analytics.metricType")}
+          </label>
+          <select
+            value={filters.metricType}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                metricType: e.target.value,
+              }))
+            }
+            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
+            <option value="all">{t("analytics.allMetrics")}</option>
+            <option value="revenue">{t("analytics.revenue")}</option>
+            <option value="members">{t("analytics.members")}</option>
+            <option value="classes">{t("analytics.classes")}</option>
+            <option value="attendance">{t("dashboard.attendance")}</option>
+            <option value="retention">{t("members.retention")}</option>
+          </select>
+        </div>
+
+        {/* Member Type Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("analytics.memberType")}
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">{t("analytics.allMemberTypes")}</option>
+            <option value="active">{t("members.active")}</option>
+            <option value="inactive">{t("members.inactive")}</option>
+            <option value="premium">{t("members.premium")}</option>
+            <option value="standard">{t("members.standard")}</option>
+            <option value="trial">{t("members.trial")}</option>
+          </select>
+        </div>
+
+        {/* Class Type Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("analytics.classType")}
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">{t("analytics.allClassTypes")}</option>
+            <option value="group">{t("classes.groupClasses")}</option>
+            <option value="personal">{t("classes.personalTraining")}</option>
+            <option value="virtual">{t("classes.virtualClasses")}</option>
+            <option value="workshop">{t("classes.workshops")}</option>
+          </select>
+        </div>
+
+        {/* Revenue Range Filter */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t("analytics.minimumRevenue") || "Min Revenue"}
+            </label>
+            <input
+              type="number"
+              value={filters.minRevenue}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  minRevenue: e.target.value,
+                }))
+              }
+              placeholder="0.00"
+              step="0.01"
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+              dir={isRTL ? "rtl" : "ltr"}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t("analytics.maximumRevenue") || "Max Revenue"}
+            </label>
+            <input
+              type="number"
+              value={filters.maxRevenue}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  maxRevenue: e.target.value,
+                }))
+              }
+              placeholder="0.00"
+              step="0.01"
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+              dir={isRTL ? "rtl" : "ltr"}
+            />
+          </div>
+        </div>
+      </AdvancedFilterModal>
     </div>
   );
 }

@@ -2,20 +2,14 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FiCpu,
-  FiTrendingUp,
   FiUsers,
-  FiStar,
   FiActivity,
   FiTarget,
   FiZap,
-  FiClock,
-  FiDollarSign,
   FiBarChart,
   FiMessageSquare,
 } from "react-icons/fi";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -45,12 +39,11 @@ interface TrainerInsight {
 
 export default function SmartTrainerDashboard({
   refreshKey,
-  stats,
 }: SmartTrainerDashboardProps) {
-  const [insights, setInsights] =
+  const [insights] =
     useState<TrainerInsight[]>([]);
   const [loading, setLoading] = useState(false);
-  const [smartRecommendations, setSmartRecommendations] = useState<string[]>([]);
+  const [smartRecommendations] = useState<string[]>([]);
 
   useEffect(() => {
     // Mock data is already loaded

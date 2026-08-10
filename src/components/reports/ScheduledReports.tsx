@@ -14,7 +14,6 @@ import {
   FiCheckCircle,
   FiAlertCircle,
 } from "react-icons/fi";
-import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 
 interface ScheduledReportsProps {
@@ -51,8 +50,8 @@ export default function ScheduledReports({
   );
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<ReportMetric[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<ScheduledReport | null>(
+  const [, setShowCreateModal] = useState(false);
+  const [, setSelectedReport] = useState<ScheduledReport | null>(
     null,
   );
 

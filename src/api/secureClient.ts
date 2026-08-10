@@ -558,12 +558,11 @@ class SecureApiClient {
 
       const rolePermissions: Record<string, string[]> = {
         admin: ["all"],
-        manager: ["read", "write", "manage_staff"],
+        employee: ["read", "write", "manage_staff"],
         trainer: ["read", "write_classes"],
-        staff: ["read"],
       };
 
-      const userRole = (userMetadata?.role || "staff") as string;
+      const userRole = (userMetadata?.role || "trainer") as string;
       const permissions = rolePermissions[userRole] || ["read"];
 
       return permissions.includes(permission) || permissions.includes("all");

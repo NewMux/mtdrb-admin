@@ -22,22 +22,22 @@ const inactiveMembers = [
 const satisfaction = 87; // percent
 
 const MemberEngagementPanel: React.FC = () => (
-  <section className="rounded-3xl shadow-xl p-10 mb-10 bg-white/70 border border-[#E5E7EB] backdrop-blur-md bg-gradient-to-br from-white via-blue-50 to-blue-100">
-    <h2 className="text-3xl md:text-4xl font-extrabold mb-10 tracking-tight text-[#111827]">
+  <section className="rounded-3xl shadow-xl p-10 mb-10 bg-white/70 dark:bg-gray-800/70 border border-[#E5E7EB] dark:border-gray-700 backdrop-blur-md bg-gradient-to-br from-white via-blue-50 to-blue-100 dark:from-gray-800 dark:via-gray-800 dark:to-gray-700">
+    <h2 className="text-3xl md:text-4xl font-extrabold mb-10 tracking-tight text-[#111827] dark:text-white">
       Member Engagement
     </h2>
     <div className="flex flex-col gap-10">
       {/* Most Attended Classes */}
-      <div className="rounded-3xl shadow-md p-6 bg-blue-50">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+      <div className="rounded-3xl shadow-md p-6 bg-blue-50 dark:bg-blue-900/20">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
           <FiBarChart2 className="mr-2" />
           Most Attended Classes
         </h3>
         <ul className="space-y-2">
           {mostAttendedClasses.map((cls, idx) => (
             <li key={idx} className="flex justify-between items-center">
-              <span className="text-gray-900 font-medium">{cls.name}</span>
-              <span className="text-xs text-blue-700">
+              <span className="text-gray-900 dark:text-white font-medium">{cls.name}</span>
+              <span className="text-xs text-blue-700 dark:text-blue-400">
                 {cls.count} sessions
               </span>
             </li>
@@ -45,16 +45,16 @@ const MemberEngagementPanel: React.FC = () => (
         </ul>
       </div>
       {/* Most Booked Time Slots */}
-      <div className="rounded-3xl shadow-md p-6 bg-green-50">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+      <div className="rounded-3xl shadow-md p-6 bg-green-50 dark:bg-green-900/20">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
           <FiClock className="mr-2" />
           Most Booked Time Slots
         </h3>
         <ul className="space-y-2">
           {mostBookedSlots.map((slot, idx) => (
             <li key={idx} className="flex justify-between items-center">
-              <span className="text-gray-900 font-medium">{slot.slot}</span>
-              <span className="text-xs text-green-700">
+              <span className="text-gray-900 dark:text-white font-medium">{slot.slot}</span>
+              <span className="text-xs text-green-700 dark:text-green-400">
                 {slot.count} bookings
               </span>
             </li>
@@ -62,23 +62,23 @@ const MemberEngagementPanel: React.FC = () => (
         </ul>
       </div>
       {/* Inactive Members */}
-      <div className="rounded-3xl shadow-md p-6 bg-yellow-50">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+      <div className="rounded-3xl shadow-md p-6 bg-yellow-50 dark:bg-yellow-900/20">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
           <FiUserX className="mr-2" />
           Inactive Members
         </h3>
         <ul className="space-y-2">
           {inactiveMembers.map((m, idx) => (
             <li key={idx} className="flex justify-between items-center">
-              <span className="text-gray-900 font-medium">{m.name}</span>
-              <span className="text-xs text-yellow-700">{m.days} days</span>
+              <span className="text-gray-900 dark:text-white font-medium">{m.name}</span>
+              <span className="text-xs text-yellow-700 dark:text-yellow-400">{m.days} days</span>
             </li>
           ))}
         </ul>
       </div>
       {/* Member Satisfaction */}
-      <div className="rounded-3xl shadow-md p-6 bg-purple-50 flex flex-col items-center justify-center">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+      <div className="rounded-3xl shadow-md p-6 bg-purple-50 dark:bg-purple-900/20 flex flex-col items-center justify-center">
+        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
           <FiSmile className="mr-2" />
           Member Satisfaction
         </h3>
@@ -91,6 +91,7 @@ const MemberEngagementPanel: React.FC = () => (
               stroke="#E9D5FF"
               strokeWidth="12"
               fill="none"
+              className="dark:stroke-purple-900"
             />
             <circle
               cx="48"
@@ -104,11 +105,11 @@ const MemberEngagementPanel: React.FC = () => (
               strokeLinecap="round"
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-purple-700">
+          <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-purple-700 dark:text-purple-400">
             {satisfaction}%
           </span>
         </div>
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-gray-700 dark:text-gray-400">
           from feedback forms/ratings
         </span>
       </div>

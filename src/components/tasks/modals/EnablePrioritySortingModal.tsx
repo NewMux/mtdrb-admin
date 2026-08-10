@@ -2,11 +2,8 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiArrowUp,
-  FiClock,
-  FiTarget,
   FiZap,
   FiLock,
-  FiBarChart2,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
 import { useSmartTaskModal } from "./useSmartTaskModal";

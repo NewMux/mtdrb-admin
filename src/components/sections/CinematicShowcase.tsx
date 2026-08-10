@@ -108,7 +108,7 @@ const Scene: React.FC<SceneProps> = ({ title, subtitle, index }) => {
                   {/* Header */}
                   <div className="mb-12">
                     <h3 className="text-4xl font-semibold text-gray-900 mb-4">Dashboard</h3>
-                    <p className="text-xl text-gray-600">Welcome back, here's what's happening with your gym today.</p>
+                    <p className="text-xl text-gray-600">Welcome back, here&apos;s what&apos;s happening with your gym today.</p>
                   </div>
                   
                   {/* KPI Cards - now much larger */}
@@ -213,7 +213,7 @@ const Scene: React.FC<SceneProps> = ({ title, subtitle, index }) => {
 };
 
 const CinematicShowcase: React.FC = () => {
-  const [currentScene, setCurrentScene] = useState(0);
+  const [, setCurrentScene] = useState(0);
 
   const scenes = [
     {

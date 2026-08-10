@@ -2,16 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTrendingUp,
-  FiUsers,
   FiTarget,
   FiZap,
   FiAlertCircle,
-  FiCheckCircle,
   FiDollarSign,
   FiActivity,
   FiHeart,
-  FiStar,
-  FiArrowRight,
   FiRefreshCw,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
@@ -94,11 +90,9 @@ interface SmartMemberDashboardProps {
 
 export default function SmartMemberDashboard({
   refreshKey,
-  onMemberClick,
-  onAutomationTrigger,
 }: SmartMemberDashboardProps) {
   const [metrics, setMetrics] = useState<SmartMetrics | null>(null);
-  const [insights, setInsights] = useState<AutomationInsight[]>([]);
+  const [, setInsights] = useState<AutomationInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "predictions">(
     "overview",
@@ -459,34 +453,6 @@ export default function SmartMemberDashboard({
       setInsights(generatedInsights.slice(0, 6)); // Top 6 insights
     } catch (error) {
       console.error("Error fetching automation insights:", error);
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-50 border-red-200 text-red-800";
-      case "medium":
-        return "bg-yellow-50 border-yellow-200 text-yellow-800";
-      case "low":
-        return "bg-green-50 border-green-200 text-green-800";
-      default:
-        return "bg-gray-50 border-gray-200 text-gray-800";
-    }
-  };
-
-  const getInsightIcon = (type: string) => {
-    switch (type) {
-      case "churn_risk":
-        return FiAlertCircle;
-      case "upsell_opportunity":
-        return FiTrendingUp;
-      case "engagement_drop":
-        return FiActivity;
-      case "milestone_achieved":
-        return FiStar;
-      default:
-        return FiZap;
     }
   };
 

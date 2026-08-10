@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiMessageSquare,
@@ -21,8 +20,6 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
   onClose,
   trainer,
 }) => {
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const mockRequests = [
@@ -61,14 +58,14 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
     },
   ];
 
-  const handleApprove = async (requestId: number) => {
+  const handleApprove = async () => {
     setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
   };
 
-  const handleReject = async (requestId: number) => {
+  const handleReject = async () => {
     setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -231,14 +228,14 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                     {request.status === "pending" && (
                       <div className="ml-4 flex space-x-2">
                         <button
-                          onClick={() => handleApprove(request.id)}
+                          onClick={() => handleApprove()}
                           disabled={isLoading}
                           className="p-2 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 rounded-lg transition-colors"
                         >
                           <FiCheck className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleReject(request.id)}
+                          onClick={() => handleReject()}
                           disabled={isLoading}
                           className="p-2 bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-600 dark:text-red-400 rounded-lg transition-colors"
                         >

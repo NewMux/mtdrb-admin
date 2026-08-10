@@ -6,9 +6,7 @@ import {
   FiTrendingDown,
   FiUsers,
   FiDollarSign,
-  FiStar,
   FiCalendar,
-  FiTarget,
   FiActivity,
   FiFilter,
   FiClock,
@@ -21,6 +19,8 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useRTL } from "../../hooks/useRTL";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -135,6 +135,8 @@ const FilterBar: React.FC<{
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
 }> = ({ filters, onFilterChange }) => {
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateFilter = (key: keyof FilterState, value: any) => {
@@ -146,27 +148,27 @@ const FilterBar: React.FC<{
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-6 rounded-3xl shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 rounded-3xl shadow-sm" dir={isRTL ? "rtl" : "ltr"}>
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors`}
         >
-          <FiFilter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            Trainer Performance Filters
+          <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("trainers.advancedFilters")}
           </span>
         </button>
 
         {isExpanded && (
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2`}>
+            <button className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors`}>
               <FiRefreshCw className="w-4 h-4" />
-              Reset
+              {t("common.reset") || "Reset"}
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+            <button className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}>
               <FiDownload className="w-4 h-4" />
-              Export
+              {t("trainers.export")}
             </button>
           </div>
         )}
@@ -184,32 +186,34 @@ const FilterBar: React.FC<{
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
             {/* Branch Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Branch
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("common.branch") || "Branch"}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.branches[0] || ""}
                 onChange={(e) => updateFilter("branches", [e.target.value])}
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="">All Branches</option>
-                <option value="main">Main Branch</option>
-                <option value="north">North Branch</option>
-                <option value="south">South Branch</option>
+                <option value="">{t("common.allBranches") || "All Branches"}</option>
+                <option value="main">{t("common.mainBranch") || "Main Branch"}</option>
+                <option value="north">{t("common.northBranch") || "North Branch"}</option>
+                <option value="south">{t("common.southBranch") || "South Branch"}</option>
               </select>
             </div>
 
             {/* Trainer Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Trainer
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("trainers.title")}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.trainer}
                 onChange={(e) => updateFilter("trainer", e.target.value)}
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="">All Trainers</option>
+                <option value="">{t("trainers.allTrainers")}</option>
                 <option value="sarah">Sarah Johnson</option>
                 <option value="mike">Mike Chen</option>
                 <option value="emma">Emma Davis</option>
@@ -218,32 +222,34 @@ const FilterBar: React.FC<{
 
             {/* Date Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Range
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("common.dateRange") || "Date Range"}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.dateRange}
                 onChange={(e) => updateFilter("dateRange", e.target.value)}
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-                <option value="1y">Last Year</option>
+                <option value="7d">{t("common.last7Days") || "Last 7 Days"}</option>
+                <option value="30d">{t("common.last30Days") || "Last 30 Days"}</option>
+                <option value="90d">{t("common.last90Days") || "Last 90 Days"}</option>
+                <option value="1y">{t("common.lastYear") || "Last Year"}</option>
               </select>
             </div>
 
             {/* Class Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Class Type
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("classes.classType") || "Class Type"}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.classType}
                 onChange={(e) => updateFilter("classType", e.target.value)}
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="">All Types</option>
+                <option value="">{t("common.allTypes") || "All Types"}</option>
                 <option value="yoga">Yoga</option>
                 <option value="hiit">HIIT</option>
                 <option value="strength">Strength</option>
@@ -253,33 +259,35 @@ const FilterBar: React.FC<{
 
             {/* Member Gender Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gender
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("common.gender") || "Gender"}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.memberGender}
                 onChange={(e) => updateFilter("memberGender", e.target.value)}
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="">All</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="">{t("common.all") || "All"}</option>
+                <option value="male">{t("common.male") || "Male"}</option>
+                <option value="female">{t("common.female") || "Female"}</option>
               </select>
             </div>
 
             {/* Membership Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Membership
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t("members.membershipType") || "Membership"}
               </label>
               <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.membershipType}
                 onChange={(e) =>
                   updateFilter("membershipType", e.target.value)
                 }
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="">All Types</option>
+                <option value="">{t("common.allTypes") || "All Types"}</option>
                 <option value="basic">Basic</option>
                 <option value="premium">Premium</option>
                 <option value="vip">VIP</option>
@@ -301,10 +309,12 @@ const MetricCard: React.FC<{
   icon: React.ReactNode;
   color: string;
 }> = ({ title, value, subtitle, trend, trendValue, icon, color }) => {
+  const { isRTL } = useRTL();
+  
   const getTrendColor = () => {
-    if (trend === "up") return "text-green-600";
-    if (trend === "down") return "text-red-600";
-    return "text-gray-600";
+    if (trend === "up") return "text-green-600 dark:text-green-400";
+    if (trend === "down") return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
   };
 
   const getTrendIcon = () => {
@@ -317,16 +327,17 @@ const MetricCard: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200"
+      className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
         <div
           className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}
         >
           {icon}
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-sm ${getTrendColor()}`}>
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 text-sm ${getTrendColor()}`}>
             {getTrendIcon()}
             <span>{trendValue}</span>
           </div>
@@ -334,14 +345,14 @@ const MetricCard: React.FC<{
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-gray-600 mb-1">
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
           {title}
         </h3>
-        <p className="text-2xl font-bold text-gray-900">
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">
           {value}
         </p>
         {subtitle && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {subtitle}
           </p>
         )}
@@ -354,21 +365,27 @@ const ChartCard: React.FC<{
   title: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, children, className = "" }) => (
-  <div
-    className={`bg-white rounded-3xl p-6 shadow-sm border border-gray-200 ${className}`}
-  >
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-      {title}
-    </h3>
-    {children}
-  </div>
-);
+}> = ({ title, children, className = "" }) => {
+  const { isRTL } = useRTL();
+  return (
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+};
 
 export default function TrainerPerformanceDashboard({
   refreshKey,
 }: TrainerPerformanceDashboardProps) {
   const { tenantId } = useAuth();
+  const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<FilterState>({
     branches: [],
     trainer: "",
@@ -544,7 +561,7 @@ export default function TrainerPerformanceDashboard({
         return { date, revenue };
       });
 
-      const ratingTrend = months.map(({ date, monthKey }) => {
+      const ratingTrend = months.map(({ date }) => {
         // Use average rating for now (would need historical rating data)
         return { date, rating: avgRating || 0 };
       });
@@ -652,47 +669,47 @@ export default function TrainerPerformanceDashboard({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Filter Bar */}
       <FilterBar filters={filters} onFilterChange={setFilters} />
 
       {/* Performance Overview */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          🎯 Performance Overview
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          🎯 {t("trainers.performanceOverview") || "Performance Overview"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Total Sessions Led"
+            title={t("trainers.totalSessionsLed")}
             value={metrics.totalSessions}
-            subtitle="Classes conducted"
+            subtitle={t("trainers.classesConducted")}
             trend="up"
             trendValue="+12%"
             icon={<FiCalendar className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
           <MetricCard
-            title="Avg. Attendance / Class"
+            title={t("trainers.avgAttendancePerClass")}
             value={metrics.avgAttendancePerClass}
-            subtitle="Members per session"
+            subtitle={t("trainers.membersPerSession")}
             trend="up"
             trendValue="+8%"
             icon={<FiUsers className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
           <MetricCard
-            title="Total Attendance"
+            title={t("trainers.totalAttendance")}
             value={metrics.totalAttendance.toLocaleString()}
-            subtitle="All members attended"
+            subtitle={t("trainers.allMembersAttended")}
             trend="up"
             trendValue="+15%"
             icon={<FiUser className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
           <MetricCard
-            title="Cancelled Sessions"
+            title={t("trainers.cancelledSessions")}
             value={metrics.cancelledSessions}
-            subtitle="Missed classes"
+            subtitle={t("trainers.missedClasses")}
             trend="down"
             trendValue="-5%"
             icon={<FiX className="w-6 h-6 text-white" />}
@@ -703,41 +720,41 @@ export default function TrainerPerformanceDashboard({
 
       {/* Revenue Impact */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          💰 Revenue Impact
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          💰 {t("trainers.revenueImpact") || "Revenue Impact"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Revenue Generated"
+            title={t("trainers.revenueGenerated")}
             value={`$${metrics.revenueGenerated.toLocaleString()}`}
-            subtitle="Total earnings"
+            subtitle={t("trainers.totalEarnings")}
             trend="up"
             trendValue="+18%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
           <MetricCard
-            title="Avg. Revenue / Session"
+            title={t("trainers.avgRevenuePerSession")}
             value={`$${metrics.avgRevenuePerSession}`}
-            subtitle="Per class earnings"
+            subtitle={t("trainers.perClassEarnings")}
             trend="up"
             trendValue="+6%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
           <MetricCard
-            title="Revenue / Member"
+            title={t("trainers.revenuePerMember")}
             value={`$${metrics.revenuePerMember}`}
-            subtitle="Per attendee"
+            subtitle={t("trainers.perAttendee")}
             trend="up"
             trendValue="+9%"
             icon={<FiUser className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
           <MetricCard
-            title="Upsells"
+            title={t("trainers.upsells")}
             value={metrics.upsells}
-            subtitle="PT add-ons sold"
+            subtitle={t("trainers.ptAddOnsSold")}
             trend="up"
             trendValue="+22%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
@@ -748,41 +765,41 @@ export default function TrainerPerformanceDashboard({
 
       {/* Engagement Metrics */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📊 Engagement Metrics
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          📊 {t("trainers.engagementMetrics") || "Engagement Metrics"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Unique Members Trained"
+            title={t("trainers.uniqueMembersTrained")}
             value={metrics.uniqueMembersTrained}
-            subtitle="Different attendees"
+            subtitle={t("trainers.differentAttendees")}
             trend="up"
             trendValue="+14%"
             icon={<FiUsers className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
           <MetricCard
-            title="Repeat Clients"
+            title={t("trainers.repeatClients")}
             value={metrics.repeatClients}
-            subtitle="Returning members"
+            subtitle={t("trainers.returningMembers")}
             trend="up"
             trendValue="+11%"
             icon={<FiCheckCircle className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
           <MetricCard
-            title="Avg. Time Between Sessions"
-            value={`${metrics.avgTimeBetweenSessions} days`}
-            subtitle="Member frequency"
+            title={t("trainers.avgTimeBetweenSessions")}
+            value={`${metrics.avgTimeBetweenSessions} ${t("trainers.days")}`}
+            subtitle={t("trainers.memberFrequency")}
             trend="down"
             trendValue="-3%"
             icon={<FiClock className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
           <MetricCard
-            title="Avg. Sessions / Month"
+            title={t("trainers.avgSessionsPerMonth")}
             value={metrics.avgMemberSessionsPerMonth}
-            subtitle="Per member average"
+            subtitle={t("trainers.perMemberAverage")}
             trend="up"
             trendValue="+7%"
             icon={<FiCalendar className="w-6 h-6 text-white" />}
@@ -793,36 +810,36 @@ export default function TrainerPerformanceDashboard({
 
       {/* Class & Session Types */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          🏋️‍♂️ Class & Session Types
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          🏋️‍♂️ {t("trainers.classSessionTypes") || "Class & Session Types"}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Top Class Types Run">
+          <ChartCard title={t("trainers.topClassTypes") || "Top Class Types Run"}>
             <div className="space-y-3">
               {metrics.topClassTypes.map((classType, index) => (
                 <div
                   key={classType.type}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+                  className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-sm font-bold text-blue-600">
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3`}>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
                         {index + 1}
                       </span>
                     </div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {classType.type}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-600">
-                    {classType.count} sessions
+                  <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    {classType.count} {t("trainers.sessions") || "sessions"}
                   </span>
                 </div>
               ))}
             </div>
           </ChartCard>
 
-          <ChartCard title="Session Time Distribution">
+          <ChartCard title={t("trainers.sessionTimeDistribution") || "Session Time Distribution"}>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -848,17 +865,17 @@ export default function TrainerPerformanceDashboard({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <MetricCard
-            title="Avg. Duration per Session"
-            value={`${metrics.avgSessionDuration} min`}
-            subtitle="Class length"
+            title={t("trainers.avgDurationPerSession")}
+            value={`${metrics.avgSessionDuration} ${t("trainers.min")}`}
+            subtitle={t("trainers.classLength")}
             trend="neutral"
             icon={<FiClock className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
           <MetricCard
-            title="Session Fill Rate"
+            title={t("trainers.sessionFillRate")}
             value={`${metrics.sessionFillRate}%`}
-            subtitle="Capacity utilization"
+            subtitle={t("trainers.capacityUtilization")}
             trend="up"
             trendValue="+4%"
             icon={<FiBarChart className="w-6 h-6 text-white" />}
@@ -869,41 +886,41 @@ export default function TrainerPerformanceDashboard({
 
       {/* Risk & Quality Signals */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          ⚠️ Risk & Quality Signals
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          ⚠️ {t("trainers.riskQualitySignals") || "Risk & Quality Signals"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Low Rating Members"
+            title={t("trainers.lowRatingMembers")}
             value={metrics.lowRatingMembers}
-            subtitle="Rating ≤ 2 stars"
+            subtitle={t("trainers.rating2Stars")}
             trend="down"
             trendValue="-12%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
           <MetricCard
-            title="No-Shows"
+            title={t("trainers.noShows")}
             value={metrics.noShows}
-            subtitle="Missed appointments"
+            subtitle={t("trainers.missedAppointments")}
             trend="down"
             trendValue="-8%"
             icon={<FiX className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
           <MetricCard
-            title="Class Drop-offs"
+            title={t("trainers.classDropoffs")}
             value={metrics.classDropoffs}
-            subtitle="One-time attendees"
+            subtitle={t("trainers.oneTimeAttendees")}
             trend="down"
             trendValue="-15%"
             icon={<FiTrendingDown className="w-6 h-6 text-white" />}
             color="bg-yellow-500"
           />
           <MetricCard
-            title="Churn Rate"
+            title={t("trainers.churnRate")}
             value={`${metrics.churnRate}%`}
-            subtitle="Member loss"
+            subtitle={t("trainers.memberLoss")}
             trend="down"
             trendValue="-3%"
             icon={<FiActivity className="w-6 h-6 text-white" />}
@@ -914,11 +931,11 @@ export default function TrainerPerformanceDashboard({
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📈 Charts & Trends
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          📈 {t("trainers.chartsTrends") || "Charts & Trends"}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Attendance Over Time">
+          <ChartCard title={t("trainers.attendanceOverTime") || "Attendance Over Time"}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData.attendanceOverTime}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -935,7 +952,7 @@ export default function TrainerPerformanceDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Revenue Over Time">
+          <ChartCard title={t("trainers.revenueOverTime") || "Revenue Over Time"}>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData.revenueOverTime}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -953,7 +970,7 @@ export default function TrainerPerformanceDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Retention Curve">
+          <ChartCard title={t("trainers.retentionCurve") || "Retention Curve"}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData.retentionCurve}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -970,7 +987,7 @@ export default function TrainerPerformanceDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Rating Trend">
+          <ChartCard title={t("trainers.ratingTrend") || "Rating Trend"}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData.ratingTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -988,7 +1005,7 @@ export default function TrainerPerformanceDashboard({
           </ChartCard>
         </div>
 
-        <ChartCard title="Top vs Bottom Performing Trainers">
+        <ChartCard title={t("trainers.topBottomTrainers") || "Top vs Bottom Performing Trainers"}>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData.topVsBottomTrainers}>
               <CartesianGrid strokeDasharray="3 3" />

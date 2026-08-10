@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   FiEdit,
   FiTrash2,
   FiEye,
-  FiUserPlus,
   FiMessageCircle,
   FiClock,
   FiAlertTriangle,
@@ -11,21 +10,20 @@ import {
   FiXCircle,
   FiTrendingUp,
   FiTrendingDown,
-  FiSend,
   FiFileText,
-  FiFilter,
-  FiDownload,
   FiX,
   FiUser,
   FiChevronLeft,
   FiChevronRight,
   FiChevronsLeft,
   FiChevronsRight,
+  FiUserX,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { SmartButton } from "../ui/DesignSystem";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../hooks/usePermissions";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface Member {
   id: string;
@@ -54,6 +52,7 @@ interface SmartMemberTableProps {
   members: Member[];
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
+  onCancelMembership?: (member: Member) => void;
   onView: (member: Member) => void;
   onAssignTrainer: (member: Member) => void;
   loading?: boolean;
@@ -74,37 +73,40 @@ export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({
   status,
   daysLeft,
 }) => {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
   const getStatusConfig = () => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "active":
         return {
-          color: "bg-green-100 text-green-800",
+          color: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
           icon: FiCheckCircle,
-          text: "Active",
+          text: isArabic ? "نشط" : "Active",
         };
       case "expired":
         return {
-          color: "bg-red-100 text-red-800",
+          color: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400",
           icon: FiXCircle,
-          text: "Expired",
+          text: isArabic ? "منتهي" : "Expired",
         };
       case "payment_issue":
         return {
-          color: "bg-yellow-100 text-yellow-800",
+          color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400",
           icon: FiAlertTriangle,
-          text: "Payment Issue",
+          text: isArabic ? "مشكلة دفع" : "Payment Issue",
         };
       case "inactive":
         return {
-          color: "bg-gray-100 text-gray-800",
+          color: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
           icon: FiClock,
-          text: "Inactive",
+          text: isArabic ? "غير نشط" : "Inactive",
         };
       default:
         return {
-          color: "bg-gray-100 text-gray-800",
+          color: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
           icon: FiClock,
-          text: "Unknown",
+          text: isArabic ? "غير معروف" : "Unknown",
         };
     }
   };
@@ -114,12 +116,12 @@ export const StatusBadge: React.FC<{ status: string; daysLeft?: number }> = ({
 
   return (
     <div
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}
     >
-      <Icon className="w-3 h-3 mr-1" />
-      {config.text}
+      <Icon className="w-3 h-3" />
+      <span>{config.text}</span>
       {daysLeft !== undefined && daysLeft <= 30 && daysLeft > 0 && (
-        <span className="ml-1 text-xs">({daysLeft}d)</span>
+        <span className="text-xs">({daysLeft} {t("members.daysLeft")})</span>
       )}
     </div>
   );
@@ -130,32 +132,56 @@ export const TagPill: React.FC<{ tag: string; onRemove?: () => void }> = ({
   tag,
   onRemove,
 }) => {
-  const getTagColor = (tag: string) => {
-    switch (tag.toLowerCase()) {
+  const { i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
+  const getTagConfig = (tagStr: string) => {
+    const lower = tagStr.toLowerCase();
+    switch (lower) {
       case "trial":
-        return "bg-blue-100 text-blue-800";
+        return {
+          color: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400",
+          label: isArabic ? "تجريبي" : "Trial",
+        };
       case "loyal":
-        return "bg-purple-100 text-purple-800";
+        return {
+          color: "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400",
+          label: isArabic ? "وفي" : "Loyal",
+        };
       case "high performer":
-        return "bg-green-100 text-green-800";
+        return {
+          color: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
+          label: isArabic ? "أداء عالٍ" : "High Performer",
+        };
       case "at risk":
-        return "bg-red-100 text-red-800";
+        return {
+          color: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400",
+          label: isArabic ? "معرض للخطر" : "At Risk",
+        };
       case "new":
-        return "bg-orange-100 text-orange-800";
+        return {
+          color: "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400",
+          label: isArabic ? "جديد" : "New",
+        };
       default:
-        return "bg-gray-100 text-gray-800";
+        return {
+          color: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300",
+          label: tagStr,
+        };
     }
   };
 
+  const config = getTagConfig(tag);
+
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
     >
-      {tag}
+      <span>{config.label}</span>
       {onRemove && (
         <button
           onClick={onRemove}
-          className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
+          className="hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
         >
           <FiX className="w-3 h-3" />
         </button>
@@ -167,8 +193,8 @@ export const TagPill: React.FC<{ tag: string; onRemove?: () => void }> = ({
 // Trend Sparkline Component
 export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({
   data,
-  memberId,
 }) => {
+  const { t } = useTranslation();
   const getTrendDirection = (data: string[]) => {
     if (!data || !Array.isArray(data) || data.length < 2) return "stable";
 
@@ -188,9 +214,9 @@ export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({
   return (
     <div className="flex items-center space-x-2">
       <Icon
-        className={`w-4 h-4 ${trend === "up" ? "text-green-500" : trend === "down" ? "text-red-500" : "text-gray-500"}`}
+        className={`w-4 h-4 ${trend === "up" ? "text-green-500 dark:text-green-400" : trend === "down" ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}
       />
-      <span className="text-xs text-gray-600">{safeData.length} visits</span>
+      <span className="text-xs text-gray-600 dark:text-gray-400">{safeData.length} {t("members.visits")}</span>
     </div>
   );
 };
@@ -275,6 +301,8 @@ const Pagination: React.FC<PaginationProps> = ({
   itemsPerPage,
   onItemsPerPageChange,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const getVisiblePages = () => {
     const delta = 2;
     const range = [];
@@ -314,36 +342,37 @@ const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
+    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700`}>
       {/* Items per page selector */}
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-700">Show</span>
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
+        <span className="text-sm text-gray-700 dark:text-gray-300">{t("members.show")}</span>
         <select
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="form-select text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          className="form-select text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+          dir={isRTL ? "rtl" : "ltr"}
         >
           <option value={5}>5</option>
           <option value={10}>10</option>
           <option value={25}>25</option>
           <option value={50}>50</option>
         </select>
-        <span className="text-sm text-gray-700">per page</span>
+        <span className="text-sm text-gray-700 dark:text-gray-300">{t("members.perPage")}</span>
       </div>
 
       {/* Results info */}
-      <div className="text-sm text-gray-700">
-        Showing {startItem} to {endItem} of {totalItems} results
+      <div className="text-sm text-gray-700 dark:text-gray-300">
+        {t("members.showing")} {startItem} {t("members.to")} {endItem} {t("members.of")} {totalItems} {t("members.results")}
       </div>
 
       {/* Pagination controls */}
-      <div className="flex items-center space-x-1">
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
         {/* First page */}
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100"
-          title="First page"
+          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          title={t("members.firstPage")}
         >
           <FiChevronsLeft className="w-4 h-4" />
         </button>
@@ -352,8 +381,8 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100"
-          title="Previous page"
+          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          title={t("members.previousPage")}
         >
           <FiChevronLeft className="w-4 h-4" />
         </button>
@@ -362,14 +391,14 @@ const Pagination: React.FC<PaginationProps> = ({
         {getVisiblePages().map((page, index) => (
           <React.Fragment key={index}>
             {page === "..." ? (
-              <span className="px-3 py-2 text-gray-500">...</span>
+              <span className="px-3 py-2 text-gray-500 dark:text-gray-400">...</span>
             ) : (
               <button
                 onClick={() => onPageChange(page as number)}
                 className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   currentPage === page
                     ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 {page}
@@ -382,8 +411,8 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100"
-          title="Next page"
+          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          title={t("members.nextPage")}
         >
           <FiChevronRight className="w-4 h-4" />
         </button>
@@ -392,8 +421,8 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100"
-          title="Last page"
+          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          title={t("members.lastPage")}
         >
           <FiChevronsRight className="w-4 h-4" />
         </button>
@@ -465,12 +494,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   members,
   onEdit,
   onDelete,
+  onCancelMembership,
   onView,
-  onAssignTrainer,
   loading = false,
-  sortBy,
-  sortOrder,
-  onSort,
   // Pagination props with defaults
   currentPage = 1,
   totalPages = 1,
@@ -479,6 +505,8 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   onItemsPerPageChange = () => {},
   totalItems = 0,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   // Permission checks
   const { canEdit, canDelete } = usePermissions();
   // Enhanced members with computed properties
@@ -496,16 +524,12 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   // Use enhanced members directly since filtering is removed
   const filteredMembers = enhancedMembers;
 
-  const handleSort = (field: string) => {
-    onSort?.(field);
-  };
-
   if (loading) {
     return (
-      <div className="card">
+      <div className="card dark:bg-gray-800">
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 rounded-xl" />
+            <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-xl" />
           ))}
         </div>
       </div>
@@ -515,29 +539,29 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   return (
     <div className="space-y-6">
       {/* Enhanced Table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden dark:bg-gray-800 dark:border-gray-700">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Member
+                <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                  {t("members.name")}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                  {t("common.status")}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Check-in
+                <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                  {t("members.lastCheckin")}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tags
+                <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                  {t("members.tags")}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider`}>
+                  {t("members.actions")}
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               <AnimatePresence>
                 {filteredMembers.map((member, index) => (
                   <motion.tr
@@ -546,27 +570,27 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: index * 0.05 }}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     {/* Member Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                               {member.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                        <div className="text-start">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {member.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {member.phone}
                           </div>
-                          <div className="text-xs text-gray-400">
-                            Joined{" "}
+                          <div className="text-xs text-gray-400 dark:text-gray-500">
+                            {t("members.joinDate")}{" "}
                             {new Date(member.joinDate).toLocaleDateString()}
                           </div>
                         </div>
@@ -583,14 +607,14 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
 
                     {/* Last Check-in */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-900">
+                      <div className="flex items-center gap-2 text-start">
+                        <span className="text-sm text-gray-900 dark:text-gray-100">
                           {new Date(member.lastCheckIn).toLocaleDateString()}
                         </span>
                         {member.isInactive && (
                           <FiAlertTriangle
-                            className="w-4 h-4 text-red-500"
-                            title="Inactive for more than 10 days"
+                            className="w-4 h-4 text-red-500 dark:text-red-400"
+                            title={t("members.inactive")}
                           />
                         )}
                       </div>
@@ -607,11 +631,11 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
 
                     {/* Actions */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => onView(member)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="View Profile"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                          title={t("members.viewProfile")}
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -619,8 +643,8 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         {canEdit && (
                           <button
                             onClick={() => onEdit(member)}
-                            className="text-gray-600 hover:text-gray-900"
-                            title="Edit Member"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                            title={t("members.editMember")}
                           >
                             <FiEdit className="w-4 h-4" />
                           </button>
@@ -628,11 +652,21 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
 
                         <WhatsAppButton member={member} template="inactive" />
 
+                        {onCancelMembership && member.status === "active" && (
+                          <button
+                            onClick={() => onCancelMembership(member)}
+                            className="text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300"
+                            title={t("members.cancelMembership", "Cancel Membership")}
+                          >
+                            <FiUserX className="w-4 h-4" />
+                          </button>
+                        )}
+
                         {canDelete && (
                           <button
                             onClick={() => onDelete(member)}
-                            className="text-red-600 hover:text-red-900"
-                            title="Delete Member"
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                            title={t("members.deleteMember")}
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </button>
@@ -649,12 +683,12 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
         {/* Empty State */}
         {filteredMembers.length === 0 && (
           <div className="text-center py-12">
-            <FiUser className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No members found
+            <FiUser className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+              {t("members.noMembersFound")}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new member
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t("members.getStartedCreating")}
             </p>
           </div>
         )}

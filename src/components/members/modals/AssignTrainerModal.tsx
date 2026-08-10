@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
   FiUser,
   FiUsers,
@@ -12,6 +12,8 @@ import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 import { Member } from "../../../types/member";
 import { supabase } from "../../../supabaseClient";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface AssignTrainerModalProps {
   isOpen: boolean;
@@ -39,9 +41,10 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   onClose,
   member,
   onSuccess,
-  loading = false,
   modalRef,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [selectedTrainer, setSelectedTrainer] = React.useState<string>("");
   const [isAssigning, setIsAssigning] = React.useState(false);
 
@@ -168,46 +171,40 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         <ColorfulModalUI
           open={isOpen}
           onClose={handleClose}
-          title="Assign Personal Trainer"
-          subtitle={`Assign a trainer to ${member.name}`}
+          title={t("members.assignPersonalTrainer", "تعيين مدرب شخصي")}
+          subtitle={t("members.assignTrainerToMember", `تعيين مدرب للعضو ${member.name}`)}
           modalRef={modalRef}
         >
-          <div className="space-y-6">
+          <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Current Assignment */}
             {currentTrainer && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                  <FiUser className="w-5 h-5 mr-2" />
-                  Current Trainer
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FiUser className="w-5 h-5 text-blue-600" />
+                  <span>{t("members.currentTrainer", "المدرب الحالي")}</span>
                 </h3>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-purple-400 flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-purple-400 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-medium text-sm">
                         {currentTrainer.avatar}
                       </span>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-start">
                       <h4 className="font-medium text-gray-900 dark:text-white">
                         {currentTrainer.name}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {currentTrainer.specialization}
                       </p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center space-x-1">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-1">
                           <FiStar className="w-3 h-3 text-yellow-500" />
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {currentTrainer.rating}
-                          </span>
+                          <span>{currentTrainer.rating}</span>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          •
-                        </span>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                          {currentTrainer.experience}
-                        </span>
+                        <span>•</span>
+                        <span>{currentTrainer.experience}</span>
                       </div>
                     </div>
                     <SmartButton
@@ -217,7 +214,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       loading={isAssigning}
                       disabled={isAssigning}
                     >
-                      Remove
+                      {t("members.remove", "إزالة")}
                     </SmartButton>
                   </div>
                 </div>
@@ -226,9 +223,9 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
             {/* Available Trainers */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                <FiUsers className="w-5 h-5 mr-2" />
-                Available Trainers
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <FiUsers className="w-5 h-5 text-blue-600" />
+                <span>{t("members.availableTrainers", "المدربون المتاحون")}</span>
               </h3>
 
               <div className="space-y-3">

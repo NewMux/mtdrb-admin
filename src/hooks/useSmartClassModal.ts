@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 // Removed mock data - using real data from Supabase
 
-interface Class {
+export interface SmartClass {
   id: string;
   name: string;
   description?: string;
@@ -22,9 +22,11 @@ interface Class {
   status: "active" | "cancelled" | "completed" | "full";
   created_at: string;
   updated_at: string;
+  price?: number;
+  cost?: number;
 }
 
-interface Trainer {
+export interface SmartTrainer {
   id: string;
   name: string;
   email: string;
@@ -32,14 +34,14 @@ interface Trainer {
   availability: any[];
 }
 
-interface Room {
+export interface SmartRoom {
   id: string;
   name: string;
   capacity: number;
   equipment: string[];
 }
 
-interface SmartRecommendation {
+export interface SmartRecommendation {
   id: string;
   type:
     | "scheduling"
@@ -56,7 +58,7 @@ interface SmartRecommendation {
   priority: "high" | "medium" | "low";
 }
 
-interface ValidationError {
+export interface ValidationError {
   field: string;
   message: string;
 }
@@ -79,13 +81,46 @@ interface UseSmartClassModalProps {
   isPro?: boolean;
 }
 
+export interface UseSmartClassModalReturn {
+  classData: SmartClass | null;
+  trainers: SmartTrainer[];
+  rooms: SmartRoom[];
+  loading: boolean;
+  errors: ValidationError[];
+  recommendations: SmartRecommendation[];
+  conflicts: any[];
+  isValid: boolean;
+  activeModal: ModalType;
+  selectedClass: SmartClass | null;
+  deleteLoading: boolean;
+  fetchClass: () => Promise<void>;
+  fetchTrainers: () => Promise<void>;
+  fetchRooms: () => Promise<void>;
+  checkConflicts: (
+    trainerId: string,
+    startTime: string,
+    endTime: string,
+    date: string,
+    excludeClassId?: string,
+  ) => Promise<boolean>;
+  validateForm: (formData: Partial<SmartClass>) => boolean;
+  validateField: (field: string, value: any) => ValidationError | null;
+  saveClass: (classData: Partial<SmartClass>) => Promise<boolean>;
+  deleteClass: () => Promise<boolean>;
+  generateRecommendations: (classData?: Partial<SmartClass>) => Promise<void>;
+  getPopularTimeSlots: () => Promise<string[]>;
+  openModal: (modalType: ModalType, classItem?: SmartClass) => void;
+  closeModal: () => void;
+  handleModalSuccess: () => void;
+}
+
 export const useSmartClassModal = ({
   classId,
   isPro = false,
-}: UseSmartClassModalProps) => {
-  const [classData, setClassData] = useState<Class | null>(null);
-  const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
+}: UseSmartClassModalProps): UseSmartClassModalReturn => {
+  const [classData, setClassData] = useState<SmartClass | null>(null);
+  const [trainers, setTrainers] = useState<SmartTrainer[]>([]);
+  const [rooms, setRooms] = useState<SmartRoom[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [recommendations, setRecommendations] = useState<SmartRecommendation[]>(
@@ -96,11 +131,11 @@ export const useSmartClassModal = ({
 
   // Modal state management
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [selectedClass, setSelectedClass] = useState<SmartClass | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch class data
-  const fetchClass = async () => {
+  const fetchClass = useCallback(async () => {
     if (!classId) return;
 
     setLoading(true);
@@ -131,8 +166,8 @@ export const useSmartClassModal = ({
         .select("*", { count: "exact", head: true })
         .eq("class_id", classId);
 
-      // Transform to match expected Class interface
-      const transformedClass: Class = {
+      // Transform to match expected SmartClass interface
+      const transformedClass: SmartClass = {
         id: classData.id,
         name: classData.name,
         type: classData.type || "",
@@ -160,7 +195,9 @@ export const useSmartClassModal = ({
         location: classData.room || "",
         room_id: classData.room || "",
         trainer_id: classData.trainer_id,
-        recurrence: "none"
+        recurrence: "none",
+        price: classData.price || 0,
+        cost: classData.metadata?.cost || 0,
       };
 
       setClassData(transformedClass);
@@ -170,10 +207,10 @@ export const useSmartClassModal = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [classId]);
 
   // Fetch trainers
-  const fetchTrainers = async () => {
+  const fetchTrainers = useCallback(async () => {
     try {
       // Fetch trainers from Supabase
       const { data: { user } } = await supabase.auth.getUser();
@@ -198,7 +235,7 @@ export const useSmartClassModal = ({
 
         if (error) throw error;
 
-        const trainers: Trainer[] = (data || []).map((t: any) => ({
+        const trainers: SmartTrainer[] = (data || []).map((t: any) => ({
           id: t.id,
           name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email,
           email: t.email,
@@ -211,10 +248,10 @@ export const useSmartClassModal = ({
     } catch (error) {
       console.error("Error fetching trainers:", error);
     }
-  };
+  }, []);
 
   // Fetch rooms
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
       // TODO: Fetch rooms from Supabase when rooms table is available
       // For now, return empty array - no mock data
@@ -223,10 +260,10 @@ export const useSmartClassModal = ({
       console.error("Error fetching rooms:", error);
       setRooms([]);
     }
-  };
+  }, []);
 
   // Check for conflicts
-  const checkConflicts = async (
+  const checkConflicts = useCallback(async (
     trainerId: string,
     startTime: string,
     endTime: string,
@@ -281,10 +318,10 @@ export const useSmartClassModal = ({
       console.error("Error checking conflicts:", error);
       return false;
     }
-  };
+  }, []);
 
   // Generate Smart recommendations using real data
-  const generateRecommendations = async (classData?: Partial<Class>) => {
+  const generateRecommendations = useCallback(async (classData?: Partial<SmartClass>) => {
     if (!isPro) return;
 
     try {
@@ -365,10 +402,10 @@ export const useSmartClassModal = ({
       // Fallback to empty array on error
       setRecommendations([]);
     }
-  };
+  }, [isPro]);
 
   // Validate individual field
-  const validateField = (field: string, value: any): ValidationError | null => {
+  const validateField = useCallback((field: string, value: any): ValidationError | null => {
     switch (field) {
       case "name":
         if (!value || value.trim().length < 2) {
@@ -407,14 +444,14 @@ export const useSmartClassModal = ({
         break;
     }
     return null;
-  };
+  }, []);
 
   // Validate entire form
-  const validateForm = (formData: Partial<Class>): boolean => {
+  const validateForm = useCallback((formData: Partial<SmartClass>): boolean => {
     const newErrors: ValidationError[] = [];
 
     Object.keys(formData).forEach((field) => {
-      const error = validateField(field, formData[field as keyof Class]);
+      const error = validateField(field, formData[field as keyof SmartClass]);
       if (error) {
         newErrors.push(error);
       }
@@ -423,21 +460,74 @@ export const useSmartClassModal = ({
     setErrors(newErrors);
     setIsValid(newErrors.length === 0);
     return newErrors.length === 0;
-  };
+  }, [validateField]);
 
   // Save class
-  const saveClass = async (classData: Partial<Class>): Promise<boolean> => {
+  const saveClass = useCallback(async (classData: Partial<SmartClass>): Promise<boolean> => {
     if (!validateForm(classData)) {
       return false;
     }
 
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User not authenticated");
+        return false;
+      }
+
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (!tenantId) {
+        toast.error("No workspace found. Please complete onboarding.");
+        return false;
+      }
+
+      const dateVal = classData.date;
+      const startVal = classData.start_time;
+      const endVal = classData.end_time;
+
+      const startIso = new Date(`${dateVal}T${startVal}:00`).toISOString();
+      const endIso = new Date(`${dateVal}T${endVal}:00`).toISOString();
+
+      const dbPayload = {
+        tenant_id: tenantId,
+        name: classData.name,
+        description: classData.description || "",
+        trainer_id: classData.trainer_id,
+        start_time: startIso,
+        end_time: endIso,
+        capacity: classData.capacity,
+        status: classData.status || "active",
+        type: classData.type,
+        room: classData.room_id || null,
+        location: classData.room_id || null,
+        recurrence_rule: classData.recurrence || "none",
+        color: (classData as any).color || "#0071E3",
+      };
+
       if (classId) {
         // Update existing class
+        const { error } = await supabase
+          .from("classes")
+          .update(dbPayload)
+          .eq("id", classId);
+        if (error) throw error;
         toast.success("Class updated successfully");
       } else {
         // Create new class
+        const { error } = await supabase
+          .from("classes")
+          .insert(dbPayload);
+        if (error) throw error;
         toast.success("Class created successfully");
       }
 
@@ -449,14 +539,19 @@ export const useSmartClassModal = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [classId, validateForm]);
 
   // Delete class
-  const deleteClass = async (): Promise<boolean> => {
+  const deleteClass = useCallback(async (): Promise<boolean> => {
     if (!classId) return false;
 
     setDeleteLoading(true);
     try {
+      const { error } = await supabase
+        .from("classes")
+        .delete()
+        .eq("id", classId);
+      if (error) throw error;
       toast.success("Class deleted successfully");
       return true;
     } catch (error) {
@@ -466,10 +561,10 @@ export const useSmartClassModal = ({
     } finally {
       setDeleteLoading(false);
     }
-  };
+  }, [classId]);
 
   // Get popular time slots
-  const getPopularTimeSlots = async (): Promise<string[]> => {
+  const getPopularTimeSlots = useCallback(async (): Promise<string[]> => {
     try {
       // Fetch popular time slots from Supabase
       const { data: { user } } = await supabase.auth.getUser();
@@ -510,24 +605,24 @@ export const useSmartClassModal = ({
       console.error("Error fetching popular time slots:", error);
       return [];
     }
-  };
+  }, []);
 
   // Modal management functions
-  const openModal = (modalType: ModalType, classItem?: Class) => {
+  const openModal = useCallback((modalType: ModalType, classItem?: SmartClass) => {
     setActiveModal(modalType);
     setSelectedClass(classItem || null);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setActiveModal(null);
     setSelectedClass(null);
-  };
+  }, []);
 
-  const handleModalSuccess = () => {
+  const handleModalSuccess = useCallback(() => {
     closeModal();
     // Trigger refresh of data
     window.location.reload();
-  };
+  }, [closeModal]);
 
   // Initialize data
   useEffect(() => {

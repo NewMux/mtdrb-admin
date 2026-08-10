@@ -14,6 +14,7 @@ import {
 import { Line, Bar } from "react-chartjs-2";
 import { FiTrendingUp, FiUsers, FiStar, FiClock } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
+import { useTheme } from "../../contexts/ThemeContext";
 
 ChartJS.register(
   CategoryScale,
@@ -47,6 +48,7 @@ interface TopFeedback {
 }
 
 export default function TrainerPerformance() {
+  const { isDark } = useTheme();
   const [selectedTrainer, setSelectedTrainer] = useState<string>("");
   const [dateRange, setDateRange] = useState<"1m" | "3m" | "6m" | "1y">("3m");
   const [trainers, setTrainers] = useState<{ id: string; name: string }[]>([]);
@@ -208,43 +210,6 @@ export default function TrainerPerformance() {
     return performance.length > 0 ? performance[performance.length - 1] : null;
   };
 
-  const getAveragePerformance = (): TrainerPerformance | null => {
-    if (performance.length === 0) return null;
-
-    const totals = performance.reduce(
-      (acc, curr) => ({
-        total_sessions: acc.total_sessions + curr.total_sessions,
-        completed_sessions: acc.completed_sessions + curr.completed_sessions,
-        cancelled_sessions: acc.cancelled_sessions + curr.cancelled_sessions,
-        no_shows: acc.no_shows + curr.no_shows,
-        avg_rating: acc.avg_rating + curr.avg_rating,
-        revenue: acc.revenue + curr.revenue,
-      }),
-      {
-        total_sessions: 0,
-        completed_sessions: 0,
-        cancelled_sessions: 0,
-        no_shows: 0,
-        avg_rating: 0,
-        revenue: 0,
-      }
-    );
-
-    const count = performance.length;
-    return {
-      trainer_id: selectedTrainer,
-      month: "Average",
-      total_sessions: totals.total_sessions,
-      completed_sessions: totals.completed_sessions,
-      cancelled_sessions: totals.cancelled_sessions,
-      no_shows: totals.no_shows,
-      total_members: 0,
-      avg_rating: totals.avg_rating / count,
-      revenue: totals.revenue,
-      attendance_rate: (totals.completed_sessions / totals.total_sessions) * 100,
-    };
-  };
-
   const chartData: ChartData<"line"> = {
     labels: performance.map((p) => p.month),
     datasets: [
@@ -279,7 +244,6 @@ export default function TrainerPerformance() {
   };
 
   const latest = getLatestPerformance();
-  const average = getAveragePerformance();
 
   return (
     <div className="space-y-6">
@@ -387,18 +351,56 @@ export default function TrainerPerformance() {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Session Trends
               </h3>
-              <Line data={chartData} />
+              <Line 
+                data={chartData} 
+                options={{
+                  scales: {
+                    y: {
+                      grid: { color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" },
+                      ticks: { color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" },
+                    },
+                    x: {
+                      grid: { display: false },
+                      ticks: { color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" },
+                    },
+                  },
+                  plugins: {
+                    legend: {
+                      labels: { color: isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)" },
+                    },
+                  },
+                }}
+              />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Rating Trends
               </h3>
-              <Bar data={ratingData} />
+              <Bar 
+                data={ratingData}
+                options={{
+                  scales: {
+                    y: {
+                      grid: { color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" },
+                      ticks: { color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" },
+                    },
+                    x: {
+                      grid: { display: false },
+                      ticks: { color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" },
+                    },
+                  },
+                  plugins: {
+                    legend: {
+                      labels: { color: isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)" },
+                    },
+                  },
+                }}
+              />
             </div>
           </div>
 

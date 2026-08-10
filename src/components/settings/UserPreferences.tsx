@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  FiUser,
   FiEye,
   FiLayout,
   FiEdit,
@@ -13,9 +12,7 @@ interface UserPreferencesProps {
   refreshKey: number;
 }
 
-export const UserPreferences: React.FC<UserPreferencesProps> = ({
-  refreshKey,
-}) => {
+export const UserPreferences: React.FC<UserPreferencesProps> = () => {
   const [preferences, setPreferences] = useState({
     theme: "light",
     language: "en",

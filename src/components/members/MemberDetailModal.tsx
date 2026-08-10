@@ -1,19 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   FiUser,
-  FiPhone,
-  FiMail,
-  FiCalendar,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiClock,
   FiAlertTriangle,
   FiCheckCircle,
   FiXCircle,
   FiEdit,
-  FiEye,
-  FiTrash2,
-  FiMessageCircle,
   FiFileText,
   FiTarget,
   FiDollarSign,
@@ -52,7 +43,6 @@ interface MemberDetailModalProps {
   onClose: () => void;
   member: Member | null;
   onEdit: (member: Member) => void;
-  onDelete: (member: Member) => void;
 }
 
 const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
@@ -60,7 +50,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
   onClose,
   member,
   onEdit,
-  onDelete,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "profile" | "attendance" | "billing" | "documents"
@@ -118,13 +107,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
     return tags;
   };
 
-  const hasCompletedDocs = (member: Member) => {
-    return (
-      member.formsSubmitted.includes("waiver") &&
-      member.formsSubmitted.includes("id_document")
-    );
-  };
-
   const getAttendanceStats = (attendance: string[]) => {
     const now = new Date();
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -154,7 +136,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
   const computedTags = generateTags(member);
   const daysLeft = getDaysLeft(member.planEnd);
   const isInactiveMember = isInactive(member);
-  const hasCompletedDocsMember = hasCompletedDocs(member);
   const attendanceStats = getAttendanceStats(member.attendance);
   const billingInfo = getBillingInfo(member);
 

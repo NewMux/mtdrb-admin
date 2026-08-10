@@ -2,37 +2,6 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* ===== BRAND COLOR VARIABLES ===== */
-:root {
-  /* Primary brand colors - set by ThemeContext based on tenant settings */
-  --brand-primary: #155FD9;
-  --brand-secondary: #489BFA;
-  
-  /* Primary shades */
-  --brand-primary-50: rgb(235, 245, 255);
-  --brand-primary-100: rgb(219, 234, 254);
-  --brand-primary-200: rgb(191, 219, 254);
-  --brand-primary-300: rgb(147, 197, 253);
-  --brand-primary-400: rgb(96, 165, 250);
-  --brand-primary-500: #155FD9;
-  --brand-primary-600: rgb(37, 99, 235);
-  --brand-primary-700: rgb(29, 78, 216);
-  --brand-primary-800: rgb(30, 64, 175);
-  --brand-primary-900: rgb(30, 58, 138);
-  
-  /* Secondary shades */
-  --brand-secondary-50: rgb(240, 249, 255);
-  --brand-secondary-100: rgb(224, 242, 254);
-  --brand-secondary-200: rgb(186, 230, 253);
-  --brand-secondary-300: rgb(125, 211, 252);
-  --brand-secondary-400: rgb(56, 189, 248);
-  --brand-secondary-500: #489BFA;
-  --brand-secondary-600: rgb(2, 132, 199);
-  --brand-secondary-700: rgb(3, 105, 161);
-  --brand-secondary-800: rgb(7, 89, 133);
-  --brand-secondary-900: rgb(12, 74, 110);
-}
-
 /* ===== GLOBAL STYLES ===== */
 @layer base {
   * {
@@ -52,6 +21,23 @@
     margin: 0;
     padding: 0;
     scroll-behavior: smooth;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .dark body {
+    background-color: #111827;
+    color: #f9fafb;
+  }
+
+  /* Dark mode selection */
+  .dark ::selection {
+    background-color: #1e40af;
+    color: #dbeafe;
+  }
+
+  /* Dark mode focus styles */
+  .dark *:focus {
+    outline-color: #60a5fa;
   }
 
   /* Smooth scrolling for the entire page */
@@ -93,12 +79,17 @@
 @layer components {
   /* Form inputs */
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-lunaNavy placeholder-gray-400 focus:ring-2 focus:ring-lunaCyan focus:border-lunaCyan transition-colors;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-lunaNavy dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-lunaCyan focus:border-lunaCyan transition-colors;
+  }
+
+  /* Form selects */
+  .form-select {
+    @apply px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-lunaNavy dark:text-gray-100 focus:ring-2 focus:ring-lunaCyan focus:border-lunaCyan transition-colors;
   }
 
   /* Cards */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
   }
 
   /* Buttons */
@@ -111,7 +102,7 @@
   }
 
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-lunaNavy focus:ring-gray-500;
+    @apply bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-lunaNavy dark:text-gray-100 focus:ring-gray-500;
   }
 
   /* Badges */
@@ -120,15 +111,15 @@
   }
 
   .badge-success {
-    @apply bg-green-100 text-green-800;
+    @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400;
   }
 
   .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400;
   }
 
   .badge-danger {
-    @apply bg-red-100 text-red-800;
+    @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400;
   }
 
   /* Tables */
@@ -137,11 +128,11 @@
   }
 
   .table th {
-    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200;
+    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700;
   }
 
   .table td {
-    @apply px-4 py-3 text-sm text-lunaNavy border-b border-gray-200;
+    @apply px-4 py-3 text-sm text-lunaNavy dark:text-gray-300 border-b border-gray-200 dark:border-gray-700;
   }
 
   /* Modals */
@@ -154,7 +145,7 @@
   }
 
   .modal-content {
-    @apply relative bg-white rounded-lg shadow-lg border border-gray-200;
+    @apply relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700;
   }
 
   /* Navigation */
@@ -206,25 +197,25 @@
 
   /* Progress bars */
   .progress-bar {
-    @apply w-full bg-gray-200 rounded-full h-2;
+    @apply w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2;
   }
 
   .progress-bar-fill {
-    @apply h-2 bg-blue-600 rounded-full transition-all duration-300;
+    @apply h-2 bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-300;
   }
 
   /* Tooltips */
   .tooltip {
-    @apply absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-lg;
+    @apply absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg;
   }
 
   /* Dropdowns */
   .dropdown {
-    @apply absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1;
+    @apply absolute z-10 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1;
   }
 
   .dropdown-item {
-    @apply block w-full px-4 py-2 text-sm text-lunaNavy hover:bg-gray-100 transition-colors;
+    @apply block w-full px-4 py-2 text-sm text-lunaNavy dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
   }
 
   /* Alerts */
@@ -233,19 +224,19 @@
   }
 
   .alert-success {
-    @apply bg-green-50 border-green-200 text-green-800;
+    @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-800 dark:text-green-400;
   }
 
   .alert-warning {
-    @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+    @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-400;
   }
 
   .alert-danger {
-    @apply bg-red-50 border-red-200 text-red-800;
+    @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-800 dark:text-red-400;
   }
 
   .alert-info {
-    @apply bg-blue-50 border-blue-200 text-blue-800;
+    @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-400;
   }
 }
 
@@ -274,9 +265,46 @@
     background-color: #9ca3af;
   }
 
+  /* Dark mode scrollbar */
+  .dark .scrollbar-thin {
+    scrollbar-color: #4b5563 transparent;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
+  }
+
+  /* Dark mode global scrollbar */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+    border-radius: 4px;
+    border: 2px solid #1f2937;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
+  }
+
   /* Glass effect */
   .glass {
     @apply bg-white/80 backdrop-blur-xl;
+  }
+
+  .dark .glass {
+    @apply bg-gray-800/80 backdrop-blur-xl;
   }
 
   /* Animation durations */
@@ -355,88 +383,76 @@
     background-clip: text;
   }
   
-  /* ===== BRAND COLOR UTILITIES ===== */
-  /* These use CSS variables set by ThemeContext */
-  
-  /* Background colors */
-  .bg-brand-primary {
-    background-color: var(--brand-primary);
-  }
-  
-  .bg-brand-secondary {
-    background-color: var(--brand-secondary);
-  }
-  
-  .bg-brand-primary-50 {
-    background-color: var(--brand-primary-50);
-  }
-  
-  .bg-brand-primary-100 {
-    background-color: var(--brand-primary-100);
-  }
-  
-  .bg-brand-primary-600 {
-    background-color: var(--brand-primary-600);
-  }
-  
-  .bg-brand-primary-700 {
-    background-color: var(--brand-primary-700);
-  }
-  
-  /* Text colors */
-  .text-brand-primary {
-    color: var(--brand-primary);
-  }
-  
-  .text-brand-secondary {
-    color: var(--brand-secondary);
-  }
-  
-  .text-brand-primary-600 {
-    color: var(--brand-primary-600);
-  }
-  
-  .text-brand-primary-700 {
-    color: var(--brand-primary-700);
-  }
-  
-  /* Border colors */
-  .border-brand-primary {
-    border-color: var(--brand-primary);
-  }
-  
-  .border-brand-secondary {
-    border-color: var(--brand-secondary);
-  }
-  
-  .border-brand-primary-200 {
-    border-color: var(--brand-primary-200);
-  }
-  
-  /* Ring colors */
-  .ring-brand-primary {
-    --tw-ring-color: var(--brand-primary);
-  }
-  
-  .focus\:ring-brand-primary:focus {
-    --tw-ring-color: var(--brand-primary);
-  }
-  
-  /* Brand gradient */
-  .bg-brand-gradient {
-    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-  }
-  
-  /* Hover states */
-  .hover\:bg-brand-primary-600:hover {
-    background-color: var(--brand-primary-600);
-  }
-  
-  .hover\:bg-brand-primary-700:hover {
-    background-color: var(--brand-primary-700);
-  }
-  
-  .hover\:text-brand-primary:hover {
-    color: var(--brand-primary);
-  }
-} 
+}
+
+/* ===== RTL SUPPORT ===== */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Tailwind Space-X utilities in RTL mode */
+[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-6 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-8 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1 !important;
+}
+
+/* RTL Text Alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* RTL Form Inputs & Labels */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] input[type="search"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="number"],
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+  direction: rtl;
+}
+
+[dir="rtl"] label {
+  text-align: right;
+}
+
+/* RTL Table Alignment */
+[dir="rtl"] table th,
+[dir="rtl"] table td {
+  text-align: right;
+}
+
+/* RTL Helper for directional icons */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* RTL Margin Autos */
+[dir="rtl"] .ml-auto {
+  margin-left: unset;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: unset;
+  margin-left: auto;
+}
+
+/* Force LTR layout for specific components if needed */
+.nav-ltr-layout,
+.nav-ltr-layout * {
+  direction: ltr !important;
+  text-align: left !important;
+}

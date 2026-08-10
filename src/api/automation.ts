@@ -623,10 +623,10 @@ export const getDefaultWorkflows = (
     },
     {
       tenant_id: tenantId,
-      name: "Class Marketing Automation",
+      name: "Class Promotion Automation",
       description:
-        "Promote underperforming classes with targeted campaigns. Special offers for members who haven't booked recently.",
-      type: "marketing_automation",
+        "Promote underperforming classes. Special offers for members who haven't booked recently.",
+      type: "promotion_automation",
       status: "active",
       icon: "FiTrendingUp",
       color: "text-orange-600",
@@ -639,7 +639,7 @@ export const getDefaultWorkflows = (
       actions: [
         {
           id: "action-9",
-          type: "send_promotional_email",
+          type: "send_offer_email",
           parameters: {},
         },
         {
@@ -661,7 +661,7 @@ export const getDefaultWorkflows = (
       settings: {
         discountPercentage: 15,
         targetAudience: "inactive_members",
-        campaignDuration: 7,
+        offerDuration: 7,
         maxPromotions: 3,
       },
       stats: {

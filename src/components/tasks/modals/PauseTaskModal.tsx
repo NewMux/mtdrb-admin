@@ -2,7 +2,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiPause,
-  FiMessageSquare,
   FiClock,
   FiZap,
   FiAlertCircle,
@@ -253,7 +252,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                You'll receive a notification to resume this task in{" "}
+                You&apos;ll receive a notification to resume this task in{" "}
                 {reminderDays} day{reminderDays !== 1 ? "s" : ""}.
               </p>
             </motion.div>

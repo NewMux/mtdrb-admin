@@ -1,13 +1,5 @@
 import React, { useState } from "react";
 import { Task } from "../../types/index";
-import {
-  FiX,
-  FiCalendar,
-  FiUser,
-  FiTag,
-  FiClock,
-  FiSave,
-} from "react-icons/fi";
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 

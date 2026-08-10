@@ -177,7 +177,7 @@ export default function ReportTemplates({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {templates.map((template, index) => {
+        {templates.map((template) => {
           const Icon = getCategoryIcon(template.category);
           const colors = getColorClasses(template.color ?? "blue");
           const popularity = template.popularity ?? 0;

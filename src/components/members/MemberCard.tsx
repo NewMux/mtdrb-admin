@@ -1,20 +1,13 @@
 import React from "react";
 import {
-  FiUser,
   FiPhone,
   FiMail,
   FiCalendar,
   FiTrendingUp,
-  FiTrendingDown,
-  FiClock,
   FiAlertTriangle,
-  FiCheckCircle,
-  FiXCircle,
   FiEdit,
   FiEye,
   FiTrash2,
-  FiMessageCircle,
-  FiFileText,
   FiTarget,
   FiSend,
 } from "react-icons/fi";
@@ -42,7 +35,6 @@ interface MemberCardProps {
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
   onView: (member: Member) => void;
-  onAssignTrainer: (member: Member) => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
@@ -50,7 +42,6 @@ const MemberCard: React.FC<MemberCardProps> = ({
   onEdit,
   onDelete,
   onView,
-  onAssignTrainer,
 }) => {
   const getDaysLeft = (planEnd: string) => {
     const now = new Date();
@@ -115,19 +106,19 @@ const MemberCard: React.FC<MemberCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-200"
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-200"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-lg font-bold text-blue-600">
+          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
               {member.name.charAt(0).toUpperCase()}
             </span>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{member.name}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {member.age} years • {member.gender}
             </p>
           </div>
@@ -138,17 +129,17 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       {/* Contact Info */}
       <div className="space-y-2 mb-4">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
           <FiPhone className="w-4 h-4" />
           <span>{member.phone}</span>
         </div>
         {member.email && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <FiMail className="w-4 h-4" />
             <span>{member.email}</span>
           </div>
         )}
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
+        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
           <FiCalendar className="w-4 h-4" />
           <span>Joined {new Date(member.joinDate).toLocaleDateString()}</span>
         </div>
@@ -156,24 +147,24 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
           <div className="flex items-center space-x-2">
-            <FiTarget className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium text-gray-700">Check-ins</span>
+            <FiTarget className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Check-ins</span>
           </div>
-          <p className="text-xl font-bold text-gray-900">
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {member.checkInCount}
           </p>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
           <div className="flex items-center space-x-2">
-            <FiTrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium text-gray-700">
+            <FiTrendingUp className="w-4 h-4 text-green-500 dark:text-green-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Membership
             </span>
           </div>
-          <p className="text-xl font-bold text-gray-900">
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
             ${member.membershipPrice}
           </p>
         </div>
@@ -182,7 +173,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
       {/* Attendance Trend */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Attendance Trend
           </span>
           {isInactiveMember && (
@@ -198,7 +189,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
       {/* Documents */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">Documents</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Documents</span>
           {!hasCompletedDocsMember && (
             <span className="text-xs text-red-500">Incomplete</span>
           )}
@@ -211,7 +202,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       {/* Tags */}
       <div className="mb-4">
-        <span className="text-sm font-medium text-gray-700 mb-2 block">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
           Tags
         </span>
         <div className="flex flex-wrap gap-1">
@@ -260,10 +251,10 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       {/* Quick Actions for Inactive/Expiring Members */}
       {(isInactiveMember || (daysLeft <= 30 && daysLeft > 0)) && (
-        <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <div className="flex items-center space-x-2 mb-2">
-            <FiAlertTriangle className="w-4 h-4 text-yellow-600" />
-            <span className="text-sm font-medium text-yellow-800">
+            <FiAlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
               {isInactiveMember
                 ? "Member is inactive"
                 : "Membership expiring soon"}

@@ -37,6 +37,7 @@ END $$;
 
 -- Drop functions
 DROP FUNCTION IF EXISTS get_user_tenant_id() CASCADE;
+DROP FUNCTION IF EXISTS create_tenant_with_membership(TEXT, TEXT, JSONB) CASCADE;
 DROP FUNCTION IF EXISTS get_analytics_overview() CASCADE;
 DROP FUNCTION IF EXISTS get_member_metrics(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS get_trainer_metrics(TEXT) CASCADE;
@@ -69,7 +70,7 @@ CREATE TABLE IF NOT EXISTS memberships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('owner', 'admin', 'manager', 'trainer', 'staff')),
+  role TEXT NOT NULL DEFAULT 'trainer' CHECK (role IN ('admin', 'employee', 'trainer')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, tenant_id)
@@ -438,6 +439,41 @@ RETURNS UUID AS $$
   LIMIT 1;
 $$ LANGUAGE sql SECURITY DEFINER;
 
+-- Create tenant with initial membership (for signup/onboarding)
+-- This function bypasses RLS and is used during initial organization setup
+CREATE OR REPLACE FUNCTION create_tenant_with_membership(
+  p_tenant_name TEXT,
+  p_user_role TEXT DEFAULT 'admin',
+  p_tenant_metadata JSONB DEFAULT '{}'::jsonb
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_tenant_id UUID;
+  v_user_id UUID;
+BEGIN
+  -- Get the current user ID
+  v_user_id := auth.uid();
+  
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'User must be authenticated';
+  END IF;
+  
+  -- Create the tenant
+  INSERT INTO tenants (name, metadata)
+  VALUES (p_tenant_name, p_tenant_metadata)
+  RETURNING id INTO v_tenant_id;
+  
+  -- Create the membership linking user to tenant
+  INSERT INTO memberships (user_id, tenant_id, role)
+  VALUES (v_user_id, v_tenant_id, p_user_role);
+  
+  RETURN v_tenant_id;
+END;
+$$;
+
 -- Update timestamp trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -467,10 +503,8 @@ CREATE POLICY "Users can view memberships for their tenant" ON memberships FOR S
 
 CREATE POLICY "Users can insert memberships for their tenant" ON memberships FOR INSERT
   TO authenticated WITH CHECK (
-    -- Allow if user is creating their own membership (signup case - no tenant yet)
-    user_id = auth.uid()
+    (user_id = auth.uid() AND tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid)
     OR
-    -- Allow if tenant_id matches user's existing tenant (normal case)
     tenant_id = get_user_tenant_id()
   );
 
@@ -955,6 +989,7 @@ $$;
 -- ============================================================================
 
 GRANT EXECUTE ON FUNCTION get_user_tenant_id() TO authenticated;
+GRANT EXECUTE ON FUNCTION create_tenant_with_membership(TEXT, TEXT, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_analytics_overview() TO authenticated;
 GRANT EXECUTE ON FUNCTION get_member_metrics(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_trainer_metrics(TEXT) TO authenticated;

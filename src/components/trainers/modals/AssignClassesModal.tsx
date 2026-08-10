@@ -1,13 +1,9 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
-  FiUser,
   FiCalendar,
   FiClock,
-  FiTarget,
   FiSave,
   FiX,
-  FiPlus,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
@@ -49,7 +45,6 @@ export default function AssignClassesModal({
   onClose,
   trainer,
   onSuccess,
-  isPro = false,
 }: AssignClassesModalProps) {
   const [classes, setClasses] = React.useState<ClassAssignment[]>([]);
   const [loading, setLoading] = React.useState(false);

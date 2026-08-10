@@ -11,6 +11,8 @@ import { PaymentMethodType } from "../../types";
 import { FiAlertCircle } from "react-icons/fi";
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 // Add subscription related types
 type subscription_status =
@@ -92,6 +94,8 @@ export function AddSubscriptionModal({
   tenantId,
   subscription,
 }: AddSubscriptionModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState<SubscriptionFormData>({
@@ -291,11 +295,13 @@ export function AddSubscriptionModal({
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Subscription"
+      title={subscription ? t("billing.editSubscription", "تعديل اشتراك العضوية") : t("billing.addNewSubscription", "إضافة اشتراك عضوية جديد")}
+      subtitle={t("billing.subscriptionSubtitle", "تخصيص تفاصيل الاشتراك، الدورة المالية، والخدمات المشمولة")}
+      size="lg"
       footer={
-        <div className="flex justify-end space-x-3">
-          <SmartButton variant="secondary" onClick={onClose}>
-            Cancel
+        <div className="flex justify-end gap-3 w-full" dir={isRTL ? "rtl" : "ltr"}>
+          <SmartButton variant="secondary" onClick={onClose} disabled={loading}>
+            {t("common.cancel", "إلغاء")}
           </SmartButton>
           <SmartButton
             variant="primary"
@@ -304,40 +310,44 @@ export function AddSubscriptionModal({
               handleSubmit();
             }}
             loading={loading}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            Save Subscription
+            {t("billing.saveSubscription", "حفظ الاشتراك")}
           </SmartButton>
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Subscription Details */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Subscription Details
+        <div className="space-y-4 text-start">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t("billing.subscriptionDetails", "تفاصيل الخطة والاشتراك")}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Plan Name"
+              label={t("billing.planName", "اسم خطة الاشتراك")}
               name="name"
               value={formData.name}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("name", e.target.value)}
+              placeholder={t("billing.planNamePlaceholder", "مثال: الباقة الذهبية الشاملة")}
               required
             />
             <AppleInput
-              label="Price (BHD)"
+              label={t("billing.priceBhd", "السعر (د.ب)")}
               name="price"
               type="number"
               value={formData.price}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("price", Number(e.target.value))}
+              placeholder="0.00"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleSelect
-              label="Billing Cycle"
+              label={t("billing.billingCycle", "دورة الفوترة")}
               name="billing_cycle"
               value={formData.billing_cycle}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -345,14 +355,14 @@ export function AddSubscriptionModal({
               }
               required
             >
-              <option value="">Select billing cycle</option>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="semi-annual">Semi-Annual</option>
-              <option value="annual">Annual</option>
+              <option value="">{t("billing.selectBillingCycle", "اختر دورة الفوترة")}</option>
+              <option value="monthly">{t("billing.monthly", "شهرياً")}</option>
+              <option value="quarterly">{t("billing.quarterly", "ربع سنوي")}</option>
+              <option value="semi-annual">{t("billing.semiAnnual", "نصف سنوي")}</option>
+              <option value="annual">{t("billing.yearly", "سنوياً")}</option>
             </AppleSelect>
             <AppleInput
-              label="Duration (months)"
+              label={t("billing.durationMonths", "مدة الاشتراك (بالأشهر)")}
               name="duration_months"
               type="number"
               value={formData.duration_months}
@@ -362,48 +372,51 @@ export function AddSubscriptionModal({
           </div>
 
           <AppleTextarea
-            label="Description"
+            label={t("billing.description", "وصف الخطة والاشتراك")}
             name="description"
             value={formData.description}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange("description", e.target.value)}
+            placeholder={t("billing.subscriptionDescPlaceholder", "تفاصيل الشروط والخدمات المتاحة لهذا الاشتراك...")}
             rows={3}
           />
         </div>
 
         {/* Features */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Features</h3>
+        <div className="space-y-4 text-start">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t("billing.featuresTitle", "المميزات والخدمات المشمولة")}
+          </h3>
 
           <div className="space-y-3">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={feature.included}
                     onChange={(e) =>
                       handleFeatureChange(index, "included", e.target.checked)
                     }
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                   />
-                  <span className="text-sm font-medium text-gray-900">
-                    {feature.name}
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {feature.name === "Gym Access" ? "دخول الصالة الرياضية" : feature.name === "Group Classes" ? "الحصص الجماعية" : feature.name === "Personal Training" ? "التدريب الشخصي الفردي" : "الحصص والتدريب أونلاين"}
                   </span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
                     value={feature.limit || ""}
                     onChange={(e) =>
                       handleFeatureChange(index, "limit", e.target.value)
                     }
-                    placeholder="Unlimited"
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t("billing.unlimited", "غير محدود")}
+                    className="w-24 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <span className="text-xs text-gray-500">per month</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{t("billing.perMonth", "شهرياً")}</span>
                 </div>
               </div>
             ))}
@@ -411,17 +424,19 @@ export function AddSubscriptionModal({
         </div>
 
         {/* Settings */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+        <div className="space-y-4 text-start">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {t("billing.settingsAndAutomation", "الإعدادات والتجديد التلقائي")}
+          </h3>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Auto-renewal
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("billing.autoRenewal", "التجديد التلقائي للاشتراك")}
                 </label>
-                <p className="text-xs text-gray-500">
-                  Automatically renew subscriptions
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("billing.autoRenewalDesc", "تجديد الاشتراك تلقائياً بنهاية الصلاحية")}
                 </p>
               </div>
               <AppleToggle
@@ -433,11 +448,11 @@ export function AddSubscriptionModal({
 
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Trial period
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("billing.trialPeriod", "فترة تجريبية مجانية")}
                 </label>
-                <p className="text-xs text-gray-500">
-                  Allow free trial before billing
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("billing.trialPeriodDesc", "السماح بفترة تجربة مجانية قبل بدء الفوترة")}
                 </p>
               </div>
               <AppleToggle
@@ -449,9 +464,9 @@ export function AddSubscriptionModal({
           </div>
 
           {formData.trial_enabled && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
               <AppleInput
-                label="Trial Duration (days)"
+                label={t("billing.trialDurationDays", "مدة التجربة المجانية (بالأيام)")}
                 name="trial_days"
                 type="number"
                 value={formData.trial_days}
@@ -463,10 +478,10 @@ export function AddSubscriptionModal({
 
         {/* Error Display */}
         {submitError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <FiAlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-sm text-red-700">{submitError}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-start">
+            <div className="flex items-center gap-2">
+              <FiAlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
             </div>
           </div>
         )}

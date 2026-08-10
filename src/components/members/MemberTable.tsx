@@ -1,12 +1,9 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
-  FiMoreHorizontal,
   FiEdit,
   FiTrash2,
   FiEye,
-  FiMail,
-  FiPhone,
   FiUser,
   FiChevronUp,
   FiChevronDown,
@@ -14,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { Member } from "../../types/member";
 import { SmartButton, EmptyState } from "../ui/DesignSystem";
+import { useTranslation } from "react-i18next";
 
 interface MemberTableProps {
   members: Member[];
@@ -38,6 +36,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
   sortOrder,
   onSort,
 }) => {
+  const { t } = useTranslation();
   const [hoveredRow, setHoveredRow] = React.useState<string | null>(null);
   const [focusedRow, setFocusedRow] = React.useState<string | null>(null);
 
@@ -253,24 +252,24 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   aria-label={`Member row for ${memberName}`}
                 >
                 <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center"
+                      className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0"
                       aria-label={`Avatar for ${memberName}`}
                     >
                       <span className="text-white font-medium text-sm">
                         {initials || "?"}
                       </span>
                     </div>
-                    <div>
+                    <div className="text-start">
                       <div className="text-sm font-medium text-gray-900">
                         {memberName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Joined{" "}
+                        {t("members.joinDate", "تاريخ الانضمام")}{" "}
                         {joinDateValue
                           ? new Date(joinDateValue).toLocaleDateString()
-                          : "Unknown"}
+                          : "N/A"}
                       </div>
                     </div>
                   </div>

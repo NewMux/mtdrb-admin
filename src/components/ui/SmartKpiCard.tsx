@@ -1,5 +1,5 @@
 import React from "react";
-import { FiInfo } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
 /**
  * Props for SmartKpiCard
@@ -15,36 +15,22 @@ export interface SmartKpiCardProps {
   context?: string;
 }
 
-const colorAccent = {
-  blue: "bg-blue-600",
-  green: "bg-emerald-600",
-  yellow: "bg-yellow-500",
-  red: "bg-red-600",
-  purple: "bg-purple-600",
-  orange: "bg-orange-500",
-};
-
 const colorBg = {
-  blue: "bg-blue-50",
-  green: "bg-emerald-50",
-  yellow: "bg-yellow-50",
-  red: "bg-red-50",
-  purple: "bg-purple-50",
-  orange: "bg-orange-50",
+  blue: "bg-blue-50 dark:bg-blue-900/20",
+  green: "bg-emerald-50 dark:bg-emerald-900/20",
+  yellow: "bg-yellow-50 dark:bg-yellow-900/20",
+  red: "bg-red-50 dark:bg-red-900/20",
+  purple: "bg-purple-50 dark:bg-purple-900/20",
+  orange: "bg-orange-50 dark:bg-orange-900/20",
 };
 
 const colorText = {
-  blue: "text-blue-600",
-  green: "text-emerald-600",
-  yellow: "text-yellow-600",
-  red: "text-red-600",
-  purple: "text-purple-600",
-  orange: "text-orange-600",
-};
-
-const trendColor = {
-  up: "text-emerald-600",
-  down: "text-red-600",
+  blue: "text-blue-600 dark:text-blue-400",
+  green: "text-emerald-600 dark:text-emerald-400",
+  yellow: "text-yellow-600 dark:text-yellow-400",
+  red: "text-red-600 dark:text-red-400",
+  purple: "text-purple-600 dark:text-purple-400",
+  orange: "text-orange-600 dark:text-orange-400",
 };
 
 /**
@@ -57,9 +43,9 @@ const SmartKpiCard: React.FC<SmartKpiCardProps> = ({
   color,
   trend,
   trendValue,
-  tooltip,
-  context,
 }) => {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const bgColor = colorBg[color];
   const textColor = colorText[color];
   const iconBg = colorBg[color];
@@ -70,16 +56,17 @@ const SmartKpiCard: React.FC<SmartKpiCardProps> = ({
 
   return (
     <div
-      className={`p-6 rounded-2xl shadow-sm gap-2 flex flex-col items-start bg-white border border-gray-200 ${bgColor} ${textColor} transition-colors duration-300 ease-in-out`}
+      dir={isRTL ? "rtl" : "ltr"}
+      className={`p-6 rounded-2xl shadow-sm gap-2 flex flex-col items-start bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ${bgColor} ${textColor} transition-colors duration-300 ease-in-out`}
     >
       <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-lg ${iconBg}`}>
+        <div className={`p-2 rounded-lg ${iconBg} flex-shrink-0`}>
           {icon}
         </div>
-        <span className="text-sm font-medium opacity-80">{label}</span>
+        <span className="text-sm font-medium opacity-80 dark:opacity-90 text-start text-gray-700 dark:text-gray-300">{label}</span>
       </div>
-      <div className="text-2xl font-bold">{value}</div>
-      {subtext && <div className="text-xs mt-1 opacity-70">{subtext}</div>}
+      <div className="text-2xl font-bold text-start text-gray-900 dark:text-gray-100">{value}</div>
+      {subtext && <div className="text-xs mt-1 opacity-70 dark:opacity-80 text-start text-gray-600 dark:text-gray-400">{subtext}</div>}
     </div>
   );
 };

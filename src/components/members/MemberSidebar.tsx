@@ -7,7 +7,6 @@ import {
   FiFlag,
   FiRefreshCw,
   FiUserCheck,
-  FiArrowRight,
   FiAlertTriangle,
   FiHash,
 } from "react-icons/fi";
@@ -43,7 +42,6 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({
   contact,
   status,
   tags,
-  quickActions,
   emergencyContact,
   barcode,
 }) => {

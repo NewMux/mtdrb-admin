@@ -1,13 +1,11 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiDownload,
-  FiFilter,
-  FiFileText,
-  FiAlertTriangle,
   FiZap,
-  FiCalendar,
 } from "react-icons/fi";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
+import { exportCSV, exportExcel, exportJSON } from "../../../utils/exportData";
 import { SmartTaskModal } from "./SmartTaskModal";
 import { useSmartTaskModal } from "./useSmartTaskModal";
 
@@ -22,6 +20,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
   onClose,
   isPro = false,
 }) => {
+  const { tenantId } = useAuth();
   const { loading, exportTaskData, alerts, clearAlerts } = useSmartTaskModal({
     isPro,
   });
@@ -75,13 +74,88 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
   ];
 
   const handleExport = async () => {
-    const result = await exportTaskData(filters, exportFormat);
-    if (result.success) {
-      // Simulate download
-      const link = document.createElement("a");
-      link.href = result.downloadUrl || "#";
-      link.download = `task-data-${new Date().toISOString().split("T")[0]}.${exportFormat}`;
-      link.click();
+    if (!tenantId) {
+      return;
+    }
+
+    try {
+      // Build query
+      let query = supabase
+        .from("member_tasks")
+        .select(
+          `
+          *,
+          member:members(id, first_name, last_name, email),
+          assignee:profiles(id, first_name, last_name)
+        `,
+        )
+        .eq("tenant_id", tenantId);
+
+      // Apply filters
+      if (filters.status.length > 0) {
+        query = query.in("status", filters.status);
+      }
+      if (filters.priority.length > 0) {
+        query = query.in("priority", filters.priority);
+      }
+      if (filters.type.length > 0) {
+        query = query.in("type", filters.type);
+      }
+      if (filters.dateRange.start) {
+        query = query.gte("due_date", filters.dateRange.start);
+      }
+      if (filters.dateRange.end) {
+        query = query.lte("due_date", filters.dateRange.end);
+      }
+
+      const { data: tasks, error } = await query.order("due_date", {
+        ascending: true,
+      });
+
+      if (error) throw error;
+
+      // Format data for export
+      const exportData = (tasks || []).map((task: any) => ({
+        Title: task.title || "",
+        Description: task.description || "",
+        Type: task.type || "",
+        Priority: task.priority || "",
+        Status: task.status || "",
+        "Member Name": task.member
+          ? `${task.member.first_name || ""} ${task.member.last_name || ""}`.trim()
+          : "N/A",
+        "Member Email": task.member?.email || "N/A",
+        "Assigned To": task.assignee
+          ? `${task.assignee.first_name || ""} ${task.assignee.last_name || ""}`.trim()
+          : "N/A",
+        "Due Date": task.due_date
+          ? new Date(task.due_date).toLocaleDateString()
+          : "N/A",
+        "Created At": task.created_at
+          ? new Date(task.created_at).toLocaleDateString()
+          : "N/A",
+        "Completed At": task.completed_at
+          ? new Date(task.completed_at).toLocaleDateString()
+          : "N/A",
+      }));
+
+      const filename = `task-data-${new Date().toISOString().split("T")[0]}`;
+
+      // Export based on format
+      if (exportFormat === "csv") {
+        exportCSV(exportData, filename);
+      } else if (exportFormat === "excel") {
+        await exportExcel(exportData, filename, "Tasks");
+      } else if (exportFormat === "json") {
+        exportJSON(exportData, filename);
+      }
+
+      const result = await exportTaskData(filters, exportFormat);
+      if (result.success) {
+        onClose();
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
     }
   };
 

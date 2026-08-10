@@ -151,10 +151,7 @@ interface SmartTasksDashboardProps {
   stats: any;
 }
 
-export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
-  refreshKey,
-  stats,
-}) => {
+export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = () => {
   const kpis = [
     {
       title: "Active Tasks",

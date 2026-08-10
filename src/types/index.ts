@@ -415,6 +415,48 @@ export interface Task {
   completed_at?: string;
 }
 
+/** Business hours for a single day */
+export interface DayBusinessHours {
+  is_open: boolean;
+  open_time?: string; // HH:mm format
+  close_time?: string; // HH:mm format
+}
+
+/** Weekly business hours configuration */
+export interface BusinessHours {
+  sunday: DayBusinessHours;
+  monday: DayBusinessHours;
+  tuesday: DayBusinessHours;
+  wednesday: DayBusinessHours;
+  thursday: DayBusinessHours;
+  friday: DayBusinessHours;
+  saturday: DayBusinessHours;
+}
+
+/** Booking policies configuration */
+export interface BookingPolicies {
+  /** Minimum hours before class start to allow booking */
+  min_booking_hours: number;
+  /** Maximum days in advance to allow booking */
+  max_advance_booking_days: number;
+  /** Hours before class to allow cancellation without penalty */
+  cancellation_hours: number;
+  /** Enable waitlist when class is full */
+  enable_waitlist: boolean;
+  /** Maximum waitlist size (0 = unlimited) */
+  max_waitlist_size: number;
+  /** Automatically move waitlist to booking when spot opens */
+  auto_promote_waitlist: boolean;
+  /** Allow same-day bookings */
+  allow_same_day_booking: boolean;
+  /** Require payment at booking time */
+  require_payment_on_booking: boolean;
+  /** Maximum bookings per member per day */
+  max_bookings_per_day: number;
+  /** No-show penalty (e.g., restrict bookings for X days) */
+  no_show_penalty_days: number;
+}
+
 export interface Branch {
   id: string;
   tenant_id: string;
@@ -424,6 +466,8 @@ export interface Branch {
   email?: string;
   manager_name?: string;
   is_active: boolean;
+  business_hours?: BusinessHours;
+  booking_policies?: BookingPolicies;
   created_at?: string;
   updated_at?: string;
 }

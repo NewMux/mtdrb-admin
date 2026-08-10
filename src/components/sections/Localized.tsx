@@ -15,7 +15,7 @@ const Localized: React.FC = () => {
     {
       icon: FiCreditCard,
       title: "VAT Compliance",
-      description: "Built-in VAT calculation and reporting for all GCC countries with automatic tax filing."
+      description: "Built-in VAT calculation and reporting for all MENAT countries with automatic tax filing."
     },
     {
       icon: FiShield,
@@ -50,7 +50,7 @@ const Localized: React.FC = () => {
             Built for the Region
           </h2>
           <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            Arabic, VAT, Gulf logic. This isn't a global template.
+            Arabic, VAT, Gulf logic. This isn&apos;t a global template.
           </p>
         </motion.div>
 

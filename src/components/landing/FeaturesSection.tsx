@@ -56,12 +56,12 @@ const features: Feature[] = [
   },
   {
     icon: FiGift,
-    title: "Marketing Warfare",
-    description: "Automated campaigns that convert. Personalized sequences that retain. Marketing that actually works.",
+    title: "Retention Promotions",
+    description: "Automated promotions that engage. Personalized offers that retain. Retain members with zero effort.",
     color: "pink",
-    stats: "67% ROI on Campaigns",
-    benefits: ["Conversion warfare", "Personalized domination", "Retention mastery"],
-    cta: "Launch Campaigns"
+    stats: "67% Higher Retention",
+    benefits: ["Engaging promotions", "Personalized offers", "Retention mastery"],
+    cta: "Start Promoting"
   },
   {
     icon: FiBarChart2,

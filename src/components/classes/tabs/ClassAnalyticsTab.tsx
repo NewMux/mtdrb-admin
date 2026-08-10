@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   FiTrendingUp,
@@ -33,6 +33,9 @@ import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 // Register Chart.js components
 ChartJS.register(
@@ -99,14 +102,6 @@ interface BookingItem {
       last_name?: string;
     };
   };
-}
-
-interface ClassItem {
-  id: string;
-  name?: string;
-  class_type?: string;
-  trainer_id?: string;
-  start_time?: string;
 }
 
 interface ClassInsightEntry {
@@ -273,6 +268,7 @@ interface ClassAnalyticsFiltersState {
 }
 
 const ClassAnalyticsFilters: React.FC = () => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState<ClassAnalyticsFiltersState>({
     branch: "all",
@@ -289,15 +285,15 @@ const ClassAnalyticsFilters: React.FC = () => {
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+    <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 rounded-xl">
       <div className="flex items-center justify-between">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
         >
-          <FiFilter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            Class Analytics Filters
+          <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("classes.analyticsFilters") || "Class Analytics Filters"}
           </span>
         </button>
       </div>
@@ -314,7 +310,7 @@ const ClassAnalyticsFilters: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mt-4">
               {/* Branch */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.branch}
                 onChange={(e) =>
                   setFilters({ ...filters, branch: e.target.value })
@@ -328,7 +324,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Class Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.classType}
                 onChange={(e) =>
                   setFilters({ ...filters, classType: e.target.value })
@@ -344,7 +340,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Trainer */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.trainer}
                 onChange={(e) =>
                   setFilters({ ...filters, trainer: e.target.value })
@@ -359,7 +355,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Date Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.dateRange}
                 onChange={(e) =>
                   setFilters({ ...filters, dateRange: e.target.value })
@@ -374,7 +370,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Time of Day */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.timeOfDay}
                 onChange={(e) =>
                   setFilters({ ...filters, timeOfDay: e.target.value })
@@ -388,7 +384,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Member Gender */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.memberGender}
                 onChange={(e) =>
                   setFilters({ ...filters, memberGender: e.target.value })
@@ -402,7 +398,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Membership Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.membershipType}
                 onChange={(e) =>
                   setFilters({ ...filters, membershipType: e.target.value })
@@ -429,6 +425,7 @@ interface PerformanceOverviewCardsProps {
 }
 
 const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ performance, loading = false }) => {
+  const { t } = useTranslation();
 
   if (loading) {
     return (
@@ -444,49 +441,49 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
 
   const cards = [
     {
-      title: "Total Classes Held",
+      title: t("classes.totalClassesHeld"),
       value: performance.totalClassesHeld.toLocaleString(),
-      subtitle: "Classes conducted in period",
+      subtitle: t("classes.classesConductedInPeriod"),
       icon: FiPlay,
       color: "blue",
       trend: { value: Math.abs(performance.trends?.totalClassesHeld || 0), isPositive: (performance.trends?.totalClassesHeld || 0) >= 0 },
     },
     {
-      title: "Total Attendance",
+      title: t("classes.totalAttendance"),
       value: performance.totalAttendance.toLocaleString(),
-      subtitle: "Members who attended",
+      subtitle: t("classes.membersWhoAttended"),
       icon: FiUsers,
       color: "green",
       trend: { value: Math.abs(performance.trends?.totalAttendance || 0), isPositive: (performance.trends?.totalAttendance || 0) >= 0 },
     },
     {
-      title: "Avg. Attendance / Class",
+      title: t("classes.avgAttendancePerClass"),
       value: performance.avgAttendancePerClass.toFixed(1),
-      subtitle: "Average members per class",
+      subtitle: t("classes.averageMembersPerClass"),
       icon: FiActivity,
       color: "purple",
       trend: { value: Math.abs(performance.trends?.avgAttendancePerClass || 0), isPositive: (performance.trends?.avgAttendancePerClass || 0) >= 0 },
     },
     {
-      title: "Class Fill Rate",
+      title: t("classes.classFillRate"),
       value: `${performance.classFillRate.toFixed(1)}%`,
-      subtitle: "Capacity utilization",
+      subtitle: t("classes.capacityUtilization"),
       icon: FiTarget,
       color: "orange",
       trend: { value: Math.abs(performance.trends?.classFillRate || 0), isPositive: (performance.trends?.classFillRate || 0) >= 0 },
     },
     {
-      title: "Cancelled Classes",
+      title: t("classes.cancelledClasses"),
       value: performance.cancelledClasses.toLocaleString(),
-      subtitle: "Classes cancelled",
+      subtitle: t("classes.classesCancelled"),
       icon: FiX,
       color: "red",
       trend: { value: Math.abs(performance.trends?.cancelledClasses || 0), isPositive: (performance.trends?.cancelledClasses || 0) <= 0 },
     },
     {
-      title: "No-Shows",
+      title: t("classes.noShows"),
       value: performance.noShows.toLocaleString(),
-      subtitle: "Booked but not attended",
+      subtitle: t("classes.bookedButNotAttended"),
       icon: FiAlertTriangle,
       color: "yellow",
       trend: { value: Math.abs(performance.trends?.noShows || 0), isPositive: (performance.trends?.noShows || 0) <= 0 },
@@ -501,19 +498,19 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-3xl p-4 shadow-sm border border-gray-200"
+          className="bg-white dark:bg-gray-800 rounded-3xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-3">
             <div
-              className={`w-10 h-10 rounded-xl bg-${card.color}-50 flex items-center justify-center`}
+              className={`w-10 h-10 rounded-xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
             >
-              <card.icon className={`w-5 h-5 text-${card.color}-600`} />
+              <card.icon className={`w-5 h-5 text-${card.color}-600 dark:text-${card.color}-400`} />
             </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
                 card.trend.isPositive
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
+                  ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
               }`}
             >
               {card.trend.isPositive ? (
@@ -526,9 +523,9 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900">{card.value}</h3>
-            <p className="text-sm text-gray-600 mt-1">{card.title}</p>
-            <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
         </motion.div>
       ))}
@@ -543,6 +540,9 @@ interface TrainerPerformanceCardsProps {
 }
 
 const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ trainerPerformance, loading = false }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -559,35 +559,35 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Top Trainers */}
-      <div className="lg:col-span-3 bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          🏆 Top Trainers by Attendance
+      <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          🏆 {t("classes.topTrainersByAttendance")}
         </h3>
         <div className="space-y-4">
           {trainerPerformance.topTrainers.map((trainer, index) => (
             <div
               key={trainer.name}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
+              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-sm font-bold text-blue-600">
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3`}>
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
                     {index + 1}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{trainer.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {trainer.attendance} attendees
+                  <p className="font-medium text-gray-900 dark:text-white">{trainer.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {trainer.attendance} {t("classes.attendees")}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   ${trainer.revenue.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-600">
-                  {trainer.rating}★ rating
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {trainer.rating}★ {t("classes.rating")}
                 </p>
               </div>
             </div>
@@ -596,28 +596,28 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
       </div>
 
       {/* Trainer Stats */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          📊 Trainer Stats
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          📊 {t("classes.trainerStats")}
         </h3>
         <div className="space-y-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {trainerPerformance.avgRating}
             </div>
-            <div className="text-sm text-gray-600">Avg. Rating</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.avgRating")}</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {trainerPerformance.avgRetention}%
             </div>
-            <div className="text-sm text-gray-600">Avg. Retention</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.avgRetention")}</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${trainerPerformance.totalRevenue.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">Total Revenue</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.totalRevenue")}</div>
           </div>
         </div>
       </div>
@@ -632,6 +632,9 @@ interface ClassInsightsCardsProps {
 }
 
 const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, loading = false }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -647,34 +650,34 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Most Popular Classes */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          🔥 Most Popular Classes
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          🔥 {t("classes.mostPopularClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.mostPopular.map((classItem, index) => (
             <div
               key={classItem.name}
-              className="flex items-center justify-between p-3 bg-green-50 rounded-xl"
+              className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"
             >
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-green-600">
+                <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <span className="text-xs font-bold text-green-600 dark:text-green-400">
                     {index + 1}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{classItem.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {classItem.sessions} sessions
+                  <p className="font-medium text-gray-900 dark:text-white">{classItem.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {classItem.sessions} {t("classes.sessions")}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {classItem.attendance}
                 </p>
-                <p className="text-xs text-gray-600">attendees</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t("classes.attendees")}</p>
               </div>
             </div>
           ))}
@@ -682,34 +685,34 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Least Attended Classes */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          ⚠️ Least Attended Classes
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          ⚠️ {t("classes.leastAttendedClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.leastAttended.map((classItem, index) => (
             <div
               key={classItem.name}
-              className="flex items-center justify-between p-3 bg-red-50 rounded-xl"
+              className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-red-600">
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3`}>
+                <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <span className="text-xs font-bold text-red-600 dark:text-red-400">
                     {index + 1}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{classItem.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {classItem.sessions} sessions
+                  <p className="font-medium text-gray-900 dark:text-white">{classItem.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {classItem.sessions} {t("classes.sessions")}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {classItem.attendance}
                 </p>
-                <p className="text-xs text-gray-600">attendees</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t("classes.attendees")}</p>
               </div>
             </div>
           ))}
@@ -717,34 +720,34 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Most Cancelled Classes */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          ❌ Most Cancelled Classes
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          ❌ {t("classes.mostCancelledClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.mostCancelled.map((classItem, index) => (
             <div
               key={classItem.name}
-              className="flex items-center justify-between p-3 bg-orange-50 rounded-xl"
+              className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl`}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-orange-600">
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3`}>
+                <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
                     {index + 1}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{classItem.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {classItem.total} total
+                  <p className="font-medium text-gray-900 dark:text-white">{classItem.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {classItem.total} {t("common.total") || "total"}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   {classItem.cancelled}
                 </p>
-                <p className="text-xs text-gray-600">cancelled</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t("classes.cancelled")}</p>
               </div>
             </div>
           ))}
@@ -752,34 +755,34 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Overbooked Classes */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          📈 Overbooked Classes
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          📈 {t("classes.overbookedClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.overbooked.map((classItem, index) => (
             <div
               key={classItem.name}
-              className="flex items-center justify-between p-3 bg-blue-50 rounded-xl"
+              className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-blue-600">
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3`}>
+                <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                     {index + 1}
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{classItem.name}</p>
-                  <p className="text-sm text-gray-600">
-                    Capacity: {classItem.capacity}
+                  <p className="font-medium text-gray-900 dark:text-white">{classItem.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("classes.capacity")}: {classItem.capacity}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+              <div className={isRTL ? "text-left" : "text-right"}>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   +{classItem.overbooked}
                 </p>
-                <p className="text-xs text-gray-600">overbooked</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t("classes.overbooked")}</p>
               </div>
             </div>
           ))}
@@ -796,23 +799,15 @@ interface MemberBehaviorCardsProps {
 }
 
 const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavior, loading = false }) => {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 animate-pulse">
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
+  const { t, i18n } = useTranslation();
+  const { isRTL } = useRTL();
+  const { isDark } = useTheme();
+  
   // Gender Split Chart Data
-  const genderChartData = {
+  const genderChartData = useMemo(() => ({
     labels: memberBehavior.genderSplit.length > 0 
       ? memberBehavior.genderSplit.map((item) => item.gender)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
         data: memberBehavior.genderSplit.length > 0
@@ -831,16 +826,16 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderWidth: 2,
       },
     ],
-  };
+  }), [memberBehavior.genderSplit, t, i18n.language]);
 
   // Time of Day Chart Data
-  const timeOfDayChartData = {
+  const timeOfDayChartData = useMemo(() => ({
     labels: memberBehavior.timeOfDay.length > 0
       ? memberBehavior.timeOfDay.map((item) => item.time)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
-        label: "Attendance",
+        label: t("classes.attendance"),
         data: memberBehavior.timeOfDay.length > 0
           ? memberBehavior.timeOfDay.map((item) => item.attendance)
           : [0],
@@ -850,13 +845,13 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderRadius: 8,
       },
     ],
-  };
+  }), [memberBehavior.timeOfDay, t, i18n.language]);
 
   // Membership Type Chart Data
-  const membershipChartData = {
+  const membershipChartData = useMemo(() => ({
     labels: memberBehavior.attendanceByMembership.length > 0
       ? memberBehavior.attendanceByMembership.map((item) => item.type)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
         data: memberBehavior.attendanceByMembership.length > 0
@@ -877,7 +872,19 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
         borderWidth: 2,
       },
     ],
-  };
+  }), [memberBehavior.attendanceByMembership, t, i18n.language]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 animate-pulse">
+            <div className="h-64 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const chartOptions = {
     responsive: true,
@@ -891,13 +898,14 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
           font: {
             size: 12,
           },
+          color: isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)",
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
         titleColor: "white",
         bodyColor: "white",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
         cornerRadius: 8,
       },
@@ -910,12 +918,18 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+        },
+        ticks: {
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
       x: {
         grid: {
           display: false,
+        },
+        ticks: {
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
     },
@@ -924,9 +938,9 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gender Split */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          👥 Gender Attendance Split
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          👥 {t("classes.genderAttendanceSplit")}
         </h3>
         <div className="h-64">
           <Doughnut data={genderChartData} options={chartOptions} />
@@ -934,9 +948,9 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
       </div>
 
       {/* Time of Day */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          ⏰ Time of Day Breakdown
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          ⏰ {t("classes.timeOfDayBreakdown")}
         </h3>
         <div className="h-64">
           <Bar data={timeOfDayChartData} options={barChartOptions} />
@@ -944,9 +958,9 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
       </div>
 
       {/* Membership Types */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          💳 Attendance by Membership
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+          💳 {t("classes.attendanceByMembership")}
         </h3>
         <div className="h-64">
           <Doughnut data={membershipChartData} options={chartOptions} />
@@ -963,6 +977,9 @@ interface RevenueCardsProps {
 }
 
 const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -976,21 +993,21 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Total Revenue */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
-            <FiDollarSign className="w-6 h-6 text-green-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+            <FiDollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="text-start flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.totalRevenue.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">Total Revenue</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.totalRevenue")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-green-500 h-2 rounded-full"
             style={{ width: "85%" }}
@@ -999,19 +1016,19 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Avg Revenue per Class */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-            <FiCreditCard className="w-6 h-6 text-blue-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+            <FiCreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="text-start flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.avgRevenuePerClass}
             </div>
-            <div className="text-sm text-gray-600">Avg. Revenue per Class</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.avgRevenuePerClass")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-blue-500 h-2 rounded-full"
             style={{ width: "72%" }}
@@ -1020,19 +1037,19 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Cost per Class */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
-            <FiMinus className="w-6 h-6 text-orange-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+            <FiMinus className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="text-start flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.costPerClass}
             </div>
-            <div className="text-sm text-gray-600">Cost per Class</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.costPerClass")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-orange-500 h-2 rounded-full"
             style={{ width: "58%" }}
@@ -1041,19 +1058,19 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Profit per Class */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center">
-            <FiTrendingUp className="w-6 h-6 text-purple-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+            <FiTrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="text-start flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.profitPerClass}
             </div>
-            <div className="text-sm text-gray-600">Profit per Class</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.profitPerClass")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-purple-500 h-2 rounded-full"
             style={{ width: "78%" }}
@@ -1071,26 +1088,17 @@ interface ClassAnalyticsChartsProps {
 }
 
 const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loading = false }) => {
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 animate-pulse">
-            <div className="h-80 bg-gray-200 rounded"></div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
+  const { t, i18n } = useTranslation();
+  const { isDark } = useTheme();
+  
   // Attendance Trend Chart
-  const attendanceTrendData = {
+  const attendanceTrendData = useMemo(() => ({
     labels: charts.attendanceTrend.length > 0
       ? charts.attendanceTrend.map((item) => item.date)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
-        label: "Attendance",
+        label: t("classes.attendance"),
         data: charts.attendanceTrend.length > 0
           ? charts.attendanceTrend.map((item) => item.attendance)
           : [0],
@@ -1104,16 +1112,16 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
-  };
+  }), [charts.attendanceTrend, t, i18n.language]);
 
   // Class Type Popularity Chart
-  const classTypePopularityData = {
+  const classTypePopularityData = useMemo(() => ({
     labels: charts.classTypePopularity.length > 0
       ? charts.classTypePopularity.map((item) => item.type)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
-        label: "Attendance",
+        label: t("classes.attendance"),
         data: charts.classTypePopularity.length > 0
           ? charts.classTypePopularity.map((item) => item.attendance)
           : [0],
@@ -1123,16 +1131,16 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         borderRadius: 8,
       },
     ],
-  };
+  }), [charts.classTypePopularity, t, i18n.language]);
 
   // Trainer Impact Chart
-  const trainerImpactData = {
+  const trainerImpactData = useMemo(() => ({
     labels: charts.trainerImpact.length > 0
       ? charts.trainerImpact.map((item) => item.trainer)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
-        label: "Avg Attendance",
+        label: t("classes.averageAttendance"),
         data: charts.trainerImpact.length > 0
           ? charts.trainerImpact.map((item) => item.avgAttendance)
           : [0],
@@ -1146,16 +1154,16 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
-  };
+  }), [charts.trainerImpact, t, i18n.language]);
 
   // No-Show Trend Chart
-  const noShowTrendData = {
+  const noShowTrendData = useMemo(() => ({
     labels: charts.noShowTrend.length > 0
       ? charts.noShowTrend.map((item) => item.date)
-      : ["No Data"],
+      : [t("classes.noData")],
     datasets: [
       {
-        label: "No-Shows",
+        label: t("classes.noShows"),
         data: charts.noShowTrend.length > 0
           ? charts.noShowTrend.map((item) => item.noShows)
           : [0],
@@ -1169,7 +1177,19 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         pointRadius: 6,
       },
     ],
-  };
+  }), [charts.noShowTrend, t, i18n.language]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 animate-pulse">
+            <div className="h-80 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const lineChartOptions = {
     responsive: true,
@@ -1179,10 +1199,10 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
         display: false,
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
         titleColor: "white",
         bodyColor: "white",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
         cornerRadius: 8,
         displayColors: false,
@@ -1192,10 +1212,10 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
       x: {
@@ -1203,7 +1223,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
           display: false,
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
     },
@@ -1215,10 +1235,10 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
       x: {
@@ -1226,7 +1246,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
           display: false,
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
     },
@@ -1235,9 +1255,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
   return (
     <div className="space-y-6">
       {/* Attendance Trend Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          📈 Class Attendance Trend
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          📈 {t("classes.classAttendanceTrend")}
         </h3>
         <div className="h-80">
           <Line data={attendanceTrendData} options={lineChartOptions} />
@@ -1245,9 +1265,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* Class Type Popularity Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          🏆 Class Type Popularity
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          🏆 {t("classes.classTypePopularity")}
         </h3>
         <div className="h-80">
           <Bar data={classTypePopularityData} options={barChartOptions} />
@@ -1255,9 +1275,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* Trainer Impact Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          👨‍🏫 Trainer Impact Trend
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          👨‍🏫 {t("classes.trainerImpactTrend")}
         </h3>
         <div className="h-80">
           <Line data={trainerImpactData} options={lineChartOptions} />
@@ -1265,9 +1285,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* No-Show Trend Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          ❌ No-Show Trend
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          ❌ {t("classes.noShowTrend")}
         </h3>
         <div className="h-80">
           <Line data={noShowTrendData} options={lineChartOptions} />
@@ -1285,6 +1305,8 @@ interface ClassAnalyticsTabProps {
 const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
   classes: _classes,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const { tenantId } = useAuth();
   const [analyticsData, setAnalyticsData] =
     useState<ClassAnalyticsData>(emptyClassAnalyticsData);
@@ -1685,48 +1707,48 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
 
       {/* Performance Overview Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📊 Performance Overview
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          📊 {t("classes.performanceOverview") || "Performance Overview"}
         </h2>
         <PerformanceOverviewCards performance={analyticsData.performance} loading={loading} />
       </div>
 
       {/* Trainer Performance Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          ⚙️ Trainer Performance
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          ⚙️ {t("classes.trainerPerformance") || "Trainer Performance"}
         </h2>
         <TrainerPerformanceCards trainerPerformance={analyticsData.trainerPerformance} loading={loading} />
       </div>
 
       {/* Class Insights Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📈 Class Insights
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          📈 {t("classes.classInsights")}
         </h2>
         <ClassInsightsCards classInsights={analyticsData.classInsights} loading={loading} />
       </div>
 
       {/* Member Behavior Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          🧩 Member Behavior Patterns
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          🧩 {t("classes.memberBehaviorPatterns") || "Member Behavior Patterns"}
         </h2>
         <MemberBehaviorCards memberBehavior={analyticsData.memberBehavior} loading={loading} />
       </div>
 
       {/* Revenue Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          💰 Class Revenue & Efficiency
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          💰 {t("classes.classRevenueEfficiency") || "Class Revenue & Efficiency"}
         </h2>
         <RevenueCards revenue={analyticsData.revenue} loading={loading} />
       </div>
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📈 Charts & Visuals
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          📈 {t("classes.chartsVisuals")}
         </h2>
         <ClassAnalyticsCharts charts={analyticsData.charts} loading={loading} />
       </div>

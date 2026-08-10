@@ -8,15 +8,15 @@ export const DashboardSkeleton: React.FC = () => (
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
         >
           <div className="animate-pulse">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
-              <div className="w-16 h-4 bg-gray-200 rounded"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div className="w-20 h-8 bg-gray-200 rounded mb-2"></div>
-            <div className="w-24 h-4 bg-gray-200 rounded"></div>
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       ))}
@@ -24,24 +24,24 @@ export const DashboardSkeleton: React.FC = () => (
 
     {/* Chart Section Skeleton */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="animate-pulse">
-          <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
-          <div className="w-full h-64 bg-gray-200 rounded"></div>
+          <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="animate-pulse">
-          <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="w-3/4 h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-1/2 h-3 bg-gray-200 rounded"></div>
+                  <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                  <div className="w-1/2 h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
                 </div>
-                <div className="w-16 h-4 bg-gray-200 rounded"></div>
+                <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
               </div>
             ))}
           </div>
@@ -53,18 +53,18 @@ export const DashboardSkeleton: React.FC = () => (
 
 // Members list skeleton
 export const MembersListSkeleton: React.FC = () => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
     {/* Header Skeleton */}
-    <div className="p-6 border-b border-gray-100">
+    <div className="p-6 border-b border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-32 h-8 bg-gray-200 rounded"></div>
-          <div className="w-24 h-10 bg-gray-200 rounded"></div>
+          <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="w-64 h-10 bg-gray-200 rounded"></div>
-          <div className="w-32 h-10 bg-gray-200 rounded"></div>
-          <div className="w-24 h-10 bg-gray-200 rounded"></div>
+          <div className="w-64 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     </div>
@@ -73,9 +73,9 @@ export const MembersListSkeleton: React.FC = () => (
     <div className="p-6">
       <div className="animate-pulse space-y-4">
         {/* Table Header */}
-        <div className="grid grid-cols-6 gap-4 pb-4 border-b border-gray-100">
+        <div className="grid grid-cols-6 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="w-full h-4 bg-gray-200 rounded"></div>
+            <div key={i} className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
           ))}
         </div>
 
@@ -83,17 +83,17 @@ export const MembersListSkeleton: React.FC = () => (
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div
             key={i}
-            className="grid grid-cols-6 gap-4 py-4 border-b border-gray-50"
+            className="grid grid-cols-6 gap-4 py-4 border-b border-gray-50 dark:border-gray-700/50"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-              <div className="w-24 h-4 bg-gray-200 rounded"></div>
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div className="w-32 h-4 bg-gray-200 rounded"></div>
-            <div className="w-20 h-4 bg-gray-200 rounded"></div>
-            <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
-            <div className="w-24 h-4 bg-gray-200 rounded"></div>
-            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         ))}
       </div>
@@ -105,18 +105,18 @@ export const MembersListSkeleton: React.FC = () => (
 export const ClassesScheduleSkeleton: React.FC = () => (
   <div className="space-y-6">
     {/* Calendar Header Skeleton */}
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 bg-gray-200 rounded"></div>
-            <div className="w-32 h-8 bg-gray-200 rounded"></div>
-            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-20 h-8 bg-gray-200 rounded"></div>
-            <div className="w-20 h-8 bg-gray-200 rounded"></div>
-            <div className="w-20 h-8 bg-gray-200 rounded"></div>
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
 
@@ -124,23 +124,23 @@ export const ClassesScheduleSkeleton: React.FC = () => (
         <div className="grid grid-cols-7 gap-1">
           {/* Day headers */}
           {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <div key={i} className="h-10 bg-gray-200 rounded mb-2"></div>
+            <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
           ))}
 
           {/* Calendar days */}
           {Array.from({ length: 35 }).map((_, i) => (
             <div
               key={i}
-              className="h-20 bg-gray-100 rounded border border-gray-200"
+              className="h-20 bg-gray-100 dark:bg-gray-700/50 rounded border border-gray-200 dark:border-gray-600"
             >
               <div className="p-2">
-                <div className="w-6 h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="w-6 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
                 <div className="space-y-1">
                   {Math.random() > 0.7 && (
-                    <div className="w-full h-3 bg-blue-200 rounded"></div>
+                    <div className="w-full h-3 bg-blue-200 dark:bg-blue-900/50 rounded"></div>
                   )}
                   {Math.random() > 0.8 && (
-                    <div className="w-full h-3 bg-green-200 rounded"></div>
+                    <div className="w-full h-3 bg-green-200 dark:bg-green-900/50 rounded"></div>
                   )}
                 </div>
               </div>
@@ -151,24 +151,24 @@ export const ClassesScheduleSkeleton: React.FC = () => (
     </div>
 
     {/* Today's Classes Skeleton */}
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
-        <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
+        <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"
+              className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
             >
-              <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
               <div className="flex-1">
-                <div className="w-32 h-5 bg-gray-200 rounded mb-2"></div>
-                <div className="w-48 h-4 bg-gray-200 rounded mb-1"></div>
-                <div className="w-24 h-3 bg-gray-200 rounded"></div>
+                <div className="w-32 h-5 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="w-48 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-1"></div>
+                <div className="w-24 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
               <div className="text-right">
-                <div className="w-16 h-4 bg-gray-200 rounded mb-1"></div>
-                <div className="w-20 h-3 bg-gray-200 rounded"></div>
+                <div className="w-16 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-1"></div>
+                <div className="w-20 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             </div>
           ))}
@@ -182,35 +182,35 @@ export const ClassesScheduleSkeleton: React.FC = () => (
 export const ReportsSkeleton: React.FC = () => (
   <div className="space-y-6">
     {/* Report Controls Skeleton */}
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
-        <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
+        <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="w-full h-10 bg-gray-200 rounded"></div>
-          <div className="w-full h-10 bg-gray-200 rounded"></div>
-          <div className="w-full h-10 bg-gray-200 rounded"></div>
-          <div className="w-24 h-10 bg-gray-200 rounded"></div>
+          <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     </div>
 
     {/* Report Results Skeleton */}
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
         {/* Chart Skeleton */}
-        <div className="w-full h-80 bg-gray-200 rounded mb-6"></div>
+        <div className="w-full h-80 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
 
         {/* Data Table Skeleton */}
         <div className="space-y-4">
-          <div className="grid grid-cols-5 gap-4 pb-4 border-b border-gray-100">
+          <div className="grid grid-cols-5 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="w-full h-4 bg-gray-200 rounded"></div>
+              <div key={i} className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="grid grid-cols-5 gap-4 py-3">
               {[1, 2, 3, 4, 5].map((j) => (
-                <div key={j} className="w-full h-4 bg-gray-200 rounded"></div>
+                <div key={j} className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
               ))}
             </div>
           ))}
@@ -227,28 +227,28 @@ export const TrainersSkeleton: React.FC = () => (
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <div
           key={i}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
         >
           <div className="animate-pulse">
             <div className="flex items-center space-x-4 mb-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
               <div className="flex-1">
-                <div className="w-32 h-5 bg-gray-200 rounded mb-2"></div>
-                <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                <div className="w-32 h-5 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
               </div>
             </div>
             <div className="space-y-3">
-              <div className="w-full h-4 bg-gray-200 rounded"></div>
-              <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
+              <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
               <div className="flex items-center justify-between">
-                <div className="w-20 h-4 bg-gray-200 rounded"></div>
-                <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
+                <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="flex space-x-2">
-                <div className="w-20 h-8 bg-gray-200 rounded"></div>
-                <div className="w-16 h-8 bg-gray-200 rounded"></div>
+                <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div className="w-16 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
               </div>
             </div>
           </div>
@@ -264,14 +264,14 @@ export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => (
     {Array.from({ length: count }).map((_, i) => (
       <div
         key={i}
-        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
+        className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
       >
         <div className="animate-pulse">
-          <div className="w-32 h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="space-y-3">
-            <div className="w-full h-4 bg-gray-200 rounded"></div>
-            <div className="w-3/4 h-4 bg-gray-200 rounded"></div>
-            <div className="w-1/2 h-4 bg-gray-200 rounded"></div>
+            <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-1/2 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       </div>
@@ -284,20 +284,20 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
   rows = 6,
   columns = 5,
 }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
     <div className="animate-pulse">
       {/* Table Header */}
       <div
-        className="grid gap-4 p-6 border-b border-gray-100"
+        className="grid gap-4 p-6 border-b border-gray-100 dark:border-gray-700"
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
       >
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="w-full h-4 bg-gray-200 rounded"></div>
+          <div key={i} className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
         ))}
       </div>
 
       {/* Table Rows */}
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
         {Array.from({ length: rows }).map((_, i) => (
           <div
             key={i}
@@ -305,7 +305,7 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
             style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
           >
             {Array.from({ length: columns }).map((_, j) => (
-              <div key={j} className="w-full h-4 bg-gray-200 rounded"></div>
+              <div key={j} className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
         ))}
@@ -316,22 +316,22 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
 
 // Form skeleton
 export const FormSkeleton: React.FC = () => (
-  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
     <div className="animate-pulse space-y-6">
-      <div className="w-48 h-8 bg-gray-200 rounded"></div>
+      <div className="w-48 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="space-y-2">
-            <div className="w-24 h-4 bg-gray-200 rounded"></div>
-            <div className="w-full h-10 bg-gray-200 rounded"></div>
+            <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         ))}
       </div>
 
       <div className="flex justify-end space-x-3">
-        <div className="w-20 h-10 bg-gray-200 rounded"></div>
-        <div className="w-24 h-10 bg-gray-200 rounded"></div>
+        <div className="w-20 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
       </div>
     </div>
   </div>
@@ -343,15 +343,15 @@ export const ListSkeleton: React.FC<{ items?: number }> = ({ items = 5 }) => (
     {Array.from({ length: items }).map((_, i) => (
       <div
         key={i}
-        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100"
+        className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
       >
         <div className="animate-pulse flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
           <div className="flex-1">
-            <div className="w-3/4 h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="w-1/2 h-3 bg-gray-200 rounded"></div>
+            <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            <div className="w-1/2 h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
-          <div className="w-16 h-8 bg-gray-200 rounded"></div>
+          <div className="w-16 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     ))}
@@ -372,5 +372,3 @@ const SkeletonScreens = {
 };
 
 export default SkeletonScreens;
-
-

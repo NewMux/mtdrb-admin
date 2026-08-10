@@ -5,6 +5,7 @@ export type ModalType =
   | "addMember"
   | "editMember"
   | "deleteMember"
+  | "cancelMembership"
   | "viewProfile"
   | "importMembers"
   | "assignTrainer";
@@ -13,6 +14,7 @@ interface ModalState {
   addMember: boolean;
   editMember: boolean;
   deleteMember: boolean;
+  cancelMembership: boolean;
   viewProfile: boolean;
   importMembers: boolean;
   assignTrainer: boolean;
@@ -36,6 +38,7 @@ export const useSmartMemberModal = () => {
     addMember: false,
     editMember: false,
     deleteMember: false,
+    cancelMembership: false,
     viewProfile: false,
     importMembers: false,
     assignTrainer: false,
@@ -87,6 +90,7 @@ export const useSmartMemberModal = () => {
       addMember: false,
       editMember: false,
       deleteMember: false,
+      cancelMembership: false,
       viewProfile: false,
       importMembers: false,
       assignTrainer: false,
@@ -118,6 +122,16 @@ export const useSmartMemberModal = () => {
     (member: Member) => {
       openModal({
         type: "deleteMember",
+        data: { selectedMember: member, memberId: member.id },
+      });
+    },
+    [openModal],
+  );
+
+  const openCancelMembershipModal = useCallback(
+    (member: Member) => {
+      openModal({
+        type: "cancelMembership",
         data: { selectedMember: member, memberId: member.id },
       });
     },
@@ -164,6 +178,11 @@ export const useSmartMemberModal = () => {
     closeModal("deleteMember");
   }, [closeModal]);
 
+  const handleCancelMembershipSuccess = useCallback(() => {
+    setIsLoading(false);
+    closeModal("cancelMembership");
+  }, [closeModal]);
+
   const handleImportMembersSuccess = useCallback(() => {
     setIsLoading(false);
     closeModal("importMembers");
@@ -185,7 +204,7 @@ export const useSmartMemberModal = () => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         const openModalType = Object.entries(modalState).find(
-          ([_, isOpen]) => isOpen,
+          ([, isOpen]) => isOpen,
         )?.[0] as ModalType;
         if (openModalType) {
           closeModal(openModalType);
@@ -254,6 +273,7 @@ export const useSmartMemberModal = () => {
     openAddMemberModal,
     openEditMemberModal,
     openDeleteMemberModal,
+    openCancelMembershipModal,
     openViewProfileModal,
     openImportMembersModal,
     openAssignTrainerModal,
@@ -262,6 +282,7 @@ export const useSmartMemberModal = () => {
     handleAddMemberSuccess,
     handleEditMemberSuccess,
     handleDeleteMemberSuccess,
+    handleCancelMembershipSuccess,
     handleImportMembersSuccess,
     handleAssignTrainerSuccess,
 

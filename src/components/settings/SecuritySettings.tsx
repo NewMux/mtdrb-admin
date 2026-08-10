@@ -3,19 +3,14 @@ import {
   FiShield,
   FiLock,
   FiKey,
-  FiEye,
-  FiEyeOff,
   FiSave,
-  FiAlertTriangle,
 } from "react-icons/fi";
 
 interface SecuritySettingsProps {
   refreshKey: number;
 }
 
-export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
-  refreshKey,
-}) => {
+export const SecuritySettings: React.FC<SecuritySettingsProps> = () => {
   const [settings, setSettings] = useState({
     twoFactorAuth: false,
     passwordExpiry: 90,
@@ -29,8 +24,6 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
     sslRequired: true,
   });
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {

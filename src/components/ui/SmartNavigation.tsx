@@ -14,9 +14,7 @@ import {
   FiFileText,
   FiTarget,
   FiChevronRight,
-  FiArrowLeft,
 } from "react-icons/fi";
-import { SmartButton } from "./DesignSystem";
 
 // ===== NAVIGATION CONFIGURATION =====
 export const navigationConfig = {
@@ -200,8 +198,6 @@ interface SmartSuggestionsProps {
 
 export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
   currentPage,
-  userRole = "owner",
-  recentActivity = [],
 }) => {
   const navigate = useNavigate();
 
@@ -330,7 +326,7 @@ export const usePageNavigation = () => {
     const path = location.pathname;
     // Match exact path or path that starts with the config path
     const match = Object.entries(navigationConfig).find(
-      ([key, config]) => path === config.path || path.startsWith(config.path + "/"),
+      ([, config]) => path === config.path || path.startsWith(config.path + "/"),
     );
     return match?.[0] || "dashboard";
   };

@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiActivity,
-  FiCalendar,
   FiFilter,
   FiDownload,
   FiTrendingUp,
@@ -23,7 +21,6 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const [selectedActivity, setSelectedActivity] = useState("all");
-  const [isLoading, setIsLoading] = useState(false);
 
   const mockActivityLogs = [
     {

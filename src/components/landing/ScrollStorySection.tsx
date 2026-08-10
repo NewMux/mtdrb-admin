@@ -1,20 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion, useScroll } from "framer-motion";
-import { 
-  FiUsers, 
-  FiCreditCard, 
-  FiUserCheck, 
-  FiBarChart2, 
-  FiShield, 
-  FiMessageSquare,
+import {
+  FiUsers,
+  FiShield,
   FiTrendingUp,
-  FiCalendar,
-  FiTarget,
-  FiZap,
   FiCheck,
-  FiX,
-  FiDownload,
-  FiEye,
   FiActivity
 } from "react-icons/fi";
 
@@ -402,7 +392,7 @@ const WhatsAppBotVisual: React.FC = () => (
       
       <div className="flex justify-end mb-3">
         <div className="bg-teal-500 text-white rounded-lg p-3 max-w-xs">
-          <div className="text-sm">Book me for tomorrow's yoga class</div>
+          <div className="text-sm">Book me for tomorrow&apos;s yoga class</div>
         </div>
       </div>
       

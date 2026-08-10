@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../supabaseClient";
 import {
   FiUsers,
   FiTrendingUp,
-  FiCalendar,
   FiActivity,
   FiBarChart,
-  FiPieChart,
   FiDollarSign,
   FiTarget,
   FiAlertTriangle,
@@ -15,13 +13,13 @@ import {
   FiClock,
   FiTrendingDown,
   FiSettings,
-  FiEye,
   FiHeart,
   FiAward,
   FiMapPin,
 } from "react-icons/fi";
 import { SmartCard as Card, KPICard, SmartLoading as Loading } from "../ui";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 interface MemberAnalyticsProps {
   refreshKey?: number;
@@ -111,6 +109,7 @@ interface DeepAnalyticsData {
 export default function MemberAnalytics({
   refreshKey = 0,
 }: MemberAnalyticsProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<DeepAnalyticsData>({
     // Basic metrics
@@ -214,8 +213,6 @@ export default function MemberAnalytics({
       const activeMembers = members.filter(
         (m) => m.status === "active" || m.membership_status === "Active",
       ).length;
-      const inactiveMembers = totalMembers - activeMembers;
-
       const now = new Date();
       const thisMonth = now.getMonth();
       const thisYear = now.getFullYear();
@@ -574,7 +571,7 @@ export default function MemberAnalytics({
 
   const primaryKpis = [
     {
-      title: "Total Members",
+      title: t("members.totalMembers", "إجمالي الأعضاء"),
       value: analytics.totalMembers.toString(),
       change: `${analytics.growthRate >= 0 ? "+" : ""}${analytics.growthRate.toFixed(1)}%`,
       trend: analytics.growthRate >= 0 ? ("up" as const) : ("down" as const),
@@ -582,15 +579,15 @@ export default function MemberAnalytics({
       color: "blue" as const,
     },
     {
-      title: "Monthly Revenue",
-      value: `${analytics.monthlyRecurringRevenue.toFixed(0)} BHD`,
+      title: t("members.monthlyRevenue", "الإيرادات الشهرية"),
+      value: `${analytics.monthlyRecurringRevenue.toFixed(0)} د.ب`,
       change: "+12.3%",
       trend: "up" as const,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
     },
     {
-      title: "Churn Risk",
+      title: t("members.churnRisk", "مخاطر المغادرة"),
       value: `${analytics.churnPrediction.toFixed(1)}%`,
       change: "-2.1%",
       trend: "down" as const,
@@ -598,8 +595,8 @@ export default function MemberAnalytics({
       color: "red" as const,
     },
     {
-      title: "Lifetime Value",
-      value: `${analytics.averageLifetimeValue.toFixed(0)} BHD`,
+      title: t("members.lifetimeValue", "القيمة الدائمة للعضو"),
+      value: `${analytics.averageLifetimeValue.toFixed(0)} د.ب`,
       change: "+8.7%",
       trend: "up" as const,
       icon: <FiTarget className="h-6 w-6" />,
@@ -609,37 +606,37 @@ export default function MemberAnalytics({
 
   const secondaryKpis = [
     {
-      title: "Active Members",
+      title: t("members.activeMembers", "الأعضاء النشطون"),
       value: analytics.activeMembers.toString(),
       icon: <FiActivity className="h-6 w-6" />,
       color: "green" as const,
     },
     {
-      title: "At Risk",
+      title: t("members.atRisk", "معرض للخطر"),
       value: analytics.atRiskMembers.toString(),
       icon: <FiAlertTriangle className="h-6 w-6" />,
       color: "red" as const,
     },
     {
-      title: "Avg Age",
-      value: `${analytics.averageAge} years`,
+      title: t("members.avgAge", "متوسط العمر"),
+      value: `${analytics.averageAge} ${t("members.years", "سنة")}`,
       icon: <FiUsers className="h-6 w-6" />,
       color: "blue" as const,
     },
     {
-      title: "Engagement",
+      title: t("members.engagementRate", "معدل التفاعل"),
       value: `${analytics.activeEngagementRate.toFixed(1)}%`,
       icon: <FiHeart className="h-6 w-6" />,
       color: "purple" as const,
     },
     {
-      title: "ARPU",
-      value: `${analytics.arpu.toFixed(0)} BHD`,
+      title: t("members.arpu", "متوسط الإيراد للعضو"),
+      value: `${analytics.arpu.toFixed(0)} د.ب`,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
     },
     {
-      title: "Satisfaction",
+      title: t("members.satisfaction", "معدل الرضا"),
       value: `${analytics.memberSatisfactionScore.toFixed(1)}%`,
       icon: <FiAward className="h-6 w-6" />,
       color: "yellow" as const,

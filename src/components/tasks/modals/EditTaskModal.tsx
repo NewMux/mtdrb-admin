@@ -2,9 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiEdit,
-  FiClock,
   FiUser,
-  FiTag,
   FiCalendar,
   FiAlertTriangle,
   FiActivity,

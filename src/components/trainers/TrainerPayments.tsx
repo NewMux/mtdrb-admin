@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiDollarSign, FiPlus, FiDownload, FiFilter } from "react-icons/fi";
+import { FiDollarSign, FiPlus, FiDownload } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 
 interface Payment {
@@ -51,9 +51,9 @@ export default function TrainerPayments() {
       penalty: 0,
     },
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [, setLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+  const [, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchTrainers();
@@ -258,7 +258,7 @@ export default function TrainerPayments() {
 
           <button
             onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <FiDownload className="h-4 w-4 mr-2" />
             Export

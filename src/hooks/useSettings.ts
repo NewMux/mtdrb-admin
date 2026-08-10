@@ -42,6 +42,10 @@ export interface SettingsData {
     slackNotifications: boolean;
     webhookUrl: string;
   };
+  gymOperations: {
+    vatEnabled: boolean;
+    vatRate: number;
+  };
 }
 
 export interface ValidationErrors {
@@ -87,11 +91,24 @@ export const useSettings = () => {
       slackNotifications: false,
       webhookUrl: "",
     },
+    gymOperations: {
+      vatEnabled: true,
+      vatRate: 5.0,
+    },
   });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [sectionChanges, setSectionChanges] = useState<Record<keyof SettingsData, boolean>>({
+    general: false,
+    profile: false,
+    security: false,
+    billing: false,
+    integrations: false,
+    gymOperations: false,
+  });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [originalSettings, setOriginalSettings] = useState<SettingsData | null>(
     null,
@@ -135,6 +152,10 @@ export const useSettings = () => {
           slackNotifications: apiData.slack_notifications || false,
           webhookUrl: apiData.webhook_url || "",
         },
+        gymOperations: {
+          vatEnabled: apiData.vat_enabled !== false,
+          vatRate: apiData.vat_rate || 5.0,
+        },
       };
     },
     [user?.email],
@@ -169,6 +190,8 @@ export const useSettings = () => {
         stripe_payments: localData.integrations.stripePayments,
         slack_notifications: localData.integrations.slackNotifications,
         webhook_url: localData.integrations.webhookUrl,
+        vat_enabled: localData.gymOperations.vatEnabled,
+        vat_rate: localData.gymOperations.vatRate,
       };
     },
     [user],
@@ -202,45 +225,110 @@ export const useSettings = () => {
   }, [user, apiToLocalFormat, showError]);
 
   // Save settings
-  const saveSettings = useCallback(async () => {
-    if (!user || !hasChanges) return;
+  const saveSettings = useCallback(
+    async (section?: keyof SettingsData) => {
+      if (!user) return;
 
-    setSaving(true);
-    try {
-      const apiData = localToApiFormat(settings);
-      const { success, error, data } =
-        await saveGymSettingsWithValidation(apiData);
-
-      if (!success) {
-        showError("Failed to save settings", error || "Please try again.");
+      // If saving a specific section, check if that section has changes
+      if (section && !sectionChanges[section]) {
         return;
       }
 
-      if (data) {
-        const localSettings = apiToLocalFormat(data);
-        setOriginalSettings(localSettings);
-        setHasChanges(false);
-        setErrors({});
-        showSuccess(
-          "Settings saved successfully",
-          "Your changes have been applied.",
-        );
+      // If saving all, check if there are any changes
+      if (!section && !hasChanges) return;
+
+      if (section) {
+        setSavingSection(section);
+      } else {
+        setSaving(true);
       }
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      showError("Failed to save settings", "Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    user,
-    settings,
-    hasChanges,
-    localToApiFormat,
-    apiToLocalFormat,
-    showSuccess,
-    showError,
-  ]);
+
+      try {
+        // If saving a specific section, merge with original settings
+        let settingsToSave = settings;
+        if (section && originalSettings) {
+          settingsToSave = {
+            ...originalSettings,
+            [section]: settings[section],
+          };
+        }
+
+        const apiData = localToApiFormat(settingsToSave);
+        const { success, error, data } =
+          await saveGymSettingsWithValidation(apiData);
+
+        if (!success) {
+          showError("Failed to save settings", error || "Please try again.");
+          return;
+        }
+
+        if (data) {
+          const localSettings = apiToLocalFormat(data);
+          setOriginalSettings(localSettings);
+          
+          if (section) {
+            // Only update the saved section, preserve other unsaved changes
+            setSettings((prev) => ({
+              ...prev,
+              [section]: localSettings[section],
+            }));
+            
+            // Clear changes for this section
+            setSectionChanges((prev) => ({
+              ...prev,
+              [section]: false,
+            }));
+            
+            // Check if there are any other changes
+            const otherChanges = Object.entries(sectionChanges).some(
+              ([key, hasChange]) => key !== section && hasChange,
+            );
+            setHasChanges(otherChanges);
+          } else {
+            // Update all settings when saving everything
+            setSettings(localSettings);
+            setHasChanges(false);
+            setSectionChanges({
+              general: false,
+              profile: false,
+              security: false,
+              billing: false,
+              integrations: false,
+              gymOperations: false,
+            });
+          }
+          
+          setErrors({});
+          showSuccess(
+            section
+              ? `${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully`
+              : "Settings saved successfully",
+            "Your changes have been applied.",
+          );
+        }
+      } catch (error) {
+        console.error("Error saving settings:", error);
+        showError("Failed to save settings", "Please try again.");
+      } finally {
+        if (section) {
+          setSavingSection(null);
+        } else {
+          setSaving(false);
+        }
+      }
+    },
+    [
+      user,
+      settings,
+      hasChanges,
+      sectionChanges,
+      originalSettings,
+      localToApiFormat,
+      apiToLocalFormat,
+      showSuccess,
+      showError,
+    ],
+  );
 
   // Handle input changes
   const handleInputChange = useCallback(
@@ -253,6 +341,10 @@ export const useSettings = () => {
         },
       }));
       setHasChanges(true);
+      setSectionChanges((prev) => ({
+        ...prev,
+        [section]: true,
+      }));
 
       // Clear validation error for this field
       if (errors[`${section}.${field}`]) {
@@ -267,74 +359,126 @@ export const useSettings = () => {
   );
 
   // Validate settings
-  const validateSettings = useCallback(() => {
-    const newErrors: ValidationErrors = {};
+  const validateSettings = useCallback(
+    (section?: keyof SettingsData) => {
+      const newErrors: ValidationErrors = {};
 
-    // General settings validation
-    if (!settings.general.gymName.trim()) {
-      newErrors["general.gymName"] = "Gym name is required";
-    }
+      // If section is specified, only validate that section
+      if (section === "general" || !section) {
+        if (!settings.general.gymName.trim()) {
+          newErrors["general.gymName"] = "Gym name is required";
+        }
+      }
 
-    // Profile settings validation
-    if (!settings.profile.firstName.trim()) {
-      newErrors["profile.firstName"] = "First name is required";
-    }
-    if (!settings.profile.lastName.trim()) {
-      newErrors["profile.lastName"] = "Last name is required";
-    }
-    if (
-      !settings.profile.email ||
-      !/\S+@\S+\.\S+/.test(settings.profile.email)
-    ) {
-      newErrors["profile.email"] = "Valid email is required";
-    }
+      if (section === "profile" || !section) {
+        if (!settings.profile.firstName.trim()) {
+          newErrors["profile.firstName"] = "First name is required";
+        }
+        if (!settings.profile.lastName.trim()) {
+          newErrors["profile.lastName"] = "Last name is required";
+        }
+        if (
+          !settings.profile.email ||
+          !/\S+@\S+\.\S+/.test(settings.profile.email)
+        ) {
+          newErrors["profile.email"] = "Valid email is required";
+        }
+      }
 
-    // Security settings validation
-    if (
-      settings.security.passwordExpiry < 30 ||
-      settings.security.passwordExpiry > 365
-    ) {
-      newErrors["security.passwordExpiry"] =
-        "Password expiry must be between 30 and 365 days";
-    }
-    if (
-      settings.security.sessionTimeout < 5 ||
-      settings.security.sessionTimeout > 120
-    ) {
-      newErrors["security.sessionTimeout"] =
-        "Session timeout must be between 5 and 120 minutes";
-    }
-    if (
-      settings.security.minPasswordLength < 6 ||
-      settings.security.minPasswordLength > 20
-    ) {
-      newErrors["security.minPasswordLength"] =
-        "Minimum password length must be between 6 and 20 characters";
-    }
+      if (section === "security" || !section) {
+        if (
+          settings.security.passwordExpiry < 30 ||
+          settings.security.passwordExpiry > 365
+        ) {
+          newErrors["security.passwordExpiry"] =
+            "Password expiry must be between 30 and 365 days";
+        }
+        if (
+          settings.security.sessionTimeout < 5 ||
+          settings.security.sessionTimeout > 120
+        ) {
+          newErrors["security.sessionTimeout"] =
+            "Session timeout must be between 5 and 120 minutes";
+        }
+        if (
+          settings.security.minPasswordLength < 6 ||
+          settings.security.minPasswordLength > 20
+        ) {
+          newErrors["security.minPasswordLength"] =
+            "Minimum password length must be between 6 and 20 characters";
+        }
+      }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [settings]);
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    },
+    [settings],
+  );
 
   // Handle save with validation
-  const handleSave = useCallback(async () => {
-    if (!validateSettings()) {
-      showError("Validation failed", "Please fix the errors before saving.");
-      return;
-    }
+  const handleSave = useCallback(
+    async (section?: keyof SettingsData) => {
+      if (!validateSettings(section)) {
+        showError("Validation failed", "Please fix the errors before saving.");
+        return;
+      }
 
-    await saveSettings();
-  }, [validateSettings, saveSettings, showError]);
+      await saveSettings(section);
+    },
+    [validateSettings, saveSettings, showError],
+  );
+
+  // Handle save for a specific section
+  const handleSaveSection = useCallback(
+    async (section: keyof SettingsData) => {
+      await handleSave(section);
+    },
+    [handleSave],
+  );
 
   // Reset to original settings
-  const handleReset = useCallback(() => {
-    if (originalSettings) {
-      setSettings(originalSettings);
-      setHasChanges(false);
-      setErrors({});
-      showSuccess("Settings reset", "All changes have been discarded.");
-    }
-  }, [originalSettings, showSuccess]);
+  const handleReset = useCallback(
+    (section?: keyof SettingsData) => {
+      if (originalSettings) {
+        if (section) {
+          setSettings((prev) => ({
+            ...prev,
+            [section]: originalSettings[section],
+          }));
+          setSectionChanges((prev) => {
+            const updated = {
+              ...prev,
+              [section]: false,
+            };
+            // Check if there are any other changes
+            const otherChanges = Object.entries(updated).some(
+              ([key, hasChange]) => key !== section && hasChange,
+            );
+            setHasChanges(otherChanges);
+            return updated;
+          });
+          showSuccess(
+            `${section.charAt(0).toUpperCase() + section.slice(1)} settings reset`,
+            "Changes for this section have been discarded.",
+          );
+        } else {
+          setSettings(originalSettings);
+          setHasChanges(false);
+          setSectionChanges({
+            general: false,
+            profile: false,
+            security: false,
+            billing: false,
+            integrations: false,
+            gymOperations: false,
+          });
+          showSuccess("Settings reset", "All changes have been discarded.");
+        }
+        setErrors({});
+      }
+    },
+    [originalSettings, showSuccess],
+  );
 
   // Get error for a specific field
   const getFieldError = useCallback(
@@ -367,12 +511,15 @@ export const useSettings = () => {
     settings,
     loading,
     saving,
+    savingSection,
     hasChanges,
+    sectionChanges,
     errors,
 
     // Actions
     handleInputChange,
     handleSave,
+    handleSaveSection,
     handleReset,
     getFieldError,
 

@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS memberships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('owner', 'admin', 'manager', 'trainer', 'staff')),
+  role TEXT NOT NULL DEFAULT 'trainer' CHECK (role IN ('admin', 'employee', 'trainer')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, tenant_id)
@@ -464,10 +464,8 @@ CREATE POLICY "Users can insert memberships for their tenant"
   ON memberships FOR INSERT
   TO authenticated
   WITH CHECK (
-    -- Allow if user is creating their own membership (signup case)
-    user_id = auth.uid()
+    (user_id = auth.uid() AND tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid)
     OR
-    -- Allow if tenant_id matches user's tenant (normal case)
     tenant_id = get_user_tenant_id()
   );
 

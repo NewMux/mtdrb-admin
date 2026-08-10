@@ -39,6 +39,8 @@ import {
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 import type { Branch, Expense, Invoice, Member, PaymentMethodType, InvoiceStatus } from "../../types";
 
 interface FinancialInsightsDashboardProps {
@@ -198,6 +200,8 @@ const FilterBar: React.FC<{
   options: FilterOptions;
   onFilterChange: (filters: FilterState) => void;
 }> = ({ filters, options, onFilterChange }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateFilter = <Key extends keyof FilterState>(
@@ -212,27 +216,27 @@ const FilterBar: React.FC<{
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-6 rounded-3xl shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 rounded-3xl shadow-sm" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="flex items-center justify-between gap-4">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
         >
-          <FiFilter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            Financial Analytics Filters
+          <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("billing.financialAnalyticsFilters")}
           </span>
         </button>
 
         {isExpanded && (
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-              <FiRefreshCw className="w-4 h-4" />
-              Reset
+            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+              <FiRefreshCw className="w-4 h-4 flex-shrink-0" />
+              <span>{t("billing.reset", "إعادة ضبط")}</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-              <FiDownload className="w-4 h-4" />
-              Export
+            <button className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <FiDownload className="w-4 h-4 flex-shrink-0" />
+              <span>{t("billing.export", "تصدير")}</span>
             </button>
           </div>
         )}
@@ -250,15 +254,16 @@ const FilterBar: React.FC<{
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
               {/* Branch Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Branch
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.branch")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.branches[0] || ""}
                   onChange={(e) => updateFilter("branches", [e.target.value])}
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="">All Branches</option>
+                  <option value="">{t("billing.allBranches")}</option>
                   {options.branches.map((branch) => (
                     <option key={branch.id} value={branch.id}>
                       {branch.name}
@@ -269,34 +274,36 @@ const FilterBar: React.FC<{
 
               {/* Date Range Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date Range
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.dateRange")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.dateRange}
                   onChange={(e) => updateFilter("dateRange", e.target.value)}
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="this-month">This Month</option>
-                  <option value="last-month">Last Month</option>
-                  <option value="last-3-months">Last 3 Months</option>
-                  <option value="this-year">This Year</option>
+                  <option value="this-month">{t("billing.thisMonth")}</option>
+                  <option value="last-month">{t("billing.lastMonth")}</option>
+                  <option value="last-3-months">{t("billing.last3Months")}</option>
+                  <option value="this-year">{t("billing.thisYear")}</option>
                 </select>
               </div>
 
               {/* Membership Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Membership
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.membership")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.membershipType}
                   onChange={(e) =>
                     updateFilter("membershipType", e.target.value)
                   }
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="">All Types</option>
+                  <option value="">{t("billing.allTypes")}</option>
                   {options.membershipTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -307,17 +314,18 @@ const FilterBar: React.FC<{
 
               {/* Payment Method Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Method
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.paymentMethod")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.paymentMethod}
                   onChange={(e) =>
                     updateFilter("paymentMethod", e.target.value)
                   }
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="">All Methods</option>
+                  <option value="">{t("billing.allMethods")}</option>
                   {options.paymentMethods.map((method) => (
                     <option key={method} value={method}>
                       {method}
@@ -328,17 +336,18 @@ const FilterBar: React.FC<{
 
               {/* Invoice Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Invoice Status
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.invoiceStatus")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.invoiceStatus}
                   onChange={(e) =>
                     updateFilter("invoiceStatus", e.target.value)
                   }
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="">All Status</option>
+                  <option value="">{t("billing.allStatus")}</option>
                   {options.invoiceStatuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
@@ -349,17 +358,18 @@ const FilterBar: React.FC<{
 
               {/* VAT Filing Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  VAT Status
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t("billing.vatStatus")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.vatFilingStatus}
                   onChange={(e) =>
                     updateFilter("vatFilingStatus", e.target.value)
                   }
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <option value="">All Status</option>
+                  <option value="">{t("billing.allStatus")}</option>
                   {options.vatStatuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
@@ -396,10 +406,12 @@ const MetricCard: React.FC<{
   format = "number",
   currency,
 }) => {
+  const { isRTL } = useRTL();
+
   const getTrendColor = () => {
-    if (trend === "up") return "text-green-600";
-    if (trend === "down") return "text-red-600";
-    return "text-gray-600";
+    if (trend === "up") return "text-green-600 dark:text-green-400";
+    if (trend === "down") return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
   };
 
   const getTrendIcon = () => {
@@ -426,11 +438,12 @@ const MetricCard: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200"
+      className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between gap-4 mb-4">
         <div
-          className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}
+          className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}
         >
           {icon}
         </div>
@@ -442,15 +455,15 @@ const MetricCard: React.FC<{
         )}
       </div>
 
-      <div>
-        <h3 className="text-sm font-medium text-gray-600 mb-1">
+      <div className="text-start">
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
           {title}
         </h3>
-        <p className="text-2xl font-bold text-gray-900">
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">
           {formatValue(value)}
         </p>
         {subtitle && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {subtitle}
           </p>
         )}
@@ -463,21 +476,25 @@ const ChartCard: React.FC<{
   title: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, children, className = "" }) => (
-  <div
-    className={`bg-white rounded-3xl p-6 shadow-sm border border-gray-200 ${className}`}
-  >
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-      {title}
-    </h3>
-    {children}
-  </div>
-);
+}> = ({ title, children, className = "" }) => {
+  return (
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+    >
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+};
 
 export default function FinancialInsightsDashboard({
   refreshKey,
 }: FinancialInsightsDashboardProps) {
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [filters, setFilters] = useState<FilterState>({
     branches: [],
     dateRange: "this-month",
@@ -1006,14 +1023,14 @@ export default function FinancialInsightsDashboard({
 
       {/* Revenue Overview */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          💰 Revenue Overview
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.revenueOverview")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricCard
-            title="Total Revenue"
+            title={t("billing.totalRevenue")}
             value={revenueMetrics.totalRevenue}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="up"
             trendValue="+12%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
@@ -1022,9 +1039,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="MRR"
+            title={t("billing.mrr")}
             value={revenueMetrics.mrr}
-            subtitle="Monthly Recurring Revenue"
+            subtitle={t("billing.monthlyRecurringRevenue")}
             trend="up"
             trendValue="+8%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
@@ -1033,9 +1050,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Avg. Revenue per Member"
+            title={t("billing.avgRevenuePerMember")}
             value={revenueMetrics.avgRevenuePerMember}
-            subtitle="Per member average"
+            subtitle={t("billing.perMemberAverage")}
             trend="up"
             trendValue="+5%"
             icon={<FiUser className="w-6 h-6 text-white" />}
@@ -1044,9 +1061,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="New Revenue"
+            title={t("billing.newRevenue")}
             value={revenueMetrics.newRevenue}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="up"
             trendValue="+15%"
             icon={<FiAward className="w-6 h-6 text-white" />}
@@ -1055,9 +1072,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Projected Revenue"
+            title={t("billing.projectedRevenue")}
             value={revenueMetrics.projectedRevenue}
-            subtitle="Next month"
+            subtitle={t("billing.nextMonth")}
             trend="up"
             trendValue="+9%"
             icon={<FiTarget className="w-6 h-6 text-white" />}
@@ -1066,9 +1083,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Revenue from Add-ons"
+            title={t("billing.revenueFromAddons")}
             value={revenueMetrics.revenueFromAddons}
-            subtitle="PT & extras"
+            subtitle={t("billing.ptAndExtras")}
             trend="up"
             trendValue="+22%"
             icon={<FiPlus className="w-6 h-6 text-white" />}
@@ -1081,41 +1098,41 @@ export default function FinancialInsightsDashboard({
 
       {/* Invoice & Payment Insights */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📄 Invoice & Payment Insights
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.invoicePaymentInsights")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <MetricCard
-            title="Total Invoices Issued"
+            title={t("billing.totalInvoicesIssued")}
             value={invoiceMetrics.totalInvoicesIssued}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="up"
             trendValue="+8%"
             icon={<FiFileText className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
           <MetricCard
-            title="Paid Invoices"
+            title={t("billing.paidInvoices")}
             value={invoiceMetrics.paidInvoices}
-            subtitle="Successfully paid"
+            subtitle={t("billing.successfullyPaid")}
             trend="up"
             trendValue="+6%"
             icon={<FiCheckCircle className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
           <MetricCard
-            title="Unpaid / Overdue"
+            title={t("billing.unpaidOverdue")}
             value={invoiceMetrics.unpaidOverdueInvoices}
-            subtitle="Requires attention"
+            subtitle={t("billing.requiresAttention")}
             trend="down"
             trendValue="-12%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
           <MetricCard
-            title="Avg. Invoice Value"
+            title={t("billing.avgInvoiceValue")}
             value={invoiceMetrics.avgInvoiceValue}
-            subtitle="Per invoice"
+            subtitle={t("billing.perInvoice")}
             trend="up"
             trendValue="+4%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
@@ -1124,9 +1141,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Failed Payments"
+            title={t("billing.failedPayments")}
             value={invoiceMetrics.failedPayments}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="down"
             trendValue="-18%"
             icon={<FiX className="w-6 h-6 text-white" />}
@@ -1137,11 +1154,11 @@ export default function FinancialInsightsDashboard({
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📈 Visuals
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.visuals")}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Revenue Trend">
+          <ChartCard title={t("billing.revenueTrend")}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData.revenueTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -1150,7 +1167,7 @@ export default function FinancialInsightsDashboard({
                 <Tooltip
                   formatter={(value) => [
                     `${currencyCode ? `${currencyCode} ` : ""}${value}`,
-                    "Revenue",
+                    t("billing.revenue"),
                   ]}
                 />
                 <Line
@@ -1163,7 +1180,7 @@ export default function FinancialInsightsDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Invoices Over Time">
+          <ChartCard title={t("billing.invoicesOverTime")}>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData.invoicesOverTime}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -1175,7 +1192,7 @@ export default function FinancialInsightsDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Revenue by Branch">
+          <ChartCard title={t("billing.revenueByBranch")}>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData.revenueByBranch}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -1184,7 +1201,7 @@ export default function FinancialInsightsDashboard({
                 <Tooltip
                   formatter={(value) => [
                     `${currencyCode ? `${currencyCode} ` : ""}${value}`,
-                    "Revenue",
+                    t("billing.revenue"),
                   ]}
                 />
                 <Bar dataKey="revenue" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
@@ -1192,7 +1209,7 @@ export default function FinancialInsightsDashboard({
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Payment Method Split">
+          <ChartCard title={t("billing.paymentMethodSplit")}>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -1218,7 +1235,7 @@ export default function FinancialInsightsDashboard({
           </ChartCard>
         </div>
 
-        <ChartCard title="Membership Type Revenue Share">
+        <ChartCard title={t("billing.membershipTypeRevenueShare")}>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -1244,14 +1261,14 @@ export default function FinancialInsightsDashboard({
 
       {/* Expense & Profitability Metrics */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📉 Expense & Profitability Metrics
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.expenseProfitabilityMetrics")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Total Expenses"
+            title={t("billing.totalExpenses")}
             value={expenseMetrics.totalExpenses}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="down"
             trendValue="-3%"
             icon={<FiShoppingCart className="w-6 h-6 text-white" />}
@@ -1260,9 +1277,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Net Profit"
+            title={t("billing.netProfit")}
             value={expenseMetrics.netProfit}
-            subtitle="Revenue - Expenses"
+            subtitle={t("billing.revenueMinusExpenses")}
             trend="up"
             trendValue="+15%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
@@ -1271,9 +1288,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Avg. Profit Margin"
+            title={t("billing.avgProfitMargin")}
             value={expenseMetrics.avgProfitMargin}
-            subtitle="Net profit %"
+            subtitle={t("billing.netProfitPercent")}
             trend="up"
             trendValue="+2%"
             icon={<FiPercent className="w-6 h-6 text-white" />}
@@ -1282,7 +1299,7 @@ export default function FinancialInsightsDashboard({
           />
         </div>
 
-        <ChartCard title="Top Expense Categories">
+        <ChartCard title={t("billing.topExpenseCategories")}>
           <div className="space-y-3">
             {expenseMetrics.topExpenseCategories.map((category, index) => (
               <div
@@ -1295,7 +1312,7 @@ export default function FinancialInsightsDashboard({
                       {index + 1}
                     </span>
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {category.category}
                   </span>
                 </div>
@@ -1311,14 +1328,14 @@ export default function FinancialInsightsDashboard({
 
       {/* VAT Analytics */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📊 VAT Analytics
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.vatAnalytics")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <MetricCard
-            title="VAT Collected"
+            title={t("billing.vatCollected")}
             value={vatMetrics.vatCollected}
-            subtitle="From invoices"
+            subtitle={t("billing.fromInvoices")}
             trend="up"
             trendValue="+12%"
             icon={<FiPercent className="w-6 h-6 text-white" />}
@@ -1327,9 +1344,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="VAT Paid"
+            title={t("billing.vatPaid")}
             value={vatMetrics.vatPaid}
-            subtitle="On expenses"
+            subtitle={t("billing.onExpenses")}
             trend="up"
             trendValue="+8%"
             icon={<FiCreditCard className="w-6 h-6 text-white" />}
@@ -1338,9 +1355,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="VAT Balance"
+            title={t("billing.vatBalance")}
             value={vatMetrics.vatBalance}
-            subtitle="Collected - Paid"
+            subtitle={t("billing.collectedMinusPaid")}
             trend="up"
             trendValue="+15%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
@@ -1349,17 +1366,17 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Next Filing Deadline"
+            title={t("billing.nextFilingDeadline")}
             value={vatMetrics.nextFilingDeadline}
-            subtitle="Due date"
+            subtitle={t("billing.dueDateLabel")}
             trend="neutral"
             icon={<FiCalendar className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
           <MetricCard
-            title="Filed Returns"
+            title={t("billing.filedReturns")}
             value={vatMetrics.filedReturnsThisPeriod}
-            subtitle="This period"
+            subtitle={t("billing.thisPeriod")}
             trend="up"
             trendValue="+1"
             icon={<FiFileText className="w-6 h-6 text-white" />}
@@ -1370,14 +1387,14 @@ export default function FinancialInsightsDashboard({
 
       {/* Risk Indicators */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          📉 Risk Indicators
+        <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+          {t("billing.riskIndicators")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Churned Members' Revenue Loss"
+            title={t("billing.churnedMembersRevenueLoss")}
             value={riskMetrics.churnedMembersRevenueLoss}
-            subtitle="Lost revenue"
+            subtitle={t("billing.lostRevenue")}
             trend="down"
             trendValue="-8%"
             icon={<FiTrendingDown className="w-6 h-6 text-white" />}
@@ -1386,9 +1403,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="At-Risk Revenue"
+            title={t("billing.atRiskRevenue")}
             value={riskMetrics.atRiskRevenue}
-            subtitle="Expiring soon"
+            subtitle={t("billing.expiringSoon")}
             trend="up"
             trendValue="+5%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
@@ -1397,9 +1414,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title="Late Payment Rate"
+            title={t("billing.latePaymentRate")}
             value={riskMetrics.latePaymentRate}
-            subtitle="% of invoices"
+            subtitle={t("billing.percentOfInvoices")}
             trend="down"
             trendValue="-2%"
             icon={<FiClock className="w-6 h-6 text-white" />}
@@ -1407,7 +1424,7 @@ export default function FinancialInsightsDashboard({
             format="percentage"
           />
           <MetricCard
-            title="Unpaid High-Value Invoices"
+            title={t("billing.unpaidHighValueInvoices")}
             value={riskMetrics.unpaidHighValueInvoices}
             subtitle={currencyCode ? `> ${currencyCode} 500` : "> 500"}
             trend="down"

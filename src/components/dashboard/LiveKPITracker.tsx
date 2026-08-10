@@ -6,6 +6,20 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
+
+// Color mappings for KPI cards
+const kpiColorMap = {
+  green: {
+    iconBg: "bg-green-50 dark:bg-green-900/30",
+    iconText: "text-green-600 dark:text-green-400",
+  },
+  blue: {
+    iconBg: "bg-blue-50 dark:bg-blue-900/30",
+    iconText: "text-blue-600 dark:text-blue-400",
+  },
+};
 
 interface LiveKPITrackerProps {
   refreshKey?: number;
@@ -22,9 +36,10 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
   }
 
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
   const [liveMetrics, setLiveMetrics] = useState<LiveMetric[]>([
     {
-      title: "Members in Gym",
+      title: t("dashboard.membersInGym"),
       value: "0",
       icon: <FiUsers className="h-5 w-5" />,
       color: "green",
@@ -32,7 +47,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       status: "active",
     },
     {
-      title: "Classes Running",
+      title: t("dashboard.classesRunning"),
       value: "0",
       icon: <FiActivity className="h-5 w-5" />,
       color: "blue",
@@ -113,7 +128,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
 
       setLiveMetrics([
         {
-          title: "Members in Gym",
+          title: t("dashboard.membersInGym"),
           value: membersInGym.toString(),
           icon: <FiUsers className="h-5 w-5" />,
           color: "green",
@@ -121,7 +136,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
           status: membersInGym > 0 ? "active" : "stable",
         },
         {
-          title: "Classes Running",
+          title: t("dashboard.classesRunning"),
           value: runningClassesCount.toString(),
           icon: <FiActivity className="h-5 w-5" />,
           color: "blue",
@@ -134,7 +149,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   useEffect(() => {
     fetchLiveData();
@@ -143,23 +158,24 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
     return () => clearInterval(interval);
   }, [fetchLiveData, refreshKey]);
 
+  const { isRTL } = useRTL();
   return (
-    <section className="bg-white border border-gray-100 rounded-2xl p-6 transition-colors duration-300">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-green-50 rounded-xl">
-            <FiActivity className="text-green-600 text-xl" />
+    <section className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6 transition-colors duration-300">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
+            <FiActivity className="text-green-600 dark:text-green-400 text-xl" />
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
-              Live Activity
+          <div className="text-start">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
+              {t("dashboard.liveActivity")}
             </h2>
-            <p className="text-sm text-gray-600">Real-time gym status</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.realtimeGymStatus")}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>Live</span>
+          <span>{t("dashboard.live")}</span>
         </div>
       </div>
       
@@ -167,26 +183,27 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
         {liveMetrics.map((metric, index) => (
           <div
             key={index}
-            className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-sm transition-all duration-200"
+            className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/20 transition-all duration-200 text-start"
+            dir={isRTL ? "rtl" : "ltr"}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`p-2 rounded-lg bg-${metric.color}-50 text-${metric.color}-600`}>
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <div className={`p-2 rounded-lg ${kpiColorMap[metric.color].iconBg} ${kpiColorMap[metric.color].iconText}`}>
                 {metric.icon}
               </div>
-              <div className="flex items-center space-x-1 text-sm">
-                <FiArrowUpRight className="h-4 w-4 text-green-600" />
-                <span className="text-green-600 font-medium">
+              <div className="flex items-center gap-1 text-sm">
+                <FiArrowUpRight className={`h-4 w-4 text-green-600 dark:text-green-400 ${isRTL ? 'rtl-flip' : ''}`} />
+                <span className="text-green-600 dark:text-green-400 font-medium">
                   {metric.change > 0 ? "+" : ""}{metric.change}
                 </span>
               </div>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
-            <div className="text-sm text-gray-600">{metric.title}</div>
-            <div className="flex items-center space-x-2 mt-2">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{metric.value}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{metric.title}</div>
+            <div className="flex items-center gap-2 mt-2">
               <div className={`w-2 h-2 rounded-full ${
                 metric.status === "active" ? "bg-green-500" : "bg-blue-500"
               }`}></div>
-              <span className="text-xs text-gray-500 capitalize">{metric.status}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-500 capitalize">{metric.status}</span>
             </div>
           </div>
         ))}

@@ -2,9 +2,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiBell,
-  FiMessageSquare,
-  FiMail,
-  FiSmartphone,
   FiZap,
   FiAlertTriangle,
 } from "react-icons/fi";

@@ -5,54 +5,94 @@ import {
   FiDollarSign,
   FiCalendar,
   FiStar,
+  FiEdit2,
 } from "react-icons/fi";
 import { SmartDashboardOverview } from "./SmartDashboardOverview";
 import { LiveKPITracker } from "./LiveKPITracker";
 import MemberEngagement from "./MemberEngagement";
 import BusinessOverview from "./BusinessOverview";
+import { SetTargetsModal } from "./SetTargetsModal";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
+
+// Color mappings for KPI cards to ensure Tailwind classes work properly
+const kpiColorMap = {
+  green: {
+    iconBg: "bg-green-50 dark:bg-green-900/30",
+    iconText: "text-green-600 dark:text-green-400",
+    progressBar: "bg-green-500 dark:bg-green-400",
+  },
+  blue: {
+    iconBg: "bg-blue-50 dark:bg-blue-900/30",
+    iconText: "text-blue-600 dark:text-blue-400",
+    progressBar: "bg-blue-500 dark:bg-blue-400",
+  },
+  purple: {
+    iconBg: "bg-purple-50 dark:bg-purple-900/30",
+    iconText: "text-purple-600 dark:text-purple-400",
+    progressBar: "bg-purple-500 dark:bg-purple-400",
+  },
+  yellow: {
+    iconBg: "bg-yellow-50 dark:bg-yellow-900/30",
+    iconText: "text-yellow-600 dark:text-yellow-400",
+    progressBar: "bg-yellow-500 dark:bg-yellow-400",
+  },
+};
 
 interface DashboardOverviewProps {
   refreshKey: number;
+}
+
+interface DashboardTargets {
+  revenue?: number;
+  activeMembers?: number;
+  classAttendance?: number;
+  memberSatisfaction?: number;
 }
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ 
   refreshKey 
 }) => {
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  const [showTargetsModal, setShowTargetsModal] = useState(false);
+  const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
+  const [currency, setCurrency] = useState("AED");
   const [primaryStats, setPrimaryStats] = useState([
     {
-      name: "Total Revenue",
+      name: t("dashboard.totalRevenue"),
       value: "$0",
-      change: "Loading...",
+      change: t("common.loading"),
       icon: <FiDollarSign className="w-6 h-6" />,
       color: "green" as const,
       target: "$0",
       progress: 0,
     },
     {
-      name: "Active Members",
+      name: t("dashboard.activeMembers"),
       value: "0",
-      change: "Loading...",
+      change: t("common.loading"),
       icon: <FiUsers className="w-6 h-6" />,
       color: "blue" as const,
       target: "0",
       progress: 0,
     },
     {
-      name: "Class Attendance",
+      name: t("dashboard.classAttendance"),
       value: "0%",
-      change: "Loading...",
+      change: t("common.loading"),
       icon: <FiCalendar className="w-6 h-6" />,
       color: "purple" as const,
       target: "85%",
       progress: 0,
     },
     {
-      name: "Member Satisfaction",
+      name: t("dashboard.memberSatisfaction"),
       value: "0/5",
-      change: "Loading...",
+      change: t("common.loading"),
       icon: <FiStar className="w-6 h-6" />,
       color: "yellow" as const,
       target: "4.8",
@@ -154,15 +194,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const previousAttendanceRate = previousTotal > 0 ? (previousAttended / previousTotal) * 100 : 0;
       const attendanceChange = currentAttendanceRate - previousAttendanceRate;
 
-      // Get currency from settings
+      // Get currency and targets from settings
       const { data: settings } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .single();
 
-      const currency = settings?.currency || "AED";
-      const currencySymbol = currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : "$";
+      const settingsCurrency = settings?.currency || "AED";
+      setCurrency(settingsCurrency);
+      const currencySymbol = settingsCurrency === "AED" ? "AED" : settingsCurrency === "SAR" ? "SAR" : "$";
+
+      // Extract targets from metadata
+      const metadata = settings?.metadata as { dashboardTargets?: DashboardTargets } | null;
+      const targets = metadata?.dashboardTargets || null;
+      setSavedTargets(targets);
 
       // Calculate average trainer rating as proxy for member satisfaction
       const { data: trainers } = await supabase
@@ -175,51 +221,69 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         ? trainers.reduce((sum, t) => sum + Number(t.rating || 0), 0) / trainers.length
         : 0;
 
-      const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : "N/A";
-      const satisfactionChange = avgRating > 0 ? "Based on trainer ratings" : "No rating data";
+      const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : t("dashboard.notAvailable");
+      const satisfactionChange = avgRating > 0 ? t("dashboard.basedOnTrainerRatings") : t("dashboard.noRatingData");
+
+      // Calculate targets: use saved targets or fallback to calculated defaults
+      const revenueTarget = targets?.revenue ?? (currentRevenue * 1.1);
+      const membersTarget = targets?.activeMembers ?? (currentMemberCount * 1.05);
+      const attendanceTarget = targets?.classAttendance ?? 85;
+      const satisfactionTarget = targets?.memberSatisfaction ?? 4.8;
+
+      // Format targets for display
+      const revenueTargetDisplay = `${currencySymbol} ${revenueTarget.toLocaleString()}`;
+      const membersTargetDisplay = membersTarget.toLocaleString();
+      const attendanceTargetDisplay = `${attendanceTarget}%`;
+      const satisfactionTargetDisplay = satisfactionTarget.toFixed(1);
+
+      // Calculate progress percentages
+      const revenueProgress = revenueTarget > 0 ? Math.min(100, (currentRevenue / revenueTarget) * 100) : 0;
+      const membersProgress = membersTarget > 0 ? Math.min(100, (currentMemberCount / membersTarget) * 100) : 0;
+      const attendanceProgress = Math.min(100, (currentAttendanceRate / attendanceTarget) * 100);
+      const satisfactionProgress = avgRating > 0 ? Math.min(100, (avgRating / satisfactionTarget) * 100) : 0;
 
       setPrimaryStats([
         {
-          name: "Total Revenue",
+          name: t("dashboard.totalRevenue"),
           value: `${currencySymbol} ${currentRevenue.toLocaleString()}`,
           change: revenueChange >= 0
-            ? `+${currencySymbol} ${Math.abs(currentRevenue - previousRevenue).toLocaleString()} vs last month`
-            : `-${currencySymbol} ${Math.abs(currentRevenue - previousRevenue).toLocaleString()} vs last month`,
+            ? `+${currencySymbol} ${Math.abs(currentRevenue - previousRevenue).toLocaleString()} ${t("dashboard.vsLastMonth")}`
+            : `-${currencySymbol} ${Math.abs(currentRevenue - previousRevenue).toLocaleString()} ${t("dashboard.vsLastMonth")}`,
           icon: <FiDollarSign className="w-6 h-6" />,
           color: "green" as const,
-          target: `${currencySymbol} ${(currentRevenue * 1.1).toLocaleString()}`,
-          progress: currentRevenue > 0 ? Math.min(100, (currentRevenue / (currentRevenue * 1.1)) * 100) : 0,
+          target: revenueTargetDisplay,
+          progress: revenueProgress,
         },
         {
-          name: "Active Members",
+          name: t("dashboard.activeMembers"),
           value: currentMemberCount.toLocaleString(),
           change: memberChange >= 0
-            ? `+${memberChange} vs last month`
-            : `${memberChange} vs last month`,
+            ? `+${memberChange} ${t("dashboard.vsLastMonth")}`
+            : `${memberChange} ${t("dashboard.vsLastMonth")}`,
           icon: <FiUsers className="w-6 h-6" />,
           color: "blue" as const,
-          target: (currentMemberCount * 1.05).toLocaleString(),
-          progress: currentMemberCount > 0 ? Math.min(100, (currentMemberCount / (currentMemberCount * 1.05)) * 100) : 0,
+          target: membersTargetDisplay,
+          progress: membersProgress,
         },
         {
-          name: "Class Attendance",
+          name: t("dashboard.classAttendance"),
           value: `${currentAttendanceRate.toFixed(1)}%`,
           change: attendanceChange >= 0
-            ? `+${attendanceChange.toFixed(1)}% vs last month`
-            : `${attendanceChange.toFixed(1)}% vs last month`,
+            ? `+${attendanceChange.toFixed(1)}% ${t("dashboard.vsLastMonth")}`
+            : `${attendanceChange.toFixed(1)}% ${t("dashboard.vsLastMonth")}`,
           icon: <FiCalendar className="w-6 h-6" />,
           color: "purple" as const,
-          target: "85%",
-          progress: Math.min(100, (currentAttendanceRate / 85) * 100),
+          target: attendanceTargetDisplay,
+          progress: attendanceProgress,
         },
         {
-          name: "Member Satisfaction",
+          name: t("dashboard.memberSatisfaction"),
           value: satisfactionValue,
           change: satisfactionChange,
           icon: <FiStar className="w-6 h-6" />,
           color: "yellow" as const,
-          target: "4.8",
-          progress: avgRating > 0 ? Math.min(100, (avgRating / 4.8) * 100) : 0,
+          target: satisfactionTargetDisplay,
+          progress: satisfactionProgress,
         },
       ]);
     } catch (error) {
@@ -227,7 +291,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   useEffect(() => {
     fetchStats();
@@ -235,7 +299,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }
@@ -244,52 +308,74 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     <div className="space-y-8">
       {/* Primary Stats - Enhanced 2x2 Grid with Progress Bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {primaryStats.map((stat, index) => (
-          <motion.div
-            key={stat.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.3 }}
-          >
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-${stat.color}-50 text-${stat.color}-600`}>
-                  {stat.icon}
+        {primaryStats.map((stat, index) => {
+          const colors = kpiColorMap[stat.color];
+          return (
+            <motion.div
+              key={stat.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+            >
+              <div 
+                dir={isRTL ? "rtl" : "ltr"}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 text-start"
+              >
+                {/* Header: Icon on start side, Target button on end side */}
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div className={`p-3 rounded-xl ${colors.iconBg} ${colors.iconText} flex-shrink-0`}>
+                    {stat.icon}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowTargetsModal(true);
+                    }}
+                    className="group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-2.5 py-1 transition-all text-start"
+                    title={t("dashboard.targets.setTargets")}
+                    type="button"
+                  >
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("dashboard.target")}</div>
+                      <FiEdit2 className="w-3 h-3 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">{stat.target}</div>
+                  </button>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-gray-600">Target</div>
-                  <div className="text-sm font-semibold text-gray-900">{stat.target}</div>
+                
+                {/* Value & Name */}
+                <div className="mb-4 text-start">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{stat.name}</div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-sm mb-2 gap-2">
+                    <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
+                      style={{ width: `${Math.min(stat.progress, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                {/* Footer: Change message & Live indicator */}
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">{stat.change}</span>
+                  <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 flex-shrink-0">
+                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+                    <span className="text-xs font-medium">{t("dashboard.live")}</span>
+                  </div>
                 </div>
               </div>
-              
-              <div className="mb-4">
-                <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-600">{stat.name}</div>
-              </div>
-              
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-600">Progress</span>
-                  <span className="font-medium text-gray-900">{Math.round(stat.progress)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full bg-${stat.color}-500 transition-all duration-300`}
-                    style={{ width: `${Math.min(stat.progress, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{stat.change}</span>
-                <div className="flex items-center space-x-1 text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs font-medium">Live</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Main Content - Enhanced Single Column Layout */}
@@ -299,6 +385,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <LiveKPITracker />
         <MemberEngagement />
       </div>
+
+      {/* Set Targets Modal */}
+      <SetTargetsModal
+        isOpen={showTargetsModal}
+        onClose={() => setShowTargetsModal(false)}
+        onSave={() => {
+          fetchStats();
+        }}
+        currentTargets={savedTargets || undefined}
+        currency={currency}
+      />
     </div>
   );
 }; 

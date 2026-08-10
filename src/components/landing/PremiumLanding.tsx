@@ -12,10 +12,13 @@ import {
   FiTrendingUp,
   FiDollarSign,
   FiShield,
-  FiZap,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 const PremiumLanding: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
@@ -37,29 +40,39 @@ const PremiumLanding: React.FC = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`nav-ltr-layout fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm"
             : "bg-transparent"
         }`}
+        dir="ltr"
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
+          <div className="flex items-center justify-between h-20 relative">
+            {/* Logo - Left side */}
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="text-2xl font-bold bg-gradient-to-r from-[#0033A0] to-[#40C4FF] bg-clip-text text-transparent"
+              className="text-2xl font-bold bg-gradient-to-r from-[#0033A0] to-[#40C4FF] bg-clip-text text-transparent flex-shrink-0 z-20"
+              style={{ minWidth: 'fit-content' }}
             >
               MTDRB
             </motion.div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            {/* Desktop Navigation - Center */}
+            <div className="hidden xl:flex items-center gap-8 absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
               <a
-                href="#features"
-                className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                href="#pricing"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.querySelector("#pricing");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer whitespace-nowrap px-2"
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                Features
+                {t("navbar.pricing")}
               </a>
               <a
                 href="#features"
@@ -70,32 +83,31 @@ const PremiumLanding: React.FC = () => {
                     element.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
                 }}
-                className="text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer"
+                className="text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer whitespace-nowrap px-2"
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                Solutions
+                {t("landing.solutions")}
               </a>
               <a
-                href="#pricing"
-                className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                href="#features"
+                className="text-slate-600 hover:text-slate-900 font-medium transition-colors whitespace-nowrap px-2"
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                Pricing
+                {t("navbar.features")}
               </a>
             </div>
 
-            {/* Right Side Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm font-medium text-slate-600">
-                <span>EN</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-slate-400">AR</span>
-              </div>
-              <Link to="/signup">
+            {/* Actions - Right side */}
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0 z-20">
+              <LanguageSwitcher />
+              <Link to="/signup" className="flex-shrink-0">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-2.5 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 whitespace-nowrap"
+                  dir={isRTL ? "rtl" : "ltr"}
                 >
-                  Get Started
+                  {t("landing.get_started")}
                 </motion.button>
               </Link>
             </div>
@@ -103,7 +115,7 @@ const PremiumLanding: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-slate-600"
+              className="md:hidden p-2 text-slate-600 flex-shrink-0 z-10 absolute right-0"
             >
               {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
@@ -116,14 +128,22 @@ const PremiumLanding: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden bg-white border-t border-slate-200 px-6 py-4 space-y-4"
+            className={`md:hidden bg-white border-t border-slate-200 px-6 py-4 space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}
+            dir={isRTL ? "rtl" : "ltr"}
           >
             <a
-              href="#features"
-              className="block text-slate-600 hover:text-slate-900 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
+              href="#pricing"
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.querySelector("#pricing");
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+                setMobileMenuOpen(false);
+              }}
+              className="block text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
             >
-              Features
+              {t("navbar.pricing")}
             </a>
             <a
               href="#features"
@@ -137,19 +157,22 @@ const PremiumLanding: React.FC = () => {
               }}
               className="block text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
             >
-              Solutions
+              {t("landing.solutions")}
             </a>
             <a
-              href="#pricing"
+              href="#features"
               className="block text-slate-600 hover:text-slate-900 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Pricing
+              {t("navbar.features")}
             </a>
+            <div className="pt-4 border-t border-slate-200">
+              <LanguageSwitcher />
+            </div>
             <div className="pt-4 border-t border-slate-200">
               <Link to="/signup" className="block">
                 <button className="w-full px-6 py-2.5 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl">
-                  Get Started
+                  {t("landing.get_started")}
                 </button>
               </Link>
             </div>
@@ -176,9 +199,9 @@ const PremiumLanding: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-tight mb-6"
               >
-                The Gym Operating System{" "}
+                {t("landing.hero_title")}{" "}
                 <span className="bg-gradient-to-r from-[#0033A0] to-[#40C4FF] bg-clip-text text-transparent">
-                  Built for the GCC
+                  {t("landing.hero_title_highlight")}
                 </span>
               </motion.h1>
 
@@ -188,9 +211,7 @@ const PremiumLanding: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl text-slate-600 mb-8 leading-relaxed"
               >
-                Streamline your fitness business with the only platform that
-                speaks your language. Manage bookings, memberships, and VAT
-                compliance in one unified dashboard.
+                {t("landing.hero_description")}
               </motion.p>
 
               <motion.div
@@ -203,10 +224,10 @@ const PremiumLanding: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-8 py-4 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                    className={`px-8 py-4 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''} gap-2`}
                   >
-                    Start Free Trial
-                    <FiArrowRight className="w-5 h-5" />
+                    {t("landing.startFreeTrial")}
+                    <FiArrowRight className={`w-5 h-5 ${isRTL ? 'rotate-180' : ''}`} />
                   </motion.button>
                 </Link>
                 <motion.a
@@ -222,7 +243,7 @@ const PremiumLanding: React.FC = () => {
                   }}
                   className="px-8 py-4 border-2 border-slate-300 text-slate-700 font-semibold rounded-xl hover:border-slate-400 transition-all duration-200"
                 >
-                  See How It Works
+                  {t("landing.seeHowItWorks")}
                 </motion.a>
               </motion.div>
             </motion.div>
@@ -258,11 +279,10 @@ const PremiumLanding: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Global Standards. Local Logic.
+              {t("landing.globalStandards")}
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Built specifically for the GCC region with regional business logic
-              and compliance built-in.
+              {t("landing.globalStandardsDesc")}
             </p>
           </motion.div>
 
@@ -279,11 +299,10 @@ const PremiumLanding: React.FC = () => {
                 <FiGlobe className="w-7 h-7 text-[#0033A0]" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3">
-                Bilingual Core
+                {t("landing.bilingualCore")}
               </h3>
               <p className="text-slate-600 leading-relaxed">
-                Switch seamlessly between English and Arabic. Full RTL support
-                with culturally-aware interface design.
+                {t("landing.bilingualCoreDesc")}
               </p>
             </motion.div>
 
@@ -299,11 +318,10 @@ const PremiumLanding: React.FC = () => {
                 <FiShield className="w-7 h-7 text-[#0033A0]" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3">
-                VAT Compliant
+                {t("landing.vatCompliant")}
               </h3>
               <p className="text-slate-600 leading-relaxed">
-                Automated tax reporting designed for Gulf regulations. Generate
-                VAT reports with one click, fully compliant with GCC standards.
+                {t("landing.vatCompliantDesc")}
               </p>
             </motion.div>
 
@@ -319,12 +337,10 @@ const PremiumLanding: React.FC = () => {
                 <FiCreditCard className="w-7 h-7 text-[#0033A0]" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-3">
-                Unified Billing
+                {t("landing.unifiedBilling")}
               </h3>
               <p className="text-slate-600 leading-relaxed">
-                Accept payments via local gateways (Mada, KNET, Benefit). All
-                transactions processed securely with regional payment
-                preferences.
+                {t("landing.unifiedBillingDesc")}
               </p>
             </motion.div>
           </div>
@@ -342,11 +358,10 @@ const PremiumLanding: React.FC = () => {
             className="text-center mb-20"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Everything You Need to Run Your Gym
+              {t("landing.everythingYouNeed")}
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Powerful features designed to streamline operations and boost
-              member satisfaction.
+              {t("landing.everythingYouNeedDesc")}
             </p>
           </motion.div>
 
@@ -358,30 +373,28 @@ const PremiumLanding: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="grid md:grid-cols-2 gap-12 items-center mb-24"
           >
-            <div>
+            <div dir={isRTL ? "rtl" : "ltr"}>
               <div className="w-14 h-14 bg-gradient-to-br from-[#0033A0]/10 to-[#40C4FF]/10 rounded-xl flex items-center justify-center mb-6">
                 <FiCalendar className="w-7 h-7 text-[#0033A0]" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">
-                Smart Scheduling
+              <h3 className={`text-3xl font-bold text-slate-900 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.smartScheduling")}
               </h3>
-              <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                Stop juggling calendars. Our system detects room conflicts and
-                manages waitlists automatically. Recurring classes, trainer
-                availability, and capacity management—all handled seamlessly.
+              <p className={`text-lg text-slate-600 leading-relaxed mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.smartSchedulingDesc")}
               </p>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Automatic conflict detection</span>
+              <ul className={`space-y-3 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.automaticConflictDetection")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Intelligent waitlist management</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.intelligentWaitlistManagement")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Recurring class patterns</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.recurringClassPatterns")}</span>
                 </li>
               </ul>
             </div>
@@ -409,30 +422,28 @@ const PremiumLanding: React.FC = () => {
                 className="w-full h-auto object-cover"
               />
             </div>
-            <div className="order-1 md:order-2">
+            <div className="order-1 md:order-2" dir={isRTL ? "rtl" : "ltr"}>
               <div className="w-14 h-14 bg-gradient-to-br from-[#0033A0]/10 to-[#40C4FF]/10 rounded-xl flex items-center justify-center mb-6">
                 <FiTrendingUp className="w-7 h-7 text-[#0033A0]" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">
-                Member Retention
+              <h3 className={`text-3xl font-bold text-slate-900 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.memberRetention")}
               </h3>
-              <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                Data-driven insights track attendance. The system flags members
-                who haven't visited in 14 days, enabling proactive engagement
-                before they churn.
+              <p className={`text-lg text-slate-600 leading-relaxed mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.memberRetentionDesc")}
               </p>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Automated attendance tracking</span>
+              <ul className={`space-y-3 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.automatedAttendanceTracking")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Churn risk identification</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.churnRiskIdentification")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Engagement scoring</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.engagementScoring")}</span>
                 </li>
               </ul>
             </div>
@@ -446,30 +457,28 @@ const PremiumLanding: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="grid md:grid-cols-2 gap-12 items-center"
           >
-            <div>
+            <div dir={isRTL ? "rtl" : "ltr"}>
               <div className="w-14 h-14 bg-gradient-to-br from-[#0033A0]/10 to-[#40C4FF]/10 rounded-xl flex items-center justify-center mb-6">
                 <FiDollarSign className="w-7 h-7 text-[#0033A0]" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">
-                Financial Command
+              <h3 className={`text-3xl font-bold text-slate-900 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.financialCommand")}
               </h3>
-              <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                Track every Riyal and Dirham with precise expense
-                categorization. Automated invoicing, payment processing, and
-                comprehensive financial reporting.
+              <p className={`text-lg text-slate-600 leading-relaxed mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("landing.financialCommandDesc")}
               </p>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Automated invoicing</span>
+              <ul className={`space-y-3 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.automatedInvoicing")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Multi-currency support</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.multiCurrencySupport")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Real-time financial insights</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.realTimeFinancialInsights")}</span>
                 </li>
               </ul>
             </div>
@@ -495,11 +504,10 @@ const PremiumLanding: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Simple, Transparent Pricing
+              {t("landing.simpleTransparentPricing")}
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Choose the plan that fits your gym. All plans include core
-              features with no hidden fees.
+              {t("landing.pricingDesc")}
             </p>
           </motion.div>
 
@@ -512,35 +520,35 @@ const PremiumLanding: React.FC = () => {
               transition={{ duration: 0.6 }}
               className="bg-white rounded-2xl p-8 border-2 border-slate-200 hover:border-slate-300 transition-all duration-300"
             >
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Starter</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.starter")}</h3>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-slate-900">80</span>
-                <span className="text-slate-600"> USD/month</span>
+                <span className="text-slate-600"> {t("landing.usdPerMonth")}</span>
               </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>All core features</span>
+              <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.allCoreFeatures")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Single location</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.singleLocation")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>+$20 USD per extra location</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>+$20 {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Basic analytics</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.basicAnalytics")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Email support</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.emailSupport")}</span>
                 </li>
               </ul>
               <button className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 font-semibold rounded-xl hover:border-slate-400 transition-all duration-200">
-                Get Started
+                {t("landing.get_started")}
               </button>
             </motion.div>
 
@@ -554,43 +562,43 @@ const PremiumLanding: React.FC = () => {
             >
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Most Popular
+                  {t("landing.most_popular")}
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Pro</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.pro")}</h3>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-slate-900">130</span>
-                <span className="text-slate-600"> USD/month</span>
+                <span className="text-slate-600"> {t("landing.usdPerMonth")}</span>
               </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Everything in Starter</span>
+              <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.everythingInStarter")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>$10 USD per extra location</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>$10 {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Unlimited members</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.unlimitedMembers")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Advanced analytics</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.advancedAnalytics")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>Priority support</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.prioritySupport")}</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-700">
-                  <FiCheck className="w-5 h-5 text-[#40C4FF]" />
-                  <span>WhatsApp bot</span>
+                <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
+                  <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
+                  <span className={isRTL ? 'order-1' : ''}>{t("landing.whatsappBot")}</span>
                 </li>
               </ul>
               <Link to="/signup" className="block">
                 <button className="w-full px-6 py-3 bg-gradient-to-r from-[#0033A0] to-[#40C4FF] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                  Get Started
+                  {t("landing.get_started")}
                 </button>
               </Link>
             </motion.div>
@@ -608,14 +616,14 @@ const PremiumLanding: React.FC = () => {
                 MTDRB
               </div>
               <p className="text-slate-400 text-sm">
-                The gym operating system built for the GCC region.
+                {t("landing.footerDescription")}
               </p>
             </div>
 
             {/* Column 2 */}
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
+              <h4 className="font-semibold mb-4">{t("landing.product")}</h4>
+              <ul className={`space-y-2 text-sm text-slate-400 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li>
                   <a 
                     href="#features" 
@@ -628,7 +636,7 @@ const PremiumLanding: React.FC = () => {
                     }}
                     className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Features
+                    {t("navbar.features")}
                   </a>
                 </li>
                 <li>
@@ -643,7 +651,7 @@ const PremiumLanding: React.FC = () => {
                     }}
                     className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Pricing
+                    {t("navbar.pricing")}
                   </a>
                 </li>
                 <li>
@@ -658,7 +666,7 @@ const PremiumLanding: React.FC = () => {
                     }}
                     className="hover:text-white transition-colors cursor-pointer"
                   >
-                    Integrations
+                    {t("landing.integrations")}
                   </a>
                 </li>
               </ul>
@@ -666,21 +674,21 @@ const PremiumLanding: React.FC = () => {
 
             {/* Column 3 */}
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
+              <h4 className="font-semibold mb-4">{t("landing.company")}</h4>
+              <ul className={`space-y-2 text-sm text-slate-400 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li>
                   <span className="text-slate-500 cursor-not-allowed">
-                    About
+                    {t("landing.about")}
                   </span>
                 </li>
                 <li>
                   <span className="text-slate-500 cursor-not-allowed">
-                    Blog
+                    {t("landing.blog")}
                   </span>
                 </li>
                 <li>
                   <span className="text-slate-500 cursor-not-allowed">
-                    Careers
+                    {t("landing.careers")}
                   </span>
                 </li>
               </ul>
@@ -688,21 +696,21 @@ const PremiumLanding: React.FC = () => {
 
             {/* Column 4 */}
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
+              <h4 className="font-semibold mb-4">{t("landing.support")}</h4>
+              <ul className={`space-y-2 text-sm text-slate-400 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li>
                   <span className="text-slate-500 cursor-not-allowed">
-                    Documentation
+                    {t("landing.documentation")}
                   </span>
                 </li>
                 <li>
                   <span className="text-slate-500 cursor-not-allowed">
-                    Help Center
+                    {t("landing.helpCenter")}
                   </span>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Contact
+                    {t("landing.contact")}
                   </Link>
                 </li>
               </ul>
@@ -710,7 +718,7 @@ const PremiumLanding: React.FC = () => {
           </div>
 
           <div className="pt-8 border-t border-slate-800 text-center text-sm text-slate-400">
-            <p>© 2025 MTDRB. Made for the Gulf.</p>
+            <p>{t("landing.madeForGulf")}</p>
           </div>
         </div>
       </footer>

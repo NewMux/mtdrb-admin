@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiZap,
   FiSettings,
-  FiPlay,
   FiPause,
   FiShield,
   FiCheck,
@@ -22,7 +20,6 @@ const TrainerAutomationModal: React.FC<TrainerAutomationModalProps> = ({
   onClose,
   trainer,
 }) => {
-  const [selectedAutomation, setSelectedAutomation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [automationEnabled, setAutomationEnabled] = useState({
     schedule: true,

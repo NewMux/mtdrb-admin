@@ -1,19 +1,21 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
-  FiMoreHorizontal,
   FiEdit,
   FiTrash2,
   FiEye,
   FiCheck,
-  FiClock,
   FiUser,
   FiCalendar,
   FiCheckSquare,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 import type { Task, UserProfile } from "../../types";
+import { EmptyState } from "../ui/DesignSystem";
 
 interface TaskRowData {
   task: Task;
@@ -32,9 +34,11 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   const [assigneesById, setAssigneesById] = React.useState<
     Record<string, UserProfile>
   >({});
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
 
   /**
    * Build initials from a full name.
@@ -119,6 +123,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       if (assigneeIds.length === 0) {
         setTasks(taskData || []);
         setAssigneesById({});
+        setLoading(false);
         return;
       }
 
@@ -160,22 +165,33 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
 
       setTasks(taskData || []);
       setAssigneesById(profileMap);
+      setLoading(false);
     } catch (err: any) {
       console.error("Error loading tasks:", err);
       
       // Check for specific error types
-      let errorMessage = "Failed to load tasks";
+      let errorMessage = t("messages.somethingWentWrong");
       
       if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
-        errorMessage = "The tasks table may not exist yet. Please create the member_tasks table in your database.";
+        errorMessage = t("messages.noData");
       } else if (err?.code === "42501" || err?.message?.includes("permission denied") || err?.message?.includes("row-level security")) {
-        errorMessage = "Permission denied. Please check your Row Level Security policies for the member_tasks table.";
-      } else if (err?.code === "42883" || err?.message?.includes("function") && err?.message?.includes("does not exist")) {
-        errorMessage = "Database function missing. Please ensure get_user_tenant_id() function exists in your database.";
+        errorMessage = t("messages.error");
+      } else if (err?.code === "42883" || (err?.message?.includes("function") && err?.message?.includes("does not exist"))) {
+        errorMessage = t("messages.error");
+      } else if (err?.message?.includes("invalid input syntax for type uuid") || err?.message?.includes("uuid")) {
+        errorMessage = t("messages.error");
       } else if (err?.message) {
-        errorMessage = err.message;
+        // Don't show raw database errors to users - provide friendly message
+        const rawMessage = err.message.toLowerCase();
+        if (rawMessage.includes("uuid") || rawMessage.includes("invalid input")) {
+          errorMessage = t("messages.error");
+        } else if (rawMessage.includes("network") || rawMessage.includes("fetch")) {
+          errorMessage = t("messages.tryAgain");
+        } else {
+          errorMessage = t("messages.somethingWentWrong");
+        }
       } else if (err instanceof Error) {
-        errorMessage = err.message;
+        errorMessage = t("messages.somethingWentWrong");
       }
       
       setError(errorMessage);
@@ -194,30 +210,30 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400";
       case "high":
-        return "bg-rose-100 text-rose-800";
+        return "bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-400";
       case "medium":
-        return "bg-gold-100 text-gold-800";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
       case "low":
-        return "bg-emerald-100 text-emerald-800";
+        return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-100 text-emerald-800";
+        return "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400";
       case "in_progress":
-        return "bg-sky-100 text-sky-800";
+        return "bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-400";
       case "pending":
-        return "bg-gold-100 text-gold-800";
+        return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400";
       case "cancelled":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300";
     }
   };
 
@@ -251,81 +267,84 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-        <p className="text-sm text-red-700 font-medium mb-2">{error}</p>
-        {error.includes("table may not exist") && (
-          <p className="text-xs text-red-600 mt-2">
-            Run the SQL script in <code className="bg-red-100 px-1 rounded">supabase/create_member_tasks_table.sql</code> to create the table.
-          </p>
-        )}
-        {error.includes("Permission denied") && (
-          <p className="text-xs text-red-600 mt-2">
-            Check your Row Level Security policies. Ensure the <code className="bg-red-100 px-1 rounded">get_user_tenant_id()</code> function exists.
-          </p>
-        )}
-        {error.includes("function") && error.includes("does not exist") && (
-          <p className="text-xs text-red-600 mt-2">
-            Create the <code className="bg-red-100 px-1 rounded">get_user_tenant_id()</code> function in your database.
-          </p>
-        )}
+      <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6">
+        <div className={`flex items-start ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
+          <div className="flex-shrink-0">
+            <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-red-700 dark:text-red-300 font-medium mb-2">{error}</p>
+            <button
+              onClick={() => fetchTasks()}
+              className="mt-3 px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+            >
+              {t("messages.tryAgain")}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (tasks.length === 0 && !loading) {
+  if (tasks.length === 0 && !loading && !error) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center">
-        <FiCheckSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <p className="text-sm text-gray-600 font-medium">No tasks found</p>
-        <p className="text-xs text-gray-500 mt-1">
-          Create your first task to get started
-        </p>
-      </div>
+      <EmptyState
+        icon={<FiCheckSquare className="w-12 h-12 text-gray-400" />}
+        title={t("tasks.emptyStateTitle")}
+        description={t("tasks.emptyStateDescription")}
+        action={
+          <div className="flex flex-col items-center space-y-2">
+            <p className="text-sm text-gray-500">
+              {t("tasks.emptyStateAction")}
+            </p>
+          </div>
+        }
+      />
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200">
-      <table className="w-full">
-        <thead className="bg-gray-50">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+      <table className="w-full" dir={isRTL ? "rtl" : "ltr"}>
+        <thead className="bg-gray-50 dark:bg-gray-800/50">
           <tr>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-              Task
+            <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tableTask")}
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-              Assignee
+            <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tableAssignee")}
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-              Priority
+            <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tablePriority")}
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-              Status
+            <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tableStatus")}
             </th>
-            <th className="px-6 py-4 text-left text-sm font-medium text-gray-700">
-              Due Date
+            <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tableDueDate")}
             </th>
-            <th className="px-6 py-4 text-right text-sm font-medium text-gray-700">
-              Actions
+            <th className={`px-6 py-4 ${isRTL ? 'text-left' : 'text-right'} text-sm font-medium text-gray-700 dark:text-gray-300`}>
+              {t("tasks.tableActions")}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {taskRows.map(({ task, assigneeName, avatarText, avatarUrl }, index) => (
             <motion.tr
               key={task.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`hover:bg-gray-50 transition-colors duration-200 ${
+              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 ${
                 index % 2 === 0
-                  ? "bg-white"
-                  : "bg-gray-50/50/50"
+                  ? "bg-white dark:bg-gray-800"
+                  : "bg-gray-50/50 dark:bg-gray-800/50"
               }`}
               onMouseEnter={() => setHoveredRow(task.id)}
               onMouseLeave={() => setHoveredRow(null)}
             >
               <td className="px-6 py-4">
-                <div className="flex items-center space-x-3">
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
                     {avatarUrl ? (
                       <img
@@ -340,10 +359,10 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
                     )}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {task.title}
                     </div>
-                    <div className="text-xs text-gray-500 max-w-xs truncate">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate">
                       {task.description}
                     </div>
                   </div>
@@ -351,9 +370,9 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
               </td>
 
               <td className="px-6 py-4">
-                <div className="flex items-center space-x-2">
-                  <FiUser className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-900">{assigneeName}</span>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
+                  <FiUser className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <span className="text-sm text-gray-900 dark:text-white">{assigneeName}</span>
                 </div>
               </td>
 
@@ -361,8 +380,11 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}
                 >
-                  {task.priority.charAt(0).toUpperCase() +
-                    task.priority.slice(1)}
+                  {task.priority === "low" ? t("tasks.low") :
+                   task.priority === "medium" ? t("tasks.medium") :
+                   task.priority === "high" ? t("tasks.high") :
+                   task.priority === "urgent" ? t("tasks.urgent") :
+                   (task.priority as string).charAt(0).toUpperCase() + (task.priority as string).slice(1)}
                 </span>
               </td>
 
@@ -370,23 +392,27 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}
                 >
-                  {task.status
-                    .split("_")
-                    .map((segment) =>
-                      segment.charAt(0).toUpperCase() + segment.slice(1),
-                    )
-                    .join(" ")}
+                  {task.status === "pending" ? t("tasks.pending") :
+                   task.status === "in_progress" ? t("tasks.inProgress") :
+                   task.status === "completed" ? t("tasks.completed") :
+                   task.status === "cancelled" ? t("tasks.cancelled") :
+                   (task.status as string)
+                     .split("_")
+                     .map((segment: string) =>
+                       segment.charAt(0).toUpperCase() + segment.slice(1),
+                     )
+                     .join(" ")}
                 </span>
               </td>
 
               <td className="px-6 py-4">
-                <div className="flex items-center space-x-2">
-                  <FiCalendar className="w-4 h-4 text-gray-400" />
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
+                  <FiCalendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <span
                     className={`text-sm ${
                       task.due_date && isOverdue(task.due_date)
-                        ? "text-red-600 font-medium"
-                        : "text-gray-900"
+                        ? "text-red-600 dark:text-red-400 font-medium"
+                        : "text-gray-900 dark:text-white"
                     }`}
                   >
                     {task.due_date
@@ -396,23 +422,23 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
                 </div>
               </td>
 
-              <td className="px-6 py-4 text-right">
+              <td className={`px-6 py-4 ${isRTL ? 'text-left' : 'text-right'}`}>
                 <div
-                  className={`flex items-center justify-end space-x-2 transition-opacity duration-200 ${
+                  className={`flex items-center ${isRTL ? 'justify-start flex-row-reverse space-x-reverse' : 'justify-end'} space-x-2 transition-opacity duration-200 ${
                     hoveredRow === task.id ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  <button className="p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                    <FiEye className="w-4 h-4 text-gray-500" />
+                  <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                    <FiEye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
-                  <button className="p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                    <FiEdit className="w-4 h-4 text-gray-500" />
+                  <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                    <FiEdit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
-                  <button className="p-1 rounded-lg hover:bg-emerald-100 transition-colors duration-200">
-                    <FiCheck className="w-4 h-4 text-emerald-500" />
+                  <button className="p-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
+                    <FiCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   </button>
-                  <button className="p-1 rounded-lg hover:bg-red-100 transition-colors duration-200">
-                    <FiTrash2 className="w-4 h-4 text-red-500" />
+                  <button className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200">
+                    <FiTrash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                   </button>
                 </div>
               </td>

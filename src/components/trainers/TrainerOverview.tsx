@@ -1,16 +1,8 @@
 import React, { useState } from "react";
-import {
-  FiUsers,
-  FiCalendar,
-  FiStar,
-  FiSearch,
-  FiDownload,
-  FiFilter,
-} from "react-icons/fi";
+import { FiSearch, FiDownload, FiFilter } from "react-icons/fi";
 import TrainerTable from "./TrainerTable";
 import AddTrainerModal from "./AddTrainerModal";
 import { supabase } from "../../supabaseClient";
-import TrainerKPICards from "./TrainerKPICards";
 
 interface TrainerStats {
   totalTrainers: number;
@@ -27,7 +19,7 @@ interface Props {
   onSelectTrainer: (trainerId: string) => void;
 }
 
-export default function TrainerOverview({ stats, onSelectTrainer }: Props) {
+export default function TrainerOverview({ onSelectTrainer }: Props) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({

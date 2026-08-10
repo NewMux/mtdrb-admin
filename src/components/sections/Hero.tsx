@@ -98,7 +98,7 @@ const Hero: React.FC = () => {
             className="inline-flex items-center px-6 py-3 bg-white/5 backdrop-blur-sm rounded-full text-sm font-medium border border-white/10"
           >
             <FiPlay className="w-4 h-4 mr-2" />
-            <span>GCC Fitness Technology</span>
+            <span>MENAT Fitness Technology</span>
           </motion.div>
 
           {/* Main Headline - Reduced size to prevent overlap */}
@@ -122,7 +122,7 @@ const Hero: React.FC = () => {
             transition={{ duration: 1, delay: 0.6 }}
             className="text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light"
           >
-            The gym operating system for the GCC
+            The gym operating system for MENAT
           </motion.p>
 
           {/* CTA Buttons */}

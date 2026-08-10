@@ -22,6 +22,8 @@ import { VatDashboardData, VatReturn } from "../../types";
 import { toast } from "react-hot-toast";
 import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -71,6 +73,8 @@ export default function SmartVatDashboard({
   tenantId,
   refreshKey,
 }: SmartVatDashboardProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [dashboardData, setDashboardData] = useState<VatDashboardData | null>(
     null,
   );
@@ -322,10 +326,10 @@ export default function SmartVatDashboard({
       setComplianceLoading(true);
       // TODO: Run compliance check via Supabase
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success("Compliance check completed");
+      toast.success(t("billing.complianceCheckCompleted"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
-      toast.error("Failed to run compliance check");
+      toast.error(t("billing.complianceCheckFailed"));
     } finally {
       setComplianceLoading(false);
     }
@@ -337,7 +341,7 @@ export default function SmartVatDashboard({
       toast.success("VAT return generated successfully");
       fetchDashboardData(); // Refresh data
     } catch (error) {
-      toast.error("Failed to generate VAT return");
+      toast.error(t("billing.vatReturnGenerationFailed"));
     }
   };
 
@@ -345,27 +349,27 @@ export default function SmartVatDashboard({
     try {
       void returnId;
       // TODO: Submit VAT return via Supabase
-      toast.success("VAT return submitted successfully");
+      toast.success(t("billing.vatReturnSubmitted"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
-      toast.error("Failed to submit VAT return");
+      toast.error(t("billing.vatReturnSubmissionFailed"));
     }
   };
 
   const handleExportReport = async (format: "pdf" | "excel" | "csv") => {
     try {
       // TODO: Export report via Supabase
-      toast.success(`${format.toUpperCase()} report exported successfully`);
+      toast.success(`${format.toUpperCase()} ${t("billing.reportExported")}`);
     } catch (error) {
-      toast.error("Failed to export report");
+      toast.error(t("billing.reportExportFailed"));
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-center h-64`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading VAT dashboard...</span>
+        <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-gray-600 dark:text-gray-400`}>{t("billing.loadingVatDashboard")}</span>
       </div>
     );
   }
@@ -373,7 +377,7 @@ export default function SmartVatDashboard({
   if (!dashboardData) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No VAT data available</p>
+        <p className="text-gray-500 dark:text-gray-400">{t("billing.noVatDataAvailable")}</p>
       </div>
     );
   }
@@ -387,37 +391,37 @@ export default function SmartVatDashboard({
   };
 
   const getComplianceColor = (score: number) => {
-    if (score >= 90) return "text-green-600";
-    if (score >= 70) return "text-yellow-600";
-    return "text-red-600";
+    if (score >= 90) return "text-green-600 dark:text-green-400";
+    if (score >= 70) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   const tabs: { id: VatTab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
-    { id: "overview", label: "Overview", icon: FiBarChart2 },
-    { id: "returns", label: "VAT Returns", icon: FiFileText },
-    { id: "compliance", label: "Compliance", icon: FiShield },
-    { id: "analytics", label: "Analytics", icon: FiTrendingUp },
+    { id: "overview", label: t("billing.overview"), icon: FiBarChart2 },
+    { id: "returns", label: t("billing.vatReturns"), icon: FiFileText },
+    { id: "compliance", label: t("billing.compliance"), icon: FiShield },
+    { id: "analytics", label: t("billing.analytics"), icon: FiTrendingUp },
   ];
 
   const getComplianceIcon = (score: number) => {
-    if (score >= 90) return <FiCheckCircle className="text-green-500" />;
-    if (score >= 70) return <FiAlertTriangle className="text-yellow-500" />;
-    return <FiAlertTriangle className="text-red-500" />;
+    if (score >= 90) return <FiCheckCircle className="text-green-500 dark:text-green-400" />;
+    if (score >= 70) return <FiAlertTriangle className="text-yellow-500 dark:text-yellow-400" />;
+    return <FiAlertTriangle className="text-red-500 dark:text-red-400" />;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header with Smart Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Smart VAT Dashboard
+        <div className="text-start">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t("billing.smartVatDashboard", "لوحة تحكم القيمة المضافة الذكية")}
           </h2>
-          <p className="text-gray-600">
-            Comprehensive VAT management and compliance monitoring
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            {t("billing.comprehensiveVatManagement", "إدارة وتصريح القيمة المضافة ومتابعة الامتثال الضريبي")}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <SmartButton
             size="sm"
             variant="primary"
@@ -425,7 +429,7 @@ export default function SmartVatDashboard({
             onClick={handleRunComplianceCheck}
             disabled={complianceLoading}
           >
-            {complianceLoading ? "Checking..." : "Run Compliance Check"}
+            {complianceLoading ? t("billing.checking", "جاري الفحص...") : t("billing.runComplianceCheck", "فحص الامتثال الضريبي")}
           </SmartButton>
           <SmartButton
             size="sm"
@@ -433,7 +437,7 @@ export default function SmartVatDashboard({
             icon={<FiFileText size={16} />}
             onClick={handleGenerateVatReturn}
           >
-            Generate VAT Return
+            {t("billing.generateVatReturn", "إنشاء الإقرار الضريبي")}
           </SmartButton>
           <SmartButton
             size="sm"
@@ -441,17 +445,17 @@ export default function SmartVatDashboard({
             icon={<FiDownload size={16} />}
             onClick={() => handleExportReport("pdf")}
           >
-            Export PDF
+            {t("billing.exportPdf", "تصدير PDF")}
           </SmartButton>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav
           className="flex overflow-x-auto gap-8 -mb-px"
           role="tablist"
-          aria-label="VAT Dashboard Views"
+          aria-label={t("billing.vatDashboardViews", "عرض لوحة تحكم القيمة المضافة")}
         >
           {tabs.map((tab) => (
             <button
@@ -463,13 +467,13 @@ export default function SmartVatDashboard({
               className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-all duration-300 whitespace-nowrap
                 ${
                   selectedTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }
               `}
             >
               <tab.icon size={16} />
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </nav>
@@ -480,83 +484,83 @@ export default function SmartVatDashboard({
         <div className="space-y-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    VAT Collected
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {t("billing.vatCollected")}
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(dashboardData.totalVatCollected)}
                   </p>
-                  <div className="flex items-center mt-2">
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} mt-2`}>
                     {dashboardData.vatGrowthPercentage > 0 ? (
-                      <FiTrendingUp className="text-green-500 mr-1" />
+                      <FiTrendingUp className={`text-green-500 dark:text-green-400 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     ) : (
-                      <FiTrendingDown className="text-red-500 mr-1" />
+                      <FiTrendingDown className={`text-red-500 dark:text-red-400 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     )}
                     <span
-                      className={`text-sm ${dashboardData.vatGrowthPercentage > 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-sm ${dashboardData.vatGrowthPercentage > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                     >
                       {Math.abs(dashboardData.vatGrowthPercentage).toFixed(1)}%
                     </span>
                   </div>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <FiDollarSign className="text-green-600" size={24} />
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                  <FiDollarSign className="text-green-600 dark:text-green-400" size={24} />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">VAT Paid</p>
-                  <p className="text-2xl font-bold text-red-600">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("billing.vatPaid")}</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(dashboardData.totalVatPaid)}
                   </p>
                 </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <FiDollarSign className="text-red-600" size={24} />
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                  <FiDollarSign className="text-red-600 dark:text-red-400" size={24} />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Net VAT Payable
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {t("billing.netVatPayable")}
                   </p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {formatCurrency(dashboardData.netVatPayable)}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <FiTarget className="text-blue-600" size={24} />
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                  <FiTarget className="text-blue-600 dark:text-blue-400" size={24} />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Compliance Score
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {t("billing.complianceScore")}
                   </p>
-                  <div className="flex items-center">
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     <p
                       className={`text-2xl font-bold ${getComplianceColor(dashboardData.complianceScore)}`}
                     >
                       {dashboardData.complianceScore}%
                     </p>
-                    <span className="ml-2">
+                    <span className={isRTL ? 'mr-2' : 'ml-2'}>
                       {getComplianceIcon(dashboardData.complianceScore)}
                     </span>
                   </div>
                 </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <FiShield className="text-gray-600" size={24} />
+                <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+                  <FiShield className="text-gray-600 dark:text-gray-400" size={24} />
                 </div>
               </div>
             </div>
@@ -564,9 +568,9 @@ export default function SmartVatDashboard({
 
           {/* Compliance Alerts */}
           {(dashboardData?.complianceAlerts || []).length > 0 && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Compliance Alerts
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("billing.complianceAlerts")}
               </h3>
               <div className="space-y-3">
                 {(dashboardData?.complianceAlerts || []).map((alert, index) => (
@@ -574,33 +578,33 @@ export default function SmartVatDashboard({
                     key={index}
                     className={`flex items-center p-3 rounded-lg ${
                       alert.type === "error"
-                        ? "bg-red-50 border border-red-200"
+                        ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
                         : alert.type === "warning"
-                          ? "bg-yellow-50 border border-yellow-200"
-                          : "bg-blue-50 border border-blue-200"
+                          ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
+                          : "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
                     }`}
                   >
                     {alert.type === "error" ? (
-                      <FiAlertTriangle className="text-red-500 mr-3" />
+                      <FiAlertTriangle className={`text-red-500 dark:text-red-400 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                     ) : alert.type === "warning" ? (
-                      <FiClock className="text-yellow-500 mr-3" />
+                      <FiClock className={`text-yellow-500 dark:text-yellow-400 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                     ) : (
-                      <FiCheckCircle className="text-blue-500 mr-3" />
+                      <FiCheckCircle className={`text-blue-500 dark:text-blue-400 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                     )}
                     <span
                       className={`text-sm font-medium ${
                         alert.type === "error"
-                          ? "text-red-800"
+                          ? "text-red-800 dark:text-red-300"
                           : alert.type === "warning"
-                            ? "text-yellow-800"
-                            : "text-blue-800"
+                            ? "text-yellow-800 dark:text-yellow-300"
+                            : "text-blue-800 dark:text-blue-300"
                       }`}
                     >
                       {alert.message}
                     </span>
                     {alert.action_required && (
-                      <span className="ml-auto text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                        Action Required
+                      <span className={`${isRTL ? 'mr-auto' : 'ml-auto'} text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded-full`}>
+                        {t("billing.actionRequired")}
                       </span>
                     )}
                   </div>
@@ -612,29 +616,29 @@ export default function SmartVatDashboard({
           {/* Smart Insights */}
           {insights && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Smart Insights
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t("billing.smartInsights")}
                 </h3>
                 <div className="space-y-3">
                   {(insights?.trends || []).map((trend, index) => (
-                    <div key={index} className="flex items-start">
-                      <FiTrendingUp className="text-blue-500 mr-3 mt-1" />
-                      <span className="text-sm text-gray-700">{trend}</span>
+                    <div key={index} className={`flex items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <FiTrendingUp className={`text-blue-500 dark:text-blue-400 ${isRTL ? 'ml-3' : 'mr-3'} mt-1`} />
+                      <span className={`text-sm text-gray-700 dark:text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>{trend}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Recommendations
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+                <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t("billing.recommendations")}
                 </h3>
                 <div className="space-y-3">
                   {(insights?.recommendations || []).map((rec, index) => (
-                    <div key={index} className="flex items-start">
-                      <FiTarget className="text-green-500 mr-3 mt-1" />
-                      <span className="text-sm text-gray-700">{rec}</span>
+                    <div key={index} className={`flex items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <FiTarget className={`text-green-500 dark:text-green-400 ${isRTL ? 'ml-3' : 'mr-3'} mt-1`} />
+                      <span className={`text-sm text-gray-700 dark:text-gray-300 ${isRTL ? 'text-right' : 'text-left'}`}>{rec}</span>
                     </div>
                   ))}
                 </div>
@@ -643,68 +647,68 @@ export default function SmartVatDashboard({
           )}
 
           {/* Recent Transactions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Recent VAT Transactions
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t("billing.recentVatTransactions")}
             </h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+                <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Date
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      {t("billing.date")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Type
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      {t("billing.status")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Reference
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      {t("billing.reference")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      VAT Amount
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      {t("billing.vatAmount")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      {t("billing.status")}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {(dashboardData?.recentTransactions || [])
                     .slice(0, 5)
                     .map((transaction) => (
                       <tr
                         key={transaction.id}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={`px-6 py-4 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               transaction.type === "Invoice"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
                             }`}
                           >
-                            {transaction.type}
+                            {transaction.type === "Invoice" ? t("billing.invoice") : t("billing.expense")}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                           {transaction.reference_number}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                           {formatCurrency(transaction.vat_amount)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={`px-6 py-4 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               transaction.status === "Paid"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                             }`}
                           >
-                            {transaction.status}
+                            {transaction.status === "Paid" ? t("billing.paid") : transaction.status}
                           </span>
                         </td>
                       </tr>
@@ -719,111 +723,114 @@ export default function SmartVatDashboard({
       {/* VAT Returns Tab */}
       {selectedTab === "returns" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                VAT Returns
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6`}>
+              <h3 className={`text-lg font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("billing.vatReturns")}
               </h3>
-              <div className="flex gap-2">
+              <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} gap-2`}>
                 <SmartButton
                   size="sm"
                   variant="primary"
                   icon={<FiFileText size={16} />}
                   onClick={handleGenerateVatReturn}
                 >
-                  Generate New Return
+                  {t("billing.generateNewReturn")}
                 </SmartButton>
               </div>
             </div>
             {(vatReturns || []).length === 0 ? (
               <div className="text-center py-8">
-                <FiFileText className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No VAT returns
+                <FiFileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                  {t("billing.noVatReturns")}
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Generate your first VAT return to get started.
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {t("billing.generateFirstVatReturn")}
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+                  <thead className="bg-gray-50 dark:bg-gray-800/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Period
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.period")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Country
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.country")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Net VAT
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.netVat")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Due Date
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.dueDate")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Status
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.status")}
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                        Actions
+                      <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-right'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                        {t("billing.actions")}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {(vatReturns || []).map((vatReturn) => (
                       <tr
                         key={vatReturn.id}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                           {vatReturn.return_period_start} -{" "}
                           {vatReturn.return_period_end}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <FiGlobe className="mr-2" />
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <FiGlobe className={isRTL ? 'ml-2' : 'mr-2'} />
                             {vatReturn.country_code || "BH"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                           {formatCurrency(vatReturn.net_vat_payable || 0)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                           {vatReturn.submitted_at
                             ? new Date(
                                 vatReturn.submitted_at,
                               ).toLocaleDateString()
-                            : "N/A"}
+                            : t("billing.nA")}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className={`px-6 py-4 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               vatReturn.status === "draft"
-                                ? "bg-yellow-100 text-yellow-800"
+                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                                 : vatReturn.status === "submitted"
-                                  ? "bg-blue-100 text-blue-800"
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
                                   : vatReturn.status === "accepted"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
+                                    ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                                    : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
                             }`}
                           >
-                            {vatReturn.status}
+                            {vatReturn.status === "draft" ? t("billing.draft") :
+                             vatReturn.status === "submitted" ? t("billing.submitted") :
+                             vatReturn.status === "accepted" ? t("billing.accepted") :
+                             vatReturn.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className={`px-6 py-4 whitespace-nowrap ${isRTL ? 'text-left' : 'text-right'} text-sm font-medium`}>
+                          <div className={`flex items-center ${isRTL ? 'justify-start flex-row-reverse space-x-reverse' : 'justify-end'} gap-2`}>
                             <SmartButton
                               size="sm"
                               variant="ghost"
                               icon={<FiEye size={16} />}
-                              title="View"
+                              title={t("billing.view")}
                             />
                             <SmartButton
                               size="sm"
                               variant="ghost"
                               icon={<FiEdit size={16} />}
-                              title="Edit"
+                              title={t("billing.edit")}
                             />
                             {vatReturn.status === "draft" && (
                               <SmartButton
@@ -833,7 +840,7 @@ export default function SmartVatDashboard({
                                 onClick={() =>
                                   handleSubmitVatReturn(vatReturn.id)
                                 }
-                                title="Submit"
+                                title={t("common.submit") || "Submit"}
                               />
                             )}
                           </div>
@@ -851,9 +858,9 @@ export default function SmartVatDashboard({
       {/* Compliance Tab */}
       {selectedTab === "compliance" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Compliance Overview
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t("billing.complianceOverview")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
@@ -862,92 +869,92 @@ export default function SmartVatDashboard({
                 >
                   {dashboardData?.complianceScore ?? 0}%
                 </div>
-                <p className="text-sm text-gray-600">
-                  Compliance Score
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("billing.complianceScore")}
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600">
+                <div className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {dashboardData?.overdueReturns ?? 0}
                 </div>
-                <p className="text-sm text-gray-600">
-                  Overdue Returns
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("billing.overdueReturns")}
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-yellow-600">
+                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
                   {dashboardData?.upcomingDeadlines ?? 0}
                 </div>
-                <p className="text-sm text-gray-600">
-                  Upcoming Deadlines
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("billing.upcomingDeadlines")}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Compliance Checklist */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Compliance Checklist
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t("billing.complianceChecklist")}
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <FiCalendar className="mr-3 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    VAT Returns Filed on Time
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <FiCalendar className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {t("billing.vatReturnsFiledOnTime")}
                   </span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     (dashboardData?.overdueReturns ?? 0) === 0
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
                   }`}
                 >
                   {(dashboardData?.overdueReturns ?? 0) === 0
-                    ? "Compliant"
-                    : `${dashboardData?.overdueReturns ?? 0} Overdue`}
+                    ? t("billing.compliant")
+                    : `${dashboardData?.overdueReturns ?? 0} ${t("billing.overdue")}`}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <FiDollarSign className="mr-3 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    VAT Payments Made on Time
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {t("billing.vatPaymentsMadeOnTime")}
                   </span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     (dashboardData?.overdueReturns ?? 0) === 0
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
                   }`}
                 >
                   {(dashboardData?.overdueReturns ?? 0) === 0
-                    ? "Compliant"
-                    : `${dashboardData?.overdueReturns ?? 0} Overdue`}
+                    ? t("billing.compliant")
+                    : `${dashboardData?.overdueReturns ?? 0} ${t("billing.overdue")}`}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <FiClock className="mr-3 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    Upcoming Deadlines
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {t("billing.upcomingDeadlines")}
                   </span>
                 </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     (dashboardData?.upcomingDeadlines ?? 0) === 0
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                      : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                   }`}
                 >
                   {(dashboardData?.upcomingDeadlines ?? 0) === 0
-                    ? "No Deadlines"
-                    : `${dashboardData?.upcomingDeadlines ?? 0} Due Soon`}
+                    ? t("billing.noDeadlines")
+                    : `${dashboardData?.upcomingDeadlines ?? 0} ${t("billing.dueSoon")}`}
                 </span>
               </div>
             </div>
@@ -958,25 +965,25 @@ export default function SmartVatDashboard({
       {/* Analytics Tab */}
       {selectedTab === "analytics" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              VAT Analytics
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t("billing.vatAnalytics")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-3">
-                  VAT by Country
+              <div dir={isRTL ? "rtl" : "ltr"}>
+                <h4 className={`text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t("billing.vatByCountry")}
                 </h4>
                 <div className="space-y-3">
                   {(dashboardData?.vatByCountry || []).map((country, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between"
+                      className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}
                     >
-                      <span className="text-sm text-gray-900">
+                      <span className={`text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                         {country.country_name}
                       </span>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className={`text-sm font-medium text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                         {formatCurrency(country.net_vat)}
                       </span>
                     </div>
@@ -984,35 +991,35 @@ export default function SmartVatDashboard({
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-600 mb-3">
-                  Period Comparison
+              <div dir={isRTL ? "rtl" : "ltr"}>
+                <h4 className={`text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t("billing.periodComparison")}
                 </h4>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-900">
-                      Current Period
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                    <span className={`text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t("billing.currentPeriod")}
                     </span>
-                    <span className="text-sm font-medium text-green-600">
+                    <span className={`text-sm font-medium text-green-600 dark:text-green-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                       {formatCurrency(dashboardData?.currentPeriodVat ?? 0)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-900">
-                      Previous Period
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                    <span className={`text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t("billing.previousPeriod")}
                     </span>
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className={`text-sm font-medium text-gray-600 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                       {formatCurrency(dashboardData?.previousPeriodVat ?? 0)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-900">Growth</span>
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                    <span className={`text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>{t("analytics.trends")}</span>
                     <span
                       className={`text-sm font-medium ${
                         (dashboardData?.vatGrowthPercentage ?? 0) > 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      } ${isRTL ? 'text-right' : 'text-left'}`}
                     >
                       {(dashboardData?.vatGrowthPercentage ?? 0) > 0 ? "+" : ""}
                       {(dashboardData?.vatGrowthPercentage ?? 0).toFixed(1)}%

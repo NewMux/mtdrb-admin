@@ -1,7 +1,8 @@
 import React, { Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FiX } from 'react-icons/fi';
-import { MODAL_STYLES, MODAL_ANIMATIONS } from '../../lib/constants/designSystem';
+import { MODAL_STYLES } from '../../lib/constants/designSystem';
+import { useRTL } from '../../hooks/useRTL';
 
 interface MTDRBModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export const MTDRBModal: React.FC<MTDRBModalProps> = ({
   maxWidth = '4xl',
   className = '',
 }) => {
+  const { isRTL } = useRTL();
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -61,12 +64,18 @@ export const MTDRBModal: React.FC<MTDRBModalProps> = ({
     '7xl': 'max-w-7xl',
   };
 
+  // RTL-aware animation classes and positioning
+  const slideFrom = isRTL ? '-translate-x-full' : 'translate-x-full';
+  const slideTo = 'translate-x-0';
+  const panelPosition = isRTL ? 'left-0 rounded-r-3xl' : 'right-0 rounded-l-3xl';
+
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
         as="div"
         className={MODAL_STYLES.container}
         onClose={closeOnBackdropClick ? onClose : () => {}}
+        dir={isRTL ? 'rtl' : 'ltr'}
       >
         {/* Backdrop */}
         <Transition.Child
@@ -81,23 +90,24 @@ export const MTDRBModal: React.FC<MTDRBModalProps> = ({
           <div className={MODAL_STYLES.backdrop} aria-hidden="true" />
         </Transition.Child>
 
-        {/* Modal Panel - Slide from right */}
+        {/* Modal Panel - Slide from right in LTR, from left in RTL */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
-          enterFrom="transform translate-x-full"
-          enterTo="transform translate-x-0"
+          enterFrom={`transform ${slideFrom}`}
+          enterTo={`transform ${slideTo}`}
           leave="ease-in duration-200"
-          leaveFrom="transform translate-x-0"
-          leaveTo="transform translate-x-full"
+          leaveFrom={`transform ${slideTo}`}
+          leaveTo={`transform ${slideFrom}`}
         >
           <Dialog.Panel
-            className={`${MODAL_STYLES.panel.base} ${maxWidthClasses[maxWidth]} ${MODAL_STYLES.panel.slide} ${className}`}
+            className={`fixed top-0 h-full w-full ${panelPosition} max-w-4xl bg-white dark:bg-gray-800 shadow-2xl ${MODAL_STYLES.panel.slide} ${maxWidthClasses[maxWidth]} ${className}`}
+            dir={isRTL ? 'rtl' : 'ltr'}
           >
             {/* Fixed Header */}
             <div className={MODAL_STYLES.header.container}>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 text-start">
                   <Dialog.Title className={MODAL_STYLES.header.title}>
                     {title}
                   </Dialog.Title>
@@ -127,7 +137,7 @@ export const MTDRBModal: React.FC<MTDRBModalProps> = ({
             {/* Fixed Footer */}
             {footer && (
               <div className={MODAL_STYLES.footer.container}>
-                <div className={MODAL_STYLES.footer.actions}>
+                <div className="flex items-center justify-end gap-3">
                   {footer}
                 </div>
               </div>
@@ -192,11 +202,12 @@ export const FormField: React.FC<FormFieldProps> = ({
   required = false,
   className = '',
 }) => {
+  const { isRTL } = useRTL();
   return (
     <div className={`${MODAL_STYLES.form.field} ${className}`}>
       <label className={MODAL_STYLES.form.label}>
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className={`text-red-500 ${isRTL ? 'mr-1' : 'ml-1'}`}>*</span>}
       </label>
       {children}
       {error && (
@@ -269,10 +280,11 @@ export const Toggle: React.FC<ToggleProps> = ({
   disabled = false,
   className = '',
 }) => {
+  const { isRTL } = useRTL();
   return (
-    <div className={`${MODAL_STYLES.smartForm.inline} ${className}`}>
+    <div className={`${MODAL_STYLES.smartForm.inline} ${className} ${isRTL ? 'flex-row-reverse' : ''}`}>
       {label && (
-        <span className="text-sm font-medium text-gray-700">
+        <span className={`text-sm font-medium text-gray-700 dark:text-gray-300 ${isRTL ? 'ml-3' : 'mr-3'}`}>
           {label}
         </span>
       )}
@@ -291,7 +303,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         <span
           className={`
             ${MODAL_STYLES.smartForm.toggleThumb}
-            ${checked ? MODAL_STYLES.smartForm.toggleThumbActive : MODAL_STYLES.smartForm.toggleThumbInactive}
+            ${checked ? (isRTL ? MODAL_STYLES.smartForm.toggleThumbActive.replace('translate-x-6', 'translate-x-[-1.5rem]') : MODAL_STYLES.smartForm.toggleThumbActive) : MODAL_STYLES.smartForm.toggleThumbInactive}
           `}
         />
       </button>

@@ -10,14 +10,6 @@ import {
   FiMessageSquare,
   FiFileText,
   FiCheck,
-  FiArrowRight,
-  FiArrowLeft,
-  FiMail,
-  FiPhone,
-  FiCalendar,
-  FiMapPin,
-  FiShield,
-  FiZap,
   FiAlertCircle,
   FiCheckCircle,
 } from "react-icons/fi";
@@ -126,7 +118,6 @@ const SmartField: React.FC<SmartFieldProps> = ({
   value,
   onChange,
   error,
-  dependencies = {},
   onDependencyChange,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -252,69 +243,6 @@ const SmartField: React.FC<SmartFieldProps> = ({
       </label>
       {renderField()}
       {error && <p className="text-red-500 text-sm">{error}</p>}
-    </div>
-  );
-};
-
-// Smart Form Section Component
-interface SmartFormSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  gradient?: boolean;
-}
-
-const SmartFormSection: React.FC<SmartFormSectionProps> = ({
-  title,
-  icon,
-  children,
-  gradient = false,
-}) => {
-  return (
-    <div className="space-y-6">
-      <div
-        className={`flex items-center space-x-3 pb-4 ${
-          gradient
-            ? "bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 rounded-lg"
-            : ""
-        }`}
-      >
-        <div className="text-blue-600">{icon}</div>
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      </div>
-      <div className="space-y-4">{children}</div>
-    </div>
-  );
-};
-
-// Smart Tabs Component
-interface SmartTabsProps {
-  tabs: { id: string; label: string; icon: React.ReactNode }[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-}
-
-const SmartTabs: React.FC<SmartTabsProps> = ({
-  tabs,
-  activeTab,
-  onTabChange,
-}) => {
-  return (
-    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-            activeTab === tab.id
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-              : "text-gray-600 hover:text-gray-900 hover:bg-white"
-          }`}
-        >
-          {tab.icon}
-          <span>{tab.label}</span>
-        </button>
-      ))}
     </div>
   );
 };

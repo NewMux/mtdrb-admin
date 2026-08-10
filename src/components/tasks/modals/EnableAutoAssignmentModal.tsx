@@ -1,11 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
-  FiUsers,
-  FiShuffle,
-  FiClock,
   FiZap,
-  FiUser,
   FiCheck,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";

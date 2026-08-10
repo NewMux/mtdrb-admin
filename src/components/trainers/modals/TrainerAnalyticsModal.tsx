@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiBarChart2,
@@ -22,7 +21,6 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
   trainer,
 }) => {
   const [selectedMetric, setSelectedMetric] = useState("overview");
-  const [selectedPeriod, setSelectedPeriod] = useState("30d");
 
   const mockAnalytics = {
     totalClasses: 156,

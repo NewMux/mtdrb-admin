@@ -11,6 +11,9 @@ import {
 import { motion } from "framer-motion";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
+import { useNavigate } from "react-router-dom";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -30,45 +33,45 @@ const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
   change,
-  trend: _trend,
   icon,
   color,
   subtitle,
 }) => {
+  const { isRTL } = useRTL();
   const getColorClasses = (color: string) => {
     switch (color) {
       case "blue":
-        return "bg-blue-50 text-blue-600 border-blue-200";
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700";
       case "green":
-        return "bg-emerald-50 text-emerald-600 border-emerald-200";
+        return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700";
       case "yellow":
-        return "bg-yellow-50 text-yellow-600 border-yellow-200";
+        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-700";
       case "red":
-        return "bg-red-50 text-red-600 border-red-200";
+        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-700";
       case "purple":
-        return "bg-violet-50 text-violet-600 border-violet-200";
+        return "bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-700";
       case "orange":
-        return "bg-orange-50 text-orange-600 border-orange-200";
+        return "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-700";
       default:
-        return "bg-gray-50 text-gray-600 border-gray-200";
+        return "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600";
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl border ${getColorClasses(color)}`}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 ease-in-out text-start" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className={`p-3 rounded-xl border ${getColorClasses(color)} flex-shrink-0`}>
           {icon}
         </div>
-        <div className="flex items-center space-x-1 text-sm font-medium text-emerald-600">
-          <FiArrowUpRight className="h-4 w-4" />
+        <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+          <FiArrowUpRight className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
           <span>{change}</span>
         </div>
       </div>
-      <div>
-        <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+      <div className="text-start">
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{title}</h3>
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+        {subtitle && <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{subtitle}</p>}
       </div>
     </div>
   );
@@ -81,6 +84,7 @@ interface SmartInsightProps {
   action: string;
   priority: "high" | "medium" | "low";
   value?: string;
+  onClick?: () => void;
 }
 
 const SmartInsight: React.FC<SmartInsightProps> = ({
@@ -90,32 +94,38 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
   action,
   priority,
   value,
+  onClick,
 }) => {
+  const { isRTL } = useRTL();
   const priorityColors = {
-    high: "border-red-200 bg-red-50",
-    medium: "border-yellow-200 bg-yellow-50",
-    low: "border-blue-200 bg-blue-50",
+    high: "border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20",
+    medium: "border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20",
+    low: "border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20",
   };
 
   return (
     <div
-      className={`p-6 rounded-2xl border ${priorityColors[priority]} hover:shadow-md transition-all duration-300`}
+      className={`p-6 rounded-2xl border ${priorityColors[priority]} hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 text-start`}
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      <div className="flex items-start space-x-4">
-        <div className="p-3 bg-white rounded-xl shadow-sm">{icon}</div>
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-3">
-            <h4 className="text-lg font-semibold text-gray-900">{title}</h4>
+      <div className="flex items-start gap-4">
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex-shrink-0">{icon}</div>
+        <div className="flex-1 text-start">
+          <div className="flex items-center gap-3 mb-3">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h4>
             {value && (
-              <span className="px-3 py-1 bg-white text-gray-700 rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
                 {value}
               </span>
             )}
           </div>
-          <p className="text-gray-600 mb-4 leading-relaxed">{description}</p>
-          <button className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{description}</p>
+          <button 
+            onClick={onClick}
+            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+          >
             <span>{action}</span>
-            <FiArrowUpRight className="h-4 w-4" />
+            <FiArrowUpRight className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
           </button>
         </div>
       </div>
@@ -127,42 +137,44 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
   refreshKey,
 }) => {
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [kpis, setKpis] = useState<KPICardProps[]>([
     {
-      title: "Active Members",
+      title: t("dashboard.activeMembers"),
       value: 0,
-      change: "Loading...",
+      change: t("common.loading"),
       trend: "neutral",
       icon: <FiUsers className="h-6 w-6 text-blue-600" />,
       color: "blue",
-      subtitle: "vs last month",
+      subtitle: t("dashboard.vsLastMonth"),
     },
     {
-      title: "Monthly Revenue",
+      title: t("dashboard.monthlyRevenue"),
       value: "0",
-      change: "Loading...",
+      change: t("common.loading"),
       trend: "neutral",
       icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
       color: "green",
-      subtitle: "This month",
+      subtitle: t("dashboard.thisMonth"),
     },
     {
-      title: "Class Attendance",
+      title: t("dashboard.classAttendance"),
       value: "0%",
-      change: "Loading...",
+      change: t("common.loading"),
       trend: "neutral",
       icon: <FiCalendar className="h-6 w-6 text-purple-600" />,
       color: "purple",
-      subtitle: "Average this week",
+      subtitle: t("dashboard.averageThisWeek"),
     },
     {
-      title: "Member Retention",
+      title: t("dashboard.memberRetention"),
       value: "0%",
-      change: "Loading...",
+      change: t("common.loading"),
       trend: "neutral",
       icon: <FiTarget className="h-6 w-6 text-orange-600" />,
       color: "orange",
-      subtitle: "12-month average",
+      subtitle: t("dashboard.twelveMonthAverage"),
     },
   ]);
   const [smartInsights, setSmartInsights] = useState<unknown[]>([]);
@@ -296,40 +308,40 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       setKpis([
         {
-          title: "Active Members",
+          title: t("dashboard.activeMembers"),
           value: currentMemberCount,
           change: memberChange >= 0 ? `+${memberChange.toFixed(1)}%` : `${memberChange.toFixed(1)}%`,
           trend: memberChange >= 0 ? "up" : "down",
           icon: <FiUsers className="h-6 w-6 text-blue-600" />,
           color: "blue",
-          subtitle: "vs last month",
+          subtitle: t("dashboard.vsLastMonth"),
         },
         {
-          title: "Monthly Revenue",
+          title: t("dashboard.monthlyRevenue"),
           value: `${currencySymbol} ${(currentRevenue / 1000).toFixed(1)}k`,
           change: revenueChange >= 0 ? `+${revenueChange.toFixed(1)}%` : `${revenueChange.toFixed(1)}%`,
           trend: revenueChange >= 0 ? "up" : "down",
           icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
           color: "green",
-          subtitle: `Target: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+          subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
         },
         {
-          title: "Class Attendance",
+          title: t("dashboard.classAttendance"),
           value: `${weekAttendanceRate.toFixed(1)}%`,
-          change: "This week",
+          change: t("dashboard.thisWeek"),
           trend: "up",
           icon: <FiCalendar className="h-6 w-6 text-purple-600" />,
           color: "purple",
-          subtitle: "Average this week",
+          subtitle: t("dashboard.averageThisWeek"),
         },
         {
-          title: "Member Retention",
+          title: t("dashboard.memberRetention"),
           value: `${retentionRate.toFixed(1)}%`,
-          change: "90+ days",
+          change: t("dashboard.ninetyPlusDays"),
           trend: retentionRate >= 85 ? "up" : "down",
           icon: <FiTarget className="h-6 w-6 text-orange-600" />,
           color: "orange",
-          subtitle: "12-month average",
+          subtitle: t("dashboard.twelveMonthAverage"),
         },
       ]);
 
@@ -339,22 +351,22 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       if (inactiveMembers > 0) {
         insights.push({
           icon: <FiUsers className="h-6 w-6 text-blue-600" />,
-          title: "Member Churn Risk",
-          description: `${inactiveMembers} members haven't visited in 14+ days. Send personalized re-engagement campaigns to retain them.`,
-          action: "Send Campaign",
+          title: t("dashboard.memberChurnRisk"),
+          description: `${inactiveMembers} ${t("dashboard.membersHaventVisited")}`,
+          action: t("dashboard.sendCampaign"),
           priority: inactiveMembers > 10 ? "high" : "medium" as const,
-          value: `${inactiveMembers} at-risk`,
+          value: `${inactiveMembers} ${t("dashboard.atRisk")}`,
         });
       }
 
       if (weekAttendanceRate > 80) {
         insights.push({
           icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
-          title: "High Attendance Week",
-          description: `This week's attendance is ${weekAttendanceRate.toFixed(1)}%. Consider adding more classes during peak hours to maximize revenue.`,
-          action: "Schedule Class",
+          title: t("dashboard.highAttendanceWeek"),
+          description: `${t("dashboard.thisWeeksAttendance")} ${weekAttendanceRate.toFixed(1)}%. ${t("dashboard.considerAddingMoreClasses")}`,
+          action: t("dashboard.scheduleClass"),
           priority: "medium" as const,
-          value: `${weekAttendanceRate.toFixed(1)}% attendance`,
+          value: `${weekAttendanceRate.toFixed(1)}% ${t("dashboard.attendance")}`,
         });
       }
 
@@ -364,23 +376,24 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, refreshKey]);
+  }, [fetchData, refreshKey, t]);
 
+  const { isRTL } = useRTL();
   return (
     <div className="space-y-8">
       {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-purple-50 rounded-xl">
-            <FiCpu className="h-6 w-6 text-purple-600" />
+      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex-shrink-0">
+            <FiCpu className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Smart Dashboard</h2>
-            <p className="text-gray-600">Smart-powered insights for your gym</p>
+          <div style={{ textAlign: isRTL ? 'right' : 'left' }} dir={isRTL ? "rtl" : "ltr"}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard.smartDashboard")}</h2>
+            <p className="text-gray-600 dark:text-gray-400">{t("dashboard.smartPoweredInsights")}</p>
           </div>
         </div>
       </div>
@@ -402,11 +415,11 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       {/* Smart Insights - Enhanced Single Column */}
       {smartInsights.length > 0 && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-900">Key Insights</h3>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+            <h3 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-left' : 'text-left'}`}>{t("dashboard.keyInsights")}</h3>
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm text-gray-500 dark:text-gray-400`}>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Live Updates</span>
+              <span>{t("dashboard.liveUpdates")}</span>
             </div>
           </div>
           <div className="space-y-4">
@@ -419,7 +432,16 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.2, duration: 0.3 }}
             >
-              <SmartInsight {...typedInsight} />
+              <SmartInsight 
+                {...typedInsight} 
+                onClick={() => {
+                  if (typedInsight.action === t("dashboard.sendCampaign")) {
+                    navigate("/dashboard/members");
+                  } else if (typedInsight.action === t("dashboard.scheduleClass")) {
+                    navigate("/dashboard/classes");
+                  }
+                }}
+              />
             </motion.div>
               );
             })}

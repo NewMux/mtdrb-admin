@@ -266,11 +266,11 @@ class ErrorHandler {
     // Log to external service in production
     if (import.meta.env.PROD) {
       // Send to logging service (e.g., Sentry, LogRocket, etc.)
-      this.sendToLoggingService(error);
+      this.sendToLoggingService();
     }
   }
 
-  private sendToLoggingService(error: ProcessedError): void {
+  private sendToLoggingService(): void {
     // Implementation for external logging service
     // This would integrate with services like Sentry, DataDog, etc.
   }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
-import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiTrendingUp, FiStar } from "react-icons/fi";
+import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
 
 // ===== SUBSCRIBE PAGE =====
@@ -41,16 +41,15 @@ export default function Subscribe() {
     {
       id: "starter",
       name: "Starter",
-      price: 99,
+      price: 80,
       period: "month",
-      description: "Perfect for small gyms getting started",
+      description: "Perfect for single-location gyms",
       features: [
-        "Up to 100 members",
-        "Basic member management",
-        "Class scheduling",
-        "Payment processing",
-        "Email support",
-        "Mobile app access"
+        "All core features",
+        "Single location",
+        "+$20 USD/month per extra location",
+        "Basic analytics",
+        "Email support"
       ],
       popular: false,
       color: "blue"
@@ -58,18 +57,16 @@ export default function Subscribe() {
     {
       id: "pro",
       name: "Pro",
-      price: 199,
+      price: 130,
       period: "month",
-      description: "Everything you need to scale your gym",
+      description: "Everything in Starter & scale your gym",
       features: [
+        "Everything in Starter",
+        "$10 USD/month per extra location",
         "Unlimited members",
         "Advanced analytics",
-        "Automated marketing",
-        "Personal training tools",
-        "VAT reporting",
         "Priority support",
-        "Custom branding",
-        "API access"
+        "WhatsApp bot"
       ],
       popular: true,
       color: "purple"
@@ -81,6 +78,7 @@ export default function Subscribe() {
     setSubscribing(true);
     setError("");
     try {
+      // First, update user metadata
       const { error } = await supabase.auth.updateUser({
         data: { 
           paid: true,
@@ -88,31 +86,64 @@ export default function Subscribe() {
           subscription_start: new Date().toISOString()
         },
       });
+
       if (error) {
         setError(error.message);
-      } else {
-        const { data } = await supabase.auth.getUser();
-        if (
-          data.user &&
-          data.user.user_metadata &&
-          data.user.user_metadata.paid
-        ) {
-          // Check if onboarding is completed
-          if (data.user.user_metadata.onboarding_completed) {
-            // Go to dashboard if onboarding is done
-            const from = (location.state as any)?.from?.pathname || "/dashboard";
-            navigate(from);
-          } else {
-            // Go to onboarding if not completed
-            navigate("/onboarding");
-          }
+        setSubscribing(false);
+        return;
+      }
+
+      // Upsert database platform subscription
+      const tenantId = user?.user_metadata?.tenant_id || user?.user_metadata?.tenantId;
+      if (tenantId) {
+        const now = new Date();
+        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        
+        const { error: subTableError } = await supabase
+          .from("platform_subscriptions")
+          .upsert({
+            tenant_id: tenantId,
+            status: "active",
+            plan_tier: planId,
+            amount: planId === "starter" ? 99.00 : 199.00,
+            currency: "AED",
+            current_period_end: periodEnd,
+            metadata: {
+              method: "trial_checkout",
+              last_payment_date: now.toISOString()
+            },
+            updated_at: now.toISOString()
+          }, {
+            onConflict: "tenant_id"
+          });
+
+        if (subTableError) {
+          console.error("Error updating platform_subscription row:", subTableError);
+        }
+      }
+
+      const { data } = await supabase.auth.getUser();
+      if (
+        data.user &&
+        data.user.user_metadata &&
+        (data.user.user_metadata.paid || data.user.user_metadata.tenant_id)
+      ) {
+        // Check if onboarding is completed
+        if (data.user.user_metadata.onboarding_completed) {
+          // Go to dashboard if onboarding is done
+          const from = (location.state as any)?.from?.pathname || "/dashboard";
+          navigate(from);
+        } else {
+          // Go to onboarding if not completed
+          navigate("/onboarding");
         }
       }
     } catch (e) {
       setError("Unexpected error");
       if (import.meta.env.DEV) console.error("Subscribe error:", e);
+    } finally {
+      setSubscribing(false);
     }
-    setSubscribing(false);
   };
 
   if (loading) return null;
@@ -147,7 +178,7 @@ export default function Subscribe() {
               Choose your plan
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Start with a free trial, then choose the plan that fits your gym's needs. You can upgrade or downgrade anytime.
+              Start with a free trial, then choose the plan that fits your gym&apos;s needs. You can upgrade or downgrade anytime.
             </p>
 
             {/* Feature Highlights */}
@@ -232,7 +263,7 @@ export default function Subscribe() {
                   className={`w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 ${
                     selectedPlan === plan.id
                       ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();

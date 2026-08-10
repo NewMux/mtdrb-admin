@@ -7,8 +7,6 @@
 
 const isDevelopment = import.meta.env.DEV;
 
-type LogLevel = 'log' | 'warn' | 'error' | 'info' | 'debug';
-
 interface LoggerOptions {
   /** Force logging even in production (use sparingly) */
   force?: boolean;

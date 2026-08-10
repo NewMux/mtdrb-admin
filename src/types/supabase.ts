@@ -46,7 +46,7 @@ export interface Database {
           id: string;
           user_id: string;
           tenant_id: string;
-          role: "owner" | "admin" | "manager" | "trainer" | "staff";
+          role: "admin" | "employee" | "trainer";
           created_at: string;
           updated_at: string;
         };
@@ -54,7 +54,7 @@ export interface Database {
           id?: string;
           user_id: string;
           tenant_id: string;
-          role?: "owner" | "admin" | "manager" | "trainer" | "staff";
+          role?: "admin" | "employee" | "trainer";
           created_at?: string;
           updated_at?: string;
         };
@@ -62,7 +62,7 @@ export interface Database {
           id?: string;
           user_id?: string;
           tenant_id?: string;
-          role?: "owner" | "admin" | "manager" | "trainer" | "staff";
+          role?: "admin" | "employee" | "trainer";
           created_at?: string;
           updated_at?: string;
         };
@@ -741,10 +741,7 @@ export type Enums<
     : never;
 
 // CompositeTypes not available in current schema
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions = never,
-  CompositeTypeName = never
-> = never;
+export type CompositeTypes = never;
 
 export const Constants = {
   graphql_public: {

@@ -7,18 +7,17 @@ import {
 } from "react-router-dom";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material";
 import { theme } from "./theme";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthProvider";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { UIProvider } from "./contexts/UIContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { PageThemeProvider } from "./contexts/PageThemeContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { WorkoutPlansProvider } from "./contexts/WorkoutPlansContext";
-import { Toaster, toast } from "react-hot-toast";
-import NetworkStatus from "./components/NetworkStatus";
-import { checkSupabaseHealth } from "./supabaseClient";
+import { Toaster } from "react-hot-toast";
 import { errorHandler } from "./services/errorHandler";
 import { ErrorContext } from "./services/errorHandler";
+import { AIChatProvider } from "./contexts/AIChatContext";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -26,6 +25,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Subscribe from "./pages/Subscribe";
 import Onboarding from "./pages/Onboarding";
+import Legal from "./pages/Legal";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Members from "./pages/Members";
@@ -37,9 +37,9 @@ import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import Plans from "./pages/Plans";
 import Tasks from "./pages/Tasks";
+import Branches from "./pages/Branches";
+import Insights from "./pages/Insights";
 import NotFound from "./pages/NotFound";
-import MemberModalsDemo from "./components/members/MemberModalsDemo";
-import ClassModalsDemo from "./components/classes/ClassModalsDemo";
 
 // Components
 import Layout from "./components/Layout";
@@ -47,17 +47,6 @@ import AuthSetup from "./components/AuthSetup";
 import PermissionGuard from "./components/auth/PermissionGuard";
 
 const App = () => {
-  // Check Supabase connectivity on initial load
-  useEffect(() => {
-    checkSupabaseHealth().then((ok) => {
-      if (ok) {
-        toast.success("Connected to backend");
-      } else {
-        toast.error("Cannot reach backend");
-      }
-    });
-  }, []);
-
   // Global async error handling
   // React Error Boundaries don't catch async errors, so we need to handle them globally
   useEffect(() => {
@@ -121,8 +110,8 @@ const App = () => {
               <AuthProvider>
                 <SubscriptionProvider>
                   <UIProvider>
-                    <NetworkStatus />
-                    <Toaster
+                    <AIChatProvider>
+                      <Toaster
                       position="top-right"
                       toastOptions={{
                         duration: 4000,
@@ -139,33 +128,9 @@ const App = () => {
                       <Route path="/signup" element={<Signup />} />
                       <Route path="/subscribe" element={<Subscribe />} />
                       <Route path="/onboarding" element={<Onboarding />} />
-
-                      {/* Demo routes */}
-                      <Route
-                        path="/modals-demo"
-                        element={
-                          <AuthSetup>
-                            <WorkoutPlansProvider>
-                              <Layout />
-                            </WorkoutPlansProvider>
-                          </AuthSetup>
-                        }
-                      >
-                        <Route index element={<MemberModalsDemo />} />
-                      </Route>
-
-                      <Route
-                        path="/class-modals-demo"
-                        element={
-                          <AuthSetup>
-                            <WorkoutPlansProvider>
-                              <Layout />
-                            </WorkoutPlansProvider>
-                          </AuthSetup>
-                        }
-                      >
-                        <Route index element={<ClassModalsDemo />} />
-                      </Route>
+                      <Route path="/terms" element={<Legal initialTab="terms" />} />
+                      <Route path="/privacy" element={<Legal initialTab="privacy" />} />
+                      <Route path="/refund" element={<Legal initialTab="refund" />} />
 
                       {/* Protected routes with AuthSetup wrapper */}
                       <Route
@@ -182,7 +147,7 @@ const App = () => {
                         <Route 
                           index 
                           element={
-                            <PermissionGuard requiredRole="staff" fallbackPath="/login">
+                            <PermissionGuard requiredRole="trainer" fallbackPath="/login">
                               <Dashboard />
                             </PermissionGuard>
                           } 
@@ -191,16 +156,16 @@ const App = () => {
                         <Route 
                           path="profile" 
                           element={
-                            <PermissionGuard requiredRole="staff" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="trainer" fallbackPath="/dashboard">
                               <Profile />
                             </PermissionGuard>
                           } 
                         />
-                        {/* Members - requires manager or higher */}
+                        {/* Members - requires employee or higher */}
                         <Route 
                           path="members" 
                           element={
-                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Members />
                             </PermissionGuard>
                           } 
@@ -214,29 +179,38 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
-                        {/* Trainers - requires manager or higher */}
+                        {/* Trainers - requires employee or higher */}
                         <Route 
                           path="trainers" 
                           element={
-                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Trainers />
                             </PermissionGuard>
                           } 
                         />
-                        {/* Analytics - requires manager or higher */}
+                        {/* Analytics - requires employee or higher */}
                         <Route 
                           path="analytics" 
                           element={
-                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Analytics />
                             </PermissionGuard>
                           } 
                         />
-                        {/* Reports - requires manager or higher */}
+                        {/* Insights - requires employee or higher */}
+                        <Route 
+                          path="insights" 
+                          element={
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                              <Insights />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Reports - requires employee or higher */}
                         <Route 
                           path="reports" 
                           element={
-                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Reports />
                             </PermissionGuard>
                           } 
@@ -250,11 +224,11 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
-                        {/* Billing - requires manager or higher */}
+                        {/* Billing - requires employee or higher */}
                         <Route 
                           path="billing" 
                           element={
-                            <PermissionGuard requiredRole="manager" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Billing />
                             </PermissionGuard>
                           } 
@@ -274,6 +248,15 @@ const App = () => {
                           element={
                             <PermissionGuard requiredRole="trainer" fallbackPath="/dashboard">
                               <Tasks />
+                            </PermissionGuard>
+                          } 
+                        />
+                        {/* Branches - requires admin or higher */}
+                        <Route 
+                          path="branches" 
+                          element={
+                            <PermissionGuard requiredRole="admin" fallbackPath="/dashboard">
+                              <Branches />
                             </PermissionGuard>
                           } 
                         />
@@ -317,6 +300,14 @@ const App = () => {
                         element={<Navigate to="/dashboard/tasks" replace />}
                       />
                       <Route
+                        path="/branches"
+                        element={<Navigate to="/dashboard/branches" replace />}
+                      />
+                      <Route
+                        path="/insights"
+                        element={<Navigate to="/dashboard/insights" replace />}
+                      />
+                      <Route
                         path="/profile"
                         element={<Navigate to="/dashboard/profile" replace />}
                       />
@@ -324,6 +315,7 @@ const App = () => {
                       {/* Catch all route */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    </AIChatProvider>
                   </UIProvider>
                 </SubscriptionProvider>
               </AuthProvider>

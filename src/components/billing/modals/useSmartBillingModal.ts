@@ -52,8 +52,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
           .eq("user_id", user.id)
           .single();
 
-        // Pro users are owners/admins/managers
-        const proRoles = ["owner", "admin", "manager"];
+        // Pro users are admins and employees
+        const proRoles = ["admin", "employee"];
         setIsProUser(proRoles.includes(membership?.role || ""));
       } catch (error) {
         console.error("Error checking Pro status:", error);

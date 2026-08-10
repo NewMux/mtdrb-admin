@@ -3,14 +3,9 @@ import { motion } from "framer-motion";
 import {
   FiTrendingUp,
   FiUsers,
-  FiCheckCircle,
   FiAlertTriangle,
   FiDollarSign,
-  FiClock,
-  FiDownload,
-  FiMessageCircle,
   FiGift,
-  FiZap,
   FiArrowUp,
   FiArrowDown,
   FiTarget,
@@ -20,20 +15,12 @@ import {
   FiCreditCard,
   FiAlertCircle,
   FiStar,
-  FiAward,
   FiRefreshCw,
   FiFilter,
   FiCalendar,
-  FiMapPin,
-  FiUser,
-  FiBarChart,
-  FiPieChart,
-  FiTrendingDown,
-  FiEye,
-  FiHeart,
-  FiShield,
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
 import dayjs from "dayjs";
 import {
   Chart as ChartJS,
@@ -49,8 +36,11 @@ import {
   Filler,
   RadialLinearScale,
 } from "chart.js";
-import { Line, Bar, Doughnut, Radar } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 // Register Chart.js components
 ChartJS.register(
@@ -67,79 +57,9 @@ ChartJS.register(
   RadialLinearScale,
 );
 
-// Mock data for analytics
-const mockAnalyticsData = {
-  overview: {
-    activeMembers: 1247,
-    newThisPeriod: 89,
-    churnedThisPeriod: 23,
-    avgRetentionRate: 87.3,
-  },
-  engagement: {
-    sessionsBooked: 3421,
-    avgSessionsPerMember: 2.7,
-    topClasses: [
-      { name: "Yoga Flow", sessions: 456 },
-      { name: "HIIT Training", sessions: 389 },
-      { name: "Strength Training", sessions: 312 },
-    ],
-  },
-  demographics: {
-    genderSplit: [
-      { gender: "Male", count: 623, percentage: 50 },
-      { gender: "Female", count: 498, percentage: 40 },
-      { gender: "Other", count: 126, percentage: 10 },
-    ],
-    ageDistribution: [
-      { range: "18-24", count: 187 },
-      { range: "25-34", count: 456 },
-      { range: "35-44", count: 389 },
-      { range: "45-54", count: 156 },
-      { range: "55+", count: 59 },
-    ],
-    membershipTypes: [
-      { type: "Monthly", count: 623, percentage: 50 },
-      { type: "Yearly", count: 374, percentage: 30 },
-      { type: "Class Pack", count: 187, percentage: 15 },
-      { type: "Free Trial", count: 63, percentage: 5 },
-    ],
-  },
-  riskOpportunity: {
-    inactiveMembers: 156,
-    almostChurned: 34,
-    highValue: 89,
-    referralActive: 234,
-    unengagedNew: 12,
-  },
-  revenue: {
-    totalRevenue: 98750,
-    avgRevenuePerMember: 79.2,
-    estimatedLTV: 948,
-  },
-  charts: {
-    memberGrowth: [
-      { month: "Jan", active: 1150 },
-      { month: "Feb", active: 1180 },
-      { month: "Mar", active: 1210 },
-      { month: "Apr", active: 1247 },
-    ],
-    churnTrend: [
-      { month: "Jan", churned: 15 },
-      { month: "Feb", churned: 18 },
-      { month: "Mar", churned: 22 },
-      { month: "Apr", churned: 23 },
-    ],
-    revenueTrend: [
-      { month: "Jan", revenue: 85000 },
-      { month: "Feb", revenue: 89000 },
-      { month: "Mar", revenue: 92000 },
-      { month: "Apr", revenue: 98750 },
-    ],
-  },
-};
-
 // Filter Component
 const AnalyticsFilters: React.FC = () => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
     branch: "all",
@@ -156,15 +76,15 @@ const AnalyticsFilters: React.FC = () => {
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+    <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 rounded-xl">
       <div className="flex items-center justify-between">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
         >
-          <FiFilter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">
-            Analytics Filters
+          <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("members.analyticsFilters")}
           </span>
         </button>
       </div>
@@ -181,36 +101,36 @@ const AnalyticsFilters: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mt-4">
               {/* Branch */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.branch}
                 onChange={(e) =>
                   setFilters({ ...filters, branch: e.target.value })
                 }
               >
-                <option value="">All Branches</option>
-                <option value="main">Main Branch</option>
+                <option value="">{t("members.allBranches")}</option>
+                <option value="main">{t("members.mainBranch")}</option>
                 <option value="downtown">Downtown</option>
                 <option value="westside">Westside</option>
               </select>
 
               {/* Membership Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.membershipType}
                 onChange={(e) =>
                   setFilters({ ...filters, membershipType: e.target.value })
                 }
               >
-                <option value="all">All Types</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="classpack">Class Pack</option>
-                <option value="trial">Free Trial</option>
+                <option value="all">{t("members.allTypes")}</option>
+                <option value="monthly">{t("members.monthly")}</option>
+                <option value="yearly">{t("members.yearly")}</option>
+                <option value="classpack">{t("members.classPack")}</option>
+                <option value="trial">{t("members.trial")}</option>
               </select>
 
               {/* Join Date Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.joinDateRange}
                 onChange={(e) =>
                   setFilters({ ...filters, joinDateRange: e.target.value })
@@ -225,27 +145,27 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Gender */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.gender}
                 onChange={(e) =>
                   setFilters({ ...filters, gender: e.target.value })
                 }
               >
-                <option value="all">All Genders</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="all">{t("members.allGenders")}</option>
+                <option value="male">{t("members.male")}</option>
+                <option value="female">{t("members.female")}</option>
+                <option value="other">{t("members.other")}</option>
               </select>
 
               {/* Age Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.ageRange}
                 onChange={(e) =>
                   setFilters({ ...filters, ageRange: e.target.value })
                 }
               >
-                <option value="all">All Ages</option>
+                <option value="all">{t("members.allAges")}</option>
                 <option value="18-24">18-24</option>
                 <option value="25-34">25-34</option>
                 <option value="35-44">35-44</option>
@@ -255,21 +175,21 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Activity Status */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.activityStatus}
                 onChange={(e) =>
                   setFilters({ ...filters, activityStatus: e.target.value })
                 }
               >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="at-risk">At Risk</option>
+                <option value="all">{t("members.allStatus")}</option>
+                <option value="active">{t("members.active")}</option>
+                <option value="inactive">{t("members.inactive")}</option>
+                <option value="at-risk">{t("members.atRisk")}</option>
               </select>
 
               {/* Trainer */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.trainer}
                 onChange={(e) =>
                   setFilters({ ...filters, trainer: e.target.value })
@@ -299,37 +219,38 @@ interface OverviewCardsProps {
   loading?: boolean;
 }
 
-const OverviewCards: React.FC<OverviewCardsProps> = ({ overview, loading }) => {
+const OverviewCards: React.FC<OverviewCardsProps> = ({ overview }) => {
+  const { t } = useTranslation();
 
   const cards = [
     {
-      title: "Active Members",
+      title: t("members.activeMembers"),
       value: overview.activeMembers.toLocaleString(),
-      subtitle: "Currently active members",
+      subtitle: t("members.currentlyActiveMembers"),
       icon: FiUsers,
       color: "blue",
       trend: { value: 5.2, isPositive: true },
     },
     {
-      title: "New This Period",
+      title: t("members.newThisPeriod"),
       value: overview.newThisPeriod.toLocaleString(),
-      subtitle: "Members joined this period",
+      subtitle: t("members.membersJoinedThisPeriod"),
       icon: FiUserPlus,
       color: "green",
       trend: { value: 12.3, isPositive: true },
     },
     {
-      title: "Churned This Period",
+      title: t("members.churnedThisPeriod"),
       value: overview.churnedThisPeriod.toLocaleString(),
-      subtitle: "Members who left this period",
+      subtitle: t("members.membersWhoLeft"),
       icon: FiUserCheck,
       color: "red",
       trend: { value: 8.1, isPositive: false },
     },
     {
-      title: "Avg. Retention Rate",
+      title: t("members.avgRetentionRate"),
       value: `${overview.avgRetentionRate}%`,
-      subtitle: "Average member retention",
+      subtitle: t("members.averageMemberRetention"),
       icon: FiTarget,
       color: "purple",
       trend: { value: 2.1, isPositive: true },
@@ -344,19 +265,19 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ overview, loading }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200"
+          className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-4">
             <div
-              className={`w-12 h-12 rounded-2xl bg-${card.color}-50 flex items-center justify-center`}
+              className={`w-12 h-12 rounded-2xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
             >
-              <card.icon className={`w-6 h-6 text-${card.color}-600`} />
+              <card.icon className={`w-6 h-6 text-${card.color}-600 dark:text-${card.color}-400`} />
             </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
                 card.trend.isPositive
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
+                  ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
               }`}
             >
               {card.trend.isPositive ? (
@@ -369,9 +290,9 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ overview, loading }) => {
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">{card.value}</h3>
-            <p className="text-sm text-gray-600 mt-1">{card.title}</p>
-            <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
         </motion.div>
       ))}
@@ -389,24 +310,26 @@ interface EngagementCardsProps {
   loading?: boolean;
 }
 
-const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement, loading }) => {
+const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Sessions Booked */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-            <FiCalendar className="w-6 h-6 text-blue-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+            <FiCalendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {engagement.sessionsBooked.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">Sessions Booked</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.sessionsBooked")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-blue-500 h-2 rounded-full"
             style={{ width: "75%" }}
@@ -415,21 +338,21 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement, loading }
       </div>
 
       {/* Avg Sessions per Member */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
-            <FiActivity className="w-6 h-6 text-green-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+            <FiActivity className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {engagement.avgSessionsPerMember}
             </div>
-            <div className="text-sm text-gray-600">
-              Avg. Sessions per Member
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              {t("members.avgSessionsPerMember")}
             </div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-green-500 h-2 rounded-full"
             style={{ width: "68%" }}
@@ -438,24 +361,24 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement, loading }
       </div>
 
       {/* Top Classes */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center">
-            <FiStar className="w-6 h-6 text-purple-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+            <FiStar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">Top 3</div>
-            <div className="text-sm text-gray-600">Most Popular Classes</div>
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">Top 3</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.mostPopularClasses")}</div>
           </div>
         </div>
         <div className="space-y-2">
-          {engagement.topClasses.map((classItem, index) => (
+          {engagement.topClasses.map((classItem) => (
             <div
               key={classItem.name}
-              className="flex items-center justify-between text-sm"
+              className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}
             >
-              <span className="text-gray-600">{classItem.name}</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-gray-600 dark:text-gray-400">{classItem.name}</span>
+              <span className="font-medium text-gray-900 dark:text-white">
                 {classItem.sessions}
               </span>
             </div>
@@ -476,7 +399,9 @@ interface DemographicCardsProps {
   loading?: boolean;
 }
 
-const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loading }) => {
+const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => {
+  const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   // Gender Split Chart Data
   const genderChartData = {
@@ -504,7 +429,7 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
     labels: demographics.ageDistribution.map((item) => item.range),
     datasets: [
       {
-        label: "Members",
+        label: t("members.members"),
         data: demographics.ageDistribution.map((item) => item.count),
         backgroundColor: "rgba(59, 130, 246, 0.8)",
         borderColor: "rgba(59, 130, 246, 1)",
@@ -549,13 +474,14 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
           font: {
             size: 12,
           },
+          color: isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)",
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
         titleColor: "white",
         bodyColor: "white",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
         cornerRadius: 8,
       },
@@ -568,12 +494,18 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+        },
+        ticks: {
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
       x: {
         grid: {
           display: false,
+        },
+        ticks: {
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
     },
@@ -582,9 +514,9 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gender Split */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Gender Split
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.genderSplit", "توزيع الجنسين")}
         </h3>
         <div className="h-64">
           <Doughnut data={genderChartData} options={chartOptions} />
@@ -592,9 +524,9 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
       </div>
 
       {/* Age Distribution */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Age Distribution
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.ageDistribution", "التوزيع العمري")}
         </h3>
         <div className="h-64">
           <Bar data={ageChartData} options={barChartOptions} />
@@ -602,9 +534,9 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics, loadi
       </div>
 
       {/* Membership Type Split */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Membership Types
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.membershipTypes", "أنواع العضويات")}
         </h3>
         <div className="h-64">
           <Doughnut data={membershipChartData} options={chartOptions} />
@@ -626,48 +558,49 @@ interface RiskOpportunityCardsProps {
   loading?: boolean;
 }
 
-const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportunity, loading }) => {
+const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportunity }) => {
+  const { t } = useTranslation();
 
   const cards = [
     {
-      title: "Inactive Members",
+      title: t("members.inactiveMembers"),
       value: riskOpportunity.inactiveMembers,
-      subtitle: "No activity in 14+ days",
+      subtitle: t("members.noActivity14Days"),
       icon: FiAlertTriangle,
       color: "red",
-      action: "Re-engage",
+      action: t("members.reEngage"),
     },
     {
-      title: "Almost-Churned",
+      title: t("members.almostChurned"),
       value: riskOpportunity.almostChurned,
-      subtitle: "Renewal due within 7 days",
+      subtitle: t("members.renewalDue7Days"),
       icon: FiAlertCircle,
       color: "orange",
-      action: "Contact",
+      action: t("members.contact"),
     },
     {
-      title: "High-Value",
+      title: t("members.highValue"),
       value: riskOpportunity.highValue,
-      subtitle: "4+ sessions/week, 90+ days",
+      subtitle: t("members.sessionsPerWeek"),
       icon: FiStar,
       color: "green",
-      action: "Reward",
+      action: t("members.reward"),
     },
     {
-      title: "Referral Active",
+      title: t("members.referralActive"),
       value: riskOpportunity.referralActive,
-      subtitle: "Members with referrals",
+      subtitle: t("members.membersWithReferrals"),
       icon: FiGift,
       color: "blue",
-      action: "Incentivize",
+      action: t("members.incentivize"),
     },
     {
-      title: "Unengaged New",
+      title: t("members.unengagedNew"),
       value: riskOpportunity.unengagedNew,
-      subtitle: "Joined 30 days, ≤1 session",
+      subtitle: t("members.joined30Days1Session"),
       icon: FiUserPlus,
       color: "yellow",
-      action: "Onboard",
+      action: t("members.onboard"),
     },
   ];
 
@@ -679,23 +612,23 @@ const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportu
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-3xl p-4 shadow-sm border border-gray-200"
+          className="bg-white dark:bg-gray-800 rounded-3xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-3">
             <div
-              className={`w-10 h-10 rounded-xl bg-${card.color}-50 flex items-center justify-center`}
+              className={`w-10 h-10 rounded-xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
             >
-              <card.icon className={`w-5 h-5 text-${card.color}-600`} />
+              <card.icon className={`w-5 h-5 text-${card.color}-600 dark:text-${card.color}-400`} />
             </div>
-            <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
+            <button className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
               {card.action}
             </button>
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900">{card.value}</h3>
-            <p className="text-sm text-gray-600 mt-1">{card.title}</p>
-            <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
         </motion.div>
       ))}
@@ -713,24 +646,26 @@ interface RevenueCardsProps {
   loading?: boolean;
 }
 
-const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading }) => {
+const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Total Revenue */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
-            <FiDollarSign className="w-6 h-6 text-green-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+            <FiDollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.totalRevenue.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">Total Revenue</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.totalRevenue")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-green-500 h-2 rounded-full"
             style={{ width: "85%" }}
@@ -739,19 +674,19 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading }) => {
       </div>
 
       {/* Avg Revenue per Member */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
-            <FiCreditCard className="w-6 h-6 text-blue-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+            <FiCreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.avgRevenuePerMember}
             </div>
-            <div className="text-sm text-gray-600">Avg. Revenue per Member</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.avgRevenuePerMember")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-blue-500 h-2 rounded-full"
             style={{ width: "72%" }}
@@ -760,19 +695,19 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading }) => {
       </div>
 
       {/* Estimated LTV */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center">
-            <FiTrendingUp className="w-6 h-6 text-purple-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+            <FiTrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className={isRTL ? "text-left" : "text-right"}>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
               ${revenue.estimatedLTV}
             </div>
-            <div className="text-sm text-gray-600">Estimated LTV</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.estimatedLTV")}</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className="bg-purple-500 h-2 rounded-full"
             style={{ width: "78%" }}
@@ -793,14 +728,16 @@ interface AnalyticsChartsProps {
   loading?: boolean;
 }
 
-const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) => {
+const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
+  const { t } = useTranslation();
+  const { isDark } = useTheme();
 
   // Member Growth Chart
   const memberGrowthData = {
     labels: charts.memberGrowth.map((item) => item.month),
     datasets: [
       {
-        label: "Active Members",
+        label: t("members.activeMembers"),
         data: charts.memberGrowth.map((item) => item.active),
         borderColor: "rgba(59, 130, 246, 1)",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -819,7 +756,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
     labels: charts.revenueTrend.map((item) => item.month),
     datasets: [
       {
-        label: "Revenue",
+        label: t("members.revenue"),
         data: charts.revenueTrend.map((item) => item.revenue),
         borderColor: "rgba(34, 197, 94, 1)",
         backgroundColor: "rgba(34, 197, 94, 0.1)",
@@ -838,7 +775,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
     labels: charts.churnTrend.map((item) => item.month),
     datasets: [
       {
-        label: "Churned Members",
+        label: t("members.churnedMembers"),
         data: charts.churnTrend.map((item) => item.churned),
         borderColor: "rgba(239, 68, 68, 1)",
         backgroundColor: "rgba(239, 68, 68, 0.1)",
@@ -860,10 +797,10 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
         display: false,
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
         titleColor: "white",
         bodyColor: "white",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
         cornerRadius: 8,
         displayColors: false,
@@ -873,10 +810,10 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
       x: {
@@ -884,7 +821,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
           display: false,
         },
         ticks: {
-          color: "rgba(0, 0, 0, 0.6)",
+          color: isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
         },
       },
     },
@@ -893,9 +830,9 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
   return (
     <div className="space-y-6">
       {/* Member Growth Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Member Growth
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.memberGrowth", "نمو الأعضاء")}
         </h3>
         <div className="h-80">
           <Line data={memberGrowthData} options={lineChartOptions} />
@@ -903,9 +840,9 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
       </div>
 
       {/* Revenue Trend Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Revenue Trend
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.revenueTrend", "اتجاه الإيرادات")}
         </h3>
         <div className="h-80">
           <Line data={revenueTrendData} options={lineChartOptions} />
@@ -913,9 +850,9 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts, loading }) =>
       </div>
 
       {/* Churn Trend Chart */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Churn Trend
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+          {t("members.churnTrend", "اتجاه المغادرة")}
         </h3>
         <div className="h-80">
           <Line data={churnTrendData} options={lineChartOptions} />
@@ -970,11 +907,11 @@ interface AnalyticsData {
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
-  members,
-  stats,
-  onFilterMembers,
   refreshKey = 0,
 }) => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  const { user, tenantId: contextTenantId } = useAuth();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -984,16 +921,14 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       setLoading(true);
       setError(null);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) {
         setError("User not authenticated");
+        setLoading(false);
         return;
       }
 
-      // Get tenant_id
-      let tenantId = user.user_metadata?.tenant_id;
+      // Get tenant_id from context first, then try user metadata, then memberships
+      let tenantId = contextTenantId || user.user_metadata?.tenant_id;
       if (!tenantId) {
         const { data: membershipData } = await supabase
           .from("memberships")
@@ -1005,6 +940,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       if (!tenantId) {
         setError("Tenant ID not found");
+        setLoading(false);
         return;
       }
 
@@ -1271,11 +1207,11 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       setAnalyticsData(data);
     } catch (err) {
       console.error("Error fetching analytics data:", err);
-      setError("Failed to load analytics data");
+      setError(t("members.failedToLoadAnalytics"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, contextTenantId]);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -1285,8 +1221,8 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
-          <FiRefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading analytics data...</p>
+          <FiRefreshCw className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+          <p className="text-gray-600 dark:text-gray-400">Loading analytics data...</p>
         </div>
       </div>
     );
@@ -1296,13 +1232,13 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
-          <FiAlertCircle className="w-8 h-8 text-red-600" />
-          <p className="text-gray-600">{error}</p>
+          <FiAlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+          <p className="text-gray-600 dark:text-gray-400">{error}</p>
           <button
             onClick={() => fetchAnalyticsData()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Retry
+            {t("members.retry")}
           </button>
         </div>
       </div>
@@ -1314,45 +1250,61 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
       {/* Filters */}
       <AnalyticsFilters />
 
       {/* Overview Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">🎯 Overview</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>🎯</span>
+          <span>{t("dashboard.overview", "نظرة عامة")}</span>
+        </h2>
         <OverviewCards overview={analyticsData.overview} loading={loading} />
       </div>
 
       {/* Engagement Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">📊 Engagement</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>📊</span>
+          <span>{t("members.memberEngagement", "تفاعل الأعضاء")}</span>
+        </h2>
         <EngagementCards engagement={analyticsData.engagement} loading={loading} />
       </div>
 
       {/* Demographic Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">👥 Demographics</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>👥</span>
+          <span>{t("members.demographics", "البيانات الديموغرافية")}</span>
+        </h2>
         <DemographicCards demographics={analyticsData.demographics} loading={loading} />
       </div>
 
       {/* Risk & Opportunity Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          ⚠️ Risk & Opportunity
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>⚠️</span>
+          <span>{t("members.riskOpportunity", "المخاطر والفرص")}</span>
         </h2>
         <RiskOpportunityCards riskOpportunity={analyticsData.riskOpportunity} loading={loading} />
       </div>
 
       {/* Revenue Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">💰 Revenue</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>💰</span>
+          <span>{t("members.revenue", "الإيرادات")}</span>
+        </h2>
         <RevenueCards revenue={analyticsData.revenue} loading={loading} />
       </div>
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">📈 Charts</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+          <span>📈</span>
+          <span>{t("analytics.charts", "الرسوم البيانية")}</span>
+        </h2>
         <AnalyticsCharts charts={analyticsData.charts} loading={loading} />
       </div>
     </div>

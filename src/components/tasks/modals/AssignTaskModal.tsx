@@ -1,12 +1,9 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiUser,
   FiSearch,
   FiFilter,
   FiZap,
-  FiUsers,
-  FiClock,
   FiCheck,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
@@ -218,7 +215,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
               </h3>
             </div>
             <div className="space-y-2">
-              {smartSuggestions.map((suggestion, index) => (
+              {smartSuggestions.map((suggestion) => (
                 <button
                   key={suggestion.id}
                   type="button"
@@ -289,7 +286,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
           </label>
           {assignToSelf && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-              You'll be assigned this task and can manage it directly
+              You&apos;ll be assigned this task and can manage it directly
             </p>
           )}
         </div>

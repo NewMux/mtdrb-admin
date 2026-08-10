@@ -4,16 +4,9 @@ import {
   FiEdit,
   FiTrash,
   FiUpload,
-  FiDownload,
   FiUser,
-  FiMail,
   FiTarget,
-  FiEye,
   FiZap,
-  FiSend,
-  FiFileText,
-  FiTrendingUp,
-  FiDollarSign,
 } from "react-icons/fi";
 import {
   AddMemberModal,
@@ -26,7 +19,7 @@ import {
 
 const MemberModalsDemo: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState("member-123");
+  const [selectedMemberId] = useState("member-123");
 
   const modalConfigs = [
     {

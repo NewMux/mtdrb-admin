@@ -1,23 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FiBarChart,
   FiTrendingUp,
-  FiUsers,
-  FiDollarSign,
   FiActivity,
-  FiTarget,
-  FiZap,
-  FiFileText,
-  FiCalendar,
-  FiDownload,
-  FiEye,
-  FiMessageSquare,
 } from "react-icons/fi";
-import { supabase } from "../../supabaseClient";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,8 +12,6 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  AreaChart,
-  Area,
 } from "recharts";
 
 interface SmartReportAnalyticsProps {

@@ -86,9 +86,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   );
 };
 
-export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
-  refreshKey,
-}) => {
+export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = () => {
   const settingsCategories = [
     {
       title: "System Configuration",

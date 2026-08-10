@@ -12,34 +12,6 @@ import {
   type UserMetadata,
 } from "./auth-context";
 
-/**
- * Create a mock user for localhost development
- */
-const createMockUser = (): User => {
-  return {
-    id: "mock-user-localhost",
-    aud: "authenticated",
-    role: "authenticated",
-    email: "dev@localhost.local",
-    email_confirmed_at: new Date().toISOString(),
-    phone: "",
-    confirmed_at: new Date().toISOString(),
-    last_sign_in_at: new Date().toISOString(),
-    app_metadata: {},
-    user_metadata: {
-      tenant_id: "00000000-0000-0000-0000-000000000000",
-      paid: true,
-      role: "admin",
-      subscription_tier: "enterprise",
-      onboarding_completed: true,
-      name: "Local Dev User",
-    },
-    identities: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  } as User;
-};
-
 const DEFAULT_ERROR: AuthErrorState = {
   code: "unknown",
   message: "An unknown error occurred",
@@ -71,25 +43,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return errorState;
   }, []);
 
-  const handleUserMetadata = useCallback((user: User | null) => {
+  const handleUserMetadata = useCallback(async (user: User | null) => {
     if (!user) {
       setUserMetadata(null);
       setTenantId(null);
-      return;
+      return null;
     }
 
     const rawRole = user.user_metadata?.role;
     const validatedRole = isValidRole(rawRole) ? rawRole : getDefaultRole();
+    const tId = user.user_metadata?.tenant_id || user.user_metadata?.tenantId;
+
+    let isPaid = user.user_metadata?.paid || false;
+    let tier = user.user_metadata?.subscription_tier || "free";
+
+    if (tId) {
+      try {
+        const { data: subData } = await supabase
+          .from("platform_subscriptions")
+          .select("status, plan_tier")
+          .eq("tenant_id", tId)
+          .maybeSingle();
+
+        if (subData) {
+          isPaid = (subData.status === "active" || subData.status === "trialing");
+          tier = subData.plan_tier;
+        }
+      } catch (err) {
+        console.error("Error querying platform_subscriptions in handleUserMetadata:", err);
+      }
+    }
 
     const metadata: UserMetadata = {
-      tenant_id: user.user_metadata?.tenant_id || user.user_metadata?.tenantId,
-      paid: user.user_metadata?.paid || false,
+      tenant_id: tId,
+      paid: isPaid,
       role: validatedRole,
-      subscription_tier: user.user_metadata?.subscription_tier || "free",
+      subscription_tier: tier as any,
     };
 
     setUserMetadata(metadata);
     setTenantId(metadata.tenant_id);
+    return metadata;
   }, []);
 
   const checkAuth = useCallback(async () => {
@@ -97,9 +91,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       if (isLocalhost()) {
-        const mockUser = createMockUser();
-        setUser(mockUser);
-        handleUserMetadata(mockUser);
+        let loggedIn = typeof window !== "undefined" ? sessionStorage.getItem("mock_logged_in") : null;
+        
+        if (loggedIn === null && typeof window !== "undefined") {
+          const publicRoutes = ["/", "/login", "/signup"];
+          if (publicRoutes.includes(location.pathname)) {
+            loggedIn = "false";
+          } else {
+            sessionStorage.setItem("mock_logged_in", "true");
+            loggedIn = "true";
+          }
+        }
+        
+        if (loggedIn === "true") {
+          const { data: { user: mockUser } } = await supabase.auth.getUser();
+          if (mockUser) {
+            setUser(mockUser);
+            await handleUserMetadata(mockUser);
+          } else {
+            setUser(null);
+            setUserMetadata(null);
+            setTenantId(null);
+          }
+        } else {
+          setUser(null);
+          setUserMetadata(null);
+          setTenantId(null);
+        }
 
         const publicRoutes = [
           "/",
@@ -113,6 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        if (loggedIn !== "true") {
+          navigate("/login", { replace: true });
+          setIsLoading(false);
+          return;
+        }
+
         setIsLoading(false);
         return;
       }
@@ -122,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       setUser(user);
-      handleUserMetadata(user);
+      const metadata = await handleUserMetadata(user);
 
       const publicRoutes = [
         "/",
@@ -136,8 +160,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (user && !user.user_metadata?.paid) {
-        const gracePeriod = new Date(user.user_metadata?.trial_end || 0);
+      if (metadata && !metadata.paid) {
+        let trialEnd = user?.user_metadata?.trial_end;
+        if (metadata.tenant_id) {
+          try {
+            const { data: subData } = await supabase
+              .from("platform_subscriptions")
+              .select("trial_end")
+              .eq("tenant_id", metadata.tenant_id)
+              .maybeSingle();
+            if (subData?.trial_end) {
+              trialEnd = subData.trial_end;
+            }
+          } catch {
+            // trial_end lookup failed; fall through with default grace period
+          }
+        }
+
+        const gracePeriod = new Date(trialEnd || 0);
         const now = new Date();
         if (now > gracePeriod) {
           navigate("/subscribe", { replace: true });
@@ -179,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionUser = session?.user ?? null;
 
       setUser(sessionUser);
-      handleUserMetadata(sessionUser);
+      const metadata = await handleUserMetadata(sessionUser);
       setIsLoading(false);
 
       switch (event) {
@@ -190,10 +230,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             break;
           }
 
-          if (!sessionUser.user_metadata?.paid) {
-            const gracePeriod = new Date(
-              sessionUser.user_metadata?.trial_end || 0,
-            );
+          if (metadata && !metadata.paid) {
+            let trialEnd = sessionUser.user_metadata?.trial_end;
+            if (metadata.tenant_id) {
+              try {
+                const { data: subData } = await supabase
+                  .from("platform_subscriptions")
+                  .select("trial_end")
+                  .eq("tenant_id", metadata.tenant_id)
+                  .maybeSingle();
+                if (subData?.trial_end) {
+                  trialEnd = subData.trial_end;
+                }
+              } catch {
+                // trial_end lookup failed; fall through with default grace period
+              }
+            }
+            const gracePeriod = new Date(trialEnd || 0);
             const now = new Date();
             if (now > gracePeriod) {
               navigate("/subscribe");
@@ -201,7 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
           if (
-            sessionUser.user_metadata?.paid &&
+            metadata?.paid &&
             !sessionUser.user_metadata?.onboarding_completed
           ) {
             navigate("/onboarding");
@@ -218,7 +271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         case "USER_UPDATED":
           if (sessionUser) {
-            handleUserMetadata(sessionUser);
+            await handleUserMetadata(sessionUser);
           }
           break;
       }
@@ -234,6 +287,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
+        if (isLocalhost()) {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("mock_logged_in", "true");
+          }
+        }
         const { error } = await api.auth.signIn(email, password);
         if (error) throw error;
         toast.success("Successfully signed in!");
@@ -253,6 +311,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
+        if (isLocalhost()) {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("mock_logged_in", "true");
+          }
+        }
         const { error } = await api.auth.signUp(email, password, name);
         if (error) throw error;
         toast.success(
@@ -275,6 +338,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       if (isLocalhost()) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("mock_logged_in", "false");
+        }
         setUser(null);
         setUserMetadata(null);
         setTenantId(null);

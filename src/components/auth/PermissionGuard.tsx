@@ -40,8 +40,8 @@ interface PermissionGuardProps {
  * 
  * @example
  * ```tsx
- * <PermissionGuard requiredRole="manager">
- *   <ManagerDashboard />
+ * <PermissionGuard requiredRole="employee">
+ *   <EmployeeDashboard />
  * </PermissionGuard>
  * ```
  */
@@ -81,7 +81,7 @@ export default function PermissionGuard({
     );
   }
 
-  // Get user's role (default to staff if not set)
+  // Get user's role (default to trainer if not set)
   const userRole = (userMetadata.role || getDefaultRole()) as UserRole;
 
   // Check if user has required role

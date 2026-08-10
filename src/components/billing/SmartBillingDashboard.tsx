@@ -20,6 +20,8 @@ import {
 import toast from "react-hot-toast";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface SmartBillingDashboardProps {
   refreshKey: number;
@@ -47,6 +49,8 @@ interface RevenueGrowth {
 export default function SmartBillingDashboard({
   refreshKey,
 }: SmartBillingDashboardProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const { tenantId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<BillingMetrics>({
@@ -210,13 +214,13 @@ export default function SmartBillingDashboard({
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-500">Loading smart billing insights...</p>
+        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading smart billing insights...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Revenue Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
@@ -224,27 +228,27 @@ export default function SmartBillingDashboard({
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-xl flex-shrink-0">
               <FiDollarSign className="text-2xl" />
             </div>
-            <div className="text-right">
-              <div className="text-sm opacity-90">Total Revenue</div>
+            <div className="text-start">
+              <div className="text-sm opacity-90">{t("billing.totalRevenue", "إجمالي الإيرادات")}</div>
               <div className="text-2xl font-bold">
-                {metrics.totalRevenue.toFixed(0)} AED
+                {metrics.totalRevenue.toFixed(0)} د.ب
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {revenueGrowth.trend === "up" ? (
-              <FiArrowUp className="text-green-300" />
+              <FiArrowUp className="text-green-300 flex-shrink-0" />
             ) : revenueGrowth.trend === "down" ? (
-              <FiArrowDown className="text-red-300" />
+              <FiArrowDown className="text-red-300 flex-shrink-0" />
             ) : (
-              <FiActivity className="text-blue-300" />
+              <FiActivity className="text-blue-300 flex-shrink-0" />
             )}
             <span className="text-sm opacity-90">
-              {revenueGrowth.percentage.toFixed(1)}% from last month
+              {revenueGrowth.percentage.toFixed(1)}% {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
             </span>
           </div>
         </motion.div>
@@ -255,21 +259,21 @@ export default function SmartBillingDashboard({
           transition={{ delay: 0.1 }}
           className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-xl flex-shrink-0">
               <FiShield className="text-2xl" />
             </div>
-            <div className="text-right">
-              <div className="text-sm opacity-90">VAT Collected</div>
+            <div className="text-start">
+              <div className="text-sm opacity-90">{t("billing.vatCollected", "ضريبة القيمة المضافة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.vatCollected.toFixed(0)} AED
+                {metrics.vatCollected.toFixed(0)} د.ب
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <FiCheckCircle className="text-emerald-300" />
+            <FiCheckCircle className="text-emerald-300 flex-shrink-0" />
             <span className="text-sm opacity-90">
-              {metrics.vatCompliance.toFixed(0)}% compliance rate
+              {metrics.vatCompliance.toFixed(0)}% {t("billing.complianceRate", "نسبة الالتزام الضريبي")}
             </span>
           </div>
         </motion.div>
@@ -280,21 +284,21 @@ export default function SmartBillingDashboard({
           transition={{ delay: 0.2 }}
           className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-xl flex-shrink-0">
               <FiClock className="text-2xl" />
             </div>
-            <div className="text-right">
-              <div className="text-sm opacity-90">Outstanding</div>
+            <div className="text-start">
+              <div className="text-sm opacity-90">{t("billing.outstandingAmount", "المبالغ المعلقة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.outstandingAmount.toFixed(0)} AED
+                {metrics.outstandingAmount.toFixed(0)} د.ب
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <FiTarget className="text-orange-300" />
+            <FiTarget className="text-orange-300 flex-shrink-0" />
             <span className="text-sm opacity-90">
-              {metrics.collectionRate.toFixed(0)}% collection rate
+              {metrics.collectionRate.toFixed(0)}% {t("billing.collectionRate", "نسبة التحصيل")}
             </span>
           </div>
         </motion.div>
@@ -305,27 +309,27 @@ export default function SmartBillingDashboard({
           transition={{ delay: 0.3 }}
           className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-xl">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="bg-white bg-opacity-20 p-3 rounded-xl flex-shrink-0">
               <FiBarChart className="text-2xl" />
             </div>
-            <div className="text-right">
-              <div className="text-sm opacity-90">Avg Invoice</div>
+            <div className="text-start">
+              <div className="text-sm opacity-90">{t("billing.averageInvoice", "متوسط الفاتورة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.averageInvoiceValue.toFixed(0)} AED
+                {metrics.averageInvoiceValue.toFixed(0)} د.ب
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {revenueGrowth.trend === "up" ? (
-              <FiTrendingUp className="text-purple-300" />
+              <FiTrendingUp className="text-purple-300 flex-shrink-0" />
             ) : revenueGrowth.trend === "down" ? (
-              <FiTrendingDown className="text-purple-300" />
+              <FiTrendingDown className="text-purple-300 flex-shrink-0" />
             ) : (
-              <FiActivity className="text-purple-300" />
+              <FiActivity className="text-purple-300 flex-shrink-0" />
             )}
             <span className="text-sm opacity-90">
-              {revenueGrowth.percentage >= 0 ? "+" : ""}{revenueGrowth.percentage.toFixed(1)}% from last month
+              {revenueGrowth.percentage >= 0 ? "+" : ""}{revenueGrowth.percentage.toFixed(1)}% {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
             </span>
           </div>
         </motion.div>
@@ -336,31 +340,31 @@ export default function SmartBillingDashboard({
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-500 p-3 rounded-xl">
+            <div className="bg-blue-500 p-3 rounded-xl flex-shrink-0">
               <FiPieChart className="text-white text-xl" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">
-                Revenue Breakdown
+            <div className="text-start">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {t("billing.revenueBreakdown", "توزيع الإيرادات")}
               </h3>
-              <p className="text-gray-600 text-sm">By service type</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{t("billing.byServiceType", "حسب نوع الخدمة")}</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">Memberships</span>
+                <div className="w-4 h-4 bg-blue-500 rounded-full flex-shrink-0"></div>
+                <span className="font-medium text-gray-900 dark:text-white">{t("billing.memberships", "اشتراكات العضوية")}</span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-900">
-                  {metrics.membershipRevenue.toFixed(0)} AED
+              <div className="text-start">
+                <div className="font-bold text-gray-900 dark:text-white">
+                  {metrics.membershipRevenue.toFixed(0)} د.ب
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
                     ? (
                         (metrics.membershipRevenue / metrics.totalRevenue) *
@@ -372,16 +376,16 @@ export default function SmartBillingDashboard({
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">Classes</span>
+                <div className="w-4 h-4 bg-green-500 rounded-full flex-shrink-0"></div>
+                <span className="font-medium text-gray-900 dark:text-white">{t("billing.classes", "الحصص الجماعية")}</span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-900">
-                  {metrics.classRevenue.toFixed(0)} AED
+              <div className="text-start">
+                <div className="font-bold text-gray-900 dark:text-white">
+                  {metrics.classRevenue.toFixed(0)} د.ب
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
                     ? (
                         (metrics.classRevenue / metrics.totalRevenue) *
@@ -393,18 +397,18 @@ export default function SmartBillingDashboard({
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                <span className="font-medium text-gray-900">
-                  Personal Training
+                <div className="w-4 h-4 bg-purple-500 rounded-full flex-shrink-0"></div>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {t("billing.personalTraining", "التدريب الشخصي")}
                 </span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-gray-900">
-                  {metrics.ptRevenue.toFixed(0)} AED
+              <div className="text-start">
+                <div className="font-bold text-gray-900 dark:text-white">
+                  {metrics.ptRevenue.toFixed(0)} د.ب
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
                     ? (
                         (metrics.ptRevenue / metrics.totalRevenue) *
@@ -421,57 +425,57 @@ export default function SmartBillingDashboard({
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-emerald-500 p-3 rounded-xl">
+            <div className="bg-emerald-500 p-3 rounded-xl flex-shrink-0">
               <FiGlobe className="text-white text-xl" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">
-                GCC VAT Compliance
+            <div className="text-start">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {t("billing.gccVatCompliance", "الامتثال الضريبي للخليج")}
               </h3>
-              <p className="text-gray-600 text-sm">Regional tax management</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{t("billing.regionalTaxManagement", "إدارة الضرائب الإقليمية")}</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <FiCheckCircle className="text-emerald-600" />
-                <span className="font-medium text-gray-900">UAE VAT (5%)</span>
+                <FiCheckCircle className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                <span className="font-medium text-gray-900 dark:text-white">{t("billing.bahrainVat", "ضريبة القيمة المضافة (10%)")}</span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-emerald-600">Compliant</div>
-                <div className="text-sm text-gray-500">
-                  Last filed: Dec 2024
+              <div className="text-start">
+                <div className="font-bold text-emerald-600 dark:text-emerald-400">{t("billing.compliant", "ملتزم")}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("billing.lastFiled", "آخر تقديم: ديسمبر 2024")}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <FiClock className="text-blue-600" />
-                <span className="font-medium text-gray-900">
-                  Next Return Due
+                <FiClock className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {t("billing.nextReturnDue", "موعد الإقرار القادم")}
                 </span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-blue-600">15 Days</div>
-                <div className="text-sm text-gray-500">Q1 2025 Return</div>
+              <div className="text-start">
+                <div className="font-bold text-blue-600 dark:text-blue-400">15 {t("billing.days", "يوماً")}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{t("billing.q1Return", "إقرار الربع الأول 2025")}</div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
               <div className="flex items-center gap-3">
-                <FiAlertCircle className="text-yellow-600" />
-                <span className="font-medium text-gray-900">VAT Payable</span>
+                <FiAlertCircle className="text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                <span className="font-medium text-gray-900 dark:text-white">{t("billing.vatPayable", "الضريبة المستحقة")}</span>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-yellow-600">
-                  {(metrics.vatCollected * 0.8).toFixed(0)} AED
+              <div className="text-start">
+                <div className="font-bold text-yellow-600 dark:text-yellow-400">
+                  {(metrics.vatCollected * 0.8).toFixed(0)} د.ب
                 </div>
-                <div className="text-sm text-gray-500">Estimated payment</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{t("billing.estimatedPayment", "دفعة مقدرة")}</div>
               </div>
             </div>
           </div>
@@ -482,57 +486,57 @@ export default function SmartBillingDashboard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200"
+        className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-indigo-200 dark:border-indigo-800"
       >
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-indigo-500 p-3 rounded-xl">
             <FiZap className="text-white text-xl" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               Smart Billing Insights
             </h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Smart-powered recommendations for your gym
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-indigo-200 dark:border-indigo-700">
             <div className="flex items-center gap-2 mb-2">
-              <FiTrendingUp className="text-green-600" />
-              <span className="text-sm font-medium text-gray-900">
+              <FiTrendingUp className="text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
                 Revenue Opportunity
               </span>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               Consider introducing premium class packages. Analysis shows 23% of
               members would upgrade.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-indigo-200 dark:border-indigo-700">
             <div className="flex items-center gap-2 mb-2">
-              <FiTarget className="text-blue-600" />
-              <span className="text-sm font-medium text-gray-900">
+              <FiTarget className="text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
                 Collection Optimization
               </span>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               Automated payment reminders could improve collection rate by 15%
               based on industry data.
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-indigo-200">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-indigo-200 dark:border-indigo-700">
             <div className="flex items-center gap-2 mb-2">
-              <FiShield className="text-emerald-600" />
-              <span className="text-sm font-medium text-gray-900">
+              <FiShield className="text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
                 VAT Optimization
               </span>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               Your VAT compliance is excellent. Consider automating quarterly
               returns for efficiency.
             </p>

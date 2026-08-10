@@ -1,20 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiTarget,
-  FiHeart,
-  FiFileText,
-} from "react-icons/fi";
+import React, { useState } from "react";
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { supabase } from "../../supabaseClient";
-import toast from "react-hot-toast";
 
 interface Props {
   isOpen: boolean;
@@ -67,38 +55,6 @@ export default function TrainerFormModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [specialtyInput, setSpecialtyInput] = useState("");
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleAddSpecialty = () => {
-    if (
-      specialtyInput.trim() &&
-      !formData.specialties.includes(specialtyInput.trim())
-    ) {
-      setFormData({
-        ...formData,
-        specialties: [...formData.specialties, specialtyInput.trim()],
-      });
-      setSpecialtyInput("");
-    }
-  };
-
-  const handleRemoveSpecialty = (specialty: string) => {
-    setFormData({
-      ...formData,
-      specialties: formData.specialties.filter((s: string) => s !== specialty),
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

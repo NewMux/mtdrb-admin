@@ -247,24 +247,13 @@ const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
   );
 };
 
-// Using real data from Supabase - no mock data
-const getAttendanceTrend = async () => {
-  // TODO: Fetch from Supabase analytics
-  return [];
-};
-
-const getAssistantSuggestions = async () => {
-  // TODO: Fetch from smart suggestions service
-  return [];
-};
-
 export default function Insights({
-  classes,
-  bookings,
+  classes = [],
+  bookings = [],
 }: {
-  classes: InsightClass[];
-  bookings: InsightBooking[];
-}) {
+  classes?: InsightClass[];
+  bookings?: InsightBooking[];
+} = {}) {
   const {
     totalBookings,
     fillRate,

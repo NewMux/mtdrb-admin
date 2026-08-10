@@ -12,6 +12,7 @@ export const PROTECTED_ROUTES = [
   "/dashboard/settings",
   "/dashboard/plans",
   "/dashboard/tasks",
+  "/dashboard/branches",
   "/dashboard/notifications",
   "/dashboard/profile",
   // Legacy routes (will redirect)
@@ -24,6 +25,7 @@ export const PROTECTED_ROUTES = [
   "/settings",
   "/plans",
   "/tasks",
+  "/branches",
   "/profile",
 ];
 
@@ -286,6 +288,7 @@ class RoutePreservationManager {
 
   // Update URL without page reload
   updateURL(path: string, state: Partial<RouteState>): void {
+    void state;
     const currentURL = new URL(window.location.href);
     const newURL = this.encodeStateToURL(path, `${currentURL.origin}${path}`);
 
@@ -319,7 +322,7 @@ class RoutePreservationManager {
   // Enhanced browser navigation support
   setupBrowserNavigation(): void {
     // Handle browser back/forward buttons
-    window.addEventListener("popstate", (event) => {
+    window.addEventListener("popstate", () => {
       const path = window.location.pathname;
       const state = this.initializeFromURL(path);
 

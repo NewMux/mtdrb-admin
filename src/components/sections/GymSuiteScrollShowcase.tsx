@@ -160,7 +160,7 @@ const Panel: React.FC<PanelProps> = ({ title, subtitle, index }) => {
                   {/* Header */}
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">Dashboard</h3>
-                    <p className="text-sm text-gray-600">Welcome back, here's what's happening with your gym today.</p>
+                    <p className="text-sm text-gray-600">Welcome back, here&apos;s what&apos;s happening with your gym today.</p>
                   </div>
                   
                   {/* Search bar */}
@@ -244,7 +244,7 @@ const Panel: React.FC<PanelProps> = ({ title, subtitle, index }) => {
 };
 
 const GymSuiteScrollShowcase: React.FC = () => {
-  const [currentPanel, setCurrentPanel] = useState(0);
+  const [, setCurrentPanel] = useState(0);
 
   const panels = [
     {

@@ -27,6 +27,8 @@ export interface GymSettings {
   stripe_payments?: boolean;
   slack_notifications?: boolean;
   webhook_url?: string;
+  vat_enabled?: boolean;
+  vat_rate?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -152,6 +154,8 @@ export const createDefaultSettings = async (
       stripe_payments: true,
       slack_notifications: false,
       webhook_url: "",
+      vat_enabled: true,
+      vat_rate: 5.0,
     };
 
     const { data, error } = await supabase
