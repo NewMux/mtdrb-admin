@@ -15,7 +15,7 @@ import { useRTL } from "../../../hooks/useRTL";
 interface ImportMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (fileData: any) => Promise<void>;
+  onSuccess: (fileData: ImportedMember[]) => Promise<void>;
   loading?: boolean;
   modalRef?: React.RefObject<HTMLDivElement>;
 }
@@ -70,7 +70,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
       for (let i = 1; i < lines.length; i++) {
         if (lines[i].trim()) {
           const values = lines[i].split(",").map((v) => v.trim());
-          const row: any = {};
+          const row: Record<string, string> = {};
 
           headers.forEach((header, index) => {
             row[header] = values[index] || "";

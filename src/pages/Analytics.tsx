@@ -11,6 +11,7 @@ import {
   FiTarget,
   FiCheckCircle,
 } from "react-icons/fi";
+import type { IconType } from "react-icons";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
@@ -126,6 +127,26 @@ import {
 import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 
+type AnalyticsView =
+  | "overview"
+  | "members"
+  | "revenue"
+  | "classes"
+  | "insights"
+  | "generator"
+  | "scheduled"
+  | "automation";
+
+const ANALYTICS_URL_TABS: readonly AnalyticsView[] = [
+  "overview",
+  "members",
+  "revenue",
+  "classes",
+  "insights",
+  "generator",
+  "scheduled",
+];
+
 export default function Analytics() {
   usePageThemeContext();
   const { user, isLoading: authLoading, userMetadata } = useAuth();
@@ -135,16 +156,7 @@ export default function Analytics() {
 
   // Track loading state
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<
-    | "overview"
-    | "members"
-    | "revenue"
-    | "classes"
-    | "insights"
-    | "generator"
-    | "scheduled"
-    | "automation"
-  >("overview");
+  const [activeView, setActiveView] = useState<AnalyticsView>("overview");
   const [insights, setInsights] = useState<SmartInsight[]>([]);
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
@@ -195,7 +207,7 @@ export default function Analytics() {
 
   const isPro = userMetadata?.subscription_tier === "premium" || userMetadata?.subscription_tier === "enterprise";
 
-  const tabs = React.useMemo(() => [
+  const tabs: { id: AnalyticsView; name: string; icon: IconType }[] = React.useMemo(() => [
     { id: "overview", name: t("analytics.overview"), icon: FiBarChart2 },
     { id: "members", name: t("analytics.members"), icon: FiUsers },
     { id: "revenue", name: t("analytics.revenue"), icon: FiDollarSign },
@@ -761,32 +773,44 @@ export default function Analytics() {
           net: vatCollected - vatRefunded,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching analytics data:", error);
-      
+
+      // Narrow the unknown error to the Postgrest-style shape we expect
+      const errObj =
+        error && typeof error === "object"
+          ? (error as Record<string, unknown>)
+          : {};
+      const errCode = typeof errObj.code === "string" ? errObj.code : undefined;
+      const errMessageProp =
+        typeof errObj.message === "string" ? errObj.message : undefined;
+      const errDetails =
+        typeof errObj.details === "string" ? errObj.details : undefined;
+      const errHint = typeof errObj.hint === "string" ? errObj.hint : undefined;
+
       // Provide more specific error messages
       let errorMessage = "Failed to load analytics data";
-      
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.code === "PGRST116" || error?.message?.includes("relation") || error?.message?.includes("does not exist")) {
+
+      if (errMessageProp) {
+        errorMessage = errMessageProp;
+      } else if (errCode === "PGRST116" || errMessageProp?.includes("relation") || errMessageProp?.includes("does not exist")) {
         errorMessage = "One or more required database tables are missing. Please check your database schema.";
-      } else if (error?.code === "42501" || error?.message?.includes("permission denied") || error?.message?.includes("row-level security")) {
+      } else if (errCode === "42501" || errMessageProp?.includes("permission denied") || errMessageProp?.includes("row-level security")) {
         errorMessage = "Permission denied. Please check your Row Level Security policies.";
-      } else if (error?.code === "42883" || (error?.message?.includes("function") && error?.message?.includes("does not exist"))) {
+      } else if (errCode === "42883" || (errMessageProp?.includes("function") && errMessageProp?.includes("does not exist"))) {
         errorMessage = "Database function missing. Please ensure get_user_tenant_id() function exists.";
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       console.error("Analytics error details:", {
         message: errorMessage,
-        code: error?.code,
-        details: error?.details,
-        hint: error?.hint,
+        code: errCode,
+        details: errDetails,
+        hint: errHint,
         fullError: error,
       });
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -829,19 +853,8 @@ export default function Analytics() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get("tab");
-    if (
-      tabParam &&
-      [
-        "overview",
-        "members",
-        "revenue",
-        "classes",
-        "insights",
-        "generator",
-        "scheduled",
-      ].includes(tabParam)
-    ) {
-      setActiveView(tabParam as any);
+    if (tabParam && ANALYTICS_URL_TABS.includes(tabParam as AnalyticsView)) {
+      setActiveView(tabParam as AnalyticsView);
     }
   }, []);
 
@@ -1350,7 +1363,7 @@ export default function Analytics() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
+              onClick={() => setActiveView(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeView === tab.id
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"

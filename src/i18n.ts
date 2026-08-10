@@ -2942,7 +2942,9 @@ const getInitialLanguage = (): string => {
   }
   
   // Fallback to browser language detection
-  const browserLang = navigator.language || (navigator as any).userLanguage;
+  const browserLang =
+    navigator.language ||
+    (navigator as Navigator & { userLanguage?: string }).userLanguage;
   if (browserLang && browserLang.startsWith("ar")) {
     return "ar";
   }

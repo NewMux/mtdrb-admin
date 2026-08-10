@@ -21,6 +21,7 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
+import { Member } from "../../../types/member";
 import dayjs from "dayjs";
 import {
   Chart as ChartJS,
@@ -863,11 +864,29 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
 };
 
 // Main Analytics Tab Component
+interface AnalyticsTabStats {
+  total: number;
+  active: number;
+  inactive: number;
+  newThisMonth: number;
+}
+
 interface AnalyticsTabProps {
-  members: any[];
-  stats: any;
-  onFilterMembers?: (filter: any) => void;
+  members?: Member[];
+  stats?: AnalyticsTabStats;
+  // TODO: shape of the filter payload is not determined by this file; the
+  // current caller passes a no-arg callback, so this is left as unknown.
+  onFilterMembers?: (filter: unknown) => void;
   refreshKey?: number;
+}
+
+// Local shape of the JSON `metadata` column on the members table, as
+// consumed within this file (gender, age, last check-in, referrals).
+interface MemberMetadata {
+  gender?: string;
+  age?: number;
+  last_check_in?: string;
+  referrals?: unknown[];
 }
 
 interface AnalyticsData {
@@ -1051,11 +1070,11 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       allMembers.forEach((member) => {
         // Gender from metadata
-        const gender = (member.metadata as any)?.gender || "Other";
+        const gender = (member.metadata as MemberMetadata | null)?.gender || "Other";
         genderCounts.set(gender, (genderCounts.get(gender) || 0) + 1);
 
         // Age from metadata or calculate from join_date
-        const age = (member.metadata as any)?.age;
+        const age = (member.metadata as MemberMetadata | null)?.age;
         if (age) {
           if (age >= 18 && age <= 24) ageRanges["18-24"]++;
           else if (age >= 25 && age <= 34) ageRanges["25-34"]++;
@@ -1092,7 +1111,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       const fourteenDaysAgo = now.subtract(14, "days");
       const inactiveMembers = allMembers.filter((m) => {
         if (m.status === "inactive") return true;
-        const lastCheckIn = (m.metadata as any)?.last_check_in;
+        const lastCheckIn = (m.metadata as MemberMetadata | null)?.last_check_in;
         if (lastCheckIn && dayjs(lastCheckIn).isBefore(fourteenDaysAgo)) return true;
         return false;
       }).length;
@@ -1109,7 +1128,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       // Referral active (from metadata)
       const referralActive = allMembers.filter((m) => {
-        const referrals = (m.metadata as any)?.referrals || [];
+        const referrals = (m.metadata as MemberMetadata | null)?.referrals || [];
         return referrals.length > 0;
       }).length;
 
@@ -1211,7 +1230,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [user, contextTenantId]);
+  }, [user, contextTenantId, t]);
 
   useEffect(() => {
     fetchAnalyticsData();

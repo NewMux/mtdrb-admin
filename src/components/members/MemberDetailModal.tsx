@@ -51,11 +51,11 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
   member,
   onEdit,
 }) => {
-  const [activeTab, setActiveTab] = useState<
-    "profile" | "attendance" | "billing" | "documents"
-  >("profile");
+  type MemberDetailTab = "profile" | "attendance" | "billing" | "documents";
 
-  const tabs = [
+  const [activeTab, setActiveTab] = useState<MemberDetailTab>("profile");
+
+  const tabs: { id: MemberDetailTab; label: string; icon: typeof FiUser }[] = [
     { id: "profile", label: "Profile", icon: FiUser },
     { id: "attendance", label: "Attendance", icon: FiActivity },
     { id: "billing", label: "Billing", icon: FiDollarSign },
@@ -668,7 +668,7 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"

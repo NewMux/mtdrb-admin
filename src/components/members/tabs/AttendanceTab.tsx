@@ -1,9 +1,9 @@
 import React from "react";
 
 interface AttendanceTabProps {
-  history?: any[];
-  classBreakdown?: any;
-  calendar?: any;
+  history?: unknown[];
+  classBreakdown?: unknown;
+  calendar?: unknown;
   aiFlags?: string[];
 }
 

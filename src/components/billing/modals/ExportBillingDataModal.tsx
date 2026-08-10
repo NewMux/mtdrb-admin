@@ -12,11 +12,55 @@ import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { useSmartBillingModal } from "./useSmartBillingModal";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
+import type { Database } from "../../../types/supabase";
 
 interface ExportBillingDataModalProps {
   open: boolean;
   onClose: () => void;
 }
+
+type MemberJoin = Pick<
+  Database["public"]["Tables"]["members"]["Row"],
+  "id" | "first_name" | "last_name" | "email"
+>;
+
+// `invoice_number` isn't part of the generated invoices Row type, but the
+// live table has this column and the query below selects `*`.
+type InvoiceWithMember = Database["public"]["Tables"]["invoices"]["Row"] & {
+  invoice_number?: string;
+  member: MemberJoin | null;
+};
+
+type ExpenseRow = Database["public"]["Tables"]["expenses"]["Row"];
+
+// This query selects vat_rate/vat_amount, neither of which is present on the
+// generated invoices Row type (which only models vat_total) - describing the
+// exact shape the query returns rather than forcing a mismatched Pick<>.
+interface VatInvoiceRow {
+  id: string;
+  amount: number | null;
+  created_at: string | null;
+  vat_rate?: number | null;
+  vat_amount?: number | null;
+}
+
+// This query selects invoice_number/paid_at, neither of which is present on
+// the generated invoices Row type (which only models paid_date).
+interface PaymentInvoiceRow {
+  id: string;
+  invoice_number?: string;
+  amount: number | null;
+  status: string | null;
+  paid_at?: string | null;
+  payment_method?: string | null;
+  created_at: string | null;
+  member: MemberJoin | null;
+}
+
+// The exported rows differ per data type but are always a flat map of
+// column-label -> primitive value, matching what exportCSV/exportExcel/
+// exportJSON expect.
+type ExportRow = Record<string, string | number>;
 
 const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
   open,
@@ -95,10 +139,10 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
     setIsLoading(true);
 
     try {
-      const exportData: any[] = [];
+      const exportData: ExportRow[] = [];
 
       // Build date filter
-      let dateFilter: any = {};
+      const dateFilter: { gte?: string; lte?: string } = {};
       if (startDate) {
         dateFilter.gte = startDate;
       }
@@ -135,7 +179,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
 
         if (invoicesError) throw invoicesError;
 
-        const invoiceData = (invoices || []).map((inv: any) => ({
+        const invoiceData = ((invoices as InvoiceWithMember[] | null) || []).map((inv) => ({
           Type: "Invoice",
           "Invoice Number": inv.invoice_number || inv.id,
           "Member Name": inv.member
@@ -176,7 +220,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
 
         if (expensesError) throw expensesError;
 
-        const expenseData = (expenses || []).map((exp: any) => ({
+        const expenseData = ((expenses as ExpenseRow[] | null) || []).map((exp) => ({
           Type: "Expense",
           Category: exp.category || "Other",
           Description: exp.description || "",
@@ -213,7 +257,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
 
         if (vatError) throw vatError;
 
-        const vatExportData = (vatData || []).map((vat: any) => ({
+        const vatExportData = ((vatData as VatInvoiceRow[] | null) || []).map((vat) => ({
           Type: "VAT",
           "Invoice ID": vat.id,
           "Subtotal": (vat.amount || 0) - (vat.vat_amount || 0),
@@ -261,7 +305,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
 
         if (paymentsError) throw paymentsError;
 
-        const paymentData = (payments || []).map((pay: any) => ({
+        const paymentData = ((payments as unknown as PaymentInvoiceRow[] | null) || []).map((pay) => ({
           Type: "Payment",
           "Invoice Number": pay.invoice_number || pay.id,
           "Member Name": pay.member

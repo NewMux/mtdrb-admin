@@ -1,4 +1,7 @@
-import AnalyticsFunctionalTest from "./analytics-functional-test";
+import AnalyticsFunctionalTest, {
+  type TestResult,
+  type TestSuite,
+} from "./analytics-functional-test";
 
 // Test Runner for Analytics Dashboard
 class AnalyticsTestRunner {
@@ -40,31 +43,31 @@ class AnalyticsTestRunner {
     }
   }
 
-  private generateRecommendations(results: any) {
+  private generateRecommendations(results: TestSuite) {
 
-    const failedTests = results.tests.filter((t: any) => t.status === "FAIL");
+    const failedTests = results.tests.filter((t: TestResult) => t.status === "FAIL");
     const warningTests = results.tests.filter(
-      (t: any) => t.status === "WARNING",
+      (t: TestResult) => t.status === "WARNING",
     );
 
     if (failedTests.length > 0) {
-      failedTests.forEach((test: any) => {
+      failedTests.forEach((test: TestResult) => {
         console.log(`Failed: ${test.component} - ${test.test}`);
       });
     }
 
     if (warningTests.length > 0) {
-      warningTests.forEach((test: any) => {
+      warningTests.forEach((test: TestResult) => {
         console.log(`Warning: ${test.component} - ${test.test}`);
       });
     }
 
     // Performance recommendations
     const slowTests = results.tests.filter(
-      (t: any) => t.performance && t.performance > 1000,
+      (t: TestResult) => t.performance && t.performance > 1000,
     );
     if (slowTests.length > 0) {
-      slowTests.forEach((test: any) => {
+      slowTests.forEach((test: TestResult) => {
         console.log(
           `• ${test.component}: ${test.test} - ${test.performance?.toFixed(2)}ms (should be < 1000ms)`
         );
@@ -74,7 +77,7 @@ class AnalyticsTestRunner {
 }
 
 // Export for use in browser console
-(window as any).runAnalyticsTests = async () => {
+(window as Window & { runAnalyticsTests?: () => Promise<TestSuite> }).runAnalyticsTests = async () => {
   const runner = new AnalyticsTestRunner();
   return await runner.runTests();
 };

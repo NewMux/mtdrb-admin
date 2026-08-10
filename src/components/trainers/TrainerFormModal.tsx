@@ -4,11 +4,29 @@ import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { supabase } from "../../supabaseClient";
 
+interface TrainerFormInitialValues {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  status?: "active" | "inactive" | "busy" | "available";
+  specialties?: string[];
+  bio?: string;
+  profile_image_url?: string;
+  address?: string;
+  specialization?: string;
+  experience?: number;
+  certifications?: string;
+  hourly_rate?: number;
+  start_date?: string;
+  notes?: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  initialValues?: any;
+  initialValues?: TrainerFormInitialValues;
   isEdit?: boolean;
 }
 
@@ -66,7 +84,7 @@ export default function TrainerFormModal({
         const { error } = await supabase
           .from("trainers")
           .update(formData)
-          .eq("id", initialValues.id);
+          .eq("id", initialValues?.id);
 
         if (error) throw error;
       } else {
@@ -77,8 +95,8 @@ export default function TrainerFormModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

@@ -361,11 +361,11 @@ export interface AutomationWorkflow {
   type: "member" | "trainer" | "class" | "billing";
   trigger: {
     event: string;
-    conditions: Record<string, any>;
+    conditions: Record<string, unknown>;
   };
   actions: {
     type: string;
-    params: Record<string, any>;
+    params: Record<string, unknown>;
   }[];
   status: "active" | "paused" | "draft";
   created_at: string;
@@ -480,7 +480,7 @@ export interface UserProfile {
   last_name: string;
   phone?: string;
   avatar_url?: string;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }

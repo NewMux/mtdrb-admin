@@ -81,9 +81,12 @@ const Tasks: React.FC = () => {
             .eq("tenant_id", tenantId);
           taskData = result.data;
           taskError = result.error;
-        } catch (err: any) {
+        } catch (err: unknown) {
           // Table might not exist
-          if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
+          const errObj = err && typeof err === "object" ? (err as Record<string, unknown>) : {};
+          const errCode = typeof errObj.code === "string" ? errObj.code : undefined;
+          const errMessage = typeof errObj.message === "string" ? errObj.message : undefined;
+          if (errCode === "PGRST116" || errMessage?.includes("relation") || errMessage?.includes("does not exist")) {
             console.warn("member_tasks table does not exist");
             setTaskStats({ total: 0, pending: 0, inProgress: 0, completed: 0 });
             setFilters([

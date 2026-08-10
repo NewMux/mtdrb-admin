@@ -2,7 +2,7 @@ import React from "react";
 
 interface ProgressGoalsTabProps {
   goal: string;
-  progress: any;
+  progress: unknown;
   trainerNotes: string;
   onNotesChange: (notes: string) => void;
   upgradeSuggestion: string;

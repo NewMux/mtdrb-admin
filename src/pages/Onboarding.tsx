@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
+import type { User } from "@supabase/supabase-js";
 import { 
   FiHome, 
   FiMapPin, 
@@ -13,13 +14,68 @@ import {
   FiArrowLeft,
 } from "react-icons/fi";
 
+// Pull a human-readable message out of an unknown thrown value, checking the
+// common shapes Supabase errors can take (message, nested error.message, code).
+function extractErrorMessage(err: unknown): string | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const errObj = err as Record<string, unknown>;
+  if (typeof errObj.message === "string" && errObj.message) {
+    return errObj.message;
+  }
+  if (errObj.error && typeof errObj.error === "object") {
+    const nested = errObj.error as Record<string, unknown>;
+    if (typeof nested.message === "string" && nested.message) {
+      return nested.message;
+    }
+  }
+  if (typeof errObj.code === "string" && errObj.code) {
+    return errObj.code;
+  }
+  return undefined;
+}
+
+interface OnboardingFormData {
+  // Step 1: Gym Info
+  gymName: string;
+  country: string;
+  language: string;
+  vatEnabled: boolean;
+  vatNumber: string;
+  currency: string;
+  timezone: string;
+
+  // Step 2: Branch Setup
+  branchName: string;
+  branchAddress: string;
+  branchPhone: string;
+  branchEmail: string;
+  operatingHours: Record<
+    "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday",
+    { open: string; close: string; closed: boolean }
+  >;
+
+  // Step 3: Staff Setup
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  trainerName: string;
+  trainerEmail: string;
+  trainerPhone: string;
+  trainerSpecialization: string;
+
+  // Step 4: Branding
+  logo: File | null;
+}
+
+type SetOnboardingFormData = React.Dispatch<React.SetStateAction<OnboardingFormData>>;
+
 // ===== ONBOARDING WIZARD =====
 export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Form data
   const [formData, setFormData] = useState({
@@ -360,9 +416,9 @@ export default function Onboarding() {
         } 
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (import.meta.env.DEV) console.error("Onboarding completion error:", err);
-      const errorMessage = err.message || err.error?.message || err.code || "Failed to complete onboarding";
+      const errorMessage = extractErrorMessage(err) || "Failed to complete onboarding";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -383,8 +439,8 @@ export default function Onboarding() {
           message: "Welcome to MTDRB! You can complete your setup later in settings." 
         } 
       });
-    } catch (err: any) {
-      setError(err.message || "Failed to skip onboarding");
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err) || "Failed to skip onboarding");
     } finally {
       setLoading(false);
     }
@@ -546,7 +602,7 @@ export default function Onboarding() {
 
 // ===== STEP COMPONENTS =====
 
-function GymInfoStep({ formData, setFormData }: { formData: any; setFormData: any }) {
+function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
   const countries = [
     "Saudi Arabia", "UAE", "Bahrain", "Kuwait", "Oman", "Qatar", "Egypt", "Jordan", "Lebanon"
   ];
@@ -656,7 +712,7 @@ function GymInfoStep({ formData, setFormData }: { formData: any; setFormData: an
   );
 }
 
-function BranchSetupStep({ formData, setFormData }: { formData: any; setFormData: any }) {
+function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -716,7 +772,7 @@ function BranchSetupStep({ formData, setFormData }: { formData: any; setFormData
       <div className="border-t pt-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Operating Hours</h3>
         <div className="space-y-3">
-          {Object.entries(formData.operatingHours).map(([day, hours]: [string, any]) => (
+          {Object.entries(formData.operatingHours).map(([day, hours]) => (
             <div key={day} className="flex items-center space-x-4">
               <div className="w-24 text-sm font-medium text-gray-700 capitalize">
                 {day}
@@ -773,7 +829,7 @@ function BranchSetupStep({ formData, setFormData }: { formData: any; setFormData
   );
 }
 
-function StaffSetupStep({ formData, setFormData }: { formData: any; setFormData: any }) {
+function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
   const specializations = [
     "General Fitness", "Weight Training", "Cardio", "Yoga", "Pilates", 
     "CrossFit", "Swimming", "Martial Arts", "Nutrition", "Rehabilitation"
@@ -889,7 +945,7 @@ function StaffSetupStep({ formData, setFormData }: { formData: any; setFormData:
   );
 }
 
-function BrandingStep({ formData, setFormData }: { formData: any; setFormData: any }) {
+function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {

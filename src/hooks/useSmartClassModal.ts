@@ -3,6 +3,13 @@ import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 // Removed mock data - using real data from Supabase
 
+interface ClassConflict {
+  id: string;
+  start_time: string;
+  end_time: string;
+  trainer_id: string;
+}
+
 export interface SmartClass {
   id: string;
   name: string;
@@ -24,6 +31,7 @@ export interface SmartClass {
   updated_at: string;
   price?: number;
   cost?: number;
+  color?: string;
 }
 
 export interface SmartTrainer {
@@ -31,7 +39,7 @@ export interface SmartTrainer {
   name: string;
   email: string;
   specialties: string[];
-  availability: any[];
+  availability: unknown[];
 }
 
 export interface SmartRoom {
@@ -88,7 +96,7 @@ export interface UseSmartClassModalReturn {
   loading: boolean;
   errors: ValidationError[];
   recommendations: SmartRecommendation[];
-  conflicts: any[];
+  conflicts: ClassConflict[];
   isValid: boolean;
   activeModal: ModalType;
   selectedClass: SmartClass | null;
@@ -104,7 +112,7 @@ export interface UseSmartClassModalReturn {
     excludeClassId?: string,
   ) => Promise<boolean>;
   validateForm: (formData: Partial<SmartClass>) => boolean;
-  validateField: (field: string, value: any) => ValidationError | null;
+  validateField: (field: string, value: unknown) => ValidationError | null;
   saveClass: (classData: Partial<SmartClass>) => Promise<boolean>;
   deleteClass: () => Promise<boolean>;
   generateRecommendations: (classData?: Partial<SmartClass>) => Promise<void>;
@@ -126,7 +134,7 @@ export const useSmartClassModal = ({
   const [recommendations, setRecommendations] = useState<SmartRecommendation[]>(
     [],
   );
-  const [conflicts, setConflicts] = useState<any[]>([]);
+  const [conflicts, setConflicts] = useState<ClassConflict[]>([]);
   const [isValid, setIsValid] = useState(false);
 
   // Modal state management
@@ -235,7 +243,7 @@ export const useSmartClassModal = ({
 
         if (error) throw error;
 
-        const trainers: SmartTrainer[] = (data || []).map((t: any) => ({
+        const trainers: SmartTrainer[] = (data || []).map((t) => ({
           id: t.id,
           name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email,
           email: t.email,
@@ -405,10 +413,10 @@ export const useSmartClassModal = ({
   }, [isPro]);
 
   // Validate individual field
-  const validateField = useCallback((field: string, value: any): ValidationError | null => {
+  const validateField = useCallback((field: string, value: unknown): ValidationError | null => {
     switch (field) {
       case "name":
-        if (!value || value.trim().length < 2) {
+        if (!value || (typeof value === "string" && value.trim().length < 2)) {
           return { field, message: "Class name must be at least 2 characters" };
         }
         break;
@@ -438,7 +446,7 @@ export const useSmartClassModal = ({
         }
         break;
       case "capacity":
-        if (!value || value < 1) {
+        if (!value || (typeof value === "number" && value < 1)) {
           return { field, message: "Capacity must be at least 1" };
         }
         break;
@@ -511,7 +519,7 @@ export const useSmartClassModal = ({
         room: classData.room_id || null,
         location: classData.room_id || null,
         recurrence_rule: classData.recurrence || "none",
-        color: (classData as any).color || "#0071E3",
+        color: classData.color || "#0071E3",
       };
 
       if (classId) {
@@ -631,7 +639,7 @@ export const useSmartClassModal = ({
     if (classId) {
       fetchClass();
     }
-  }, [classId]);
+  }, [classId, fetchTrainers, fetchRooms, fetchClass]);
 
   return {
     // Existing data and functions

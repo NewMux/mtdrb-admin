@@ -1,7 +1,7 @@
 // Analytics Dashboard Functional Test Suite
 // Tests all interactive elements and edge cases
 
-interface TestResult {
+export interface TestResult {
   component: string;
   test: string;
   status: "PASS" | "FAIL" | "WARNING";
@@ -9,7 +9,7 @@ interface TestResult {
   performance?: number; // ms
 }
 
-interface TestSuite {
+export interface TestSuite {
   name: string;
   tests: TestResult[];
   summary: {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiDollarSign, FiPlus, FiDownload } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 
@@ -59,12 +59,6 @@ export default function TrainerPayments() {
     fetchTrainers();
   }, []);
 
-  useEffect(() => {
-    if (selectedTrainer) {
-      fetchPayments();
-    }
-  }, [selectedTrainer, dateRange, paymentType]);
-
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
@@ -79,12 +73,12 @@ export default function TrainerPayments() {
       if (data?.[0]) {
         setSelectedTrainer(data[0].id);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -124,12 +118,18 @@ export default function TrainerPayments() {
 
       setPayments(data || []);
       calculateSummary(data || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTrainer, dateRange, paymentType]);
+
+  useEffect(() => {
+    if (selectedTrainer) {
+      fetchPayments();
+    }
+  }, [selectedTrainer, dateRange, paymentType, fetchPayments]);
 
   const calculateSummary = (payments: Payment[]) => {
     const summary: PaymentSummary = {
@@ -225,7 +225,9 @@ export default function TrainerPayments() {
 
           <select
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as any)}
+            onChange={(e) =>
+              setDateRange(e.target.value as "1m" | "3m" | "6m" | "1y")
+            }
             className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="1m">Last Month</option>

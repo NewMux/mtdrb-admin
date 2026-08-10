@@ -196,6 +196,7 @@ export default function TrainerProfile({ trainerId }: Props) {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- processPerformanceData transitively reads `trainer` state; including it would change when this fetch re-triggers
   }, [trainerId]);
 
   const processPerformanceData = (data: Session[]): Performance[] => {

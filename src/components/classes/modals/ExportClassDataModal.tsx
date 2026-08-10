@@ -16,6 +16,26 @@ import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
 import { exportCSV, exportPDF, exportExcel } from "../../../utils/exportData";
 import { useTranslation } from "react-i18next";
+import type { Database } from "../../../types/supabase";
+
+type MemberJoin = Pick<
+  Database["public"]["Tables"]["members"]["Row"],
+  "id" | "first_name" | "last_name" | "email" | "phone" | "status"
+>;
+
+// `attended` / `price` aren't part of the generated class_bookings Row type,
+// but the live table has these columns and the queries below select them.
+type BookingRow = Database["public"]["Tables"]["class_bookings"]["Row"] & {
+  attended?: boolean | null;
+  price?: number | null;
+};
+
+type BookingWithMember = BookingRow & { member: MemberJoin | null };
+
+// The exported rows differ per export option but are always a flat map of
+// column-label -> primitive value, matching what exportCSV/exportExcel/
+// exportPDF expect.
+type ExportRow = Record<string, string | number>;
 
 interface ExportOption {
   id: string;
@@ -148,7 +168,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         });
       }, 200);
 
-      let exportData: any[] = [];
+      let exportData: ExportRow[] = [];
       let filename = `class-export-${new Date().toISOString().split("T")[0]}`;
 
       // Fetch data based on export type
@@ -167,7 +187,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
         if (bookingsError) throw bookingsError;
 
-        exportData = (bookings || []).map((booking: any) => ({
+        exportData = ((bookings as BookingWithMember[] | null) || []).map((booking) => ({
           "Member Name": booking.member
             ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
             : "N/A",
@@ -195,7 +215,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
         if (attendanceError) throw attendanceError;
 
-        exportData = (attendance || []).map((record: any) => ({
+        exportData = ((attendance as BookingWithMember[] | null) || []).map((record) => ({
           "Member Name": record.member
             ? `${record.member.first_name || ""} ${record.member.last_name || ""}`.trim()
             : "N/A",
@@ -219,8 +239,8 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
         if (bookingsError) throw bookingsError;
 
-        const totalRevenue = (bookings || []).reduce(
-          (sum: number, b: any) => sum + (b.price || 0),
+        const totalRevenue = ((bookings as BookingRow[] | null) || []).reduce(
+          (sum, b) => sum + (b.price || 0),
           0,
         );
         const totalCost = (classData?.cost || 0) * (bookings?.length || 0);
@@ -264,7 +284,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
         if (bookingsResult.error) throw bookingsResult.error;
 
-        exportData = (bookingsResult.data || []).map((booking: any) => ({
+        exportData = ((bookingsResult.data as BookingWithMember[] | null) || []).map((booking) => ({
           "Member Name": booking.member
             ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
             : "N/A",

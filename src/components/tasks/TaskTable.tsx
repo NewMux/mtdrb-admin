@@ -28,6 +28,26 @@ interface TaskTableProps {
   refreshKey?: number;
 }
 
+const getErrorCode = (error: unknown): string | undefined =>
+  error && typeof error === "object"
+    ? (error as { code?: string }).code
+    : undefined;
+
+const getErrorMessage = (error: unknown): string | undefined =>
+  error && typeof error === "object"
+    ? (error as { message?: string }).message
+    : undefined;
+
+const isMissingTableError = (error: unknown): boolean => {
+  const code = getErrorCode(error);
+  const message = getErrorMessage(error);
+  return (
+    code === "PGRST116" ||
+    (message?.includes("relation") ?? false) ||
+    (message?.includes("does not exist") ?? false)
+  );
+};
+
 const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   const [hoveredRow, setHoveredRow] = React.useState<string | null>(null);
   const [tasks, setTasks] = React.useState<Task[]>([]);
@@ -90,9 +110,9 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
           errorCode: taskError?.code,
           errorMessage: taskError?.message 
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Table might not exist
-        if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
+        if (isMissingTableError(err)) {
           console.warn("member_tasks table may not exist, returning empty tasks");
           setTasks([]);
           setAssigneesById({});
@@ -138,9 +158,9 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
           .in("user_id", assigneeIds);
         profileData = profileResult.data;
         profileError = profileResult.error;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Profiles table might not exist, continue without assignee names
-        if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
+        if (isMissingTableError(err)) {
           console.warn("profiles table may not exist, continuing without assignee names");
           setTasks(taskData || []);
           setAssigneesById({});
@@ -166,23 +186,25 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       setTasks(taskData || []);
       setAssigneesById(profileMap);
       setLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error loading tasks:", err);
-      
+
       // Check for specific error types
       let errorMessage = t("messages.somethingWentWrong");
-      
-      if (err?.code === "PGRST116" || err?.message?.includes("relation") || err?.message?.includes("does not exist")) {
+      const errCode = getErrorCode(err);
+      const errMessage = getErrorMessage(err);
+
+      if (errCode === "PGRST116" || errMessage?.includes("relation") || errMessage?.includes("does not exist")) {
         errorMessage = t("messages.noData");
-      } else if (err?.code === "42501" || err?.message?.includes("permission denied") || err?.message?.includes("row-level security")) {
+      } else if (errCode === "42501" || errMessage?.includes("permission denied") || errMessage?.includes("row-level security")) {
         errorMessage = t("messages.error");
-      } else if (err?.code === "42883" || (err?.message?.includes("function") && err?.message?.includes("does not exist"))) {
+      } else if (errCode === "42883" || (errMessage?.includes("function") && errMessage?.includes("does not exist"))) {
         errorMessage = t("messages.error");
-      } else if (err?.message?.includes("invalid input syntax for type uuid") || err?.message?.includes("uuid")) {
+      } else if (errMessage?.includes("invalid input syntax for type uuid") || errMessage?.includes("uuid")) {
         errorMessage = t("messages.error");
-      } else if (err?.message) {
+      } else if (errMessage) {
         // Don't show raw database errors to users - provide friendly message
-        const rawMessage = err.message.toLowerCase();
+        const rawMessage = errMessage.toLowerCase();
         if (rawMessage.includes("uuid") || rawMessage.includes("invalid input")) {
           errorMessage = t("messages.error");
         } else if (rawMessage.includes("network") || rawMessage.includes("fetch")) {
@@ -193,7 +215,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       } else if (err instanceof Error) {
         errorMessage = t("messages.somethingWentWrong");
       }
-      
+
       setError(errorMessage);
       // Set empty state to prevent UI crashes
       setTasks([]);
@@ -201,7 +223,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   React.useEffect(() => {
     fetchTasks();

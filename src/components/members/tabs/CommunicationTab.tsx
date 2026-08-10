@@ -1,10 +1,10 @@
 import React from "react";
 
 interface CommunicationTabProps {
-  log: any[];
+  log: unknown[];
   staffNotes: string;
   onStaffNotesChange: (notes: string) => void;
-  futureMessages: any[];
+  futureMessages: unknown[];
 }
 
 const CommunicationTab: React.FC<CommunicationTabProps> = () => {

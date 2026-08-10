@@ -9,10 +9,15 @@ import {
 } from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
+interface TrainerSummary {
+  name: string;
+  email: string;
+}
+
 interface TrainerKPICardModalProps {
   open: boolean;
   onClose: () => void;
-  trainer?: any;
+  trainer?: TrainerSummary;
 }
 
 const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({

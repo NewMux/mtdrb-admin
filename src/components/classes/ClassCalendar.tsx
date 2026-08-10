@@ -102,7 +102,7 @@ const ClassCalendar: React.FC = () => {
 
       return true;
     });
-  }, [events, filters]);
+  }, [events, filters, t]);
 
   // Event handlers
   const handleEventClick = useCallback((info: EventClickArg) => {
@@ -138,7 +138,7 @@ const ClassCalendar: React.FC = () => {
     );
     setEvents(updatedEvents);
     toast.success(t('classes.classDurationUpdated'));
-  }, [events]);
+  }, [events, t]);
 
   // Keyboard navigation
   useEffect(() => {

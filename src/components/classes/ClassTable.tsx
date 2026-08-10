@@ -20,6 +20,14 @@ type ClassRow = Class & {
   enrolled_count?: number;
   status?: string;
 };
+
+// Some callers pass a looser/legacy shape where `trainer` may already be a
+// display name (string) or a joined trainer object with a `name` field.
+interface TrainerNameSource {
+  trainer_name?: string;
+  trainer?: string | { name?: string };
+  trainer_id?: string;
+}
 import { SmartButton, EmptyState } from "../ui/DesignSystem";
 
 interface ClassTableProps {
@@ -190,9 +198,11 @@ const ClassTable: React.FC<ClassTableProps> = ({
     }
   };
 
-  const getTrainerName = (item: any) => {
+  const getTrainerName = (item: TrainerNameSource) => {
     if (item.trainer_name) return item.trainer_name;
-    if (item.trainer?.name) return item.trainer.name;
+    if (typeof item.trainer === "object" && item.trainer?.name) {
+      return item.trainer.name;
+    }
     if (item.trainer_id && typeof item.trainer_id === "string" && item.trainer_id.includes("-")) {
       return isRTL ? "كابتن أحمد" : "Capt. Ahmed";
     }

@@ -4,6 +4,19 @@ import TrainerTable from "./TrainerTable";
 import AddTrainerModal from "./AddTrainerModal";
 import { supabase } from "../../supabaseClient";
 
+// The generated trainers.Row type in src/types/supabase.ts models
+// first_name/last_name, not the combined `name` this export reads —
+// describing the actual shape returned/read by this query.
+interface TrainerExportData {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  specialties?: string[];
+  status?: string;
+  rating?: number;
+}
+
 interface TrainerStats {
   totalTrainers: number;
   activeTrainers: number;
@@ -55,7 +68,7 @@ export default function TrainerOverview({ onSelectTrainer }: Props) {
         } else {
           schedules = scheduleData || [];
         }
-      } catch (scheduleError: any) {
+      } catch (scheduleError: unknown) {
         // If any error occurs with trainer_schedule, just use empty schedules
         schedules = [];
       }
@@ -82,7 +95,7 @@ export default function TrainerOverview({ onSelectTrainer }: Props) {
       ];
       const csvContent = [
         headers.join(","),
-        ...trainers.map((trainer: any) =>
+        ...(trainers as TrainerExportData[]).map((trainer) =>
           [
             trainer.name,
             trainer.email,

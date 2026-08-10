@@ -305,8 +305,9 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
       setFormData(initialFormData);
       setFileUploads([]);
       setErrors({});
-    } catch (err: any) {
-      setSubmitError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setSubmitError(message);
       toast.error("Failed to add trainer");
     } finally {
       setLoading(false);

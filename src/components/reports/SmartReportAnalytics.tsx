@@ -21,8 +21,15 @@ interface SmartReportAnalyticsProps {
 interface ReportAnalytic {
   type: "usage" | "performance" | "engagement" | "efficiency";
   title: string;
-  data: any[];
+  data: Record<string, string | number>[];
   insight: string;
+}
+
+interface ReportMetric {
+  label: string;
+  value: number;
+  change: number;
+  color: string;
 }
 
 export default function SmartReportAnalytics({
@@ -30,7 +37,7 @@ export default function SmartReportAnalytics({
 }: SmartReportAnalyticsProps) {
   const [analytics, setAnalytics] = useState<ReportAnalytic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reportMetrics, setReportMetrics] = useState<any[]>([]);
+  const [reportMetrics, setReportMetrics] = useState<ReportMetric[]>([]);
 
   useEffect(() => {
     fetchAnalytics();

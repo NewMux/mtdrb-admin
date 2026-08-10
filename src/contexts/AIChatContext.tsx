@@ -232,7 +232,7 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return next;
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("AI Error:", err);
       toast.error(t("common.error") || "Error calling AI Assistant");
       setMessages(prev => {

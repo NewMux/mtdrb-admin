@@ -1,6 +1,6 @@
 // Smart Trainer Matching Component
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiTarget,
@@ -13,10 +13,21 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
+import type { Database } from "../../types/supabase";
 
 interface SmartTrainerMatchingProps {
   refreshKey: number;
 }
+
+// `select("*")` rows, with an optional `name` fallback the matching logic
+// below defensively reads (some deployments carry a legacy/computed `name`
+// column alongside first_name/last_name).
+type MatchMember = Database["public"]["Tables"]["members"]["Row"] & {
+  name?: string;
+};
+type MatchTrainer = Database["public"]["Tables"]["trainers"]["Row"] & {
+  name?: string;
+};
 
 interface MatchData {
   id: string;
@@ -34,11 +45,7 @@ export default function SmartTrainerMatching({
   const [loading, setLoading] = useState(true);
   const [autoMatchEnabled, setAutoMatchEnabled] = useState(false);
 
-  useEffect(() => {
-    fetchMatchingData();
-  }, [refreshKey]);
-
-  const fetchMatchingData = async () => {
+  const fetchMatchingData = useCallback(async () => {
     setLoading(true);
     try {
       const [membersResponse, trainersResponse] = await Promise.all([
@@ -56,9 +63,16 @@ export default function SmartTrainerMatching({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const generateMatches = (members: any[], trainers: any[]): MatchData[] => {
+  useEffect(() => {
+    fetchMatchingData();
+  }, [refreshKey, fetchMatchingData]);
+
+  const generateMatches = (
+    members: MatchMember[],
+    trainers: MatchTrainer[],
+  ): MatchData[] => {
     const goals = ["Weight Loss", "Muscle Gain", "Cardio", "Strength Training"];
     const reasons = [
       "Specializes in weight management with proven results",

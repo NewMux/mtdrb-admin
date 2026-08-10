@@ -32,6 +32,17 @@ function formatMessagesForGemini(messages: ChatMessage[]) {
   }));
 }
 
+interface GeminiRequestPayload {
+  contents: ReturnType<typeof formatMessagesForGemini>;
+  systemInstruction?: { parts: { text: string }[] };
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  };
+}
+
 /**
  * Stream responses from Gemini API using fetch and Server-Sent Events (SSE).
  * Yields chunk texts as they arrive.
@@ -49,7 +60,7 @@ export async function* streamGeminiResponse(
   const url = `${GEMINI_API_URL}/${modelName}:streamGenerateContent?alt=sse&key=${apiKey}`;
   const formattedContents = formatMessagesForGemini(messages);
 
-  const payload: any = {
+  const payload: GeminiRequestPayload = {
     contents: formattedContents,
   };
 
@@ -144,7 +155,7 @@ export async function generateGeminiResponse(
   const url = `${GEMINI_API_URL}/${modelName}:generateContent?key=${apiKey}`;
   const formattedContents = formatMessagesForGemini(messages);
 
-  const payload: any = {
+  const payload: GeminiRequestPayload = {
     contents: formattedContents,
   };
 

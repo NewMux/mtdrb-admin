@@ -8,10 +8,15 @@ import {
 } from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
+interface TrainerSummary {
+  name: string;
+  email: string;
+}
+
 interface TrainerActivityLogModalProps {
   open: boolean;
   onClose: () => void;
-  trainer?: any;
+  trainer?: TrainerSummary;
 }
 
 const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({

@@ -39,10 +39,12 @@ export default function DeleteBranchModal({
       setLoading(false);
       onSuccess?.();
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting branch:", error);
       toast.error(
-        error.message || t("branches.errors.failedToDeleteBranch") || "Failed to delete branch"
+        (error instanceof Error ? error.message : undefined) ||
+          t("branches.errors.failedToDeleteBranch") ||
+          "Failed to delete branch"
       );
       setLoading(false);
     }

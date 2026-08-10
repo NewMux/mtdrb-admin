@@ -1,5 +1,15 @@
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { Database } from "../types/supabase";
+
+type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
+type ClassBookingRow = Database["public"]["Tables"]["class_bookings"]["Row"];
+
+export interface MemberCheckin extends ClassBookingRow {
+  class_name: string;
+  member_name: string;
+}
 
 export interface RealtimeNotification {
   id: string;
@@ -14,7 +24,7 @@ export interface RealtimeNotification {
   targetRoles: string[];
   targetUsers?: string[];
   priority: "low" | "medium" | "high" | "urgent";
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -29,7 +39,7 @@ export interface ClassCapacityAlert {
 }
 
 class RealtimeService {
-  private subscriptions: Map<string, any> = new Map();
+  private subscriptions: Map<string, RealtimeChannel> = new Map();
   private notificationCallbacks: Map<
     string,
     (notification: RealtimeNotification) => void
@@ -88,7 +98,7 @@ class RealtimeService {
           filter: `tenant_id=eq.${tenantId}`,
         },
         (payload) => {
-          const updatedClass = payload.new as any;
+          const updatedClass = payload.new as ClassRow;
           const utilizationPercent =
             (updatedClass.current_bookings / updatedClass.capacity) * 100;
 
@@ -121,7 +131,7 @@ class RealtimeService {
   subscribeToMemberCheckins(
     tenantId: string,
     trainerId: string,
-    callback: (checkin: any) => void,
+    callback: (checkin: MemberCheckin) => void,
   ) {
     const channel = supabase
       .channel(`checkins_${tenantId}_${trainerId}`)
@@ -134,7 +144,7 @@ class RealtimeService {
           filter: `tenant_id=eq.${tenantId}`,
         },
         async (payload) => {
-          const booking = payload.new as any;
+          const booking = payload.new as ClassBookingRow;
 
           // Only notify if status changed to 'checked_in'
           if (

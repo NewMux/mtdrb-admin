@@ -148,7 +148,7 @@ const TaskInsight: React.FC<TaskInsightProps> = ({
 
 interface SmartTasksDashboardProps {
   refreshKey: number;
-  stats: any;
+  stats: unknown;
 }
 
 export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = () => {

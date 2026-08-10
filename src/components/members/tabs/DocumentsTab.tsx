@@ -1,7 +1,7 @@
 import React from "react";
 
 interface DocumentsTabProps {
-  documents: any[];
+  documents: unknown[];
   onResend: (docId: string) => void;
   onReupload: (docId: string) => void;
 }

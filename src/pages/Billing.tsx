@@ -26,6 +26,7 @@ import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import type { Invoice, Expense } from "../types";
 
 // Using real data from Supabase - no mock data
 interface InvoiceRow {
@@ -53,6 +54,43 @@ interface ExpenseRow {
   created_at?: string | null;
 }
 
+interface RecentTransaction {
+  id: string;
+  invoice_number: string;
+  member: { name?: string | null } | null;
+  total: number;
+  status: "Paid" | "Unpaid" | "Overdue";
+  due_date: string;
+}
+
+// Adapt a locally-shaped InvoiceRow (as fetched from Supabase) into the
+// richer `Invoice` type the shared invoice modal expects. Fields whose DB
+// representation doesn't line up with the modal's shape (e.g. lowercase
+// status values vs. the modal's Title Case options, or the partial member
+// info we have) are left out entirely so the modal's own `|| default`
+// fallbacks kick in, rather than passing inaccurate values.
+const toInvoiceProp = (row: InvoiceRow): Invoice => ({
+  id: row.id,
+  invoice_number: row.invoice_number ?? undefined,
+  amount: row.amount != null ? Number(row.amount) : undefined,
+  total: row.total != null ? Number(row.total) : undefined,
+  due_date: row.due_date ?? undefined,
+  created_at: row.created_at ?? undefined,
+});
+
+// Adapt a locally-shaped ExpenseRow into the fuller `Expense` type the
+// shared expense modal expects. Only the fields we actually have from the
+// "overview"/"expenses" queries are mapped; the rest are left undefined so
+// the modal falls back to its own defaults for a new/edited expense.
+const toExpenseProp = (row: ExpenseRow): Expense =>
+  ({
+    id: row.id,
+    category: row.category ?? undefined,
+    amount: row.amount != null ? Number(row.amount) : undefined,
+    date: row.date ?? row.created_at ?? undefined,
+    created_at: row.created_at ?? undefined,
+  }) as Expense;
+
 const Billing: React.FC = () => {
   usePageThemeContext();
   const { tenantId } = useAuth();
@@ -73,11 +111,11 @@ const Billing: React.FC = () => {
     | "editExpense"
     | null
   >(null);
-  const [selectedInvoice, setSelectedInvoice] = React.useState<any>(null);
-  const [selectedExpense, setSelectedExpense] = React.useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = React.useState<InvoiceRow | null>(null);
+  const [selectedExpense, setSelectedExpense] = React.useState<ExpenseRow | null>(null);
   const [refreshKey, setRefreshKey] = React.useState(Date.now());
   const [loading, setLoading] = React.useState(false);
-  const [recentTransactions, setRecentTransactions] = React.useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = React.useState<RecentTransaction[]>([]);
   const [invoices, setInvoices] = React.useState<InvoiceRow[]>([]);
   const [expenses, setExpenses] = React.useState<ExpenseRow[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
@@ -351,15 +389,15 @@ const Billing: React.FC = () => {
         const recentInvoices = (allInvoices || [])
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           .slice(0, 10)
-          .map(inv => ({
+          .map((inv): RecentTransaction => ({
             id: inv.id,
             invoice_number: inv.invoice_number || inv.id.substring(0, 8),
             member: inv.members ? {
               name: `${inv.members.first_name || ''} ${inv.members.last_name || ''}`.trim() || inv.members.email
             } : null,
             total: parseFloat(inv.amount || inv.total || "0"),
-            status: inv.status === "paid" || inv.status === "completed" ? "Paid" 
-              : inv.status === "pending" || inv.status === "unpaid" ? "Unpaid" 
+            status: inv.status === "paid" || inv.status === "completed" ? "Paid"
+              : inv.status === "pending" || inv.status === "unpaid" ? "Unpaid"
               : "Overdue",
             due_date: inv.due_date || inv.created_at,
           }));
@@ -374,7 +412,7 @@ const Billing: React.FC = () => {
     };
 
     fetchBillingData();
-  }, [tenantId, refreshKey]);
+  }, [tenantId, refreshKey, t]);
 
   // Button handlers
   const handleRefreshData = () => {
@@ -388,22 +426,22 @@ const Billing: React.FC = () => {
   };
 
   // Table action handlers
-  const handleViewInvoice = (invoice: any) => {
+  const handleViewInvoice = (invoice: InvoiceRow) => {
     setSelectedInvoice(invoice);
     setActiveModal("viewInvoice");
   };
 
-  const handleEditInvoice = (invoice: any) => {
+  const handleEditInvoice = (invoice: InvoiceRow) => {
     setSelectedInvoice(invoice);
     setActiveModal("editInvoice");
   };
 
-  const handleViewExpense = (expense: any) => {
+  const handleViewExpense = (expense: ExpenseRow) => {
     setSelectedExpense(expense);
     setActiveModal("viewExpense");
   };
 
-  const handleEditExpense = (expense: any) => {
+  const handleEditExpense = (expense: ExpenseRow) => {
     setSelectedExpense(expense);
     setActiveModal("editExpense");
   };
@@ -500,7 +538,7 @@ const Billing: React.FC = () => {
                         </td>
                       </tr>
                     ) : (
-                      recentTransactions.map((invoice: any) => (
+                      recentTransactions.map((invoice) => (
                         <tr
                           key={invoice.id}
                           className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -1020,7 +1058,7 @@ const Billing: React.FC = () => {
               closeModal();
               toast.success(t("billing.invoiceUpdated"));
             }}
-            invoice={selectedInvoice}
+            invoice={toInvoiceProp(selectedInvoice)}
           />
         )}
 
@@ -1034,7 +1072,7 @@ const Billing: React.FC = () => {
               closeModal();
               toast.success(t("billing.invoiceUpdated"));
             }}
-            invoice={selectedInvoice}
+            invoice={toInvoiceProp(selectedInvoice)}
           />
         )}
 
@@ -1042,7 +1080,7 @@ const Billing: React.FC = () => {
           <AddExpenseModal
             isOpen={activeModal === "viewExpense"}
             onClose={closeModal}
-            expense={selectedExpense}
+            expense={toExpenseProp(selectedExpense)}
             tenantId={tenantId}
             onExpenseAdded={() => {
               closeModal();
@@ -1055,7 +1093,7 @@ const Billing: React.FC = () => {
           <AddExpenseModal
             isOpen={activeModal === "editExpense"}
             onClose={closeModal}
-            expense={selectedExpense}
+            expense={toExpenseProp(selectedExpense)}
             tenantId={tenantId}
             onExpenseAdded={() => {
               closeModal();

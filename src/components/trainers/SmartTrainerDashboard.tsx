@@ -33,7 +33,10 @@ interface SmartTrainerDashboardProps {
 interface TrainerInsight {
   type: "workload" | "performance" | "revenue" | "satisfaction";
   title: string;
-  data: any[];
+  // TODO: no code in this file currently populates `insights`, so the real
+  // shape of each chart-data row isn't determinable here; this keeps the
+  // generic "array of plain records" shape recharts' BarChart expects.
+  data: Record<string, unknown>[];
   insight: string;
 }
 

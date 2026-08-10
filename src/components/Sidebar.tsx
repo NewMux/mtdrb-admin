@@ -14,12 +14,13 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 interface SidebarProps {
   onClose?: () => void;
 }
 
-const getNavigation = (t: any) => [
+const getNavigation = (t: TFunction) => [
   { name: t("sidebar.dashboard"), href: "/dashboard", icon: FiHome },
   { name: t("sidebar.members"), href: "/dashboard/members", icon: FiUsers },
   { name: t("sidebar.classes"), href: "/dashboard/classes", icon: FiCalendar },
@@ -60,6 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const activeItem = getActiveSidebarItem(location.pathname);
   // Force re-render when language changes by using i18n.language as dependency
   const currentLang = i18n.language;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- currentLang isn't read directly but forces recompute when t's translations change language
   const navigation = React.useMemo(() => getNavigation(t), [t, currentLang]);
   const isRTL = currentLang === "ar";
 

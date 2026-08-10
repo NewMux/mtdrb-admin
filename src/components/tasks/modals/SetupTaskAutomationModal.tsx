@@ -50,7 +50,12 @@ export const SetupTaskAutomationModal: React.FC<
   const [selectedTemplate, setSelectedTemplate] = React.useState("");
   const [showPreview, setShowPreview] = React.useState(false);
 
-  const automationTypes = [
+  const automationTypes: Array<{
+    value: AutomationType;
+    label: string;
+    description: string;
+    icon: string;
+  }> = [
     {
       value: "recurring",
       label: "Recurring",
@@ -71,13 +76,28 @@ export const SetupTaskAutomationModal: React.FC<
     },
   ];
 
-  const priorities = [
+  const priorities: Array<{
+    value: AutomationPriority;
+    label: string;
+    color: string;
+  }> = [
     { value: "low", label: "Low", color: "text-green-600 bg-green-50" },
     { value: "medium", label: "Medium", color: "text-yellow-600 bg-yellow-50" },
     { value: "high", label: "High", color: "text-orange-600 bg-orange-50" },
   ];
 
-  const templates = [
+  interface AutomationTemplate {
+    id: string;
+    name: string;
+    description: string;
+    type: AutomationType;
+    schedule?: string;
+    trigger?: string;
+    assignee: string;
+    priority: AutomationPriority;
+  }
+
+  const templates: AutomationTemplate[] = [
     {
       id: "daily_cleaning",
       name: "Daily Cleaning Checklist",
@@ -116,7 +136,7 @@ export const SetupTaskAutomationModal: React.FC<
     },
   ];
 
-  const handleTemplateSelect = (template: any) => {
+  const handleTemplateSelect = (template: AutomationTemplate) => {
     setAutomationData({
       name: template.name,
       description: template.description,
@@ -299,7 +319,7 @@ export const SetupTaskAutomationModal: React.FC<
                   onClick={() =>
                     setAutomationData((prev) => ({
                       ...prev,
-                      type: type.value as any,
+                      type: type.value,
                     }))
                   }
                   className={`p-3 rounded-lg border text-left transition-all ${
@@ -420,7 +440,7 @@ export const SetupTaskAutomationModal: React.FC<
                   onClick={() =>
                     setAutomationData((prev) => ({
                       ...prev,
-                      priority: priority.value as any,
+                      priority: priority.value,
                     }))
                   }
                   className={`p-2 rounded-lg border text-sm font-medium transition-all ${

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, Views, dateFnsLocalizer, type View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
@@ -54,12 +54,6 @@ export default function TrainerSchedule() {
     fetchTrainers();
   }, []);
 
-  useEffect(() => {
-    if (trainers.length > 0) {
-      fetchEvents();
-    }
-  }, [trainers, selectedTrainer, selectedType, view, date]);
-
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
@@ -75,7 +69,7 @@ export default function TrainerSchedule() {
     }
   };
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -139,7 +133,13 @@ export default function TrainerSchedule() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTrainer, selectedType, view, date]);
+
+  useEffect(() => {
+    if (trainers.length > 0) {
+      fetchEvents();
+    }
+  }, [trainers, selectedTrainer, selectedType, view, date, fetchEvents]);
 
   const handleEventClick = () => {
   };
@@ -259,7 +259,7 @@ export default function TrainerSchedule() {
 
         <select
           value={view}
-          onChange={(e) => setView(e.target.value as any)}
+          onChange={(e) => setView(e.target.value as View)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value={Views.DAY}>Day</option>

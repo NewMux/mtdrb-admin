@@ -1,4 +1,10 @@
 import { supabase } from "../supabaseClient";
+import { Json } from "../types/supabase";
+
+// Webhook payloads are strongly-typed interfaces (not index-signature compatible
+// with Json), but they only ever contain JSON-serializable data — this cast is the
+// standard boundary conversion for logging them into a jsonb column.
+const toJsonMetadata = (value: unknown): Json => value as Json;
 
 export interface TapWebhookEvent {
   id: string;
@@ -13,7 +19,7 @@ export interface TapWebhookEvent {
     metadata: {
       tenant_id: string;
       plan_tier?: string;
-      [key: string]: any;
+      [key: string]: Json | undefined;
     };
     charge?: {
       status: string;
@@ -95,7 +101,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
           ? `Subscription payment failed after ${retryCount} attempts. Access revoked.`
           : `Subscription renewal payment failed (Attempt #${retryCount}). Retrying.`,
         "failed",
-        { event, payload }
+        toJsonMetadata({ event, payload })
       );
 
       return { success: true, message: `Failed payment logged. Status: ${targetStatus}`, data: updatedSubFailed };
@@ -135,7 +141,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
         "Subscription Active",
         `Payment of ${targetAmount} ${data.currency} received successfully. Plan tier: ${targetTier}.`,
         "success",
-        { event, payload }
+        toJsonMetadata({ event, payload })
       );
 
       return { success: true, message: "Payment succeeded logged.", data: updatedSubSuccess };
@@ -183,7 +189,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
         "Subscription Updated",
         upgradeMsg,
         "success",
-        { event, oldTier, newTier, payload }
+        toJsonMetadata({ event, oldTier, newTier, payload })
       );
 
       return { success: true, message: "Subscription update logged.", data: updatedSubUpdate };
@@ -217,7 +223,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
         event === "subscription.cancelled" ? "Subscription Cancelled" : "Subscription Expired",
         "Subscription cancelled or expired. Access revoked.",
         "warning",
-        { event, payload }
+        toJsonMetadata({ event, payload })
       );
 
       return { success: true, message: `Subscription ${targetStatusVal} logged.`, data: updatedSubCancel };
@@ -234,7 +240,7 @@ const logPlatformActivity = async (
   title: string,
   description: string,
   status: "success" | "pending" | "failed" | "warning",
-  metadata?: any
+  metadata?: Json
 ) => {
   try {
     await supabase.from("activities").insert({

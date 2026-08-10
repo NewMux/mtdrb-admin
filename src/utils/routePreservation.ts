@@ -47,7 +47,7 @@ export const isAuthRoute = (path: string): boolean => {
 // Enhanced route preservation utility for tab state management
 interface RouteState {
   tab: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
   sort?: {
     field: string;
     direction: "asc" | "desc";
@@ -148,12 +148,12 @@ class RoutePreservationManager {
   }
 
   // Save filter state
-  saveFilterState(path: string, filters: Record<string, any>): void {
+  saveFilterState(path: string, filters: Record<string, unknown>): void {
     this.saveRouteState(path, { filters });
   }
 
   // Get filter state
-  getFilterState(path: string): Record<string, any> {
+  getFilterState(path: string): Record<string, unknown> {
     const state = this.getRouteState(path);
     return state?.filters || {};
   }
@@ -385,12 +385,12 @@ export const useRoutePreservation = (path: string) => {
     return routePreservation.getTabForRoute(path);
   };
 
-  const saveFilters = (filters: Record<string, any>) => {
+  const saveFilters = (filters: Record<string, unknown>) => {
     routePreservation.saveFilterState(path, filters);
     routePreservation.updateURL(path, { filters });
   };
 
-  const getFilters = (): Record<string, any> => {
+  const getFilters = (): Record<string, unknown> => {
     return routePreservation.getFilterState(path);
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiCalendar,
   FiMessageSquare,
@@ -44,11 +44,6 @@ export default function TrainerRequests() {
   });
   const [trainers, setTrainers] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
-    fetchTrainers();
-    fetchRequests();
-  }, [filter]);
-
   const fetchTrainers = async () => {
     try {
       const { data, error } = await supabase
@@ -58,12 +53,12 @@ export default function TrainerRequests() {
 
       if (error) throw error;
       setTrainers(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching trainers:", err);
     }
   };
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -95,12 +90,17 @@ export default function TrainerRequests() {
 
       if (error) throw error;
       setRequests(data || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchTrainers();
+    fetchRequests();
+  }, [filter, fetchRequests]);
 
   const fetchAffectedClasses = async (request: Request) => {
     if (!request.start_date || !request.end_date) return;
@@ -123,7 +123,7 @@ export default function TrainerRequests() {
 
       if (error) throw error;
       setAffectedClasses(data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching affected classes:", err);
     }
   };
@@ -165,7 +165,7 @@ export default function TrainerRequests() {
       }
 
       fetchRequests();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error handling request action:", err);
     }
   };

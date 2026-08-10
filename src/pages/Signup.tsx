@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
+import type { User } from "@supabase/supabase-js";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -41,7 +42,7 @@ export default function Signup() {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
-  const [signedUpUser, setSignedUpUser] = React.useState<any>(null);
+  const [signedUpUser, setSignedUpUser] = React.useState<User | null>(null);
 
   // ===== HANDLE SIGNUP SUBMIT =====
   const handleSignup = async (e: React.FormEvent) => {
@@ -133,9 +134,10 @@ export default function Signup() {
       
       // Redirect to subscribe
       navigate("/subscribe");
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (import.meta.env.DEV) console.error("Tenant creation error:", err);
-      setOnboardingError(err.message || "Failed to set up gym. Please try again.");
+      const message = err instanceof Error ? err.message : undefined;
+      setOnboardingError(message || "Failed to set up gym. Please try again.");
       setOnboardingLoading(false);
     }
   };

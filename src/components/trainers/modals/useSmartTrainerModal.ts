@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
 
+interface SmartTrainerModalData {
+  id: string;
+  name: string;
+  status: string;
+  onLeave: boolean;
+  overloaded: boolean;
+  conflicts: unknown[];
+  satisfaction: number;
+  assignedClasses: number;
+  activeMembers: number;
+}
+
 export function useSmartTrainerModal({
   trainerId,
 }: {
@@ -8,7 +20,7 @@ export function useSmartTrainerModal({
   fromMemberId?: string;
 }) {
   const [loading, setLoading] = useState(false);
-  const [trainer, setTrainer] = useState<any>(null);
+  const [trainer, setTrainer] = useState<SmartTrainerModalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aiRecommendations, setAIRecommendations] = useState<string[]>([]);
   const [alerts, setAlerts] = useState<{ type: string; message: string }[]>([]);

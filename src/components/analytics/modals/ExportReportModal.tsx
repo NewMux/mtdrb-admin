@@ -14,6 +14,7 @@ import { exportCSV, exportPDF, exportExcel, exportJSON } from "../../../utils/ex
 import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
+import type { Database } from "../../../types/supabase";
 
 interface ExportReportModalProps {
   open: boolean;
@@ -21,6 +22,50 @@ interface ExportReportModalProps {
   onSuccess?: () => void;
   isPro?: boolean;
 }
+
+// Row shapes for the specific columns each report query selects.
+type MemberOverviewRow = Pick<
+  Database["public"]["Tables"]["members"]["Row"],
+  "id" | "first_name" | "last_name" | "email" | "status" | "created_at"
+>;
+type InvoiceOverviewRow = Pick<
+  Database["public"]["Tables"]["invoices"]["Row"],
+  "id" | "member_id" | "amount" | "status" | "created_at"
+>;
+// `attended` isn't part of the generated class_bookings Row type, but the
+// query selects it and the code relies on it below.
+type BookingOverviewRow = Pick<
+  Database["public"]["Tables"]["class_bookings"]["Row"],
+  "id" | "member_id" | "class_id" | "created_at"
+> & { attended?: boolean | null };
+
+// `vat_amount` isn't part of the generated invoices Row type (which only
+// models vat_total), but the query below selects it and the code relies on
+// it - describe the exact shape the query returns.
+type FinancialInvoiceRow = Pick<
+  Database["public"]["Tables"]["invoices"]["Row"],
+  "id" | "amount" | "status" | "created_at"
+> & { vat_amount?: number | null };
+type FinancialExpenseRow = Pick<
+  Database["public"]["Tables"]["expenses"]["Row"],
+  "id" | "amount" | "category" | "date"
+>;
+
+type CustomMemberRow = Pick<
+  Database["public"]["Tables"]["members"]["Row"],
+  "id" | "first_name" | "last_name" | "email"
+>;
+// `attended` / `price` aren't part of the generated class_bookings Row type,
+// but the query selects them and the code relies on them below.
+type CustomBookingRow = Pick<
+  Database["public"]["Tables"]["class_bookings"]["Row"],
+  "id" | "member_id" | "class_id" | "created_at"
+> & { attended?: boolean | null; price?: number | null };
+
+// The exported rows differ per report but are always a flat map of
+// column-label -> primitive value, matching what exportCSV/exportExcel/
+// exportPDF/exportJSON expect.
+type ExportRow = Record<string, string | number>;
 
 const savedReports = [
   {
@@ -121,7 +166,7 @@ export default function ExportReportModal({
         return;
       }
 
-      let exportData: any[] = [];
+      let exportData: ExportRow[] = [];
 
       // Generate report data based on selected report
       if (report.id === "1") {
@@ -145,24 +190,24 @@ export default function ExportReportModal({
         if (invoicesResult.error) throw invoicesResult.error;
         if (bookingsResult.error) throw bookingsResult.error;
 
-        const members = membersResult.data || [];
-        const invoices = invoicesResult.data || [];
-        const bookings = bookingsResult.data || [];
+        const members = (membersResult.data as MemberOverviewRow[]) || [];
+        const invoices = (invoicesResult.data as InvoiceOverviewRow[]) || [];
+        const bookings = (bookingsResult.data as BookingOverviewRow[]) || [];
 
-        exportData = members.map((member: any) => {
+        exportData = members.map((member) => {
           const memberInvoices = invoices.filter(
-            (inv: any) => inv.member_id === member.id,
+            (inv) => inv.member_id === member.id,
           );
           const memberBookings = bookings.filter(
-            (book: any) => book.member_id === member.id,
+            (book) => book.member_id === member.id,
           );
           const totalSpent = memberInvoices.reduce(
-            (sum: number, inv: any) => sum + (inv.amount || 0),
+            (sum, inv) => sum + (inv.amount || 0),
             0,
           );
           const attendanceRate =
             memberBookings.length > 0
-              ? ((memberBookings.filter((b: any) => b.attended).length /
+              ? ((memberBookings.filter((b) => b.attended).length /
                   memberBookings.length) *
                   100).toFixed(2)
               : "0";
@@ -199,19 +244,19 @@ export default function ExportReportModal({
         if (invoicesResult.error) throw invoicesResult.error;
         if (expensesResult.error) throw expensesResult.error;
 
-        const invoices = invoicesResult.data || [];
-        const expenses = expensesResult.data || [];
+        const invoices = (invoicesResult.data as FinancialInvoiceRow[]) || [];
+        const expenses = (expensesResult.data as FinancialExpenseRow[]) || [];
 
         const totalRevenue = invoices.reduce(
-          (sum: number, inv: any) => sum + (inv.amount || 0),
+          (sum, inv) => sum + (inv.amount || 0),
           0,
         );
         const totalExpenses = expenses.reduce(
-          (sum: number, exp: any) => sum + (exp.amount || 0),
+          (sum, exp) => sum + (exp.amount || 0),
           0,
         );
         const totalVAT = invoices.reduce(
-          (sum: number, inv: any) => sum + (inv.vat_amount || 0),
+          (sum, inv) => sum + (inv.vat_amount || 0),
           0,
         );
 
@@ -245,15 +290,15 @@ export default function ExportReportModal({
         if (membersResult.error) throw membersResult.error;
         if (bookingsResult.error) throw bookingsResult.error;
 
-        const members = membersResult.data || [];
-        const bookings = bookingsResult.data || [];
+        const members = (membersResult.data as CustomMemberRow[]) || [];
+        const bookings = (bookingsResult.data as CustomBookingRow[]) || [];
 
-        exportData = members.map((member: any) => {
+        exportData = members.map((member) => {
           const memberBookings = bookings.filter(
-            (book: any) => book.member_id === member.id,
+            (book) => book.member_id === member.id,
           );
           const totalSpent = memberBookings.reduce(
-            (sum: number, book: any) => sum + (book.price || 0),
+            (sum, book) => sum + (book.price || 0),
             0,
           );
 
@@ -262,7 +307,7 @@ export default function ExportReportModal({
             Email: member.email || "",
             "Total Bookings": memberBookings.length,
             "Total Spent": totalSpent,
-            "Attended Classes": memberBookings.filter((b: any) => b.attended).length,
+            "Attended Classes": memberBookings.filter((b) => b.attended).length,
           };
         });
       }

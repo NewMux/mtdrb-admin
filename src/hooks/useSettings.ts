@@ -332,7 +332,7 @@ export const useSettings = () => {
 
   // Handle input changes
   const handleInputChange = useCallback(
-    (section: keyof SettingsData, field: string, value: any) => {
+    (section: keyof SettingsData, field: string, value: unknown) => {
       setSettings((prev) => ({
         ...prev,
         [section]: {
