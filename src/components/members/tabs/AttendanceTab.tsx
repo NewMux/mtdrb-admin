@@ -18,9 +18,6 @@ interface AttendanceTabProps {
  */
 const AttendanceTab: React.FC<AttendanceTabProps> = ({
   history = [],
-  classBreakdown = null,
-  calendar = null,
-  aiFlags = [],
 }) => {
   return (
     <div className="p-6">

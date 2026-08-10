@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, useInView, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { LANDING_CONTENT } from "../../../lib/constants/landingPage";
+import { motion, useInView, useScroll, useReducedMotion } from "framer-motion";
 
 /**
  * Feature showcase items for sticky scroll section

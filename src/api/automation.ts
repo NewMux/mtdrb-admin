@@ -105,6 +105,17 @@ export interface ClassAnalytics {
   updated_at: string;
 }
 
+/**
+ * Build workflow triggers from descriptive labels.
+ */
+const buildTriggers = (labels: string[]): AutomationTrigger[] => {
+  return labels.map((label, index) => ({
+    id: `trigger-${index + 1}-${label.toLowerCase().replace(/\s+/g, "-")}`,
+    type: label,
+    conditions: {},
+  }));
+};
+
 // ============================================================================
 // AUTOMATION WORKFLOWS
 // ============================================================================
@@ -478,11 +489,11 @@ export const getDefaultWorkflows = (
       icon: "FiBell",
       color: "text-blue-600",
       bg_color: "bg-blue-50",
-      triggers: [
-        {id: "", type: "", conditions: {}} as AutomationTrigger,
-        {id: "", type: "", conditions: {}} as AutomationTrigger,
-        {id: "", type: "", conditions: {}} as AutomationTrigger,
-      ] as any,
+      triggers: buildTriggers([
+        "24 hours before class",
+        "Member books class",
+        "Class changes",
+      ]),
       actions: [
         {
           id: "action-email",
@@ -522,11 +533,11 @@ export const getDefaultWorkflows = (
       icon: "FiTarget",
       color: "text-green-600",
       bg_color: "bg-green-50",
-      triggers: [
+      triggers: buildTriggers([
         "24 hours before class",
         "Member books class",
         "Class changes",
-      ] as any,
+      ]),
       actions: [
         {
           id: "action-1",
@@ -571,11 +582,11 @@ export const getDefaultWorkflows = (
       icon: "FiCalendar",
       color: "text-purple-600",
       bg_color: "bg-purple-50",
-      triggers: [
+      triggers: buildTriggers([
         "24 hours before class",
         "Member books class",
         "Class changes",
-      ] as any,
+      ]),
       actions: [
         {
           id: "action-5",
@@ -612,23 +623,23 @@ export const getDefaultWorkflows = (
     },
     {
       tenant_id: tenantId,
-      name: "Class Marketing Automation",
+      name: "Class Promotion Automation",
       description:
-        "Promote underperforming classes with targeted campaigns. Special offers for members who haven't booked recently.",
-      type: "marketing_automation",
+        "Promote underperforming classes. Special offers for members who haven't booked recently.",
+      type: "promotion_automation",
       status: "active",
       icon: "FiTrendingUp",
       color: "text-orange-600",
       bg_color: "bg-orange-50",
-      triggers: [
+      triggers: buildTriggers([
         "24 hours before class",
         "Member books class",
         "Class changes",
-      ] as any,
+      ]),
       actions: [
         {
           id: "action-9",
-          type: "send_promotional_email",
+          type: "send_offer_email",
           parameters: {},
         },
         {
@@ -650,7 +661,7 @@ export const getDefaultWorkflows = (
       settings: {
         discountPercentage: 15,
         targetAudience: "inactive_members",
-        campaignDuration: 7,
+        offerDuration: 7,
         maxPromotions: 3,
       },
       stats: {

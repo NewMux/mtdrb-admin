@@ -40,8 +40,8 @@ interface PermissionGuardProps {
  * 
  * @example
  * ```tsx
- * <PermissionGuard requiredRole="manager">
- *   <ManagerDashboard />
+ * <PermissionGuard requiredRole="employee">
+ *   <EmployeeDashboard />
  * </PermissionGuard>
  * ```
  */
@@ -81,7 +81,7 @@ export default function PermissionGuard({
     );
   }
 
-  // Get user's role (default to staff if not set)
+  // Get user's role (default to trainer if not set)
   const userRole = (userMetadata.role || getDefaultRole()) as UserRole;
 
   // Check if user has required role
@@ -121,7 +121,7 @@ export default function PermissionGuard({
             Access Denied
           </h2>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access this page.
+            You don&apos;t have permission to access this page.
           </p>
           <p className="text-sm text-gray-500">
             Required role: <span className="font-semibold">{requiredRole}</span>

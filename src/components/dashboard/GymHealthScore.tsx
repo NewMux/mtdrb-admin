@@ -6,9 +6,9 @@ import {
   FiActivity,
   FiHeart,
 } from "react-icons/fi";
-import SmartKpiCard from "../ui/SmartKpiCard";
+import SmartKpiCard, { type SmartKpiCardProps } from "../ui/SmartKpiCard";
 
-const healthItems = [
+const healthItems: SmartKpiCardProps[] = [
   {
     label: "Member Satisfaction",
     value: "96%",

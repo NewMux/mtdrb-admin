@@ -96,10 +96,10 @@ const CTA: React.FC = () => {
             transition={{ duration: 1, delay: 0.8 }}
             className="pt-16"
           >
-            <p className="text-gray-400 mb-6">Trusted by leading gyms across the GCC</p>
+            <p className="text-gray-400 mb-6">Trusted by leading gyms across MENAT</p>
             <div className="flex flex-wrap justify-center gap-8 opacity-60">
               <div className="text-2xl font-bold text-white">Fitness First</div>
-              <div className="text-2xl font-bold text-white">Gold's Gym</div>
+              <div className="text-2xl font-bold text-white">Gold&apos;s Gym</div>
               <div className="text-2xl font-bold text-white">Planet Fitness</div>
               <div className="text-2xl font-bold text-white">Anytime Fitness</div>
             </div>

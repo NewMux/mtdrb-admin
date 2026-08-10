@@ -1,10 +1,7 @@
 import { supabase } from "../supabaseClient";
 import type { Database } from "../types/supabase";
 
-type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
-type TrainerRow = Database["public"]["Tables"]["trainers"]["Row"];
-type BookingRow = Database["public"]["Tables"]["class_bookings"]["Row"];
 
 /**
  * Smart Suggestions Service
@@ -341,7 +338,7 @@ export async function getMemberEngagementInsights(
         description: `${inactiveMembers.length} members (${Math.round(inactivePercentage)}%) haven't booked any classes in the last 30 days.`,
         confidence: 0.88,
         impact: inactivePercentage > 20 ? "high" : "medium",
-        action: "Send re-engagement campaign",
+        action: "View Members",
         isPro: true,
         category: "retention",
       });

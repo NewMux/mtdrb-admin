@@ -1,37 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState, useEffect, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import { useUI } from "../../contexts/UIContext";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleSelect,
   AppleTextarea,
   AppleToggle,
-  AppleButton,
-  AppleButtonGroup,
 } from "../AppleStyleModal";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiTarget,
-  FiHeart,
-  FiFileText,
-} from "react-icons/fi";
-import { SmartClassModal } from "./modals/SmartClassModal";
+import { AnimatePresence } from "framer-motion";
 import { SmartButton } from "../ui/DesignSystem";
+import { SmartModal } from "../ui/SmartModal";
 
 interface ClassFormDrawerProps {
   isOpen: boolean;
   mode: "add" | "edit";
-  classData?: any;
+  classData?: ClassFormData;
   onClose: () => void;
   onSaved?: () => void;
 }
@@ -42,24 +29,6 @@ const classTypes = [
   { value: "Cardio", label: "Cardio" },
   { value: "HIIT", label: "HIIT" },
   { value: "Spin", label: "Spin" },
-];
-const durations = [30, 45, 60, 75, 90];
-const repeatPatterns = [
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "mon_wed_fri", label: "Mon/Wed/Fri" },
-  { value: "custom", label: "Custom" },
-];
-const rooms = [
-  { value: "studio_a", label: "Studio A" },
-  { value: "outdoor", label: "Outdoor Zone" },
-];
-const tagsList = [
-  "Beginner-friendly",
-  "High-Intensity",
-  "Mobility",
-  "Core",
-  "Cardio",
 ];
 
 const schema = z.object({
@@ -84,11 +53,39 @@ const schema = z.object({
   price: z.coerce.number().optional(),
   visible: z.boolean(),
   notes: z.string().optional(),
-  files: z.any().optional(),
+  files: z.array(z.instanceof(File)).optional(),
   tags: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof schema>;
+type ClassFormData = Partial<FormData> & { id?: string };
+
+interface ClassPayload {
+  tenant_id: string;
+  name: string;
+  type: string;
+  description?: string;
+  color?: string;
+  starttime: string;
+  duration: number;
+  capacity: number;
+  trainer_id: string;
+  branch_id: string;
+  room?: string;
+  allow_waitlist: boolean;
+  auto_cancel: boolean;
+  is_paid: boolean;
+  price?: number | null;
+  visible: boolean;
+  notes?: string;
+  tags: string[];
+  color_tag?: string;
+  recurrence: string | null;
+  recurrence_end: string | null;
+  recurrence_sessions?: number | null;
+  custom_fields: Record<string, unknown>;
+  attachments: string[];
+}
 
 interface TrainerOption {
   id: string;
@@ -117,31 +114,21 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
   onClose,
   onSaved,
 }) => {
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    classData?.tags || [],
-  );
   const [fileList, setFileList] = useState<File[]>([]);
   const [color, setColor] = useState<string>(classData?.color || "#2563eb");
   const [trainers, setTrainers] = useState<TrainerOption[]>([]);
   const [branches, setBranches] = useState<BranchOption[]>([]);
-  const [loadingDropdowns, setLoadingDropdowns] = useState(false);
-  const [dropdownError, setDropdownError] = useState<string | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [uploadingFiles, setUploadingFiles] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
-  const [checkingConflict, setCheckingConflict] = useState(false);
   const [roomConflictWarning, setRoomConflictWarning] = useState<string | null>(
     null,
   );
-  const [checkingRoomConflict, setCheckingRoomConflict] = useState(false);
-  const { setDrawerOpen, drawerOpen } = useUI();
+  const { setDrawerOpen } = useUI();
 
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     reset,
@@ -176,52 +163,12 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
   });
 
   useEffect(() => {
-    if (isOpen) {
-      reset(
-        classData || {
-          name: "",
-          type: "",
-          description: "",
-          color: "#2563eb",
-          start_date: "",
-          time: "",
-          duration: 60,
-          repeat: false,
-          repeat_pattern: "",
-          repeat_end: "",
-          repeat_sessions: undefined,
-          trainer_id: "",
-          branch: "",
-          room: "",
-          capacity: 10,
-          allow_waitlist: false,
-          auto_cancel: false,
-          is_paid: false,
-          price: undefined,
-          visible: true,
-          notes: "",
-          files: undefined,
-          tags: [],
-        },
-      );
-      setSelectedTags(classData?.tags || []);
-      setColor(classData?.color || "#2563eb");
-      setFileList([]);
-      // Fetch trainers and branches
-      fetchDropdownData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, classData, reset]);
-
-  useEffect(() => {
     setDrawerOpen(isOpen);
     return () => setDrawerOpen(false);
   }, [isOpen, setDrawerOpen]);
 
   // Fetch trainers and branches for the current tenant
-  const fetchDropdownData = async () => {
-    setLoadingDropdowns(true);
-    setDropdownError(null);
+  const fetchDropdownData = useCallback(async () => {
     try {
       // Get session
       const {
@@ -253,18 +200,54 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
         .eq("tenant_id", tenantId);
       if (branchesError) throw branchesError;
       setBranches(branchesData || []);
-    } catch (err: any) {
-      setDropdownError(err.message || "Failed to load dropdown data");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to load dropdown data";
+      toast.error(message);
       setTrainers([]);
       setBranches([]);
-    } finally {
-      setLoadingDropdowns(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(
+        classData || {
+          name: "",
+          type: "",
+          description: "",
+          color: "#2563eb",
+          start_date: "",
+          time: "",
+          duration: 60,
+          repeat: false,
+          repeat_pattern: "",
+          repeat_end: "",
+          repeat_sessions: undefined,
+          trainer_id: "",
+          branch: "",
+          room: "",
+          capacity: 10,
+          allow_waitlist: false,
+          auto_cancel: false,
+          is_paid: false,
+          price: undefined,
+          visible: true,
+          notes: "",
+          files: undefined,
+          tags: [],
+        },
+      );
+      setColor(classData?.color || "#2563eb");
+      setFileList([]);
+      // Fetch trainers and branches
+      fetchDropdownData();
+    }
+  }, [classData, fetchDropdownData, isOpen, reset]);
 
   // Watchers for dynamic fields
-  const repeat = watch("repeat");
-  const is_paid = watch("is_paid");
   const trainer_id = watch("trainer_id");
   const start_date = watch("start_date");
   const time = watch("time");
@@ -277,7 +260,6 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
     const checkConflict = async () => {
       setConflictWarning(null);
       if (!trainer_id || !start_date || !time || !duration) return;
-      setCheckingConflict(true);
       try {
         // Calculate start and end time for the new class
         const startTime = new Date(`${start_date}T${time}`);
@@ -310,20 +292,16 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
               setConflictWarning(
                 `Trainer is already booked for "${c.name}" from ${cStart.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} to ${cEnd.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} on this date.`,
               );
-              setCheckingConflict(false);
               return;
             }
           }
         }
         setConflictWarning(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setConflictWarning("Could not check trainer availability.");
-      } finally {
-        setCheckingConflict(false);
       }
     };
     checkConflict();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trainer_id, start_date, time, duration, classData?.id]);
 
   // Room availability/booking conflict check
@@ -331,7 +309,6 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
     const checkRoomConflict = async () => {
       setRoomConflictWarning(null);
       if (!branch || !room || !start_date || !time || !duration) return;
-      setCheckingRoomConflict(true);
       try {
         const startTime = new Date(`${start_date}T${time}`);
         const endTime = new Date(
@@ -363,45 +340,21 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
               setRoomConflictWarning(
                 `Room is already booked for "${c.name}" from ${cStart.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} to ${cEnd.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} on this date.`,
               );
-              setCheckingRoomConflict(false);
               return;
             }
           }
         }
         setRoomConflictWarning(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setRoomConflictWarning("Could not check room availability.");
-      } finally {
-        setCheckingRoomConflict(false);
       }
     };
     checkRoomConflict();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branch, room, start_date, time, duration, classData?.id]);
 
-  const handleTagToggle = (tag: string) => {
-    let newTags;
-    if (selectedTags.includes(tag)) {
-      newTags = selectedTags.filter((t) => t !== tag);
-    } else {
-      newTags = [...selectedTags, tag];
-    }
-    setSelectedTags(newTags);
-    setValue("tags", newTags);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFileList(Array.from(e.target.files));
-      setValue("files", e.target.files);
-    }
-  };
-
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormData) => {
     setSubmitLoading(true);
     setSubmitError(null);
-    setUploadError(null);
-    setUploadingFiles(false);
     try {
       // Get session and tenant ID
       const {
@@ -420,26 +373,22 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
       if (!tenantId) throw new Error("No tenant ID found");
 
       // 1. Upload files if any
-      let attachments: string[] = [];
+      const attachments: string[] = [];
       if (fileList.length > 0) {
-        setUploadingFiles(true);
         for (const file of fileList) {
           const filePath = `classes/${tenantId}/${Date.now()}_${file.name}`;
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from("attachments")
-              .upload(filePath, file, { upsert: true });
+          const { error: uploadError } = await supabase.storage
+            .from("attachments")
+            .upload(filePath, file, { upsert: true });
           if (uploadError) {
-            setUploadError(`Failed to upload file: ${file.name}`);
             throw uploadError;
           }
           attachments.push(filePath);
         }
-        setUploadingFiles(false);
       }
 
       // Map form data to DB fields
-      const payload: any = {
+      const payload: ClassPayload = {
         tenant_id: tenantId,
         name: data.name,
         type: data.type,
@@ -459,9 +408,9 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
         notes: data.notes,
         tags: data.tags || [],
         color_tag: data.color,
-        recurrence: data.repeat ? data.repeat_pattern : null,
-        recurrence_end: data.repeat ? data.repeat_end : null,
-        recurrence_sessions: data.repeat ? data.repeat_sessions : null,
+        recurrence: data.repeat ? data.repeat_pattern ?? null : null,
+        recurrence_end: data.repeat ? data.repeat_end ?? null : null,
+        recurrence_sessions: data.repeat ? data.repeat_sessions ?? null : null,
         custom_fields: {},
         attachments,
       };
@@ -481,11 +430,12 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
       );
       if (onSaved) onSaved();
       onClose();
-    } catch (err: any) {
-      setSubmitError(err.message || "Failed to save class");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to save class";
+      setSubmitError(message);
     } finally {
       setSubmitLoading(false);
-      setUploadingFiles(false);
     }
   };
 
@@ -739,13 +689,13 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
                 <div className="space-y-3">
                   <AppleToggle
                     label="Allow Waitlist"
-                    checked={watch("allow_waitlist")}
+                    checked={Boolean(watch("allow_waitlist"))}
                     onChange={(checked) => setValue("allow_waitlist", checked)}
                   />
 
                   <AppleToggle
                     label="Auto-cancel if Empty"
-                    checked={watch("auto_cancel")}
+                    checked={Boolean(watch("auto_cancel"))}
                     onChange={(checked) => setValue("auto_cancel", checked)}
                   />
                 </div>
@@ -761,7 +711,7 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <AppleToggle
                   label="Paid Class"
-                  checked={watch("is_paid")}
+                  checked={Boolean(watch("is_paid"))}
                   onChange={(checked) => setValue("is_paid", checked)}
                 />
 
@@ -786,7 +736,7 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
 
               <AppleToggle
                 label="Visible to Members"
-                checked={watch("visible")}
+                checked={Boolean(watch("visible"))}
                 onChange={(checked) => setValue("visible", checked)}
               />
 

@@ -16,7 +16,7 @@ import { hasRole, UserRole, getDefaultRole } from "../types/roles";
 export function usePermissions() {
   const { userMetadata, hasPermission } = useAuth();
 
-  // Get user's role (default to staff if not set)
+  // Get user's role (default to trainer if not set)
   const userRole = (userMetadata?.role || getDefaultRole()) as UserRole;
 
   /**
@@ -41,19 +41,15 @@ export function usePermissions() {
    * Role-based access checks
    */
   const isAdmin = hasRoleAccess("admin");
-  const isManager = hasRoleAccess("manager");
+  const isEmployee = hasRoleAccess("employee");
   const isTrainer = hasRoleAccess("trainer");
-  const isStaff = hasRoleAccess("staff");
-  const isOwner = hasRoleAccess("owner");
 
   return {
     // Role checks
     userRole,
-    isOwner,
     isAdmin,
-    isManager,
+    isEmployee,
     isTrainer,
-    isStaff,
     hasRoleAccess,
 
     // Permission checks

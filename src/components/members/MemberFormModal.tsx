@@ -1,47 +1,24 @@
-import React, { useEffect, useState, Fragment, useCallback } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useEffect, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format, addMonths, addYears } from "date-fns";
+import { format } from "date-fns";
 import { supabase } from "../../supabaseClient";
 import { Member } from "../../types/member";
 import dayjs from "dayjs";
 import { useWorkoutPlans } from "../../contexts/WorkoutPlansContext";
 import {
-  FiX,
-  FiUser,
   FiMail,
-  FiPhone,
-  FiCalendar,
   FiDollarSign,
-  FiTag,
-  FiFileText,
   FiShield,
-  FiBriefcase,
-  FiArrowLeft,
-  FiArrowRight,
   FiCheck,
-  FiSave,
-  FiMapPin,
-  FiTarget,
   FiHeart,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { useUI } from "../../contexts/UIContext";
-import {
-  AppleStyleModal,
-  AppleInput,
-  AppleSelect,
-  AppleTextarea,
-  AppleToggle,
-  AppleButton,
-  AppleButtonGroup,
-} from "../AppleStyleModal";
-import * as Dialog from "@radix-ui/react-dialog";
 // ColorfulModalUI replaced with SmartModal
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 interface MemberFormModalProps {
   isOpen: boolean;
@@ -232,6 +209,62 @@ const schema = z
     },
   );
 
+const normalizeMembershipStatus = (
+  status?: string | null,
+): MemberFormData["membership_status"] => {
+  switch ((status ?? "").toLowerCase()) {
+    case "active":
+      return "active";
+    case "trial":
+      return "trial";
+    case "paused":
+      return "paused";
+    case "cancelled":
+    case "canceled":
+      return "cancelled";
+    default:
+      return "active";
+  }
+};
+
+const normalizeBillingCycle = (
+  cycle?: string | null,
+): MemberFormData["billing_cycle"] => {
+  switch ((cycle ?? "").toLowerCase()) {
+    case "monthly":
+      return "monthly";
+    case "quarterly":
+      return "quarterly";
+    case "semi-annual":
+    case "semi annual":
+      return "semi-annual";
+    case "annual":
+      return "annual";
+    default:
+      return "monthly";
+  }
+};
+
+const normalizePaymentMethod = (
+  method?: string | null,
+): MemberFormData["payment_method"] => {
+  switch ((method ?? "").toLowerCase()) {
+    case "card":
+      return "card";
+    case "bank transfer":
+    case "bank_transfer":
+      return "bank_transfer";
+    case "digital wallet":
+    case "digital_wallet":
+      return "digital_wallet";
+    case "cheque":
+      return "cheque";
+    case "cash":
+    default:
+      return "cash";
+  }
+};
+
 interface Branch {
   id: string;
   name: string;
@@ -277,19 +310,14 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
   onSaved,
   member,
 }) => {
-  const [session, setSession] = useState<any>(null);
+  const [, setSession] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [duplicateStatus, setDuplicateStatus] = useState<{
-    loading: boolean;
-    message: string | null;
-  }>({ loading: false, message: null });
-  const { plans: workoutPlans, loading: plansLoading } = useWorkoutPlans();
+  const [, setError] = useState<string | null>(null);
+  useWorkoutPlans();
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showFitnessInfo, setShowFitnessInfo] = useState(false);
+  const [, setBranches] = useState<Branch[]>([]);
+  const [selectedTags] = useState<string[]>([]);
   const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0].code);
   // Removed setDrawerOpen - this component uses Dialog, not drawer
 
@@ -306,11 +334,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         national_id: member.national_id || "",
         emergency_contact: member.emergency_contact || "",
         language: (member.language as "English" | "Arabic") || "English",
-        membership_status: member.membership_status as
-          | "active"
-          | "trial"
-          | "cancelled"
-          | "paused",
+        membership_status: normalizeMembershipStatus(member.membership_status),
         start_date: member.start_date ? member.start_date.split("T")[0] : "",
         end_date: member.end_date ? member.end_date.split("T")[0] : "",
         membership_type: member.membership_type || "",
@@ -328,7 +352,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         invoice_amount: 0,
         invoice_items: "",
         invoice_due_date: dayjs().add(30, "day").format("YYYY-MM-DD"),
-        payment_method: "Cash",
+        payment_method: normalizePaymentMethod(member.payment_method_preference),
 
         // 🚀 SMART DEFAULTS FOR EXISTING MEMBER
         height: member.height || undefined,
@@ -360,22 +384,13 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             | "1_year"
             | "2_years"
             | "lifetime") || "1_month",
-        billing_cycle:
-          (member.billing_cycle as
-            | "Monthly"
-            | "Quarterly"
-            | "Semi-Annual"
-            | "Annual") || "Monthly",
+        billing_cycle: normalizeBillingCycle(member.billing_cycle),
         discount_percentage: member.discount_percentage || undefined,
         discount_amount: member.discount_amount || undefined,
         auto_renewal: member.auto_renewal || false,
-        payment_method_preference:
-          (member.payment_method_preference as
-            | "card"
-            | "bank_transfer"
-            | "cash"
-            | "digital_wallet"
-            | "cheque") || undefined,
+        payment_method_preference: normalizePaymentMethod(
+          member.payment_method_preference,
+        ),
 
         // Modern Gym SaaS Features
         access_hours:
@@ -429,7 +444,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         invoice_amount: 0,
         invoice_items: "",
         invoice_due_date: dayjs().add(30, "day").format("YYYY-MM-DD"),
-        payment_method: "Cash",
+        payment_method: "cash",
 
         // 🚀 SMART DEFAULTS FOR NEW MEMBER - Fix required fields
         height: undefined,
@@ -446,7 +461,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         // Staff Management - Membership Setup
         access_level: "Basic",
         membership_duration: "1_month",
-        billing_cycle: "Monthly",
+        billing_cycle: "monthly",
         discount_percentage: undefined,
         discount_amount: undefined,
         auto_renewal: false,
@@ -475,7 +490,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     reset,
@@ -488,7 +502,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
 
   // 🚀 MULTI-STEP NAVIGATION STATE
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
   const steps = [
     { id: 0, title: "Member Details", icon: "👤" },
@@ -496,20 +509,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     { id: 2, title: "Goals & Schedule", icon: "🎯" },
     { id: 3, title: "Setup & Features", icon: "💳" },
   ];
-
-  const nextStep = () => {
-    if (validateRequiredFields() && currentStep < steps.length - 1) {
-      setCompletedSteps((prev) => [...prev, currentStep]);
-      setCurrentStep(currentStep + 1);
-      setValidationErrors([]); // Clear errors when moving to next step
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
 
   const goToStep = (stepIndex: number) => {
     setCurrentStep(stepIndex);
@@ -530,7 +529,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Member Information
         </h3>
         <p className="text-sm text-gray-600">
-          Enter the member's basic details and contact information
+          Enter the member&apos;s basic details and contact information
         </p>
       </div>
 
@@ -544,7 +543,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="name"
-            name="name"
             autoComplete="name"
             {...register("name")}
             type="text"
@@ -565,7 +563,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="gender"
-            name="gender"
             autoComplete="sex"
             {...register("gender")}
             className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -585,7 +582,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="date_of_birth"
-            name="date_of_birth"
             autoComplete="bday"
             {...register("date_of_birth")}
             type="date"
@@ -602,7 +598,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="phone"
-            name="phone"
             autoComplete="tel"
             {...register("phone")}
             type="tel"
@@ -623,7 +618,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="email"
-            name="email"
             autoComplete="email"
             {...register("email")}
             type="email"
@@ -644,7 +638,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="emergency_contact"
-            name="emergency_contact"
             autoComplete="tel"
             {...register("emergency_contact")}
             type="text"
@@ -662,7 +655,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="national_id"
-            name="national_id"
             autoComplete="off"
             {...register("national_id")}
             type="text"
@@ -680,7 +672,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="language"
-            name="language"
             {...register("language")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -701,7 +692,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="assigned_trainer_id"
-            name="assigned_trainer_id"
             {...register("assigned_trainer_id")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -723,7 +713,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="plan_id"
-            name="plan_id"
             {...register("plan_id")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -797,7 +786,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <textarea
             id="staff_notes"
-            name="staff_notes"
             {...register("staff_notes")}
             rows={3}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -814,7 +802,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <textarea
             id="medical_notes"
-            name="medical_notes"
             {...register("medical_notes")}
             rows={3}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -832,7 +819,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Health & Fitness Profile
         </h3>
         <p className="text-sm text-gray-600">
-          Record the member's health information and fitness background
+          Record the member&apos;s health information and fitness background
         </p>
       </div>
 
@@ -846,7 +833,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="weight"
-            name="weight"
             autoComplete="off"
             {...register("weight", { valueAsNumber: true })}
             type="number"
@@ -865,7 +851,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="target_weight"
-            name="target_weight"
             autoComplete="off"
             {...register("target_weight", { valueAsNumber: true })}
             type="number"
@@ -884,7 +869,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <input
             id="height"
-            name="height"
             autoComplete="off"
             {...register("height", { valueAsNumber: true })}
             type="number"
@@ -902,7 +886,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           </label>
           <select
             id="fitness_level"
-            name="fitness_level"
             autoComplete="off"
             {...register("fitness_level")}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1003,7 +986,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           Goals & Preferences
         </h3>
         <p className="text-sm text-gray-600">
-          Configure the member's fitness goals and workout preferences
+          Configure the member&apos;s fitness goals and workout preferences
         </p>
       </div>
 
@@ -1411,7 +1394,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
               </span>
             </label>
             <p className="text-xs text-gray-500 ml-6">
-              Member's subscription will auto-renew
+              Member&apos;s subscription will auto-renew
             </p>
           </div>
 
@@ -1768,27 +1751,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     return () => subscription.unsubscribe();
   }, [watch, setValue, calculateEndDate]);
 
-  // Smart validation feedback
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  const validateRequiredFields = useCallback(() => {
-    const errors: string[] = [];
-    const currentValues = watch();
-
-
-    // Only validate the most essential fields for member creation
-    if (!currentValues.name?.trim()) errors.push("Full Name is required");
-    if (!currentValues.phone?.trim()) errors.push("Phone Number is required");
-    if (!currentValues.gender) errors.push("Gender is required");
-    if (!currentValues.start_date) errors.push("Start Date is required");
-    if (!currentValues.end_date) errors.push("End Date is required");
-    if (!currentValues.membership_status)
-      errors.push("Membership Status is required");
-
-    setValidationErrors(errors);
-    return errors.length === 0;
-  }, [watch]);
-
   // Reset form when modal opens or member changes
   useEffect(() => {
     if (isOpen) {
@@ -1796,16 +1758,37 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
         // Editing an existing member
         const formattedMember = {
           ...member,
+          name: member.name ?? "",
+          email: member.email ?? "",
+          national_id: member.national_id ?? "",
+          emergency_contact: member.emergency_contact ?? "",
           date_of_birth: member.date_of_birth
             ? dayjs(member.date_of_birth).format("YYYY-MM-DD")
             : "",
           start_date: member.start_date
             ? dayjs(member.start_date).format("YYYY-MM-DD")
             : dayjs().format("YYYY-MM-DD"),
+          end_date: member.end_date ? dayjs(member.end_date).format("YYYY-MM-DD") : "",
           phone: member.phone || "+973",
           language: (member.language === "Arabic" ? "Arabic" : "English") as
             | "English"
             | "Arabic",
+          membership_status: normalizeMembershipStatus(member.membership_status),
+          membership_type: member.membership_type ?? "",
+          primary_goals: member.primary_goals ?? [],
+          preferred_workout_times: member.preferred_workout_times ?? [],
+          billing_cycle: normalizeBillingCycle(member.billing_cycle),
+          tags: member.tags ?? [],
+          staff_notes: member.staff_notes ?? "",
+          medical_notes: member.medical_notes ?? "",
+          height: member.height ?? undefined,
+          weight: member.weight ?? undefined,
+          target_weight: member.target_weight ?? undefined,
+          medical_conditions: member.medical_conditions ?? [],
+          injuries: member.injuries ?? [],
+          payment_method_preference: normalizePaymentMethod(
+            member.payment_method_preference,
+          ),
         };
         // Try to auto-detect country code from phone
         const found = COUNTRY_CODES.find((c) =>
@@ -1834,11 +1817,12 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           email: "",
           phone: "",
           language: "English",
-          membership_status: "Active",
+          membership_status: "active",
           membership_price: 0,
           start_date: dayjs().format("YYYY-MM-DD"),
           end_date: dayjs().add(1, "month").format("YYYY-MM-DD"),
           membership_type: "Monthly",
+          billing_cycle: "monthly",
           plan_id: null,
           tags: [],
           staff_notes: "",
@@ -1849,6 +1833,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
           invoice_items: "",
           invoice_due_date: "",
           payment_method: "cash",
+          payment_method_preference: "cash",
           // Add default values for required fields
           fitness_level: "Beginner",
           primary_goals: ["General Fitness"],
@@ -1965,31 +1950,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     };
   }, []);
 
-  // Duplicate Check
-  const checkDuplicate = async (field: "email" | "phone", value: string) => {
-    if (!value) return;
-    setDuplicateStatus({ loading: true, message: null });
-    const { data, error } = await supabase
-      .from("members")
-      .select("id, name")
-      .eq(field, value)
-      .limit(1);
-
-    if (data && data.length > 0 && data[0].id !== member?.id) {
-      setDuplicateStatus({
-        loading: false,
-        message: `Member with this ${field} already exists: ${data[0].name}`,
-      });
-    } else {
-      setDuplicateStatus({ loading: false, message: null });
-    }
-  };
-
-  // Phone input handler
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue("phone", e.target.value.replace(/[^0-9]/g, ""));
-  };
-
   const onSubmit = async (data: MemberFormData) => {
     setIsLoading(true);
     setError(null);
@@ -2028,6 +1988,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     const {
       create_invoice,
       invoice_amount,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       invoice_items,
       invoice_due_date,
       payment_method,
@@ -2041,7 +2002,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
       national_id: memberData.national_id || null,
       emergency_contact: memberData.emergency_contact || null,
       language: memberData.language || "English",
-      membership_status: memberData.membership_status || "Active",
+      membership_status: memberData.membership_status || "active",
       start_date: memberData.start_date,
       end_date: memberData.end_date,
       membership_type: memberData.membership_type,
@@ -2052,7 +2013,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
       staff_notes: memberData.staff_notes || null,
       medical_notes: memberData.medical_notes || null,
       consent_signed: memberData.consent_signed || false,
-      payment_method: payment_method?.toLowerCase() || "cash",
+      payment_method: normalizePaymentMethod(payment_method),
     };
 
     try {
@@ -2250,12 +2211,6 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
     }
   };
 
-  const handleTagToggle = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
-  };
-
   // Removed setDrawerOpen useEffect - this component uses Dialog, not drawer
 
   return (
@@ -2274,7 +2229,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
               </SmartButton>
               <SmartButton
                 variant="primary"
-                onClick={handleSubmit}
+                onClick={handleSubmit(onSubmit)}
                 loading={isLoading}
               >
                 {isLoading
@@ -2286,7 +2241,7 @@ const MemberFormModal: React.FC<MemberFormModalProps> = ({
             </div>
           }
         >
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Progress Steps */}
             <div className="mb-8 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">

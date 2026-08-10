@@ -27,7 +27,8 @@ import {
 
 const ClassModalsDemo: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [selectedClassId, setSelectedClassId] = useState("class-123");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedClassId, _setSelectedClassId] = useState("class-123");
 
   const modalConfigs = [
     {

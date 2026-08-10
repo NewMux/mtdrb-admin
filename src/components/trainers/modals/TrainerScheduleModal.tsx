@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiCalendar,
-  FiClock,
   FiPlus,
   FiEdit,
   FiTrash2,

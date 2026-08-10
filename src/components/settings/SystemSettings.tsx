@@ -3,19 +3,15 @@ import {
   FiServer,
   FiGlobe,
   FiClock,
-  FiMapPin,
   FiDatabase,
   FiWifi,
-  FiSave,
 } from "react-icons/fi";
 
 interface SystemSettingsProps {
   refreshKey: number;
 }
 
-export const SystemSettings: React.FC<SystemSettingsProps> = ({
-  refreshKey,
-}) => {
+export const SystemSettings: React.FC<SystemSettingsProps> = () => {
   const [settings, setSettings] = useState({
     systemName: "MTDRB Gym Management",
     timezone: "America/New_York",
@@ -33,21 +29,11 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
     enableLogging: true,
   });
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleInputChange = (
     field: string,
     value: string | boolean | number,
   ) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    // toast.success('System settings saved successfully!');
   };
 
   const timezones = [

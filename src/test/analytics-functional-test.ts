@@ -939,6 +939,7 @@ class AnalyticsFunctionalTest {
   }
 
   private endTimer(component: string) {
+    void component;
     const endTime = performance.now();
     const duration = endTime - this.startTime;
 
@@ -998,16 +999,19 @@ class AnalyticsFunctionalTest {
   }
 
   private async testEscapeKey(modal: Element): Promise<boolean> {
+    void modal;
     // Test escape key functionality
     return true; // Placeholder
   }
 
   private async testBackdropClick(modal: Element): Promise<boolean> {
+    void modal;
     // Test backdrop click functionality
     return true; // Placeholder
   }
 
   private async testModalContent(modalType: string): Promise<boolean> {
+    void modalType;
     // Test modal content validation
     return true; // Placeholder
   }

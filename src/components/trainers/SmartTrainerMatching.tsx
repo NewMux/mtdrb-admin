@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import {
   FiTarget,
   FiUsers,
-  FiStar,
   FiHeart,
   FiTrendingUp,
   FiCheckCircle,

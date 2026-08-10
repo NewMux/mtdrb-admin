@@ -95,7 +95,7 @@ const BentoGrid: React.FC = () => {
             Sneak Peek
           </h2>
           <p className="text-xl sm:text-2xl text-lunaNavy/70 max-w-3xl mx-auto leading-relaxed font-light">
-            A preview of what's coming in 2025
+            A preview of what&apos;s coming in 2025
           </p>
         </motion.div>
 

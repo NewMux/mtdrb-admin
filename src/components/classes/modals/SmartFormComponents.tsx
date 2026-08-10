@@ -1,14 +1,10 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiAlertCircle,
-  FiCheck,
   FiClock,
-  FiUsers,
-  FiMapPin,
-  FiUser,
   FiCalendar,
-  FiZap,
+  FiChevronDown,
 } from "react-icons/fi";
 
 interface FormFieldProps {
@@ -36,13 +32,13 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-dark-900 dark:text-white">
+      <label className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-400">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
             {icon}
           </div>
         )}
@@ -56,11 +52,11 @@ export const FormField: React.FC<FormFieldProps> = ({
               icon ? "pl-10" : ""
             } ${
               error
-                ? "border-red-300 bg-red-50 dark:bg-red-900/10"
-                : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
+                ? "border-red-300 bg-red-50"
+                : "border-gray-200 bg-gray-50"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
-            } text-dark-900 dark:text-white`}
+            } text-gray-900 bg-white`}
             rows={4}
           />
         ) : (
@@ -74,18 +70,18 @@ export const FormField: React.FC<FormFieldProps> = ({
               icon ? "pl-10" : ""
             } ${
               error
-                ? "border-red-300 bg-red-50 dark:bg-red-900/10"
-                : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
+                ? "border-red-300 bg-red-50"
+                : "border-gray-200 bg-gray-50"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
-            } text-dark-900 dark:text-white`}
+            } text-gray-900 bg-white`}
           />
         )}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center space-x-1 mt-1 text-red-600 dark:text-red-400"
+            className="flex items-center space-x-1 mt-1 text-red-600"
           >
             <FiAlertCircle className="h-4 w-4" />
             <span className="text-sm">{error}</span>
@@ -119,7 +115,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-dark-900 dark:text-white">
+      <label className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -129,11 +125,11 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         disabled={disabled}
         className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
           error
-            ? "border-red-300 bg-red-50 dark:bg-red-900/10"
-            : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
+            ? "border-red-300 bg-red-50"
+            : "border-gray-200 bg-white"
         } ${
           disabled ? "opacity-50 cursor-not-allowed" : ""
-        } text-dark-900 dark:text-white`}
+        } text-gray-900`}
       >
         {placeholder && (
           <option value="" disabled>
@@ -150,7 +146,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center space-x-1 mt-1 text-red-600 dark:text-red-400"
+          className="flex items-center space-x-1 mt-1 text-red-600"
         >
           <FiAlertCircle className="h-4 w-4" />
           <span className="text-sm">{error}</span>
@@ -179,12 +175,12 @@ export const TimeField: React.FC<TimeFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-dark-900 dark:text-white">
+      <label className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-400 h-4 w-4" />
+        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <input
           type="time"
           value={value}
@@ -192,17 +188,17 @@ export const TimeField: React.FC<TimeFieldProps> = ({
           disabled={disabled}
           className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
             error
-              ? "border-red-300 bg-red-50 dark:bg-red-900/10"
-              : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
+              ? "border-red-300 bg-red-50"
+              : "border-gray-200 bg-white"
           } ${
             disabled ? "opacity-50 cursor-not-allowed" : ""
-          } text-dark-900 dark:text-white`}
+          } text-gray-900`}
         />
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center space-x-1 mt-1 text-red-600 dark:text-red-400"
+            className="flex items-center space-x-1 mt-1 text-red-600"
           >
             <FiAlertCircle className="h-4 w-4" />
             <span className="text-sm">{error}</span>
@@ -234,12 +230,12 @@ export const DateField: React.FC<DateFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-dark-900 dark:text-white">
+      <label className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-light-400 h-4 w-4" />
+        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <input
           type="date"
           value={value}
@@ -248,17 +244,17 @@ export const DateField: React.FC<DateFieldProps> = ({
           disabled={disabled}
           className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
             error
-              ? "border-red-300 bg-red-50 dark:bg-red-900/10"
-              : "border-light-200 dark:border-dark-600 bg-light-50 dark:bg-dark-700"
+              ? "border-red-300 bg-red-50"
+              : "border-gray-200 bg-white"
           } ${
             disabled ? "opacity-50 cursor-not-allowed" : ""
-          } text-dark-900 dark:text-white`}
+          } text-gray-900`}
         />
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center space-x-1 mt-1 text-red-600 dark:text-red-400"
+            className="flex items-center space-x-1 mt-1 text-red-600"
           >
             <FiAlertCircle className="h-4 w-4" />
             <span className="text-sm">{error}</span>
@@ -290,21 +286,21 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   if (collapsible) {
     return (
-      <div className="border border-light-200 dark:border-dark-700 rounded-xl overflow-hidden">
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full px-6 py-4 bg-light-50 dark:bg-dark-700 hover:bg-light-100 dark:hover:bg-dark-600 transition-colors duration-200 flex items-center justify-between"
+          className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
         >
           <div className="flex items-center space-x-3">
             {icon && (
-              <div className="text-light-600 dark:text-dark-400">{icon}</div>
+              <div className="text-gray-600">{icon}</div>
             )}
             <div className="text-left">
-              <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+              <h3 className="text-sm font-semibold text-gray-900">
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-xs text-light-600 dark:text-dark-400">
+                <p className="text-xs text-gray-600">
                   {subtitle}
                 </p>
               )}
@@ -313,7 +309,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-light-400"
+            className="text-gray-400"
           >
             <FiChevronDown className="h-4 w-4" />
           </motion.div>
@@ -339,14 +335,14 @@ export const FormSection: React.FC<FormSectionProps> = ({
     <div className="space-y-4">
       <div className="flex items-center space-x-3">
         {icon && (
-          <div className="text-light-600 dark:text-dark-400">{icon}</div>
+          <div className="text-gray-600">{icon}</div>
         )}
         <div>
-          <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
+          <h3 className="text-sm font-semibold text-gray-900">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-xs text-light-600 dark:text-dark-400">
+            <p className="text-xs text-gray-600">
               {subtitle}
             </p>
           )}
@@ -375,9 +371,9 @@ export const SmartRecommendationCard: React.FC<SmartRecommendationCardProps> = (
   onApply,
 }) => {
   const priorityColors = {
-    high: "border-red-200 bg-red-50 dark:bg-red-900/10",
-    medium: "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10",
-    low: "border-blue-200 bg-blue-50 dark:bg-blue-900/10",
+    high: "border-red-200 bg-red-50",
+    medium: "border-yellow-200 bg-yellow-50",
+    low: "border-blue-200 bg-blue-50",
   };
 
   const priorityIcons = {
@@ -398,16 +394,16 @@ export const SmartRecommendationCard: React.FC<SmartRecommendationCardProps> = (
             {priorityIcons[recommendation.priority]}
           </span>
           <div>
-            <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
+            <h4 className="text-sm font-semibold text-gray-900">
               {recommendation.title}
             </h4>
-            <p className="text-xs text-light-600 dark:text-dark-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               {recommendation.description}
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-light-600 dark:text-dark-400">
+          <span className="text-xs text-gray-600">
             {Math.round(recommendation.confidence * 100)}% confidence
           </span>
           {onApply && (
@@ -425,7 +421,7 @@ export const SmartRecommendationCard: React.FC<SmartRecommendationCardProps> = (
 };
 
 interface ConflictAlertProps {
-  conflicts: any[];
+  conflicts: { name?: string; date?: string; reason?: string; start_time?: string; end_time?: string }[];
 }
 
 export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
@@ -435,15 +431,15 @@ export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="p-4 border border-red-200 bg-red-50 dark:bg-red-900/10 rounded-xl"
+      className="p-4 border border-red-200 bg-red-50 rounded-xl"
     >
       <div className="flex items-start space-x-3">
-        <FiAlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+        <FiAlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
         <div className="flex-1">
-          <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">
+          <h4 className="text-sm font-semibold text-red-900">
             Scheduling Conflict Detected
           </h4>
-          <p className="text-sm text-red-700 dark:text-red-200 mt-1">
+          <p className="text-sm text-red-700 mt-1">
             The selected trainer has {conflicts.length} conflicting class(es) at
             this time.
           </p>
@@ -451,13 +447,13 @@ export const ConflictAlert: React.FC<ConflictAlertProps> = ({ conflicts }) => {
             {conflicts.slice(0, 3).map((conflict, index) => (
               <div
                 key={index}
-                className="text-xs text-red-600 dark:text-red-300"
+                className="text-xs text-red-600"
               >
-                • {conflict.name} ({conflict.start_time} - {conflict.end_time})
+                • {conflict.name || conflict.reason || "Conflict"} {conflict.start_time && conflict.end_time ? `(${conflict.start_time} - ${conflict.end_time})` : conflict.date ? `on ${conflict.date}` : ""}
               </div>
             ))}
             {conflicts.length > 3 && (
-              <div className="text-xs text-red-600 dark:text-red-300">
+              <div className="text-xs text-red-600">
                 • And {conflicts.length - 3} more...
               </div>
             )}

@@ -2,8 +2,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   FiBarChart,
-  FiFileText,
-  FiDollarSign,
   FiCalendar,
   FiCheckCircle,
   FiAlertTriangle,
@@ -72,6 +70,8 @@ export default function GenerateVATReportModal({
 }: GenerateVATReportModalProps) {
   const { loading, generateReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
+
+  const isProUser = isPro ?? true;
 
   const [selectedQuarter, setSelectedQuarter] = React.useState("q4_2023");
   const [customDateRange, setCustomDateRange] = React.useState(false);
@@ -158,6 +158,11 @@ export default function GenerateVATReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          VAT reports are available on Pro plans.
+        </div>
+      )}
 
       {/* Period Selection */}
       <Section title="Report Period">
@@ -412,7 +417,7 @@ export default function GenerateVATReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading || generating}
           >
@@ -421,7 +426,7 @@ export default function GenerateVATReportModal({
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handleGenerate}
-            disabled={loading || generating}
+            disabled={loading || generating || !isProUser}
           >
             {generating ? (
               <>

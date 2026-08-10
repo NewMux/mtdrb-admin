@@ -22,12 +22,13 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    // Check localStorage first, then system preference
+    // Only use user selection from localStorage, default to light
     const saved = localStorage.getItem("theme");
     if (saved) {
       return saved === "dark";
     }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Default to light mode - user must explicitly select dark mode
+    return false;
   });
 
   const toggleTheme = () => {
@@ -50,19 +51,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       root.classList.remove("dark");
     }
   }, [isDark]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem("theme")) {
-        setIsDark(e.matches);
-      }
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
 
   const value = {
     isDark,

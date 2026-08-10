@@ -28,7 +28,8 @@ interface Props {
   // For now, it&apos;s calculated within this component
 }
 
-export default function ClassOptimization(_props: Props) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ClassOptimization(_unusedProps: Props) {
   const calculateOptimalSchedule = (): {
     recommendations: ScheduleRecommendation[];
   } => {

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiFileText,
@@ -25,7 +24,6 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
   const [noteType, setNoteType] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingNote, setEditingNote] = useState(null);
 
   const mockNotes = [
     {

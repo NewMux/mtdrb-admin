@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { FiX, FiLock } from "react-icons/fi";
+import { useRTL } from "../hooks/useRTL";
 
 interface AppleStyleModalProps {
   isOpen: boolean;
@@ -52,12 +53,15 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
   isProFeature = false,
   footer,
 }) => {
+  const { isRTL } = useRTL();
+
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
         as="div"
         className="fixed inset-0 z-50 overflow-y-auto"
         onClose={closeOnBackdropClick ? onClose : () => {}}
+        dir={isRTL ? "rtl" : "ltr"}
       >
         <div className="flex min-h-screen items-center justify-center p-6">
           {/* Backdrop with frosted glass effect */}
@@ -87,32 +91,32 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
             leaveTo="opacity-0 scale-95"
           >
             <Dialog.Panel
-              className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white rounded-2xl shadow-2xl border border-gray-200 ${className}`}
+              className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-start ${className}`}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200">
-                <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200 dark:border-gray-700 gap-4">
+                <div className="flex items-center gap-3">
                   {isProFeature && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <FiLock className="w-4 h-4 text-yellow-500" />
-                      <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
+                      <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-1 rounded">
                         PRO
                       </span>
                     </div>
                   )}
-                  <div>
-                    <Dialog.Title className="text-xl font-semibold text-gray-900 tracking-tight">
+                  <div className="text-start">
+                    <Dialog.Title className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
                       {title}
                     </Dialog.Title>
                     {subtitle && (
-                      <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
                     )}
                   </div>
                 </div>
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl p-2"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
                   >
                     <FiX className="h-5 w-5" />
                   </button>
@@ -120,11 +124,11 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
               </div>
 
               {/* Content */}
-              <div className="px-8 py-6">{children}</div>
+              <div className="px-8 py-6 text-start">{children}</div>
 
               {/* Footer */}
               {footer && (
-                <div className="px-8 py-6 border-t border-gray-200">
+                <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700">
                   {footer}
                 </div>
               )}
@@ -147,25 +151,25 @@ export const AppleInput = React.forwardRef<
   } & React.InputHTMLAttributes<HTMLInputElement>
 >(({ label, error, className = "", required = false, ...props }, ref) => {
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+    <div className="space-y-3 text-start">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <input
         ref={ref}
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900
-          bg-white border border-gray-200 rounded-xl
+          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl
           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
           transition-all duration-300 ease-in-out
-          placeholder:text-gray-400
-          ${error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""}
+          placeholder:text-gray-400 dark:placeholder:text-gray-500
+          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       />
-      {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
     </div>
   );
 });
@@ -189,25 +193,25 @@ export const AppleSelect: React.FC<
   ...props
 }) => {
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+    <div className="space-y-3 text-start">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <select
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900
-          bg-white border border-gray-200 rounded-xl
+          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl
           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
           transition-all duration-300 ease-in-out
-          ${error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""}
+          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       >
         {children}
       </select>
-      {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
     </div>
   );
 };
@@ -222,25 +226,25 @@ export const AppleTextarea = React.forwardRef<
   } & React.TextareaHTMLAttributes<HTMLTextAreaElement>
 >(({ label, error, className = "", required = false, ...props }, ref) => {
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+    <div className="space-y-3 text-start">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <textarea
         ref={ref}
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900
-          bg-white border border-gray-200 rounded-xl resize-y
+          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl resize-y
           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
           transition-all duration-300 ease-in-out
-          placeholder:text-gray-400
-          ${error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""}
+          placeholder:text-gray-400 dark:placeholder:text-gray-500
+          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       />
-      {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
     </div>
   );
 });
@@ -255,13 +259,13 @@ export const AppleToggle: React.FC<{
 }> = ({ label, checked, onChange, className = "" }) => {
   return (
     <div className={`flex items-center justify-between ${className}`}>
-      <span className="text-sm font-medium text-gray-700">{label}</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         className={`
-          relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-          ${checked ? "bg-blue-600" : "bg-gray-200"}
+          relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800
+          ${checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
         `}
       >
         <span
@@ -307,8 +311,8 @@ export const AppleButton: React.FC<
   const variantClasses = {
     primary:
       "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md",
-    secondary: "border border-gray-300 text-gray-700 hover:bg-gray-100",
-    ghost: "text-gray-500 hover:text-gray-700 px-4 py-2",
+    secondary: "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
+    ghost: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2",
     danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow-md",
     success:
       "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md",

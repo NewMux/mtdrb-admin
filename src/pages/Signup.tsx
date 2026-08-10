@@ -1,13 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 import { supabase } from "../supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   
   // Check if user is already authenticated and redirect if needed
   // Only redirect if user is fully set up (paid and onboarded)
@@ -49,16 +51,15 @@ export default function Signup() {
     
     // Validate gym name
     if (!gymName.trim()) {
-      setError("Please enter your gym name");
+      setError(t("auth.pleaseEnterGymName"));
       setLoading(false);
       return;
     }
     
     // Sign up with Supabase
-    // Use production domain for email redirects, fallback to current origin
-    const redirectUrl = import.meta.env.PROD 
-      ? 'https://www.mtdrb.fit/dashboard'
-      : `${window.location.origin}/dashboard`;
+    // Use VITE_APP_URL for email redirects, fallback to current origin
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const redirectUrl = `${appUrl}/dashboard`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -77,9 +78,8 @@ export default function Signup() {
       // If session is available, it's already set in Supabase client
       // If email confirmation is required, session might be null
       if (data.session) {
-        // Session is available - user can proceed immediately
-        // Show onboarding step
-        setShowOnboarding(true);
+        // Session is available - auto-create tenant and proceed
+        await createTenantAndProceed();
       } else {
         // Email confirmation might be required
         // Check Supabase settings - if email confirmation is disabled, session should be available
@@ -87,98 +87,57 @@ export default function Signup() {
         setTimeout(async () => {
           const { data: sessionData } = await supabase.auth.getSession();
           if (sessionData?.session) {
-            setShowOnboarding(true);
+            await createTenantAndProceed();
           } else {
-            setError("Please check your email to confirm your account, then try again.");
+            setError(t("auth.checkEmailConfirm"));
           }
         }, 1000);
       }
     } else {
-      setError("Signup successful but user data not available. Please try signing in.");
+      setError(t("auth.signupSuccessButNoUser"));
     }
   };
 
-  // ===== HANDLE ONBOARDING SUBMIT =====
-  const handleOnboarding = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ===== AUTO-CREATE TENANT AND PROCEED =====
+  const createTenantAndProceed = async () => {
+    setShowOnboarding(true); // Show loading modal
     setOnboardingLoading(true);
     setOnboardingError("");
+    
     try {
-      // First, ensure we have a valid session (required for authenticated requests)
-      let session = null;
-      let user = signedUpUser;
+      // Create Tenant/org and membership using RPC function (bypasses RLS)
+      const { data: tenantId, error: tenantError } = await supabase
+        .rpc('create_tenant_with_membership', {
+          p_tenant_name: gymName || "My Gym",
+          p_user_role: 'admin',
+          p_tenant_metadata: {}
+        });
       
-      // Try to get session first (this is what provides the auth token)
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionData?.session) {
-        session = sessionData.session;
-        user = session.user;
-      } else if (sessionError) {
-        // If no session, try to refresh or get user
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user) {
-          user = userData.user;
-          // Try to refresh session
-          await supabase.auth.refreshSession();
-          const { data: refreshedSession } = await supabase.auth.getSession();
-          session = refreshedSession?.session || null;
-        }
+      if (tenantError) {
+        if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
+        throw new Error(tenantError.message || "Failed to create organization");
       }
       
-      // If still no user, use stored user (but this won't have auth token)
-      if (!user && signedUpUser) {
-        user = signedUpUser;
+      if (!tenantId) {
+        throw new Error("Failed to create organization: No tenant ID returned");
       }
-      
-      if (!user) {
-        throw new Error("User not found. Please try signing up again.");
-      }
-      
-      // If we don't have a session, wait a moment and try again
-      // (session might be establishing after signup)
-      if (!session) {
-        // Wait a bit for session to establish
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const { data: retrySession } = await supabase.auth.getSession();
-        if (!retrySession?.session) {
-          throw new Error("Session not available. Please try signing in again.");
-        }
-        session = retrySession.session;
-      }
-      
-      // Create Tenant/org (now with valid session/auth token)
-      const { data: tenantData, error: tenantError } = await supabase
-        .from("tenants")
-        .insert({
-          name: gymName || "My Gym",
-        })
-        .select("id")
-        .single();
-      if (tenantError) throw new Error(tenantError.message);
-      
-      // Create Membership (user as admin)
-      await supabase.from("memberships").insert({
-        user_id: user.id,
-        tenant_id: tenantData.id,
-        role: "admin",
-      });
       
       // Update user metadata with tenantId AND role
-      // This ensures PermissionGuard can check the user's role
       await supabase.auth.updateUser({ 
         data: { 
-          tenant_id: tenantData.id,
-          role: "admin", // Set role in user_metadata so PermissionGuard works
+          tenant_id: tenantId,
+          role: "admin",
+          gym_name: gymName,
         } 
       });
       
       // Redirect to subscribe
       navigate("/subscribe");
     } catch (err: any) {
-      setOnboardingError(err.message || "Failed to set up gym.");
+      if (import.meta.env.DEV) console.error("Tenant creation error:", err);
+      setOnboardingError(err.message || "Failed to set up gym. Please try again.");
+      setOnboardingLoading(false);
     }
-    setOnboardingLoading(false);
   };
 
   return (
@@ -208,25 +167,25 @@ export default function Signup() {
             </div>
             
             <h1 className="text-4xl font-bold mb-4">
-              Start your gym's digital transformation
+              {t("auth.signupSlogan")}
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Join thousands of gyms using MTDRB to streamline operations, boost revenue, and deliver exceptional member experiences.
+              {t("auth.signupDescription")}
             </p>
 
             {/* Feature Highlights */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-                <span className="text-blue-100">Free 14-day trial, no credit card required</span>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-300 rounded-full flex-shrink-0"></div>
+                <span className="text-blue-100 text-start">{t("auth.feature1")}</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-                <span className="text-blue-100">Setup your gym in under 5 minutes</span>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-300 rounded-full flex-shrink-0"></div>
+                <span className="text-blue-100 text-start">{t("auth.feature2")}</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-300 rounded-full"></div>
-                <span className="text-blue-100">Cancel anytime, no long-term contracts</span>
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-300 rounded-full flex-shrink-0"></div>
+                <span className="text-blue-100 text-start">{t("auth.feature3")}</span>
               </div>
             </div>
           </motion.div>
@@ -234,13 +193,8 @@ export default function Signup() {
       </div>
 
       {/* ===== RIGHT COLUMN - SIGNUP FORM ===== */}
-      <div className="flex-1 lg:w-1/2 flex items-center justify-center px-8 py-12 bg-white">
+      <div className="flex-1 lg:w-1/2 flex items-center justify-center px-8 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-md">
-          {/* Language Switcher */}
-          <div className="absolute top-8 right-8 lg:right-8">
-            <LanguageSwitcher />
-          </div>
-
           {/* Logo for mobile */}
           <div className="lg:hidden mb-8 text-center">
             <img 
@@ -257,105 +211,109 @@ export default function Signup() {
             transition={{ duration: 0.7, ease: [0.4, 0.1, 0.2, 1] }}
           >
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Create your account
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {t("auth.createAccount")}
               </h1>
-              <p className="text-gray-600">
-                Get started with MTDRB and transform your gym management.
+              <p className="text-gray-600 dark:text-gray-400">
+                {t("auth.createAccountSubtitle")}
               </p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSignup}>
               {/* Gym Name Field */}
               <div className="space-y-2">
-                <label htmlFor="gymName" className="block text-sm font-medium text-gray-700">
-                  Gym Name *
+                <label htmlFor="gymName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("auth.gymName")} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                     <FiHome className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     id="gymName"
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-                    placeholder="Enter your gym name"
+                    className={`block w-full ${isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3'} py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder={t("auth.gymNamePlaceholder")}
                     required
                     value={gymName}
                     onChange={(e) => setGymName(e.target.value)}
                     disabled={loading}
+                    dir={isRTL ? "rtl" : "ltr"}
                   />
                 </div>
               </div>
 
               {/* Name Field */}
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Full Name *
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("auth.fullName")} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                     <FiUser className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     id="name"
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-                    placeholder="Enter your full name"
+                    className={`block w-full ${isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3'} py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder={t("auth.fullNamePlaceholder")}
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={loading}
+                    dir={isRTL ? "rtl" : "ltr"}
                   />
                 </div>
               </div>
 
               {/* Email Field */}
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email Address *
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("auth.emailAddress")} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                     <FiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="email"
                     id="email"
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-                    placeholder="Enter your email"
+                    className={`block w-full ${isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3'} py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder={t("auth.emailPlaceholder")}
                     autoComplete="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
+                    dir={isRTL ? "rtl" : "ltr"}
                   />
                 </div>
               </div>
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password *
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t("auth.password")} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
                     <FiLock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200"
-                    placeholder="Create a password"
+                    className={`block w-full ${isRTL ? 'pr-10 pl-12' : 'pl-10 pr-12'} py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder={t("auth.passwordPlaceholder")}
                     autoComplete="new-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
+                    dir={isRTL ? "rtl" : "ltr"}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className={`absolute inset-y-0 ${isRTL ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center`}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -365,8 +323,8 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Must be at least 8 characters long
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t("auth.passwordMinLength")}
                 </p>
               </div>
 
@@ -377,20 +335,20 @@ export default function Signup() {
                     id="terms"
                     name="terms"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                     required
                   />
                 </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="terms" className="text-gray-700">
-                    I agree to the{" "}
-                    <a href="#" className="text-blue-600 hover:text-blue-500">
-                      Terms of Service
-                    </a>{" "}
-                    and{" "}
-                    <a href="#" className="text-blue-600 hover:text-blue-500">
-                      Privacy Policy
-                    </a>
+                <div className={`${isRTL ? 'mr-3' : 'ml-3'} text-sm`}>
+                  <label htmlFor="terms" className="text-gray-700 dark:text-gray-300">
+                    {t("auth.agreeTerms")}{" "}
+                    <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                      {t("auth.termsOfService")}
+                    </Link>{" "}
+                    {t("auth.and")}{" "}
+                    <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                      {t("auth.privacyPolicy")}
+                    </Link>
                   </label>
                 </div>
               </div>
@@ -420,14 +378,14 @@ export default function Signup() {
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Creating account...
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`animate-spin rounded-full h-5 w-5 border-b-2 border-white ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
+                    {t("auth.creatingAccount")}
                   </div>
                 ) : (
-                  <div className="flex items-center">
-                    Create account
-                    <FiArrowRight className="ml-2 h-4 w-4" />
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    {t("auth.createAccountButton")}
+                    <FiArrowRight className={`${isRTL ? 'mr-2 rotate-180' : 'ml-2'} h-4 w-4`} />
                   </div>
                 )}
               </motion.button>
@@ -436,12 +394,12 @@ export default function Signup() {
             {/* Sign In Link */}
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-600">
-                Already have an account?{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <Link
                   to="/login"
                   className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
-                  Sign in
+                  {t("auth.signIn")}
                 </Link>
               </p>
             </div>
@@ -452,14 +410,14 @@ export default function Signup() {
                 to="/"
                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
-                ← Back to Home
+                {isRTL ? '→ ' : '← '}{t("auth.backToHome")}
               </Link>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* ===== ONBOARDING MODAL ===== */}
+      {/* ===== ONBOARDING MODAL (Loading State) ===== */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <motion.div
@@ -470,13 +428,24 @@ export default function Signup() {
           >
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiHome className="h-8 w-8 text-blue-600" />
+                {onboardingLoading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                ) : onboardingError ? (
+                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <FiHome className="h-8 w-8 text-blue-600" />
+                )}
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Setting up your gym
+                {onboardingError ? t("auth.setupFailed") : t("auth.settingUpGym")}
               </h2>
               <p className="text-gray-600">
-                We're creating your organization and preparing your dashboard.
+                {onboardingError 
+                  ? t("auth.setupFailedDescription")
+                  : t("auth.settingUpDescription")
+                }
               </p>
             </div>
 
@@ -486,28 +455,32 @@ export default function Signup() {
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <span className="text-sm text-gray-700">Creating your organization</span>
+            {!onboardingError && (
+              <div className={`space-y-4 ${isRTL ? 'space-y-reverse' : ''}`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'space-x-3'}`}>
+                  <div className={`w-2 h-2 rounded-full ${onboardingLoading ? 'bg-blue-600 animate-pulse' : 'bg-green-500'}`}></div>
+                  <span className="text-sm text-gray-700">{t("auth.creatingOrganization")}</span>
+                </div>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'space-x-3'}`}>
+                  <div className={`w-2 h-2 rounded-full ${onboardingLoading ? 'bg-blue-600 animate-pulse' : 'bg-green-500'}`}></div>
+                  <span className="text-sm text-gray-700">{t("auth.settingUpAccount")}</span>
+                </div>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'space-x-3'}`}>
+                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                  <span className="text-sm text-gray-500">{t("auth.redirectingToSubscription")}</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                <span className="text-sm text-gray-700">Setting up your account</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                <span className="text-sm text-gray-500">Redirecting to payment</span>
-              </div>
-            </div>
+            )}
 
-            <button
-              onClick={handleOnboarding}
-              disabled={onboardingLoading}
-              className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
-            >
-              {onboardingLoading ? "Setting up..." : "Continue"}
-            </button>
+            {onboardingError && (
+              <button
+                onClick={() => signedUpUser && createTenantAndProceed()}
+                disabled={onboardingLoading}
+                className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
+              >
+                {t("auth.tryAgain")}
+              </button>
+            )}
           </motion.div>
         </div>
       )}

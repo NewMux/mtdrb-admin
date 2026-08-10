@@ -11,7 +11,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
-import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
+import { useSmartAnalyticsModal, type AnalyticsFilters } from "./useSmartAnalyticsModal";
 
 interface GenerateReportModalProps {
   open: boolean;
@@ -87,7 +87,6 @@ export default function GenerateReportModal({
     smartInsights,
     reportPreview,
     alerts,
-    generatePreview,
     generateReport,
     scheduleReport,
     clearAlerts,
@@ -101,8 +100,8 @@ export default function GenerateReportModal({
 
   const [showSchedule, setShowSchedule] = React.useState(false);
   const [scheduleConfig, setScheduleConfig] = React.useState({
-    frequency: "weekly" as const,
-    deliveryMethod: "email" as const,
+    frequency: "weekly" as NonNullable<AnalyticsFilters["frequency"]>,
+    deliveryMethod: "email" as NonNullable<AnalyticsFilters["deliveryMethod"]>,
     recipients: ["admin@mtdrb.com"],
   });
 
@@ -241,9 +240,10 @@ export default function GenerateReportModal({
                 name="reportType"
                 value={type.id}
                 checked={filters.reportType === type.id}
-                onChange={(e) =>
-                  setFilters({ ...filters, reportType: e.target.value as any })
-                }
+                  onChange={(e) => {
+                    const value = e.target.value as AnalyticsFilters["reportType"];
+                    setFilters({ ...filters, reportType: value });
+                  }}
                 className="mt-1"
               />
               <div>
@@ -330,7 +330,11 @@ export default function GenerateReportModal({
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
               value={filters.exportFormat}
               onChange={(e) =>
-                setFilters({ ...filters, exportFormat: e.target.value as any })
+                setFilters({
+                  ...filters,
+                  exportFormat:
+                    e.target.value as AnalyticsFilters["exportFormat"],
+                })
               }
             >
               {exportFormats.map((format) => (
@@ -392,7 +396,10 @@ export default function GenerateReportModal({
                     onChange={(e) =>
                       setScheduleConfig({
                         ...scheduleConfig,
-                        frequency: e.target.value as any,
+                        frequency:
+                          e.target.value as NonNullable<
+                            AnalyticsFilters["frequency"]
+                          >,
                       })
                     }
                   >
@@ -412,7 +419,10 @@ export default function GenerateReportModal({
                     onChange={(e) =>
                       setScheduleConfig({
                         ...scheduleConfig,
-                        deliveryMethod: e.target.value as any,
+                        deliveryMethod:
+                          e.target.value as NonNullable<
+                            AnalyticsFilters["deliveryMethod"]
+                          >,
                       })
                     }
                   >
@@ -470,7 +480,7 @@ export default function GenerateReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading}
           >

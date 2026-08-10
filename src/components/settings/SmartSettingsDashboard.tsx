@@ -20,7 +20,7 @@ interface SettingsCardProps {
   icon: React.ReactNode;
   status: "configured" | "incomplete" | "disabled";
   lastUpdated: string;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 const SettingsCard: React.FC<SettingsCardProps> = ({
@@ -86,9 +86,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   );
 };
 
-export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = ({
-  refreshKey,
-}) => {
+export const SmartSettingsDashboard: React.FC<SmartSettingsDashboardProps> = () => {
   const settingsCategories = [
     {
       title: "System Configuration",

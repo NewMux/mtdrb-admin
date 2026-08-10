@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiAlertTriangle,
   FiUserMinus,
   FiShield,
-  FiCheckCircle,
 } from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
@@ -23,7 +21,6 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
   const [reason, setReason] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1);
 
   const handleRemove = async () => {
     if (confirmText !== "REMOVE") {
@@ -152,7 +149,7 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
           {/* Confirmation */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Type "REMOVE" to confirm
+              Type &quot;REMOVE&quot; to confirm
             </label>
             <input
               type="text"

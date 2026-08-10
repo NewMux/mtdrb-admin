@@ -10,7 +10,7 @@ import {
 
 interface KPICardProps {
   title: string;
-  value: string;
+  value: string | number;
   subtitle: string;
   icon: React.ReactNode;
   trend: "up" | "down" | "neutral";
@@ -151,10 +151,7 @@ interface SmartTasksDashboardProps {
   stats: any;
 }
 
-export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = ({
-  refreshKey,
-  stats,
-}) => {
+export const SmartTasksDashboard: React.FC<SmartTasksDashboardProps> = () => {
   const kpis = [
     {
       title: "Active Tasks",

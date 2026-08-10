@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiTrash2,
   FiArchive,

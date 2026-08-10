@@ -18,8 +18,11 @@ interface SmartInsight {
   action: string;
   value?: number;
   trend?: "up" | "down" | "stable";
+  icon?: React.ReactNode;
+  badge?: string;
+  cause?: string;
+  suggestion?: string;
 }
-import { toast } from "react-hot-toast";
 
 interface SmartInsightCardsProps {
   insights: SmartInsight[];
@@ -136,7 +139,7 @@ export default function SmartInsightCards({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {insights.map((insight, index) => {
+        {insights.map((insight) => {
           const PriorityIcon = getPriorityIcon(insight.priority);
           const CategoryIcon = getCategoryIcon(insight.category);
 

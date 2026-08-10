@@ -8,13 +8,7 @@ interface BillingTabProps {
   onCreditNote: () => void;
 }
 
-const BillingTab: React.FC<BillingTabProps> = ({
-  plan,
-  invoices,
-  onSendPaymentLink,
-  onMarkPaid,
-  onCreditNote,
-}) => {
+const BillingTab: React.FC<BillingTabProps> = () => {
   return (
     <div className="p-6">
       {/* TODO: Plan details, invoices table, actions */}

@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
-  FiDollarSign,
-  FiCalendar,
-  FiUsers,
-  FiCheck,
   FiX,
-  FiEdit2,
   FiTrash2,
   FiAlertTriangle,
   FiPlus,
@@ -17,13 +12,13 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleTextarea,
-  AppleButton,
   AppleButtonGroup,
   AppleSelect,
 } from "../AppleStyleModal";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 // Add plan related types
 type subscription_plan_type = "Membership" | "PT" | "Class Pack" | "Online";
@@ -63,29 +58,31 @@ export function DeleteConfirmationModal({
   onConfirm,
   planName,
 }: DeleteConfirmationModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+
   return (
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Plan"
-      subtitle={`Are you sure you want to delete the plan "${planName}"? This action cannot be undone.`}
+      title={t("billing.deletePlan", "حذف الخطة")}
+      subtitle={t("billing.deletePlanConfirm", `هل أنت تأكد من رغبتك في حذف خطة الاشتراك "${planName}"؟ لا يمكن التراجع عن هذا الإجراء.`)}
       footer={
-        <div className="flex items-center justify-end space-x-3">
+        <div className="flex items-center justify-end gap-3 w-full" dir={isRTL ? "rtl" : "ltr"}>
           <SmartButton variant="secondary" onClick={onClose}>
-            Cancel
+            {t("common.cancel", "إلغاء")}
           </SmartButton>
           <SmartButton variant="danger" onClick={onConfirm}>
-            Delete Plan
+            {t("billing.deletePlanSubmit", "حذف الخطة نهائياً")}
           </SmartButton>
         </div>
       }
     >
-      <div className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <FiAlertTriangle className="text-red-500 text-2xl" />
-          <p className="text-gray-700">
-            Are you sure you want to delete the plan "{planName}"? This action
-            cannot be undone.
+      <div className="space-y-4 text-start" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="flex items-center gap-3">
+          <FiAlertTriangle className="text-red-500 text-2xl flex-shrink-0" />
+          <p className="text-gray-700 dark:text-gray-300">
+            {t("billing.deletePlanConfirm", `هل أنت تأكد من رغبتك في حذف خطة الاشتراك "${planName}"؟ لا يمكن التراجع عن هذا الإجراء.`)}
           </p>
         </div>
       </div>
@@ -98,6 +95,8 @@ export function ManagePlansModal({
   onClose,
   tenantId,
 }: ManagePlansModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -209,17 +208,6 @@ export function ManagePlansModal({
     }
   };
 
-  const handleEdit = (plan: Plan) => {
-    setEditingPlan(plan);
-    setFormData({
-      name: plan.name,
-      description: plan.description || "",
-      price: plan.price,
-      billing_cycle: plan.billing_cycle,
-    });
-    setShowPlanForm(true);
-  };
-
   const handleDelete = async (plan: Plan) => {
     try {
       // Check if plan has any subscriptions
@@ -245,53 +233,48 @@ export function ManagePlansModal({
     }
   };
 
-  const initiateDelete = (plan: Plan) => {
-    setPlanToDelete(plan);
-    setShowDeleteConfirmation(true);
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
         <SmartModal
           isOpen={isOpen}
           onClose={onClose}
-          title="Manage Subscription Plans"
-          subtitle="Create and manage membership plans"
+          title={t("billing.managePlansTitle", "إدارة خطط وباقات الاشتراكات")}
+          subtitle={t("billing.managePlansSubtitle", "إنشاء وتعديل وإدارة باقات الاشتراكات والأسعار")}
           footer={
-            <div className="flex items-center justify-end space-x-3">
+            <div className="flex items-center justify-end gap-3 w-full" dir={isRTL ? "rtl" : "ltr"}>
               <SmartButton variant="secondary" onClick={onClose}>
-                Close
+                {t("common.close", "إغلاق")}
               </SmartButton>
             </div>
           }
         >
-          <div className="space-y-6">
+          <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Plans List */}
             {!showPlanForm && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Current Plans
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {t("billing.currentPlans", "الخطط والباقات الحالية")}
                   </h3>
                   <SmartButton
                     onClick={() => setShowPlanForm(true)}
-                    className="flex items-center space-x-2"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <FiPlus className="h-4 w-4" />
-                    Add Plan
+                    <span>{t("billing.addPlan", "إضافة باقة جديد")}</span>
                   </SmartButton>
                 </div>
 
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-500">Loading plans...</p>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">{t("common.loading", "جاري التحميل...")}</p>
                   </div>
                 ) : plans.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">
-                      No plans found. Create your first plan to get started.
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {t("billing.noPlansFound", "لا توجد خطط اشتراك مضافة. ابدأ بإنشاء باقتك الأولى الآن.")}
                     </p>
                   </div>
                 ) : (
@@ -299,40 +282,39 @@ export function ManagePlansModal({
                     {plans.map((plan) => (
                       <div
                         key={plan.id}
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50"
+                        className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       >
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">
+                        <div className="flex-1 text-start">
+                          <h4 className="font-medium text-gray-900 dark:text-white">
                             {plan.name}
                           </h4>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {plan.description}
                           </p>
-                          <div className="flex items-center space-x-4 mt-2">
-                            <span className="text-sm font-medium text-blue-600">
-                              {plan.price} BHD
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                              {plan.price} د.ب
                             </span>
-                            <span className="text-sm text-gray-500">
-                              {plan.billing_cycle}
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              {plan.billing_cycle === "Monthly" || String(plan.billing_cycle).toLowerCase() === "monthly" ? "شهرياً" : plan.billing_cycle === "Weekly" ? "أسبوعياً" : "سنوياً"}
                             </span>
                             <span
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                plan.is_active
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
+                              className={`px-2 py-1 text-xs rounded-full font-medium ${plan.is_active
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                }`}
                             >
-                              {plan.is_active ? "Active" : "Inactive"}
+                              {plan.is_active ? t("billing.active", "نشط") : t("billing.inactive", "غير نشط")}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
                               setEditingPlan(plan);
                               setShowPlanForm(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
                           >
                             <FiEdit className="h-4 w-4" />
                           </button>
@@ -341,7 +323,7 @@ export function ManagePlansModal({
                               setPlanToDelete(plan);
                               setShowDeleteConfirmation(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                           >
                             <FiTrash2 className="h-4 w-4" />
                           </button>
@@ -355,17 +337,17 @@ export function ManagePlansModal({
 
             {/* Plan Form */}
             {showPlanForm && (
-              <div className="space-y-6">
+              <div className="space-y-6 text-start">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {editingPlan ? "Edit Plan" : "Create New Plan"}
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {editingPlan ? t("billing.editPlan", "تعديل الباقة") : t("billing.createNewPlan", "إنشاء باقة اشتراك جديدة")}
                   </h3>
                   <button
                     onClick={() => {
                       setShowPlanForm(false);
                       setEditingPlan(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
                   >
                     <FiX className="h-6 w-6" />
                   </button>
@@ -374,18 +356,18 @@ export function ManagePlansModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <AppleInput
-                      label="Plan Name"
+                      label={t("billing.planName", "اسم الباقة / الخطة")}
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
                       error={""}
                       required
-                      placeholder="Enter plan name"
+                      placeholder={t("billing.planNamePlaceholder", "مثال: العضوية الفضية")}
                     />
 
                     <AppleInput
-                      label="Price (BHD)"
+                      label={t("billing.priceBhd", "السعر (د.ب)")}
                       type="number"
                       step="0.01"
                       value={formData.price}
@@ -402,19 +384,19 @@ export function ManagePlansModal({
                   </div>
 
                   <AppleTextarea
-                    label="Description"
+                    label={t("billing.description", "وصف الباقة المميزات")}
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
                     error={""}
-                    placeholder="Describe the plan..."
+                    placeholder={t("billing.planDescPlaceholder", "وصف خدمات الباقة والشروط...")}
                     rows={3}
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <AppleSelect
-                      label="Billing Cycle"
+                      label={t("billing.billingCycle", "دورة الفوترة")}
                       value={formData.billing_cycle}
                       onChange={(e) =>
                         setFormData({
@@ -425,18 +407,18 @@ export function ManagePlansModal({
                       error={""}
                       required
                     >
-                      <option value="">Select billing cycle</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="semi_annual">Semi-Annual</option>
-                      <option value="annual">Annual</option>
+                      <option value="">{t("billing.selectBillingCycle", "اختر دورة الفوترة")}</option>
+                      <option value="monthly">{t("billing.monthly", "شهرياً")}</option>
+                      <option value="quarterly">{t("billing.quarterly", "ربع سنوي")}</option>
+                      <option value="semi_annual">{t("billing.semiAnnual", "نصف سنوي")}</option>
+                      <option value="annual">{t("billing.yearly", "سنوياً")}</option>
                     </AppleSelect>
 
                     <AppleInput
-                      label="Duration (months)"
+                      label={t("billing.durationMonths", "المدة بالشهور")}
                       type="number"
                       value={""}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       error={""}
                       placeholder="12"
                     />
@@ -450,18 +432,19 @@ export function ManagePlansModal({
                         setEditingPlan(null);
                       }}
                     >
-                      Cancel
+                      {t("common.cancel", "إلغاء")}
                     </SmartButton>
                     <SmartButton
                       type="submit"
                       loading={loading}
                       disabled={loading}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       {loading
-                        ? "Saving..."
+                        ? t("common.saving", "جاري الحفظ...")
                         : editingPlan
-                          ? "Update Plan"
-                          : "Create Plan"}
+                          ? t("billing.updatePlan", "تحديث الباقة")
+                          : t("billing.createPlan", "إنشاء الباقة")}
                     </SmartButton>
                   </AppleButtonGroup>
                 </form>

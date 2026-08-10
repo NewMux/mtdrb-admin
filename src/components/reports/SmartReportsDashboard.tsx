@@ -3,18 +3,13 @@ import { motion } from "framer-motion";
 import {
   FiCpu,
   FiTrendingUp,
-  FiUsers,
-  FiDollarSign,
   FiActivity,
   FiTarget,
   FiZap,
   FiFileText,
-  FiCalendar,
   FiDownload,
   FiBarChart,
-  FiMessageSquare,
 } from "react-icons/fi";
-import { supabase } from "../../supabaseClient";
 import {
   LineChart,
   Line,
@@ -23,11 +18,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 
 interface SmartReportsDashboardProps {
@@ -49,7 +39,6 @@ interface ReportInsight {
 
 export default function SmartReportsDashboard({
   refreshKey,
-  stats,
 }: SmartReportsDashboardProps) {
   const [insights, setInsights] = useState<ReportInsight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,8 +114,6 @@ export default function SmartReportsDashboard({
       setLoading(false);
     }
   };
-
-  const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
   if (loading) {
     return (

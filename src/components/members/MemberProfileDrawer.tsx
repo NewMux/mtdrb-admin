@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiSettings, FiUser, FiRotateCw } from "react-icons/fi";
 import { MemberProfileCards } from "./MemberProfileCards";
+import { useRTL } from "../../hooks/useRTL";
 
 // Types for member data
 interface Member {
@@ -60,70 +61,64 @@ export default function MemberProfileDrawer({
   member,
   isOpen,
   onClose,
-  onEdit,
   onRefresh,
 }: MemberProfileDrawerProps) {
+  const { isRTL } = useRTL();
   const [isLoading, setIsLoading] = useState(false);
   const [engagementData, setEngagementData] = useState<EngagementData>({
     score: 85,
-    checkins_per_week: 4.2,
+    checkins_per_week: 3.5,
     is_high_performer: true,
     at_risk_count: 0,
   });
   const [billingData, setBillingData] = useState<BillingData>({
-    lifetime_value: 2847.5,
+    lifetime_value: 1250.0,
     last_payment_date: "2024-01-15",
     last_payment_status: "paid",
     total_invoices: 12,
   });
   const [goalData, setGoalData] = useState<GoalData>({
-    primary_goal: "Lose 10kg and build strength",
-    progress_percentage: 65,
-    next_milestone: "Reach 70kg target weight",
+    primary_goal: "Weight Loss & Muscle Gain",
+    progress_percentage: 68,
+    next_milestone: "Reach 75kg target weight",
     goal_type: "weight_loss",
   });
   const [riskData, setRiskData] = useState<RiskData>({
     churn_risk_score: 15,
     churn_risk_level: "low",
-    active_alerts: [
-      {
-        id: "1",
-        type: "low_attendance",
-        message: "Missed 2 sessions this week",
-        severity: "medium",
-      },
-    ],
+    active_alerts: [],
   });
 
   useEffect(() => {
     if (isOpen && member) {
       setIsLoading(true);
+      // Simulate API fetch delay
       setTimeout(() => {
-        // Update data based on member status
-        if (member.membership_status === "active") {
-          setEngagementData({
-            score: 85,
-            checkins_per_week: 4.2,
-            is_high_performer: true,
-            at_risk_count: 0,
-          });
-        } else if (member.membership_status === "trial") {
-          setEngagementData({
-            score: 45,
-            checkins_per_week: 1.5,
-            is_high_performer: false,
-            at_risk_count: 2,
-          });
-        } else {
-          setEngagementData({
-            score: 25,
-            checkins_per_week: 0.8,
-            is_high_performer: false,
-            at_risk_count: 3,
-          });
-        }
+        setEngagementData({
+          score: 85,
+          checkins_per_week: 3.5,
+          is_high_performer: true,
+          at_risk_count: 0,
+        });
+        setBillingData({
+          lifetime_value: 1250.0,
+          last_payment_date: "2024-01-15",
+          last_payment_status: "paid",
+          total_invoices: 12,
+        });
+        setGoalData({
+          primary_goal: "Weight Loss & Muscle Gain",
+          progress_percentage: 68,
+          next_milestone: "Reach 75kg target weight",
+          goal_type: "weight_loss",
+        });
+        setRiskData({
+          churn_risk_score: 15,
+          churn_risk_level: "low",
+          active_alerts: [],
+        });
         setIsLoading(false);
-      }, 1000);
+      }, 500);
     }
   }, [isOpen, member]);
 
@@ -140,7 +135,7 @@ export default function MemberProfileDrawer({
     if (onRefresh) {
       await onRefresh();
     }
-    setTimeout(() => setIsLoading(false), 1000);
+    setTimeout(() => setIsLoading(false), 500);
   };
 
   if (!member || !isOpen) return null;
@@ -160,11 +155,12 @@ export default function MemberProfileDrawer({
 
         {/* Drawer */}
         <motion.div
-          initial={{ x: "100%" }}
+          initial={{ x: isRTL ? "-100%" : "100%" }}
           animate={{ x: 0 }}
-          exit={{ x: "100%" }}
+          exit={{ x: isRTL ? "-100%" : "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-3xl flex flex-col"
+          className={`absolute ${isRTL ? 'left-0 rounded-r-3xl' : 'right-0 rounded-l-3xl'} top-0 h-full w-full max-w-4xl bg-white shadow-2xl flex flex-col text-start`}
+          dir={isRTL ? "rtl" : "ltr"}
           role="dialog"
           aria-modal="true"
           aria-labelledby="member-profile-title"

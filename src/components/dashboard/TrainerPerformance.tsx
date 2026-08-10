@@ -1,8 +1,8 @@
 import React from "react";
 import { FiUser, FiStar, FiCalendar, FiHeart, FiAward } from "react-icons/fi";
-import SmartKpiCard from "../ui/SmartKpiCard";
+import SmartKpiCard, { type SmartKpiCardProps } from "../ui/SmartKpiCard";
 
-const performanceItems = [
+const performanceItems: SmartKpiCardProps[] = [
   {
     label: "Active Trainers",
     value: 8,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { FiCheckSquare, FiPlus } from "react-icons/fi";
 
 interface TaskManagementProps {
@@ -6,10 +6,7 @@ interface TaskManagementProps {
   stats: any;
 }
 
-export const TaskManagement: React.FC<TaskManagementProps> = ({
-  refreshKey,
-  stats,
-}) => {
+export const TaskManagement: React.FC<TaskManagementProps> = () => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">

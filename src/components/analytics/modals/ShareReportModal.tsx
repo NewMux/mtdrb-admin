@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiShare2,
   FiLink,
@@ -7,7 +6,6 @@ import {
   FiClock,
   FiLock,
   FiUnlock,
-  FiMail,
   FiCopy,
   FiCheckCircle,
 } from "react-icons/fi";
@@ -98,8 +96,11 @@ export default function ShareReportModal({
 }: ShareReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+
+  const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
   const [shareLink, setShareLink] = React.useState(
-    `https://mtdrb.com/reports/share/${reportId}`,
+    `${appUrl}/reports/share/${reportId}`,
   );
   const [selectedPermission, setSelectedPermission] = React.useState("view");
   const [expirationDate, setExpirationDate] = React.useState("");
@@ -113,9 +114,10 @@ export default function ShareReportModal({
   React.useEffect(() => {
     if (open) {
       clearAlerts();
-      // Generate unique share link
+      // Generate unique share link using environment variable or current origin
+      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       setShareLink(
-        `https://mtdrb.com/reports/share/${reportId}?token=${Date.now()}`,
+        `${baseUrl}/reports/share/${reportId}?token=${Date.now()}`,
       );
     }
   }, [open, reportId, clearAlerts]);
@@ -158,11 +160,6 @@ export default function ShareReportModal({
       member.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const getPermissionIcon = (permissionId: string) => {
-    const permission = permissionLevels.find((p) => p.id === permissionId);
-    return permission?.icon || FiUnlock;
-  };
-
   function Section({
     title,
     children,
@@ -202,6 +199,11 @@ export default function ShareReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Sharing reports is available on Pro plans.
+        </div>
+      )}
 
       {/* Share Link */}
       <Section title="Share Link">
@@ -246,14 +248,11 @@ export default function ShareReportModal({
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
               >
-                {permissionLevels.map((permission) => {
-                  const Icon = permission.icon;
-                  return (
-                    <option key={permission.id} value={permission.id}>
-                      {permission.label} - {permission.description}
-                    </option>
-                  );
-                })}
+                {permissionLevels.map((permission) => (
+                  <option key={permission.id} value={permission.id}>
+                    {permission.label} - {permission.description}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -428,7 +427,7 @@ export default function ShareReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading || sharing}
           >
@@ -437,7 +436,7 @@ export default function ShareReportModal({
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handleShare}
-            disabled={loading || sharing}
+            disabled={loading || sharing || !isProUser}
           >
             {sharing ? (
               <>

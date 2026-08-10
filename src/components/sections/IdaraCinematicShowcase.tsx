@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { FiArrowRight, FiChevronDown } from "react-icons/fi";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -18,7 +18,7 @@ interface SceneProps {
   isActive: boolean;
 }
 
-const Scene: React.FC<SceneProps> = ({ title, subtitle, image, alt, index, isActive }) => {
+const Scene: React.FC<SceneProps> = ({ title, subtitle, image, alt, index }) => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);

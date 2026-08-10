@@ -1,14 +1,14 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiCalendar,
   FiUsers,
-  FiTrendingUp,
-  FiTarget,
   FiDollarSign,
   FiActivity,
   FiClock,
   FiStar,
 } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SmartWidgetsProps {
   refreshKey: number;
@@ -18,6 +18,33 @@ interface WidgetProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+}
+
+interface TrainerPerformance {
+  name: string;
+  count: number;
+}
+
+interface BookingItem {
+  id?: string;
+  status?: string;
+  created_at?: string;
+  classes?: {
+    trainer_id?: string;
+    trainers?: {
+      first_name?: string;
+      last_name?: string;
+    } | Array<{
+      first_name?: string;
+      last_name?: string;
+    }>;
+  } | Array<{
+    trainer_id?: string;
+    trainers?: Array<{
+      first_name?: string;
+      last_name?: string;
+    }>;
+  }>;
 }
 
 const Widget: React.FC<WidgetProps> = ({ title, children, className = "" }) => (
@@ -34,47 +61,210 @@ const Widget: React.FC<WidgetProps> = ({ title, children, className = "" }) => (
 export default Widget;
 
 export const SmartWidgets: React.FC<SmartWidgetsProps> = ({ refreshKey }) => {
-  const todaySchedule = [
-    { time: "06:00", class: "Morning Yoga", trainer: "Sarah", spots: "8/12" },
-    { time: "07:30", class: "HIIT Training", trainer: "Mike", spots: "12/15" },
-    { time: "09:00", class: "Pilates", trainer: "Emma", spots: "6/10" },
-    { time: "18:00", class: "Evening Yoga", trainer: "Sarah", spots: "10/12" },
-    { time: "19:30", class: "CrossFit", trainer: "David", spots: "15/20" },
-  ];
+  const { tenantId } = useAuth();
+  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
+  const [recentMembers, setRecentMembers] = useState<any[]>([]);
+  const [topPerformers, setTopPerformers] = useState<any[]>([]);
+  const [quickStats, setQuickStats] = useState({
+    checkIns: 0,
+    activeClasses: 0,
+    revenueToday: 0,
+    peakHour: "N/A",
+  });
+  const [, setLoading] = useState(true);
 
-  const recentMembers = [
-    {
-      name: "Mohammed Ali",
-      joined: "Today",
-      plan: "Premium",
-      status: "active",
-    },
-    {
-      name: "Sarah Johnson",
-      joined: "Yesterday",
-      plan: "Basic",
-      status: "trial",
-    },
-    {
-      name: "David Chen",
-      joined: "2 days ago",
-      plan: "Premium",
-      status: "active",
-    },
-    {
-      name: "Emma Wilson",
-      joined: "3 days ago",
-      plan: "Basic",
-      status: "active",
-    },
-  ];
+  const fetchData = useCallback(async () => {
+    if (!tenantId) return;
+    try {
+      setLoading(true);
 
-  const topPerformers = [
-    { name: "Sarah (Trainer)", metric: "98% attendance", score: 98 },
-    { name: "HIIT Class", metric: "45 avg/session", score: 95 },
-    { name: "Premium Plan", metric: "₹24.5k revenue", score: 92 },
-    { name: "Morning Slot", metric: "89% occupancy", score: 89 },
-  ];
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      const formatDateTime = (date: Date) => date.toISOString();
+
+      // Fetch today's classes
+      const { data: todayClasses } = await supabase
+        .from("classes")
+        .select(`
+          id,
+          name,
+          start_time,
+          capacity,
+          current_bookings,
+          trainers!inner(first_name, last_name)
+        `)
+        .eq("tenant_id", tenantId)
+        .gte("start_time", formatDateTime(todayStart))
+        .lte("start_time", formatDateTime(todayEnd))
+        .in("status", ["scheduled", "in_progress"])
+        .order("start_time", { ascending: true })
+        .limit(5);
+
+      // Format schedule
+      const schedule = (todayClasses || []).map(cls => {
+        const startTime = new Date(cls.start_time);
+        const trainer = Array.isArray(cls.trainers)
+          ? cls.trainers[0]
+          : cls.trainers;
+        const trainerName = trainer
+          ? `${trainer.first_name ?? ""} ${trainer.last_name ?? ""}`.trim()
+          : "TBA";
+        return {
+          time: startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+          class: cls.name,
+          trainer: trainerName,
+          spots: `${cls.current_bookings || 0}/${cls.capacity}`,
+        };
+      });
+      setTodaySchedule(schedule);
+
+      // Fetch recent members
+      const { data: members } = await supabase
+        .from("members")
+        .select("id, first_name, last_name, membership_type, membership_status, created_at, join_date")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(4);
+
+      const formattedMembers = (members || []).map(m => {
+        const joinDate = new Date(m.join_date || m.created_at);
+        const daysAgo = Math.floor((today.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
+        let joinedText = "Today";
+        if (daysAgo === 1) joinedText = "Yesterday";
+        else if (daysAgo > 1) joinedText = `${daysAgo} days ago`;
+
+        return {
+          name: `${m.first_name} ${m.last_name}`,
+          joined: joinedText,
+          plan: m.membership_type || "Basic",
+          status: m.membership_status || "active",
+        };
+      });
+      setRecentMembers(formattedMembers);
+
+      // Fetch top performers (trainers with most bookings)
+      const { data: trainerBookings } = await supabase
+        .from("class_bookings")
+        .select(`
+          classes!inner(
+            trainer_id,
+            trainers!inner(first_name, last_name)
+          )
+        `)
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1)));
+
+      const trainerMap = new Map<string, TrainerPerformance>();
+      (trainerBookings || []).forEach((booking: unknown) => {
+        const bookingData = booking as { 
+          classes?: Array<{ 
+            trainer_id?: string; 
+            trainers?: Array<{ first_name?: string; last_name?: string }> 
+          }> | { 
+            trainer_id?: string; 
+            trainers?: Array<{ first_name?: string; last_name?: string }> 
+          } 
+        };
+        const classes = Array.isArray(bookingData.classes) ? bookingData.classes[0] : bookingData.classes;
+        const trainer = Array.isArray(classes?.trainers) ? classes.trainers[0] : classes?.trainers;
+        if (trainer && classes?.trainer_id) {
+          const trainerId = classes.trainer_id;
+          const trainerName = `${trainer.first_name || ''} ${trainer.last_name || ''}`.trim();
+          trainerMap.set(trainerId, {
+            name: trainerName,
+            count: (trainerMap.get(trainerId)?.count || 0) + 1,
+          });
+        }
+      });
+
+      const topTrainers = Array.from(trainerMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 2)
+        .map((t) => ({
+          name: `${t.name} (Trainer)`,
+          metric: `${t.count} bookings`,
+          score: Math.min(100, (t.count / 50) * 100),
+        }));
+
+      // Fetch class performance
+      const { data: classStats } = await supabase
+        .from("classes")
+        .select("name, current_bookings, capacity")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDate(new Date(today.getFullYear(), today.getMonth() - 1, 1)));
+
+      const classPerformance = (classStats || [])
+        .map(cls => ({
+          name: cls.name,
+          occupancy: cls.capacity > 0 ? (cls.current_bookings / cls.capacity) * 100 : 0,
+        }))
+        .sort((a, b) => b.occupancy - a.occupancy)
+        .slice(0, 1)
+        .map(cls => ({
+          name: cls.name,
+          metric: `${cls.occupancy.toFixed(0)}% occupancy`,
+          score: Math.min(100, cls.occupancy),
+        }));
+
+      setTopPerformers([...topTrainers, ...classPerformance].slice(0, 4));
+
+      // Fetch quick stats
+      const { data: todayBookings } = await supabase
+        .from("class_bookings")
+        .select("id, status, created_at")
+        .eq("tenant_id", tenantId)
+        .gte("created_at", formatDateTime(todayStart))
+        .lte("created_at", formatDateTime(todayEnd));
+
+      const checkIns = (todayBookings || []).filter(
+        b => b.status === "checked_in" || b.status === "completed"
+      ).length;
+
+      const activeClassesCount = (todayClasses || []).length;
+
+      const { data: todayInvoices } = await supabase
+        .from("invoices")
+        .select("amount, total, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "paid")
+        .gte("created_at", formatDateTime(todayStart))
+        .lte("created_at", formatDateTime(todayEnd));
+
+      const revenueToday = (todayInvoices || []).reduce(
+        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+        0
+      );
+
+      // Find peak hour
+      const hourMap = new Map<number, number>();
+      (todayBookings || []).forEach((booking: BookingItem) => {
+        if (booking.created_at) {
+          const hour = new Date(booking.created_at).getHours();
+          hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
+        }
+      });
+      const peakHour = Array.from(hourMap.entries())
+        .sort((a, b) => b[1] - a[1])[0];
+      const peakHourText = peakHour ? `${peakHour[0]}:00-${peakHour[0] + 1}:00` : "N/A";
+
+      setQuickStats({
+        checkIns,
+        activeClasses: activeClassesCount,
+        revenueToday,
+        peakHour: peakHourText,
+      });
+    } catch (error) {
+      console.error("Error fetching widget data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, refreshKey]);
 
   return (
     <div className="w-full flex flex-col gap-8">
@@ -174,25 +364,25 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({ refreshKey }) => {
           {[
             {
               label: "Today's Check-ins",
-              value: "89",
+              value: quickStats.checkIns.toString(),
               icon: FiActivity,
               color: "text-green-600",
             },
             {
               label: "Active Classes",
-              value: "6",
+              value: quickStats.activeClasses.toString(),
               icon: FiCalendar,
               color: "text-blue-600",
             },
             {
               label: "Revenue Today",
-              value: "₹4.2k",
+              value: `AED ${(quickStats.revenueToday / 1000).toFixed(1)}k`,
               icon: FiDollarSign,
               color: "text-purple-600",
             },
             {
               label: "Peak Hour",
-              value: "6-7PM",
+              value: quickStats.peakHour,
               icon: FiClock,
               color: "text-orange-600",
             },

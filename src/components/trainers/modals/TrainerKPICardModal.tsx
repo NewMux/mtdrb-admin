@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiTrendingUp,
@@ -22,7 +21,6 @@ const TrainerKPICardModal: React.FC<TrainerKPICardModalProps> = ({
   trainer,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
-  const [selectedMetric, setSelectedMetric] = useState("all");
 
   const mockKPIs = {
     classesTaught: 45,

@@ -1,20 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiTarget,
-  FiHeart,
-  FiFileText,
-} from "react-icons/fi";
+import React, { useState } from "react";
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { supabase } from "../../supabaseClient";
-import toast from "react-hot-toast";
 
 interface Props {
   isOpen: boolean;
@@ -31,62 +19,47 @@ export default function TrainerFormModal({
   initialValues,
   isEdit,
 }: Props) {
-  const [formData, setFormData] = useState({
-    name: initialValues?.name || "",
-    email: initialValues?.email || "",
-    phone: initialValues?.phone || "",
-    status: initialValues?.status || "active",
-    specialties: initialValues?.specialties || [],
-    bio: initialValues?.bio || "",
-    profile_image_url: initialValues?.profile_image_url || "",
-    address: initialValues?.address || "",
-    specialization: initialValues?.specialization || "",
-    experience: initialValues?.experience || 0,
-    certifications: initialValues?.certifications || "",
-    hourly_rate: initialValues?.hourly_rate || 0,
-    start_date: initialValues?.start_date || "",
-    notes: initialValues?.notes || "",
+  interface TrainerFormData {
+    name: string;
+    email: string;
+    phone: string;
+    status: "active" | "inactive" | "busy" | "available";
+    specialties: string[];
+    bio: string;
+    profile_image_url: string;
+    address: string;
+    specialization: string;
+    experience: number;
+    certifications: string;
+    hourly_rate: number;
+    start_date: string;
+    notes: string;
+  }
+
+  const [formData, setFormData] = useState<TrainerFormData>({
+    name: initialValues?.name ?? "",
+    email: initialValues?.email ?? "",
+    phone: initialValues?.phone ?? "",
+    status: initialValues?.status ?? "active",
+    specialties: initialValues?.specialties ?? [],
+    bio: initialValues?.bio ?? "",
+    profile_image_url: initialValues?.profile_image_url ?? "",
+    address: initialValues?.address ?? "",
+    specialization: initialValues?.specialization ?? "",
+    experience: initialValues?.experience ?? 0,
+    certifications: initialValues?.certifications ?? "",
+    hourly_rate: initialValues?.hourly_rate ?? 0,
+    start_date: initialValues?.start_date ?? "",
+    notes: initialValues?.notes ?? "",
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [specialtyInput, setSpecialtyInput] = useState("");
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleAddSpecialty = () => {
-    if (
-      specialtyInput.trim() &&
-      !formData.specialties.includes(specialtyInput.trim())
-    ) {
-      setFormData({
-        ...formData,
-        specialties: [...formData.specialties, specialtyInput.trim()],
-      });
-      setSpecialtyInput("");
-    }
-  };
-
-  const handleRemoveSpecialty = (specialty: string) => {
-    setFormData({
-      ...formData,
-      specialties: formData.specialties.filter((s: string) => s !== specialty),
-    });
-  };
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError(undefined);
 
     try {
       if (isEdit) {
@@ -262,7 +235,10 @@ export default function TrainerFormModal({
               label="Status"
               value={formData.status}
               onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
+                setFormData({
+                  ...formData,
+                  status: e.target.value as TrainerFormData["status"],
+                })
               }
               error={error}
             >

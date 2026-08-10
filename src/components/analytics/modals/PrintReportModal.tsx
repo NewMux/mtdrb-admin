@@ -6,9 +6,7 @@ import {
   FiGrid,
   FiList,
   FiDownload,
-  FiEye,
   FiSettings,
-  FiCheckCircle,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
@@ -66,6 +64,8 @@ export default function PrintReportModal({
 }: PrintReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+
   const [selectedLayout, setSelectedLayout] = React.useState("summary");
   const [selectedOrientation, setSelectedOrientation] =
     React.useState("portrait");
@@ -103,11 +103,6 @@ export default function PrintReportModal({
     }
   };
 
-  const getLayoutIcon = (layoutId: string) => {
-    const layout = layoutOptions.find((l) => l.id === layoutId);
-    return layout?.icon || FiFileText;
-  };
-
   function Section({
     title,
     children,
@@ -130,7 +125,7 @@ export default function PrintReportModal({
       open={open}
       onClose={onClose}
       title="Print Report"
-      subtitle={`Print "${reportName}" with custom layout options`}
+      subtitle={`Print "${reportName}" (ID: ${reportId}) with custom layout options`}
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
@@ -147,6 +142,11 @@ export default function PrintReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Printing reports is available on Pro plans.
+        </div>
+      )}
 
       {/* Layout Options */}
       <Section title="Layout Options">
@@ -373,7 +373,7 @@ export default function PrintReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading || printing}
           >
@@ -382,7 +382,7 @@ export default function PrintReportModal({
           <button
             className="bg-green-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-green-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handleDownloadPDF}
-            disabled={loading || printing}
+            disabled={loading || printing || !isProUser}
           >
             {printing ? (
               <>
@@ -399,7 +399,7 @@ export default function PrintReportModal({
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={handlePrint}
-            disabled={loading || printing}
+            disabled={loading || printing || !isProUser}
           >
             {printing ? (
               <>

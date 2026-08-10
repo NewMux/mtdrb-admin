@@ -2,14 +2,25 @@ import React from "react";
 import { SmartButton } from "./DesignSystem";
 import { FiFilter } from "react-icons/fi";
 
-const FilterButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = (
-  props,
-) => (
+interface FilterButtonProps {
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
+  id?: string;
+  name?: string;
+  value?: string | number | readonly string[];
+  title?: string;
+  "aria-label"?: string;
+  active?: boolean;
+}
+
+const FilterButton: React.FC<FilterButtonProps> = ({ active, className, ...props }) => (
   <SmartButton
-    variant="ghost"
+    variant={active ? "primary" : "ghost"}
     size="sm"
     icon={<FiFilter className="w-5 h-5" />}
-    className="p-2"
+    className={`p-2 ${active ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" : ""} ${className || ""}`}
     {...props}
     aria-label="Filter"
   />

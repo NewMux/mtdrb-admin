@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { FiWifi, FiWifiOff } from "react-icons/fi";
-import { supabase } from "../supabaseClient";
 import { checkSupabaseHealth } from "../supabaseClient";
 import toast from "react-hot-toast";
 
@@ -8,7 +7,24 @@ const NetworkStatus: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isBackendHealthy, setIsBackendHealthy] = useState(true);
   const [showOfflineBanner, setShowOfflineBanner] = useState(false);
-  const subscriptionRef = useRef<any>(null);
+
+  const checkBackendHealth = async () => {
+    if (!navigator.onLine) return;
+
+    try {
+      const isHealthy = await checkSupabaseHealth();
+      setIsBackendHealthy(isHealthy);
+      setShowOfflineBanner(!isHealthy);
+
+      if (!isHealthy) {
+        toast.error("Backend service is unavailable");
+      }
+    } catch (error) {
+      console.error("Health check failed:", error);
+      setIsBackendHealthy(false);
+      setShowOfflineBanner(true);
+    }
+  };
 
   // Monitor online/offline status
   useEffect(() => {
@@ -36,24 +52,6 @@ const NetworkStatus: React.FC = () => {
 
   // Check backend health periodically
   useEffect(() => {
-    const checkBackendHealth = async () => {
-      if (!isOnline) return;
-
-      try {
-        const isHealthy = await checkSupabaseHealth();
-        setIsBackendHealthy(isHealthy);
-        setShowOfflineBanner(!isHealthy);
-
-        if (!isHealthy) {
-          toast.error("Backend service is unavailable");
-        }
-      } catch (error) {
-        console.error("Health check failed:", error);
-        setIsBackendHealthy(false);
-        setShowOfflineBanner(true);
-      }
-    };
-
     // Initial check
     checkBackendHealth();
 
@@ -63,61 +61,9 @@ const NetworkStatus: React.FC = () => {
     return () => clearInterval(interval);
   }, [isOnline]);
 
-  // Simplified real-time subscription status monitoring
-  useEffect(() => {
-    if (!isOnline || !isBackendHealthy) return;
-
-    // Clean up existing subscription
-    if (subscriptionRef.current) {
-      subscriptionRef.current.unsubscribe();
-      subscriptionRef.current = null;
-    }
-
-    // Create new subscription with unique channel name
-    try {
-      const channelName = `network_status_${Date.now()}`;
-      subscriptionRef.current = supabase
-        .channel(channelName)
-        .on("presence", { event: "sync" }, () => {
-          setIsBackendHealthy(true);
-          setShowOfflineBanner(false);
-        })
-        .on("presence", { event: "join" }, () => {
-          setIsBackendHealthy(true);
-          setShowOfflineBanner(false);
-        })
-        .on("presence", { event: "leave" }, () => {
-          setIsBackendHealthy(false);
-          setShowOfflineBanner(true);
-        })
-        .subscribe((status) => {
-          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-            // Silently handle Realtime connection errors - don't spam console
-            // Realtime is optional for network status monitoring
-            if (subscriptionRef.current) {
-              subscriptionRef.current.unsubscribe();
-              subscriptionRef.current = null;
-            }
-          } else if (status === "SUBSCRIBED") {
-            setIsBackendHealthy(true);
-            setShowOfflineBanner(false);
-          }
-        });
-    } catch (error) {
-      // Silently handle Realtime subscription errors - it's optional
-      // The health check will still work via HTTP requests
-      if (import.meta.env.DEV) {
-        console.warn("Realtime subscription unavailable (optional feature):", error);
-      }
-    }
-
-    return () => {
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-        subscriptionRef.current = null;
-      }
-    };
-  }, [isOnline, isBackendHealthy]);
+  // Note: Realtime subscription removed to prevent recursive unsubscribe loops
+  // The HTTP health check (checkBackendHealth) is sufficient for monitoring backend status
+  // Realtime subscriptions were causing "Maximum call stack size exceeded" errors
 
   if (!showOfflineBanner) return null;
 

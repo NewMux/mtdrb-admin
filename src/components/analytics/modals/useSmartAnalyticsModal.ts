@@ -69,6 +69,21 @@ export interface useSmartAnalyticsModalProps {
 export const useSmartAnalyticsModal = (
   props: useSmartAnalyticsModalProps = {},
 ) => {
+  const reportTypeOptions: AnalyticsFilters["reportType"][] = [
+    "member",
+    "class",
+    "trainer",
+    "billing",
+    "vat",
+    "financial",
+    "custom",
+  ];
+  const resolvedReportType = reportTypeOptions.includes(
+    props.reportType as AnalyticsFilters["reportType"],
+  )
+    ? (props.reportType as AnalyticsFilters["reportType"])
+    : "member";
+
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<AnalyticsFilters>({
     dateRange: {
@@ -79,7 +94,7 @@ export const useSmartAnalyticsModal = (
           .split("T")[0],
       end: props.dateRange?.end || new Date().toISOString().split("T")[0],
     },
-    reportType: (props.reportType as any) || "member",
+    reportType: resolvedReportType,
     exportFormat: "csv",
     includeVisuals: true,
   });
@@ -181,6 +196,7 @@ export const useSmartAnalyticsModal = (
   }) => {
     setLoading(true);
     try {
+      void schedule;
       // TODO: Implement real report scheduling
       setAlerts([{ type: "info", message: "Report scheduled successfully" }]);
       return { success: true };
@@ -213,6 +229,7 @@ export const useSmartAnalyticsModal = (
   const applyRecommendation = async (insightId: string) => {
     setLoading(true);
     try {
+      void insightId;
       // TODO: Implement real recommendation application
       setAlerts([
         { type: "info", message: "Recommendation applied successfully" },

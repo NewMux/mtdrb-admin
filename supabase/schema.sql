@@ -13,10 +13,12 @@
 -- 3. Run this entire script
 -- 4. Verify all tables and policies are created
 --
--- FIXES INCLUDED:
--- - Table creation order (trainers before members)
--- - Reserved keyword "user" escaped with double quotes
--- - RLS policies for signup/onboarding
+-- UPDATES:
+-- - Added gym_settings, branches, expenses, vat_returns tables
+-- - Updated invoices table with additional fields (type, issue_date, payment_method, total, paid_amount, vat_total, line_items)
+-- - Updated members table with assigned_branch_id and membership_status
+-- - Removed promotion-related tables
+-- - All tables include proper RLS policies for multi-tenancy
 --
 -- ============================================================================
 
@@ -51,7 +53,7 @@ CREATE TABLE IF NOT EXISTS memberships (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  role TEXT NOT NULL DEFAULT 'staff' CHECK (role IN ('owner', 'admin', 'manager', 'trainer', 'staff')),
+  role TEXT NOT NULL DEFAULT 'trainer' CHECK (role IN ('admin', 'employee', 'trainer')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, tenant_id)
@@ -60,6 +62,48 @@ CREATE TABLE IF NOT EXISTS memberships (
 -- Create indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships(user_id);
 CREATE INDEX IF NOT EXISTS idx_memberships_tenant_id ON memberships(tenant_id);
+
+-- ============================================================================
+-- GYM_SETTINGS TABLE
+-- ============================================================================
+-- Stores gym/organization settings (currency, VAT settings, etc.)
+
+CREATE TABLE IF NOT EXISTS gym_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  currency TEXT NOT NULL DEFAULT 'AED',
+  vat_rate NUMERIC(5, 2) DEFAULT 5.00,
+  vat_enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb,
+  UNIQUE(tenant_id)
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_gym_settings_tenant_id ON gym_settings(tenant_id);
+
+-- ============================================================================
+-- BRANCHES TABLE
+-- ============================================================================
+-- Stores branch/location information for multi-branch gyms
+
+CREATE TABLE IF NOT EXISTS branches (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  address TEXT,
+  phone TEXT,
+  email TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_branches_tenant_id ON branches(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_branches_is_active ON branches(is_active);
 
 -- ============================================================================
 -- TRAINERS TABLE
@@ -102,9 +146,11 @@ CREATE TABLE IF NOT EXISTS members (
   phone TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'inactive', 'pending', 'suspended')),
   membership_type TEXT NOT NULL,
+  membership_status TEXT DEFAULT 'active' CHECK (membership_status IN ('active', 'inactive', 'trial', 'expired', 'suspended')),
   join_date DATE NOT NULL,
   expiry_date DATE,
   trainer_id UUID REFERENCES trainers(id) ON DELETE SET NULL,
+  assigned_branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
@@ -112,7 +158,9 @@ CREATE TABLE IF NOT EXISTS members (
 CREATE INDEX IF NOT EXISTS idx_members_tenant_id ON members(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_members_email ON members(email);
 CREATE INDEX IF NOT EXISTS idx_members_status ON members(status);
+CREATE INDEX IF NOT EXISTS idx_members_membership_status ON members(membership_status);
 CREATE INDEX IF NOT EXISTS idx_members_trainer_id ON members(trainer_id);
+CREATE INDEX IF NOT EXISTS idx_members_assigned_branch_id ON members(assigned_branch_id);
 
 -- ============================================================================
 -- CLASSES TABLE
@@ -171,18 +219,26 @@ CREATE INDEX IF NOT EXISTS idx_class_bookings_status ON class_bookings(status);
 -- INVOICES TABLE
 -- ============================================================================
 -- Stores billing and invoicing information
+-- Updated with additional fields for comprehensive billing management
 
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-  amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
-  currency TEXT NOT NULL DEFAULT 'SAR',
+  type TEXT DEFAULT 'membership' CHECK (type IN ('membership', 'class', 'personal_training', 'product', 'other')),
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending', 'paid', 'overdue', 'cancelled')),
+  issue_date DATE,
   due_date DATE NOT NULL,
   paid_date DATE,
+  payment_method TEXT CHECK (payment_method IN ('cash', 'card', 'bank_transfer', 'online', 'other')),
+  amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
+  total NUMERIC(10, 2) CHECK (total >= 0),
+  paid_amount NUMERIC(10, 2) DEFAULT 0 CHECK (paid_amount >= 0),
+  vat_total NUMERIC(10, 2) DEFAULT 0 CHECK (vat_total >= 0),
+  currency TEXT NOT NULL DEFAULT 'AED',
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  line_items JSONB DEFAULT '[]'::jsonb,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
@@ -191,6 +247,93 @@ CREATE INDEX IF NOT EXISTS idx_invoices_tenant_id ON invoices(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_member_id ON invoices(member_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
+CREATE INDEX IF NOT EXISTS idx_invoices_issue_date ON invoices(issue_date);
+CREATE INDEX IF NOT EXISTS idx_invoices_type ON invoices(type);
+
+-- ============================================================================
+-- EXPENSES TABLE
+-- ============================================================================
+-- Stores business expenses for VAT and financial tracking
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL CHECK (amount >= 0),
+  vat_amount NUMERIC(10, 2) DEFAULT 0 CHECK (vat_amount >= 0),
+  category TEXT,
+  date DATE NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+  payment_method TEXT,
+  vendor TEXT,
+  receipt_url TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_expenses_tenant_id ON expenses(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
+CREATE INDEX IF NOT EXISTS idx_expenses_status ON expenses(status);
+CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
+
+-- ============================================================================
+-- VAT_RETURNS TABLE
+-- ============================================================================
+-- Stores VAT return information for compliance
+
+CREATE TABLE IF NOT EXISTS vat_returns (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  period TEXT NOT NULL,
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'approved', 'rejected')),
+  vat_collected NUMERIC(10, 2) DEFAULT 0,
+  vat_paid NUMERIC(10, 2) DEFAULT 0,
+  net_vat_payable NUMERIC(10, 2) DEFAULT 0,
+  due_date DATE,
+  filing_deadline DATE,
+  filed_date DATE,
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_vat_returns_tenant_id ON vat_returns(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_vat_returns_period ON vat_returns(period);
+CREATE INDEX IF NOT EXISTS idx_vat_returns_status ON vat_returns(status);
+
+-- ============================================================================
+-- MEMBER_TASKS TABLE
+-- ============================================================================
+-- Stores tasks related to members (follow-ups, reminders, check-ins, etc.)
+
+CREATE TABLE IF NOT EXISTS member_tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT NOT NULL DEFAULT 'other' CHECK (type IN ('follow_up', 'payment_reminder', 'renewal', 'check_in', 'other')),
+  priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
+  due_date DATE,
+  assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
+  completed_at TIMESTAMPTZ,
+  metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Create indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_member_tasks_tenant_id ON member_tasks(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_member_tasks_member_id ON member_tasks(member_id);
+CREATE INDEX IF NOT EXISTS idx_member_tasks_status ON member_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_member_tasks_due_date ON member_tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_member_tasks_assigned_to ON member_tasks(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_member_tasks_created_by ON member_tasks(created_by);
 
 -- ============================================================================
 -- ACTIVITIES TABLE
@@ -245,11 +388,16 @@ CREATE TABLE IF NOT EXISTS health_check (
 -- Enable RLS on all tables
 ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gym_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE branches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trainers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE class_bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vat_returns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE member_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE health_check ENABLE ROW LEVEL SECURITY;
 
@@ -271,6 +419,11 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- TENANTS RLS POLICIES
 -- ============================================================================
 
+-- Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "Users can view their own tenant" ON tenants;
+DROP POLICY IF EXISTS "Authenticated users can create tenants" ON tenants;
+DROP POLICY IF EXISTS "Users can update their own tenant" ON tenants;
+
 -- Users can view their own tenant
 CREATE POLICY "Users can view their own tenant"
   ON tenants FOR SELECT
@@ -278,6 +431,7 @@ CREATE POLICY "Users can view their own tenant"
 
 -- Users can insert tenants (for signup/onboarding)
 -- This allows new users to create their organization during signup
+-- CRITICAL: This must allow ANY authenticated user to create a tenant
 CREATE POLICY "Authenticated users can create tenants"
   ON tenants FOR INSERT
   TO authenticated
@@ -292,6 +446,12 @@ CREATE POLICY "Users can update their own tenant"
 -- MEMBERSHIPS RLS POLICIES
 -- ============================================================================
 
+-- Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "Users can view memberships for their tenant" ON memberships;
+DROP POLICY IF EXISTS "Users can insert memberships for their tenant" ON memberships;
+DROP POLICY IF EXISTS "Users can update memberships for their tenant" ON memberships;
+DROP POLICY IF EXISTS "Users can delete memberships for their tenant" ON memberships;
+
 -- Users can view memberships for their tenant
 CREATE POLICY "Users can view memberships for their tenant"
   ON memberships FOR SELECT
@@ -299,15 +459,14 @@ CREATE POLICY "Users can view memberships for their tenant"
 
 -- Users can insert memberships for their tenant
 -- Also allow users to create their own membership during signup (before they have a tenant_id)
+-- CRITICAL: user_id = auth.uid() check MUST come first for signup to work
 CREATE POLICY "Users can insert memberships for their tenant"
   ON memberships FOR INSERT
   TO authenticated
   WITH CHECK (
-    -- Allow if tenant_id matches user's tenant (normal case)
-    tenant_id = get_user_tenant_id()
+    (user_id = auth.uid() AND tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid)
     OR
-    -- Allow if user is creating their own membership (signup case)
-    user_id = auth.uid()
+    tenant_id = get_user_tenant_id()
   );
 
 -- Users can update memberships for their tenant
@@ -318,6 +477,46 @@ CREATE POLICY "Users can update memberships for their tenant"
 -- Users can delete memberships for their tenant
 CREATE POLICY "Users can delete memberships for their tenant"
   ON memberships FOR DELETE
+  USING (tenant_id = get_user_tenant_id());
+
+-- ============================================================================
+-- GYM_SETTINGS RLS POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view gym settings for their tenant"
+  ON gym_settings FOR SELECT
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can insert gym settings for their tenant"
+  ON gym_settings FOR INSERT
+  WITH CHECK (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can update gym settings for their tenant"
+  ON gym_settings FOR UPDATE
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can delete gym settings for their tenant"
+  ON gym_settings FOR DELETE
+  USING (tenant_id = get_user_tenant_id());
+
+-- ============================================================================
+-- BRANCHES RLS POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view branches for their tenant"
+  ON branches FOR SELECT
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can insert branches for their tenant"
+  ON branches FOR INSERT
+  WITH CHECK (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can update branches for their tenant"
+  ON branches FOR UPDATE
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can delete branches for their tenant"
+  ON branches FOR DELETE
   USING (tenant_id = get_user_tenant_id());
 
 -- ============================================================================
@@ -441,6 +640,46 @@ CREATE POLICY "Users can delete invoices from their tenant"
   USING (tenant_id = get_user_tenant_id());
 
 -- ============================================================================
+-- EXPENSES RLS POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view expenses for their tenant"
+  ON expenses FOR SELECT
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can insert expenses for their tenant"
+  ON expenses FOR INSERT
+  WITH CHECK (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can update expenses for their tenant"
+  ON expenses FOR UPDATE
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can delete expenses for their tenant"
+  ON expenses FOR DELETE
+  USING (tenant_id = get_user_tenant_id());
+
+-- ============================================================================
+-- VAT_RETURNS RLS POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view VAT returns for their tenant"
+  ON vat_returns FOR SELECT
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can insert VAT returns for their tenant"
+  ON vat_returns FOR INSERT
+  WITH CHECK (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can update VAT returns for their tenant"
+  ON vat_returns FOR UPDATE
+  USING (tenant_id = get_user_tenant_id());
+
+CREATE POLICY "Users can delete VAT returns for their tenant"
+  ON vat_returns FOR DELETE
+  USING (tenant_id = get_user_tenant_id());
+
+-- ============================================================================
 -- ACTIVITIES RLS POLICIES
 -- ============================================================================
 
@@ -498,6 +737,21 @@ CREATE TRIGGER update_memberships_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_gym_settings_updated_at
+  BEFORE UPDATE ON gym_settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_branches_updated_at
+  BEFORE UPDATE ON branches
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_member_tasks_updated_at
+  BEFORE UPDATE ON member_tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================================================
 -- COMMENTS
 -- ============================================================================
@@ -505,11 +759,16 @@ CREATE TRIGGER update_memberships_updated_at
 
 COMMENT ON TABLE tenants IS 'Stores organization/tenant information for multi-tenancy';
 COMMENT ON TABLE memberships IS 'Links users to tenants with their roles';
+COMMENT ON TABLE gym_settings IS 'Stores gym/organization settings (currency, VAT, etc.)';
+COMMENT ON TABLE branches IS 'Stores branch/location information for multi-branch gyms';
 COMMENT ON TABLE members IS 'Stores member profiles and information';
 COMMENT ON TABLE trainers IS 'Stores trainer profiles and information';
 COMMENT ON TABLE classes IS 'Stores class schedules and details';
 COMMENT ON TABLE class_bookings IS 'Stores member class bookings';
 COMMENT ON TABLE invoices IS 'Stores billing and invoicing information';
+COMMENT ON TABLE expenses IS 'Stores business expenses for VAT and financial tracking';
+COMMENT ON TABLE vat_returns IS 'Stores VAT return information for compliance';
+COMMENT ON TABLE member_tasks IS 'Stores tasks related to members (follow-ups, reminders, check-ins, etc.)';
 COMMENT ON TABLE activities IS 'Stores activity feed/logs';
 
 -- ============================================================================

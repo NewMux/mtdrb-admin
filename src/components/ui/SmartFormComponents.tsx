@@ -26,7 +26,7 @@ export const FormField: React.FC<FormFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -43,20 +43,20 @@ export const FormField: React.FC<FormFieldProps> = ({
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             ${
               error
-                ? "border-red-300 bg-red-50"
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20"
+                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
             }
-            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+            ${disabled ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"}
           `}
         />
         {error && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <FiAlertCircle className="h-4 w-4 text-red-500" />
+            <FiAlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
           </div>
         )}
       </div>
       {error && (
-        <p className="text-sm text-red-600 flex items-center gap-1">
+        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
           <FiAlertCircle className="h-3 w-3" />
           {error}
         </p>
@@ -92,7 +92,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -107,10 +107,10 @@ export const SelectField: React.FC<SelectFieldProps> = ({
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             ${
               error
-                ? "border-red-300 bg-red-50"
-                : "border-gray-300 hover:border-gray-400"
+                ? "border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20"
+                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
             }
-            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+            ${disabled ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"}
           `}
         >
           <option value="">{placeholder}</option>
@@ -121,11 +121,11 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           ))}
         </select>
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <FiChevronDown className="h-4 w-4 text-gray-400" />
+          <FiChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
         </div>
       </div>
       {error && (
-        <p className="text-sm text-red-600 flex items-center gap-1">
+        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
           <FiAlertCircle className="h-3 w-3" />
           {error}
         </p>
@@ -159,7 +159,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -175,14 +175,14 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${
             error
-              ? "border-red-300 bg-red-50"
-              : "border-gray-300 hover:border-gray-400"
+              ? "border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20"
+              : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
           }
-          ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+          ${disabled ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"}
         `}
       />
       {error && (
-        <p className="text-sm text-red-600 flex items-center gap-1">
+        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
           <FiAlertCircle className="h-3 w-3" />
           {error}
         </p>
@@ -216,12 +216,12 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
       />
       <div className="flex-1">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
         {description && (
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
         )}
       </div>
     </div>
@@ -244,8 +244,8 @@ export const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+        {subtitle && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>}
       </div>
       <div className="space-y-4">{children}</div>
     </div>
@@ -262,15 +262,15 @@ export const ValidationSummary: React.FC<ValidationSummaryProps> = ({
   if (errors.length === 0) return null;
 
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-      <h4 className="text-sm font-medium text-red-800 mb-2">
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-red-800 dark:text-red-300 mb-2">
         Please fix the following errors:
       </h4>
       <ul className="space-y-1">
         {errors.map((error, index) => (
           <li
             key={index}
-            className="text-sm text-red-700 flex items-center gap-1"
+            className="text-sm text-red-700 dark:text-red-400 flex items-center gap-1"
           >
             <FiAlertCircle className="h-3 w-3" />
             {error.message}

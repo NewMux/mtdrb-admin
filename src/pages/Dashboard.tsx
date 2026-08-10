@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiActivity, FiBarChart2 } from "react-icons/fi";
-import { SmartButton } from "../components/ui/DesignSystem";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { DashboardTabs } from "../components/dashboard/DashboardTabs";
 import { DashboardOverview } from "../components/dashboard/DashboardOverview";
 import { DashboardAnalytics } from "../components/dashboard/DashboardAnalytics";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useRTL } from "../hooks/useRTL";
 import toast from "react-hot-toast";
 
 const Dashboard: React.FC = () => {
-  const { theme } = usePageThemeContext();
+  usePageThemeContext();
+  const { isRTL } = useRTL();
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"overview" | "analytics">("overview");
@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       <DashboardHeader onRefresh={handleRefresh} />
       
       <DashboardTabs 

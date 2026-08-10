@@ -7,9 +7,7 @@ import {
   FiTarget,
   FiUpload,
   FiCheck,
-  FiX,
   FiActivity,
-  FiShield,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { SmartModal } from "../ui/SmartModal";
@@ -66,7 +64,7 @@ const SmartMemberOnboardingModal: React.FC<SmartMemberOnboardingModalProps> = ({
     mode: "onChange",
   });
 
-  const fitnessGoal = watch("fitnessGoal");
+  watch("fitnessGoal");
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -102,8 +100,9 @@ const SmartMemberOnboardingModal: React.FC<SmartMemberOnboardingModalProps> = ({
     }
   };
 
-  const getError = (field: string) => {
-    return errors[field as keyof typeof errors]?.message;
+  const getError = (field: string): string | undefined => {
+    const error = errors[field as keyof typeof errors];
+    return typeof error?.message === "string" ? error.message : undefined;
   };
 
   return (
@@ -158,7 +157,7 @@ const SmartMemberOnboardingModal: React.FC<SmartMemberOnboardingModalProps> = ({
                 Basic Information
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Member's personal details
+                Member&apos;s personal details
               </p>
             </div>
           </div>

@@ -56,12 +56,12 @@ const features: Feature[] = [
   },
   {
     icon: FiGift,
-    title: "Marketing Warfare",
-    description: "Automated campaigns that convert. Personalized sequences that retain. Marketing that actually works.",
+    title: "Retention Promotions",
+    description: "Automated promotions that engage. Personalized offers that retain. Retain members with zero effort.",
     color: "pink",
-    stats: "67% ROI on Campaigns",
-    benefits: ["Conversion warfare", "Personalized domination", "Retention mastery"],
-    cta: "Launch Campaigns"
+    stats: "67% Higher Retention",
+    benefits: ["Engaging promotions", "Personalized offers", "Retention mastery"],
+    cta: "Start Promoting"
   },
   {
     icon: FiBarChart2,
@@ -228,7 +228,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ isInView, onScrollToS
               Ready to Dominate Your Market?
             </h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Join the gym owners who've already started crushing the competition with Idara.
+              Join the gym owners who&apos;ve already started crushing the competition with Idara.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button

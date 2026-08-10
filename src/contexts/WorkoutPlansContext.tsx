@@ -42,7 +42,7 @@ export function WorkoutPlansProvider({
 
   const fetchPlans = useCallback(
     async (force = false) => {
-      // Don&apos;t fetch if cache is still valid
+      // Don't fetch if cache is still valid
       if (!force && Date.now() - lastFetch < CACHE_DURATION) {
         return;
       }
@@ -73,7 +73,7 @@ export function WorkoutPlansProvider({
         }
 
         const { data, error: fetchError } = await supabase
-          .from("workout_plans")
+          .from("plans")
           .select("*")
           .eq("tenant_id", membershipData.tenant_id)
           .order("name");

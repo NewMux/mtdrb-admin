@@ -17,7 +17,7 @@ import {
 interface Class {
   id: string;
   name: string;
-  bookings?: any[];
+  bookings?: Booking[];
   capacity?: number;
   price?: number;
   startTime: string;
@@ -80,7 +80,7 @@ export default function ClassAnalytics({
   }, [trainers]);
 
   const timeSlotData = React.useMemo(() => {
-    const slots = classes.reduce((acc, c) => {
+    const slots = classes.reduce<Record<string, number>>((acc, c) => {
       const hour = new Date(c.startTime).getHours();
       const slot = `${hour}:00`;
       acc[slot] = (acc[slot] || 0) + (c.bookings?.length || 0);

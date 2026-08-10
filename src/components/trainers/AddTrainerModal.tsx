@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
   FiTarget,
-  FiHeart,
   FiFileText,
   FiUpload,
   FiX,
   FiClock,
-  FiStar,
   FiAlertCircle,
-  FiCheck,
   FiImage,
   FiFile,
   FiShield,
@@ -124,23 +117,6 @@ const initialFormData: TrainerFormData = {
     },
   ],
 };
-
-const specialtyOptions = [
-  "Strength Training",
-  "Cardio",
-  "HIIT",
-  "Yoga",
-  "Pilates",
-  "CrossFit",
-  "Boxing",
-  "Nutrition",
-  "Rehabilitation",
-  "Personal Training",
-  "Spinning",
-  "Zumba",
-  "Martial Arts",
-  "Dance",
-];
 
 const experienceLevels = [
   { value: "beginner", label: "Beginner (0-2 years)" },
@@ -378,7 +354,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
               <FiUser className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Basic Information
             </h3>
           </div>
@@ -465,7 +441,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600">
               <FiTarget className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Professional Information
             </h3>
           </div>
@@ -550,7 +526,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
               <FiClock className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Availability
             </h3>
           </div>
@@ -559,7 +535,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             {formData.availability.map((day, index) => (
               <div
                 key={day.name}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700/50"
               >
                 <div className="flex items-center gap-3">
                   <input
@@ -569,11 +545,11 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                     onChange={(e) =>
                       handleAvailabilityChange(index, "available", e.target.checked)
                     }
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600"
                   />
                   <label
                     htmlFor={`available-${index}`}
-                    className="text-sm font-medium text-gray-700"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-200"
                   >
                     {day.name}
                   </label>
@@ -586,16 +562,16 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                       onChange={(e) =>
                         handleAvailabilityChange(index, "start_time", e.target.value)
                       }
-                      className="px-3 py-1 border border-gray-300 rounded text-sm"
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                     />
-                    <span className="text-gray-500">to</span>
+                    <span className="text-gray-500 dark:text-gray-400">to</span>
                     <input
                       type="time"
                       value={day.end_time}
                       onChange={(e) =>
                         handleAvailabilityChange(index, "end_time", e.target.value)
                       }
-                      className="px-3 py-1 border border-gray-300 rounded text-sm"
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                     />
                   </div>
                 )}
@@ -610,7 +586,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
               <FiUpload className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Documents & Files
             </h3>
           </div>
@@ -618,7 +594,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
           {/* Profile Image Upload */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Profile Image
               </label>
               <div className="flex items-center gap-4">
@@ -631,7 +607,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="profile-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiImage className="h-4 w-4 mr-2" />
                   Upload Image
@@ -639,10 +615,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 {getFileUploadsByType("profile").map((upload, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
+                    className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg"
                   >
-                    <FiImage className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm text-gray-700 flex-1 truncate">
+                    <FiImage className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-200 flex-1 truncate">
                       {upload.name}
                     </span>
                     <button
@@ -662,7 +638,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
 
             {/* Certifications Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 Certifications
               </label>
               <div className="flex items-center gap-4">
@@ -676,7 +652,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="certifications-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiFile className="h-4 w-4 mr-2" />
                   Upload Certifications
@@ -684,10 +660,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 {getFileUploadsByType("certifications").map((upload, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 bg-green-50 rounded-lg"
+                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/30 rounded-lg"
                   >
-                    <FiFile className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-gray-700 flex-1 truncate">
+                    <FiFile className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-200 flex-1 truncate">
                       {upload.name}
                     </span>
                     <button
@@ -707,7 +683,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
 
             {/* National ID Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 National ID
               </label>
               <div className="flex items-center gap-4">
@@ -720,7 +696,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="national-id-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiShield className="h-4 w-4 mr-2" />
                   Upload National ID
@@ -728,10 +704,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 {getFileUploadsByType("national_id").map((upload, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg"
+                    className="flex items-center gap-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg"
                   >
-                    <FiShield className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm text-gray-700 flex-1 truncate">
+                    <FiShield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-200 flex-1 truncate">
                       {upload.name}
                     </span>
                     <button
@@ -757,7 +733,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600">
               <FiFileText className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               Additional Information
             </h3>
           </div>
@@ -785,10 +761,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
 
         {/* Error Display */}
         {submitError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <div className="flex items-center">
               <FiAlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-sm text-red-700">{submitError}</p>
+              <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
             </div>
           </div>
         )}

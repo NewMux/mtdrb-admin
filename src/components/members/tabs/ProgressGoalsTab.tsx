@@ -8,13 +8,7 @@ interface ProgressGoalsTabProps {
   upgradeSuggestion: string;
 }
 
-const ProgressGoalsTab: React.FC<ProgressGoalsTabProps> = ({
-  goal,
-  progress,
-  trainerNotes,
-  onNotesChange,
-  upgradeSuggestion,
-}) => {
+const ProgressGoalsTab: React.FC<ProgressGoalsTabProps> = () => {
   return (
     <div className="p-6">{/* TODO: Progress chart, notes, suggestion */}</div>
   );

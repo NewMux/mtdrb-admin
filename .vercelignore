@@ -1,6 +1,40 @@
-node_modules
+# Vercel ignore file
+# Files/folders to exclude from deployment
+
+# Development files
 .env
 .env.local
+.env.*.local
 *.log
 .DS_Store
-dist
+
+# Build artifacts (Vercel builds these)
+dist/
+build/
+
+# Test files
+coverage/
+.nyc_output/
+
+# Documentation (optional - can include if you want)
+# *.md
+# docs/
+
+# SQL files (not needed in frontend deployment)
+supabase/
+*.sql
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+.npm
+.pnpm-store

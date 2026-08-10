@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, Views, dateFnsLocalizer } from "react-big-calendar";
+import { Calendar, Views, dateFnsLocalizer, type View } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import {
-  FiPlus,
-  FiFilter,
-  FiEdit,
-  FiTrash,
-  FiClock,
-  FiMapPin,
-} from "react-icons/fi";
+import { FiPlus, FiFilter } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 
 const locales = {
@@ -43,18 +36,16 @@ interface Trainer {
   status: string;
 }
 
-interface Resource {
-  id: string;
-  title: string;
-  status: string;
-}
 
 export default function TrainerSchedule() {
   const [events, setEvents] = useState<Event[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [selectedTrainer, setSelectedTrainer] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
-  const [view, setView] = useState(Views.WEEK);
+  const [view, setView] = useState<View>(Views.WEEK);
+  const handleViewChange = (nextView: View) => {
+    setView(nextView);
+  };
   const [date, setDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,14 +141,14 @@ export default function TrainerSchedule() {
     }
   };
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = () => {
   };
 
-  const handleSelect = ({ start, end }: { start: Date; end: Date }) => {
+  const handleSelect = () => {
   };
 
   const eventStyleGetter = (event: Event) => {
-    let style: React.CSSProperties = {
+    const style: React.CSSProperties = {
       backgroundColor: "#3B82F6",
       borderRadius: "4px",
       opacity: 0.8,
@@ -286,7 +277,7 @@ export default function TrainerSchedule() {
           endAccessor="end"
           style={{ height: 600 }}
           view={view}
-          onView={setView}
+          onView={handleViewChange}
           date={date}
           onNavigate={setDate}
           onSelectEvent={handleEventClick}
@@ -296,7 +287,7 @@ export default function TrainerSchedule() {
           resources={resources}
           resourceIdAccessor="id"
           resourceTitleAccessor="title"
-          tooltipAccessor={(event) => `${event.title} - ${event.type}`}
+          tooltipAccessor={(event: Event) => `${event.title} - ${event.type}`}
           messages={{
             next: "Next",
             previous: "Previous",

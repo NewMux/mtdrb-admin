@@ -7,19 +7,17 @@
 
 /**
  * User role type definition
- * Hierarchy: owner > admin > manager > trainer > staff
+ * Hierarchy: admin > employee > trainer
  */
-export type UserRole = "owner" | "admin" | "manager" | "trainer" | "staff";
+export type UserRole = "admin" | "employee" | "trainer";
 
 /**
  * Array of all valid user roles (for validation)
  */
 export const USER_ROLES: UserRole[] = [
-  "owner",
   "admin",
-  "manager",
+  "employee",
   "trainer",
-  "staff",
 ];
 
 /**
@@ -27,11 +25,9 @@ export const USER_ROLES: UserRole[] = [
  * Higher number = more permissions
  */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  owner: 4,
-  admin: 3,
-  manager: 2,
-  trainer: 1,
-  staff: 0,
+  admin: 2,
+  employee: 1,
+  trainer: 0,
 };
 
 /**
@@ -54,10 +50,11 @@ export function hasRole(
 
   // Validate current role
   if (!USER_ROLES.includes(currentRole as UserRole)) {
-    console.warn(
-      `Invalid role detected: ${currentRole}. Defaulting to staff.`,
-    );
-    return requiredRole === "staff";
+    // Only warn in development to avoid leaking info in production
+    if (import.meta.env.DEV) {
+      console.warn(`Invalid role detected: ${currentRole}. Defaulting to trainer.`);
+    }
+    return requiredRole === "trainer";
   }
 
   const currentLevel = ROLE_HIERARCHY[currentRole as UserRole];
@@ -71,11 +68,9 @@ export function hasRole(
  */
 export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
-    owner: "Owner",
     admin: "Administrator",
-    manager: "Manager",
+    employee: "Employee",
     trainer: "Trainer",
-    staff: "Staff",
   };
 
   return displayNames[role] || role;
@@ -92,6 +87,6 @@ export function isValidRole(role: string): role is UserRole {
  * Get the default role (lowest permission level)
  */
 export function getDefaultRole(): UserRole {
-  return "staff";
+  return "trainer";
 }
 

@@ -1,14 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
 import {
   FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiTarget,
-  FiHeart,
-  FiFileText,
   FiBell,
   FiX,
 } from "react-icons/fi";
@@ -82,15 +74,19 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
     memberId: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Error state for form validation - reserved for future error display
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_error, _setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Filtered member suggestions
-  const filteredMembers = members.filter(
-    (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) &&
-      !waitlist.some((w) => w.id === m.id),
-  );
+  const filteredMembers = members.filter((m) => {
+    const memberName = m.name ?? "";
+    return (
+      memberName.toLowerCase().includes(search.toLowerCase()) &&
+      !waitlist.some((w) => w.id === m.id)
+    );
+  });
 
   // Keyboard navigation for dropdown
   const [highlighted, setHighlighted] = useState<number>(-1);
@@ -169,6 +165,7 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
           </h3>
           <div className="flex gap-2 mb-2">
             <AppleInput
+              label="Search member"
               placeholder="Search member by name..."
               value={search}
               onChange={(e) => {
@@ -208,8 +205,10 @@ const WaitlistModal: React.FC<WaitlistModalProps> = ({
                     }}
                     aria-selected={highlighted === i}
                   >
-                    <AppleAvatar name={m.name} />
-                    <span className="font-medium text-gray-900">{m.name}</span>
+                    <AppleAvatar name={m.name ?? "Member"} />
+                    <span className="font-medium text-gray-900">
+                      {m.name ?? "Unnamed member"}
+                    </span>
                     <span className="text-xs text-gray-400 ml-2">
                       {m.email || m.phone}
                     </span>

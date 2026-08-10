@@ -15,7 +15,7 @@ export function ProFeatureGate({
   fallback,
   showPreview = true,
 }: ProFeatureGateProps) {
-  const { checkProFeature, upgradePrompt, isPro } = useSubscription();
+  const { checkProFeature, upgradePrompt } = useSubscription();
 
   if (checkProFeature(feature)) {
     return <>{children}</>;

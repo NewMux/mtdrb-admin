@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient";
+import type { User } from "@supabase/supabase-js";
 import { errorHandler, ErrorContext } from "../services/errorHandler";
 import {
   validateInput,
@@ -18,7 +19,7 @@ import {
   type MemberFilterParams,
   type ClassFilterParams,
 } from "./validation";
-import type { ApiResponse } from "../types";
+import type { ApiResponse, Class, Member } from "../types";
 // Removed mock data - using real data from Supabase
 // Removed isDev - always use real Supabase
 
@@ -70,7 +71,7 @@ interface SecureApiResponse<T> extends ApiResponse<T> {
 
 // Base secure API client
 class SecureApiClient {
-  private async checkAuth(): Promise<{ user: any; tenantId: string }> {
+  private async checkAuth(): Promise<{ user: User; tenantId: string }> {
     const {
       data: { user },
       error,
@@ -123,14 +124,34 @@ class SecureApiClient {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
+  /**
+   * Normalize non-Error values into an Error instance.
+   */
+  private normalizeError(error: unknown): Error | null {
+    if (!error) {
+      return null;
+    }
+    if (error instanceof Error) {
+      return error;
+    }
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const message =
+        typeof (error as { message?: unknown }).message === "string"
+          ? (error as { message?: string }).message
+          : "Unknown error";
+      return new Error(message);
+    }
+    return new Error(String(error));
+  }
+
   private wrapResponse<T>(
     data: T,
-    error: any,
+    error: unknown,
     userId: string,
   ): SecureApiResponse<T> {
     return {
       data,
-      error,
+      error: this.normalizeError(error),
       requestId: this.generateRequestId(),
       timestamp: Date.now(),
       rateLimit: {
@@ -144,7 +165,7 @@ class SecureApiClient {
   async getMembers(
     filters?: MemberFilterParams,
     pagination?: PaginationParams,
-  ): Promise<SecureApiResponse<any[]>> {
+  ): Promise<SecureApiResponse<Member[]>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -219,7 +240,7 @@ class SecureApiClient {
 
   async createMember(
     memberData: CreateMemberData,
-  ): Promise<SecureApiResponse<any>> {
+  ): Promise<SecureApiResponse<Member | null>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -255,21 +276,21 @@ class SecureApiClient {
         .select()
         .single();
 
-      return this.wrapResponse(data || [], error, user.id);
+      return this.wrapResponse(data ?? null, error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse([], processedError, user.id);
+      return this.wrapResponse(null, processedError, user.id);
     }
   }
 
   async updateMember(
     memberId: string,
     memberData: UpdateMemberData,
-  ): Promise<SecureApiResponse<any>> {
+  ): Promise<SecureApiResponse<Member | null>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -325,18 +346,18 @@ class SecureApiClient {
         .select()
         .single();
 
-      return this.wrapResponse(data || [], error, user.id);
+      return this.wrapResponse(data ?? null, error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.MEMBER_MANAGEMENT,
         false,
       );
-      return this.wrapResponse([], processedError, user.id);
+      return this.wrapResponse(null, processedError, user.id);
     }
   }
 
-  async deleteMember(memberId: string): Promise<SecureApiResponse<any[]>> {
+  async deleteMember(memberId: string): Promise<SecureApiResponse<Member[]>> {
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
 
@@ -396,7 +417,7 @@ class SecureApiClient {
   async getClasses(
     filters?: ClassFilterParams,
     pagination?: PaginationParams,
-  ): Promise<SecureApiResponse<any[]>> {
+  ): Promise<SecureApiResponse<Class[]>> {
     // Always use real Supabase
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
@@ -477,7 +498,7 @@ class SecureApiClient {
 
   async createClass(
     classData: CreateClassData,
-  ): Promise<SecureApiResponse<any>> {
+  ): Promise<SecureApiResponse<Class | null>> {
     // Always use real Supabase
     const { user, tenantId } = await this.checkAuth();
     await this.checkRateLimit(user.id);
@@ -518,14 +539,14 @@ class SecureApiClient {
         .select()
         .single();
 
-      return this.wrapResponse(data || [], error, user.id);
+      return this.wrapResponse(data ?? null, error, user.id);
     } catch (error) {
       const processedError = errorHandler.processError(
         error,
         ErrorContext.CLASS_SCHEDULING,
         false,
       );
-      return this.wrapResponse([], processedError, user.id);
+      return this.wrapResponse(null, processedError, user.id);
     }
   }
 
@@ -537,12 +558,11 @@ class SecureApiClient {
 
       const rolePermissions: Record<string, string[]> = {
         admin: ["all"],
-        manager: ["read", "write", "manage_staff"],
+        employee: ["read", "write", "manage_staff"],
         trainer: ["read", "write_classes"],
-        staff: ["read"],
       };
 
-      const userRole = (userMetadata?.role || "staff") as string;
+      const userRole = (userMetadata?.role || "trainer") as string;
       const permissions = rolePermissions[userRole] || ["read"];
 
       return permissions.includes(permission) || permissions.includes("all");

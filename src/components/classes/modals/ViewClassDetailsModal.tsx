@@ -6,13 +6,13 @@ import {
   FiClock,
   FiStar,
   FiTrendingUp,
-  FiTrendingDown,
   FiCheck,
   FiX,
   FiAlertCircle,
   FiDollarSign,
 } from "react-icons/fi";
-import SmartModal from "./SmartModal";
+import { UnifiedModal } from "../../ui/UnifiedModal";
+import { useTranslation } from "react-i18next";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 
 interface ClassMember {
@@ -47,10 +47,13 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
   isOpen,
   onClose,
   classId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onSuccess,
   isPro = false,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loading, setLoading] = useState(false);
   const [members, setMembers] = useState<ClassMember[]>([]);
   const [analytics, setAnalytics] = useState<ClassAnalytics | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -65,6 +68,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
       fetchClass();
       loadClassDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId]);
 
   // Load mock class details
@@ -163,26 +167,29 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
 
   if (!classData) {
     return (
-      <SmartModal
+      <UnifiedModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Class Details"
-        subtitle="Loading class data..."
+        title={t("classes.classDetailsTitle")}
+        subtitle={t("classes.loading") || "Loading class data..."}
+        maxWidth="5xl"
+        slideFrom="right"
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </SmartModal>
+      </UnifiedModal>
     );
   }
 
   return (
-    <SmartModal
+    <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
       title="Class Details"
       subtitle={classData.name}
       maxWidth="5xl"
+      slideFrom="right"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -192,11 +199,11 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 {analytics?.total_enrolled || 0} enrolled
               </span>
             </div>
-            {analytics?.total_waitlist > 0 && (
+            {(analytics?.total_waitlist ?? 0) > 0 && (
               <div className="flex items-center space-x-2 px-3 py-2 bg-amber-100bg-amber-900/30 rounded-lg border border-amber-200border-amber-800">
                 <FiClock className="h-4 w-4 text-amber-700text-amber-300" />
                 <span className="text-sm font-medium text-amber-800text-amber-200">
-                  {analytics.total_waitlist} on waitlist
+                  {analytics?.total_waitlist ?? 0} on waitlist
                 </span>
               </div>
             )}
@@ -280,7 +287,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as "overview" | "members" | "analytics")}
                 className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600 bg-blue-50bg-blue-900/10"
@@ -370,7 +377,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                         Class Type:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        {classData.type || classData.class_type || "General"}
+                        {classData.type || "General"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
@@ -605,7 +612,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
           )}
         </div>
       </div>
-    </SmartModal>
+    </UnifiedModal>
   );
 };
 

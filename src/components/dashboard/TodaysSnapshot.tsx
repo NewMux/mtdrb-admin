@@ -6,9 +6,9 @@ import {
   FiCheckCircle,
   FiZap,
 } from "react-icons/fi";
-import SmartKpiCard from "../ui/SmartKpiCard";
+import SmartKpiCard, { type SmartKpiCardProps } from "../ui/SmartKpiCard";
 
-const snapshots = [
+const snapshots: SmartKpiCardProps[] = [
   {
     label: "Upcoming Classes",
     value: 8,
@@ -54,7 +54,7 @@ const snapshots = [
 const TodaysSnapshot: React.FC = () => (
   <section className="mb-8">
     <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-      <FiZap className="text-blue-500" /> Today's Snapshot
+      <FiZap className="text-blue-500" /> Today&apos;s Snapshot
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {snapshots.map((item, idx) => (

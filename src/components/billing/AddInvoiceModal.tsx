@@ -1,54 +1,34 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   FiDollarSign,
-  FiCalendar,
-  FiTag,
   FiFileText,
   FiUpload,
-  FiX,
-  FiCheck,
   FiAlertCircle,
-  FiInfo,
-  FiSearch,
-  FiClock,
-  FiTrendingUp,
   FiShield,
   FiBarChart2,
-  FiZap,
-  FiStar,
-  FiTarget,
-  FiActivity,
-  FiHeart,
-  FiSave,
-  FiArrowRight,
-  FiArrowLeft,
-  FiRefreshCw,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
 import {
-  AppleStyleModal,
   AppleInput,
   AppleSelect,
   AppleTextarea,
-  AppleButton,
-  AppleButtonGroup,
   AppleToggle,
 } from "../AppleStyleModal";
 import {
   Invoice,
   InvoiceType,
   InvoiceStatus,
-  RecurringFrequency,
-  PaymentMethodType,
 } from "../../types";
-import { Database } from "../../types/supabase";
 import { useAuth } from "../../contexts/AuthContext";
-import { SmartModal } from "../ui/SmartModal";
+import { UnifiedModal } from "../ui/UnifiedModal";
+import { SmartButton } from "../ui/DesignSystem";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -57,34 +37,6 @@ interface AddInvoiceModalProps {
   tenantId: string | null;
   invoice: Invoice | null;
 }
-
-// Enhanced invoice categories with smart suggestions
-const INVOICE_CATEGORIES: InvoiceType[] = [
-  "Membership",
-  "PT",
-  "Class",
-  "Facility",
-  "Other",
-];
-
-const PAYMENT_METHODS: PaymentMethodType[] = [
-  "cash",
-  "card",
-  "bank_transfer",
-  "cheque",
-  "digital_wallet",
-];
-
-const RECURRING_FREQUENCIES = ["weekly", "monthly", "quarterly", "yearly"];
-const INVOICE_STATUSES = [
-  "Paid",
-  "Unpaid",
-  "Partial",
-  "Overdue",
-  "Refunded",
-  "Draft",
-  "Cancelled",
-];
 
 // Smart categorization patterns
 const SMART_CATEGORIZATION = {
@@ -126,43 +78,21 @@ const invoiceSchema = z.object({
   invoice_file: z.any().optional(),
 });
 
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
-
-interface RecentClient {
-  id: string;
-  name: string;
-  category: string;
-  last_used: string;
-  total_invoices: number;
-}
-
-interface SimilarInvoice {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  client: string;
-  date: string;
-  similarity_score: number;
-}
+type InvoiceFormData = z.input<typeof invoiceSchema>;
 
 export function AddInvoiceModal({
   isOpen,
   onClose,
   onInvoiceAdded,
-  tenantId,
   invoice: editingInvoice,
 }: AddInvoiceModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const { user } = useAuth();
   const { tenantId: authTenantId } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [recentClients, setRecentClients] = useState<RecentClient[]>([]);
-  const [similarInvoices, setSimilarInvoices] = useState<SimilarInvoice[]>([]);
-  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
-  const [showSimilarInvoices, setShowSimilarInvoices] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clientInputRef = useRef<HTMLInputElement>(null);
 
@@ -172,14 +102,12 @@ export function AddInvoiceModal({
     watch,
     setValue,
     reset,
-    control,
     formState: { errors, isValid, isDirty },
-    trigger,
   } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       title: "",
-      amount: "",
+      amount: 0,
       date: new Date().toISOString().split("T")[0],
       category: "Other",
       payment_method: "card",
@@ -198,21 +126,9 @@ export function AddInvoiceModal({
 
   const watchedTitle = watch("title");
   const watchedDescription = watch("description");
-  const watchedCategory = watch("category");
-  const watchedClient = watch("client");
-  const watchedRecurring = watch("recurring");
-  const watchedVatIncluded = watch("vat_included");
+  const watchedRecurring = Boolean(watch("recurring"));
+  const watchedVatIncluded = Boolean(watch("vat_included"));
   const watchedAmount = watch("amount");
-
-  // Load recent clients and similar invoices
-  useEffect(() => {
-    if (isOpen) {
-      loadRecentClients();
-      if (watchedTitle || watchedDescription) {
-        findSimilarInvoices();
-      }
-    }
-  }, [isOpen, watchedTitle, watchedDescription]);
 
   // Auto-categorization based on title and description
   useEffect(() => {
@@ -235,7 +151,7 @@ export function AddInvoiceModal({
     if (editingInvoice && isOpen) {
       reset({
         title: editingInvoice.title || "",
-        amount: editingInvoice.amount?.toString() || "",
+        amount: typeof editingInvoice.amount === 'number' ? editingInvoice.amount : (typeof editingInvoice.total === 'number' ? editingInvoice.total : 0),
         date:
           editingInvoice.issue_date || new Date().toISOString().split("T")[0],
         category: editingInvoice.type || "Other",
@@ -253,197 +169,53 @@ export function AddInvoiceModal({
     }
   }, [editingInvoice, isOpen, reset]);
 
-  // Load recent clients from database
-  const loadRecentClients = async () => {
-    try {
-      const { data } = await supabase
-        .from("invoices")
-        .select("member, type, created_at, amount")
-        .not("member", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (data) {
-        const clients = data.reduce((acc: RecentClient[], invoice) => {
-          const memberName = invoice.member?.name || "Unknown";
-          const existing = acc.find((c) => c.name === memberName);
-          if (existing) {
-            existing.total_invoices += invoice.amount || 0;
-          } else {
-            acc.push({
-              id: memberName,
-              name: memberName,
-              category: invoice.type || "Other",
-              last_used: invoice.created_at,
-              total_invoices: invoice.amount || 0,
-            });
-          }
-          return acc;
-        }, []);
-
-        setRecentClients(clients.slice(0, 5));
-      }
-    } catch (error) {
-      console.error("Error loading recent clients:", error);
-    }
-  };
-
-  // Find similar invoices for duplicate detection
-  const findSimilarInvoices = async () => {
-    if (!watchedTitle && !watchedDescription) return;
-
-    setIsAnalyzing(true);
-    try {
-      const { data } = await supabase
-        .from("invoices")
-        .select("*")
-        .or(`title.ilike.%${watchedTitle}%,notes.ilike.%${watchedDescription}%`)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (data) {
-        const similar = data
-          .map((invoice) => ({
-            id: invoice.id || "",
-            title: invoice.title || "",
-            amount: invoice.amount || 0,
-            category: invoice.type || "",
-            client: invoice.member?.name || "",
-            date: invoice.issue_date || "",
-            similarity_score: calculateSimilarity(invoice),
-          }))
-          .filter((invoice) => invoice.similarity_score > 0.3);
-
-        setSimilarInvoices(similar);
-        setShowSimilarInvoices(similar.length > 0);
-      }
-    } catch (error) {
-      console.error("Error finding similar invoices:", error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Calculate similarity score between current form and existing invoice
-  const calculateSimilarity = (invoice: any): number => {
-    let score = 0;
-    const currentText = `${watchedTitle} ${watchedDescription}`.toLowerCase();
-    const invoiceText =
-      `${invoice.title || ""} ${invoice.notes || ""}`.toLowerCase();
-
-    // Title similarity
-    if (watchedTitle && invoice.title) {
-      const titleSimilarity = similarity(
-        watchedTitle.toLowerCase(),
-        invoice.title.toLowerCase(),
-      );
-      score += titleSimilarity * 0.4;
-    }
-
-    // Description similarity
-    if (watchedDescription && invoice.notes) {
-      const descSimilarity = similarity(
-        watchedDescription.toLowerCase(),
-        invoice.notes.toLowerCase(),
-      );
-      score += descSimilarity * 0.3;
-    }
-
-    // Category match
-    if (watchedCategory === invoice.type) {
-      score += 0.2;
-    }
-
-    // Client match
-    if (
-      watchedClient &&
-      invoice.member?.name &&
-      watchedClient.toLowerCase() === invoice.member.name.toLowerCase()
-    ) {
-      score += 0.1;
-    }
-
-    return score;
-  };
-
-  // Simple string similarity function
-  const similarity = (s1: string, s2: string): number => {
-    const longer = s1.length > s2.length ? s1 : s2;
-    const shorter = s1.length > s2.length ? s2 : s1;
-    if (longer.length === 0) return 1.0;
-    return (longer.length - editDistance(longer, shorter)) / longer.length;
-  };
-
-  const editDistance = (s1: string, s2: string): number => {
-    const costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-      let lastValue = i;
-      for (let j = 0; j <= s2.length; j++) {
-        if (i === 0) {
-          costs[j] = j;
-        } else if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          }
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-      if (i > 0) costs[s2.length] = lastValue;
-    }
-    return costs[s2.length];
-  };
-
   // Handle file upload with preview
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "application/pdf",
-      ];
-      if (!validTypes.includes(file.type)) {
-        toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
-        return;
-      }
+  const handleFileSelection = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
 
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size must be less than 10MB");
-        return;
-      }
-
-      setSelectedFile(file);
-      setValue("invoice_file", file);
-
-      // Create preview for images
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview(null);
-      }
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+    setValue("invoice_file", file);
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFilePreview(event.target?.result?.toString() || null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileSelection(e.target.files);
   };
 
   // Handle drag and drop
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = fileInputRef.current;
-      if (input) {
-        input.files = e.dataTransfer.files;
-        handleFileChange({ target: { files: e.dataTransfer.files } } as any);
-      }
+    const input = fileInputRef.current;
+    if (input) {
+      input.files = e.dataTransfer.files;
     }
+    handleFileSelection(e.dataTransfer.files);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -454,24 +226,22 @@ export function AddInvoiceModal({
   const handleClientInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setValue("client", value);
-    setShowClientSuggestions(value.length > 0);
-  };
-
-  const selectClient = (client: RecentClient) => {
-    setValue("client", client.name);
-    setValue("category", client.category as InvoiceType);
-    setShowClientSuggestions(false);
   };
 
   // Calculate VAT amount
   const calculateVatAmount = () => {
-    const amount = parseFloat(watchedAmount) || 0;
+    const amount =
+      typeof watchedAmount === "number"
+        ? watchedAmount
+        : typeof watchedAmount === "string"
+          ? parseFloat(watchedAmount)
+          : 0;
     const vatRate = watch("vat_rate") || 15;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
   // Handle form submission
-  const onSubmit = async (data: InvoiceFormData) => {
+  const onSubmit: SubmitHandler<InvoiceFormData> = async (data) => {
     if (isSubmitting) return;
 
     if (!authTenantId) {
@@ -485,7 +255,7 @@ export function AddInvoiceModal({
       let invoiceUrl = null;
       if (selectedFile) {
         const fileName = `invoices/${authTenantId}/${Date.now()}_${selectedFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("invoice-files")
           .upload(fileName, selectedFile);
 
@@ -563,61 +333,67 @@ export function AddInvoiceModal({
     }
   };
 
-  const totalAmount = parseFloat(watchedAmount) || 0;
+  const totalAmount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
   const vatAmount = calculateVatAmount();
   const finalAmount = totalAmount + vatAmount;
 
-  // Sticky footer
-  const Footer = () => (
-    <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-200 py-4 px-8 flex items-center justify-between z-10">
-      <AppleButton variant="secondary" onClick={onClose}>
-        Cancel
-      </AppleButton>
-      <AppleButton
+  const footer = (
+    <div className="flex items-center justify-end gap-3 w-full">
+      <SmartButton variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+        {t("common.cancel", "إلغاء")}
+      </SmartButton>
+      <SmartButton
         variant="primary"
         onClick={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={!isValid || isSubmitting}
+        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
       >
         {isSubmitting
-          ? "Saving..."
+          ? t("billing.saving", "جاري الحفظ...")
           : editingInvoice
-            ? "Update Invoice"
-            : "Add Invoice"}
-      </AppleButton>
+            ? t("billing.updateInvoice", "تحديث الفاتورة")
+            : t("billing.addInvoice", "إصدار الفاتورة")}
+      </SmartButton>
     </div>
   );
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <SmartModal
-          isOpen={isOpen}
-          onClose={handleClose}
-          title={editingInvoice ? "Edit Invoice" : "Add New Invoice"}
-          subtitle="Create and manage professional invoices with smart features"
-        >
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-8"
-            onKeyDown={handleKeyDown}
-          >
-            {/* Invoice Details Section */}
-            <div className="card p-6 space-y-6">
-              <h3 className="text-lg font-semibold flex items-center mb-4">
-                <FiDollarSign className="mr-2" />
-                Invoice Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <UnifiedModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={editingInvoice ? t("billing.editInvoice", "تعديل الفاتورة") : t("billing.addInvoiceTitle", "إصدار فاتورة جديدة")}
+      subtitle={t("billing.addInvoiceSubtitle", "إنشاء وإدارة الفواتير الاحترافية للعملاء والأعضاء")}
+      footer={footer}
+      maxWidth="4xl"
+      slideFrom="right"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-8 text-start"
+        dir={isRTL ? "rtl" : "ltr"}
+        onKeyDown={handleKeyDown}
+      >
+        {/* Invoice Details Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
+              <FiDollarSign className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+              {t("billing.invoiceDetails", "تفاصيل الفاتورة")}
+            </h3>
+          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleInput
-                  label="Title"
+                  label={t("billing.title", "عنوان الفاتورة")}
                   {...register("title")}
                   error={errors.title?.message}
                   required
-                  placeholder="Enter invoice title"
+                  placeholder={t("billing.titlePlaceholder", "أدخل عنوان الفاتورة (مثال: اشتراك شهري)")}
                 />
                 <AppleInput
-                  label="Amount"
+                  label={t("billing.amount", "المبلغ الإجمالي")}
                   type="number"
                   step="0.01"
                   {...register("amount")}
@@ -626,108 +402,112 @@ export function AddInvoiceModal({
                   placeholder="0.00"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleInput
-                  label="Date"
+                  label={t("billing.date", "التاريخ")}
                   type="date"
                   {...register("date")}
                   error={errors.date?.message}
                   required
                 />
                 <AppleSelect
-                  label="Category"
+                  label={t("billing.category", "الفئة / النوع")}
                   {...register("category")}
                   error={errors.category?.message}
                   required
                 >
-                  <option value="">Select Category</option>
-                  {INVOICE_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
+                  <option value="">{t("billing.selectCategory", "اختر الفئة")}</option>
+                  <option value="Membership">{t("billing.membershipType", "اشتراك عضوية")}</option>
+                  <option value="PT">{t("billing.ptType", "تدريب شخصي")}</option>
+                  <option value="Class">{t("billing.classType", "حصص جماعية")}</option>
+                  <option value="Facility">{t("billing.facilityType", "مرافق وخدمات")}</option>
+                  <option value="Other">{t("billing.otherType", "أخرى")}</option>
                 </AppleSelect>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleInput
-                  label="Client"
+                  label={t("billing.client", "العميل / العضو")}
                   {...register("client")}
                   error={errors.client?.message}
-                  placeholder="Enter client name"
+                  placeholder={t("billing.enterClientName", "أدخل اسم العميل")}
                   onChange={handleClientInput}
                   ref={clientInputRef}
                 />
                 <AppleSelect
-                  label="Payment Method"
+                  label={t("billing.paymentMethod", "طريقة الدفع")}
                   {...register("payment_method")}
                   error={errors.payment_method?.message}
                   required
                 >
-                  <option value="">Select Payment Method</option>
-                  {PAYMENT_METHODS.map((method) => (
-                    <option key={method} value={method}>
-                      {method.charAt(0).toUpperCase() +
-                        method.slice(1).replace("_", " ")}
-                    </option>
-                  ))}
+                  <option value="">{t("billing.selectPaymentMethod", "اختر طريقة الدفع")}</option>
+                  <option value="cash">{t("billing.cash", "نقداً")}</option>
+                  <option value="card">{t("billing.card", "بطاقة ائتمان / خصم")}</option>
+                  <option value="bank_transfer">{t("billing.bankTransfer", "تحويل بنكي")}</option>
+                  <option value="cheque">{t("billing.cheque", "شيك")}</option>
+                  <option value="digital_wallet">{t("billing.digitalWallet", "محفظة رقمية (BenefitPay)")}</option>
                 </AppleSelect>
               </div>
-              <AppleTextarea
-                label="Description"
-                {...register("description")}
-                error={errors.description?.message}
-                rows={3}
-                placeholder="Describe the invoice..."
-              />
-            </div>
+          <AppleTextarea
+            label={t("billing.description", "الوصف")}
+            {...register("description")}
+            error={errors.description?.message}
+            rows={3}
+            placeholder={t("billing.descriptionPlaceholder", "وصف تفصيلي للفاتورة والخدمات المقدمة...")}
+          />
+        </section>
 
-            {/* VAT & File Section */}
-            <div className="card p-6 space-y-6">
-              <h3 className="text-lg font-semibold flex items-center mb-4">
-                <FiBarChart2 className="mr-2" />
-                VAT & File
-              </h3>
-              <div className="flex items-center space-x-4">
+        {/* VAT & File Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 flex-shrink-0">
+              <FiBarChart2 className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+              {t("billing.vatAndFile", "الضريبة والمستندات")}
+            </h3>
+          </div>
+              <div className="flex items-center space-x-4 text-start">
                 <AppleToggle
-                  label="VAT Included"
+                  label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة (10%)")}
                   checked={watchedVatIncluded}
                   onChange={(checked) => setValue("vat_included", checked)}
                 />
                 {watchedVatIncluded && (
                   <AppleSelect
-                    label="VAT Rate"
+                    label={t("billing.vatRate", "نسبة الضريبة")}
                     {...register("vat_rate")}
                     error={errors.vat_rate?.message}
                   >
                     <option value={0}>0%</option>
                     <option value={5}>5%</option>
+                    <option value={10}>10%</option>
                     <option value={15}>15%</option>
                   </AppleSelect>
                 )}
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700 text-start">
                 <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
+                  <span>{totalAmount.toFixed(3)} د.ب</span>
                 </div>
                 {watchedVatIncluded && (
                   <div className="flex justify-between text-sm">
-                    <span>VAT ({watch("vat_rate")}%):</span>
-                    <span>${vatAmount.toFixed(2)}</span>
+                    <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
+                    <span>{vatAmount.toFixed(3)} د.ب</span>
                   </div>
                 )}
-                <div className="flex justify-between font-medium border-t pt-2">
-                  <span>Total:</span>
-                  <span>${finalAmount.toFixed(2)}</span>
+                <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
+                  <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
+                  <span>{finalAmount.toFixed(3)} د.ب</span>
                 </div>
               </div>
-              <div className="space-y-4">
-                <h4 className="font-medium flex items-center">
-                  <FiUpload className="mr-2" />
-                  Invoice File Upload
+              <div className="space-y-4 text-start">
+                <h4 className="font-medium flex items-center gap-2">
+                  <FiUpload className="flex-shrink-0" />
+                  <span>{t("billing.uploadInvoiceFile", "إرفاق ملف أو إيصال الفاتورة")}</span>
                 </h4>
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors"
+                  className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors"
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                 >
@@ -747,7 +527,7 @@ export function AddInvoiceModal({
                         </div>
                       )}
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {selectedFile.name}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -761,9 +541,9 @@ export function AddInvoiceModal({
                           setFilePreview(null);
                           setValue("invoice_file", null);
                         }}
-                        className="text-sm text-red-600 hover:text-red-700"
+                        className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
                       >
-                        Remove file
+                        {t("billing.removeFile", "حذف الملف")}
                       </button>
                     </div>
                   ) : (
@@ -772,18 +552,18 @@ export function AddInvoiceModal({
                         <FiUpload className="h-12 w-12 text-gray-400" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">
-                          Drag and drop your invoice file here, or{" "}
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {t("billing.dragAndDropFile", "قم بسحب وإفلات ملف الفاتورة هنا، أو")}{" "}
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-blue-600 hover:text-blue-700 font-medium"
+                            className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
                           >
-                            browse
+                            {t("billing.browseFiles", "استعراض الملفات")}
                           </button>
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Supports: JPG, PNG, GIF, PDF (max 10MB)
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {t("billing.supportedFormats", "الصيغ المدعومة: JPG, PNG, GIF, PDF (حد أقصى 10 ميجابايت)")}
                         </p>
                       </div>
                       <input
@@ -797,31 +577,35 @@ export function AddInvoiceModal({
                   )}
                 </div>
               </div>
-            </div>
+        </section>
 
-            {/* Settings & Notes Section */}
-            <div className="card p-6 space-y-6">
-              <h3 className="text-lg font-semibold flex items-center mb-4">
-                <FiShield className="mr-2" />
-                Settings & Notes
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Settings & Notes Section */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex-shrink-0">
+              <FiShield className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+              {t("billing.settingsAndNotes", "الإعدادات والملاحظات")}
+            </h3>
+          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleSelect
-                  label="Status"
+                  label={t("billing.status", "الحالة")}
                   {...register("status")}
                   error={errors.status?.message}
                   required
                 >
-                  <option value="">Select Status</option>
-                  {INVOICE_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </option>
-                  ))}
+                  <option value="">{t("billing.selectStatus", "اختر الحالة")}</option>
+                  <option value="Unpaid">{t("billing.unpaid", "غير مدفوعة")}</option>
+                  <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
+                  <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
+                  <option value="Draft">{t("billing.draft", "مسودة")}</option>
+                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
                 </AppleSelect>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 text-start">
                   <AppleToggle
-                    label="Recurring Invoice"
+                    label={t("billing.recurringInvoice", "فاتورة متكررة دورية")}
                     checked={watchedRecurring}
                     onChange={(checked) => setValue("recurring", checked)}
                   />
@@ -829,62 +613,60 @@ export function AddInvoiceModal({
               </div>
               {watchedRecurring && (
                 <AppleSelect
-                  label="Recurring Frequency"
+                  label={t("billing.recurringFrequency", "تكرار الفاتورة")}
                   {...register("recurring_frequency")}
                   error={errors.recurring_frequency?.message}
                 >
-                  <option value="">Select Frequency</option>
-                  {RECURRING_FREQUENCIES.map((freq) => (
-                    <option key={freq} value={freq}>
-                      {freq.charAt(0).toUpperCase() + freq.slice(1)}
-                    </option>
-                  ))}
+                  <option value="">{t("billing.selectFrequency", "اختر تكرار الفاتورة")}</option>
+                  <option value="weekly">{t("billing.weekly", "أسبوعياً")}</option>
+                  <option value="monthly">{t("billing.monthly", "شهرياً")}</option>
+                  <option value="quarterly">{t("billing.quarterly", "ربع سنوي")}</option>
+                  <option value="yearly">{t("billing.yearly", "سنوياً")}</option>
                 </AppleSelect>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleTextarea
-                  label="Internal Notes"
+                  label={t("billing.internalNotes", "ملاحظات داخلية (للموظفين فقط)")}
                   {...register("internal_notes")}
                   error={errors.internal_notes?.message}
                   rows={3}
-                  placeholder="Private notes for staff only..."
+                  placeholder={t("billing.internalNotesPlaceholder", "ملاحظات سرية خاصة بالإدارة...")}
                 />
                 <AppleTextarea
-                  label="Public Notes"
+                  label={t("billing.publicNotes", "ملاحظات العميل (تظهر بالفاتورة)")}
                   {...register("public_notes")}
                   error={errors.public_notes?.message}
                   rows={3}
-                  placeholder="Notes visible to clients..."
+                  placeholder={t("billing.publicNotesPlaceholder", "ملاحظات تظهر للعميل على الفاتورة...")}
                 />
               </div>
+        </section>
+
+        {/* Error Display */}
+        {Object.keys(errors).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-start"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FiAlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                {t("billing.fixErrorsWarning", "يرجى تصحيح الأخطاء التالية:")}
+              </p>
             </div>
-
-            {/* Error Display */}
-            {Object.keys(errors).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 rounded-lg p-4"
-              >
-                <div className="flex items-center mb-2">
-                  <FiAlertCircle className="h-5 w-5 text-red-500 mr-2" />
-                  <p className="text-sm font-medium text-red-700">
-                    Please fix the following errors:
-                  </p>
-                </div>
-                <ul className="text-sm text-red-600 space-y-1">
-                  {Object.values(errors).map((error, index) => (
-                    <li key={index}>• {error?.message}</li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-
-            <Footer />
-          </form>
-        </SmartModal>
-      )}
-    </AnimatePresence>
+            <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+              {Object.values(errors).map((error, index) => {
+                const errorMessage = error && typeof error === 'object' && 'message' in error 
+                  ? String(error.message) 
+                  : String(error || 'Unknown error');
+                return <li key={index}>• {errorMessage}</li>;
+              })}
+            </ul>
+          </motion.div>
+        )}
+      </form>
+    </UnifiedModal>
   );
 }
 

@@ -180,6 +180,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
     status: Task["status"],
     comment?: string,
   ) => {
+    void comment;
     setLoading(true);
     try {
       // TODO: Update in Supabase when tasks table is available
@@ -239,6 +240,8 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
     filters: TaskFilters,
     format: "csv" | "excel" | "json",
   ) => {
+    void filters;
+    void format;
     setLoading(true);
     try {
       // TODO: Implement real export functionality when tasks table is available
@@ -274,6 +277,7 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
 
   // Apply Smart suggestion
   const applySuggestion = async (suggestionId: string) => {
+    void suggestionId;
     setLoading(true);
     try {
       // TODO: Apply suggestion when tasks table is available

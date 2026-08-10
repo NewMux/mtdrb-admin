@@ -12,9 +12,14 @@ vi.mock("../../../contexts/AuthContext", () => ({
 }));
 
 // Helper to render with providers
+type AuthValue = {
+  userMetadata: { role?: UserRole } | null;
+  isLoading: boolean;
+};
+
 const renderWithProviders = (
   ui: React.ReactElement,
-  authValue: any = { userMetadata: null, isLoading: false }
+  authValue: AuthValue = { userMetadata: null, isLoading: false }
 ) => {
   mockUseAuth.mockReturnValue(authValue);
 
@@ -34,7 +39,7 @@ describe("PermissionGuard", () => {
   describe("Loading State", () => {
     it("should show loading spinner when auth is loading", () => {
       renderWithProviders(
-        <PermissionGuard requiredRole="staff">
+        <PermissionGuard requiredRole="trainer">
           <div>Protected Content</div>
         </PermissionGuard>,
         { userMetadata: null, isLoading: true }
@@ -50,7 +55,7 @@ describe("PermissionGuard", () => {
   describe("Unauthenticated Users", () => {
     it("should redirect to fallback path when user is not authenticated", () => {
       renderWithProviders(
-        <PermissionGuard requiredRole="staff" fallbackPath="/login">
+        <PermissionGuard requiredRole="trainer" fallbackPath="/login">
           <div>Protected Content</div>
         </PermissionGuard>,
         { userMetadata: null, isLoading: false }
@@ -62,7 +67,7 @@ describe("PermissionGuard", () => {
 
     it("should show authentication required message when no fallback path", () => {
       renderWithProviders(
-        <PermissionGuard requiredRole="staff">
+        <PermissionGuard requiredRole="trainer">
           <div>Protected Content</div>
         </PermissionGuard>,
         { userMetadata: null, isLoading: false }
@@ -76,11 +81,11 @@ describe("PermissionGuard", () => {
   describe("Role-Based Access Control", () => {
     it("should allow access when user has required role", () => {
       renderWithProviders(
-        <PermissionGuard requiredRole="staff">
+        <PermissionGuard requiredRole="trainer">
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "staff" as UserRole },
+          userMetadata: { role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -108,7 +113,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "staff" as UserRole },
+          userMetadata: { role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -123,7 +128,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "staff" as UserRole },
+          userMetadata: { role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -142,7 +147,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "staff" as UserRole },
+          userMetadata: { role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -161,7 +166,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "staff" as UserRole },
+          userMetadata: { role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -177,14 +182,15 @@ describe("PermissionGuard", () => {
       requiredRole: UserRole;
       shouldAllow: boolean;
     }> = [
-      { userRole: "owner", requiredRole: "staff", shouldAllow: true },
-      { userRole: "admin", requiredRole: "manager", shouldAllow: true },
-      { userRole: "manager", requiredRole: "trainer", shouldAllow: true },
-      { userRole: "trainer", requiredRole: "staff", shouldAllow: true },
-      { userRole: "staff", requiredRole: "trainer", shouldAllow: false },
-      { userRole: "trainer", requiredRole: "manager", shouldAllow: false },
-      { userRole: "manager", requiredRole: "admin", shouldAllow: false },
-      { userRole: "admin", requiredRole: "owner", shouldAllow: false },
+      { userRole: "admin", requiredRole: "trainer", shouldAllow: true },
+      { userRole: "admin", requiredRole: "employee", shouldAllow: true },
+      { userRole: "admin", requiredRole: "admin", shouldAllow: true },
+      { userRole: "employee", requiredRole: "trainer", shouldAllow: true },
+      { userRole: "employee", requiredRole: "employee", shouldAllow: true },
+      { userRole: "trainer", requiredRole: "trainer", shouldAllow: true },
+      { userRole: "trainer", requiredRole: "employee", shouldAllow: false },
+      { userRole: "trainer", requiredRole: "admin", shouldAllow: false },
+      { userRole: "employee", requiredRole: "admin", shouldAllow: false },
     ];
 
     roleTests.forEach(({ userRole, requiredRole, shouldAllow }) => {

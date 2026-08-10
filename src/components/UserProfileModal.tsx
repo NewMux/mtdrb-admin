@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiTarget,
-  FiHeart,
-  FiFileText,
   FiCamera,
   FiX,
   FiSave,
@@ -17,11 +9,12 @@ import { SmartModal } from "./ui/SmartModal";
 import { SmartButton } from "./ui/DesignSystem";
 import { api } from "../api/client";
 import type { UserProfile } from "../types";
+import type { User } from "@supabase/supabase-js";
 
 interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: User | null;
 }
 
 export default function UserProfileModal({

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 import { useSmartTrainerModal } from "./useSmartTrainerModal";
-import { FiLock, FiCalendar, FiUserCheck, FiUserX } from "react-icons/fi";
+import { FiLock, FiCalendar } from "react-icons/fi";
 
 interface UpdateTrainerStatusModalProps {
   open: boolean;
@@ -16,14 +16,8 @@ export default function UpdateTrainerStatusModal({
   onClose,
   trainerId,
   onSuccess,
-  isPro,
 }: UpdateTrainerStatusModalProps) {
-  // Return null if trainerId is null or empty to prevent errors
-  if (!trainerId) {
-    return null;
-  }
-
-  const { loading, trainer, aiRecommendations, alerts, proLocked } =
+  const { trainer, alerts } =
     useSmartTrainerModal({ trainerId });
   const [status, setStatus] = React.useState("active");
   const [leaveDate, setLeaveDate] = React.useState("");
@@ -43,6 +37,11 @@ export default function UpdateTrainerStatusModal({
     if (trainer) setStatus(trainer.status || "active");
   }, [trainer]);
 
+  // Return null if trainerId is null or empty to prevent errors
+  if (!trainerId) {
+    return null;
+  }
+
   return (
     <SmartTrainerModal
       open={open}
@@ -57,7 +56,7 @@ export default function UpdateTrainerStatusModal({
             {saving ? "Saving..." : "Update Status"}
           </button>
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={saving}
           >

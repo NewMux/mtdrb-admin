@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  FiBarChart,
-  FiUsers,
-  FiUserPlus,
-  FiUserCheck,
-  FiUserX,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiActivity,
-} from "react-icons/fi";
+import { FiBarChart } from "react-icons/fi";
 import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 
 interface SmartMemberAnalyticsProps {

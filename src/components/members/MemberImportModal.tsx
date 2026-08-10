@@ -1,5 +1,4 @@
 import React, { useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUploadCloud,
   FiFileText,
@@ -8,7 +7,7 @@ import {
   FiCheckCircle,
   FiAlertTriangle,
 } from "react-icons/fi";
-import Papa from "papaparse";
+import Papa, { type ParseResult } from "papaparse";
 import { supabase } from "../../supabaseClient";
 
 const REQUIRED_COLUMNS = ["name", "status"];
@@ -42,10 +41,10 @@ export default function MemberImportModal({
   onClose,
   onImportSuccess,
 }: MemberImportModalProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [, setFile] = useState<File | null>(null);
+  const [, setDragActive] = useState(false);
   const [csvData, setCsvData] = useState<CsvData[]>([]);
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [, setCsvHeaders] = useState<string[]>([]);
   const [csvError, setCsvError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -186,12 +185,6 @@ export default function MemberImportModal({
   };
 
   // Handle drag events
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
-    if (e.type === "dragleave") setDragActive(false);
-  };
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -223,7 +216,7 @@ export default function MemberImportModal({
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: async (results) => {
+      complete: async (results: ParseResult<CsvData>) => {
         const headers = results.meta.fields || [];
         setCsvHeaders(headers);
         const data = results.data as CsvData[];

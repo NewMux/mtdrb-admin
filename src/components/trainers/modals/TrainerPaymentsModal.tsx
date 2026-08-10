@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiDollarSign,
   FiCalendar,
   FiDownload,
-  FiTrendingUp,
   FiShield,
 } from "react-icons/fi";
 import { SmartTrainerModal } from "./SmartTrainerModal";
@@ -21,7 +19,6 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
   onClose,
   trainer,
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [paymentType, setPaymentType] = useState("");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);

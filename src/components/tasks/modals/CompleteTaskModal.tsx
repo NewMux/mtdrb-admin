@@ -1,11 +1,8 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiCheck,
-  FiMessageSquare,
   FiUpload,
   FiFileText,
-  FiClock,
   FiZap,
   FiAlertTriangle,
 } from "react-icons/fi";

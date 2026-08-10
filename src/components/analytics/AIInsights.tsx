@@ -65,25 +65,25 @@ const InsightCard = ({
       case "low":
         return "bg-emerald-100 text-emerald-700 border-emerald-200";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600";
     }
   };
 
   return (
     <motion.div
-      className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-l-4 ${getPriorityColor()} hover:shadow-md transition-all duration-300 ease-in-out`}
+      className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 border-l-4 ${getPriorityColor()} hover:shadow-md transition-all duration-300 ease-in-out`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ y: -2 }}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gray-50">{getIcon()}</div>
+          <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-700">{getIcon()}</div>
           <div>
-            <h3 className="font-semibold text-gray-900 tracking-tight">
+            <h3 className="font-semibold text-gray-900 dark:text-white tracking-tight">
               {insight.title}
             </h3>
-            <p className="text-sm text-gray-600">{insight.description}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{insight.description}</p>
           </div>
         </div>
         <span
@@ -94,7 +94,7 @@ const InsightCard = ({
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">{insight.impact}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{insight.impact}</span>
         <SmartButton
           onClick={() => onActionClick(insight.id, insight.action)}
           variant="primary"
@@ -125,15 +125,15 @@ const AskAssistantModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <motion.div
-        className="bg-white rounded-2xl p-8 max-w-md w-full mx-4"
+        className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
       >
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <FiZap className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <FiZap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Ask Smart Assistant
           </h2>
         </div>
@@ -142,7 +142,7 @@ const AskAssistantModal = ({
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask anything about your gym analytics... e.g., 'Why did revenue drop last week?'"
-          className="w-full p-4 border border-gray-300 rounded-xl resize-none h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl resize-none h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
         />
 
         <div className="flex gap-3 mt-6">
@@ -175,6 +175,7 @@ export default function SmartInsights({
 
   const handleAskAssistant = async (question: string) => {
     try {
+      void question;
       // TODO: Implement real assistant API call when backend is ready
       // Placeholder for future implementation
     } catch (error) {
@@ -185,17 +186,17 @@ export default function SmartInsights({
   // Add null/undefined check
   if (!insights || !Array.isArray(insights)) {
     return (
-      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FiZap className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <FiZap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Insights That Matter
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Smart-powered recommendations for your business
               </p>
             </div>
@@ -214,21 +215,21 @@ export default function SmartInsights({
           {[1, 2, 3].map((index) => (
             <div
               key={index}
-              className="bg-gray-50 rounded-xl p-4 animate-pulse"
+              className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 animate-pulse"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-xl"></div>
                   <div>
-                    <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-48 h-3 bg-gray-200 rounded"></div>
+                    <div className="w-32 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+                    <div className="w-48 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
                   </div>
                 </div>
-                <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
+                <div className="w-16 h-6 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
               </div>
               <div className="flex items-center justify-between">
-                <div className="w-20 h-3 bg-gray-200 rounded"></div>
-                <div className="w-24 h-8 bg-gray-200 rounded"></div>
+                <div className="w-20 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="w-24 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             </div>
           ))}
@@ -244,17 +245,17 @@ export default function SmartInsights({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <FiZap className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+            <FiZap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Insights That Matter
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Smart-powered recommendations for your business
             </p>
           </div>
@@ -291,65 +292,3 @@ export default function SmartInsights({
   );
 }
 
-// Default insights for demonstration
-export const defaultInsights: Insight[] = [
-  {
-    id: "1",
-    title: "Revenue Drop Detected",
-    description:
-      "Revenue dropped 9% compared to last week. This could be due to reduced class attendance.",
-    priority: "high",
-    impact: "High Impact",
-    action: "See Details",
-    category: "revenue",
-  },
-  {
-    id: "2",
-    title: "At-Risk Members",
-    description:
-      "18 members flagged as at-risk. They haven't attended classes in 2+ weeks.",
-    priority: "medium",
-    impact: "Medium Impact",
-    action: "Start Campaign",
-    category: "members",
-  },
-  {
-    id: "3",
-    title: "Peak Hours Identified",
-    description:
-      "6-8 PM classes are consistently full. Consider adding more sessions.",
-    priority: "high",
-    impact: "High Impact",
-    action: "Optimize Schedule",
-    category: "operations",
-  },
-  {
-    id: "4",
-    title: "Trainer Performance",
-    description:
-      "Sarah Ahmed has the highest retention rate. Consider promoting her classes.",
-    priority: "medium",
-    impact: "Medium Impact",
-    action: "View Stats",
-    category: "members",
-  },
-  {
-    id: "5",
-    title: "New Signups Up",
-    description:
-      "15% increase in new signups this week. Your marketing campaign is working!",
-    priority: "low",
-    impact: "High Impact",
-    action: "View Campaign",
-    category: "revenue",
-  },
-  {
-    id: "6",
-    title: "Equipment Maintenance",
-    description: "Treadmill #3 needs maintenance. 3 members reported issues.",
-    priority: "medium",
-    impact: "Low Impact",
-    action: "Schedule Repair",
-    category: "operations",
-  },
-];

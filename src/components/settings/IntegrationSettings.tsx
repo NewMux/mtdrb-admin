@@ -12,10 +12,8 @@ interface IntegrationSettingsProps {
   refreshKey: number;
 }
 
-export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
-  refreshKey,
-}) => {
-  const [integrations, setIntegrations] = useState([
+export const IntegrationSettings: React.FC<IntegrationSettingsProps> = () => {
+  const [integrations] = useState([
     {
       id: "stripe",
       name: "Stripe",
@@ -78,10 +76,10 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Integration Settings
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Configure third-party integrations and API connections
           </p>
         </div>
@@ -96,10 +94,10 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
       </div>
 
       {/* Integrations List */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiLink className="h-6 w-6 text-blue-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">
+          <FiLink className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Available Integrations
           </h2>
         </div>
@@ -107,18 +105,18 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
           {integrations.map((integration) => (
             <div
               key={integration.id}
-              className="border border-gray-200 rounded-2xl p-6"
+              className="border border-gray-200 dark:border-gray-600 rounded-2xl p-6"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start space-x-4">
-                  <div className="p-3 bg-gray-50 rounded-2xl">
-                    <FiLink className="h-6 w-6 text-gray-600" />
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-2xl">
+                    <FiLink className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {integration.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-2">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
                       {integration.description}
                     </p>
                     <div
@@ -134,7 +132,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
                 <button
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     integration.status === "connected"
-                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
@@ -145,9 +143,9 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
               </div>
 
               {integration.status === "connected" && (
-                <div className="space-y-4 pt-4 border-t border-gray-100">
+                <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       API Key
                     </label>
                     <div className="flex space-x-2">
@@ -155,22 +153,22 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
                         type="password"
                         value={integration.apiKey}
                         readOnly
-                        className="flex-1 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200"
+                        className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 dark:text-gray-100"
                       />
-                      <button className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors">
+                      <button className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                         <FiKey className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Webhook URL
                     </label>
                     <input
                       type="text"
                       value={integration.webhookUrl}
                       readOnly
-                      className="w-full px-4 py-2 bg-gray-50 rounded-xl border border-gray-200"
+                      className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 dark:text-gray-100"
                     />
                   </div>
                 </div>
@@ -181,27 +179,27 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
       </div>
 
       {/* API Configuration */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiSettings className="h-6 w-6 text-green-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">API Configuration</h2>
+          <FiSettings className="h-6 w-6 text-green-600 dark:text-green-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">API Configuration</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               API Rate Limit
             </label>
-            <select className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0">
+            <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100">
               <option>1000 requests/hour</option>
               <option>5000 requests/hour</option>
               <option>10000 requests/hour</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Webhook Timeout
             </label>
-            <select className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0">
+            <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100">
               <option>30 seconds</option>
               <option>60 seconds</option>
               <option>120 seconds</option>

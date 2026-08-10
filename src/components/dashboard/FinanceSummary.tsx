@@ -1,8 +1,8 @@
 import React from "react";
 import { FiFileText, FiDollarSign, FiAlertCircle, FiZap } from "react-icons/fi";
-import SmartKpiCard from "../ui/SmartKpiCard";
+import SmartKpiCard, { type SmartKpiCardProps } from "../ui/SmartKpiCard";
 
-const financeItems = [
+const financeItems: SmartKpiCardProps[] = [
   {
     label: "Unpaid Invoices",
     value: 12,

@@ -7,13 +7,13 @@ export const LANDING_CONTENT = {
   hero: {
     badge: {
       icon: "play",
-      text: "GCC Fitness Technology",
+      text: "MENAT Fitness Technology",
     },
     headline: {
       primary: "Built for Power.",
       secondary: "Designed for Growth.",
     },
-    subtitle: "The gym operating system for the GCC",
+    subtitle: "The gym operating system for MENAT",
     cta: {
       primary: {
         text: "Book Demo",
@@ -149,34 +149,31 @@ export const LANDING_CONTENT = {
     plans: [
       {
         name: "Starter",
-        monthlyPrice: 79,
-        yearlyPrice: 59,
+        monthlyPrice: 80,
+        yearlyPrice: 65,
         description: "Perfect for single-location gyms",
         features: [
           "All core features",
           "Single location",
-          "Up to 500 members",
+          "+$20 USD/month per extra location",
           "Basic analytics",
           "Email support",
-          "WhatsApp Assistant bot",
         ],
         popular: false,
         cta: "Get Started",
       },
       {
         name: "Pro",
-        monthlyPrice: 109,
-        yearlyPrice: 89,
+        monthlyPrice: 130,
+        yearlyPrice: 105,
         description: "For growing gym chains",
         features: [
           "Everything in Starter",
-          "Unlimited locations",
+          "$10 USD/month per extra location",
           "Unlimited members",
           "Advanced analytics",
           "Priority support",
-          "Custom integrations",
-          "Biometric access",
-          "White-label options",
+          "WhatsApp bot",
         ],
         popular: true,
         cta: "Get Started",
@@ -198,7 +195,7 @@ export const LANDING_CONTENT = {
         {
           question: "What about VAT?",
           answer:
-            "All prices include VAT. We handle all tax compliance automatically for GCC businesses.",
+            "All prices include VAT. We handle all tax compliance automatically for MENAT businesses.",
         },
         {
           question: "Do you offer custom plans?",
@@ -210,7 +207,7 @@ export const LANDING_CONTENT = {
   },
 
   socialProof: {
-    headline: "Trusted by gyms across the GCC",
+    headline: "Trusted by gyms across MENAT",
     testimonials: [
       {
         name: "Ahmed Al-Mansoori",
@@ -251,33 +248,33 @@ export const LANDING_CONTENT = {
     },
     secondary: {
       text: "Schedule Demo",
-      href: "/demo",
+      href: "/signup",
     },
   },
 
   footer: {
     description:
-      "The gym operating system for the GCC. Built for power, designed for growth.",
+      "The gym operating system for MENAT. Built for power, designed for growth.",
     links: {
       product: [
         { text: "Features", href: "#features" },
         { text: "Pricing", href: "#pricing" },
-        { text: "Demo", href: "/demo" },
-        { text: "API", href: "/api" },
+        { text: "Demo", href: "/signup" },
+        { text: "API", href: "#features" },
       ],
       company: [
-        { text: "About", href: "/about" },
-        { text: "Contact", href: "/contact" },
-        { text: "Support", href: "/support" },
-        { text: "Careers", href: "/careers" },
+        { text: "About", href: "#features" },
+        { text: "Contact", href: "/login" },
+        { text: "Support", href: "/login" },
+        { text: "Careers", href: "#features" },
       ],
       legal: [
-        { text: "Privacy", href: "/privacy" },
-        { text: "Terms", href: "/terms" },
-        { text: "Security", href: "/security" },
+        { text: "Privacy", href: "#features" },
+        { text: "Terms", href: "#features" },
+        { text: "Security", href: "#features" },
       ],
     },
-    copyright: "© 2024 MTDRB. All rights reserved.",
+    copyright: `© ${new Date().getFullYear()} MTDRB. All rights reserved.`,
     social: {
       twitter: "https://twitter.com/mtdrb",
       linkedin: "https://linkedin.com/company/mtdrb",

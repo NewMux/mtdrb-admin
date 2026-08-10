@@ -1,12 +1,8 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiPlay,
   FiClock,
-  FiMessageSquare,
   FiZap,
-  FiUser,
-  FiCalendar,
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
 import { useSmartTaskModal } from "./useSmartTaskModal";
@@ -32,7 +28,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
   const [timerRunning, setTimerRunning] = React.useState(false);
   const [timerSeconds, setTimerSeconds] = React.useState(0);
   const [selectedStatus, setSelectedStatus] = React.useState<
-    "in_progress" | "waiting"
+    "in_progress" | "paused"
   >("in_progress");
 
   // Timer effect
@@ -79,10 +75,10 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
       icon: "▶️",
     },
     {
-      value: "waiting" as const,
-      label: "Waiting on Response",
-      description: "Waiting for someone else to respond",
-      icon: "⏳",
+      value: "paused" as const,
+      label: "Paused",
+      description: "Task is paused temporarily",
+      icon: "⏸️",
     },
   ];
 

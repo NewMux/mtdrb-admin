@@ -5,7 +5,6 @@ import {
   FiX,
   FiAlertTriangle,
   FiInfo,
-  FiAlertCircle,
 } from "react-icons/fi";
 import { Toast as ToastType } from "../../hooks/useToast";
 

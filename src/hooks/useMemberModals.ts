@@ -36,7 +36,7 @@ export const useMemberModals = () => {
     (modalName: keyof ModalState, member?: Member) => {
       setModalState((prev) => ({ ...prev, [modalName]: true }));
       if (member) {
-        setModalData({ selectedMember: member, memberId: member.id });
+        setModalData({ selectedMember: member, memberId: member.id ?? null });
       }
     },
     [],

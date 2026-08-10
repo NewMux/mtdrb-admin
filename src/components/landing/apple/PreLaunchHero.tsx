@@ -119,7 +119,7 @@ const PreLaunchHero: React.FC = () => {
               >
                 <FiCheck className="w-5 h-5 text-lunaCyan" />
                 <span className="text-lunaNavy font-semibold">
-                  Spot secured. You'll be first to know.
+                  Spot secured. You&apos;ll be first to know.
                 </span>
               </motion.div>
             ) : (

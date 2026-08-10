@@ -1,17 +1,9 @@
 import * as React from "react";
-import { motion } from "framer-motion";
-import {
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiStar,
-  FiTarget,
-  FiSave,
-  FiX,
-} from "react-icons/fi";
+import { FiUser, FiStar, FiTarget } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
-import { SmartButton } from "../../ui/DesignSystem";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../../hooks/useRTL";
 
 interface Trainer {
   id: string;
@@ -39,8 +31,10 @@ export default function EditTrainerModal({
   onClose,
   trainer,
   onSuccess,
-  isPro = false,
 }: EditTrainerModalProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+
   const [formData, setFormData] = React.useState<Trainer>(trainer);
   const [loading, setLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Partial<Trainer>>({});
@@ -60,33 +54,33 @@ export default function EditTrainerModal({
   const validateForm = (): boolean => {
     const newErrors: Partial<Trainer> = {};
 
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    if (!formData.phone.trim()) newErrors.phone = "Phone is required";
+    if (!formData.name.trim()) newErrors.name = t("trainers.nameRequired", "الاسم مطلوب");
+    if (!formData.email.trim()) newErrors.email = t("trainers.emailRequired", "البريد مطلوب");
+    if (!formData.phone.trim()) newErrors.phone = t("trainers.phoneRequired", "الهاتف مطلوب");
     if (!formData.specialty.trim())
-      newErrors.specialty = "Specialty is required";
+      newErrors.specialty = t("trainers.specialtyRequired", "التخصص مطلوب");
     if (!formData.experience.trim())
-      newErrors.experience = "Experience is required";
+      newErrors.experience = t("trainers.experienceRequired", "الخبرة مطلوبة");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    toast.success("Trainer updated successfully!");
-    setLoading(false);
-    onSuccess?.();
-    onClose();
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success(t("trainers.updateSuccess", "تم تحديث بيانات المدرب بنجاح"));
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      toast.error(t("trainers.updateError", "حدث خطأ أثناء التحديث"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -99,30 +93,31 @@ export default function EditTrainerModal({
       open={isOpen}
       onClose={handleClose}
       onAction={handleSubmit}
-      actionLabel={loading ? "Updating..." : "Update Trainer"}
-      title="Edit Trainer"
-      subtitle={`Update ${trainer.name}'s profile information`}
+      actionLabel={loading ? t("trainers.updating", "جاري التحديث...") : t("trainers.updateTrainer", "تحديث المدرب")}
+      title={t("trainers.editTrainerTitle", "تعديل بيانات المدرب")}
+      subtitle={t("trainers.editTrainerSubtitle", `تحديث الملف الشخصي للمدرب ${trainer.name}`)}
     >
-      <div className="space-y-8">
+      <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Personal Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
-            <FiUser className="w-5 h-5 text-blue-500" />
-            Personal Information
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+            <FiUser className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <span>{t("trainers.personalInfo", "البيانات الشخصية")}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name *
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.fullName", "الاسم الكامل")} *
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.name ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
+                  errors.name ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="Sarah Johnson"
+                placeholder={t("trainers.namePlaceholder", "سارة أحمد")}
+                dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.name && (
                 <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.name}</p>
@@ -130,17 +125,18 @@ export default function EditTrainerModal({
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email *
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.email", "البريد الإلكتروني")} *
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.email ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
+                  errors.email ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="sarah.johnson@mtdrb.com"
+                placeholder="sarah@example.com"
+                dir="ltr"
               />
               {errors.email && (
                 <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.email}</p>
@@ -148,17 +144,18 @@ export default function EditTrainerModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.phone", "رقم الهاتف")} *
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.phone ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
+                  errors.phone ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="+1 (555) 123-4567"
+                placeholder="+973 3300 0000"
+                dir="ltr"
               />
               {errors.phone && (
                 <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.phone}</p>
@@ -166,8 +163,8 @@ export default function EditTrainerModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Experience *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.experience", "سنوات الخبرة")} *
               </label>
               <input
                 type="text"
@@ -175,10 +172,11 @@ export default function EditTrainerModal({
                 onChange={(e) =>
                   handleInputChange("experience", e.target.value)
                 }
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.experience ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
+                  errors.experience ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="5 years"
+                placeholder="5 سنوات"
+                dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.experience && (
                 <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.experience}</p>
@@ -189,23 +187,24 @@ export default function EditTrainerModal({
 
         {/* Professional Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FiTarget className="text-green-500" />
-            Professional Information
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <FiTarget className="text-green-500 flex-shrink-0" />
+            <span>{t("trainers.professionalInfo", "البيانات المهنية")}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Specialty *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.specialty", "التخصص")} *
               </label>
               <input
                 type="text"
                 value={formData.specialty}
                 onChange={(e) => handleInputChange("specialty", e.target.value)}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.specialty ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-300"
+                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
+                  errors.specialty ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="Yoga & Pilates"
+                placeholder="يوغا ولياقة"
+                dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.specialty && (
                 <p className="text-red-500 text-sm mt-1">{errors.specialty}</p>
@@ -213,26 +212,27 @@ export default function EditTrainerModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.status", "الحالة")}
               </label>
               <select
                 value={formData.status}
                 onChange={(e) =>
                   handleInputChange("status", e.target.value as any)
                 }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
+                dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="active">Active</option>
-                <option value="available">Available</option>
-                <option value="busy">Busy</option>
-                <option value="inactive">Inactive</option>
+                <option value="active">{t("trainers.active", "نشط")}</option>
+                <option value="available">{t("trainers.available", "متاح")}</option>
+                <option value="busy">{t("trainers.busy", "مشغول")}</option>
+                <option value="inactive">{t("trainers.inactive", "غير نشط")}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rating
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.rating", "التقييم")}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -244,15 +244,15 @@ export default function EditTrainerModal({
                   onChange={(e) =>
                     handleInputChange("rating", parseFloat(e.target.value))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                 />
-                <FiStar className="text-yellow-400" />
+                <FiStar className="text-yellow-400 flex-shrink-0" />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Classes Assigned
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("trainers.classesAssigned", "الحصص المسندة")}
               </label>
               <input
                 type="number"
@@ -261,14 +261,12 @@ export default function EditTrainerModal({
                 onChange={(e) =>
                   handleInputChange("classes", parseInt(e.target.value))
                 }
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:border-gray-300 transition-all"
+                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
               />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Footer Actions */}
     </ColorfulModalUI>
   );
 }

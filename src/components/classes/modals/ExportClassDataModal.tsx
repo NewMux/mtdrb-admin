@@ -12,6 +12,10 @@ import { SmartModal } from "../../ui/SmartModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
+import { exportCSV, exportPDF, exportExcel } from "../../../utils/exportData";
+import { useTranslation } from "react-i18next";
 
 interface ExportOption {
   id: string;
@@ -47,6 +51,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [selectedExport, setSelectedExport] = useState<string>("");
   const [filters, setFilters] = useState<ExportFilter>({
@@ -62,12 +67,14 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
     classId: classId || "",
     isPro,
   });
+  const { tenantId } = useAuth();
 
   // Load class data when modal opens
   useEffect(() => {
     if (isOpen && classId) {
       fetchClass();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId]);
 
   const exportOptions: ExportOption[] = [
@@ -116,30 +123,189 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
       return;
     }
 
+    if (!tenantId) {
+      toast.error("No tenant ID found");
+      return;
+    }
+
     setLoading(true);
     setExportProgress(0);
 
     try {
+      const option = exportOptions.find((opt) => opt.id === selectedExport);
+      if (!option) {
+        throw new Error("Invalid export option");
+      }
+
       // Simulate export progress
       const progressInterval = setInterval(() => {
         setExportProgress((prev) => {
-          if (prev >= 100) {
+          if (prev >= 90) {
             clearInterval(progressInterval);
-            return 100;
+            return 90;
           }
           return prev + 10;
         });
       }, 200);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      let exportData: any[] = [];
+      let filename = `class-export-${new Date().toISOString().split("T")[0]}`;
+
+      // Fetch data based on export type
+      if (selectedExport === "class-roster" && classId) {
+        // Fetch class roster with member details
+        const { data: bookings, error: bookingsError } = await supabase
+          .from("class_bookings")
+          .select(
+            `
+            *,
+            member:members(id, first_name, last_name, email, phone, status)
+          `,
+          )
+          .eq("class_id", classId)
+          .eq("tenant_id", tenantId);
+
+        if (bookingsError) throw bookingsError;
+
+        exportData = (bookings || []).map((booking: any) => ({
+          "Member Name": booking.member
+            ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
+            : "N/A",
+          Email: booking.member?.email || "N/A",
+          Phone: booking.member?.phone || "N/A",
+          "Enrollment Date": booking.created_at
+            ? new Date(booking.created_at).toLocaleDateString()
+            : "N/A",
+          Status: booking.status || "N/A",
+        }));
+
+        filename = `class-roster-${classId}`;
+      } else if (selectedExport === "attendance-report" && classId) {
+        // Fetch attendance data
+        const { data: attendance, error: attendanceError } = await supabase
+          .from("class_bookings")
+          .select(
+            `
+            *,
+            member:members(id, first_name, last_name)
+          `,
+          )
+          .eq("class_id", classId)
+          .eq("tenant_id", tenantId);
+
+        if (attendanceError) throw attendanceError;
+
+        exportData = (attendance || []).map((record: any) => ({
+          "Member Name": record.member
+            ? `${record.member.first_name || ""} ${record.member.last_name || ""}`.trim()
+            : "N/A",
+          "Class Date": classData?.date
+            ? new Date(classData.date).toLocaleDateString()
+            : "N/A",
+          "Attendance Status": record.attended ? "Attended" : "No Show",
+          "Booking Date": record.created_at
+            ? new Date(record.created_at).toLocaleDateString()
+            : "N/A",
+        }));
+
+        filename = `attendance-report-${classId}`;
+      } else if (selectedExport === "financial-summary" && classId) {
+        // Fetch financial data
+        const { data: bookings, error: bookingsError } = await supabase
+          .from("class_bookings")
+          .select("*")
+          .eq("class_id", classId)
+          .eq("tenant_id", tenantId);
+
+        if (bookingsError) throw bookingsError;
+
+        const totalRevenue = (bookings || []).reduce(
+          (sum: number, b: any) => sum + (b.price || 0),
+          0,
+        );
+        const totalCost = (classData?.cost || 0) * (bookings?.length || 0);
+
+        exportData = [
+          {
+            "Class Name": classData?.name || "N/A",
+            "Total Bookings": bookings?.length || 0,
+            "Total Revenue": totalRevenue,
+            "Total Costs": totalCost,
+            "Profit": totalRevenue - totalCost,
+            "Profit Margin": totalRevenue > 0
+              ? `${((totalRevenue - totalCost) / totalRevenue * 100).toFixed(2)}%`
+              : "0%",
+            "Per Member Revenue": bookings?.length
+              ? (totalRevenue / bookings.length).toFixed(2)
+              : "0",
+          },
+        ];
+
+        filename = `financial-summary-${classId}`;
+      } else if (selectedExport === "comprehensive-report" && classId) {
+        // Comprehensive report with all data
+        const [bookingsResult] = await Promise.all([
+          supabase
+            .from("class_bookings")
+            .select(
+              `
+              *,
+              member:members(id, first_name, last_name, email, phone, status)
+            `,
+            )
+            .eq("class_id", classId)
+            .eq("tenant_id", tenantId),
+          supabase
+            .from("class_bookings")
+            .select("*")
+            .eq("class_id", classId)
+            .eq("tenant_id", tenantId),
+        ]);
+
+        if (bookingsResult.error) throw bookingsResult.error;
+
+        exportData = (bookingsResult.data || []).map((booking: any) => ({
+          "Member Name": booking.member
+            ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
+            : "N/A",
+          Email: booking.member?.email || "N/A",
+          Phone: booking.member?.phone || "N/A",
+          "Enrollment Date": booking.created_at
+            ? new Date(booking.created_at).toLocaleDateString()
+            : "N/A",
+          Status: booking.status || "N/A",
+          "Class Name": classData?.name || "N/A",
+          "Class Date": classData?.date
+            ? new Date(classData.date).toLocaleDateString()
+            : "N/A",
+          "Start Time": classData?.start_time || "N/A",
+          "End Time": classData?.end_time || "N/A",
+          Price: booking.price || 0,
+        }));
+
+        filename = `comprehensive-report-${classId}`;
+      }
+
+      clearInterval(progressInterval);
+      setExportProgress(100);
+
+      // Export based on format
+      if (option.format === "csv") {
+        exportCSV(exportData, filename);
+      } else if (option.format === "pdf") {
+        exportPDF(exportData, filename, option.label);
+      } else if (option.format === "excel") {
+        await exportExcel(exportData, filename, option.label);
+      }
 
       toast.success("Data exported successfully");
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error exporting data:", error);
-      toast.error("Failed to export data");
+      toast.error(
+        `Failed to export data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setLoading(false);
       setExportProgress(0);
@@ -158,8 +324,8 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Export Class Data"
-      subtitle="Export class information in various formats"
+      title={t("classes.exportClassData")}
+      subtitle={t("classes.exportClassInformation")}
       maxWidth="4xl"
       footer={
         <div className="flex items-center justify-between">
@@ -323,7 +489,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
-                      dateRange: e.target.value as any,
+                      dateRange: e.target.value as ExportFilter["dateRange"],
                     }))
                   }
                   className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"

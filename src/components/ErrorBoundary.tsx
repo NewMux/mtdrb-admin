@@ -13,6 +13,8 @@ interface State {
   errorInfo?: ErrorInfo;
 }
 
+const isDevelopment = import.meta.env.DEV;
+
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
@@ -21,7 +23,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+    // Only log error details in development
+    if (isDevelopment) {
+      console.error("Error caught by boundary:", error, errorInfo);
+    }
 
     this.setState({ error, errorInfo });
 
@@ -71,12 +76,13 @@ export class ErrorBoundary extends Component<Props, State> {
                 We encountered an unexpected error. Please try again.
               </p>
 
-              {this.state.error && (
+              {/* Only show error details in development to prevent info leakage */}
+              {isDevelopment && this.state.error && (
                 <details className="mt-4 text-left">
                   <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
-                    Error details
+                    Error details (dev only)
                   </summary>
-                  <pre className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded overflow-auto">
+                  <pre className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded overflow-auto max-h-32">
                     {this.state.error.toString()}
                   </pre>
                 </details>

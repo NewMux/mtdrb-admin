@@ -7,15 +7,14 @@ import {
   FiClock,
   FiChevronLeft,
   FiChevronRight,
-  FiMoreHorizontal,
   FiDownload,
   FiSend,
   FiRepeat,
   FiCopy,
-  FiMessageCircle,
 } from "react-icons/fi";
 import dayjs from "dayjs";
 import { useUI } from "../../contexts/UIContext";
+import { Invoice } from "../../types";
 
 // Removed mock data - using real data from Supabase
 const EMPTY_INVOICES: Invoice[] = [];
@@ -71,10 +70,10 @@ export default function InvoiceTable() {
           </tr>
         </thead>
         <tbody>
-          {paginated.map((inv, idx) => {
+          {paginated.map((inv) => {
             const overdueDays =
-              inv.status === "Overdue"
-                ? dayjs().diff(dayjs(inv.dueDate), "day")
+              inv.status === "Overdue" && inv.due_date
+                ? dayjs().diff(dayjs(inv.due_date), "day")
                 : 0;
             return (
               <tr
@@ -83,36 +82,40 @@ export default function InvoiceTable() {
               >
                 {/* Invoice ID */}
                 <td className="py-3 px-4 max-w-[140px] truncate overflow-hidden whitespace-nowrap text-blue-700 underline cursor-pointer">
-                  {inv.id}
+                  {inv.id || inv.invoice_number || 'N/A'}
                 </td>
                 {/* Member Info */}
                 <td className="py-3 px-4 flex items-center gap-3 w-48 whitespace-nowrap">
                   <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 text-lg">
                     <FiUser />
                   </div>
-                  <div>
-                    <a
-                      href={inv.member.profileUrl}
-                      className="font-semibold text-blue-900 hover:underline whitespace-nowrap"
-                    >
-                      {inv.member.name}
-                    </a>
-                    <div className="text-xs text-blue-500 flex items-center gap-1 whitespace-nowrap">
-                      {inv.member.phone}
+                  {inv.member ? (
+                    <div>
+                      <a
+                        href={`#member-${inv.member.id}`}
+                        className="font-semibold text-blue-900 hover:underline whitespace-nowrap"
+                      >
+                        {inv.member.name}
+                      </a>
+                      <div className="text-xs text-blue-500 flex items-center gap-1 whitespace-nowrap">
+                        {inv.member.phone || inv.member.email || 'N/A'}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-gray-500">N/A</div>
+                  )}
                 </td>
                 {/* Type */}
                 <td className="py-3 px-4 text-blue-700 font-medium w-24 whitespace-nowrap">
-                  {inv.type}
+                  {inv.type || 'N/A'}
                 </td>
                 {/* Amount */}
                 <td className="py-3 px-4 w-32 whitespace-nowrap">
                   <div className="font-bold text-blue-900">
-                    BHD {inv.amount.toFixed(2)}
+                    {inv.currency || 'BHD'} {inv.amount ? inv.amount.toFixed(2) : (inv.total ? inv.total.toFixed(2) : '0.00')}
                   </div>
                   <div className="text-xs text-blue-500">
-                    VAT: {inv.vat.toFixed(2)}
+                    VAT: {inv.vat_total ? inv.vat_total.toFixed(2) : '0.00'}
                   </div>
                 </td>
                 {/* Status */}
@@ -140,19 +143,25 @@ export default function InvoiceTable() {
                 </td>
                 {/* Due Date */}
                 <td className="py-3 px-4 w-32 whitespace-nowrap">
-                  <div className="text-blue-900 font-medium">
-                    {dayjs(inv.dueDate).format("DD MMM YYYY")}
-                  </div>
-                  {overdueDays > 0 && (
-                    <div className="text-xs text-red-500 font-semibold animate-pulse">
-                      +{overdueDays} days overdue
-                    </div>
+                  {inv.due_date ? (
+                    <>
+                      <div className="text-blue-900 font-medium">
+                        {dayjs(inv.due_date).format("DD MMM YYYY")}
+                      </div>
+                      {overdueDays > 0 && (
+                        <div className="text-xs text-red-500 font-semibold animate-pulse">
+                          +{overdueDays} days overdue
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-gray-400">N/A</div>
                   )}
                 </td>
                 {/* Payment Method */}
                 <td className="py-3 px-4 w-32 whitespace-nowrap">
                   <select className="rounded-lg border-blue-200 px-2 py-1 text-sm bg-white">
-                    <option>{inv.paymentMethod}</option>
+                    <option>{inv.payment_method || 'N/A'}</option>
                     <option>Cash</option>
                     <option>Bank</option>
                     <option>POS</option>

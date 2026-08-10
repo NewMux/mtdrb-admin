@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   FiSearch,
-  FiFilter,
   FiEdit2,
   FiEye,
   FiChevronLeft,
@@ -11,10 +10,15 @@ import {
   FiChevronDown,
   FiTrash2,
 } from "react-icons/fi";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "react-hot-toast";
 import FilterButton from "../ui/FilterButton";
 import Papa from "papaparse";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface Trainer {
   id: string;
@@ -50,6 +54,9 @@ export default function ClassList({
   refreshKey,
   selectedClassId,
 }: ClassListProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
+  const { tenantId } = useAuth();
   const [search, setSearch] = useState("");
   const [trainerFilter, setTrainerFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -59,12 +66,16 @@ export default function ClassList({
   const [dateTo, setDateTo] = useState("");
   const [minCapacity, setMinCapacity] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  // Price filters - reserved for future pricing filter feature
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_minPrice, _setMinPrice] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_maxPrice, _setMaxPrice] = useState("");
   const PAGE_SIZE = 10;
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const [exportOpen, setExportOpen] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [importing, setImporting] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
   // Extract unique trainers for filter dropdown
@@ -194,7 +205,8 @@ export default function ClassList({
       c.capacity ?? "∞",
       c.bookedCount ?? 0,
     ]);
-    (doc as any).autoTable({
+    // jsPDF autoTable plugin type assertion needed due to missing types in jspdf-autotable
+    (doc as unknown as { autoTable: (options: Record<string, unknown>) => void }).autoTable({
       head: [
         ["Name", "Trainer", "Start Time", "End Time", "Capacity", "Booked"],
       ],
@@ -237,7 +249,7 @@ export default function ClassList({
             value={trainerFilter}
             onChange={(e) => setTrainerFilter(e.target.value)}
           >
-            <option value="">All Trainers</option>
+            <option value="">{t("classes.allTrainers")}</option>
             {trainers.map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
@@ -272,7 +284,7 @@ export default function ClassList({
               className="flex items-center gap-1 px-4 py-2 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:bg-blue-50 transition"
               onClick={() => setExportOpen((e) => !e)}
             >
-              <FiDownload /> Export <FiChevronDown className="ml-1" />
+              <FiDownload /> {t("classes.export")} <FiChevronDown className="ml-1" />
             </button>
             {exportOpen && (
               <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-blue-100 z-20 py-2">
@@ -283,7 +295,7 @@ export default function ClassList({
                     setExportOpen(false);
                   }}
                 >
-                  <FiDownload /> Export as CSV
+                  <FiDownload /> {t("classes.exportAsCSV")}
                 </button>
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-blue-50 rounded-lg text-blue-900 flex items-center gap-2"
@@ -292,7 +304,7 @@ export default function ClassList({
                     setExportOpen(false);
                   }}
                 >
-                  <FiDownload /> Export as PDF
+                  <FiDownload /> {t("classes.exportAsPDF")}
                 </button>
               </div>
             )}
@@ -314,7 +326,7 @@ export default function ClassList({
             />
           </div>
           <div>
-            <label className="block text-xs text-blue-500 mb-1">End Date</label>
+            <label className="block text-xs text-blue-500 mb-1">{t("classes.endDate")}</label>
             <input
               type="date"
               className="w-full rounded-lg border border-blue-200 px-3 py-2"
@@ -325,7 +337,7 @@ export default function ClassList({
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-xs text-blue-500 mb-1">
-                Min Capacity
+                {t("classes.minCapacity")}
               </label>
               <input
                 type="number"
@@ -356,25 +368,25 @@ export default function ClassList({
           <thead>
             <tr className="bg-blue-50">
               <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Name
+                {t("classes.name") || "Name"}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Trainer
+              <th className={`px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-xs font-semibold text-blue-500`}>
+                {t("classes.trainer")}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Date/Time
+              <th className={`px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-xs font-semibold text-blue-500`}>
+                {t("classes.dateTime")}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Capacity
+              <th className={`px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-xs font-semibold text-blue-500`}>
+                {t("classes.capacity")}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Booked
+              <th className={`px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-xs font-semibold text-blue-500`}>
+                {t("classes.booked")}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-semibold text-blue-500">
-                Status
+              <th className={`px-4 py-2 ${isRTL ? 'text-right' : 'text-left'} text-xs font-semibold text-blue-500`}>
+                {t("classes.status")}
               </th>
-              <th className="px-4 py-2 text-right text-xs font-semibold text-blue-500">
-                Actions
+              <th className={`px-4 py-2 ${isRTL ? 'text-left' : 'text-right'} text-xs font-semibold text-blue-500`}>
+                {t("classes.actions")}
               </th>
             </tr>
           </thead>
@@ -439,7 +451,7 @@ export default function ClassList({
                         e.stopPropagation();
                         onView(classItem);
                       }}
-                      title="View Details"
+                      title={t("classes.viewDetails")}
                     >
                       <FiEye />
                     </button>
@@ -459,7 +471,7 @@ export default function ClassList({
                         e.stopPropagation();
                         onDelete(classItem);
                       }}
-                      title="Delete"
+                      title={t("classes.deleteClass")}
                     >
                       <FiTrash2 />
                     </button>
@@ -473,7 +485,7 @@ export default function ClassList({
       {/* Pagination Controls */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-blue-400">
-          Page {page} of {totalPages}
+          {t("classes.page")} {page} {t("classes.of")} {totalPages}
         </div>
         <div className="flex gap-2">
           <button
@@ -488,33 +500,178 @@ export default function ClassList({
             className="p-2 rounded hover:bg-blue-100 text-blue-500 disabled:opacity-50"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            aria-label="Next page"
+            aria-label={t("classes.next")}
           >
             <FiChevronRight />
           </button>
         </div>
       </div>
-      {/* Import Modal Placeholder */}
+      {/* Import Classes Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
             className="absolute inset-0 bg-blue-900/30"
             onClick={() => setShowImportModal(false)}
           ></div>
-          <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-4 text-blue-900">
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-gray-900">
               Import Classes
             </h2>
-            <div className="mb-6 text-blue-400">
-              Import functionality coming soon. You can upload a CSV file to
-              bulk add or update classes.
+            <p className="text-gray-600 mb-4 text-sm">
+              Upload a CSV file to bulk import classes. Required columns:
+            </p>
+            <div className="bg-gray-50 p-3 rounded-lg mb-4 text-xs font-mono text-gray-700">
+              name, description, trainer_name, start_time, end_time, capacity, status
             </div>
-            <button
-              className="px-5 py-2 rounded-lg bg-blue-50 text-blue-400 font-semibold hover:bg-blue-100 transition"
-              onClick={() => setShowImportModal(false)}
-            >
-              Close
-            </button>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4 hover:border-blue-400 transition-colors">
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                id="csv-upload"
+                disabled={importing}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !tenantId) return;
+
+                  setImporting(true);
+                  try {
+                    Papa.parse(file, {
+                      header: true,
+                      complete: async (results: Papa.ParseResult<Record<string, unknown>>) => {
+                        try {
+                          const classesToInsert = [];
+                          const errors: string[] = [];
+
+                          for (const row of results.data as any[]) {
+                            if (!row.name || !row.start_time || !row.end_time) {
+                              errors.push(
+                                `Row missing required fields: ${row.name || "Unknown"}`,
+                              );
+                              continue;
+                            }
+
+                            // Find trainer by name if provided
+                            let trainerId = null;
+                            if (row.trainer_name) {
+                              const { data: trainers } = await supabase
+                                .from("trainers")
+                                .select("id")
+                                .eq("tenant_id", tenantId)
+                                .or(
+                                  `first_name.ilike.%${row.trainer_name}%,last_name.ilike.%${row.trainer_name}%`,
+                                )
+                                .limit(1);
+
+                              if (trainers && trainers.length > 0) {
+                                trainerId = trainers[0].id;
+                              }
+                            }
+
+                            // Parse date and time
+                            const startDateTime = new Date(row.start_time as string);
+                            const endDateTime = new Date(row.end_time as string);
+
+                            classesToInsert.push({
+                              tenant_id: tenantId,
+                              name: row.name,
+                              description: row.description || null,
+                              trainer_id: trainerId,
+                              start_time: startDateTime.toISOString(),
+                              end_time: endDateTime.toISOString(),
+                              date: startDateTime.toISOString().split("T")[0],
+                              capacity: parseInt(row.capacity as string) || 20,
+                              status: row.status || "scheduled",
+                            });
+                          }
+
+                          if (classesToInsert.length === 0) {
+                            toast.error("No valid classes to import");
+                            setImporting(false);
+                            return;
+                          }
+
+                          // Insert classes in batches
+                          const batchSize = 50;
+                          for (let i = 0; i < classesToInsert.length; i += batchSize) {
+                            const batch = classesToInsert.slice(i, i + batchSize);
+                            const { error: insertError } = await supabase
+                              .from("classes")
+                              .insert(batch);
+
+                            if (insertError) {
+                              throw insertError;
+                            }
+                          }
+
+                          toast.success(
+                            `Successfully imported ${classesToInsert.length} classes${errors.length > 0 ? ` (${errors.length} errors)` : ""}`,
+                          );
+                          if (errors.length > 0) {
+                            console.warn("Import errors:", errors);
+                          }
+                          setShowImportModal(false);
+                          // Refresh the class list
+                          window.location.reload();
+                        } catch (error) {
+                          console.error("Import error:", error);
+                          toast.error(
+                            `Failed to import classes: ${error instanceof Error ? error.message : "Unknown error"}`,
+                          );
+                        } finally {
+                          setImporting(false);
+                        }
+                      },
+                      error: (error: Error) => {
+                        console.error("CSV parse error:", error);
+                        toast.error("Failed to parse CSV file");
+                        setImporting(false);
+                      },
+                    });
+                  } catch (error) {
+                    console.error("Import error:", error);
+                    toast.error("Failed to import classes");
+                    setImporting(false);
+                  }
+                }}
+              />
+              <label
+                htmlFor="csv-upload"
+                className={`cursor-pointer flex flex-col items-center ${importing ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <FiUpload className="h-8 w-8 text-gray-400 mb-2" />
+                <span className="text-sm text-gray-600">
+                  {importing ? "Importing..." : "Click to upload or drag and drop"}
+                </span>
+                <span className="text-xs text-gray-400 mt-1">CSV files only</span>
+              </label>
+            </div>
+            <div className="flex justify-between">
+              <button
+                className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                onClick={() => {
+                  const template = "name,description,trainer_name,start_time,end_time,capacity,status\nMorning Yoga,Relaxing yoga class,John Smith,2024-01-15 09:00,2024-01-15 10:00,20,scheduled";
+                  const blob = new Blob([template], { type: "text/csv" });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "classes-template.csv";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  window.URL.revokeObjectURL(url);
+                }}
+              >
+                Download Template
+              </button>
+              <button
+                className="px-5 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition disabled:opacity-50"
+                onClick={() => setShowImportModal(false)}
+                disabled={importing}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

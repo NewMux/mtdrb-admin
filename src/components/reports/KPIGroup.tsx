@@ -10,20 +10,54 @@ import {
   FiMoreVertical,
 } from "react-icons/fi";
 // Removed import from mockReports - define types locally
-interface KPIStats {
-  revenue: { value: number; change: number };
-  members: { value: number; change: number };
-  classes: { value: number; change: number };
-  attendance: { value: number; change: number };
+interface KPIValue {
+  value: number;
+  change: number;
+  trend?: string;
 }
+
+interface KPIStats {
+  revenue: KPIValue;
+  members: KPIValue;
+  classes: KPIValue;
+  attendance: KPIValue;
+  generatedReports: KPIValue;
+  downloads: KPIValue;
+  scheduledReports: KPIValue;
+  autoReports: KPIValue;
+}
+
+const COLOR_BG_MAP: Record<string, string> = {
+  blue: "bg-blue-100 dark:bg-blue-900/30",
+  green: "bg-green-100 dark:bg-green-900/30",
+  purple: "bg-purple-100 dark:bg-purple-900/30",
+  emerald: "bg-emerald-100 dark:bg-emerald-900/30",
+  amber: "bg-amber-100 dark:bg-amber-900/30",
+  rose: "bg-rose-100 dark:bg-rose-900/30",
+  indigo: "bg-indigo-100 dark:bg-indigo-900/30",
+};
+
+const COLOR_TEXT_MAP: Record<string, string> = {
+  blue: "text-blue-600 dark:text-blue-400",
+  green: "text-green-600 dark:text-green-400",
+  purple: "text-purple-600 dark:text-purple-400",
+  emerald: "text-emerald-600 dark:text-emerald-400",
+  amber: "text-amber-600 dark:text-amber-400",
+  rose: "text-rose-600 dark:text-rose-400",
+  indigo: "text-indigo-600 dark:text-indigo-400",
+};
 
 const getKPIStats = async (): Promise<KPIStats> => {
   // TODO: Fetch from Supabase
   return {
-    revenue: { value: 0, change: 0 },
-    members: { value: 0, change: 0 },
-    classes: { value: 0, change: 0 },
-    attendance: { value: 0, change: 0 },
+    revenue: { value: 0, change: 0, trend: "+0%" },
+    members: { value: 0, change: 0, trend: "+0%" },
+    classes: { value: 0, change: 0, trend: "+0%" },
+    attendance: { value: 0, change: 0, trend: "+0%" },
+    generatedReports: { value: 0, change: 0, trend: "+0%" },
+    downloads: { value: 0, change: 0, trend: "+0%" },
+    scheduledReports: { value: 0, change: 0, trend: "+0%" },
+    autoReports: { value: 0, change: 0, trend: "+0%" },
   };
 };
 import { toast } from "react-hot-toast";
@@ -73,8 +107,8 @@ const KPICard = ({
       className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-${color}-100`}>
-          <Icon className={`w-6 h-6 text-${color}-600`} />
+        <div className={`p-3 rounded-xl ${COLOR_BG_MAP[color] || "bg-blue-100"}`}>
+          <Icon className={`w-6 h-6 ${COLOR_TEXT_MAP[color] || "text-blue-600"}`} />
         </div>
         <div className="relative group">
           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">

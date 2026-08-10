@@ -624,7 +624,7 @@ export const exportVatReport = async (
   format: "pdf" | "excel" | "csv",
 ): Promise<string> => {
   try {
-    const reportData = await generateVatReport(tenantId, filters);
+    await generateVatReport(tenantId, filters);
 
     // TODO: Implement actual export logic
     // This would typically involve:

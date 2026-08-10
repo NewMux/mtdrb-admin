@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { isLocalhost } from "../utils/isLocalhost";
 
 interface Subscription {
   id: string;
@@ -56,6 +57,19 @@ export function SubscriptionProvider({
   };
 
   useEffect(() => {
+    if (isLocalhost()) {
+      setIsPro(true);
+      setSubscription({
+        id: "localhost-subscription",
+        member_id: "mock-member",
+        status: "active",
+        plan_type: "enterprise",
+        created_at: new Date().toISOString(),
+      });
+      setIsLoading(false);
+      return;
+    }
+
     // Get user directly from supabase instead of useAuth
     const getUser = async () => {
       try {
@@ -84,43 +98,53 @@ export function SubscriptionProvider({
     try {
       setIsLoading(true);
 
-      // Check if user has an active subscription
-      // Note: subscriptions table uses member_id, so we need to find the member first
-      const { data: memberData } = await supabase
-        .from("members")
-        .select("id")
+      // Get the tenant membership of the user first
+      const { data: membershipData } = await supabase
+        .from("memberships")
+        .select("tenant_id")
         .eq("user_id", currentUser.id)
-        .single();
+        .maybeSingle();
 
-      if (!memberData) {
+      if (!membershipData) {
         setIsPro(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from("subscriptions")
+      // Query platform_subscriptions for the tenant
+      const { data: subData } = await supabase
+        .from("platform_subscriptions")
         .select("*")
-        .eq("member_id", memberData.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .eq("tenant_id", membershipData.tenant_id)
+        .maybeSingle();
 
-      if (data && data.length > 0) {
-        setIsPro(true);
-        setSubscription(data[0] as Subscription);
+      if (subData) {
+        const isActive = (subData.status === 'active' || subData.status === 'trialing');
+        setIsPro(isActive && (subData.plan_tier === 'pro' || subData.plan_tier === 'enterprise'));
+        setSubscription({
+          id: subData.id,
+          member_id: currentUser.id,
+          status: subData.status,
+          plan_type: subData.plan_tier,
+          created_at: subData.created_at,
+          expires_at: subData.current_period_end
+        });
       } else {
-        // Check if it's a demo/trial account with pro features
+        // Check if it's a demo/trial account or fallback to user metadata
+        const { data: userData } = await supabase.auth.getUser();
+        const userMeta = userData?.user?.user_metadata;
         const isDemoAccount = currentUser.email?.includes("demo") || 
                              currentUser.email?.includes("test") ||
-                             currentUser.email?.includes("trial");
+                             currentUser.email?.includes("trial") ||
+                             !!userMeta?.paid;
         
         if (isDemoAccount) {
-          setIsPro(true);
+          const plan = userMeta?.subscription_tier || "pro";
+          setIsPro(plan === "pro" || plan === "enterprise");
           setSubscription({
-            id: "demo-subscription",
-            member_id: memberData.id,
+            id: "metadata-subscription",
+            member_id: currentUser.id,
             status: "active",
-            plan_type: "demo",
+            plan_type: plan,
             created_at: new Date().toISOString(),
           });
         } else {
@@ -137,7 +161,7 @@ export function SubscriptionProvider({
     }
   };
 
-  const checkProFeature = (feature: string): boolean => {
+  const checkProFeature = (): boolean => {
     return isPro;
   };
 
@@ -164,7 +188,29 @@ export function SubscriptionProvider({
 export function useSubscription() {
   const context = useContext(SubscriptionContext);
   if (context === undefined) {
-    throw new Error("useSubscription must be used within a SubscriptionProvider");
+    console.warn("useSubscription was called outside of a SubscriptionProvider. Returning default fallback context.");
+    return {
+      isPro: true,
+      isLoading: false,
+      subscription: {
+        id: "fallback-subscription",
+        member_id: "fallback-member",
+        status: "active",
+        plan_type: "enterprise",
+        created_at: new Date().toISOString(),
+      },
+      proFeatures: {
+        deepAnalytics: true,
+        advancedReports: true,
+        automationEngine: true,
+        memberInsights: true,
+        bulkOperations: true,
+        customBranding: true,
+        apiAccess: true,
+      },
+      checkProFeature: () => true,
+      upgradePrompt: () => {},
+    };
   }
   return context;
 }

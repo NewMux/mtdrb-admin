@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiCpu,
   FiTrendingUp,
   FiUsers,
   FiCalendar,
-  FiActivity,
   FiClock,
   FiDollarSign,
   FiZap,
-  FiTarget,
-  FiBarChart,
   FiAlertTriangle,
   FiCheckCircle,
   FiStar,
@@ -82,11 +79,7 @@ export default function SmartClassesDashboard({
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchSmartInsights();
-  }, [user, refreshKey]);
-
-  const fetchSmartInsights = async () => {
+  const fetchSmartInsights = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -217,7 +210,11 @@ export default function SmartClassesDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchSmartInsights();
+  }, [fetchSmartInsights, refreshKey]);
 
   if (loading) {
     return (
@@ -376,7 +373,7 @@ export default function SmartClassesDashboard({
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Today's Classes
+                Today&apos;s Classes
               </p>
               <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                 {insights.todayClasses}

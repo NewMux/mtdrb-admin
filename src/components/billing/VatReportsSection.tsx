@@ -2,12 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   FiDownload,
   FiPrinter,
-  FiBarChart2,
-  FiShield,
-  FiTrendingUp,
 } from "react-icons/fi";
 // Removed mock data - using real data from Supabase
-import { VatTransaction, VatDashboardData } from "../../types";
+import { VatTransaction } from "../../types";
 import { toast } from "react-hot-toast";
 
 interface VatReportsSectionProps {
@@ -26,13 +23,9 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   onPageChange,
   refreshKey,
   dateRange,
-  tenantId,
   selectedStatus,
 }) => {
   const [transactions, setTransactions] = useState<VatTransaction[]>([]);
-  const [dashboardData, setDashboardData] = useState<VatDashboardData | null>(
-    null,
-  );
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -57,12 +50,12 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
       }
 
       // Apply date range filter
-      if (dateRange && dateRange[0] && dateRange[1]) {
+      const startDate = dateRange?.[0] ?? null;
+      const endDate = dateRange?.[1] ?? null;
+      if (startDate && endDate) {
         filteredTransactions = filteredTransactions.filter((transaction) => {
           const transactionDate = new Date(transaction.date);
-          return (
-            transactionDate >= dateRange[0] && transactionDate <= dateRange[1]
-          );
+          return transactionDate >= startDate && transactionDate <= endDate;
         });
       }
 
@@ -95,19 +88,6 @@ export const VatReportsSection: React.FC<VatReportsSectionProps> = ({
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions, refreshKey]);
-
-  // TODO: Fetch dashboard data from Supabase
-  useEffect(() => {
-    // TODO: Fetch VAT dashboard data from Supabase
-    setDashboardData({
-      totalVatCollected: 0,
-      totalVatPaid: 0,
-      netVat: 0,
-      vatRate: 0,
-      monthlyBreakdown: [],
-      topVatCategories: [],
-    });
-  }, [refreshKey]);
 
   const handleDownloadReport = async () => {
     try {

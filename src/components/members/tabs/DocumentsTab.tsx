@@ -6,11 +6,7 @@ interface DocumentsTabProps {
   onReupload: (docId: string) => void;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({
-  documents,
-  onResend,
-  onReupload,
-}) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = () => {
   return (
     <div className="p-6">
       {/* TODO: Document list, status badges, actions */}

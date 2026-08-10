@@ -9,14 +9,11 @@ import {
   FiCheckCircle,
   FiAlertTriangle,
   FiFileText,
-  FiTarget,
   FiAward,
-  FiClock,
   FiSend,
   FiArrowRight,
   FiStar,
   FiActivity,
-  FiTrendingDown,
 } from "react-icons/fi";
 
 // Types for member data

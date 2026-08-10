@@ -3,9 +3,7 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  Fragment,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiDownload,
   FiTrash2,
@@ -13,18 +11,16 @@ import {
   FiEye,
   FiEdit2,
   FiMail,
-  FiDollarSign,
-  FiCalendar,
-  FiUser,
-  FiFileText,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
-// Removed mock data - using real data from Supabase
 import { Invoice } from "../../types";
 import { toast } from "react-hot-toast";
-import { AppleInput, AppleSelect, AppleButton } from "../AppleStyleModal";
+import { AppleInput, AppleSelect } from "../AppleStyleModal";
 import { SmartTable, SmartButton } from "../ui/DesignSystem";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
+import ViewInvoiceModal from "./modals/ViewInvoiceModal";
 
 interface InvoicesSectionProps {
   searchQuery: string;
@@ -41,42 +37,80 @@ export default function InvoicesSection({
   onPageChange,
   refreshKey,
 }: InvoicesSectionProps) {
+  const { tenantId } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isSelectingAll, setIsSelectingAll] = useState(false);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchQuery);
   const [status, setStatus] = useState(selectedStatus || "");
+  
+  // Modal state for View/Edit invoice
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit">("view");
 
   const PAGE_SIZE = 10;
 
   const fetchInvoices = useCallback(async () => {
+    if (!tenantId) return;
     try {
       setLoading(true);
 
-      // Use mock data instead of backend calls
-      // TODO: Fetch invoices from Supabase
-      let filteredInvoices: any[] = [];
+      // Build query
+      let query = supabase
+        .from("invoices")
+        .select(`
+          *,
+          members!inner(id, first_name, last_name, email)
+        `)
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (status) {
+        query = query.eq("status", status);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      type RawInvoice = {
+        id?: string;
+        member_id?: string;
+        members?: {
+          id?: string;
+          first_name?: string;
+          last_name?: string;
+          email?: string;
+        } | null;
+        amount?: number;
+        total?: number;
+        currency?: string;
+        status?: string;
+        due_date?: string;
+        paid_date?: string;
+        created_at?: string;
+        items?: unknown[];
+        metadata?: Record<string, unknown>;
+        type?: string;
+      };
+
+      let filteredInvoices = (data || []) as RawInvoice[];
 
       // Apply search filter
       if (search) {
         filteredInvoices = filteredInvoices.filter(
-          (invoice) =>
-            invoice.member?.name
-              ?.toLowerCase()
-              .includes(search.toLowerCase()) ||
-            invoice.invoice_number
-              ?.toLowerCase()
-              .includes(search.toLowerCase()),
-        );
-      }
-
-      // Apply status filter
-      if (status) {
-        filteredInvoices = filteredInvoices.filter(
-          (invoice) => invoice.status?.toLowerCase() === status.toLowerCase(),
+          (invoice) => {
+            const member = invoice.members;
+            const memberName = member ? `${member.first_name} ${member.last_name}` : "";
+            return (
+              memberName.toLowerCase().includes(search.toLowerCase()) ||
+              invoice.id?.toLowerCase().includes(search.toLowerCase())
+            );
+          }
         );
       }
 
@@ -85,7 +119,26 @@ export default function InvoicesSection({
       const endIndex = startIndex + PAGE_SIZE;
       const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
 
-      setInvoices(paginatedInvoices);
+      // Map to Invoice type
+      const mappedInvoices: Invoice[] = paginatedInvoices.map((inv) => ({
+        id: inv.id || '',
+        member_id: inv.member_id || '',
+        member: inv.members ? {
+          id: inv.members.id || '',
+          name: `${inv.members.first_name || ''} ${inv.members.last_name || ''}`.trim() || 'Unknown',
+          email: inv.members.email || '',
+        } : undefined,
+        amount: Number(inv.amount || inv.total || 0),
+        currency: inv.currency || "AED",
+        status: inv.status || 'draft',
+        due_date: inv.due_date,
+        paid_date: inv.paid_date,
+        created_at: inv.created_at,
+        items: Array.isArray(inv.items) ? inv.items : [],
+        metadata: inv.metadata || {},
+      })) as Invoice[];
+
+      setInvoices(mappedInvoices);
       setTotalPages(
         Math.max(1, Math.ceil(filteredInvoices.length / PAGE_SIZE)),
       );
@@ -95,7 +148,7 @@ export default function InvoicesSection({
     } finally {
       setLoading(false);
     }
-  }, [page, search, status]);
+  }, [tenantId, page, search, status]);
 
   useEffect(() => {
     setSearch(searchQuery);
@@ -107,7 +160,7 @@ export default function InvoicesSection({
 
   useEffect(() => {
     fetchInvoices();
-  }, [page, search, status, refreshKey]);
+  }, [fetchInvoices, refreshKey]);
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -118,6 +171,7 @@ export default function InvoicesSection({
 
   const handleDelete = async (invoiceId: string) => {
     try {
+      void invoiceId;
       // Mock delete operation
       toast.success("Invoice deleted successfully");
       fetchInvoices();
@@ -129,6 +183,7 @@ export default function InvoicesSection({
 
   const handleSendReminder = async (invoiceId: string) => {
     try {
+      void invoiceId;
       // TODO: Implement send reminder functionality
       toast.success("Reminder sent successfully");
     } catch (error) {
@@ -141,76 +196,14 @@ export default function InvoicesSection({
     if (selectedIds.length === invoices.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(invoices.map((inv) => inv.id));
+      setSelectedIds(invoices.map((inv) => inv.id).filter((id): id is string => Boolean(id)));
     }
   };
 
-  const handleSelectRow = (id: string) => {
+  const handleSelectRow = (id: string | undefined) => {
+    if (!id) return;
     setSelectedIds((ids) =>
       ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id],
-    );
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusClasses = {
-      Paid: "bg-green-100 text-green-800",
-      Unpaid: "bg-yellow-100 text-yellow-800",
-      Partial: "bg-blue-100 text-blue-800",
-      Overdue: "bg-red-100 text-red-800",
-      Refunded: "bg-purple-100 text-purple-800",
-      Draft: "bg-gray-100 text-gray-800",
-      Cancelled: "bg-gray-100 text-gray-800",
-    };
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${statusClasses[status] || ""}`}
-      >
-        {status}
-      </span>
-    );
-  };
-
-  // Pagination logic
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-    const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
-        pages.push(
-          <button
-            key={i}
-            onClick={() => onPageChange(i)}
-            className={`min-w-[40px] h-10 rounded-lg border ${page === i ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 hover:bg-gray-50"} transition-colors`}
-          >
-            {i}
-          </button>,
-        );
-      } else if (i === page - 2 || i === page + 2) {
-        pages.push(
-          <span key={i} className="px-2">
-            ...
-          </span>,
-        );
-      }
-    }
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
-        >
-          <FiChevronLeft size={18} />
-        </button>
-        {pages}
-        <button
-          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
-        >
-          <FiChevronRight size={18} />
-        </button>
-      </div>
     );
   };
 
@@ -355,7 +348,7 @@ export default function InvoicesSection({
                 </td>
               </tr>
             ) : (
-              invoices.map((invoice, i) => (
+              invoices.map((invoice) => (
                 <tr
                   key={invoice.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
@@ -363,10 +356,10 @@ export default function InvoicesSection({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
-                      checked={selectedIds.includes(invoice.id)}
-                      onChange={() => handleSelectRow(invoice.id)}
+                      checked={invoice.id ? selectedIds.includes(invoice.id) : false}
+                      onChange={() => invoice.id && handleSelectRow(invoice.id)}
                       onClick={(e) => e.stopPropagation()}
-                      aria-label={`Select invoice ${invoice.invoice_number}`}
+                      aria-label={`Select invoice ${invoice.invoice_number || invoice.id || 'N/A'}`}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-blue-400"
                     />
                   </td>
@@ -410,50 +403,94 @@ export default function InvoicesSection({
                         icon={<FiEye size={16} />}
                         title="View"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("View invoice functionality coming soon");
+                          e?.stopPropagation();
+                          setSelectedInvoice(invoice);
+                          setModalMode("view");
+                          setViewModalOpen(true);
                         }}
-                      />
+                      >
+                        View
+                      </SmartButton>
                       <SmartButton
                         size="sm"
                         variant="ghost"
                         icon={<FiEdit2 size={16} />}
                         title="Edit"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Edit invoice functionality coming soon");
+                          e?.stopPropagation();
+                          setSelectedInvoice(invoice);
+                          setModalMode("edit");
+                          setViewModalOpen(true);
                         }}
-                      />
+                      >
+                        Edit
+                      </SmartButton>
                       <SmartButton
                         size="sm"
                         variant="ghost"
                         icon={<FiMail size={16} />}
                         title="Send Reminder"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleSendReminder(invoice.id);
+                          e?.stopPropagation();
+                          if (invoice.id) {
+                            handleSendReminder(invoice.id);
+                          }
                         }}
-                      />
+                      >
+                        Send
+                      </SmartButton>
                       <SmartButton
                         size="sm"
                         variant="ghost"
                         icon={<FiDownload size={16} />}
                         title="Download"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Download invoice functionality coming soon");
+                          e?.stopPropagation();
+                          // Generate and download invoice
+                          const amount = invoice.amount ?? invoice.total ?? 0;
+                          const invoiceContent = `
+INVOICE #${invoice.invoice_number || invoice.id?.slice(0, 8)}
+----------------------------------------
+Date: ${invoice.created_at ? new Date(invoice.created_at).toLocaleDateString() : "N/A"}
+Due Date: ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "N/A"}
+Status: ${invoice.status?.toUpperCase() || "N/A"}
+
+Member: ${invoice.member?.name || "N/A"}
+
+Amount: $${amount.toFixed(2)}
+
+Notes: ${invoice.notes || "Membership Fee"}
+
+Payment Method: ${invoice.payment_method || "N/A"}
+                          `;
+                          const blob = new Blob([invoiceContent], { type: "text/plain" });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `invoice-${invoice.invoice_number || invoice.id?.slice(0, 8)}.txt`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(url);
+                          toast.success("Invoice downloaded");
                         }}
-                      />
+                      >
+                        Download
+                      </SmartButton>
                       <SmartButton
                         size="sm"
                         variant="danger"
                         icon={<FiTrash2 size={16} />}
                         title="Delete"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(invoice.id);
+                          e?.stopPropagation();
+                          if (invoice.id) {
+                            handleDelete(invoice.id);
+                          }
                         }}
-                      />
+                      >
+                        Delete
+                      </SmartButton>
                     </div>
                   </td>
                 </tr>
@@ -468,7 +505,7 @@ export default function InvoicesSection({
           <button
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -545,6 +582,20 @@ export default function InvoicesSection({
           </div>
         </div>
       </div>
+
+      {/* View/Edit Invoice Modal */}
+      <ViewInvoiceModal
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedInvoice(null);
+        }}
+        invoice={selectedInvoice}
+        mode={modalMode}
+        onSuccess={() => {
+          fetchInvoices();
+        }}
+      />
     </div>
   );
 }

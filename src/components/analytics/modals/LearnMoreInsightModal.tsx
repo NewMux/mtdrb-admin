@@ -1,11 +1,8 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiBarChart2,
   FiTrendingUp,
   FiTrendingDown,
-  FiUsers,
-  FiCalendar,
   FiZap,
   FiInfo,
   FiAlertTriangle,
@@ -83,6 +80,9 @@ export default function LearnMoreInsightModal({
 }: LearnMoreInsightModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+  const resolvedInsightTitle = insightTitle || insightDetails.title;
+
   const [activeTab, setActiveTab] = React.useState("logic");
 
   React.useEffect(() => {
@@ -130,6 +130,11 @@ export default function LearnMoreInsightModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Applying insights is available on Pro plans.
+        </div>
+      )}
 
       {/* Insight Overview */}
       <Section title="Insight Overview">
@@ -139,7 +144,7 @@ export default function LearnMoreInsightModal({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-semibold text-gray-900">
-                  {insightDetails.title}
+                  {resolvedInsightTitle}
                 </h4>
                 <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
                   {insightDetails.impact} impact
@@ -149,6 +154,9 @@ export default function LearnMoreInsightModal({
                 </span>
               </div>
               <p className="text-gray-700">{insightDetails.description}</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Insight ID: {insightId}
+              </p>
             </div>
           </div>
         </div>
@@ -381,7 +389,7 @@ export default function LearnMoreInsightModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading}
           >
@@ -391,8 +399,10 @@ export default function LearnMoreInsightModal({
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
             onClick={() => {
               // Apply the insight
+              onSuccess?.();
+              onClose();
             }}
-            disabled={loading}
+            disabled={loading || !isProUser}
           >
             <FiZap />
             Apply This Insight

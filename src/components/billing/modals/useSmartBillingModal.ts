@@ -18,10 +18,14 @@ interface ValidationResult {
 }
 
 interface SmartSuggestion {
-  type: "pricing" | "payment" | "reminder" | "optimization";
-  message: string;
-  priority: "low" | "medium" | "high";
+  id: string;
+  type: "pricing" | "payment" | "reminder" | "optimization" | "escalation";
+  title: string;
+  description: string;
+  confidence: number;
+  impact: "low" | "medium" | "high";
   action?: string;
+  isPro: boolean;
 }
 
 export const useSmartBillingModal = (initialData?: BillingData) => {
@@ -48,8 +52,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
           .eq("user_id", user.id)
           .single();
 
-        // Pro users are owners/admins/managers
-        const proRoles = ["owner", "admin", "manager"];
+        // Pro users are admins and employees
+        const proRoles = ["admin", "employee"];
         setIsProUser(proRoles.includes(membership?.role || ""));
       } catch (error) {
         console.error("Error checking Pro status:", error);
@@ -65,24 +69,49 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   };
 
   // Real-time validation
-  const validateField = (field: string, value: any): string[] => {
+  const validateField = (field: string, value: unknown): string[] => {
     const errors: string[] = [];
 
     switch (field) {
       case "amount":
-        if (value <= 0) errors.push("Amount must be greater than 0");
-        if (value > 100000) errors.push("Amount seems unusually high");
+        if (typeof value === "number") {
+          if (value <= 0) errors.push("Amount must be greater than 0");
+          if (value > 100000) errors.push("Amount seems unusually high");
+        }
+        if (typeof value === "string" && value.trim() !== "") {
+          const parsed = Number(value);
+          if (!Number.isNaN(parsed)) {
+            if (parsed <= 0) errors.push("Amount must be greater than 0");
+            if (parsed > 100000) errors.push("Amount seems unusually high");
+          }
+        }
         break;
       case "vatRate":
-        if (value < 0 || value > 100)
-          errors.push("VAT rate must be between 0-100%");
+        if (typeof value === "number") {
+          if (value < 0 || value > 100) {
+            errors.push("VAT rate must be between 0-100%");
+          }
+        }
+        if (typeof value === "string" && value.trim() !== "") {
+          const parsed = Number(value);
+          if (!Number.isNaN(parsed) && (parsed < 0 || parsed > 100)) {
+            errors.push("VAT rate must be between 0-100%");
+          }
+        }
         break;
-      case "dueDate":
-        const date = new Date(value);
-        if (date < new Date()) errors.push("Due date cannot be in the past");
+      case "dueDate": {
+        if (typeof value === "string") {
+          const date = new Date(value);
+          if (!Number.isNaN(date.getTime()) && date < new Date()) {
+            errors.push("Due date cannot be in the past");
+          }
+        }
         break;
+      }
       case "memberId":
-        if (!value) errors.push("Member selection is required");
+        if (typeof value !== "string" || value.trim() === "") {
+          errors.push("Member selection is required");
+        }
         break;
     }
 

@@ -11,11 +11,6 @@ import {
   FiCheck, 
   FiArrowRight, 
   FiArrowLeft,
-  FiGlobe,
-  FiDollarSign,
-  FiClock,
-  FiMail,
-  FiPhone
 } from "react-icons/fi";
 
 // ===== ONBOARDING WIZARD =====
@@ -62,9 +57,7 @@ export default function Onboarding() {
     trainerSpecialization: "General Fitness",
     
     // Step 4: Branding
-    logo: null as File | null,
-    primaryColor: "#155FD9",
-    secondaryColor: "#489BFA"
+    logo: null as File | null
   });
 
   // Check user on mount
@@ -78,6 +71,14 @@ export default function Onboarding() {
       // Allow onboarding for users who have signed up but may not have paid flag yet
       // This handles the case where user comes from signup flow
       setUser(user);
+
+      // Prefill owner name, email, and gym name from user metadata/credentials
+      setFormData(prev => ({
+        ...prev,
+        ownerName: prev.ownerName || user.user_metadata?.name || "",
+        ownerEmail: prev.ownerEmail || user.email || "",
+        gymName: prev.gymName || user.user_metadata?.gym_name || ""
+      }));
     };
     checkUser();
   }, [navigate]);
@@ -138,12 +139,12 @@ export default function Onboarding() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
-        console.error("Error getting user:", userError);
+        if (import.meta.env.DEV) console.error("Error getting user:", userError);
         throw new Error(`Authentication error: ${userError.message}`);
       }
       
       if (!user) {
-        console.error("No user found");
+        if (import.meta.env.DEV) console.error("No user found");
         throw new Error("User not found. Please sign in again.");
       }
 
@@ -151,12 +152,12 @@ export default function Onboarding() {
       let tenantId = user.user_metadata?.tenant_id;
       
       if (!tenantId) {
-        // Create tenant if it doesn't exist
-        const { data: tenantData, error: tenantCreateError } = await supabase
-          .from("tenants")
-          .insert({
-            name: formData.gymName || "My Gym",
-            metadata: {
+        // Create tenant and membership using RPC function (bypasses RLS)
+        const { data: tenantIdData, error: tenantCreateError } = await supabase
+          .rpc('create_tenant_with_membership', {
+            p_tenant_name: formData.gymName || "My Gym",
+            p_user_role: 'admin',
+            p_tenant_metadata: {
               country: formData.country,
               language: formData.language,
               vat_enabled: formData.vatEnabled,
@@ -165,32 +166,18 @@ export default function Onboarding() {
               timezone: formData.timezone,
               onboarding_completed: true
             }
-          })
-          .select("id")
-          .single();
+          });
 
         if (tenantCreateError) {
-          console.error("Error creating tenant:", tenantCreateError);
+          if (import.meta.env.DEV) console.error("Error creating tenant:", tenantCreateError);
           throw new Error(`Failed to create organization: ${tenantCreateError.message}`);
         }
         
-        if (!tenantData || !tenantData.id) {
+        if (!tenantIdData) {
           throw new Error("Failed to create organization: No tenant ID returned");
         }
         
-        tenantId = tenantData.id;
-
-        // Create membership
-        const { error: membershipError } = await supabase.from("memberships").insert({
-          user_id: user.id,
-          tenant_id: tenantId,
-          role: "admin",
-        });
-
-        if (membershipError) {
-          console.error("Error creating membership:", membershipError);
-          throw new Error(`Failed to create membership: ${membershipError.message}`);
-        }
+        tenantId = tenantIdData;
 
         // Update user metadata with tenantId AND role
         await supabase.auth.updateUser({
@@ -224,6 +211,32 @@ export default function Onboarding() {
         }
       }
 
+      // Create or update gym settings for the tenant
+      try {
+        const { error: settingsError } = await supabase
+          .from("gym_settings")
+          .upsert({
+            tenant_id: tenantId,
+            currency: formData.currency || "AED",
+            vat_enabled: formData.vatEnabled,
+            vat_rate: formData.vatEnabled ? 5.0 : 0.0,
+            metadata: {
+              country: formData.country,
+              language: formData.language,
+              timezone: formData.timezone,
+            },
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: "tenant_id"
+          });
+
+        if (settingsError) {
+          console.error("Error creating/updating gym settings:", settingsError);
+        }
+      } catch (err) {
+        console.error("Failed to save gym settings:", err);
+      }
+
       // Create branch if branch name is provided
       // Note: branches table may not exist in all setups, so we'll store in tenant metadata if needed
       if (formData.branchName) {
@@ -241,7 +254,7 @@ export default function Onboarding() {
 
           if (branchError) {
             // If branches table doesn't exist, store in tenant metadata instead
-            console.warn("Branches table not available, storing in tenant metadata:", branchError);
+            if (import.meta.env.DEV) console.warn("Branches table not available, storing in tenant metadata:", branchError);
             const { error: metadataError } = await supabase
               .from("tenants")
               .update({
@@ -258,12 +271,12 @@ export default function Onboarding() {
               .eq("id", tenantId);
             
             if (metadataError) {
-              console.error("Error storing branch in metadata:", metadataError);
+              if (import.meta.env.DEV) console.error("Error storing branch in metadata:", metadataError);
               // Continue anyway - branch info is optional
             }
           }
         } catch (err) {
-          console.error("Error creating branch:", err);
+          if (import.meta.env.DEV) console.error("Error creating branch:", err);
           // Continue anyway - branch creation is optional
         }
       }
@@ -275,13 +288,17 @@ export default function Onboarding() {
         const firstName = nameParts[0] || "";
         const lastName = nameParts.slice(1).join(" ") || "";
 
+        const ownerEmail = formData.ownerEmail.trim()
+          ? formData.ownerEmail.trim()
+          : user.email || `owner_${Date.now()}@yourgym.com`;
+
         const { error: ownerError } = await supabase
           .from("trainers")
           .insert({
             tenant_id: tenantId,
             first_name: firstName,
             last_name: lastName,
-            email: formData.ownerEmail || "",
+            email: ownerEmail,
             phone: formData.ownerPhone || null,
             status: "active",
             specialties: ["General Management"],
@@ -301,13 +318,17 @@ export default function Onboarding() {
         const firstName = nameParts[0] || "";
         const lastName = nameParts.slice(1).join(" ") || "";
 
+        const trainerEmail = formData.trainerEmail.trim()
+          ? formData.trainerEmail.trim()
+          : `trainer_${Math.random().toString(36).substring(2, 11)}_${Date.now()}@yourgym.com`;
+
         const { error: trainerError } = await supabase
           .from("trainers")
           .insert({
             tenant_id: tenantId,
             first_name: firstName,
             last_name: lastName,
-            email: formData.trainerEmail || "",
+            email: trainerEmail,
             phone: formData.trainerPhone || null,
             status: "active",
             specialties: [formData.trainerSpecialization || "General Fitness"],
@@ -315,7 +336,7 @@ export default function Onboarding() {
           });
 
         if (trainerError) {
-          console.error("Error creating trainer:", trainerError);
+          if (import.meta.env.DEV) console.error("Error creating trainer:", trainerError);
           // Don't throw - this is optional, continue with onboarding
         }
       }
@@ -340,7 +361,7 @@ export default function Onboarding() {
       });
 
     } catch (err: any) {
-      console.error("Onboarding completion error:", err);
+      if (import.meta.env.DEV) console.error("Onboarding completion error:", err);
       const errorMessage = err.message || err.error?.message || err.code || "Failed to complete onboarding";
       setError(errorMessage);
       toast.error(errorMessage);
@@ -369,6 +390,8 @@ export default function Onboarding() {
     }
   };
 
+  const isRTL = formData.language === "Arabic";
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -378,19 +401,19 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
               <img src="/mtdrb-logo.svg" alt="MTDRB" className="h-8 w-auto" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Setup Your Gym</h1>
-                <p className="text-sm text-gray-500">Complete your gym configuration</p>
+              <div className="text-start">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Setup Your Gym</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Complete your gym configuration</p>
               </div>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               Step {currentStep + 1} of {steps.length}
             </div>
           </div>
@@ -398,15 +421,15 @@ export default function Onboarding() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-3 justify-center sm:justify-start">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
                   index <= currentStep 
                     ? "bg-blue-600 border-blue-600 text-white" 
-                    : "bg-white border-gray-300 text-gray-400"
+                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
                 }`}>
                   {index < currentStep ? (
                     <FiCheck className="h-4 w-4" />
@@ -415,7 +438,7 @@ export default function Onboarding() {
                   )}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-2 ${
+                  <div className={`w-12 sm:w-16 h-0.5 mx-2 ${
                     index < currentStep ? "bg-blue-600" : "bg-gray-300"
                   }`} />
                 )}
@@ -427,7 +450,7 @@ export default function Onboarding() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Step Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
             <div className="flex items-center space-x-4">
@@ -455,17 +478,17 @@ export default function Onboarding() {
 
             {/* Error Message */}
             {error && (
-              <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             )}
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 0}
-                className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <FiArrowLeft className="h-4 w-4 mr-2" />
                 Previous
@@ -475,7 +498,7 @@ export default function Onboarding() {
                 <button
                   onClick={handleSkip}
                   disabled={loading}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
                 >
                   Skip for now
                 </button>
@@ -878,13 +901,13 @@ function BrandingStep({ formData, setFormData }: { formData: any; setFormData: a
     <div className="space-y-6">
       {/* Logo Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Gym Logo
         </label>
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
           <FiUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-sm text-gray-600 mb-2">
-            Upload your gym's logo (optional)
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            Upload your gym&apos;s logo (optional)
           </p>
           <input
             type="file"
@@ -907,68 +930,10 @@ function BrandingStep({ formData, setFormData }: { formData: any; setFormData: a
         </div>
       </div>
 
-      {/* Color Scheme */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Color Scheme</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Primary Color
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={formData.primaryColor}
-                onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                className="w-12 h-12 rounded-lg border border-gray-300 cursor-pointer"
-              />
-              <span className="text-sm text-gray-600">{formData.primaryColor}</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Secondary Color
-            </label>
-            <div className="flex items-center space-x-3">
-              <input
-                type="color"
-                value={formData.secondaryColor}
-                onChange={(e) => setFormData({ ...formData, secondaryColor: e.target.value })}
-                className="w-12 h-12 rounded-lg border border-gray-300 cursor-pointer"
-              />
-              <span className="text-sm text-gray-600">{formData.secondaryColor}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Preview */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Preview</h3>
-        <div className="bg-gray-50 rounded-xl p-6">
-          <div className="flex items-center space-x-4 mb-4">
-            {formData.logo && (
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-xs text-gray-500">Logo</span>
-              </div>
-            )}
-            <div>
-              <h4 className="font-semibold text-gray-900">{formData.gymName || "Your Gym"}</h4>
-              <p className="text-sm text-gray-600">Gym Management Platform</p>
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <div 
-              className="w-6 h-6 rounded"
-              style={{ backgroundColor: formData.primaryColor }}
-            ></div>
-            <div 
-              className="w-6 h-6 rounded"
-              style={{ backgroundColor: formData.secondaryColor }}
-            ></div>
-          </div>
-        </div>
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <p className="text-sm text-blue-800 dark:text-blue-300">
+          Your gym&apos;s branding will use the default MTDRB color scheme. You can customize other settings later in the Settings page.
+        </p>
       </div>
     </div>
   );

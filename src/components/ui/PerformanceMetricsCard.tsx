@@ -1,6 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiArrowUpRight } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import { useRTL } from "../../hooks/useRTL";
 
 interface PerformanceMetric {
   name: string;
@@ -25,6 +27,8 @@ export default function PerformanceMetricsCard({
   title,
   subtitle,
 }: PerformanceMetricsCardProps) {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const formatValue = (value: number, format?: string, suffix?: string) => {
     switch (format) {
       case "currency":
@@ -53,30 +57,30 @@ export default function PerformanceMetricsCard({
   const getTrendColor = (trend: "up" | "down" | "stable") => {
     switch (trend) {
       case "up":
-        return "text-green-600";
+        return "text-green-600 dark:text-green-400";
       case "down":
-        return "text-red-600";
+        return "text-red-600 dark:text-red-400";
       case "stable":
-        return "text-gray-600";
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
   const getColorClasses = (color?: string) => {
     switch (color) {
       case "green":
-        return "bg-green-50 text-green-600 border-green-200";
+        return "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800";
       case "blue":
-        return "bg-blue-50 text-blue-600 border-blue-200";
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800";
       case "purple":
-        return "bg-purple-50 text-purple-600 border-purple-200";
+        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800";
       case "yellow":
-        return "bg-yellow-50 text-yellow-600 border-yellow-200";
+        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800";
       case "red":
-        return "bg-red-50 text-red-600 border-red-200";
+        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800";
       case "indigo":
-        return "bg-indigo-50 text-indigo-600 border-indigo-200";
+        return "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800";
       default:
-        return "bg-gray-50 text-gray-600 border-gray-200";
+        return "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600";
     }
   };
 
@@ -90,11 +94,11 @@ export default function PerformanceMetricsCard({
           transition={{ duration: 0.3 }}
         >
           {title && (
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-gray-600 text-lg">{subtitle}</p>}
+          {subtitle && <p className="text-gray-600 dark:text-gray-400 text-lg">{subtitle}</p>}
         </motion.div>
       )}
 
@@ -105,46 +109,47 @@ export default function PerformanceMetricsCard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-300"
+            dir={isRTL ? "rtl" : "ltr"}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
                 {metric.icon && (
                   <div className={`p-2 rounded-lg border ${getColorClasses(metric.color)}`}>
                     {metric.icon}
                   </div>
                 )}
-                <h3 className="font-semibold text-gray-900">{metric.name}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{metric.name}</h3>
               </div>
-              <div className={`flex items-center space-x-1 ${getTrendColor(metric.trend)}`}>
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1 ${getTrendColor(metric.trend)}`}>
                 {getTrendIcon(metric.trend)}
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold text-gray-900">
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {formatValue(metric.current, metric.format, metric.suffix)}
                 </span>
                 <span
                   className={`text-sm font-medium px-2 py-1 rounded-full ${
                     metric.current >= metric.target
-                      ? "bg-green-100 text-green-700"
-                      : "bg-orange-100 text-orange-700"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                      : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
                   }`}
                 >
-                  Target: {formatValue(metric.target, metric.format, metric.suffix)}
+                  {t("dashboard.target")}: {formatValue(metric.target, metric.format, metric.suffix)}
                 </span>
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Progress</span>
-                  <span className="font-medium text-gray-900">
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
+                  <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">
                     {Math.round((metric.current / metric.target) * 100)}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-500 ${
                       metric.current >= metric.target
@@ -158,19 +163,19 @@ export default function PerformanceMetricsCard({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
-                  Previous: {formatValue(metric.previous, metric.format, metric.suffix)}
+              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
+                <span className="text-gray-600 dark:text-gray-400">
+                  {t("dashboard.previous")}: {formatValue(metric.previous, metric.format, metric.suffix)}
                 </span>
-                <div className="flex items-center space-x-1">
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
                   <FiArrowUpRight className="h-3 w-3" />
                   <span
                     className={`font-medium ${
                       metric.current > metric.previous
-                        ? "text-green-600"
+                        ? "text-green-600 dark:text-green-400"
                         : metric.current < metric.previous
-                          ? "text-red-600"
-                          : "text-gray-600"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-gray-600 dark:text-gray-400"
                     }`}
                   >
                     {metric.current > metric.previous ? "+" : ""}

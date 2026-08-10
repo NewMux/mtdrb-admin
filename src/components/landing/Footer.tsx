@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FiGlobe } from "react-icons/fi";
 import { LANDING_CONTENT } from "../../lib/constants/landingPage";
 
@@ -32,16 +33,39 @@ const Footer: React.FC = () => {
               Product
             </h3>
             <ul className="space-y-3 sm:space-y-4">
-              {footer.links.product.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors"
-                  >
-                    {link.text}
-                  </a>
-                </li>
-              ))}
+              {footer.links.product.map((link, index) => {
+                if (link.href.startsWith("/")) {
+                  return (
+                    <li key={index}>
+                      <Link
+                        to={link.href}
+                        className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors"
+                      >
+                        {link.text}
+                      </Link>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={index}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        if (link.href.startsWith("#")) {
+                          e.preventDefault();
+                          const element = document.querySelector(link.href);
+                          if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
+                        }
+                      }}
+                      className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors cursor-pointer"
+                    >
+                      {link.text}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -70,16 +94,39 @@ const Footer: React.FC = () => {
               Legal
             </h3>
             <ul className="space-y-3 sm:space-y-4">
-              {footer.links.legal.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors"
-                  >
-                    {link.text}
-                  </a>
-                </li>
-              ))}
+              {footer.links.legal.map((link, index) => {
+                if (link.href.startsWith("/")) {
+                  return (
+                    <li key={index}>
+                      <Link
+                        to={link.href}
+                        className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors"
+                      >
+                        {link.text}
+                      </Link>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={index}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        if (link.href.startsWith("#")) {
+                          e.preventDefault();
+                          const element = document.querySelector(link.href);
+                          if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
+                        }
+                      }}
+                      className="text-sm sm:text-base text-lunaNavy/70 hover:text-lunaNavy transition-colors cursor-pointer"
+                    >
+                      {link.text}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

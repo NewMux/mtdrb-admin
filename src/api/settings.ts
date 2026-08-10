@@ -27,13 +27,15 @@ export interface GymSettings {
   stripe_payments?: boolean;
   slack_notifications?: boolean;
   webhook_url?: string;
+  vat_enabled?: boolean;
+  vat_rate?: number;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface SettingsResponse {
   data: GymSettings | null;
-  error: any;
+  error: Error | null;
 }
 
 /**
@@ -56,7 +58,9 @@ export const fetchGymSettings = async (
     return { data, error: null };
   } catch (error) {
     console.error("Error fetching gym settings:", error);
-    return { data: null, error };
+    const resolvedError =
+      error instanceof Error ? error : new Error(String(error));
+    return { data: null, error: resolvedError };
   }
 };
 
@@ -83,7 +87,9 @@ export const saveGymSettings = async (
     return { data, error: null };
   } catch (error) {
     console.error("Error saving gym settings:", error);
-    return { data: null, error };
+    const resolvedError =
+      error instanceof Error ? error : new Error(String(error));
+    return { data: null, error: resolvedError };
   }
 };
 
@@ -110,7 +116,9 @@ export const updateGymSettings = async (
     return { data, error: null };
   } catch (error) {
     console.error("Error updating gym settings:", error);
-    return { data: null, error };
+    const resolvedError =
+      error instanceof Error ? error : new Error(String(error));
+    return { data: null, error: resolvedError };
   }
 };
 
@@ -146,6 +154,8 @@ export const createDefaultSettings = async (
       stripe_payments: true,
       slack_notifications: false,
       webhook_url: "",
+      vat_enabled: true,
+      vat_rate: 5.0,
     };
 
     const { data, error } = await supabase
@@ -159,7 +169,9 @@ export const createDefaultSettings = async (
     return { data, error: null };
   } catch (error) {
     console.error("Error creating default settings:", error);
-    return { data: null, error };
+    const resolvedError =
+      error instanceof Error ? error : new Error(String(error));
+    return { data: null, error: resolvedError };
   }
 };
 

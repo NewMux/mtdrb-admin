@@ -1,19 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   FiUser,
-  FiPhone,
-  FiMail,
-  FiCalendar,
-  FiTrendingUp,
-  FiTrendingDown,
-  FiClock,
   FiAlertTriangle,
   FiCheckCircle,
   FiXCircle,
   FiEdit,
-  FiEye,
-  FiTrash2,
-  FiMessageCircle,
   FiFileText,
   FiTarget,
   FiDollarSign,
@@ -34,27 +25,10 @@ import {
   DocumentChecklist,
   WhatsAppButton,
 } from "./SmartMemberTable";
+import type { SmartMember } from "./SmartMemberTable";
 import toast from "react-hot-toast";
 
-interface Member {
-  id: string;
-  name: string;
-  email?: string;
-  phone: string;
-  age: number;
-  gender: string;
-  joinDate: string;
-  planEnd: string;
-  lastCheckIn: string;
-  checkInCount: number;
-  status: "active" | "expired" | "payment_issue" | "inactive";
-  membershipPrice: number;
-  formsSubmitted: string[];
-  isTrial: boolean;
-  attendance: string[];
-  tags: string[];
-  assignedTrainerId?: string;
-  fitnessGoal?: string;
+type Member = SmartMember & {
   membershipType?: string;
   billingCycle?: string;
   autoRenewal?: boolean;
@@ -62,14 +36,13 @@ interface Member {
   emergencyContact?: string;
   medicalNotes?: string;
   staffNotes?: string;
-}
+};
 
 interface MemberDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   member: Member | null;
   onEdit: (member: Member) => void;
-  onDelete: (member: Member) => void;
 }
 
 const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
@@ -77,7 +50,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
   onClose,
   member,
   onEdit,
-  onDelete,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "profile" | "attendance" | "billing" | "documents"
@@ -106,7 +78,7 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
 
     if (now > planEnd) return "expired";
     if (daysSinceCheckIn > 10) return "inactive";
-    if (member.status === "payment_issue") return "payment_issue";
+    if (member.status === "suspended") return "suspended";
     return "active";
   };
 
@@ -133,13 +105,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
     if (daysSinceJoin <= 30) tags.push("New");
 
     return tags;
-  };
-
-  const hasCompletedDocs = (member: Member) => {
-    return (
-      member.formsSubmitted.includes("waiver") &&
-      member.formsSubmitted.includes("id_document")
-    );
   };
 
   const getAttendanceStats = (attendance: string[]) => {
@@ -171,7 +136,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({
   const computedTags = generateTags(member);
   const daysLeft = getDaysLeft(member.planEnd);
   const isInactiveMember = isInactive(member);
-  const hasCompletedDocsMember = hasCompletedDocs(member);
   const attendanceStats = getAttendanceStats(member.attendance);
   const billingInfo = getBillingInfo(member);
 

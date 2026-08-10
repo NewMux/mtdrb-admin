@@ -1,52 +1,29 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { supabase } from "../supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { Class } from "../types";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
+import { useRTL } from "../hooks/useRTL";
+import { useTranslation } from "react-i18next";
 import {
   FiPlus,
   FiCalendar,
-  FiClock,
   FiUsers,
-  FiUser,
-  FiMapPin,
   FiDollarSign,
   FiActivity,
-  FiTrendingUp,
   FiSearch,
   FiFilter,
   FiDownload,
   FiRefreshCw,
-  FiBarChart2,
-  FiEdit,
-  FiMoreVertical,
-  FiCpu,
-  FiZap,
-  FiHeart,
-  FiCreditCard,
-  FiMail,
-  FiMessageSquare,
   FiTarget,
-  FiCheck,
-  FiX,
   FiCheckCircle,
-  FiTrash2,
-  FiEye,
   FiSettings,
-  FiStar,
-  FiSend,
 } from "react-icons/fi";
 import ClassTable from "../components/classes/ClassTable";
-import ClassKPICards from "../components/classes/ClassKPICards";
-import SmartClassFormModal from "../components/classes/SmartClassFormModal";
 import ClassDetailsDrawer from "../components/classes/ClassDetailsDrawer";
-import ClassFormModal from "../components/classes/ClassFormModal";
-import WaitlistModal from "../components/classes/WaitlistModal";
 import ClassCalendar from "../components/classes/ClassCalendar";
-import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Import smart class modals
 import {
@@ -64,35 +41,16 @@ import {
 } from "../components/classes/modals";
 
 import {
-  getClassWaitlist,
-  addToWaitlist,
-  removeFromWaitlist,
-  promoteFromWaitlist,
-} from "../api/waitlist";
-import { getAllMembers } from "../api/member";
-import {
   getSmartInsights,
-  getClassCategories,
-  getClassAnalytics as getAutomationClassAnalytics,
-  initializeAutomationData,
-  SmartInsight,
-  ClassCategory,
-  ClassAnalytics,
 } from "../api/automation";
 import {
   getAllClasses,
   getClassStats,
   getClassAnalytics,
-  getClassesWithBookings,
-  createClass,
-  updateClass,
-  deleteClass,
-  ClassStats as ApiClassStats,
-  ClassAnalyticsData,
 } from "../api/class";
-import SmartClassAnalytics from "../components/classes/SmartClassAnalytics";
 
 import ClassAnalyticsTab from "../components/classes/tabs/ClassAnalyticsTab";
+import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 
 type ModalType =
   | "add"
@@ -168,49 +126,37 @@ interface SmartInsights {
   }>;
 }
 
-interface ClassCategories {
-  popular: string[];
-  underbooked: string[];
-  waitlisted: string[];
-  high_rated: string[];
-}
-
-interface AutomationSettings {
-  capacityAlerts: boolean;
-  waitlistNotifications: boolean;
-  scheduleOptimization: boolean;
-  bookingReminders?: boolean;
-}
-
 export default function SmartClassManagement() {
-  const { theme } = usePageThemeContext();
+  const { isRTL } = useRTL();
+  usePageThemeContext();
+  const { t } = useTranslation();
+
+  type ClassRow = Class & {
+    bookings?: Array<{ count: number }>;
+    startTime?: string;
+  };
 
   // Core State
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState<ClassRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { isPro } = useSubscription();
+  useSubscription();
 
   // View State
   const [activeView, setActiveView] = useState<
-    "dashboard" | "insights" | "analytics" | "management" | "calendar"
+    "dashboard" | "insights" | "analytics" | "management" | "calendar" | "automation"
   >("dashboard");
 
   // Modal & Drawer State
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<ClassRow | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
-  const [selectedWaitlistClass, setSelectedWaitlistClass] =
-    useState<Class | null>(null);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Analytics & Insights State
   const [classStats, setClassStats] = useState<ClassStats>({
@@ -222,7 +168,7 @@ export default function SmartClassManagement() {
     utilization: 0,
   });
 
-  const [classAnalytics, setClassAnalytics] = useState<LocalClassAnalytics>({
+  const [, setClassAnalytics] = useState<LocalClassAnalytics>({
     popularTimes: { morning: 0, afternoon: 0, evening: 0, night: 0 },
     classTypes: { strength: 0, cardio: 0, yoga: 0, other: 0 },
     classRating: { average: 0, totalReviews: 0 },
@@ -239,75 +185,62 @@ export default function SmartClassManagement() {
   });
 
 
-  const [classCategories, setClassCategories] = useState<ClassCategories>({
-    popular: [],
-    underbooked: [],
-    waitlisted: [],
-    high_rated: [],
-  });
-
-  const [automationSettings, setAutomationSettings] =
-    useState<AutomationSettings>({
-      capacityAlerts: true,
-      waitlistNotifications: true,
-      scheduleOptimization: true,
-      bookingReminders: true,
-    });
-
   const classStatsData = [
     {
-      name: "Total Classes",
+      name: t("classes.totalClasses"),
       value: classStats.totalClasses.toString(),
-      change: "+5 from last week",
+      change: `+5 ${t("classes.fromLastWeek")}`,
       icon: FiCalendar,
       color: "from-blue-500 to-blue-600",
     },
     {
-      name: "Total Capacity",
+      name: t("classes.totalCapacity"),
       value: classStats.totalCapacity.toString(),
-      change: "+12% from last week",
+      change: `+12% ${t("classes.fromLastWeek")}`,
       icon: FiUsers,
       color: "from-green-500 to-green-600",
     },
     {
-      name: "Booked Spots",
+      name: t("classes.bookedSpots"),
       value: classStats.bookedSpots.toString(),
-      change: "+8% from last week",
+      change: `+8% ${t("classes.fromLastWeek")}`,
       icon: FiCheckCircle,
       color: "from-purple-500 to-purple-600",
     },
     {
-      name: "Revenue",
+      name: t("classes.revenue"),
       value: `$${classStats.revenue.toLocaleString()}`,
-      change: "+15% from last week",
+      change: `+15% ${t("classes.fromLastWeek")}`,
       icon: FiDollarSign,
       color: "from-yellow-500 to-orange-500",
     },
   ];
 
   const tabs = [
-    { id: "dashboard", name: "Dashboard", icon: FiActivity },
-    { id: "calendar", name: "Calendar", icon: FiCalendar },
-    { id: "analytics", name: "Analytics", icon: FiBarChart2 },
-    { id: "management", name: "Management", icon: FiSettings },
+    { id: "dashboard", name: t("classes.dashboard"), icon: FiActivity },
+    { id: "calendar", name: t("classes.calendar"), icon: FiCalendar },
+    { id: "management", name: t("classes.classManagement"), icon: FiSettings },
   ];
 
   const filters = [
-    { id: "all", name: "All Classes", count: classes.length },
+    { id: "all", name: t("classes.allClasses"), count: classes.length },
     {
       id: "upcoming",
-      name: "Upcoming",
-      count: classes.filter((c) => new Date(c.startTime) > new Date()).length,
+      name: t("classes.upcoming"),
+      count: classes.filter((c) => {
+        const start = c.start_time ?? c.startTime ?? "";
+        return start ? new Date(start) > new Date() : false;
+      }).length,
     },
     {
       id: "popular",
-      name: "Popular",
-      count: classes.filter((c) => c.bookings && c.bookings.length > 10).length,
+      name: t("classes.popular"),
+      count: classes.filter((c) => (c.bookings?.length ?? 0) > 10).length,
     },
     {
       id: "underbooked",
-      name: "Underbooked",
-      count: classes.filter((c) => c.bookings && c.bookings.length < 5).length,
+      name: t("classes.underbooked"),
+      count: classes.filter((c) => (c.bookings?.length ?? 0) < 5).length,
     },
   ];
 
@@ -356,7 +289,7 @@ export default function SmartClassManagement() {
         });
         return;
       }
-      const insights = await getSmartInsights(tenantId);
+      await getSmartInsights(tenantId);
       // getSmartInsights returns an array, but we need to transform it to match SmartInsights structure
       // For now, just set empty structure since insights are optional
       setSmartInsights({
@@ -376,22 +309,6 @@ export default function SmartClassManagement() {
     }
   };
 
-  const fetchAutomationData = async () => {
-    try {
-      // Get tenantId from user metadata or memberships
-      const tenantId = user?.user_metadata?.tenant_id || user?.user_metadata?.tenantId;
-      if (!tenantId) {
-        setClassCategories([]);
-        return;
-      }
-      const categories = await getClassCategories(tenantId);
-      setClassCategories(categories || []);
-    } catch (error) {
-      console.error("Error fetching automation data:", error);
-      setClassCategories([]);
-    }
-  };
-
   // Initialize data
   useEffect(() => {
     const initializeData = async () => {
@@ -400,7 +317,6 @@ export default function SmartClassManagement() {
         fetchClassStats(),
         fetchClassAnalytics(),
         fetchSmartInsights(),
-        fetchAutomationData(),
       ]);
     };
 
@@ -412,47 +328,47 @@ export default function SmartClassManagement() {
     setActiveModal("add");
   };
 
-  const handleEditClass = (classItem: Class) => {
+  const handleEditClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("edit");
   };
 
-  const handleDeleteClass = (classItem: Class) => {
+  const handleDeleteClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("delete");
   };
 
-  const handleViewClass = (classItem: Class) => {
+  const handleViewClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("view");
   };
 
-  const handleScheduleClass = (classItem?: Class) => {
-    if (classItem) setSelectedClass(classItem);
+  const handleScheduleClass = (classItem: ClassRow) => {
+    setSelectedClass(classItem);
     setActiveModal("schedule");
   };
 
-  const handleAssignTrainer = (classItem: Class) => {
+  const handleAssignTrainer = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("assign");
   };
 
-  const handleWaitlist = (classItem: Class) => {
+  const handleWaitlist = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("waitlist");
   };
 
-  const handleCancelClass = (classItem: Class) => {
+  const handleCancelClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("cancel");
   };
 
-  const handleExportClass = (classItem: Class) => {
+  const handleExportClass = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("export");
   };
 
-  const handleSettings = (classItem: Class) => {
+  const handleSettings = (classItem: ClassRow) => {
     setSelectedClass(classItem);
     setActiveModal("settings");
   };
@@ -469,22 +385,6 @@ export default function SmartClassManagement() {
     toast.success("Class operation completed successfully!");
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedClass) return;
-
-    try {
-      await deleteClass(selectedClass.id);
-      handleClassModalSuccess();
-    } catch (error) {
-      toast.error("Failed to delete class");
-    }
-  };
-
-  const handleRowClick = (classItem: Class) => {
-    setSelectedClass(classItem);
-    setIsDrawerOpen(true);
-  };
-
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
     setSelectedClass(null);
@@ -493,12 +393,12 @@ export default function SmartClassManagement() {
   const handleRefresh = () => {
     fetchAllClasses();
     fetchClassStats();
-    toast.success("Data refreshed!");
+    toast.success(t("classes.dataRefreshed"));
   };
 
   const handleExport = () => {
     // Export functionality
-    toast.success("Export completed!");
+    toast.success(t("classes.exportCompleted"));
   };
 
   const renderActiveView = () => {
@@ -514,24 +414,24 @@ export default function SmartClassManagement() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        {stat.name}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">
-                        {stat.value}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {stat.change}
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-between gap-4">
                     <div
-                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center flex-shrink-0`}
                     >
                       <stat.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 text-start">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {stat.name}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        {stat.change}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
@@ -540,23 +440,23 @@ export default function SmartClassManagement() {
 
             {/* Critical Alerts */}
             {smartInsights.criticalAlerts.length > 0 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  🚨 Critical Alerts
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  🚨 {t("classes.criticalAlerts")}
                 </h3>
                 <div className="space-y-3">
                   {smartInsights?.criticalAlerts?.map((alert, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                      className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 gap-3"
                     >
-                      <div className="flex items-center space-x-3">
-                        <FiTarget className="h-4 w-4 text-red-600" />
-                        <span className="text-sm font-medium text-red-800">
+                      <div className="flex items-center gap-3">
+                        <FiTarget className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                        <span className="text-sm font-medium text-red-800 dark:text-red-300 text-start">
                           {alert.title}
                         </span>
                       </div>
-                      <button className="text-sm text-red-600 hover:text-red-700">
+                      <button className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
                         {alert.action}
                       </button>
                     </div>
@@ -566,16 +466,16 @@ export default function SmartClassManagement() {
             )}
 
             {/* Recent Classes */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Recent Classes
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+                  {t("classes.recentClasses")}
                 </h2>
                 <button
                   onClick={() => setActiveView("management")}
-                  className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                  className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
                 >
-                  View All Classes
+                  {t("classes.viewAllClasses")}
                 </button>
               </div>
               <ClassTable
@@ -584,7 +484,7 @@ export default function SmartClassManagement() {
                 onDelete={handleDeleteClass}
                 onView={handleViewClass}
                 onSchedule={handleScheduleClass}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 onWaitlist={handleWaitlist}
                 onCancel={handleCancelClass}
                 onExport={handleExportClass}
@@ -598,7 +498,7 @@ export default function SmartClassManagement() {
       case "analytics":
         return (
           <div className="space-y-6">
-            <ClassAnalyticsTab classes={classes} stats={classStats} />
+            <ClassAnalyticsTab classes={classes} />
           </div>
         );
 
@@ -607,30 +507,30 @@ export default function SmartClassManagement() {
       case "management":
         return (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Class Management
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="text-start">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {t("classes.classManagement")}
                   </h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Manage all classes, schedules, and bookings
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {t("classes.manageAllClasses")}
                   </p>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={handleExport}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                   >
                     <FiDownload className="w-4 h-4" />
-                    <span>Export</span>
+                    <span>{t("classes.export")}</span>
                   </button>
                   <button
                     onClick={handleAddClass}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                   >
                     <FiPlus className="w-4 h-4" />
-                    <span>Add Class</span>
+                    <span>{t("classes.addClass")}</span>
                   </button>
                 </div>
               </div>
@@ -641,7 +541,7 @@ export default function SmartClassManagement() {
                 onDelete={handleDeleteClass}
                 onView={handleViewClass}
                 onSchedule={handleScheduleClass}
-                onAssign={handleAssignTrainer}
+                onAssignTrainer={handleAssignTrainer}
                 onWaitlist={handleWaitlist}
                 onCancel={handleCancelClass}
                 onExport={handleExportClass}
@@ -659,65 +559,69 @@ export default function SmartClassManagement() {
           </div>
         );
 
+
+
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              📅 Smart Class Management
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-start">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              📅 {t("classes.smartClassManagement")}
             </h1>
-            <p className="text-gray-600 mt-1">
-              Intelligent scheduling • Automated bookings • Zero conflicts
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t("classes.intelligentScheduling")}
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={handleRefresh}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
             >
               <FiRefreshCw className="w-4 h-4" />
-              <span>Refresh</span>
+              <span>{t("classes.refresh")}</span>
             </button>
             <button
               onClick={handleAddClass}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
             >
               <FiPlus className="w-4 h-4" />
-              <span>Add Class</span>
+              <span>{t("classes.addClass")}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
             <input
               type="text"
-              placeholder="Search classes by name, trainer, or time..."
+              placeholder={t("classes.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className={`w-full ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4 text-left'} py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+              dir={isRTL ? "rtl" : "ltr"}
             />
           </div>
 
           {/* Filters */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              dir={isRTL ? "rtl" : "ltr"}
             >
               {filters.map((filter) => (
                 <option key={filter.id} value={filter.id}>
@@ -726,7 +630,15 @@ export default function SmartClassManagement() {
               ))}
             </select>
 
-            <button className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`p-2 rounded-lg transition-colors ${
+                showAdvancedFilters
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+              aria-label={t("classes.advancedFilters")}
+            >
               <FiFilter className="w-4 h-4" />
             </button>
           </div>
@@ -734,16 +646,16 @@ export default function SmartClassManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl p-2 shadow-sm border border-gray-200">
-        <div className="flex space-x-1">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id as any)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeView === tab.id
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -803,11 +715,11 @@ export default function SmartClassManagement() {
           />
         )}
 
-        {activeModal === "schedule" && (
+        {activeModal === "schedule" && selectedClass && (
           <ScheduleClassModal
             isOpen={activeModal === "schedule"}
             onClose={closeModal}
-            classItem={selectedClass}
+            classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
           />
         )}
@@ -867,20 +779,102 @@ export default function SmartClassManagement() {
         )}
       </AnimatePresence>
 
+      {/* Filter Modal */}
+      <AdvancedFilterModal
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
+        title={t("classes.advancedFilters")}
+        clearLabel={t("classes.clearFilters")}
+        onClear={() => {
+          setSelectedFilter("all");
+        }}
+      >
+        {/* Class Type Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Class Type
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">All Types</option>
+            <option value="yoga">Yoga</option>
+            <option value="pilates">Pilates</option>
+            <option value="hiit">HIIT</option>
+            <option value="strength">Strength Training</option>
+            <option value="cardio">Cardio</option>
+            <option value="spinning">Spinning</option>
+            <option value="zumba">Zumba</option>
+            <option value="boxing">Boxing</option>
+          </select>
+        </div>
+
+        {/* Trainer Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Trainer
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">All Trainers</option>
+            {/* TODO: Populate with actual trainers */}
+          </select>
+        </div>
+
+        {/* Date Range Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("classes.dateRange") || "Date Range"}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="date"
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
+              placeholder={t("classes.from")}
+              dir={isRTL ? "rtl" : "ltr"}
+            />
+            <input
+              type="date"
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
+              placeholder={t("classes.to")}
+              dir={isRTL ? "rtl" : "ltr"}
+            />
+          </div>
+        </div>
+
+        {/* Capacity Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("classes.capacity")}
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">{t("classes.anyCapacity")}</option>
+            <option value="underbooked">{t("classes.underbookedLess50")}</option>
+            <option value="full">{t("classes.full100")}</option>
+            <option value="available">{t("classes.hasSpotsAvailable")}</option>
+          </select>
+        </div>
+
+        {/* Status Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t("classes.status")}
+          </label>
+          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+            <option value="">{t("classes.allStatuses")}</option>
+            <option value="active">{t("classes.active")}</option>
+            <option value="scheduled">{t("classes.scheduled")}</option>
+            <option value="completed">{t("classes.completed")}</option>
+            <option value="cancelled">{t("classes.cancelled")}</option>
+          </select>
+        </div>
+      </AdvancedFilterModal>
+
       {/* Drawer */}
       {selectedClass && (
         <ClassDetailsDrawer
-          classItem={selectedClass}
+          classData={selectedClass}
           isOpen={isDrawerOpen}
           onClose={handleCloseDrawer}
           onEdit={handleEditClass}
-          onDelete={handleDeleteClass}
-          onSchedule={handleScheduleClass}
-          onAssign={handleAssignTrainer}
           onWaitlist={handleWaitlist}
-          onCancel={handleCancelClass}
-          onExport={handleExportClass}
-          onSettings={handleSettings}
         />
       )}
     </div>

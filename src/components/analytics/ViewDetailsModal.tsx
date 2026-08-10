@@ -1,9 +1,6 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
-  FiX,
   FiBarChart,
-  FiTrendingUp,
   FiUsers,
   FiDollarSign,
   FiCalendar,
@@ -14,7 +11,7 @@ interface ViewDetailsModalProps {
   open: boolean;
   onClose: () => void;
   section: string;
-  data: any;
+  data: unknown;
   dateRange: string;
 }
 

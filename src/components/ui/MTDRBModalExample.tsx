@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiStar, FiSave, FiX } from 'react-icons/fi';
 import MTDRBModal, { FormSection, FormField, FormGrid, FullWidthField, Toggle } from './MTDRBModal';
 
 interface ExampleFormData {
@@ -34,10 +33,6 @@ export const MTDRBModalExample: React.FC = () => {
 
   const handleInputChange = (field: keyof ExampleFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = () => {
-    setIsOpen(false);
   };
 
   return (

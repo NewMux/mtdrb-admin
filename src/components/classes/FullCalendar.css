@@ -21,6 +21,23 @@
   --mtdrb-gray-950: #1c1c1e;
 }
 
+/* Dark mode support */
+.dark .fc {
+  background: #111827;
+  color: #f3f4f6;
+  --mtdrb-gray-50: #1f2937;
+  --mtdrb-gray-100: #374151;
+  --mtdrb-gray-200: #4b5563;
+  --mtdrb-gray-300: #6b7280;
+  --mtdrb-gray-400: #9ca3af;
+  --mtdrb-gray-500: #d1d5db;
+  --mtdrb-gray-600: #e5e7eb;
+  --mtdrb-gray-700: #f3f4f6;
+  --mtdrb-gray-800: #f9fafb;
+  --mtdrb-gray-900: #ffffff;
+  --mtdrb-gray-950: #ffffff;
+}
+
 .fc-theme-standard {
   --fc-border-color: var(--mtdrb-gray-200);
   --fc-button-bg-color: var(--mtdrb-gray-50);
@@ -51,12 +68,21 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+.dark .fc-header-toolbar {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
 .fc-toolbar-title {
   color: var(--mtdrb-gray-900);
   font-size: 1.75rem;
   font-weight: 600;
   letter-spacing: -0.025em;
   margin: 0;
+}
+
+.dark .fc-toolbar-title {
+  color: #ffffff;
 }
 
 /* Button styling - Apple-inspired */
@@ -75,11 +101,22 @@
   overflow: hidden;
 }
 
+.dark .fc-button {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
 .fc-button:hover {
   background: var(--mtdrb-gray-100) !important;
   border-color: var(--mtdrb-gray-300) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .fc-button:hover {
+  background: #4b5563 !important;
+  border-color: #6b7280 !important;
 }
 
 .fc-button:active {
@@ -123,6 +160,10 @@
   border-right: 1px solid var(--mtdrb-gray-200);
 }
 
+.dark .fc-timegrid-col {
+  border-right-color: #374151;
+}
+
 .fc-timegrid-slot {
   border-bottom: 1px solid var(--mtdrb-gray-100);
   background: #ffffff;
@@ -130,8 +171,17 @@
   transition: background-color 0.2s ease;
 }
 
+.dark .fc-timegrid-slot {
+  border-bottom-color: #374151;
+  background: #111827;
+}
+
 .fc-timegrid-slot:hover {
   background: var(--mtdrb-gray-50);
+}
+
+.dark .fc-timegrid-slot:hover {
+  background: #1f2937;
 }
 
 /* Event styling - Apple-inspired */
@@ -220,12 +270,21 @@
   width: 80px;
 }
 
+.dark .fc-timegrid-axis {
+  background-color: #1f2937;
+  border-right-color: #374151;
+}
+
 .fc-timegrid-slot-label {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--mtdrb-gray-600);
   padding: 8px 12px;
   text-align: right;
+}
+
+.dark .fc-timegrid-slot-label {
+  color: #9ca3af;
 }
 
 /* Day header styling */
@@ -236,6 +295,12 @@
   height: 56px;
 }
 
+.dark .fc-col-header-cell {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+  border-right-color: #374151;
+}
+
 .fc-col-header-cell-cushion {
   font-weight: 600;
   color: var(--mtdrb-gray-900);
@@ -244,9 +309,17 @@
   text-align: center;
 }
 
+.dark .fc-col-header-cell-cushion {
+  color: #ffffff;
+}
+
 /* Today column highlighting */
 .fc-day-today {
   background-color: rgba(0, 122, 255, 0.08) !important;
+}
+
+.dark .fc-day-today {
+  background-color: rgba(0, 122, 255, 0.15) !important;
 }
 
 /* Now indicator - Apple-inspired */
@@ -266,6 +339,10 @@
 /* Business hours */
 .fc-timegrid-slot.fc-slot-business {
   background-color: #ffffff;
+}
+
+.dark .fc-timegrid-slot.fc-slot-business {
+  background-color: #111827;
 }
 
 /* Event content */
@@ -330,14 +407,26 @@
   border-radius: 4px;
 }
 
+.dark .fc-scroller::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
 .fc-scroller::-webkit-scrollbar-thumb {
   background: var(--mtdrb-gray-300);
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }
 
+.dark .fc-scroller::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
 .fc-scroller::-webkit-scrollbar-thumb:hover {
   background: var(--mtdrb-gray-400);
+}
+
+.dark .fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 /* Focus states for accessibility */

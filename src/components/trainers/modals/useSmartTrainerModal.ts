@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 
 export function useSmartTrainerModal({
   trainerId,
-  fromClassId,
-  fromMemberId,
 }: {
   trainerId?: string;
   fromClassId?: string;

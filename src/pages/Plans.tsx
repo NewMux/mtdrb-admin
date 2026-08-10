@@ -5,14 +5,11 @@ import {
   FiPackage,
   FiPlus,
   FiSearch,
-  FiFilter,
   FiDollarSign,
   FiUsers,
-  FiCalendar,
   FiTrendingUp,
   FiZap,
   FiBarChart,
-  FiList,
   FiActivity,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
@@ -50,12 +47,15 @@ interface Plan {
 
 export default function Plans() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [, setUser] = useState<any>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: "", max: "" });
+  const [durationFilter, setDurationFilter] = useState("all");
   const navigate = useNavigate();
   const { currentPage } = usePageNavigation();
 
@@ -162,8 +162,19 @@ export default function Plans() {
       plan.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || plan.status === statusFilter;
+    
+    // Advanced filter: price range
+    const minPrice = priceRange.min ? parseFloat(priceRange.min) : 0;
+    const maxPrice = priceRange.max ? parseFloat(priceRange.max) : Infinity;
+    const matchesPrice = plan.price >= minPrice && plan.price <= maxPrice;
+    
+    // Advanced filter: duration
+    const matchesDuration = durationFilter === "all" || 
+      (durationFilter === "monthly" && plan.duration <= 31) ||
+      (durationFilter === "quarterly" && plan.duration > 31 && plan.duration <= 92) ||
+      (durationFilter === "annual" && plan.duration > 92);
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPrice && matchesDuration;
   });
 
   if (loading) {
@@ -234,9 +245,69 @@ export default function Plans() {
         </select>
 
         <FilterButton
-          onClick={() => toast.success("Advanced filters coming soon!")}
+          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          active={showAdvancedFilters}
         />
       </FilterBar>
+
+      {/* Advanced Filters Panel */}
+      {showAdvancedFilters && (
+        <SmartCard className="mt-4 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-semibold text-gray-700">Advanced Filters</h4>
+            <button
+              onClick={() => {
+                setPriceRange({ min: "", max: "" });
+                setDurationFilter("all");
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Min Price
+              </label>
+              <input
+                type="number"
+                value={priceRange.min}
+                onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                placeholder="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Max Price
+              </label>
+              <input
+                type="number"
+                value={priceRange.max}
+                onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                placeholder="No limit"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Duration
+              </label>
+              <select
+                value={durationFilter}
+                onChange={(e) => setDurationFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                <option value="all">All Durations</option>
+                <option value="monthly">Monthly (up to 31 days)</option>
+                <option value="quarterly">Quarterly (32-92 days)</option>
+                <option value="annual">Annual (93+ days)</option>
+              </select>
+            </div>
+          </div>
+        </SmartCard>
+      )}
 
       {/* Plans Grid */}
       <Section

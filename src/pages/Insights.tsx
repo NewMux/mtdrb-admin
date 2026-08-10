@@ -21,7 +21,64 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 
-const MetricCard = ({ title, value, icon, change, changeType }) => (
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  change?: string;
+  changeType?: "up" | "down";
+}
+
+interface ChartCardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+interface AiSuggestion {
+  type: "good" | "warning";
+  text: string;
+}
+
+interface AiSuggestionCardProps {
+  title: string;
+  icon: React.ReactNode;
+  suggestions: AiSuggestion[];
+}
+
+interface TrainerPerformanceEntry {
+  name: string;
+  classCount: number;
+  totalAttendance: number;
+  avgAttendance: number;
+}
+
+interface TrainerPerformanceCardProps {
+  trainers: TrainerPerformanceEntry[];
+}
+
+type HeatmapData = Record<number, Record<number, number>>;
+
+interface InsightClass {
+  id: string;
+  name?: string;
+  trainer?: string;
+  start_time?: string | null;
+  trainer_id?: string | null;
+  capacity?: number | null;
+}
+
+interface InsightBooking {
+  class_id?: string | null;
+  created_at?: string | null;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  icon,
+  change,
+  changeType,
+}) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
     <div>
       <div className="flex items-center justify-between">
@@ -46,14 +103,18 @@ const MetricCard = ({ title, value, icon, change, changeType }) => (
   </div>
 );
 
-const ChartCard = ({ title, children }) => (
+const ChartCard: React.FC<ChartCardProps> = ({ title, children }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
     <h3 className="text-lg font-bold mb-4 tracking-tight">{title}</h3>
     <div style={{ height: "300px" }}>{children}</div>
   </div>
 );
 
-const AiSuggestionCard = ({ title, icon, suggestions }) => (
+const AiSuggestionCard: React.FC<AiSuggestionCardProps> = ({
+  title,
+  icon,
+  suggestions,
+}) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
     <h3 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
       {icon} {title}
@@ -75,7 +136,9 @@ const AiSuggestionCard = ({ title, icon, suggestions }) => (
   </div>
 );
 
-const TrainerPerformanceCard = ({ trainers }) => (
+const TrainerPerformanceCard: React.FC<TrainerPerformanceCardProps> = ({
+  trainers,
+}) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
     <h3 className="text-lg font-bold mb-4 text-gray-900">
       Trainer Performance
@@ -127,7 +190,7 @@ const TrainerPerformanceCard = ({ trainers }) => (
   </div>
 );
 
-const HeatmapChart = ({ data }) => {
+const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
@@ -136,7 +199,7 @@ const HeatmapChart = ({ data }) => {
     1, // Default to 1 to avoid division by zero
   );
 
-  const getColor = (value) => {
+  const getColor = (value: number) => {
     if (!value) return "bg-gray-100";
     const intensity = value / maxAttendance;
     if (intensity > 0.8) return "bg-blue-600";
@@ -184,18 +247,13 @@ const HeatmapChart = ({ data }) => {
   );
 };
 
-// Using real data from Supabase - no mock data
-const getAttendanceTrend = async () => {
-  // TODO: Fetch from Supabase analytics
-  return [];
-};
-
-const getAssistantSuggestions = async () => {
-  // TODO: Fetch from smart suggestions service
-  return [];
-};
-
-export default function Insights({ classes, bookings }: { classes: any[]; bookings: any[] }) {
+export default function Insights({
+  classes = [],
+  bookings = [],
+}: {
+  classes?: InsightClass[];
+  bookings?: InsightBooking[];
+} = {}) {
   const {
     totalBookings,
     fillRate,
@@ -217,14 +275,20 @@ export default function Insights({ classes, bookings }: { classes: any[]; bookin
       };
     }
 
-    const classBookingCounts = bookings.reduce((acc: Record<string, number>, booking: any) => {
-      acc[booking.class_id] = (acc[booking.class_id] || 0) + 1;
-      return acc;
-    }, {});
+    const classBookingCounts = bookings.reduce<Record<string, number>>(
+      (acc, booking) => {
+        if (!booking.class_id) return acc;
+        acc[booking.class_id] = (acc[booking.class_id] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
 
-    const heatmap = classes.reduce((acc: Record<number, Record<number, number>>, classInfo: any) => {
-      const dayOfWeek = dayjs(classInfo.startTime).day(); // 0 for Sunday, 6 for Saturday
-      const hour = dayjs(classInfo.startTime).hour();
+    const heatmap = classes.reduce<HeatmapData>((acc, classInfo) => {
+      const startTime = classInfo.start_time;
+      if (!startTime) return acc;
+      const dayOfWeek = dayjs(startTime).day(); // 0 for Sunday, 6 for Saturday
+      const hour = dayjs(startTime).hour();
       const attendance = classBookingCounts[classInfo.id] || 0;
 
       if (!acc[dayOfWeek]) {
@@ -234,7 +298,9 @@ export default function Insights({ classes, bookings }: { classes: any[]; bookin
       return acc;
     }, {});
 
-    const trainerStats = classes.reduce((acc: Record<string, { name: string; classCount: number; totalAttendance: number }>, classInfo: any) => {
+    const trainerStats = classes.reduce<
+      Record<string, { name: string; classCount: number; totalAttendance: number }>
+    >((acc, classInfo) => {
       const trainerName = classInfo.trainer || "Unknown Trainer";
       if (!acc[trainerName]) {
         acc[trainerName] = {
@@ -250,25 +316,25 @@ export default function Insights({ classes, bookings }: { classes: any[]; bookin
     }, {});
 
     const trainerPerformanceData = Object.values(trainerStats)
-      .map((stats: any) => ({
+      .map((stats) => ({
         ...stats,
         avgAttendance:
           stats.classCount > 0 ? stats.totalAttendance / stats.classCount : 0,
       }))
-      .sort((a: any, b: any) => b.totalAttendance - a.totalAttendance);
+      .sort((a, b) => b.totalAttendance - a.totalAttendance);
 
     const popularity = Object.entries(classBookingCounts)
       .map(([classId, count]) => {
-        const classInfo = classes.find((c: any) => c.id === classId);
+        const classInfo = classes.find((c) => c.id === classId);
         return {
           name: classInfo?.name || "Unknown Class",
           attendance: count,
         };
       })
-      .sort((a: any, b: any) => b.attendance - a.attendance);
+      .sort((a, b) => b.attendance - a.attendance);
 
     const totalCapacity = classes.reduce(
-      (acc: number, c: any) => acc + (c.capacity || 0),
+      (acc, c) => acc + (c.capacity || 0),
       0,
     );
     const currentTotalBookings = bookings.length;

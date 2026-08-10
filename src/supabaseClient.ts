@@ -1,5 +1,7 @@
-import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
+import { createClient, User } from "@supabase/supabase-js";
 import { Database } from "./types/supabase";
+import { isLocalhost } from "./utils/isLocalhost";
+import { createMockSupabaseClient } from "./mocks/mockSupabaseClient";
 
 // Helper to clean environment variables (remove newlines, carriage returns, and trim)
 const cleanEnvVar = (value: string | undefined): string | undefined => {
@@ -75,7 +77,7 @@ ${missingVars.map((v) => `║    • ${v.padEnd(55)} ║`).join("\n")}
 // Validate environment variables before initializing client
 validateEnvironmentVariables();
 
-export const supabase = createClient<Database>(
+const realSupabase = createClient<Database>(
   supabaseUrl!,
   supabaseAnonKey!,
   {
@@ -87,18 +89,25 @@ export const supabase = createClient<Database>(
     global: {
       headers: {
         "x-application-name": "mtdrb-admin",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
       },
     },
   },
 );
 
-// Health check function
+/** On localhost, use hardcoded demo data instead of the real backend */
+export const supabase = (
+  isLocalhost() ? createMockSupabaseClient() : realSupabase
+) as typeof realSupabase;
+
+// Health check function (skipped in frontend-only localhost mode)
 export const checkSupabaseHealth = async (): Promise<boolean> => {
+  if (isLocalhost()) return true;
+
   try {
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("id")
-      .limit(1);
+    const { error } = await supabase.from("tenants").select("id").limit(1);
     if (error) throw error;
     return true;
   } catch (error) {

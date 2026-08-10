@@ -10,7 +10,7 @@ export const usePageTheme = (pageName: string) => {
   const theme = useMemo(() => getPageTheme(pageName), [pageName]);
   const classes = useMemo(() => getThemeClasses(pageName), [pageName]);
 
-  const getColor = (shade: keyof typeof theme.primary = "500") => {
+  const getColor = (shade: keyof typeof theme.primary = 500) => {
     return theme.primary[shade];
   };
 

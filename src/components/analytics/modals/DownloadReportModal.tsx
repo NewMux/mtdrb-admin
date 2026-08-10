@@ -7,7 +7,6 @@ import {
   FiArchive,
   FiFilter,
   FiSearch,
-  FiTrash2,
   FiRefreshCw,
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
@@ -114,6 +113,8 @@ export default function DownloadReportModal({
 }: DownloadReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
+  const isProUser = isPro ?? true;
+
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedType, setSelectedType] = React.useState("all");
   const [selectedStatus, setSelectedStatus] = React.useState("all");
@@ -128,6 +129,9 @@ export default function DownloadReportModal({
   }, [open, clearAlerts]);
 
   const handleDownload = async (reportId: string, downloadUrl: string) => {
+    if (!downloadUrl) {
+      return;
+    }
     setDownloading(reportId);
     try {
       // Simulate download
@@ -141,6 +145,7 @@ export default function DownloadReportModal({
 
   const handleArchive = async (reportId: string) => {
     // Simulate archive action
+    void reportId;
   };
 
   const filteredDownloads = availableDownloads.filter((report) => {
@@ -216,6 +221,11 @@ export default function DownloadReportModal({
           {alert.message}
         </div>
       ))}
+      {!isProUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+          Downloads are available on Pro plans.
+        </div>
+      )}
 
       {/* Search and Filters */}
       <Section title="Search & Filters">
@@ -334,7 +344,7 @@ export default function DownloadReportModal({
                       onClick={() =>
                         handleDownload(report.id, report.downloadUrl!)
                       }
-                      disabled={downloading === report.id}
+                      disabled={downloading === report.id || !isProUser}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
                     >
                       {downloading === report.id ? (
@@ -395,7 +405,7 @@ export default function DownloadReportModal({
       <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="flex gap-3 justify-end">
           <button
-            className="bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition"
+            className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={loading}
           >

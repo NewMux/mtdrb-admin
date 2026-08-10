@@ -7,16 +7,13 @@ import {
   FiClock,
   FiUsers,
   FiZap,
-  FiSave,
 } from "react-icons/fi";
 
 interface NotificationSettingsProps {
   refreshKey: number;
 }
 
-export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
-  refreshKey,
-}) => {
+export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: true,
@@ -42,8 +39,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     },
   });
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleToggle = (path: string, value: boolean) => {
     const keys = path.split(".");
     setSettings((prev) => {
@@ -68,12 +63,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       current[keys[keys.length - 1]] = value;
       return updated;
     });
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
   };
 
   const channels = [
@@ -150,10 +139,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Notification Settings
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             Configure how and when you receive notifications
           </p>
         </div>
@@ -174,10 +163,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Notification Channels */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiBell className="h-6 w-6 text-blue-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">
+          <FiBell className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Notification Channels
           </h2>
         </div>
@@ -185,15 +174,15 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           {channels.map((channel) => (
             <div
               key={channel.key}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl"
+              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl"
             >
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+                <div className="p-2 bg-white dark:bg-gray-600 rounded-lg shadow-sm">
                   {channel.icon}
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900">{channel.label}</h3>
-                  <p className="text-sm text-gray-600">{channel.description}</p>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{channel.label}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{channel.description}</p>
                 </div>
               </div>
               <button
@@ -214,16 +203,16 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Quiet Hours */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiClock className="h-6 w-6 text-purple-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">Quiet Hours</h2>
+          <FiClock className="h-6 w-6 text-purple-600 dark:text-purple-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quiet Hours</h2>
         </div>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
             <div>
-              <h3 className="font-medium text-gray-900">Enable Quiet Hours</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-medium text-gray-900 dark:text-white">Enable Quiet Hours</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Limit notifications during specified hours
               </p>
             </div>
@@ -248,7 +237,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           {settings.quietHours.enabled && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Time
                 </label>
                 <input
@@ -257,11 +246,11 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                   onChange={(e) =>
                     handleInputChange("quietHours.start", e.target.value)
                   }
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   End Time
                 </label>
                 <input
@@ -270,7 +259,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                   onChange={(e) =>
                     handleInputChange("quietHours.end", e.target.value)
                   }
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -279,10 +268,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Notification Types */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiUsers className="h-6 w-6 text-green-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">
+          <FiUsers className="h-6 w-6 text-green-600 dark:text-green-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Notification Types
           </h2>
         </div>
@@ -290,11 +279,11 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           {notificationTypes.map((type) => (
             <div
               key={type.key}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl"
+              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl"
             >
               <div>
-                <h3 className="font-medium text-gray-900">{type.label}</h3>
-                <p className="text-sm text-gray-600">{type.description}</p>
+                <h3 className="font-medium text-gray-900 dark:text-white">{type.label}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{type.description}</p>
               </div>
               <button
                 onClick={() =>
@@ -316,16 +305,16 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Frequency Settings */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <FiSettings className="h-6 w-6 text-orange-600 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900">
+          <FiSettings className="h-6 w-6 text-orange-600 dark:text-orange-400 mr-3" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Frequency Settings
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Marketing Notifications
             </label>
             <select
@@ -333,7 +322,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               onChange={(e) =>
                 handleInputChange("frequency.marketing", e.target.value)
               }
-              className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
               <option value="never">Never</option>
               <option value="weekly">Weekly</option>
@@ -342,7 +331,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               System Updates
             </label>
             <select
@@ -350,7 +339,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               onChange={(e) =>
                 handleInputChange("frequency.updates", e.target.value)
               }
-              className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
               <option value="immediate">Immediate</option>
               <option value="daily">Daily Summary</option>
@@ -358,7 +347,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Alert Notifications
             </label>
             <select
@@ -366,7 +355,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               onChange={(e) =>
                 handleInputChange("frequency.alerts", e.target.value)
               }
-              className="w-full px-4 py-3 bg-gray-50 rounded-2xl border border-gray-200 focus:border-blue-600 focus:ring-0"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
               <option value="immediate">Immediate</option>
               <option value="hourly">Hourly</option>
@@ -377,8 +366,8 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       </div>
 
       {/* Test Notifications */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
           Test Notifications
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

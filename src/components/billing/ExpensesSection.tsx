@@ -3,19 +3,13 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  Fragment,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiDownload,
   FiTrash2,
   FiX,
   FiEye,
   FiEdit2,
-  FiDollarSign,
-  FiCalendar,
-  FiTag,
-  FiFileText,
   FiChevronLeft,
   FiChevronRight,
   FiCheck,
@@ -25,6 +19,7 @@ import { Expense } from "../../types";
 import { toast } from "react-hot-toast";
 import { AppleInput, AppleSelect } from "../AppleStyleModal";
 import { SmartButton } from "../ui/DesignSystem";
+import ViewExpenseModal from "./modals/ViewExpenseModal";
 
 interface ExpensesSectionProps {
   searchQuery: string;
@@ -45,10 +40,14 @@ export default function ExpensesSection({
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isSelectingAll, setIsSelectingAll] = useState(false);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(searchQuery);
   const [status, setStatus] = useState(selectedStatus || "");
+  
+  // Modal state for View/Edit expense
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit">("view");
 
   const PAGE_SIZE = 10;
 
@@ -58,7 +57,7 @@ export default function ExpensesSection({
 
       // TODO: Fetch expenses from Supabase
       // TODO: Fetch expenses from Supabase
-      let filteredExpenses: any[] = [];
+      let filteredExpenses: Expense[] = [];
 
       // Apply search filter
       if (search) {
@@ -104,7 +103,7 @@ export default function ExpensesSection({
 
   useEffect(() => {
     fetchExpenses();
-  }, [page, search, status, refreshKey]);
+  }, [fetchExpenses, refreshKey]);
 
   useEffect(() => {
     if (selectAllRef.current) {
@@ -115,6 +114,7 @@ export default function ExpensesSection({
 
   const handleDelete = async (expenseId: string) => {
     try {
+      void expenseId;
       // TODO: Delete expense in Supabase
       toast.success("Expense deleted successfully");
       fetchExpenses();
@@ -126,6 +126,7 @@ export default function ExpensesSection({
 
   const handleApprove = async (expenseId: string) => {
     try {
+      void expenseId;
       // TODO: Approve expense in Supabase
       toast.success("Expense approved successfully");
       fetchExpenses();
@@ -156,9 +157,10 @@ export default function ExpensesSection({
       rejected: "bg-red-100 text-red-800",
       paid: "bg-blue-100 text-blue-800",
     };
+    const statusKey = status.toLowerCase() as keyof typeof statusClasses;
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${statusClasses[status.toLowerCase()] || ""}`}
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${statusClasses[statusKey] || ""}`}
       >
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -309,7 +311,7 @@ export default function ExpensesSection({
                 </td>
               </tr>
             ) : (
-              expenses.map((expense, i) => (
+              expenses.map((expense) => (
                 <tr
                   key={expense.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
@@ -353,8 +355,10 @@ export default function ExpensesSection({
                   <td className="px-6 py-4 text-blue-700 whitespace-nowrap">
                     {expense.recurring ? (
                       <span className="text-blue-600 font-medium">
-                        {expense.recurring_frequency?.charAt(0).toUpperCase() +
-                          expense.recurring_frequency?.slice(1)}
+                        {expense.recurring_frequency ? (
+                          expense.recurring_frequency.charAt(0).toUpperCase() +
+                          expense.recurring_frequency.slice(1)
+                        ) : 'N/A'}
                       </span>
                     ) : (
                       "No"
@@ -368,20 +372,28 @@ export default function ExpensesSection({
                         icon={<FiEye size={16} />}
                         title="View"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("View expense functionality coming soon");
+                          e?.stopPropagation();
+                          setSelectedExpense(expense);
+                          setModalMode("view");
+                          setViewModalOpen(true);
                         }}
-                      />
+                      >
+                        View
+                      </SmartButton>
                       <SmartButton
                         size="sm"
                         variant="ghost"
                         icon={<FiEdit2 size={16} />}
                         title="Edit"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          toast.info("Edit expense functionality coming soon");
+                          e?.stopPropagation();
+                          setSelectedExpense(expense);
+                          setModalMode("edit");
+                          setViewModalOpen(true);
                         }}
-                      />
+                      >
+                        Edit
+                      </SmartButton>
                       {expense.status === "pending" && (
                         <SmartButton
                           size="sm"
@@ -389,10 +401,12 @@ export default function ExpensesSection({
                           icon={<FiCheck size={16} />}
                           title="Approve"
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e?.stopPropagation();
                             handleApprove(expense.id);
                           }}
-                        />
+                        >
+                          Approve
+                        </SmartButton>
                       )}
                       {expense.receipt_url && (
                         <SmartButton
@@ -401,10 +415,12 @@ export default function ExpensesSection({
                           icon={<FiDownload size={16} />}
                           title="Download Receipt"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            toast.info("Download receipt functionality coming soon");
+                            e?.stopPropagation();
+                            window.open(expense.receipt_url, "_blank");
                           }}
-                        />
+                        >
+                          Download
+                        </SmartButton>
                       )}
                       <SmartButton
                         size="sm"
@@ -412,10 +428,12 @@ export default function ExpensesSection({
                         icon={<FiTrash2 size={16} />}
                         title="Delete"
                         onClick={(e) => {
-                          e.stopPropagation();
+                          e?.stopPropagation();
                           handleDelete(expense.id);
                         }}
-                      />
+                      >
+                        Delete
+                      </SmartButton>
                     </div>
                   </td>
                 </tr>
@@ -430,7 +448,7 @@ export default function ExpensesSection({
           <button
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -507,6 +525,20 @@ export default function ExpensesSection({
           </div>
         </div>
       </div>
+
+      {/* View/Edit Expense Modal */}
+      <ViewExpenseModal
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedExpense(null);
+        }}
+        expense={selectedExpense}
+        mode={modalMode}
+        onSuccess={() => {
+          fetchExpenses();
+        }}
+      />
     </div>
   );
 }

@@ -1,9 +1,7 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import {
   FiSettings,
   FiSave,
-  FiX,
   FiZap,
   FiTarget,
   FiClock,
@@ -36,9 +34,7 @@ export default function WorkflowConfigurationModal({
   isOpen,
   onClose,
   onSuccess,
-  workflowId,
   workflowName = "Workflow",
-  workflowType = "automation",
 }: WorkflowConfigurationModalProps) {
   const [config, setConfig] = React.useState<WorkflowConfig>({
     name: workflowName,

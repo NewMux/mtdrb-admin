@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   FiX,
   FiUserPlus,
@@ -24,7 +23,6 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
   const [scheduleRestore, setScheduleRestore] = useState(false);
   const [restoreDate, setRestoreDate] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1);
 
   const handleRestore = async () => {
     setIsLoading(true);

@@ -25,25 +25,23 @@ describe("usePermissions", () => {
       const { result } = renderHook(() => usePermissions());
 
       expect(result.current.isAdmin).toBe(true);
-      expect(result.current.isManager).toBe(true);
+      expect(result.current.isEmployee).toBe(true);
       expect(result.current.isTrainer).toBe(true);
-      expect(result.current.isStaff).toBe(true);
       expect(result.current.userRole).toBe("admin");
     });
 
-    it("should correctly identify manager role", () => {
+    it("should correctly identify employee role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "manager" as UserRole },
+        userMetadata: { role: "employee" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write" || perm === "manage_staff"),
       });
 
       const { result } = renderHook(() => usePermissions());
 
       expect(result.current.isAdmin).toBe(false);
-      expect(result.current.isManager).toBe(true);
+      expect(result.current.isEmployee).toBe(true);
       expect(result.current.isTrainer).toBe(true);
-      expect(result.current.isStaff).toBe(true);
-      expect(result.current.userRole).toBe("manager");
+      expect(result.current.userRole).toBe("employee");
     });
 
     it("should correctly identify trainer role", () => {
@@ -55,28 +53,12 @@ describe("usePermissions", () => {
       const { result } = renderHook(() => usePermissions());
 
       expect(result.current.isAdmin).toBe(false);
-      expect(result.current.isManager).toBe(false);
+      expect(result.current.isEmployee).toBe(false);
       expect(result.current.isTrainer).toBe(true);
-      expect(result.current.isStaff).toBe(true);
       expect(result.current.userRole).toBe("trainer");
     });
 
-    it("should correctly identify staff role", () => {
-      mockUseAuth.mockReturnValue({
-        userMetadata: { role: "staff" as UserRole },
-        hasPermission: vi.fn((perm: string) => perm === "read"),
-      });
-
-      const { result } = renderHook(() => usePermissions());
-
-      expect(result.current.isAdmin).toBe(false);
-      expect(result.current.isManager).toBe(false);
-      expect(result.current.isTrainer).toBe(false);
-      expect(result.current.isStaff).toBe(true);
-      expect(result.current.userRole).toBe("staff");
-    });
-
-    it("should default to staff when role is missing", () => {
+    it("should default to trainer when role is missing", () => {
       mockUseAuth.mockReturnValue({
         userMetadata: null,
         hasPermission: vi.fn(() => false),
@@ -84,9 +66,9 @@ describe("usePermissions", () => {
 
       const { result } = renderHook(() => usePermissions());
 
-      expect(result.current.userRole).toBe("staff");
-      // When userMetadata is null, hasRoleAccess returns false, so isStaff will be false
-      expect(result.current.isStaff).toBe(false);
+      expect(result.current.userRole).toBe("trainer");
+      // When userMetadata is null, hasRoleAccess returns false, so isTrainer will be false
+      expect(result.current.isTrainer).toBe(false);
     });
   });
 
@@ -107,9 +89,9 @@ describe("usePermissions", () => {
       expect(result.current.canManageClasses).toBe(true);
     });
 
-    it("should return correct permissions for manager", () => {
+    it("should return correct permissions for employee", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "manager" as UserRole },
+        userMetadata: { role: "employee" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write" || perm === "manage_staff"),
       });
 
@@ -138,22 +120,6 @@ describe("usePermissions", () => {
       expect(result.current.canManageStaff).toBe(false);
       expect(result.current.canManageClasses).toBe(true);
     });
-
-    it("should return correct permissions for staff", () => {
-      mockUseAuth.mockReturnValue({
-        userMetadata: { role: "staff" as UserRole },
-        hasPermission: vi.fn((perm: string) => perm === "read"),
-      });
-
-      const { result } = renderHook(() => usePermissions());
-
-      expect(result.current.canCreate).toBe(false);
-      expect(result.current.canEdit).toBe(false);
-      expect(result.current.canDelete).toBe(false);
-      expect(result.current.canView).toBe(true);
-      expect(result.current.canManageStaff).toBe(false);
-      expect(result.current.canManageClasses).toBe(false);
-    });
   });
 
   describe("hasRoleAccess", () => {
@@ -165,23 +131,21 @@ describe("usePermissions", () => {
 
       const { result } = renderHook(() => usePermissions());
 
-      expect(result.current.hasRoleAccess("staff")).toBe(true);
       expect(result.current.hasRoleAccess("trainer")).toBe(true);
-      expect(result.current.hasRoleAccess("manager")).toBe(true);
+      expect(result.current.hasRoleAccess("employee")).toBe(true);
       expect(result.current.hasRoleAccess("admin")).toBe(true);
     });
 
     it("should deny access when user has lower role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "staff" as UserRole },
+        userMetadata: { role: "trainer" as UserRole },
         hasPermission: vi.fn(),
       });
 
       const { result } = renderHook(() => usePermissions());
 
-      expect(result.current.hasRoleAccess("staff")).toBe(true);
-      expect(result.current.hasRoleAccess("trainer")).toBe(false);
-      expect(result.current.hasRoleAccess("manager")).toBe(false);
+      expect(result.current.hasRoleAccess("trainer")).toBe(true);
+      expect(result.current.hasRoleAccess("employee")).toBe(false);
       expect(result.current.hasRoleAccess("admin")).toBe(false);
     });
 
@@ -193,8 +157,7 @@ describe("usePermissions", () => {
 
       const { result } = renderHook(() => usePermissions());
 
-      expect(result.current.hasRoleAccess("staff")).toBe(false);
+      expect(result.current.hasRoleAccess("trainer")).toBe(false);
     });
   });
 });
-
