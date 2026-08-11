@@ -252,21 +252,50 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
       });
 
       const uploadResults = await Promise.all(uploadPromises);
+      const certifications = uploadResults
+        .filter((r) => r.type === "certifications")
+        .map((r) => ({
+          url: r.url,
+          verified: false,
+          uploaded_at: new Date().toISOString(),
+        }));
+      const nationalIdUrl = uploadResults.find(
+        (r) => r.type === "national_id",
+      )?.url;
 
-      // Prepare trainer data
+      // The trainers table only has first_name/last_name/email/phone/status/
+      // specialties/rating/hourly_rate/bio/profile_image_url/metadata - map the
+      // rest of this form's fields (gender, dob, address, etc.) into metadata
+      // instead of spreading formData directly, which doesn't match the schema.
+      const dbStatus =
+        formData.status === "active" ||
+        formData.status === "inactive" ||
+        formData.status === "on_leave"
+          ? formData.status
+          : "inactive"; // "terminated" has no DB column equivalent
+
       const trainerData = {
-        ...formData,
-        name: `${formData.first_name} ${formData.last_name}`,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        status: dbStatus,
+        specialties: formData.specialty ? [formData.specialty] : [],
+        hourly_rate: parseFloat(formData.hourly_rate) || 0,
+        bio: formData.bio || undefined,
         profile_image_url: uploadResults.find((r) => r.type === "profile")?.url,
-        certifications: uploadResults
-          .filter((r) => r.type === "certifications")
-          .map((r) => ({
-            url: r.url,
-            verified: false,
-            uploaded_at: new Date().toISOString(),
-          })),
-        national_id_url: uploadResults.find((r) => r.type === "national_id")
-          ?.url,
+        metadata: {
+          gender: formData.gender || null,
+          date_of_birth: formData.date_of_birth || null,
+          address: formData.address || null,
+          experience_level: formData.experience_level || null,
+          education: formData.education || null,
+          notes: formData.notes || null,
+          availability: formData.availability,
+          certifications,
+          national_id_url: nationalIdUrl || null,
+          status_label: formData.status,
+        },
       };
 
       // Insert trainer data

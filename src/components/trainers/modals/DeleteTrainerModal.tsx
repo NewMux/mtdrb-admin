@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
+import { supabase } from "../../../supabaseClient";
 
 interface Trainer {
   id: string;
@@ -39,13 +40,22 @@ export default function DeleteTrainerModal({
   const handleDelete = async () => {
     setLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const { error } = await supabase
+        .from("trainers")
+        .delete()
+        .eq("id", trainer.id);
 
-    toast.success(t("trainers.deleteSuccess", `تم حذف المدرب ${trainer.name} بنجاح!`));
-    setLoading(false);
-    onSuccess?.();
-    onClose();
+      if (error) throw error;
+
+      toast.success(t("trainers.deleteSuccess", `تم حذف المدرب ${trainer.name} بنجاح!`));
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      toast.error(t("trainers.deleteError", "حدث خطأ أثناء حذف المدرب"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {

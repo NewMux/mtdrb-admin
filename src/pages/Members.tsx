@@ -42,7 +42,7 @@ import { useSmartMemberModal } from "../hooks/useSmartMemberModal";
 import AnalyticsTab from "../components/members/tabs/AnalyticsTab";
 import { usePermissions } from "../hooks/usePermissions";
 import { type Member } from "../types/member";
-import type { Database } from "../types/supabase";
+import type { Database, Json } from "../types/supabase";
 
 // Raw "members" table row as returned by Supabase (select("*"))
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -754,6 +754,127 @@ const Members: React.FC = () => {
     [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess],
   );
 
+  // Handle saving an edited member (persists EditMemberModal's form data)
+  const handleSaveEditedMember = React.useCallback(
+    async (memberId: string, memberData: Partial<Member>) => {
+      try {
+        setModalLoading(true);
+
+        // Fetch current metadata so we only overwrite the fields this form edits
+        const { data: existing, error: fetchError } = await supabase
+          .from("members")
+          .select("metadata")
+          .eq("id", memberId)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        const existingMetadata = (existing?.metadata as Record<string, Json>) || {};
+
+        const nameParts = (memberData.name || "").trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        const updatedMetadata: Record<string, Json> = {
+          ...existingMetadata,
+          gender: memberData.gender ?? existingMetadata.gender ?? null,
+          fitness_goal: memberData.fitnessGoal ?? existingMetadata.fitness_goal ?? null,
+          injuries: (memberData.injuries as Json | undefined) ?? existingMetadata.injuries ?? null,
+          staff_notes: memberData.staffNotes ?? existingMetadata.staff_notes ?? null,
+          age: memberData.age ?? existingMetadata.age ?? null,
+        };
+
+        const updatePayload: Database["public"]["Tables"]["members"]["Update"] = {
+          first_name: firstName || undefined,
+          last_name: lastName,
+          email: memberData.email || undefined,
+          phone: memberData.phone || undefined,
+          metadata: updatedMetadata,
+        };
+
+        const { error } = await supabase
+          .from("members")
+          .update(updatePayload)
+          .eq("id", memberId);
+
+        if (error) throw error;
+
+        setRefreshKey((prev) => prev + 1);
+        showSuccess("Success", "Member updated successfully!");
+        handleEditMemberSuccess();
+      } catch (error: unknown) {
+        console.error("Failed to update member:", error);
+        const message = error instanceof Error ? error.message : undefined;
+        showError("Error", message || "Failed to update member. Please try again.");
+      } finally {
+        setModalLoading(false);
+      }
+    },
+    [setModalLoading, showSuccess, showError, handleEditMemberSuccess],
+  );
+
+  // Handle confirming a member deletion
+  const handleConfirmDeleteMember = React.useCallback(
+    async (member: Member) => {
+      if (!member.id) return;
+
+      try {
+        setModalLoading(true);
+
+        const { error } = await supabase
+          .from("members")
+          .delete()
+          .eq("id", member.id);
+
+        if (error) throw error;
+
+        setRefreshKey((prev) => prev + 1);
+        showSuccess("Success", `${member.name || "Member"} deleted successfully!`);
+        handleDeleteMemberSuccess();
+      } catch (error: unknown) {
+        console.error("Failed to delete member:", error);
+        const message = error instanceof Error ? error.message : undefined;
+        showError("Error", message || "Failed to delete member. Please try again.");
+      } finally {
+        setModalLoading(false);
+      }
+    },
+    [setModalLoading, showSuccess, showError, handleDeleteMemberSuccess],
+  );
+
+  // Handle saving a trainer assignment (or removal, when trainerId is "") for a member
+  const handleSaveAssignTrainer = React.useCallback(
+    async (member: Member, trainerId: string) => {
+      if (!member.id) return;
+
+      try {
+        setModalLoading(true);
+
+        const { error } = await supabase
+          .from("members")
+          .update({ trainer_id: trainerId || null })
+          .eq("id", member.id);
+
+        if (error) throw error;
+
+        setRefreshKey((prev) => prev + 1);
+        showSuccess(
+          "Success",
+          trainerId
+            ? `Trainer assigned to ${member.name || "member"} successfully!`
+            : `Trainer removed from ${member.name || "member"}.`,
+        );
+        handleAssignTrainerSuccess();
+      } catch (error: unknown) {
+        console.error("Failed to assign trainer:", error);
+        const message = error instanceof Error ? error.message : undefined;
+        showError("Error", message || "Failed to assign trainer. Please try again.");
+      } finally {
+        setModalLoading(false);
+      }
+    },
+    [setModalLoading, showSuccess, showError, handleAssignTrainerSuccess],
+  );
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -1026,7 +1147,7 @@ const Members: React.FC = () => {
             isOpen={modalState.editMember}
             onClose={() => closeModal("editMember")}
             member={modalData.selectedMember}
-            onSuccess={async () => { handleEditMemberSuccess(); }}
+            onSuccess={handleSaveEditedMember}
           />
         )}
 
@@ -1035,7 +1156,7 @@ const Members: React.FC = () => {
             isOpen={modalState.deleteMember}
             onClose={() => closeModal("deleteMember")}
             member={modalData.selectedMember}
-            onSuccess={async () => { handleDeleteMemberSuccess(); }}
+            onSuccess={handleConfirmDeleteMember}
           />
         )}
 
@@ -1072,7 +1193,7 @@ const Members: React.FC = () => {
             isOpen={modalState.assignTrainer}
             onClose={() => closeModal("assignTrainer")}
             member={modalData.selectedMember}
-            onSuccess={async () => { handleAssignTrainerSuccess(); }}
+            onSuccess={handleSaveAssignTrainer}
           />
         )}
       </AnimatePresence>

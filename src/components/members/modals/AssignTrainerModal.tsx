@@ -131,9 +131,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     setIsAssigning(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       await onSuccess(member, selectedTrainer);
     } catch (error) {
       console.error("Failed to assign trainer:", error);
@@ -146,9 +143,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     setIsAssigning(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
       await onSuccess(member!, "");
     } catch (error) {
       console.error("Failed to remove trainer:", error);

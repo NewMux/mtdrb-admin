@@ -11,6 +11,7 @@ import { UnifiedModal } from "../../ui/UnifiedModal";
 import { FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { useTranslation } from "react-i18next";
+import { supabase } from "../../../supabaseClient";
 
 interface CancelClassModalProps {
   isOpen: boolean;
@@ -45,20 +46,55 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
     }
   }, [isOpen, classId, fetchClass]);
 
-  // Calculate refund amount based on class data
+  // Calculate refund amount based on the class's real price
   useEffect(() => {
     if (classData) {
-      // Mock calculation - in real app, this would be based on billing data
-      const baseAmount = 25; // Mock class price
-      setRefundAmount(baseAmount * classData.enrolled_count);
+      setRefundAmount((classData.price || 0) * classData.enrolled_count);
     }
   }, [classData]);
 
   const handleCancel = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const { data: existingClass, error: fetchError } = await supabase
+        .from("classes")
+        .select("metadata")
+        .eq("id", classId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error: classError } = await supabase
+        .from("classes")
+        .update({
+          status: "cancelled",
+          metadata: {
+            ...((existingClass?.metadata as Record<string, unknown>) || {}),
+            cancellation_reason: reason === "other" ? customReason : reason,
+          },
+        })
+        .eq("id", classId);
+
+      if (classError) throw classError;
+
+      if (hasEnrolledMembers) {
+        const { error: bookingsError } = await supabase
+          .from("class_bookings")
+          .update({ status: "cancelled" })
+          .eq("class_id", classId)
+          .eq("status", "booked");
+
+        if (bookingsError) throw bookingsError;
+      }
+
+      if (hasWaitlist) {
+        const { error: waitlistError } = await supabase
+          .from("class_waitlist")
+          .update({ status: "cancelled" })
+          .eq("class_id", classId);
+
+        if (waitlistError) throw waitlistError;
+      }
 
       onSuccess?.();
       onClose();

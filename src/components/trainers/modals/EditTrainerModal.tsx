@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
+import { supabase } from "../../../supabaseClient";
 
 interface Trainer {
   id: string;
@@ -71,8 +72,51 @@ export default function EditTrainerModal({
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const nameParts = formData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // "busy"/"available" have no dedicated column in the trainers.status
+      // check constraint (active|inactive|on_leave) - map them to their
+      // closest real status and keep the original label in metadata.
+      const dbStatus =
+        formData.status === "busy"
+          ? "on_leave"
+          : formData.status === "available"
+            ? "active"
+            : formData.status;
+
+      // Fetch current metadata so we only overwrite the fields this form edits
+      const { data: existing, error: fetchError } = await supabase
+        .from("trainers")
+        .select("metadata")
+        .eq("id", trainer.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const existingMetadata = (existing?.metadata as Record<string, unknown>) || {};
+
+      const { error } = await supabase
+        .from("trainers")
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          email: formData.email,
+          phone: formData.phone,
+          specialties: formData.specialty ? [formData.specialty] : [],
+          rating: formData.rating,
+          status: dbStatus,
+          metadata: {
+            ...existingMetadata,
+            experience_level: formData.experience,
+            status_label: formData.status,
+          },
+        })
+        .eq("id", trainer.id);
+
+      if (error) throw error;
+
       toast.success(t("trainers.updateSuccess", "تم تحديث بيانات المدرب بنجاح"));
       onSuccess?.();
       onClose();

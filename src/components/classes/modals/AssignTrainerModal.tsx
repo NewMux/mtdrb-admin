@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiUser,
-  FiStar,
   FiAlertTriangle,
 } from "react-icons/fi";
 import { SmartModal } from "../../ui/SmartModal";
 import { FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { supabase } from "../../../supabaseClient";
 
 interface Trainer {
   id: string;
@@ -15,14 +15,9 @@ interface Trainer {
   email: string;
   specialties: string[];
   rating: number;
-  availability: {
-    [key: string]: string[];
-  };
   current_load: number;
   max_load: number;
   hourly_rate: number;
-  is_preferred: boolean;
-  last_assigned?: string;
 }
 
 interface AssignTrainerModalProps {
@@ -50,32 +45,39 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
   const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
-  const loadTrainers = useCallback(() => {
-    const mockTrainers: Trainer[] = [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        email: "sarah@mtdrb.com",
-        specialties: ["Yoga", "Pilates", "Strength Training"],
-        rating: 4.8,
-        availability: {
-          Monday: ["09:00", "14:00", "18:00"],
-          Tuesday: ["09:00", "14:00", "18:00"],
-          Wednesday: ["09:00", "14:00"],
-          Thursday: ["09:00", "14:00", "18:00"],
-          Friday: ["09:00", "14:00"],
-          Saturday: ["10:00", "15:00"],
-          Sunday: ["10:00", "15:00"],
-        },
-        current_load: 12,
-        max_load: 20,
-        hourly_rate: 45,
-        is_preferred: true,
-        last_assigned: "2024-01-10",
-      },
-      // Additional trainers would be loaded from Supabase in production
-    ];
-    setTrainers(mockTrainers);
+  const loadTrainers = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("trainers")
+      .select("id, first_name, last_name, email, specialties, rating, hourly_rate")
+      .eq("status", "active");
+
+    if (error || !data) {
+      setTrainers([]);
+      return;
+    }
+
+    const trainersWithLoad = await Promise.all(
+      data.map(async (trainer) => {
+        const { count } = await supabase
+          .from("classes")
+          .select("*", { count: "exact", head: true })
+          .eq("trainer_id", trainer.id)
+          .gte("start_time", new Date().toISOString());
+
+        return {
+          id: trainer.id,
+          name: `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email,
+          email: trainer.email,
+          specialties: trainer.specialties || [],
+          rating: trainer.rating || 0,
+          current_load: count || 0,
+          max_load: 20, // no per-trainer capacity column yet; reasonable default
+          hourly_rate: trainer.hourly_rate || 0,
+        };
+      }),
+    );
+
+    setTrainers(trainersWithLoad);
   }, []);
 
   // Load class data when modal opens
@@ -87,10 +89,15 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   }, [isOpen, classId, fetchClass, loadTrainers]);
 
   const handleAssign = async () => {
+    if (!selectedTrainer) return;
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const { error } = await supabase
+        .from("classes")
+        .update({ trainer_id: selectedTrainer })
+        .eq("id", classId);
+
+      if (error) throw error;
 
       onSuccess?.();
       onClose();
@@ -104,22 +111,9 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   const getAvailableTrainers = () => {
     if (!classData) return [];
 
-    const classDate = new Date(classData.date);
-    const dayOfWeek = classDate.toLocaleDateString("en-US", {
-      weekday: "long",
-    });
-    const classTime = classData.start_time;
-
-    return trainers.filter((trainer) => {
-      // Check if trainer has availability for this day and time
-      const dayAvailability = trainer.availability[dayOfWeek] || [];
-      const isAvailable = dayAvailability.includes(classTime);
-
-      // Check if trainer is not overloaded
-      const hasCapacity = trainer.current_load < trainer.max_load;
-
-      return isAvailable && hasCapacity;
-    });
+    // Only trainers under their class-load capacity; there's no per-trainer
+    // weekly schedule data to check exact time-slot availability against yet.
+    return trainers.filter((trainer) => trainer.current_load < trainer.max_load);
   };
 
   const getFilteredTrainers = () => {
@@ -162,18 +156,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
     const conflicts = [];
 
-    // Check for schedule conflicts
-    const classDate = new Date(classData.date);
-    const dayOfWeek = classDate.toLocaleDateString("en-US", {
-      weekday: "long",
-    });
-    const dayAvailability = trainer.availability[dayOfWeek] || [];
-
-    if (!dayAvailability.includes(classData.start_time)) {
-      conflicts.push("Trainer not available at this time");
-    }
-
-    // Check for overload
     if (trainer.current_load >= trainer.max_load) {
       conflicts.push("Trainer at maximum capacity");
     }
@@ -334,9 +316,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                           <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
                             {trainer.name}
                           </h4>
-                          {trainer.is_preferred && (
-                            <FiStar className="h-3 w-3 text-yellow-500" />
-                          )}
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                             {trainer.rating}★
                           </span>
@@ -384,18 +363,6 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           ${trainer.hourly_rate}/hr
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">
-                          Last
-                        </div>
-                        <div className="font-medium text-dark-900 dark:text-white">
-                          {trainer.last_assigned
-                            ? new Date(
-                                trainer.last_assigned,
-                              ).toLocaleDateString()
-                            : "Never"}
                         </div>
                       </div>
                     </div>
@@ -461,18 +428,28 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
           </div>
         )}
 
-        {/* Smart Suggestions */}
-        {isPro && (
+        {/* Smart Suggestions - computed from the real available trainers above */}
+        {isPro && availableTrainers.length > 0 && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
               Smart Recommendations
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
-              <p>• Emma Davis has the highest rating and specializes in Yoga</p>
-              <p>
-                • Sarah Johnson is a preferred trainer with good availability
-              </p>
-              <p>• Consider trainer load to ensure quality instruction</p>
+              {(() => {
+                const topRated = [...availableTrainers].sort((a, b) => b.rating - a.rating)[0];
+                const leastLoaded = [...availableTrainers].sort(
+                  (a, b) => a.current_load / a.max_load - b.current_load / b.max_load,
+                )[0];
+                return (
+                  <>
+                    <p>• {topRated.name} has the highest rating ({topRated.rating.toFixed(1)}★)</p>
+                    {leastLoaded.id !== topRated.id && (
+                      <p>• {leastLoaded.name} has the most availability ({leastLoaded.current_load}/{leastLoaded.max_load} classes)</p>
+                    )}
+                    <p>• Consider trainer load to ensure quality instruction</p>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
