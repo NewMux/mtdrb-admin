@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { supabase, getCurrentUser } from "../supabaseClient";
 import { isValidRole, getDefaultRole } from "../types/roles";
 import { isLocalhost } from "../utils/isLocalhost";
+import { withTimeout } from "../utils/withTimeout";
 import {
   AuthContext,
   type AuthErrorState,
@@ -59,11 +60,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (tId) {
       try {
-        const { data: subData } = await supabase
-          .from("platform_subscriptions")
-          .select("status, plan_tier")
-          .eq("tenant_id", tId)
-          .maybeSingle();
+        const { data: subData } = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from("platform_subscriptions")
+              .select("status, plan_tier")
+              .eq("tenant_id", tId)
+              .maybeSingle()
+          ),
+          8000,
+          "Timed out checking subscription status"
+        );
 
         if (subData) {
           isPaid = (subData.status === "active" || subData.status === "trialing");
@@ -141,7 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { user, error } = await getCurrentUser();
+      const { user, error } = await withTimeout(
+        getCurrentUser(),
+        8000,
+        "Timed out checking your session"
+      );
 
       if (error) throw error;
 
@@ -164,11 +175,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let trialEnd = user?.user_metadata?.trial_end;
         if (metadata.tenant_id) {
           try {
-            const { data: subData } = await supabase
-              .from("platform_subscriptions")
-              .select("trial_end")
-              .eq("tenant_id", metadata.tenant_id)
-              .maybeSingle();
+            const { data: subData } = await withTimeout(
+              Promise.resolve(
+                supabase
+                  .from("platform_subscriptions")
+                  .select("trial_end")
+                  .eq("tenant_id", metadata.tenant_id)
+                  .maybeSingle()
+              ),
+              8000,
+              "Timed out checking trial status"
+            );
             if (subData?.trial_end) {
               trialEnd = subData.trial_end;
             }
@@ -234,11 +251,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             let trialEnd = sessionUser.user_metadata?.trial_end;
             if (metadata.tenant_id) {
               try {
-                const { data: subData } = await supabase
-                  .from("platform_subscriptions")
-                  .select("trial_end")
-                  .eq("tenant_id", metadata.tenant_id)
-                  .maybeSingle();
+                const { data: subData } = await withTimeout(
+                  Promise.resolve(
+                    supabase
+                      .from("platform_subscriptions")
+                      .select("trial_end")
+                      .eq("tenant_id", metadata.tenant_id)
+                      .maybeSingle()
+                  ),
+                  8000,
+                  "Timed out checking trial status"
+                );
                 if (subData?.trial_end) {
                   trialEnd = subData.trial_end;
                 }
