@@ -10,6 +10,10 @@ import {
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
+import { exportPDF } from "../../../utils/exportData";
+import { toast } from "react-hot-toast";
 
 interface PrintReportModalProps {
   open: boolean;
@@ -63,6 +67,7 @@ export default function PrintReportModal({
   isPro,
 }: PrintReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
+  const { tenantId } = useAuth();
 
   const isProUser = isPro ?? true;
 
@@ -74,6 +79,11 @@ export default function PrintReportModal({
   const [pageNumbers, setPageNumbers] = React.useState(true);
   const [showPreview, setShowPreview] = React.useState(true);
   const [printing, setPrinting] = React.useState(false);
+  const [summary, setSummary] = React.useState({
+    totalMembers: 0,
+    attendanceRate: 0,
+    monthlyRevenue: 0,
+  });
 
   React.useEffect(() => {
     if (open) {
@@ -81,11 +91,94 @@ export default function PrintReportModal({
     }
   }, [open, clearAlerts]);
 
+  // Real summary metrics for the preview/print/PDF output, replacing what
+  // used to be hardcoded placeholder numbers (1,247 members, 89%, $45K).
+  React.useEffect(() => {
+    const loadSummary = async () => {
+      if (!open || !tenantId) return;
+
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+
+      const [membersResult, bookingsResult, invoicesResult] = await Promise.all([
+        supabase
+          .from("members")
+          .select("*", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        supabase
+          .from("class_bookings")
+          .select("attended")
+          .eq("tenant_id", tenantId),
+        supabase
+          .from("invoices")
+          .select("amount")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", monthStart.toISOString()),
+      ]);
+
+      const bookings = (bookingsResult.data as { attended?: boolean | null }[]) || [];
+      const attendanceRate =
+        bookings.length > 0
+          ? Math.round(
+              (bookings.filter((b) => b.attended).length / bookings.length) * 100,
+            )
+          : 0;
+      const monthlyRevenue = (invoicesResult.data || []).reduce(
+        (sum, inv) => sum + (inv.amount || 0),
+        0,
+      );
+
+      setSummary({
+        totalMembers: membersResult.count || 0,
+        attendanceRate,
+        monthlyRevenue,
+      });
+    };
+
+    loadSummary();
+  }, [open, tenantId]);
+
+  const buildReportHtml = () => `
+    <html>
+      <head>
+        <title>${reportName}</title>
+        <style>
+          body { font-family: sans-serif; padding: 32px; }
+          h1 { text-align: center; }
+          .subtitle { text-align: center; color: #666; margin-bottom: 24px; }
+          .stats { display: flex; justify-content: space-around; margin: 24px 0; }
+          .stat { text-align: center; }
+          .stat .value { font-size: 28px; font-weight: bold; }
+          .stat .label { color: #666; font-size: 14px; }
+          .page-number { text-align: center; color: #999; font-size: 12px; margin-top: 32px; }
+        </style>
+      </head>
+      <body>
+        <h1>${reportName}</h1>
+        <p class="subtitle">Generated on ${new Date().toLocaleDateString()}</p>
+        <div class="stats">
+          <div class="stat"><div class="value">${summary.totalMembers}</div><div class="label">Total Members</div></div>
+          <div class="stat"><div class="value">${summary.attendanceRate}%</div><div class="label">Attendance Rate</div></div>
+          <div class="stat"><div class="value">$${summary.monthlyRevenue.toLocaleString()}</div><div class="label">Monthly Revenue</div></div>
+        </div>
+        ${pageNumbers ? '<div class="page-number">Page 1 of 1</div>' : ""}
+      </body>
+    </html>
+  `;
+
   const handlePrint = async () => {
     setPrinting(true);
     try {
-      // Simulate print process
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        toast.error("Please allow pop-ups to print this report");
+        return;
+      }
+      printWindow.document.write(buildReportHtml());
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
       onSuccess?.();
       onClose();
     } finally {
@@ -96,8 +189,20 @@ export default function PrintReportModal({
   const handleDownloadPDF = async () => {
     setPrinting(true);
     try {
-      // Simulate PDF generation
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const filename = `${reportName.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`;
+      exportPDF(
+        [
+          { Metric: "Total Members", Value: summary.totalMembers },
+          { Metric: "Attendance Rate", Value: `${summary.attendanceRate}%` },
+          { Metric: "Monthly Revenue", Value: `$${summary.monthlyRevenue.toLocaleString()}` },
+        ],
+        filename,
+        reportName,
+      );
+      toast.success("PDF downloaded");
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      toast.error("Failed to generate PDF");
     } finally {
       setPrinting(false);
     }
@@ -324,13 +429,13 @@ export default function PrintReportModal({
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600">
-                        1,247
+                        {summary.totalMembers.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">Total Members</div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">
-                        89%
+                        {summary.attendanceRate}%
                       </div>
                       <div className="text-sm text-gray-600">
                         Attendance Rate
@@ -338,23 +443,12 @@ export default function PrintReportModal({
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600">
-                        $45K
+                        ${summary.monthlyRevenue.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">
                         Monthly Revenue
                       </div>
                     </div>
-                  </div>
-
-                  <div className="border-t pt-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Key Insights
-                    </h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Member retention increased by 12% this month</li>
-                      <li>• Peak attendance times: 6-8 PM on weekdays</li>
-                      <li>• Most popular class: HIIT Blast (94% capacity)</li>
-                    </ul>
                   </div>
                 </div>
 

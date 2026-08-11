@@ -122,8 +122,8 @@ export default function Subscribe() {
             tenant_id: tenantId,
             status: "active",
             plan_tier: planId,
-            amount: planId === "starter" ? 99.00 : 199.00,
-            currency: "AED",
+            amount: plans.find((p) => p.id === planId)?.price ?? 0,
+            currency: "USD",
             current_period_end: periodEnd,
             metadata: {
               method: "trial_checkout",

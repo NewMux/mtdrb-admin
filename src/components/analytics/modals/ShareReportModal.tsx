@@ -9,6 +9,7 @@ import {
   FiCopy,
   FiCheckCircle,
 } from "react-icons/fi";
+import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 
@@ -20,44 +21,6 @@ interface ShareReportModalProps {
   onSuccess?: () => void;
   isPro?: boolean;
 }
-
-const teamMembers = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah@mtdrb.com",
-    role: "Manager",
-    avatar: "SJ",
-  },
-  {
-    id: "2",
-    name: "Mike Chen",
-    email: "mike@mtdrb.com",
-    role: "Trainer",
-    avatar: "MC",
-  },
-  {
-    id: "3",
-    name: "Lisa Rodriguez",
-    email: "lisa@mtdrb.com",
-    role: "Admin",
-    avatar: "LR",
-  },
-  {
-    id: "4",
-    name: "David Kim",
-    email: "david@mtdrb.com",
-    role: "Finance",
-    avatar: "DK",
-  },
-  {
-    id: "5",
-    name: "Emma Wilson",
-    email: "emma@mtdrb.com",
-    role: "HR",
-    avatar: "EW",
-  },
-];
 
 const permissionLevels = [
   {
@@ -89,7 +52,6 @@ const permissionLevels = [
 export default function ShareReportModal({
   open,
   onClose,
-  reportId = "1",
   reportName = "Member Overview Report",
   onSuccess,
   isPro,
@@ -98,29 +60,25 @@ export default function ShareReportModal({
 
   const isProUser = isPro ?? true;
 
+  // There's no public shared-report route or recipient-notification backend
+  // built yet, so this links to the real Analytics page (requires login)
+  // rather than promising a token-based public view that doesn't exist.
   const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-  const [shareLink, setShareLink] = React.useState(
-    `${appUrl}/reports/share/${reportId}`,
-  );
+  const [shareLink] = React.useState(`${appUrl}/dashboard/analytics`);
   const [selectedPermission, setSelectedPermission] = React.useState("view");
   const [expirationDate, setExpirationDate] = React.useState("");
   const [selectedRecipients, setSelectedRecipients] = React.useState<string[]>(
     [],
   );
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [recipientInput, setRecipientInput] = React.useState("");
   const [sharing, setSharing] = React.useState(false);
   const [linkCopied, setLinkCopied] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
       clearAlerts();
-      // Generate unique share link using environment variable or current origin
-      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      setShareLink(
-        `${baseUrl}/reports/share/${reportId}?token=${Date.now()}`,
-      );
     }
-  }, [open, reportId, clearAlerts]);
+  }, [open, clearAlerts]);
 
   const handleCopyLink = async () => {
     try {
@@ -135,30 +93,36 @@ export default function ShareReportModal({
   const handleShare = async () => {
     setSharing(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // No email/notification backend exists to actually deliver this to
+      // recipients yet - be honest about that instead of claiming it was
+      // sent. Copy the link so the admin can send it themselves.
+      await navigator.clipboard.writeText(shareLink);
+      toast.success(
+        selectedRecipients.length > 0
+          ? `Link copied - send it to ${selectedRecipients.join(", ")} yourself (automatic email delivery isn't set up yet)`
+          : "Link copied to clipboard",
+      );
       onSuccess?.();
       onClose();
+    } catch (error) {
+      console.error("Failed to share report:", error);
+      toast.error("Failed to copy share link");
     } finally {
       setSharing(false);
     }
   };
 
   const handleAddRecipient = (email: string) => {
-    if (!selectedRecipients.includes(email)) {
-      setSelectedRecipients([...selectedRecipients, email]);
+    const trimmed = email.trim();
+    if (trimmed && !selectedRecipients.includes(trimmed)) {
+      setSelectedRecipients([...selectedRecipients, trimmed]);
     }
+    setRecipientInput("");
   };
 
   const handleRemoveRecipient = (email: string) => {
     setSelectedRecipients(selectedRecipients.filter((r) => r !== email));
   };
-
-  const filteredMembers = teamMembers.filter(
-    (member) =>
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   function Section({
     title,
@@ -274,51 +238,32 @@ export default function ShareReportModal({
       {/* Recipients */}
       <Section title="Add Recipients">
         <div className="space-y-4">
-          {/* Search */}
-          <div className="relative">
+          <p className="text-sm text-gray-500">
+            Type an email address to note who this was shared with (delivery isn&apos;t automated yet - copy the link and send it yourself).
+          </p>
+          {/* Recipient email entry */}
+          <div className="relative flex gap-2">
             <FiUsers className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
-              type="text"
-              placeholder="Search team members..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              type="email"
+              placeholder="name@example.com"
+              className="flex-1 pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
+              value={recipientInput}
+              onChange={(e) => setRecipientInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddRecipient(recipientInput);
+                }
+              }}
             />
-          </div>
-
-          {/* Team Members */}
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {filteredMembers.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                    {member.avatar}
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {member.name}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {member.email} • {member.role}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleAddRecipient(member.email)}
-                  disabled={selectedRecipients.includes(member.email)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition ${
-                    selectedRecipients.includes(member.email)
-                      ? "bg-green-100 text-green-700 cursor-not-allowed"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  }`}
-                >
-                  {selectedRecipients.includes(member.email) ? "Added" : "Add"}
-                </button>
-              </div>
-            ))}
+            <button
+              onClick={() => handleAddRecipient(recipientInput)}
+              disabled={!recipientInput.trim()}
+              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              Add
+            </button>
           </div>
 
           {/* Selected Recipients */}
@@ -374,8 +319,8 @@ export default function ShareReportModal({
                 <li className="flex items-center gap-2">
                   <span>•</span>
                   <span>
-                    Consider sharing with <strong>Finance team</strong> for
-                    budget insights
+                    Only add recipients who should have access - the link
+                    still requires them to log in to your tenant
                   </span>
                   {!isPro && (
                     <FiLock className="text-gray-400" title="Pro feature" />
@@ -417,7 +362,7 @@ export default function ShareReportModal({
             )}
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Link Access</span>
-              <span className="text-gray-600">Anyone with link</span>
+              <span className="text-gray-600">Requires login to your tenant</span>
             </div>
           </div>
         </div>

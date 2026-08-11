@@ -188,20 +188,76 @@ export const useSmartAnalyticsModal = (
     }
   };
 
-  // Schedule recurring report
+  // Schedule recurring report. There's no cron/email-delivery backend yet,
+  // so this can't actually deliver reports on schedule - it persists the
+  // request for real (in gym_settings.metadata) so it isn't just a fake
+  // toast, and callers are expected to be upfront that delivery isn't
+  // automated yet.
   const scheduleReport = async (schedule: {
     frequency: "daily" | "weekly" | "monthly" | "quarterly";
     deliveryMethod: "email" | "slack";
     recipients: string[];
+    reportTemplateId?: string;
   }) => {
     setLoading(true);
     try {
-      void schedule;
-      // TODO: Implement real report scheduling
-      setAlerts([{ type: "info", message: "Report scheduled successfully" }]);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .single();
+
+      const tenantId = membership?.tenant_id;
+      if (!tenantId) throw new Error("No tenant found");
+
+      const { data: gymSettings, error: fetchError } = await supabase
+        .from("gym_settings")
+        .select("metadata")
+        .eq("tenant_id", tenantId)
+        .single();
+      if (fetchError && fetchError.code !== "PGRST116") throw fetchError;
+
+      const existingMetadata =
+        (gymSettings?.metadata as Record<string, unknown>) || {};
+      const existingSchedules = Array.isArray(existingMetadata.scheduled_reports)
+        ? (existingMetadata.scheduled_reports as unknown[])
+        : [];
+
+      const newSchedule = {
+        id: Date.now().toString(),
+        ...schedule,
+        created_at: new Date().toISOString(),
+        created_by: user.id,
+      };
+
+      const { error: upsertError } = await supabase.from("gym_settings").upsert(
+        {
+          tenant_id: tenantId,
+          metadata: {
+            ...existingMetadata,
+            scheduled_reports: [...existingSchedules, newSchedule],
+          },
+        },
+        { onConflict: "tenant_id" },
+      );
+      if (upsertError) throw upsertError;
+
+      setAlerts([
+        {
+          type: "info",
+          message:
+            "Schedule saved - note that automatic delivery isn't set up yet, this just records your request.",
+        },
+      ]);
       return { success: true };
     } catch (error) {
-      setAlerts([{ type: "error", message: "Failed to schedule report" }]);
+      console.error("Error scheduling report:", error);
+      setAlerts([{ type: "error", message: "Failed to save schedule" }]);
       return { success: false };
     } finally {
       setLoading(false);

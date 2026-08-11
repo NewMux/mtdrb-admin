@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiBell,
   FiMail,
@@ -8,36 +8,92 @@ import {
   FiUsers,
   FiZap,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
+import { fetchGymSettings, updateGymSettings } from "../../api/settings";
 
 interface NotificationSettingsProps {
   refreshKey: number;
 }
 
-export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    smsNotifications: true,
-    pushNotifications: true,
-    inAppNotifications: true,
-    quietHours: {
-      enabled: true,
-      start: "22:00",
-      end: "08:00",
-    },
-    frequency: {
-      marketing: "weekly",
-      updates: "daily",
-      alerts: "immediate",
-    },
-    preferences: {
-      memberUpdates: true,
-      classReminders: true,
-      paymentAlerts: true,
-      systemAlerts: true,
-      promotions: false,
-      reports: true,
-    },
-  });
+const DEFAULT_NOTIFICATION_SETTINGS = {
+  emailNotifications: true,
+  smsNotifications: true,
+  pushNotifications: true,
+  inAppNotifications: true,
+  quietHours: {
+    enabled: true,
+    start: "22:00",
+    end: "08:00",
+  },
+  frequency: {
+    marketing: "weekly",
+    updates: "daily",
+    alerts: "immediate",
+  },
+  preferences: {
+    memberUpdates: true,
+    classReminders: true,
+    paymentAlerts: true,
+    systemAlerts: true,
+    promotions: false,
+    reports: true,
+  },
+};
+
+export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
+  refreshKey,
+}) => {
+  const { tenantId } = useAuth();
+  const [settings, setSettings] = useState(DEFAULT_NOTIFICATION_SETTINGS);
+  const [existingMetadata, setExistingMetadata] = useState<Record<string, unknown>>({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!tenantId) return;
+      const { data } = await fetchGymSettings(tenantId);
+      const metadata = data?.metadata || {};
+      setExistingMetadata(metadata);
+      const saved = metadata.notification_settings as
+        | typeof DEFAULT_NOTIFICATION_SETTINGS
+        | undefined;
+      if (saved) {
+        setSettings(saved);
+      }
+    };
+    loadSettings();
+  }, [tenantId, refreshKey]);
+
+  const handleSaveSettings = useCallback(async () => {
+    if (!tenantId) {
+      toast.error("No tenant ID found. Please log in again.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const { error } = await updateGymSettings(tenantId, {
+        metadata: {
+          ...existingMetadata,
+          notification_settings: settings,
+        },
+      });
+      if (error) throw error;
+      toast.success("Notification settings saved");
+    } catch (error) {
+      console.error("Failed to save notification settings:", error);
+      toast.error("Failed to save notification settings");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [tenantId, existingMetadata, settings]);
+
+  const handleTestNotification = useCallback((channel: string) => {
+    toast(
+      `Test ${channel} notifications aren't set up yet - connect an email/SMS/push provider to enable this.`,
+      { icon: "ℹ️" },
+    );
+  }, []);
 
   const handleToggle = (path: string, value: boolean) => {
     const keys = path.split(".");
@@ -147,16 +203,29 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
           </p>
         </div>
         <div className="flex gap-3 mt-6">
-          <button className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]">
-            Save Settings
+          <button
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
+          >
+            {isSaving ? "Saving..." : "Save Settings"}
           </button>
-          <button className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]">
+          <button
+            onClick={() => handleTestNotification("email")}
+            className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
+          >
             Test Email
           </button>
-          <button className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]">
+          <button
+            onClick={() => handleTestNotification("SMS")}
+            className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
+          >
             Test SMS
           </button>
-          <button className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]">
+          <button
+            onClick={() => handleTestNotification("push")}
+            className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
+          >
             Test Push
           </button>
         </div>
@@ -371,16 +440,28 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = () => {
           Test Notifications
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <button className="px-4 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors">
+          <button
+            onClick={() => handleTestNotification("email")}
+            className="px-4 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors"
+          >
             Test Email
           </button>
-          <button className="px-4 py-3 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-colors">
+          <button
+            onClick={() => handleTestNotification("SMS")}
+            className="px-4 py-3 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-colors"
+          >
             Test SMS
           </button>
-          <button className="px-4 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors">
+          <button
+            onClick={() => handleTestNotification("push")}
+            className="px-4 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors"
+          >
             Test Push
           </button>
-          <button className="px-4 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-colors">
+          <button
+            onClick={() => handleTestNotification("in-app")}
+            className="px-4 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-colors"
+          >
             Test In-App
           </button>
         </div>

@@ -1,71 +1,109 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiLink,
-  FiKey,
   FiCheck,
   FiX,
   FiSettings,
   FiSave,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
+import { fetchGymSettings, updateGymSettings } from "../../api/settings";
 
 interface IntegrationSettingsProps {
   refreshKey: number;
 }
 
-export const IntegrationSettings: React.FC<IntegrationSettingsProps> = () => {
-  const [integrations] = useState([
-    {
-      id: "stripe",
-      name: "Stripe",
-      description: "Payment processing and billing",
-      status: "connected",
-      apiKey: "sk_test_*********************",
-      webhookUrl: "https://api.mtdrb.com/webhooks/stripe",
-      enabled: true,
-    },
-    {
-      id: "mailgun",
-      name: "Mailgun",
-      description: "Email delivery service",
-      status: "disconnected",
-      apiKey: "",
-      webhookUrl: "",
-      enabled: false,
-    },
-    {
-      id: "twilio",
-      name: "Twilio",
-      description: "SMS and voice communications",
-      status: "connected",
-      apiKey: "AC***********************",
-      webhookUrl: "https://api.mtdrb.com/webhooks/twilio",
-      enabled: true,
-    },
-    {
-      id: "zapier",
-      name: "Zapier",
-      description: "Workflow automation",
-      status: "disconnected",
-      apiKey: "",
-      webhookUrl: "",
-      enabled: false,
-    },
-  ]);
+// No third-party OAuth/API-key management backend exists yet for any of
+// these - none are actually connected. Only the enabled/disabled flag
+// (no secrets) is persisted; real credentials would need a server-side
+// secrets store, not this client-readable settings table.
+const DEFAULT_INTEGRATIONS = [
+  { id: "stripe", name: "Stripe", description: "Payment processing and billing", enabled: false },
+  { id: "mailgun", name: "Mailgun", description: "Email delivery service", enabled: false },
+  { id: "twilio", name: "Twilio", description: "SMS and voice communications", enabled: false },
+  { id: "zapier", name: "Zapier", description: "Workflow automation", enabled: false },
+];
 
+export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
+  refreshKey,
+}) => {
+  const { tenantId } = useAuth();
+  const [integrations, setIntegrations] = useState(DEFAULT_INTEGRATIONS);
+  const [existingMetadata, setExistingMetadata] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
+  useEffect(() => {
+    const loadIntegrations = async () => {
+      if (!tenantId) return;
+      const { data } = await fetchGymSettings(tenantId);
+      const metadata = data?.metadata || {};
+      setExistingMetadata(metadata);
+      const savedEnabled = metadata.integrations_enabled as
+        | Record<string, boolean>
+        | undefined;
+      if (savedEnabled) {
+        setIntegrations((prev) =>
+          prev.map((integration) => ({
+            ...integration,
+            enabled: savedEnabled[integration.id] ?? integration.enabled,
+          })),
+        );
+      }
+    };
+    loadIntegrations();
+  }, [tenantId, refreshKey]);
+
+  const toggleIntegration = (id: string) => {
+    const integration = integrations.find((i) => i.id === id);
+    if (!integration) return;
+    if (!integration.enabled) {
+      toast(
+        `${integration.name} isn't connected yet - real integration setup requires a backend API-key/OAuth flow that isn't built. Toggling this just marks it as enabled for when it is.`,
+        { icon: "ℹ️" },
+      );
+    }
+    setIntegrations((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, enabled: !i.enabled } : i)),
+    );
+  };
+
+  const handleSave = useCallback(async () => {
+    if (!tenantId) {
+      toast.error("No tenant ID found. Please log in again.");
+      return;
+    }
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    try {
+      const integrationsEnabled = integrations.reduce<Record<string, boolean>>(
+        (acc, integration) => {
+          acc[integration.id] = integration.enabled;
+          return acc;
+        },
+        {},
+      );
+      const { error } = await updateGymSettings(tenantId, {
+        metadata: {
+          ...existingMetadata,
+          integrations_enabled: integrationsEnabled,
+        },
+      });
+      if (error) throw error;
+      toast.success("Integration settings saved");
+    } catch (error) {
+      console.error("Failed to save integration settings:", error);
+      toast.error("Failed to save integration settings");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [tenantId, existingMetadata, integrations]);
+
+  const getStatusColor = (enabled: boolean) => {
+    return enabled ? "text-green-600" : "text-red-600";
   };
 
-  const getStatusColor = (status: string) => {
-    return status === "connected" ? "text-green-600" : "text-red-600";
-  };
-
-  const getStatusIcon = (status: string) => {
-    return status === "connected" ? (
+  const getStatusIcon = (enabled: boolean) => {
+    return enabled ? (
       <FiCheck className="h-4 w-4" />
     ) : (
       <FiX className="h-4 w-4" />
@@ -120,57 +158,33 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = () => {
                       {integration.description}
                     </p>
                     <div
-                      className={`flex items-center space-x-2 ${getStatusColor(integration.status)}`}
+                      className={`flex items-center space-x-2 ${getStatusColor(integration.enabled)}`}
                     >
-                      {getStatusIcon(integration.status)}
-                      <span className="text-sm font-medium capitalize">
-                        {integration.status}
+                      {getStatusIcon(integration.enabled)}
+                      <span className="text-sm font-medium">
+                        {integration.enabled ? "Enabled" : "Not connected"}
                       </span>
                     </div>
                   </div>
                 </div>
                 <button
+                  onClick={() => toggleIntegration(integration.id)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    integration.status === "connected"
+                    integration.enabled
                       ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
-                  {integration.status === "connected"
-                    ? "Disconnect"
-                    : "Connect"}
+                  {integration.enabled ? "Disable" : "Connect"}
                 </button>
               </div>
 
-              {integration.status === "connected" && (
-                <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      API Key
-                    </label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="password"
-                        value={integration.apiKey}
-                        readOnly
-                        className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 dark:text-gray-100"
-                      />
-                      <button className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                        <FiKey className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Webhook URL
-                    </label>
-                    <input
-                      type="text"
-                      value={integration.webhookUrl}
-                      readOnly
-                      className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 dark:text-gray-100"
-                    />
-                  </div>
+              {integration.enabled && (
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Real API key/webhook configuration for {integration.name} isn&apos;t available yet -
+                    this requires a server-side integration flow that hasn&apos;t been built.
+                  </p>
                 </div>
               )}
             </div>

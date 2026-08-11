@@ -31,6 +31,7 @@ export interface GymSettings {
   vat_rate?: number;
   created_at?: string;
   updated_at?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SettingsResponse {
