@@ -486,35 +486,27 @@ export interface UserProfile {
 }
 
 // New VAT-related interfaces
+// Matches the real `vat_returns` table (see supabase/schema.sql). This used to
+// describe a richer GCC-compliance schema (total_sales, filing_period, etc.)
+// that was never actually created in the database.
 export interface VatReturn {
   id: string;
   tenant_id: string;
-  country_code: string;
-  return_period_start: string;
-  return_period_end: string;
-  filing_period: "monthly" | "quarterly" | "annual";
-  status: "draft" | "submitted" | "accepted" | "rejected";
+  period: string;
+  period_start: string;
+  period_end: string;
+  status: "draft" | "submitted" | "approved" | "rejected";
 
-  // VAT Summary
-  total_sales: number;
-  vat_on_sales: number;
-  total_purchases: number;
-  vat_on_purchases: number;
+  vat_collected: number;
+  vat_paid: number;
   net_vat_payable: number;
 
-  // Additional fields for GCC compliance
-  zero_rated_sales: number;
-  exempt_sales: number;
-  imports_subject_to_vat: number;
-
-  // Filing information
-  due_date: string;
-  submitted_at?: string;
-  submitted_by?: string;
-  reference_number?: string;
+  due_date?: string;
+  filing_deadline?: string;
+  filed_date?: string;
 
   created_at: string;
-  updated_at: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface VatReturnLineItem {

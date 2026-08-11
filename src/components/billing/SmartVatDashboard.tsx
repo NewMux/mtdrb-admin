@@ -24,6 +24,7 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -324,10 +325,10 @@ export default function SmartVatDashboard({
   const handleRunComplianceCheck = async () => {
     try {
       setComplianceLoading(true);
-      // TODO: Run compliance check via Supabase
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Compliance score is derived from live data (overdue/rejected returns),
+      // so "running a check" means recomputing against the latest records.
+      await fetchDashboardData();
       toast.success(t("billing.complianceCheckCompleted"));
-      fetchDashboardData(); // Refresh data
     } catch (error) {
       toast.error(t("billing.complianceCheckFailed"));
     } finally {
@@ -336,31 +337,83 @@ export default function SmartVatDashboard({
   };
 
   const handleGenerateVatReturn = async () => {
+    if (!tenantId || !dashboardData) return;
     try {
-      // TODO: Generate VAT return via Supabase
+      const now = new Date();
+      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const filingDeadline = new Date(now.getFullYear(), now.getMonth() + 1, 28);
+
+      const { error } = await supabase.from("vat_returns").insert([
+        {
+          tenant_id: tenantId,
+          period: periodStart.toISOString().substring(0, 7),
+          period_start: periodStart.toISOString().split("T")[0],
+          period_end: periodEnd.toISOString().split("T")[0],
+          status: "draft",
+          vat_collected: dashboardData.totalVatCollected,
+          vat_paid: dashboardData.totalVatPaid,
+          net_vat_payable: dashboardData.netVatPayable,
+          filing_deadline: filingDeadline.toISOString().split("T")[0],
+        },
+      ]);
+
+      if (error) throw error;
+
       toast.success("VAT return generated successfully");
       fetchDashboardData(); // Refresh data
     } catch (error) {
+      console.error("Error generating VAT return:", error);
       toast.error(t("billing.vatReturnGenerationFailed"));
     }
   };
 
   const handleSubmitVatReturn = async (returnId: string) => {
     try {
-      void returnId;
-      // TODO: Submit VAT return via Supabase
+      const { error } = await supabase
+        .from("vat_returns")
+        .update({
+          status: "submitted",
+          filed_date: new Date().toISOString().split("T")[0],
+        })
+        .eq("id", returnId);
+
+      if (error) throw error;
+
       toast.success(t("billing.vatReturnSubmitted"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
+      console.error("Error submitting VAT return:", error);
       toast.error(t("billing.vatReturnSubmissionFailed"));
     }
   };
 
   const handleExportReport = async (format: "pdf" | "excel" | "csv") => {
     try {
-      // TODO: Export report via Supabase
+      const rows = vatReturns.map((vr) => ({
+        Period: vr.period,
+        "Period Start": vr.period_start,
+        "Period End": vr.period_end,
+        Status: vr.status,
+        "VAT Collected": vr.vat_collected,
+        "VAT Paid": vr.vat_paid,
+        "Net VAT Payable": vr.net_vat_payable,
+        "Filing Deadline": vr.filing_deadline,
+        "Filed Date": vr.filed_date,
+      }));
+      const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;
+
+      if (format === "csv") {
+        exportCSV(rows, filename);
+      } else if (format === "excel") {
+        await exportExcel(rows, filename, "VAT Returns");
+      } else {
+        exportPDF(rows, filename, "VAT Returns");
+      }
+
       toast.success(`${format.toUpperCase()} ${t("billing.reportExported")}`);
     } catch (error) {
+      console.error("Error exporting VAT report:", error);
       toast.error(t("billing.reportExportFailed"));
     }
   };
@@ -781,22 +834,22 @@ export default function SmartVatDashboard({
                         className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       >
                         <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-                          {vatReturn.return_period_start} -{" "}
-                          {vatReturn.return_period_end}
+                          {vatReturn.period_start} -{" "}
+                          {vatReturn.period_end}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
                           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                             <FiGlobe className={isRTL ? 'ml-2' : 'mr-2'} />
-                            {vatReturn.country_code || "BH"}
+                            {vatReturn.period}
                           </div>
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                           {formatCurrency(vatReturn.net_vat_payable || 0)}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          {vatReturn.submitted_at
+                          {vatReturn.filed_date
                             ? new Date(
-                                vatReturn.submitted_at,
+                                vatReturn.filed_date,
                               ).toLocaleDateString()
                             : t("billing.nA")}
                         </td>
@@ -807,14 +860,14 @@ export default function SmartVatDashboard({
                                 ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
                                 : vatReturn.status === "submitted"
                                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400"
-                                  : vatReturn.status === "accepted"
+                                  : vatReturn.status === "approved"
                                     ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
                                     : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
                             }`}
                           >
                             {vatReturn.status === "draft" ? t("billing.draft") :
                              vatReturn.status === "submitted" ? t("billing.submitted") :
-                             vatReturn.status === "accepted" ? t("billing.accepted") :
+                             vatReturn.status === "approved" ? t("billing.accepted") :
                              vatReturn.status}
                           </span>
                         </td>
