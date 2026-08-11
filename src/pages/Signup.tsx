@@ -117,26 +117,51 @@ export default function Signup() {
     setOnboardingError("");
 
     try {
-      // Create Tenant/org and membership using RPC function (bypasses RLS)
-      const { data: tenantId, error: tenantError } = await withTimeout(
-        Promise.resolve(
-          supabase.rpc('create_tenant_with_membership', {
-            p_tenant_name: gymName || "My Gym",
-            p_user_role: 'admin',
-            p_tenant_metadata: {}
-          })
-        ),
-        15000,
-        "Setting up your gym is taking longer than expected. Please check your connection and try again."
-      );
-
-      if (tenantError) {
-        if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
-        throw new Error(tenantError.message || "Failed to create organization");
+      if (!signedUpUser) {
+        throw new Error("Missing signed-up user. Please refresh and try again.");
       }
 
+      // A prior attempt may have already created the tenant/membership and
+      // only failed on a later step (e.g. the updateUser timeout below).
+      // Reuse that membership instead of creating a duplicate tenant on retry.
+      const { data: existingMembership } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", signedUpUser.id)
+            .maybeSingle()
+        ),
+        10000,
+        "Checking your account is taking longer than expected. Please try again."
+      );
+
+      let tenantId: string | null | undefined = existingMembership?.tenant_id;
+
       if (!tenantId) {
-        throw new Error("Failed to create organization: No tenant ID returned");
+        // Create Tenant/org and membership using RPC function (bypasses RLS)
+        const { data: newTenantId, error: tenantError } = await withTimeout(
+          Promise.resolve(
+            supabase.rpc('create_tenant_with_membership', {
+              p_tenant_name: gymName || "My Gym",
+              p_user_role: 'admin',
+              p_tenant_metadata: {}
+            })
+          ),
+          15000,
+          "Setting up your gym is taking longer than expected. Please check your connection and try again."
+        );
+
+        if (tenantError) {
+          if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
+          throw new Error(tenantError.message || "Failed to create organization");
+        }
+
+        if (!newTenantId) {
+          throw new Error("Failed to create organization: No tenant ID returned");
+        }
+
+        tenantId = newTenantId;
       }
 
       // Update user metadata with tenantId AND role
