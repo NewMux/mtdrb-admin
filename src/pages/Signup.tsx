@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
+import { withTimeout } from "../utils/withTimeout";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -100,17 +101,6 @@ export default function Signup() {
     } else {
       setError(t("auth.signupSuccessButNoUser"));
     }
-  };
-
-  // Wraps a promise with a timeout so a stalled network/DB call can't leave
-  // the onboarding modal spinning forever with no way to recover.
-  const withTimeout = <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
-    return Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        setTimeout(() => reject(new Error(message)), ms);
-      }),
-    ]);
   };
 
   // ===== AUTO-CREATE TENANT AND PROCEED =====
