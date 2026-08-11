@@ -70,6 +70,8 @@ const Trainers: React.FC = () => {
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
 
+  const [classesThisWeek, setClassesThisWeek] = React.useState(0);
+
   // Fetch trainers from API (mock data on localhost)
   React.useEffect(() => {
     const loadTrainers = async () => {
@@ -84,6 +86,29 @@ const Trainers: React.FC = () => {
       }
     };
     loadTrainers();
+  }, [refreshKey]);
+
+  // Fetch real class counts for this week (RLS scopes this to the current tenant)
+  React.useEffect(() => {
+    const loadClassesThisWeek = async () => {
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+      const { count, error } = await supabase
+        .from("classes")
+        .select("*", { count: "exact", head: true })
+        .gte("start_time", startOfWeek.toISOString())
+        .lt("start_time", endOfWeek.toISOString());
+
+      if (!error) {
+        setClassesThisWeek(count || 0);
+      }
+    };
+    loadClassesThisWeek();
   }, [refreshKey]);
 
   // Ensure trainers is always an array
@@ -183,32 +208,45 @@ const Trainers: React.FC = () => {
     setActiveTab(tabId);
   };
 
+  const activeTrainersCount = safeTrainers.filter(
+    (trainer) => trainer.status === "active" || trainer.status === "available",
+  ).length;
+  const averageRating =
+    safeTrainers.length > 0
+      ? safeTrainers.reduce((sum, trainer) => sum + (trainer.rating || 0), 0) /
+        safeTrainers.length
+      : 0;
+  const activePercentage =
+    safeTrainers.length > 0
+      ? Math.round((activeTrainersCount / safeTrainers.length) * 100)
+      : 0;
+
   const trainerStats = [
     {
       name: t("trainers.totalTrainers"),
-      value: "12",
-      change: `+2 ${t("trainers.fromLastMonth")}`,
+      value: String(safeTrainers.length),
+      change: `${activeTrainersCount} ${t("trainers.active")}`,
       icon: FiUsers,
       color: "from-blue-500 to-blue-600",
     },
     {
       name: t("trainers.averageRating"),
-      value: "4.8",
-      change: `+0.2 ${t("trainers.fromLastMonth")}`,
+      value: averageRating.toFixed(1),
+      change: `${safeTrainers.length} ${t("trainers.trainerList")}`,
       icon: FiStar,
       color: "from-yellow-500 to-orange-500",
     },
     {
       name: t("trainers.classesThisWeek"),
-      value: "156",
-      change: `+12% ${t("trainers.fromLastMonth")}`,
+      value: String(classesThisWeek),
+      change: "This week",
       icon: FiClock,
       color: "from-green-500 to-green-600",
     },
     {
       name: t("trainers.availableHours"),
-      value: "89%",
-      change: `+5% ${t("trainers.fromLastMonth")}`,
+      value: `${activePercentage}%`,
+      change: `${activeTrainersCount}/${safeTrainers.length} ${t("trainers.available")}`,
       icon: FiTrendingUp,
       color: "from-purple-500 to-purple-600",
     },

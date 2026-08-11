@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import type { Task, UserProfile } from "../../types";
 import { EmptyState } from "../ui/DesignSystem";
+import { EditTaskModal, DeleteTaskModal, CompleteTaskModal } from "./modals";
 
 interface TaskRowData {
   task: Task;
@@ -56,6 +57,9 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   >({});
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = React.useState<string | null>(null);
+  const [completingTaskId, setCompletingTaskId] = React.useState<string | null>(null);
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const { isRTL } = useRTL();
@@ -88,14 +92,14 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       setLoading(true);
       setError(null);
 
-      // Try to fetch from member_tasks table, but handle if it doesn't exist
+      // Try to fetch from the tasks table, but handle if it doesn't exist
       let taskData = null;
       let taskError = null;
       
       try {
         console.log("TaskTable: Fetching tasks for tenant:", tenantId);
         const result = await supabase
-          .from("member_tasks")
+          .from("tasks")
           .select(
             "id, tenant_id, member_id, title, description, type, priority, status, due_date, assigned_to, created_by, created_at, updated_at, completed_at",
           )
@@ -113,7 +117,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       } catch (err: unknown) {
         // Table might not exist
         if (isMissingTableError(err)) {
-          console.warn("member_tasks table may not exist, returning empty tasks");
+          console.warn("tasks table may not exist, returning empty tasks");
           setTasks([]);
           setAssigneesById({});
           setLoading(false);
@@ -125,7 +129,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       if (taskError) {
         // If table doesn't exist, return empty
         if (taskError.code === "PGRST116" || taskError.message?.includes("relation") || taskError.message?.includes("does not exist")) {
-          console.warn("member_tasks table does not exist");
+          console.warn("tasks table does not exist");
           setTasks([]);
           setAssigneesById({});
           setLoading(false);
@@ -450,16 +454,34 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
                     hoveredRow === task.id ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                  <button
+                    onClick={() => setEditingTaskId(task.id)}
+                    title={t("tasks.tableTask")}
+                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
                     <FiEye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
-                  <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                  <button
+                    onClick={() => setEditingTaskId(task.id)}
+                    title={t("tasks.tableTask")}
+                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
                     <FiEdit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
-                  <button className="p-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
-                    <FiCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                  </button>
-                  <button className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200">
+                  {task.status !== "completed" && (
+                    <button
+                      onClick={() => setCompletingTaskId(task.id)}
+                      title={t("tasks.completed")}
+                      className="p-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors duration-200"
+                    >
+                      <FiCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDeletingTaskId(task.id)}
+                    title={t("tasks.tableTask")}
+                    className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200"
+                  >
                     <FiTrash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                   </button>
                 </div>
@@ -468,6 +490,39 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
           ))}
         </tbody>
       </table>
+
+      {editingTaskId && (
+        <EditTaskModal
+          open={Boolean(editingTaskId)}
+          onClose={() => {
+            setEditingTaskId(null);
+            fetchTasks();
+          }}
+          taskId={editingTaskId}
+        />
+      )}
+
+      {deletingTaskId && (
+        <DeleteTaskModal
+          open={Boolean(deletingTaskId)}
+          onClose={() => {
+            setDeletingTaskId(null);
+            fetchTasks();
+          }}
+          taskId={deletingTaskId}
+        />
+      )}
+
+      {completingTaskId && (
+        <CompleteTaskModal
+          open={Boolean(completingTaskId)}
+          onClose={() => {
+            setCompletingTaskId(null);
+            fetchTasks();
+          }}
+          taskId={completingTaskId}
+        />
+      )}
     </div>
   );
 };

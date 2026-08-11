@@ -70,13 +70,13 @@ const Tasks: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Try to fetch from member_tasks table
+        // Try to fetch from the tasks table
         let taskData = null;
         let taskError = null;
-        
+
         try {
           const result = await supabase
-            .from("member_tasks")
+            .from("tasks")
             .select("id, status, due_date")
             .eq("tenant_id", tenantId);
           taskData = result.data;
@@ -87,7 +87,7 @@ const Tasks: React.FC = () => {
           const errCode = typeof errObj.code === "string" ? errObj.code : undefined;
           const errMessage = typeof errObj.message === "string" ? errObj.message : undefined;
           if (errCode === "PGRST116" || errMessage?.includes("relation") || errMessage?.includes("does not exist")) {
-            console.warn("member_tasks table does not exist");
+            console.warn("tasks table does not exist");
             setTaskStats({ total: 0, pending: 0, inProgress: 0, completed: 0 });
             setFilters([
               { id: "all", name: t("tasks.allTasks"), count: 0 },
