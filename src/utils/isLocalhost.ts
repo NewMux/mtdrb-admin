@@ -3,6 +3,8 @@
  */
 export function isLocalhost(): boolean {
   if (typeof window === "undefined") return false;
+  // Opt out of the mock client on localhost to test against a real backend.
+  if (import.meta.env.VITE_FORCE_REAL_CLIENT === "true") return false;
   const hostname = window.location.hostname;
   return (
     hostname === "localhost" ||

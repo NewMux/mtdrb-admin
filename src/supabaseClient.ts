@@ -77,30 +77,30 @@ ${missingVars.map((v) => `║    • ${v.padEnd(55)} ║`).join("\n")}
 // Validate environment variables before initializing client
 validateEnvironmentVariables();
 
-const realSupabase = createClient<Database>(
-  supabaseUrl!,
-  supabaseAnonKey!,
-  {
-    auth: {
-      persistSession: true,
-      detectSessionInUrl: true,
-      autoRefreshToken: true,
-    },
-    global: {
-      headers: {
-        "x-application-name": "mtdrb-admin",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-      },
-    },
-  },
-);
-
-/** On localhost, use hardcoded demo data instead of the real backend */
+// On localhost, use hardcoded demo data instead of the real backend. This
+// must stay lazy: constructing the real client eagerly (even when it's
+// about to be discarded in favor of the mock one) throws on missing env
+// vars and crashes the whole app before the mock-mode bypass ever runs -
+// defeating the point of having a credential-free local dev mode at all.
 export const supabase = (
-  isLocalhost() ? createMockSupabaseClient() : realSupabase
-) as typeof realSupabase;
+  isLocalhost()
+    ? createMockSupabaseClient()
+    : createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
+        auth: {
+          persistSession: true,
+          detectSessionInUrl: true,
+          autoRefreshToken: true,
+        },
+        global: {
+          headers: {
+            "x-application-name": "mtdrb-admin",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation",
+          },
+        },
+      })
+) as ReturnType<typeof createClient<Database>>;
 
 // Health check function (skipped in frontend-only localhost mode)
 export const checkSupabaseHealth = async (): Promise<boolean> => {

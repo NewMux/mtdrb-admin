@@ -11,8 +11,10 @@ type Filter =
   | { kind: "neq"; field: string; value: unknown }
   | { kind: "gte"; field: string; value: unknown }
   | { kind: "lte"; field: string; value: unknown }
+  | { kind: "lt"; field: string; value: unknown }
   | { kind: "in"; field: string; value: unknown[] }
-  | { kind: "or"; expr: string };
+  | { kind: "or"; expr: string }
+  | { kind: "not"; field: string; operator: string; value: unknown };
 
 const MOCK_USER: User = {
   id: "mock-user-localhost",
@@ -103,10 +105,20 @@ function applyFilters(
           const v = row[f.field];
           return v != null && String(v) <= String(f.value);
         }
+        case "lt": {
+          const v = row[f.field];
+          return v != null && String(v) < String(f.value);
+        }
         case "in":
           return (f.value as unknown[]).includes(row[f.field]);
         case "or":
           return matchesOr(row, f.expr);
+        case "not": {
+          const v = row[f.field];
+          if (f.operator === "is" && f.value === null) return v != null;
+          if (f.operator === "eq") return v !== f.value;
+          return true;
+        }
         default:
           return true;
       }
@@ -181,6 +193,11 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
     return this;
   }
 
+  lt(field: string, value: unknown) {
+    this.filters.push({ kind: "lt", field, value });
+    return this;
+  }
+
   in(field: string, values: unknown[]) {
     this.filters.push({ kind: "in", field, value: values });
     return this;
@@ -188,6 +205,11 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
 
   or(expr: string) {
     this.filters.push({ kind: "or", expr });
+    return this;
+  }
+
+  not(field: string, operator: string, value: unknown) {
+    this.filters.push({ kind: "not", field, operator, value });
     return this;
   }
 

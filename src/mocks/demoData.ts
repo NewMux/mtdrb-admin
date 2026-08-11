@@ -762,6 +762,65 @@ export const DEMO_TASKS = [
   },
 ];
 
+// General staff-ops tasks (the "tasks" table, not member-scoped "member_tasks"
+// above) - used by useSmartTaskModal.ts / TaskTable.tsx.
+export const DEMO_GENERAL_TASKS = [
+  {
+    id: "81000000-0000-0000-0000-000000000001",
+    tenant_id: DEMO_TENANT_ID,
+    member_id: null,
+    title: "Restock front desk supplies",
+    description: "Towels and water cups running low",
+    type: "admin",
+    priority: "medium",
+    status: "pending",
+    assigned_to: null,
+    created_by: null,
+    due_date: dateOnly(3),
+    completed_at: null,
+    tags: ["supplies"],
+    automation: null,
+    created_at: d(-1),
+    updated_at: d(-1),
+  },
+  {
+    id: "81000000-0000-0000-0000-000000000002",
+    tenant_id: DEMO_TENANT_ID,
+    member_id: null,
+    title: "Service treadmill #3",
+    description: "Belt is squeaking during use",
+    type: "maintenance",
+    priority: "high",
+    status: "in_progress",
+    assigned_to: null,
+    created_by: null,
+    due_date: dateOnly(1),
+    completed_at: null,
+    tags: ["equipment"],
+    automation: null,
+    created_at: d(-3),
+    updated_at: d(0),
+  },
+  {
+    id: "81000000-0000-0000-0000-000000000003",
+    tenant_id: DEMO_TENANT_ID,
+    member_id: null,
+    title: "Deep clean locker rooms",
+    description: "Weekly deep-clean rotation",
+    type: "cleaning",
+    priority: "low",
+    status: "completed",
+    assigned_to: null,
+    created_by: null,
+    due_date: dateOnly(-2),
+    completed_at: d(-2),
+    tags: ["cleaning"],
+    automation: null,
+    created_at: d(-6),
+    updated_at: d(-2),
+  },
+];
+
 export const DEMO_PLANS = [
   {
     id: "90000000-0000-0000-0000-000000000001",
@@ -1032,6 +1091,7 @@ export const DEMO_TABLES: Record<string, unknown[]> = {
   expenses: DEMO_EXPENSES,
   vat_returns: DEMO_VAT_RETURNS,
   member_tasks: DEMO_TASKS,
+  tasks: DEMO_GENERAL_TASKS,
   activities: DEMO_ACTIVITIES,
   notifications: DEMO_NOTIFICATIONS,
   gym_settings: [DEMO_GYM_SETTINGS],
