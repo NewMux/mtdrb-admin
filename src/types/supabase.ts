@@ -646,6 +646,89 @@ export interface Database {
           metadata?: Json;
         };
       };
+      tasks: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          title: string;
+          description?: string;
+          type:
+            | "onboarding"
+            | "class_setup"
+            | "maintenance"
+            | "cleaning"
+            | "equipment_check"
+            | "member_support"
+            | "admin"
+            | "custom";
+          priority: "low" | "medium" | "high" | "urgent";
+          status: "pending" | "in_progress" | "paused" | "completed" | "cancelled";
+          assigned_to?: string;
+          created_by?: string;
+          member_id?: string;
+          due_date?: string;
+          completed_at?: string;
+          tags: string[];
+          automation?: Json;
+          created_at: string;
+          updated_at: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          title: string;
+          description?: string;
+          type?:
+            | "onboarding"
+            | "class_setup"
+            | "maintenance"
+            | "cleaning"
+            | "equipment_check"
+            | "member_support"
+            | "admin"
+            | "custom";
+          priority?: "low" | "medium" | "high" | "urgent";
+          status?: "pending" | "in_progress" | "paused" | "completed" | "cancelled";
+          assigned_to?: string;
+          created_by?: string;
+          member_id?: string;
+          due_date?: string;
+          completed_at?: string;
+          tags?: string[];
+          automation?: Json;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          title?: string;
+          description?: string;
+          type?:
+            | "onboarding"
+            | "class_setup"
+            | "maintenance"
+            | "cleaning"
+            | "equipment_check"
+            | "member_support"
+            | "admin"
+            | "custom";
+          priority?: "low" | "medium" | "high" | "urgent";
+          status?: "pending" | "in_progress" | "paused" | "completed" | "cancelled";
+          assigned_to?: string;
+          created_by?: string;
+          member_id?: string;
+          due_date?: string;
+          completed_at?: string;
+          tags?: string[];
+          automation?: Json;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+      };
       health_check: {
         Row: {
           id: string;
