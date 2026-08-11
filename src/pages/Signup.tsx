@@ -99,39 +99,61 @@ export default function Signup() {
     }
   };
 
+  // Wraps a promise with a timeout so a stalled network/DB call can't leave
+  // the onboarding modal spinning forever with no way to recover.
+  const withTimeout = <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  };
+
   // ===== AUTO-CREATE TENANT AND PROCEED =====
   const createTenantAndProceed = async () => {
     setShowOnboarding(true); // Show loading modal
     setOnboardingLoading(true);
     setOnboardingError("");
-    
+
     try {
       // Create Tenant/org and membership using RPC function (bypasses RLS)
-      const { data: tenantId, error: tenantError } = await supabase
-        .rpc('create_tenant_with_membership', {
-          p_tenant_name: gymName || "My Gym",
-          p_user_role: 'admin',
-          p_tenant_metadata: {}
-        });
-      
+      const { data: tenantId, error: tenantError } = await withTimeout(
+        Promise.resolve(
+          supabase.rpc('create_tenant_with_membership', {
+            p_tenant_name: gymName || "My Gym",
+            p_user_role: 'admin',
+            p_tenant_metadata: {}
+          })
+        ),
+        15000,
+        "Setting up your gym is taking longer than expected. Please check your connection and try again."
+      );
+
       if (tenantError) {
         if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
         throw new Error(tenantError.message || "Failed to create organization");
       }
-      
+
       if (!tenantId) {
         throw new Error("Failed to create organization: No tenant ID returned");
       }
-      
+
       // Update user metadata with tenantId AND role
-      await supabase.auth.updateUser({ 
-        data: { 
-          tenant_id: tenantId,
-          role: "admin",
-          gym_name: gymName,
-        } 
-      });
-      
+      await withTimeout(
+        Promise.resolve(
+          supabase.auth.updateUser({
+            data: {
+              tenant_id: tenantId,
+              role: "admin",
+              gym_name: gymName,
+            }
+          })
+        ),
+        10000,
+        "Setting up your account is taking longer than expected. Please try again."
+      );
+
       // Redirect to subscribe
       navigate("/subscribe");
     } catch (err: unknown) {
