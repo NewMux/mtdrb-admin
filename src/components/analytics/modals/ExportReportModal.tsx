@@ -67,31 +67,39 @@ type CustomBookingRow = Pick<
 // exportPDF/exportJSON expect.
 type ExportRow = Record<string, string | number>;
 
-const savedReports = [
+// Current-quarter bounds, computed at module load so "Financial Summary"
+// always covers the quarter that's actually in progress, not a fixed past one.
+const now = new Date();
+const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+const quarterStartMonth = (currentQuarter - 1) * 3;
+const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
+const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
+
+const initialSavedReports = [
   {
     id: "1",
     name: "Member Overview Report",
     description: "Comprehensive member activity and engagement metrics",
-    lastGenerated: "2024-01-15T10:30:00Z",
-    size: "2.3 MB",
+    lastGenerated: new Date().toISOString(),
+    size: "—",
     sections: ["Attendance", "Payments", "Progress"],
     isStale: false,
   },
   {
     id: "2",
-    name: "Financial Summary Q4",
-    description: "Revenue, expenses, and profit analysis for Q4 2023",
-    lastGenerated: "2024-01-10T14:20:00Z",
-    size: "1.8 MB",
+    name: `Financial Summary Q${currentQuarter}`,
+    description: `Revenue, expenses, and profit analysis for Q${currentQuarter} ${now.getFullYear()}`,
+    lastGenerated: new Date().toISOString(),
+    size: "—",
     sections: ["Revenue", "Expenses", "Profit", "VAT"],
-    isStale: true,
+    isStale: false,
   },
   {
     id: "3",
     name: "Custom Report Template",
     description: "Your custom report with attendance and payment data",
-    lastGenerated: "2024-01-12T09:15:00Z",
-    size: "3.1 MB",
+    lastGenerated: new Date().toISOString(),
+    size: "—",
     sections: ["Attendance", "Payment", "Trainer Feedback"],
     isStale: false,
   },
@@ -140,6 +148,7 @@ export default function ExportReportModal({
   const [exportFormat, setExportFormat] = React.useState("csv");
   const [includeVisuals, setIncludeVisuals] = React.useState(true);
   const [exporting, setExporting] = React.useState(false);
+  const [savedReports, setSavedReports] = React.useState(initialSavedReports);
 
   React.useEffect(() => {
     if (open) {
@@ -231,14 +240,14 @@ export default function ExportReportModal({
             .from("invoices")
             .select("id, amount, status, created_at, vat_amount")
             .eq("tenant_id", tenantId)
-            .gte("created_at", "2023-10-01")
-            .lte("created_at", "2023-12-31"),
+            .gte("created_at", quarterStart.toISOString())
+            .lte("created_at", quarterEnd.toISOString()),
           supabase
             .from("expenses")
             .select("id, amount, category, date")
             .eq("tenant_id", tenantId)
-            .gte("date", "2023-10-01")
-            .lte("date", "2023-12-31"),
+            .gte("date", quarterStart.toISOString().split("T")[0])
+            .lte("date", quarterEnd.toISOString().split("T")[0]),
         ]);
 
         if (invoicesResult.error) throw invoicesResult.error;
@@ -262,7 +271,7 @@ export default function ExportReportModal({
 
         exportData = [
           {
-            Period: "Q4 2023",
+            Period: `Q${currentQuarter} ${now.getFullYear()}`,
             "Total Revenue": totalRevenue,
             "Total Expenses": totalExpenses,
             "Total VAT": totalVAT,
@@ -342,12 +351,16 @@ export default function ExportReportModal({
   };
 
   const handleRefreshReport = async (reportId: string) => {
-    void reportId;
     setExporting(true);
     try {
-      // Simulate refresh
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      // Update the report's lastGenerated timestamp
+      setSavedReports((prev) =>
+        prev.map((report) =>
+          report.id === reportId
+            ? { ...report, lastGenerated: new Date().toISOString(), isStale: false }
+            : report,
+        ),
+      );
+      toast.success("Report data refreshed");
     } finally {
       setExporting(false);
     }

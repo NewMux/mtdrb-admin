@@ -25,30 +25,52 @@ const reportTemplates = [
     name: "Member Overview",
     description: "Comprehensive member activity and engagement metrics",
     recommendedFrequency: "weekly",
-    lastScheduled: "2024-01-15",
   },
   {
     id: "financial_summary",
     name: "Financial Summary",
     description: "Revenue, expenses, and profit analysis",
     recommendedFrequency: "monthly",
-    lastScheduled: "2024-01-10",
   },
   {
     id: "class_performance",
     name: "Class Performance",
     description: "Class attendance, capacity, and trainer performance",
     recommendedFrequency: "weekly",
-    lastScheduled: "2024-01-12",
   },
   {
     id: "vat_report",
     name: "VAT Report",
     description: "VAT calculations and compliance data",
     recommendedFrequency: "quarterly",
-    lastScheduled: "2024-01-05",
   },
 ];
+
+// Real next-occurrence date for the chosen frequency/start date, since
+// delivery isn't automated yet there's nothing to show but the math.
+const computeNextDelivery = (
+  startDate: string,
+  frequency: "daily" | "weekly" | "monthly" | "quarterly",
+): Date => {
+  const start = new Date(startDate);
+  const now = new Date();
+  const next = start > now ? start : now;
+  switch (frequency) {
+    case "daily":
+      next.setDate(next.getDate() + 1);
+      break;
+    case "weekly":
+      next.setDate(next.getDate() + 7);
+      break;
+    case "monthly":
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case "quarterly":
+      next.setMonth(next.getMonth() + 3);
+      break;
+  }
+  return next;
+};
 
 const frequencies = [
   {
@@ -110,7 +132,7 @@ export default function ScheduleReportModal({
   const [deliveryMethod, setDeliveryMethod] = React.useState<
     NonNullable<AnalyticsFilters["deliveryMethod"]>
   >("email");
-  const [recipients, setRecipients] = React.useState(["admin@mtdrb.com"]);
+  const [recipients, setRecipients] = React.useState<string[]>([]);
   const [startDate, setStartDate] = React.useState(
     new Date().toISOString().split("T")[0],
   );
@@ -225,9 +247,6 @@ export default function ScheduleReportModal({
                 <p className="text-sm text-gray-600 mb-2">
                   {template.description}
                 </p>
-                <div className="text-xs text-gray-500">
-                  Last scheduled: {template.lastScheduled}
-                </div>
               </div>
             </label>
           ))}
@@ -414,6 +433,9 @@ export default function ScheduleReportModal({
       {/* Upcoming Schedule Preview */}
       {selectedTemplate && (
         <Section title="Upcoming Schedule">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
+            Automatic delivery isn&apos;t set up yet - this saves your schedule request for when it is, it won&apos;t send anything on its own right now.
+          </div>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -426,8 +448,15 @@ export default function ScheduleReportModal({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-white rounded-lg p-3 border">
-                  <div className="font-medium text-gray-900">Next Delivery</div>
-                  <div className="text-gray-600">Monday, Jan 22, 2024</div>
+                  <div className="font-medium text-gray-900">Would Next Occur</div>
+                  <div className="text-gray-600">
+                    {computeNextDelivery(startDate, frequency).toLocaleDateString(undefined, {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
                   <div className="font-medium text-gray-900">

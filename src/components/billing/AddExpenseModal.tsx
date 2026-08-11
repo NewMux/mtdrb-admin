@@ -259,8 +259,8 @@ export function AddExpenseModal({
 
     setIsSubmitting(true);
     try {
-      // Upload file if selected
-      let receiptUrl = null;
+      // Upload file if selected, otherwise keep whatever receipt was already there
+      let receiptUrl = editingExpense?.receipt_url || null;
       if (selectedFile) {
         const fileName = `receipts/${authTenantId}/${Date.now()}_${selectedFile.name}`;
         const { error: uploadError } = await supabase.storage
@@ -291,17 +291,22 @@ export function AddExpenseModal({
         recurring: data.recurring,
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
-        created_by: user?.id,
         country_code: "AE",
         vat_amount: calculateVatAmount(),
         currency: "BHD",
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
+        ...(editingExpense
+          ? { updated_by: user?.id }
+          : { created_by: user?.id }),
       };
 
-      const { error } = await supabase
-        .from("expenses")
-        .insert([expensePayload]);
+      const { error } = editingExpense
+        ? await supabase
+            .from("expenses")
+            .update(expensePayload)
+            .eq("id", editingExpense.id)
+        : await supabase.from("expenses").insert([expensePayload]);
 
       if (error) {
         throw error;
