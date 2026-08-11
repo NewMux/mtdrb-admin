@@ -20,6 +20,8 @@ import { toast } from "react-hot-toast";
 import { AppleInput, AppleSelect } from "../AppleStyleModal";
 import { SmartButton } from "../ui/DesignSystem";
 import ViewExpenseModal from "./modals/ViewExpenseModal";
+import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface ExpensesSectionProps {
   searchQuery: string;
@@ -48,50 +50,48 @@ export default function ExpensesSection({
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [modalMode, setModalMode] = useState<"view" | "edit">("view");
+  const { tenantId } = useAuth();
 
   const PAGE_SIZE = 10;
 
   const fetchExpenses = useCallback(async () => {
+    if (!tenantId) return;
     try {
       setLoading(true);
 
-      // TODO: Fetch expenses from Supabase
-      // TODO: Fetch expenses from Supabase
-      let filteredExpenses: Expense[] = [];
+      let query = supabase
+        .from("expenses")
+        .select("*", { count: "exact" })
+        .eq("tenant_id", tenantId);
 
-      // Apply search filter
       if (search) {
-        filteredExpenses = filteredExpenses.filter(
-          (expense) =>
-            expense.vendor?.toLowerCase().includes(search.toLowerCase()) ||
-            expense.description?.toLowerCase().includes(search.toLowerCase()) ||
-            expense.category?.toLowerCase().includes(search.toLowerCase()),
+        query = query.or(
+          `vendor.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`,
         );
       }
 
-      // Apply status filter
       if (status) {
-        filteredExpenses = filteredExpenses.filter(
-          (expense) => expense.status?.toLowerCase() === status.toLowerCase(),
-        );
+        query = query.eq("status", status);
       }
 
-      // Apply pagination
       const startIndex = (page - 1) * PAGE_SIZE;
-      const endIndex = startIndex + PAGE_SIZE;
-      const paginatedExpenses = filteredExpenses.slice(startIndex, endIndex);
+      const endIndex = startIndex + PAGE_SIZE - 1;
 
-      setExpenses(paginatedExpenses);
-      setTotalPages(
-        Math.max(1, Math.ceil(filteredExpenses.length / PAGE_SIZE)),
-      );
+      const { data, error, count } = await query
+        .order("date", { ascending: false })
+        .range(startIndex, endIndex);
+
+      if (error) throw error;
+
+      setExpenses((data || []) as Expense[]);
+      setTotalPages(Math.max(1, Math.ceil((count || 0) / PAGE_SIZE)));
     } catch (error) {
       console.error("Error loading expenses:", error);
       toast.error("Failed to load expenses");
     } finally {
       setLoading(false);
     }
-  }, [page, search, status]);
+  }, [page, search, status, tenantId]);
 
   useEffect(() => {
     setSearch(searchQuery);
@@ -114,8 +114,11 @@ export default function ExpensesSection({
 
   const handleDelete = async (expenseId: string) => {
     try {
-      void expenseId;
-      // TODO: Delete expense in Supabase
+      const { error } = await supabase
+        .from("expenses")
+        .delete()
+        .eq("id", expenseId);
+      if (error) throw error;
       toast.success("Expense deleted successfully");
       fetchExpenses();
     } catch (error) {
@@ -126,8 +129,11 @@ export default function ExpensesSection({
 
   const handleApprove = async (expenseId: string) => {
     try {
-      void expenseId;
-      // TODO: Approve expense in Supabase
+      const { error } = await supabase
+        .from("expenses")
+        .update({ status: "approved" })
+        .eq("id", expenseId);
+      if (error) throw error;
       toast.success("Expense approved successfully");
       fetchExpenses();
     } catch (error) {

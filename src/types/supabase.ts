@@ -602,6 +602,50 @@ export interface Database {
           metadata?: Json;
         };
       };
+      plans: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          description?: string;
+          price: number;
+          duration: number;
+          features: Json;
+          status: "active" | "inactive" | "archived";
+          members_count: number;
+          created_at: string;
+          updated_at: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          description?: string;
+          price?: number;
+          duration?: number;
+          features?: Json;
+          status?: "active" | "inactive" | "archived";
+          members_count?: number;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          description?: string;
+          price?: number;
+          duration?: number;
+          features?: Json;
+          status?: "active" | "inactive" | "archived";
+          members_count?: number;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+      };
       health_check: {
         Row: {
           id: string;
