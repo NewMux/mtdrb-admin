@@ -139,10 +139,24 @@ export default function PrintReportModal({
     loadSummary();
   }, [open, tenantId]);
 
-  const buildReportHtml = () => `
+  // Escape before interpolating into raw HTML - document.write() doesn't
+  // get React's auto-escaping, so an unescaped reportName would be a DOM
+  // XSS sink if this ever takes a user-editable name (it's a hardcoded
+  // default today, but this must not depend on staying that way).
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const buildReportHtml = () => {
+    const safeName = escapeHtml(reportName);
+    return `
     <html>
       <head>
-        <title>${reportName}</title>
+        <title>${safeName}</title>
         <style>
           body { font-family: sans-serif; padding: 32px; }
           h1 { text-align: center; }
@@ -155,7 +169,7 @@ export default function PrintReportModal({
         </style>
       </head>
       <body>
-        <h1>${reportName}</h1>
+        <h1>${safeName}</h1>
         <p class="subtitle">Generated on ${new Date().toLocaleDateString()}</p>
         <div class="stats">
           <div class="stat"><div class="value">${summary.totalMembers}</div><div class="label">Total Members</div></div>
@@ -166,6 +180,7 @@ export default function PrintReportModal({
       </body>
     </html>
   `;
+  };
 
   const handlePrint = async () => {
     setPrinting(true);
