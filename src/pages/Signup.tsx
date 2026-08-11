@@ -22,10 +22,13 @@ export default function Signup() {
         // Otherwise, let them complete the signup flow
         if (user.user_metadata?.paid && user.user_metadata?.onboarding_completed) {
           navigate("/dashboard", { replace: true });
+        } else if (user.user_metadata?.tenant_id) {
+          // Tenant/membership setup already completed in a prior attempt
+          // (e.g. this tab reloaded after a stuck retry) - skip straight to
+          // subscribe instead of showing the signup form again.
+          navigate("/subscribe", { replace: true });
         }
-        // If user is paid but not onboarded, they should go through onboarding
-        // If user is not paid, they should go through subscribe
-        // In both cases, let the signup flow handle it
+        // If user is not paid and has no tenant yet, let the signup flow handle it
       }
     };
     checkAuth();
