@@ -44,6 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_tenant_status ON tasks(tenant_id, status);
 
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view tasks for their tenant" ON tasks;
 CREATE POLICY "Users can view tasks for their tenant"
   ON tasks
   FOR SELECT
@@ -53,6 +54,7 @@ CREATE POLICY "Users can view tasks for their tenant"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert tasks for their tenant" ON tasks;
 CREATE POLICY "Users can insert tasks for their tenant"
   ON tasks
   FOR INSERT
@@ -62,6 +64,7 @@ CREATE POLICY "Users can insert tasks for their tenant"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update tasks for their tenant" ON tasks;
 CREATE POLICY "Users can update tasks for their tenant"
   ON tasks
   FOR UPDATE
@@ -76,6 +79,7 @@ CREATE POLICY "Users can update tasks for their tenant"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete tasks for their tenant" ON tasks;
 CREATE POLICY "Users can delete tasks for their tenant"
   ON tasks
   FOR DELETE
