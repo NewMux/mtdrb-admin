@@ -26,18 +26,22 @@ CREATE INDEX IF NOT EXISTS idx_plans_status ON plans(status);
 
 ALTER TABLE plans ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view plans for their tenant" ON plans;
 CREATE POLICY "Users can view plans for their tenant"
   ON plans FOR SELECT
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can insert plans for their tenant" ON plans;
 CREATE POLICY "Users can insert plans for their tenant"
   ON plans FOR INSERT
   WITH CHECK (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can update plans for their tenant" ON plans;
 CREATE POLICY "Users can update plans for their tenant"
   ON plans FOR UPDATE
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can delete plans for their tenant" ON plans;
 CREATE POLICY "Users can delete plans for their tenant"
   ON plans FOR DELETE
   USING (tenant_id = get_user_tenant_id());
