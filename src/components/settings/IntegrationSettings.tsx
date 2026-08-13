@@ -7,6 +7,7 @@ import {
   FiSave,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchGymSettings, updateGymSettings } from "../../api/settings";
 
@@ -28,6 +29,7 @@ const DEFAULT_INTEGRATIONS = [
 export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
   refreshKey,
 }) => {
+  const { t } = useTranslation();
   const { tenantId } = useAuth();
   const [integrations, setIntegrations] = useState(DEFAULT_INTEGRATIONS);
   const [existingMetadata, setExistingMetadata] = useState<Record<string, unknown>>({});
@@ -59,7 +61,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
     if (!integration) return;
     if (!integration.enabled) {
       toast(
-        `${integration.name} isn't connected yet - real integration setup requires a backend API-key/OAuth flow that isn't built. Toggling this just marks it as enabled for when it is.`,
+        t("settings.integrationNotConnectedYet", { name: integration.name }),
         { icon: "ℹ️" },
       );
     }
@@ -70,7 +72,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
 
   const handleSave = useCallback(async () => {
     if (!tenantId) {
-      toast.error("No tenant ID found. Please log in again.");
+      toast.error(t("settings.noTenantIdFound"));
       return;
     }
     setIsSaving(true);
@@ -89,14 +91,14 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
         },
       });
       if (error) throw error;
-      toast.success("Integration settings saved");
+      toast.success(t("settings.integrationSettingsSaved"));
     } catch (error) {
       console.error("Failed to save integration settings:", error);
-      toast.error("Failed to save integration settings");
+      toast.error(t("settings.integrationSettingsSaveFailed"));
     } finally {
       setIsSaving(false);
     }
-  }, [tenantId, existingMetadata, integrations]);
+  }, [tenantId, existingMetadata, integrations, t]);
 
   const getStatusColor = (enabled: boolean) => {
     return enabled ? "text-green-600" : "text-red-600";
@@ -115,10 +117,10 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Integration Settings
+            {t("settings.integrationSettingsTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Configure third-party integrations and API connections
+            {t("settings.integrationSettingsSubtitle")}
           </p>
         </div>
         <button
@@ -127,7 +129,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
           className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center"
         >
           <FiSave className="h-4 w-4 mr-2" />
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? t("settings.saving") : t("settings.saveChanges")}
         </button>
       </div>
 
@@ -136,7 +138,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
         <div className="flex items-center mb-6">
           <FiLink className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Available Integrations
+            {t("settings.availableIntegrations")}
           </h2>
         </div>
         <div className="space-y-4">
@@ -162,7 +164,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
                     >
                       {getStatusIcon(integration.enabled)}
                       <span className="text-sm font-medium">
-                        {integration.enabled ? "Enabled" : "Not connected"}
+                        {integration.enabled ? t("settings.enabledStatus") : t("settings.notConnected")}
                       </span>
                     </div>
                   </div>
@@ -175,15 +177,14 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
-                  {integration.enabled ? "Disable" : "Connect"}
+                  {integration.enabled ? t("settings.disableAction") : t("settings.connectAction")}
                 </button>
               </div>
 
               {integration.enabled && (
                 <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Real API key/webhook configuration for {integration.name} isn&apos;t available yet -
-                    this requires a server-side integration flow that hasn&apos;t been built.
+                    {t("settings.integrationConfigNotAvailable", { name: integration.name })}
                   </p>
                 </div>
               )}
@@ -196,12 +197,12 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
           <FiSettings className="h-6 w-6 text-green-600 dark:text-green-400 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">API Configuration</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("settings.apiConfiguration")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              API Rate Limit
+              {t("settings.apiRateLimit")}
             </label>
             <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100">
               <option>1000 requests/hour</option>
@@ -211,7 +212,7 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Webhook Timeout
+              {t("settings.webhookTimeout")}
             </label>
             <select className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100">
               <option>30 seconds</option>

@@ -798,7 +798,7 @@ export default function FinancialInsightsDashboard({
 
       const expenseCategoryTotals = eligibleExpenses.reduce(
         (acc, expense) => {
-          const category = expense.category || "Other";
+          const category = expense.category || t("billing.other");
           acc[category] = (acc[category] || 0) + Number(expense.amount || 0);
           return acc;
         },
@@ -909,7 +909,7 @@ export default function FinancialInsightsDashboard({
       paidInvoices.forEach((invoice) => {
         const branchId = memberBranchMap.get(invoice.member_id || "") || "";
         const branchName =
-          branchNameById.get(branchId) || (branchId ? branchId : "Unassigned");
+          branchNameById.get(branchId) || (branchId ? branchId : t("billing.unassigned"));
         branchRevenueMap.set(
           branchName,
           (branchRevenueMap.get(branchName) || 0) + getInvoiceAmount(invoice),
@@ -921,7 +921,7 @@ export default function FinancialInsightsDashboard({
 
       const paymentRevenueMap = new Map<string, number>();
       paidInvoices.forEach((invoice) => {
-        const method = invoice.payment_method || "Unknown";
+        const method = invoice.payment_method || t("billing.unknown");
         paymentRevenueMap.set(
           method,
           (paymentRevenueMap.get(method) || 0) + getInvoiceAmount(invoice),
@@ -936,10 +936,10 @@ export default function FinancialInsightsDashboard({
 
       const membershipRevenueMap = new Map<string, number>();
       const memberTypeMap = new Map(
-        members.map((member) => [member.id, member.membership_type || "Unknown"]),
+        members.map((member) => [member.id, member.membership_type || t("billing.unknown")]),
       );
       paidInvoices.forEach((invoice) => {
-        const type = memberTypeMap.get(invoice.member_id || "") || "Unknown";
+        const type = memberTypeMap.get(invoice.member_id || "") || t("billing.unknown");
         membershipRevenueMap.set(
           type,
           (membershipRevenueMap.get(type) || 0) + getInvoiceAmount(invoice),
@@ -998,7 +998,7 @@ export default function FinancialInsightsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [filters.dateRange, filters.invoiceStatus, filters.membershipType, filters.paymentMethod, filters.vatFilingStatus, filters.branches, tenantId]);
+  }, [filters.dateRange, filters.invoiceStatus, filters.membershipType, filters.paymentMethod, filters.vatFilingStatus, filters.branches, tenantId, t]);
 
   useEffect(() => {
     fetchBillingAnalyticsData();

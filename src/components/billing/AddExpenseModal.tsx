@@ -191,12 +191,12 @@ export function AddExpenseModal({
       "application/pdf",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      toast.error(t("billing.invalidFileType"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(t("billing.fileSizeTooLarge"));
       return;
     }
 
@@ -253,7 +253,7 @@ export function AddExpenseModal({
     if (isSubmitting) return;
 
     if (!authTenantId) {
-      toast.error("Tenant ID not found. Please ensure you're logged in.");
+      toast.error(t("billing.tenantIdNotFound"));
       return;
     }
 
@@ -314,14 +314,14 @@ export function AddExpenseModal({
 
       toast.success(
         editingExpense
-          ? "Expense updated successfully"
-          : "Expense added successfully",
+          ? t("billing.expenseUpdated")
+          : t("billing.expenseAdded"),
       );
       onExpenseAdded();
       onClose();
     } catch (error) {
       console.error("Error saving expense:", error);
-      toast.error("Failed to save expense. Please try again.");
+      toast.error(t("billing.saveExpenseFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -331,7 +331,7 @@ export function AddExpenseModal({
   const handleClose = () => {
     if (isDirty) {
       const shouldClose = window.confirm(
-        "You have unsaved changes. Are you sure you want to close?",
+        t("billing.unsavedChangesConfirm"),
       );
       if (!shouldClose) return;
     }
@@ -401,7 +401,7 @@ export function AddExpenseModal({
           </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleInput
-                  label={t("billing.title", "عنوان المصروف")}
+                  label={t("billing.expenseTitleLabel")}
                   {...register("title")}
                   error={errors.title?.message}
                   required
@@ -539,7 +539,7 @@ export function AddExpenseModal({
                         <div className="flex justify-center">
                           <img
                             src={filePreview}
-                            alt="Receipt preview"
+                            alt={t("billing.receiptPreviewAlt")}
                             className="max-w-xs max-h-32 object-contain rounded-lg"
                           />
                         </div>
