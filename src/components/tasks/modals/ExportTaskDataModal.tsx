@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiDownload,
   FiZap,
@@ -42,6 +43,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
   onClose,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { tenantId } = useAuth();
   const { loading, exportTaskData, alerts, clearAlerts } = useSmartTaskModal({
     isPro,
@@ -64,35 +66,35 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
   const [includeInsights, setIncludeInsights] = React.useState(true);
 
   const statusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "paused", label: "Paused" },
-    { value: "completed", label: "Completed" },
-    { value: "cancelled", label: "Cancelled" },
+    { value: "pending", label: t("tasks.pending") },
+    { value: "in_progress", label: t("tasks.inProgress") },
+    { value: "paused", label: t("tasks.paused") },
+    { value: "completed", label: t("tasks.completed") },
+    { value: "cancelled", label: t("tasks.cancelled") },
   ];
 
   const priorityOptions = [
-    { value: "low", label: "Low" },
-    { value: "medium", label: "Medium" },
-    { value: "high", label: "High" },
-    { value: "urgent", label: "Urgent" },
+    { value: "low", label: t("tasks.low") },
+    { value: "medium", label: t("tasks.medium") },
+    { value: "high", label: t("tasks.high") },
+    { value: "urgent", label: t("tasks.urgent") },
   ];
 
   const typeOptions = [
-    { value: "onboarding", label: "Member Onboarding" },
-    { value: "class_setup", label: "Class Setup" },
-    { value: "maintenance", label: "Equipment Maintenance" },
-    { value: "cleaning", label: "Cleaning" },
-    { value: "equipment_check", label: "Equipment Check" },
-    { value: "member_support", label: "Member Support" },
-    { value: "admin", label: "Administrative" },
-    { value: "custom", label: "Custom Task" },
+    { value: "onboarding", label: t("tasks.typeOnboarding") },
+    { value: "class_setup", label: t("tasks.typeClassSetup") },
+    { value: "maintenance", label: t("tasks.typeMaintenance") },
+    { value: "cleaning", label: t("tasks.roleCleaning") },
+    { value: "equipment_check", label: t("tasks.typeEquipmentCheck") },
+    { value: "member_support", label: t("tasks.typeMemberSupport") },
+    { value: "admin", label: t("tasks.typeAdmin") },
+    { value: "custom", label: t("tasks.typeCustom") },
   ];
 
   const formatOptions = [
-    { value: "csv", label: "CSV", description: "Comma-separated values" },
-    { value: "excel", label: "Excel", description: "Microsoft Excel format" },
-    { value: "json", label: "JSON", description: "Structured data format" },
+    { value: "csv", label: t("tasks.formatCSV"), description: t("tasks.formatCSVDesc") },
+    { value: "excel", label: t("tasks.formatExcel"), description: t("tasks.formatExcelDesc") },
+    { value: "json", label: t("tasks.formatJSON"), description: t("tasks.formatJSONDesc") },
   ];
 
   const handleExport = async () => {
@@ -201,23 +203,23 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
     return [
       {
         type: "warning",
-        title: "Overdue Tasks",
+        title: t("tasks.insightOverdueTasks"),
         count: 12,
-        description: "Tasks past their due date",
+        description: t("tasks.insightOverdueTasksDesc"),
         icon: "⚠️",
       },
       {
         type: "info",
-        title: "Unassigned Tasks",
+        title: t("tasks.insightUnassignedTasks"),
         count: 8,
-        description: "Tasks without assignees",
+        description: t("tasks.insightUnassignedTasksDesc"),
         icon: "👤",
       },
       {
         type: "success",
-        title: "Completed This Week",
+        title: t("tasks.insightCompletedThisWeek"),
         count: 45,
-        description: "Successfully completed tasks",
+        description: t("tasks.insightCompletedThisWeekDesc"),
         icon: "✅",
       },
     ];
@@ -229,8 +231,8 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Export Task Data"
-      subtitle="Export task data with filters and insights"
+      title={t("tasks.exportTaskData")}
+      subtitle={t("tasks.exportTaskDataSubtitle")}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -254,7 +256,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -264,7 +266,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
           <div className="flex items-center space-x-2 mb-3">
             <FiZap className="w-4 h-4 text-blue-500" />
             <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Smart Insights
+              {t("tasks.smartInsights")}
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -293,13 +295,13 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
         {/* Filters */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Filters
+            {t("tasks.filtersLabel")}
           </h3>
 
           {/* Status Filter */}
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Status{" "}
+              {t("tasks.status")}{" "}
               {getFilterCount("status") > 0 && `(${getFilterCount("status")})`}
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -323,7 +325,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
           {/* Priority Filter */}
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Priority{" "}
+              {t("tasks.priority")}{" "}
               {getFilterCount("priority") > 0 &&
                 `(${getFilterCount("priority")})`}
             </label>
@@ -348,7 +350,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
           {/* Type Filter */}
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Task Type{" "}
+              {t("tasks.taskType")}{" "}
               {getFilterCount("type") > 0 && `(${getFilterCount("type")})`}
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -372,12 +374,12 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
           {/* Date Range */}
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Date Range
+              {t("tasks.dateRange")}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Start Date
+                  {t("tasks.startDate")}
                 </label>
                 <input
                   type="date"
@@ -393,7 +395,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  End Date
+                  {t("tasks.endDate")}
                 </label>
                 <input
                   type="date"
@@ -414,7 +416,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
         {/* Export Format */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Export Format
+            {t("tasks.exportFormat")}
           </label>
           <div className="space-y-2">
             {formatOptions.map((format) => (
@@ -459,14 +461,13 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Include smart insights
+                {t("tasks.includeSmartInsights")}
               </span>
             </div>
           </label>
           {includeInsights && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-              Export will include overdue tasks, unassigned tasks, and
-              performance metrics
+              {t("tasks.includeSmartInsightsDesc")}
             </p>
           )}
         </div>
@@ -477,7 +478,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {includeInsights ? "With insights" : "Basic export"}
+                {includeInsights ? t("tasks.withInsights") : t("tasks.basicExport")}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -486,7 +487,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -495,7 +496,7 @@ export const ExportTaskDataModal: React.FC<ExportTaskDataModalProps> = ({
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiDownload className="w-4 h-4" />
-                <span>{loading ? "Exporting..." : "Export Data"}</span>
+                <span>{loading ? t("tasks.exportingData") : t("tasks.exportDataButton")}</span>
               </button>
             </div>
           </div>

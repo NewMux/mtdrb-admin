@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiUser,
   FiSearch,
@@ -22,6 +23,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, assignTask, alerts, clearAlerts } = useSmartTaskModal({
     taskId,
     isPro,
@@ -92,11 +94,11 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   ];
 
   const roles = [
-    { value: "", label: "All Roles" },
-    { value: "trainer", label: "Trainer" },
-    { value: "maintenance", label: "Maintenance" },
-    { value: "admin", label: "Administrative" },
-    { value: "cleaning", label: "Cleaning" },
+    { value: "", label: t("tasks.allRoles") },
+    { value: "trainer", label: t("tasks.roleTrainer") },
+    { value: "maintenance", label: t("tasks.roleMaintenance") },
+    { value: "admin", label: t("tasks.typeAdmin") },
+    { value: "cleaning", label: t("tasks.roleCleaning") },
   ];
 
   const handleAssignTask = async () => {
@@ -140,8 +142,8 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Assign Task"
-      subtitle={`Assigning: ${task.title}`}
+      title={t("tasks.assignTask")}
+      subtitle={`${t("tasks.assigningPrefix")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -165,7 +167,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -173,29 +175,29 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
         {/* Task Info */}
         <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Task Information
+            {t("tasks.taskInformation")}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.titleLabel")}:</span>
               <span className="font-medium">{task.title}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.typeLabel")}:</span>
               <span className="font-medium capitalize">
                 {task.type.replace("_", " ")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">
-                Priority:
+                {t("tasks.priority")}:
               </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Due date:
+                  {t("tasks.dueDate")}:
                 </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -211,7 +213,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
             <div className="flex items-center space-x-2 mb-3">
               <FiZap className="w-4 h-4 text-blue-500" />
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Smart Suggestions
+                {t("tasks.smartSuggestions")}
               </h3>
             </div>
             <div className="space-y-2">
@@ -242,7 +244,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {suggestion.currentLoad} tasks
+                        {suggestion.currentLoad} {t("tasks.tasksSuffix")}
                       </div>
                       <div
                         className={`text-xs px-2 py-1 rounded ${
@@ -253,7 +255,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                               : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {suggestion.availability} availability
+                        {t(`tasks.${suggestion.availability}`)} {t("tasks.availability")}
                       </div>
                     </div>
                   </div>
@@ -280,13 +282,13 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiUser className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Assign to myself
+                {t("tasks.assignToMyself")}
               </span>
             </div>
           </label>
           {assignToSelf && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-              You&apos;ll be assigned this task and can manage it directly
+              {t("tasks.assignToMyselfDesc")}
             </p>
           )}
         </div>
@@ -302,7 +304,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search assignees..."
+                  placeholder={t("tasks.searchAssigneesPlaceholder")}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 />
               </div>
@@ -327,7 +329,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
             {/* Assignee List */}
             <div>
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Available Assignees ({filteredAssignees.length})
+                {t("tasks.availableAssignees", { count: filteredAssignees.length })}
               </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {filteredAssignees.map((assignee) => (
@@ -368,7 +370,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                                 : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {assignee.availability}
+                          {t(`tasks.${assignee.availability}`)}
                         </div>
                       </div>
                     </div>
@@ -386,8 +388,8 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {assignToSelf
-                  ? "Self-assignment"
-                  : `${filteredAssignees.length} assignees available`}
+                  ? t("tasks.selfAssignment")
+                  : t("tasks.assigneesAvailable", { count: filteredAssignees.length })}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -396,7 +398,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -405,7 +407,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiCheck className="w-4 h-4" />
-                <span>{loading ? "Assigning..." : "Assign Task"}</span>
+                <span>{loading ? t("tasks.assigningTask") : t("tasks.assignTask")}</span>
               </button>
             </div>
           </div>

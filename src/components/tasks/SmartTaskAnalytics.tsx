@@ -467,6 +467,7 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
 // Chart Components
 const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
   const data = analyticsData.charts.tasksOverTime;
 
   const chartData = {
@@ -478,7 +479,7 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
     ),
     datasets: [
       {
-        label: "Tasks Created",
+        label: t("tasks.tasksCreatedLabel"),
         data: data.map((item) => item.created),
         borderColor: "rgba(59, 130, 246, 1)",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -490,7 +491,7 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
         pointRadius: 6,
       },
       {
-        label: "Tasks Completed",
+        label: t("tasks.tasksCompletedLabel"),
         data: data.map((item) => item.completed),
         borderColor: "rgba(16, 185, 129, 1)",
         backgroundColor: "rgba(16, 185, 129, 0.1)",
@@ -542,8 +543,6 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
     },
   };
 
-  const { t } = useTranslation();
-  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -558,6 +557,7 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
 
 const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
   const data = analyticsData.charts.completionTrend;
 
   const chartData = {
@@ -569,7 +569,7 @@ const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
     ),
     datasets: [
       {
-        label: "Tasks Completed",
+        label: t("tasks.tasksCompletedLabel"),
         data: data.map((item) => item.completed),
         backgroundColor: "#10B981",
         borderRadius: 4,
@@ -606,8 +606,6 @@ const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
     },
   };
 
-  const { t } = useTranslation();
-  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -730,13 +728,14 @@ const PriorityDistributionChart: React.FC<{ data: typeof emptyTaskAnalyticsData 
 
 const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
+  const { t } = useTranslation();
   const data = analyticsData.charts.staffProductivity;
 
   const chartData = {
     labels: data.map((item) => item.staff),
     datasets: [
       {
-        label: "Tasks Completed",
+        label: t("tasks.tasksCompletedLabel"),
         data: data.map((item) => item.completed),
         backgroundColor: "#3B82F6",
         borderRadius: 4,
@@ -773,8 +772,6 @@ const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> 
     },
   };
 
-  const { t } = useTranslation();
-  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -1075,7 +1072,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
         const statusBreakdown = [
           {
-            status: "Pending",
+            status: t("tasks.pending"),
             count: statusCounts.pending || 0,
             percentage:
               totalTasksCreated > 0
@@ -1084,7 +1081,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             color: "#3B82F6",
           },
           {
-            status: "In Progress",
+            status: t("tasks.inProgress"),
             count: statusCounts.in_progress || 0,
             percentage:
               totalTasksCreated > 0
@@ -1093,7 +1090,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             color: "#F59E0B",
           },
           {
-            status: "Completed",
+            status: t("tasks.completed"),
             count: statusCounts.completed || 0,
             percentage:
               totalTasksCreated > 0
@@ -1102,7 +1099,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             color: "#10B981",
           },
           {
-            status: "Overdue",
+            status: t("tasks.overdue"),
             count: overdueTasks,
             percentage:
               totalTasksCreated > 0 ? (overdueTasks / totalTasksCreated) * 100 : 0,
@@ -1119,7 +1116,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
         const priorityDistribution = [
           {
-            priority: "Low",
+            priority: t("tasks.low"),
             count: priorityCounts.low || 0,
             percentage:
               totalTasksCreated > 0
@@ -1128,7 +1125,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             color: "#6B7280",
           },
           {
-            priority: "Medium",
+            priority: t("tasks.medium"),
             count: priorityCounts.medium || 0,
             percentage:
               totalTasksCreated > 0
@@ -1137,7 +1134,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             color: "#F59E0B",
           },
           {
-            priority: "High",
+            priority: t("tasks.high"),
             count: priorityCounts.high || 0,
             percentage:
               totalTasksCreated > 0
@@ -1191,7 +1188,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
               staff:
                 profile
                   ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-                  : "Unknown",
+                  : t("tasks.unknown"),
               completed: stats.completed,
               avgTime: avgTime,
             };
@@ -1204,7 +1201,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             ? staffProductivity.reduce((prev, current) =>
                 prev.avgTime < current.avgTime ? prev : current,
               )
-            : { staff: "N/A", avgTime: 0 };
+            : { staff: t("tasks.notAvailable"), avgTime: 0 };
 
         const overdueByAssignee: Record<string, number> = {};
         tasksData
@@ -1235,16 +1232,16 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
               .then(({ data }) =>
                 data
                   ? `${data.first_name || ""} ${data.last_name || ""}`.trim()
-                  : "Unknown",
+                  : t("tasks.unknown"),
               )
-          : "N/A";
+          : t("tasks.notAvailable");
 
         const mostTasksCompleted =
           staffProductivity.length > 0
             ? staffProductivity.reduce((prev, current) =>
                 prev.completed > current.completed ? prev : current,
               )
-            : { staff: "N/A", completed: 0 };
+            : { staff: t("tasks.notAvailable"), completed: 0 };
 
         // Longest pending tasks
         const pendingTasks = tasksData.filter((t) => t.status === "pending");
@@ -1382,9 +1379,9 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
             staffProductivity: [],
           },
           teamInsights: {
-            mostEfficientStaff: { name: "N/A", avgTime: 0 },
-            mostOverdueTasksBy: { name: "N/A", count: 0 },
-            mostTasksCompleted: { name: "N/A", count: 0 },
+            mostEfficientStaff: { name: t("tasks.notAvailable"), avgTime: 0 },
+            mostOverdueTasksBy: { name: t("tasks.notAvailable"), count: 0 },
+            mostTasksCompleted: { name: t("tasks.notAvailable"), count: 0 },
             longestPendingTasks: { count: 0, avgDays: 0 },
             tasksWithNoUpdates: { count: 0, percentage: 0 },
           },
@@ -1401,7 +1398,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
     };
 
     fetchTaskAnalytics();
-  }, [refreshKey, tenantId]);
+  }, [refreshKey, tenantId, t]);
 
   return (
     <div className="space-y-6">

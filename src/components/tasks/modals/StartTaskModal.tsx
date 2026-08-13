@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiPlay,
   FiClock,
@@ -20,6 +21,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, changeTaskStatus, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
 
@@ -70,14 +72,14 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
   const statusOptions = [
     {
       value: "in_progress" as const,
-      label: "In Progress",
-      description: "Start working on the task now",
+      label: t("tasks.inProgress"),
+      description: t("tasks.statusInProgressDesc"),
       icon: "▶️",
     },
     {
       value: "paused" as const,
-      label: "Paused",
-      description: "Task is paused temporarily",
+      label: t("tasks.paused"),
+      description: t("tasks.statusPausedDesc"),
       icon: "⏸️",
     },
   ];
@@ -90,8 +92,8 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Start Task"
-      subtitle={`Starting: ${task.title}`}
+      title={t("tasks.startTask")}
+      subtitle={`${t("tasks.startingPrefix")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -115,7 +117,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -123,29 +125,29 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
         {/* Task Info */}
         <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Task Information
+            {t("tasks.taskInformation")}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.titleLabel")}:</span>
               <span className="font-medium">{task.title}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.typeLabel")}:</span>
               <span className="font-medium capitalize">
                 {task.type.replace("_", " ")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">
-                Priority:
+                {t("tasks.priority")}:
               </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.assignedTo && (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Assigned to:
+                  {t("tasks.assignedTo")}:
                 </span>
                 <span className="font-medium">{task.assignedTo}</span>
               </div>
@@ -153,7 +155,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             {task.dueDate && (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Due date:
+                  {t("tasks.dueDate")}:
                 </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -166,7 +168,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
         {/* Status Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Status Transition
+            {t("tasks.statusTransition")}
           </label>
           <div className="space-y-2">
             {statusOptions.map((option) => (
@@ -210,13 +212,13 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiClock className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Start timer to track time
+                {t("tasks.startTimerToTrackTime")}
               </span>
             </div>
           </label>
           {showTimer && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-              Timer will start automatically when you begin the task
+              {t("tasks.timerWillStartAutomatically")}
             </p>
           )}
         </div>
@@ -228,7 +230,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
               <div className="flex items-center space-x-2">
                 <FiClock className="w-5 h-5 text-blue-500" />
                 <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Timer Running
+                  {t("tasks.timerRunning")}
                 </span>
               </div>
               <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">
@@ -241,14 +243,14 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
         {/* Comment */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Optional Comment
+            {t("tasks.optionalComment")}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            placeholder="Add a comment about starting this task..."
+            placeholder={t("tasks.startCommentPlaceholder")}
           />
         </div>
 
@@ -258,12 +260,12 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             <FiZap className="w-5 h-5 text-blue-500 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Smart Suggestions
+                {t("tasks.smartSuggestions")}
               </h4>
               <div className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1">
-                <p>• Set a reminder for 2 hours from now</p>
-                <p>• Notify team members about task start</p>
-                <p>• Auto-pause timer during breaks</p>
+                <p>• {t("tasks.suggestionSetReminder2h")}</p>
+                <p>• {t("tasks.suggestionNotifyTeamStart")}</p>
+                <p>• {t("tasks.suggestionAutoPauseBreaks")}</p>
               </div>
             </div>
           </div>
@@ -275,7 +277,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {showTimer ? "Timer ready" : "Quick start available"}
+                {showTimer ? t("tasks.timerReady") : t("tasks.quickStartAvailable")}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -286,7 +288,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
                 >
                   <FiClock className="w-4 h-4" />
-                  <span>Stop Timer & Close</span>
+                  <span>{t("tasks.stopTimerAndClose")}</span>
                 </button>
               ) : (
                 <>
@@ -295,7 +297,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
                     onClick={onClose}
                     className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                   <button
                     type="button"
@@ -304,7 +306,7 @@ export const StartTaskModal: React.FC<StartTaskModalProps> = ({
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                   >
                     <FiPlay className="w-4 h-4" />
-                    <span>{loading ? "Starting..." : "Start Task"}</span>
+                    <span>{loading ? t("tasks.startingTask") : t("tasks.startTask")}</span>
                   </button>
                 </>
               )}
