@@ -389,7 +389,7 @@ export default function SmartClassManagement() {
     closeModal();
     fetchAllClasses();
     fetchClassStats();
-    toast.success("Class operation completed successfully!");
+    toast.success(t("classes.classOperationCompletedSuccessfully"));
   };
 
   const handleCloseDrawer = () => {
@@ -799,28 +799,28 @@ export default function SmartClassManagement() {
         {/* Class Type Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Class Type
+            {t("classes.classType")}
           </label>
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
-            <option value="">All Types</option>
-            <option value="yoga">Yoga</option>
-            <option value="pilates">Pilates</option>
-            <option value="hiit">HIIT</option>
-            <option value="strength">Strength Training</option>
-            <option value="cardio">Cardio</option>
-            <option value="spinning">Spinning</option>
-            <option value="zumba">Zumba</option>
-            <option value="boxing">Boxing</option>
+            <option value="">{t("classes.allTypes")}</option>
+            <option value="yoga">{t("classes.yoga")}</option>
+            <option value="pilates">{t("classes.pilates")}</option>
+            <option value="hiit">{t("classes.hiit")}</option>
+            <option value="strength">{t("classes.strengthTraining")}</option>
+            <option value="cardio">{t("classes.cardio")}</option>
+            <option value="spinning">{t("classes.spinning")}</option>
+            <option value="zumba">{t("classes.zumba")}</option>
+            <option value="boxing">{t("classes.boxing")}</option>
           </select>
         </div>
 
         {/* Trainer Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Trainer
+            {t("classes.trainer")}
           </label>
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
-            <option value="">All Trainers</option>
+            <option value="">{t("classes.allTrainers")}</option>
             {/* TODO: Populate with actual trainers */}
           </select>
         </div>

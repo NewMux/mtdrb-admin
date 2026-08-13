@@ -126,8 +126,8 @@ const ClassCalendar: React.FC = () => {
         : e
     );
     setEvents(updatedEvents);
-    toast.success('Class rescheduled successfully!');
-  }, [events]);
+    toast.success(t('classes.classRescheduledSuccessfully'));
+  }, [events, t]);
 
   const handleEventResize = useCallback((info: EventResizeDoneArg) => {
     const { event } = info;
@@ -194,7 +194,7 @@ const ClassCalendar: React.FC = () => {
             title: cls.name,
             start: cls.start_time,
             end: cls.end_time,
-            trainer: cls.trainer_id || "Unassigned",
+            trainer: cls.trainer_id || t('classes.notAssigned'),
             type: cls.metadata?.type as string || "class",
             capacity: cls.capacity,
             enrolled: cls.current_bookings || 0,
@@ -308,12 +308,12 @@ const ClassCalendar: React.FC = () => {
                 className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('classes.allTypes')}</option>
-                <option value="hiit">HIIT</option>
-                <option value="yoga">Yoga</option>
-                <option value="pilates">Pilates</option>
-                <option value="strength">Strength</option>
-                <option value="cardio">Cardio</option>
-                <option value="spinning">Spinning</option>
+                <option value="hiit">{t('classes.hiit')}</option>
+                <option value="yoga">{t('classes.yoga')}</option>
+                <option value="pilates">{t('classes.pilates')}</option>
+                <option value="strength">{t('classes.strength')}</option>
+                <option value="cardio">{t('classes.cardio')}</option>
+                <option value="spinning">{t('classes.spinning')}</option>
               </select>
               
               <select
@@ -452,7 +452,7 @@ const ClassCalendar: React.FC = () => {
                 title: cls.name,
                 start: cls.start_time,
                 end: cls.end_time,
-                trainer: cls.trainer_id || "Unassigned",
+                trainer: cls.trainer_id || t('classes.notAssigned'),
                 type: cls.metadata?.type as string || "class",
                 capacity: cls.capacity,
                 enrolled: cls.current_bookings || 0,
@@ -501,7 +501,7 @@ const ClassCalendar: React.FC = () => {
                   title: cls.name,
                   start: cls.start_time,
                   end: cls.end_time,
-                  trainer: cls.trainer_id || "Unassigned",
+                  trainer: cls.trainer_id || t('classes.notAssigned'),
                   type: cls.metadata?.type as string || "class",
                   capacity: cls.capacity,
                   enrolled: cls.current_bookings || 0,

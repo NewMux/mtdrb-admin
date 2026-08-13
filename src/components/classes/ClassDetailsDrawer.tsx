@@ -11,6 +11,7 @@ import {
   type ClassReview,
 } from "../../api/class";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 /**
  * Props for ClassDetailsDrawer
@@ -54,13 +55,6 @@ interface WaitlistRow {
   member?: MemberSummary | null;
 }
 
-const TABS = [
-  { id: "details", label: "Details" },
-  { id: "bookings", label: "Bookings" },
-  { id: "waitlist", label: "Waitlist" },
-  { id: "reviews", label: "Reviews" },
-];
-
 /**
  * Apple-style drawer for viewing class details, bookings, and waitlist.
  * Includes Waitlist button for staff to manage class waitlist.
@@ -73,6 +67,13 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
   onRefresh,
   onWaitlist,
 }) => {
+  const { t } = useTranslation();
+  const TABS = [
+    { id: "details", label: t("classes.detailsTab") },
+    { id: "bookings", label: t("classes.bookingsTab") },
+    { id: "waitlist", label: t("classes.waitlist") },
+    { id: "reviews", label: t("classes.reviewsTab") },
+  ];
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -164,7 +165,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       const message =
         err instanceof Error
           ? err.message
-          : "Failed to load class details";
+          : t("classes.failedToLoadClassDetails");
       setError(message);
     } finally {
       setLoading(false);
@@ -198,7 +199,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       const message =
         err instanceof Error
           ? err.message
-          : "Failed to promote waitlist member";
+          : t("classes.failedToPromoteWaitlistMember");
       setActionError(message);
     } finally {
       setActionLoading(false);
@@ -213,7 +214,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       await refreshDetails();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to remove booking";
+        err instanceof Error ? err.message : t("classes.failedToRemoveBooking");
       setActionError(message);
     } finally {
       setActionLoading(false);
@@ -230,7 +231,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       const message =
         err instanceof Error
           ? err.message
-          : "Failed to remove waitlist entry";
+          : t("classes.failedToRemoveWaitlistEntry");
       setActionError(message);
     } finally {
       setActionLoading(false);
@@ -241,7 +242,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
     setReviewLoading(true);
     try {
       if (!user) {
-        setActionError("Please sign in to submit a review.");
+        setActionError(t("classes.pleaseSignInToReview"));
         return;
       }
       await createClassReview(classData.id, user.id, rating, comment);
@@ -265,14 +266,14 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
       status?: string;
     };
     if (statusCandidate.cancelled || statusCandidate.status === "cancelled")
-      return { label: "Cancelled", color: "bg-gray-300 text-gray-600" };
+      return { label: t("classes.statusCancelled"), color: "bg-gray-300 text-gray-600" };
     if (now.isBefore(start))
-      return { label: "Upcoming", color: "bg-blue-100 text-blue-700" };
+      return { label: t("classes.upcoming"), color: "bg-blue-100 text-blue-700" };
     if (now.isAfter(end))
-      return { label: "Completed", color: "bg-green-100 text-green-700" };
+      return { label: t("classes.completed"), color: "bg-green-100 text-green-700" };
     if (now.isAfter(start) && now.isBefore(end))
-      return { label: "Live", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" };
-    return { label: "Unknown", color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" };
+      return { label: t("classes.statusLive"), color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" };
+    return { label: t("classes.statusUnknown"), color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" };
   }
 
   if (!classData) return null;
@@ -297,7 +298,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
             <Dialog.Panel className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-2xl rounded-l-3xl flex flex-col">
               <div className="sticky top-0 z-10 flex items-center justify-between px-8 py-6 bg-white border-b border-gray-100">
                 <Dialog.Title className="text-2xl font-bold text-gray-900">
-                  Class Profile
+                  {t("classes.classProfile")}
                 </Dialog.Title>
                 <div className="flex items-center gap-2">
                   {onWaitlist && (
@@ -307,15 +308,15 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                       size="sm"
                       icon={<FiUsers className="mr-1" />}
                     >
-                      Waitlist
+                      {t("classes.waitlist")}
                     </SmartButton>
                   )}
                   <button
                     onClick={onClose}
                     className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                    aria-label="Close"
+                    aria-label={t("common.close")}
                   >
-                    <span className="sr-only">Close</span>×
+                    <span className="sr-only">{t("common.close")}</span>×
                   </button>
                 </div>
               </div>
@@ -378,21 +379,21 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          Bookings
+                          {t("classes.bookingsTab")}
                         </h3>
                         <span className="text-xs text-gray-500">
-                          {bookings.length} / {classData.capacity || "∞"} booked
+                          {t("classes.bookedCountOfCapacity", { count: bookings.length, capacity: classData.capacity || "∞" })}
                         </span>
                       </div>
                       {loading ? (
                         <div className="text-gray-500 text-sm">
-                          Loading bookings...
+                          {t("classes.loadingBookings")}
                         </div>
                       ) : error ? (
                         <div className="text-red-500 text-sm">{error}</div>
                       ) : bookings.length === 0 ? (
                         <div className="text-gray-500 text-sm">
-                          No bookings yet.
+                          {t("classes.noBookingsYet")}
                         </div>
                       ) : (
                         <ul className="divide-y divide-gray-100">
@@ -406,7 +407,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                   {b.member?.name || b.member_id}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {b.status} {b.attended ? "• Attended" : ""}
+                                  {b.status} {b.attended ? `• ${t("classes.statusAttended")}` : ""}
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2">
@@ -420,7 +421,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                   onClick={() => removeBooking(b)}
                                   disabled={actionLoading}
                                 >
-                                  Remove
+                                  {t("classes.remove")}
                                 </button>
                               </div>
                             </li>
@@ -435,21 +436,21 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          Waitlist
+                          {t("classes.waitlist")}
                         </h3>
                         <span className="text-xs text-gray-500">
-                          {waitlist.length} waiting
+                          {t("classes.waitingCount", { count: waitlist.length })}
                         </span>
                       </div>
                       {loading ? (
                         <div className="text-gray-500 text-sm">
-                          Loading waitlist...
+                          {t("classes.loadingWaitlist")}
                         </div>
                       ) : error ? (
                         <div className="text-red-500 text-sm">{error}</div>
                       ) : waitlist.length === 0 ? (
                         <div className="text-gray-500 text-sm">
-                          No one on the waitlist.
+                          {t("classes.noOneOnWaitlist")}
                         </div>
                       ) : (
                         <ul className="divide-y divide-gray-100">
@@ -474,7 +475,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                     onClick={() => promoteWaitlist(w)}
                                     disabled={actionLoading}
                                   >
-                                    Promote
+                                    {t("classes.promote")}
                                   </button>
                                 )}
                                 <button
@@ -482,7 +483,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                   onClick={() => removeWaitlist(w)}
                                   disabled={actionLoading}
                                 >
-                                  Remove
+                                  {t("classes.remove")}
                                 </button>
                               </div>
                             </li>
@@ -500,7 +501,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                 {activeTab === "reviews" && (
                   <div>
                     <h3 className="font-semibold text-lg mb-2">
-                      Staff Reviews
+                      {t("classes.staffReviews")}
                     </h3>
                     <div className="flex items-center mb-2">
                       {[1, 2, 3, 4, 5].map((n) => (
@@ -520,18 +521,18 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                       className="w-full border rounded p-2 mb-2"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      placeholder="Add a comment (optional)"
+                      placeholder={t("classes.addCommentOptional")}
                     />
                     <button
                       className="bg-blue-500 text-white rounded px-4 py-2"
                       onClick={handleReviewSubmit}
                       disabled={reviewLoading}
                     >
-                      Submit Review
+                      {t("classes.submitReview")}
                     </button>
                     <div className="mt-4">
                       {reviews.length === 0 ? (
-                        <p className="text-gray-500">No reviews yet.</p>
+                        <p className="text-gray-500">{t("classes.noReviewsYet")}</p>
                       ) : (
                         reviews.map((r) => (
                           <div key={r.id} className="border-b py-2">
@@ -561,14 +562,14 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                     size="sm"
                     icon={<FiEdit2 className="w-4 h-4" />}
                   >
-                    Edit Class
+                    {t("classes.editClass")}
                   </SmartButton>
                 )}
                 <button
                   className="inline-flex justify-center rounded-xl border border-transparent px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-300 ease-in-out min-h-[44px]"
                   onClick={onClose}
                 >
-                  Close
+                  {t("common.close")}
                 </button>
               </div>
             </Dialog.Panel>

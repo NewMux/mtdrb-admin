@@ -100,51 +100,51 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
   const exportOptions: ExportOption[] = [
     {
       id: "class-roster",
-      label: "Class Roster",
-      description: "Complete list of enrolled members with contact details",
+      label: t("classes.classRoster"),
+      description: t("classes.classRosterDescription"),
       icon: <FiUsers className="h-5 w-5" />,
       format: "csv",
-      includes: ["Member names", "Contact info", "Enrollment date", "Status"],
+      includes: [t("classes.memberNames"), t("classes.contactInfo"), t("classes.enrollmentDate"), t("classes.status")],
     },
     {
       id: "attendance-report",
-      label: "Attendance Report",
-      description: "Detailed attendance tracking and analytics",
+      label: t("classes.attendanceReport"),
+      description: t("classes.attendanceReportDescription"),
       icon: <FiCalendar className="h-5 w-5" />,
       format: "excel",
-      includes: ["Attendance rates", "No-shows", "Trends", "Analytics"],
+      includes: [t("classes.attendanceRates"), t("classes.noShows"), t("classes.trends"), t("classes.analytics")],
     },
     {
       id: "financial-summary",
-      label: "Financial Summary",
-      description: "Revenue, costs, and profit analysis",
+      label: t("classes.financialSummary"),
+      description: t("classes.financialSummaryDescription"),
       icon: <FiFileText className="h-5 w-5" />,
       format: "pdf",
-      includes: ["Revenue", "Costs", "Profit margins", "Per-member metrics"],
+      includes: [t("classes.revenue"), t("classes.costs"), t("classes.profitMargins"), t("classes.perMemberMetrics")],
     },
     {
       id: "comprehensive-report",
-      label: "Comprehensive Report",
-      description: "Complete class data with all analytics (Pro only)",
+      label: t("classes.comprehensiveReport"),
+      description: t("classes.comprehensiveReportDescription"),
       icon: <FiSettings className="h-5 w-5" />,
       format: "excel",
       includes: [
-        "All data",
-        "Advanced analytics",
-        "Predictions",
-        "Recommendations",
+        t("classes.allData"),
+        t("classes.advancedAnalytics"),
+        t("classes.predictions"),
+        t("classes.recommendations"),
       ],
     },
   ];
 
   const handleExport = async () => {
     if (!selectedExport) {
-      toast.error("Please select an export option");
+      toast.error(t("classes.pleaseSelectExportOption"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(t("classes.noTenantIdFound"));
       return;
     }
 
@@ -154,7 +154,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
     try {
       const option = exportOptions.find((opt) => opt.id === selectedExport);
       if (!option) {
-        throw new Error("Invalid export option");
+        throw new Error(t("classes.invalidExportOption"));
       }
 
       // Simulate export progress
@@ -188,15 +188,15 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         if (bookingsError) throw bookingsError;
 
         exportData = ((bookings as BookingWithMember[] | null) || []).map((booking) => ({
-          "Member Name": booking.member
+          [t("classes.memberNameHeader")]: booking.member
             ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
-            : "N/A",
-          Email: booking.member?.email || "N/A",
-          Phone: booking.member?.phone || "N/A",
-          "Enrollment Date": booking.created_at
+            : t("classes.naValue"),
+          [t("classes.emailHeader")]: booking.member?.email || t("classes.naValue"),
+          [t("classes.phoneHeader")]: booking.member?.phone || t("classes.naValue"),
+          [t("classes.enrollmentDate")]: booking.created_at
             ? new Date(booking.created_at).toLocaleDateString()
-            : "N/A",
-          Status: booking.status || "N/A",
+            : t("classes.naValue"),
+          [t("classes.status")]: booking.status || t("classes.naValue"),
         }));
 
         filename = `class-roster-${classId}`;
@@ -216,16 +216,16 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         if (attendanceError) throw attendanceError;
 
         exportData = ((attendance as BookingWithMember[] | null) || []).map((record) => ({
-          "Member Name": record.member
+          [t("classes.memberNameHeader")]: record.member
             ? `${record.member.first_name || ""} ${record.member.last_name || ""}`.trim()
-            : "N/A",
-          "Class Date": classData?.date
+            : t("classes.naValue"),
+          [t("classes.classDateHeader")]: classData?.date
             ? new Date(classData.date).toLocaleDateString()
-            : "N/A",
-          "Attendance Status": record.attended ? "Attended" : "No Show",
-          "Booking Date": record.created_at
+            : t("classes.naValue"),
+          [t("classes.attendanceStatusHeader")]: record.attended ? t("classes.statusAttended") : t("classes.noShow"),
+          [t("classes.bookingDateHeader")]: record.created_at
             ? new Date(record.created_at).toLocaleDateString()
-            : "N/A",
+            : t("classes.naValue"),
         }));
 
         filename = `attendance-report-${classId}`;
@@ -247,15 +247,15 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
         exportData = [
           {
-            "Class Name": classData?.name || "N/A",
-            "Total Bookings": bookings?.length || 0,
-            "Total Revenue": totalRevenue,
-            "Total Costs": totalCost,
-            "Profit": totalRevenue - totalCost,
-            "Profit Margin": totalRevenue > 0
+            [t("classes.className")]: classData?.name || t("classes.naValue"),
+            [t("classes.totalBookingsHeader")]: bookings?.length || 0,
+            [t("classes.totalRevenue")]: totalRevenue,
+            [t("classes.totalCostsHeader")]: totalCost,
+            [t("classes.profitHeader")]: totalRevenue - totalCost,
+            [t("classes.profitMargin")]: totalRevenue > 0
               ? `${((totalRevenue - totalCost) / totalRevenue * 100).toFixed(2)}%`
               : "0%",
-            "Per Member Revenue": bookings?.length
+            [t("classes.perMemberRevenueHeader")]: bookings?.length
               ? (totalRevenue / bookings.length).toFixed(2)
               : "0",
           },
@@ -285,22 +285,22 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         if (bookingsResult.error) throw bookingsResult.error;
 
         exportData = ((bookingsResult.data as BookingWithMember[] | null) || []).map((booking) => ({
-          "Member Name": booking.member
+          [t("classes.memberNameHeader")]: booking.member
             ? `${booking.member.first_name || ""} ${booking.member.last_name || ""}`.trim()
-            : "N/A",
-          Email: booking.member?.email || "N/A",
-          Phone: booking.member?.phone || "N/A",
-          "Enrollment Date": booking.created_at
+            : t("classes.naValue"),
+          [t("classes.emailHeader")]: booking.member?.email || t("classes.naValue"),
+          [t("classes.phoneHeader")]: booking.member?.phone || t("classes.naValue"),
+          [t("classes.enrollmentDate")]: booking.created_at
             ? new Date(booking.created_at).toLocaleDateString()
-            : "N/A",
-          Status: booking.status || "N/A",
-          "Class Name": classData?.name || "N/A",
-          "Class Date": classData?.date
+            : t("classes.naValue"),
+          [t("classes.status")]: booking.status || t("classes.naValue"),
+          [t("classes.className")]: classData?.name || t("classes.naValue"),
+          [t("classes.classDateHeader")]: classData?.date
             ? new Date(classData.date).toLocaleDateString()
-            : "N/A",
-          "Start Time": classData?.start_time || "N/A",
-          "End Time": classData?.end_time || "N/A",
-          Price: booking.price || 0,
+            : t("classes.naValue"),
+          [t("classes.startTime")]: classData?.start_time || t("classes.naValue"),
+          [t("classes.endTime")]: classData?.end_time || t("classes.naValue"),
+          [t("classes.priceHeader")]: booking.price || 0,
         }));
 
         filename = `comprehensive-report-${classId}`;
@@ -318,13 +318,13 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         await exportExcel(exportData, filename, option.label);
       }
 
-      toast.success("Data exported successfully");
+      toast.success(t("classes.exportCompleted"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error exporting data:", error);
       toast.error(
-        `Failed to export data: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("classes.failedToExportData", { message: error instanceof Error ? error.message : t("classes.unknownError") }),
       );
     } finally {
       setLoading(false);
@@ -363,7 +363,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t("common.cancel")}
             </SmartButton>
             <SmartButton
               variant="primary"
@@ -371,7 +371,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
               loading={loading}
               disabled={loading || !selectedExport}
             >
-              {loading ? "Exporting..." : "Export Data"}
+              {loading ? t("classes.exporting") : t("classes.exportData")}
             </SmartButton>
           </div>
         </div>
@@ -393,7 +393,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-sm text-light-600 dark:text-dark-400">
-                  Members
+                  {t("classes.members")}
                 </div>
                 <div className="text-lg font-semibold text-dark-900 dark:text-white">
                   {classData.enrolled_count}/{classData.capacity}
@@ -406,7 +406,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         {/* Export Options */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
-            Select Export Type
+            {t("classes.selectExportType")}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -446,7 +446,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                         </h4>
                         {isProOnly && (
                           <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                            Pro
+                            {t("classes.proLabel")}
                           </span>
                         )}
                       </div>
@@ -455,7 +455,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       </p>
                       <div className="mt-2">
                         <div className="text-xs text-light-600 dark:text-dark-400 mb-1">
-                          Includes:
+                          {t("classes.includesLabel")}:
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {option.includes.map((item, idx) => (
@@ -469,7 +469,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                         </div>
                       </div>
                       <div className="mt-2 text-xs text-light-600 dark:text-dark-400">
-                        Format: {option.format.toUpperCase()}
+                        {t("classes.formatLabel", { format: option.format.toUpperCase() })}
                       </div>
                     </div>
                     {isSelected && (
@@ -479,7 +479,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
                   {!isPro && isProOnly && (
                     <div className="mt-2 text-xs text-purple-600 dark:text-purple-400">
-                      Upgrade to Pro to access this feature
+                      {t("classes.upgradeToProToAccess")}
                     </div>
                   )}
                 </motion.div>
@@ -496,13 +496,13 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
             className="space-y-4"
           >
             <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
-              Export Options
+              {t("classes.exportOptionsTitle")}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                  Date Range
+                  {t("classes.dateRange")}
                 </label>
                 <select
                   value={filters.dateRange}
@@ -514,10 +514,10 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   }
                   className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
                 >
-                  <option value="all">All Time</option>
-                  <option value="this-week">This Week</option>
-                  <option value="this-month">This Month</option>
-                  <option value="custom">Custom Range</option>
+                  <option value="all">{t("classes.allTime")}</option>
+                  <option value="this-week">{t("classes.thisWeek")}</option>
+                  <option value="this-month">{t("classes.thisMonth")}</option>
+                  <option value="custom">{t("classes.customRange")}</option>
                 </select>
               </div>
 
@@ -525,7 +525,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                      Start Date
+                      {t("classes.startDate")}
                     </label>
                     <input
                       type="date"
@@ -541,7 +541,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                      End Date
+                      {t("classes.endDate")}
                     </label>
                     <input
                       type="date"
@@ -577,7 +577,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   htmlFor="include-waitlist"
                   className="text-sm text-blue-900 dark:text-blue-100"
                 >
-                  Include waitlist members
+                  {t("classes.includeWaitlistMembers")}
                 </label>
               </div>
 
@@ -598,7 +598,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   htmlFor="include-analytics"
                   className="text-sm text-green-900 dark:text-green-100"
                 >
-                  Include analytics and trends
+                  {t("classes.includeAnalyticsAndTrends")}
                 </label>
               </div>
 
@@ -619,7 +619,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   htmlFor="include-attendance"
                   className="text-sm text-yellow-900 dark:text-yellow-100"
                 >
-                  Include attendance history
+                  {t("classes.includeAttendanceHistory")}
                 </label>
               </div>
 
@@ -641,7 +641,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                     htmlFor="include-revenue"
                     className="text-sm text-purple-900 dark:text-purple-100"
                   >
-                    Include revenue data (Pro feature)
+                    {t("classes.includeRevenueDataPro")}
                   </label>
                 </div>
               )}
@@ -660,7 +660,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
               <div className="flex-1">
                 <div className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Exporting data...
+                  {t("classes.exportingData")}
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
                   <div
@@ -669,7 +669,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   ></div>
                 </div>
                 <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                  {exportProgress}% complete
+                  {t("classes.percentComplete", { percent: exportProgress })}
                 </div>
               </div>
             </div>
@@ -680,15 +680,15 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         {isPro && selectedExport && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              Smart Suggestions
+              {t("classes.smartSuggestionsTitle")}
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
               <p>
-                • Include analytics for better insights into class performance
+                • {t("classes.includeAnalyticsForBetterInsights")}
               </p>
-              <p>• Export attendance data to identify patterns and trends</p>
+              <p>• {t("classes.exportAttendanceDataToIdentify")}</p>
               <p>
-                • Consider revenue data for financial analysis and optimization
+                • {t("classes.considerRevenueDataForAnalysis")}
               </p>
             </div>
           </div>

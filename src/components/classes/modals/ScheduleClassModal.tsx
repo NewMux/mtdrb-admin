@@ -19,6 +19,7 @@ import {
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface ScheduleClassModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   type RecurrenceOption = "daily" | "weekly" | "biweekly" | "monthly";
 
   interface ScheduleFormData {
@@ -166,7 +168,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
   const handleSave = async () => {
     if (!validateForm(formData)) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("classes.pleaseFillRequiredFields"));
       return;
     }
 
@@ -175,12 +177,12 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      toast.success("Recurring classes scheduled successfully");
+      toast.success(t("classes.recurringClassesScheduledSuccessfully"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error creating schedule:", error);
-      toast.error("Failed to create schedule");
+      toast.error(t("classes.failedToCreateSchedule"));
     } finally {
       setLoading(false);
     }
@@ -191,33 +193,33 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
   };
 
   const classTypes = [
-    { value: "yoga", label: "Yoga" },
-    { value: "pilates", label: "Pilates" },
-    { value: "hiit", label: "HIIT" },
-    { value: "strength", label: "Strength Training" },
-    { value: "cardio", label: "Cardio" },
-    { value: "spinning", label: "Spinning" },
-    { value: "zumba", label: "Zumba" },
-    { value: "boxing", label: "Boxing" },
-    { value: "martial-arts", label: "Martial Arts" },
-    { value: "dance", label: "Dance" },
+    { value: "yoga", label: t("classes.yoga") },
+    { value: "pilates", label: t("classes.pilates") },
+    { value: "hiit", label: t("classes.hiit") },
+    { value: "strength", label: t("classes.strengthTraining") },
+    { value: "cardio", label: t("classes.cardio") },
+    { value: "spinning", label: t("classes.spinning") },
+    { value: "zumba", label: t("classes.zumba") },
+    { value: "boxing", label: t("classes.boxing") },
+    { value: "martial-arts", label: t("classes.martialArts") },
+    { value: "dance", label: t("classes.dance") },
   ];
 
   const recurrenceOptions = [
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "biweekly", label: "Bi-weekly" },
-    { value: "monthly", label: "Monthly" },
+    { value: "daily", label: t("classes.daily") },
+    { value: "weekly", label: t("classes.weekly") },
+    { value: "biweekly", label: t("classes.biweekly") },
+    { value: "monthly", label: t("classes.monthly") },
   ];
 
   const daysOfWeek = [
-    { value: "monday", label: "Monday" },
-    { value: "tuesday", label: "Tuesday" },
-    { value: "wednesday", label: "Wednesday" },
-    { value: "thursday", label: "Thursday" },
-    { value: "friday", label: "Friday" },
-    { value: "saturday", label: "Saturday" },
-    { value: "sunday", label: "Sunday" },
+    { value: "monday", label: t("classes.monday") },
+    { value: "tuesday", label: t("classes.tuesday") },
+    { value: "wednesday", label: t("classes.wednesday") },
+    { value: "thursday", label: t("classes.thursday") },
+    { value: "friday", label: t("classes.friday") },
+    { value: "saturday", label: t("classes.saturday") },
+    { value: "sunday", label: t("classes.sunday") },
   ];
 
   const isFormValid =
@@ -233,8 +235,8 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Schedule Recurring Classes"
-      subtitle="Create a series of classes with advanced scheduling"
+      title={t("classes.scheduleRecurringClasses")}
+      subtitle={t("classes.createSeriesWithAdvancedScheduling")}
       isProFeature={isPro}
       footer={
         <div className="flex items-center justify-between">
@@ -242,13 +244,13 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
             {isPro && recommendations.length > 0 && (
               <div className="flex items-center space-x-1 text-sm text-blue-600">
                 <FiZap className="h-4 w-4" />
-                <span>{recommendations.length} Smart suggestions</span>
+                <span>{t("classes.smartSuggestionsCount", { count: recommendations.length })}</span>
               </div>
             )}
             {schedulePreview.length > 0 && (
               <div className="flex items-center space-x-1 text-sm text-green-600">
                 <FiCheck className="h-4 w-4" />
-                <span>{schedulePreview.length} classes scheduled</span>
+                <span>{t("classes.classesScheduledCount", { count: schedulePreview.length })}</span>
               </div>
             )}
           </div>
@@ -258,7 +260,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t("common.cancel")}
             </SmartButton>
             <SmartButton
               variant="primary"
@@ -266,7 +268,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               loading={loading}
               disabled={!isFormValid || loading}
             >
-              {loading ? "Scheduling..." : "Create Schedule"}
+              {loading ? t("classes.scheduling") : t("classes.createSchedule")}
             </SmartButton>
           </div>
         </div>
@@ -276,8 +278,8 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         {/* Smart Recommendations */}
         {isPro && recommendations.length > 0 && (
           <FormSection
-            title="Smart Recommendations"
-            subtitle="Smart suggestions for optimal scheduling"
+            title={t("classes.smartRecommendations")}
+            subtitle={t("classes.smartSuggestionsForOptimalScheduling")}
             icon={<FiZap className="h-5 w-5" />}
             collapsible={true}
             defaultOpen={true}
@@ -298,25 +300,25 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
         {/* Class Information */}
         <FormSection
-          title="Class Information"
-          subtitle="Basic details about the recurring class"
+          title={t("classes.classInformation")}
+          subtitle={t("classes.basicDetailsAboutRecurringClass")}
           icon={<FiCalendar className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              label="Class Name"
+              label={t("classes.className")}
               value={formData.name}
               onChange={(value) => handleInputChange("name", value)}
-              placeholder="e.g., Morning Yoga Series"
+              placeholder={t("classes.classNamePlaceholder")}
               error={getError("name")}
               required
             />
             <SelectField
-              label="Class Type"
+              label={t("classes.classType")}
               value={formData.type}
               onChange={(value) => handleInputChange("type", value)}
               options={classTypes}
-              placeholder="Select class type"
+              placeholder={t("classes.selectClassType")}
               error={getError("type")}
               required
             />
@@ -325,45 +327,45 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
         {/* Trainer & Location */}
         <FormSection
-          title="Trainer & Location"
-          subtitle="Assign trainer and select room"
+          title={t("classes.trainerLocation")}
+          subtitle={t("classes.assignTrainerAndSelectRoom")}
           icon={<FiCalendar className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SelectField
-              label="Trainer"
+              label={t("classes.trainer")}
               value={formData.trainer_id}
               onChange={(value) => handleInputChange("trainer_id", value)}
               options={trainers.map((trainer) => ({
                 value: trainer.id,
                 label: trainer.name,
               }))}
-              placeholder="Select trainer"
+              placeholder={t("classes.selectTrainer")}
               error={getError("trainer_id")}
               required
             />
             <SelectField
-              label="Room"
+              label={t("classes.room")}
               value={formData.room_id}
               onChange={(value) => handleInputChange("room_id", value)}
               options={rooms.map((room) => ({
                 value: room.id,
-                label: `${room.name} (${room.capacity} capacity)`,
+                label: t("classes.roomCapacityOption", { name: room.name, capacity: room.capacity }),
               }))}
-              placeholder="Select room"
+              placeholder={t("classes.selectRoom")}
             />
           </div>
         </FormSection>
 
         {/* Time & Date Range */}
         <FormSection
-          title="Time & Date Range"
-          subtitle="Set the time and date range for the series"
+          title={t("classes.timeAndDateRange")}
+          subtitle={t("classes.setTimeAndDateRangeForSeries")}
           icon={<FiClock className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <DateField
-              label="Start Date"
+              label={t("classes.startDate")}
               value={formData.start_date}
               onChange={(value) => handleInputChange("start_date", value)}
               error={getError("start_date")}
@@ -371,7 +373,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               min={new Date().toISOString().split("T")[0]}
             />
             <DateField
-              label="End Date"
+              label={t("classes.endDate")}
               value={formData.end_date}
               onChange={(value) => handleInputChange("end_date", value)}
               error={getError("end_date")}
@@ -383,14 +385,14 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TimeField
-              label="Start Time"
+              label={t("classes.startTime")}
               value={formData.start_time}
               onChange={(value) => handleInputChange("start_time", value)}
               error={getError("start_time")}
               required
             />
             <TimeField
-              label="End Time"
+              label={t("classes.endTime")}
               value={formData.end_time}
               onChange={(value) => handleInputChange("end_time", value)}
               error={getError("end_time")}
@@ -404,7 +406,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               <div className="flex items-center space-x-2 mb-2">
                 <FiClock className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Popular Time Slots
+                  {t("classes.popularTimeSlots")}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -424,13 +426,13 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
         {/* Recurrence Pattern */}
         <FormSection
-          title="Recurrence Pattern"
-          subtitle="Set how often the class repeats"
+          title={t("classes.recurrencePattern")}
+          subtitle={t("classes.setHowOftenClassRepeats")}
           icon={<FiRepeat className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SelectField
-              label="Recurrence Type"
+              label={t("classes.recurrenceType")}
               value={formData.recurrence}
               onChange={(value) =>
                 handleInputChange("recurrence", value as RecurrenceOption)
@@ -439,7 +441,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               required
             />
             <FormField
-              label="Maximum Occurrences"
+              label={t("classes.maximumOccurrences")}
               value={formData.max_occurrences.toString()}
               onChange={(value) =>
                 handleInputChange("max_occurrences", parseInt(value) || 12)
@@ -452,8 +454,8 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
         {/* Days of Week */}
         <FormSection
-          title="Days of Week"
-          subtitle="Select which days the class will run"
+          title={t("classes.daysOfWeek")}
+          subtitle={t("classes.selectWhichDaysClassWillRun")}
           icon={<FiCalendar className="h-5 w-5" />}
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -476,8 +478,8 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         {/* Schedule Preview */}
         {schedulePreview.length > 0 && (
           <FormSection
-            title="Schedule Preview"
-            subtitle={`${schedulePreview.length} classes will be created`}
+            title={t("classes.schedulePreview")}
+            subtitle={t("classes.classesWillBeCreated", { count: schedulePreview.length })}
             icon={<FiCheck className="h-5 w-5" />}
           >
             <div className="max-h-60 overflow-y-auto space-y-2">
@@ -507,7 +509,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
               ))}
               {schedulePreview.length > 10 && (
                 <div className="text-center text-sm text-light-600 dark:text-dark-400 py-2">
-                  +{schedulePreview.length - 10} more classes
+                  {t("classes.moreClasses", { count: schedulePreview.length - 10 })}
                 </div>
               )}
             </div>

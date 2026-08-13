@@ -125,7 +125,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         title={t("classes.cancelClass")}
-        subtitle={t("classes.loading") || "Loading class data..."}
+        subtitle={t("classes.loadingClassData")}
         maxWidth="2xl"
         slideFrom="right"
       >
@@ -154,7 +154,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
             {isHighImpact && (
               <div className="flex items-center space-x-1 text-sm text-red-600">
                 <FiAlertTriangle className="h-4 w-4" />
-                <span>High impact action</span>
+                <span>{t("classes.highImpactAction")}</span>
               </div>
             )}
           </div>
@@ -312,14 +312,14 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                Reason Type
+                {t("classes.reasonType")}
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
-                <option value="">Select a reason</option>
+                <option value="">{t("classes.selectReason")}</option>
                 {cancellationReasons.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
@@ -348,8 +348,8 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
         {/* Refund Settings */}
         {hasEnrolledMembers && (
           <FormSection
-            title="Refund Settings"
-            subtitle="Configure automatic refunds for enrolled members"
+            title={t("classes.refundSettings")}
+            subtitle={t("classes.configureAutomaticRefunds")}
             icon={<FiDollarSign className="h-5 w-5" />}
           >
             <div className="space-y-4">
