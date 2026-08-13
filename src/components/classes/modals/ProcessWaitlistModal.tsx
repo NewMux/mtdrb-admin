@@ -7,6 +7,7 @@ import {
 } from "react-icons/fi";
 import { UnifiedModal } from "../../ui/UnifiedModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { useTranslation } from "react-i18next";
 
 interface WaitlistMember {
   id: string;
@@ -60,6 +61,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [waitlistMembers, setWaitlistMembers] = useState<WaitlistMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -192,8 +194,8 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       <UnifiedModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Process Waitlist"
-        subtitle="Loading class data..."
+        title={t("classes.processWaitlist")}
+        subtitle={t("classes.loadingClassData")}
         maxWidth="4xl"
         slideFrom="right"
       >
@@ -208,8 +210,8 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
     <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Process Waitlist"
-      subtitle={`Manage waitlist for ${classData.name}`}
+      title={t("classes.processWaitlist")}
+      subtitle={t("classes.manageWaitlistFor", { name: classData.name })}
       maxWidth="4xl"
       slideFrom="right"
       footer={
@@ -217,7 +219,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1 text-sm text-blue-600">
               <FiUsers className="h-4 w-4" />
-              <span>{selectedMembers.length} members selected</span>
+              <span>{t("classes.membersSelectedCount", { count: selectedMembers.length })}</span>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -225,7 +227,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={handleProcess}
@@ -233,8 +235,8 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading
-                ? "Processing..."
-                : `Enroll ${selectedMembers.length} Members`}
+                ? t("classes.processing")
+                : t("classes.enrollMembersCount", { count: selectedMembers.length })}
             </button>
           </div>
         </div>
@@ -255,7 +257,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
             </div>
             <div className="text-right">
               <div className="text-sm text-light-600 dark:text-dark-400">
-                Available Spots
+                {t("classes.availableSpotsLabel")}
               </div>
               <div className="text-lg font-semibold text-dark-900 dark:text-white">
                 {availableSpots}
@@ -266,23 +268,23 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
 
         {/* Assignment Logic */}
         <FormSection
-          title="Assignment Logic"
-          subtitle="Choose how to automatically assign waitlist members"
+          title={t("classes.assignmentLogic")}
+          subtitle={t("classes.chooseHowToAutoAssign")}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                Auto-assignment Logic
+                {t("classes.autoAssignmentLogic")}
               </label>
               <select
                 value={assignmentLogic}
                 onChange={(e) => setAssignmentLogic(e.target.value as "first-come" | "engagement" | "vip" | "manual")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
-                <option value="first-come">First Come, First Served</option>
-                <option value="engagement">Engagement Score</option>
-                <option value="vip">VIP Priority</option>
-                <option value="manual">Manual Selection</option>
+                <option value="first-come">{t("classes.firstComeFirstServed")}</option>
+                <option value="engagement">{t("classes.engagementScore")}</option>
+                <option value="vip">{t("classes.vipPriority")}</option>
+                <option value="manual">{t("classes.manualSelection")}</option>
               </select>
             </div>
 
@@ -292,7 +294,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                 disabled={assignmentLogic === "manual"}
                 className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Auto-assign {availableSpots} Spots
+                {t("classes.autoAssignSpots", { count: availableSpots })}
               </button>
             </div>
           </div>
@@ -300,8 +302,8 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
 
         {/* Waitlist Members */}
         <FormSection
-          title="Waitlist Members"
-          subtitle={`${waitlistMembers.length} members on waitlist`}
+          title={t("classes.waitlistMembersTitle")}
+          subtitle={t("classes.membersOnWaitlistCount", { count: waitlistMembers.length })}
         >
           <div className="space-y-3">
             {waitlistMembers.map((member, index) => {
@@ -353,7 +355,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                     <div className="flex items-center space-x-4 text-xs">
                       <div className="text-center">
                         <div className="text-light-600 dark:text-dark-400">
-                          Joined
+                          {t("classes.joined")}
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {new Date(
@@ -363,7 +365,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                       </div>
                       <div className="text-center">
                         <div className="text-light-600 dark:text-dark-400">
-                          Attendance
+                          {t("classes.attendance")}
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {member.attendance_score}%
@@ -371,7 +373,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                       </div>
                       <div className="text-center">
                         <div className="text-light-600 dark:text-dark-400">
-                          Loyalty
+                          {t("classes.loyalty")}
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {member.loyalty_score}/10
@@ -382,7 +384,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
 
                   {isOverLimit && (
                     <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                      No more spots available
+                      {t("classes.noMoreSpotsAvailable")}
                     </div>
                   )}
                 </motion.div>
@@ -395,7 +397,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         {selectedMembers.length > 0 && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              Selected Members ({selectedMembers.length}/{availableSpots})
+              {t("classes.selectedMembersCount", { count: selectedMembers.length, max: availableSpots })}
             </h3>
             <div className="space-y-2">
               {selectedMembers.map((memberId) => {
@@ -412,7 +414,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                     </span>
                     <div className="flex items-center space-x-2">
                       <span className="text-green-600 dark:text-green-400">
-                        {member.attendance_score}% attendance
+                        {t("classes.attendancePercent", { percent: member.attendance_score })}
                       </span>
                       <FiCheck className="h-4 w-4 text-green-600" />
                     </div>
@@ -427,13 +429,13 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         {isPro && (
           <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl">
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-              Smart Suggestions
+              {t("classes.smartSuggestionsTitle")}
             </h3>
             <div className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
-              <p>• Consider prioritizing VIP members for better retention</p>
-              <p>• Members with 90%+ attendance are more likely to show up</p>
+              <p>• {t("classes.considerPrioritizingVIP")}</p>
+              <p>• {t("classes.membersWithHighAttendance")}</p>
               <p>
-                • Balance between loyalty and recency for optimal engagement
+                • {t("classes.balanceLoyaltyAndRecency")}
               </p>
             </div>
           </div>

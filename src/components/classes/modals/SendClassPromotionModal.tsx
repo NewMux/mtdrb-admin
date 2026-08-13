@@ -6,6 +6,7 @@ import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
 import { supabase } from "../../../supabaseClient";
+import { useTranslation } from "react-i18next";
 
 interface SendClassPromotionModalProps {
   isOpen: boolean;
@@ -44,6 +45,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<PromotionFormData>({
     title: "",
     message: "",
@@ -105,8 +107,10 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
       // Set default title and message based on class
       setFormData((prev) => ({
         ...prev,
-        title: `Special Offer: ${classId ? "Class Promotion" : "New Classes Available"}`,
-        message: `Don&apos;t miss out on our amazing classes! We have special offers just for you.`,
+        title: classId
+          ? t("classes.specialOfferClassPromotion")
+          : t("classes.specialOfferNewClasses"),
+        message: t("classes.defaultPromotionMessage"),
         validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
@@ -138,16 +142,16 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
 
-    if (!formData.title.trim()) newErrors.push("Title is required");
-    if (!formData.message.trim()) newErrors.push("Message is required");
+    if (!formData.title.trim()) newErrors.push(t("classes.titleIsRequired"));
+    if (!formData.message.trim()) newErrors.push(t("classes.messageIsRequired"));
     if (formData.discountPercentage < 0 || formData.discountPercentage > 100) {
-      newErrors.push("Discount must be between 0-100%");
+      newErrors.push(t("classes.discountMustBeBetween"));
     }
-    if (!formData.validUntil) newErrors.push("Valid until date is required");
+    if (!formData.validUntil) newErrors.push(t("classes.validUntilRequired"));
     if (formData.channels.length === 0)
-      newErrors.push("Select at least one channel");
+      newErrors.push(t("classes.selectAtLeastOneChannel"));
     if (selectedMembers.length === 0)
-      newErrors.push("Select at least one member");
+      newErrors.push(t("classes.selectAtLeastOneMember"));
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -162,13 +166,13 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       toast.success(
-        `Promotion sent to ${selectedMembers.length} members successfully!`,
+        t("classes.promotionSentSuccessfully", { count: selectedMembers.length }),
       );
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error sending promotion:", error);
-      toast.error("Failed to send promotion");
+      toast.error(t("classes.failedToSendPromotion"));
     } finally {
       setLoading(false);
     }
@@ -195,42 +199,42 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
     <ColorfulModalUI
       open={isOpen}
       onClose={onClose}
-      title="Send Class Promotion"
-      subtitle="Create targeted promotions to boost class attendance"
+      title={t("classes.sendClassPromotion")}
+      subtitle={t("classes.createTargetedPromotions")}
     >
       <div className="space-y-6">
         {/* Promotion Details */}
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Promotion Title
+              {t("classes.promotionTitle")}
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter promotion title"
+              placeholder={t("classes.enterPromotionTitle")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Message
+              {t("classes.message")}
             </label>
             <textarea
               value={formData.message}
               onChange={(e) => handleInputChange("message", e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your promotion message..."
+              placeholder={t("classes.enterPromotionMessage")}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Percentage
+                {t("classes.discountPercentage")}
               </label>
               <input
                 type="number"
@@ -249,7 +253,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valid Until
+                {t("classes.validUntil")}
               </label>
               <input
                 type="date"
@@ -266,7 +270,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
         {/* Target Audience */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Target Audience
+            {t("classes.targetAudience")}
           </label>
           <select
             value={formData.targetAudience}
@@ -275,28 +279,32 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="waitlist">Waitlist Members</option>
-            <option value="previous_attendees">Previous Attendees</option>
-            <option value="inactive_members">Inactive Members</option>
-            <option value="all_members">All Members</option>
+            <option value="waitlist">{t("classes.waitlistMembers")}</option>
+            <option value="previous_attendees">{t("classes.previousAttendees")}</option>
+            <option value="inactive_members">{t("classes.inactiveMembers")}</option>
+            <option value="all_members">{t("classes.allMembers")}</option>
           </select>
         </div>
 
         {/* Communication Channels */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Communication Channels
+            {t("classes.communicationChannels")}
           </label>
           <div className="space-y-2">
-            {["email", "sms", "push"].map((channel) => (
-              <label key={channel} className="flex items-center">
+            {[
+              { value: "email", label: t("classes.channelEmail") },
+              { value: "sms", label: t("classes.channelSms") },
+              { value: "push", label: t("classes.channelPush") },
+            ].map((channel) => (
+              <label key={channel.value} className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={formData.channels.includes(channel)}
-                  onChange={() => handleChannelToggle(channel)}
+                  checked={formData.channels.includes(channel.value)}
+                  onChange={() => handleChannelToggle(channel.value)}
                   className="mr-2"
                 />
-                <span className="capitalize">{channel}</span>
+                <span>{channel.label}</span>
               </label>
             ))}
           </div>
@@ -305,7 +313,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
         {/* Member Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Members ({selectedMembers.length} selected)
+            {t("classes.selectMembersCount", { count: selectedMembers.length })}
           </label>
           <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
             {filteredMembers.map((member) => (
@@ -332,7 +340,14 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
                         : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {member.status}
+                  {(() => {
+                    const statusMap: Record<string, string> = {
+                      active: t("classes.active"),
+                      waitlist: t("classes.waitlist"),
+                      inactive: t("classes.inactive"),
+                    };
+                    return statusMap[member.status] || member.status;
+                  })()}
                 </span>
               </label>
             ))}
@@ -352,22 +367,22 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
 
         {/* Preview */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">Preview</h4>
+          <h4 className="font-medium text-blue-900 mb-2">{t("classes.preview")}</h4>
           <div className="text-sm text-blue-800">
             <div>
-              <strong>Title:</strong> {formData.title}
+              <strong>{t("classes.titleLabel")}:</strong> {formData.title}
             </div>
             <div>
-              <strong>Discount:</strong> {formData.discountPercentage}%
+              <strong>{t("classes.discountPercentage")}:</strong> {formData.discountPercentage}%
             </div>
             <div>
-              <strong>Valid Until:</strong> {formData.validUntil}
+              <strong>{t("classes.validUntil")}:</strong> {formData.validUntil}
             </div>
             <div>
-              <strong>Channels:</strong> {formData.channels.join(", ")}
+              <strong>{t("classes.channelsLabel")}:</strong> {formData.channels.join(", ")}
             </div>
             <div>
-              <strong>Recipients:</strong> {selectedMembers.length} members
+              <strong>{t("classes.recipientsLabel")}:</strong> {t("classes.membersCount", { count: selectedMembers.length })}
             </div>
           </div>
         </div>
@@ -376,7 +391,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
       {/* Footer */}
       <div className="flex justify-end space-x-3 mt-6">
         <SmartButton variant="secondary" onClick={onClose} disabled={loading}>
-          Cancel
+          {t("common.cancel")}
         </SmartButton>
         <SmartButton
           variant="primary"
@@ -385,7 +400,7 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
           disabled={loading}
           icon={<FiSend className="h-4 w-4" />}
         >
-          Send Promotion
+          {t("classes.sendPromotion")}
         </SmartButton>
       </div>
     </ColorfulModalUI>

@@ -316,7 +316,7 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, branch: e.target.value })
                 }
               >
-                <option value="">All Branches</option>
+                <option value="">{t("classes.allBranches")}</option>
                 <option value="main">Main Branch</option>
                 <option value="downtown">Downtown</option>
                 <option value="westside">Westside</option>
@@ -330,12 +330,12 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, classType: e.target.value })
                 }
               >
-                <option value="all">All Types</option>
-                <option value="yoga">Yoga</option>
-                <option value="hiit">HIIT</option>
-                <option value="strength">Strength</option>
-                <option value="pilates">Pilates</option>
-                <option value="cardio">Cardio</option>
+                <option value="all">{t("classes.allTypes")}</option>
+                <option value="yoga">{t("classes.yoga")}</option>
+                <option value="hiit">{t("classes.hiit")}</option>
+                <option value="strength">{t("classes.strength")}</option>
+                <option value="pilates">{t("classes.pilates")}</option>
+                <option value="cardio">{t("classes.cardio")}</option>
               </select>
 
               {/* Trainer */}
@@ -346,7 +346,7 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, trainer: e.target.value })
                 }
               >
-                <option value="all">All Trainers</option>
+                <option value="all">{t("classes.allTrainers")}</option>
                 <option value="sarah">Sarah Johnson</option>
                 <option value="mike">Mike Chen</option>
                 <option value="emma">Emma Davis</option>
@@ -361,11 +361,11 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, dateRange: e.target.value })
                 }
               >
-                <option value="last7days">Last 7 Days</option>
-                <option value="last30days">Last 30 Days</option>
-                <option value="last90days">Last 90 Days</option>
-                <option value="last6months">Last 6 Months</option>
-                <option value="lastyear">Last Year</option>
+                <option value="last7days">{t("classes.last7Days")}</option>
+                <option value="last30days">{t("classes.last30Days")}</option>
+                <option value="last90days">{t("classes.last90Days")}</option>
+                <option value="last6months">{t("classes.last6Months")}</option>
+                <option value="lastyear">{t("classes.lastYear")}</option>
               </select>
 
               {/* Time of Day */}
@@ -376,10 +376,10 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, timeOfDay: e.target.value })
                 }
               >
-                <option value="all">All Times</option>
-                <option value="morning">Morning (6-12)</option>
-                <option value="afternoon">Afternoon (12-6)</option>
-                <option value="evening">Evening (6-10)</option>
+                <option value="all">{t("classes.allTimes")}</option>
+                <option value="morning">{t("classes.morning")} (6-12)</option>
+                <option value="afternoon">{t("classes.afternoon")} (12-6)</option>
+                <option value="evening">{t("classes.evening")} (6-10)</option>
               </select>
 
               {/* Member Gender */}
@@ -390,10 +390,10 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, memberGender: e.target.value })
                 }
               >
-                <option value="all">All Genders</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="all">{t("classes.allGenders")}</option>
+                <option value="male">{t("classes.male")}</option>
+                <option value="female">{t("classes.female")}</option>
+                <option value="other">{t("classes.other")}</option>
               </select>
 
               {/* Membership Type */}
@@ -404,11 +404,11 @@ const ClassAnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, membershipType: e.target.value })
                 }
               >
-                <option value="all">All Memberships</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-                <option value="classpack">Class Pack</option>
-                <option value="trial">Free Trial</option>
+                <option value="all">{t("classes.allMemberships")}</option>
+                <option value="monthly">{t("classes.monthly")}</option>
+                <option value="yearly">{t("classes.yearly")}</option>
+                <option value="classpack">{t("classes.classPack")}</option>
+                <option value="trial">{t("classes.freeTrial")}</option>
               </select>
             </div>
           </motion.div>

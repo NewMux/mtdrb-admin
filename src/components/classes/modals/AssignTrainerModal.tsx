@@ -8,6 +8,7 @@ import { SmartModal } from "../../ui/SmartModal";
 import { FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { supabase } from "../../../supabaseClient";
+import { useTranslation } from "react-i18next";
 
 interface Trainer {
   id: string;
@@ -35,6 +36,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [selectedTrainer, setSelectedTrainer] = useState<string>("");
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -157,7 +159,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     const conflicts = [];
 
     if (trainer.current_load >= trainer.max_load) {
-      conflicts.push("Trainer at maximum capacity");
+      conflicts.push(t("classes.trainerAtMaximumCapacity"));
     }
 
     return conflicts;
@@ -168,8 +170,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
       <SmartModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Assign Trainer"
-        subtitle="Loading class data..."
+        title={t("classes.assignTrainer")}
+        subtitle={t("classes.loadingClassData")}
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -186,8 +188,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Assign Trainer"
-      subtitle={`Assign trainer to ${classData.name}`}
+      title={t("classes.assignTrainer")}
+      subtitle={t("classes.assignTrainerToClass", { name: classData.name })}
       maxWidth="4xl"
       footer={
         <div className="flex items-center justify-between">
@@ -204,14 +206,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               onClick={handleAssign}
               disabled={loading || !selectedTrainer || conflicts.length > 0}
               className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Assigning..." : "Assign Trainer"}
+              {loading ? t("classes.assigning") : t("classes.assignTrainer")}
             </button>
           </div>
         </div>
@@ -232,10 +234,10 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             </div>
             <div className="text-right">
               <div className="text-sm text-light-600 dark:text-dark-400">
-                Current Trainer
+                {t("classes.currentTrainer")}
               </div>
               <div className="text-sm font-medium text-dark-900 dark:text-white">
-                {classData.trainer_name || "Not assigned"}
+                {classData.trainer_name || t("classes.notAssigned")}
               </div>
             </div>
           </div>
@@ -243,36 +245,36 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
         {/* Filters */}
         <FormSection
-          title="Filter & Sort"
-          subtitle="Find the best trainer for this class"
+          title={t("classes.filterAndSort")}
+          subtitle={t("classes.findBestTrainer")}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                Filter by Specialty
+                {t("classes.filterBySpecialty")}
               </label>
               <input
                 type="text"
                 value={filterSpecialty}
                 onChange={(e) => setFilterSpecialty(e.target.value)}
-                placeholder="e.g., Yoga, HIIT, Strength"
+                placeholder={t("classes.classTypePlaceholder")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
-                Sort by
+                {t("classes.sortBy")}
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "rating" | "availability" | "load" | "rate")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
-                <option value="rating">Highest Rating</option>
-                <option value="availability">Most Available</option>
-                <option value="load">Lowest Load</option>
-                <option value="rate">Lowest Rate</option>
+                <option value="rating">{t("classes.highestRating")}</option>
+                <option value="availability">{t("classes.mostAvailable")}</option>
+                <option value="load">{t("classes.lowestLoad")}</option>
+                <option value="rate">{t("classes.lowestRate")}</option>
               </select>
             </div>
           </div>
@@ -280,8 +282,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
         {/* Available Trainers */}
         <FormSection
-          title="Available Trainers"
-          subtitle={`${availableTrainers.length} trainers available for this time slot`}
+          title={t("classes.availableTrainersTitle")}
+          subtitle={t("classes.trainersAvailableForTimeSlot", { count: availableTrainers.length })}
         >
           <div className="space-y-3">
             {availableTrainers.map((trainer, index) => {
@@ -339,7 +341,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                     <div className="flex items-center space-x-4 text-xs">
                       <div className="text-center">
                         <div className="text-light-600 dark:text-dark-400">
-                          Load
+                          {t("classes.load")}
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {trainer.current_load}/{trainer.max_load}
@@ -359,7 +361,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       </div>
                       <div className="text-center">
                         <div className="text-light-600 dark:text-dark-400">
-                          Rate
+                          {t("classes.rate")}
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           ${trainer.hourly_rate}/hr
@@ -377,13 +379,13 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         {selectedTrainerData && (
           <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl">
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
-              Selected Trainer: {selectedTrainerData.name}
+              {t("classes.selectedTrainerLabel", { name: selectedTrainerData.name })}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-blue-700 dark:text-blue-300">
-                  Specialties:
+                  {t("classes.specialtiesLabel")}:
                 </span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {selectedTrainerData.specialties.map((specialty, idx) => (
@@ -398,11 +400,10 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               </div>
               <div>
                 <span className="text-blue-700 dark:text-blue-300">
-                  Current Load:
+                  {t("classes.currentLoad")}:
                 </span>
                 <span className="ml-2 text-blue-900 dark:text-blue-100">
-                  {selectedTrainerData.current_load}/
-                  {selectedTrainerData.max_load} classes
+                  {t("classes.loadClassesCount", { count: selectedTrainerData.current_load, max: selectedTrainerData.max_load })}
                 </span>
               </div>
             </div>
@@ -416,7 +417,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
               <FiAlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
                 <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">
-                  Assignment Conflicts
+                  {t("classes.assignmentConflicts")}
                 </h4>
                 <ul className="text-sm text-red-700 dark:text-red-200 mt-1 space-y-1">
                   {conflicts.map((conflict, idx) => (
@@ -432,7 +433,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         {isPro && availableTrainers.length > 0 && (
           <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
-              Smart Recommendations
+              {t("classes.smartRecommendations")}
             </h3>
             <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
               {(() => {
@@ -442,11 +443,11 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 )[0];
                 return (
                   <>
-                    <p>• {topRated.name} has the highest rating ({topRated.rating.toFixed(1)}★)</p>
+                    <p>• {t("classes.hasHighestRating", { name: topRated.name, rating: topRated.rating.toFixed(1) })}</p>
                     {leastLoaded.id !== topRated.id && (
-                      <p>• {leastLoaded.name} has the most availability ({leastLoaded.current_load}/{leastLoaded.max_load} classes)</p>
+                      <p>• {t("classes.hasMostAvailability", { name: leastLoaded.name, count: leastLoaded.current_load, max: leastLoaded.max_load })}</p>
                     )}
-                    <p>• Consider trainer load to ensure quality instruction</p>
+                    <p>• {t("classes.considerTrainerLoad")}</p>
                   </>
                 );
               })()}

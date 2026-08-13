@@ -10,6 +10,7 @@ import { FormField, SelectField, FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface ClassSettings {
   capacity: number;
@@ -43,6 +44,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<ClassSettings>({
     capacity: 20,
@@ -101,7 +103,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const handleSave = async () => {
     if (validationErrors.length > 0) {
-      toast.error("Please fix validation errors before saving");
+      toast.error(t("classes.pleaseFixValidationErrors"));
       return;
     }
 
@@ -109,13 +111,13 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success("Class settings updated successfully");
+      toast.success(t("classes.classSettingsUpdated"));
       setHasChanges(false);
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error updating settings:", error);
-      toast.error("Failed to update settings");
+      toast.error(t("classes.failedToUpdateSettings"));
     } finally {
       setLoading(false);
     }
@@ -125,19 +127,19 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     const errors: string[] = [];
 
     if (settings.capacity < 1) {
-      errors.push("Capacity must be at least 1");
+      errors.push(t("classes.capacityMustBeAtLeast1"));
     }
 
     if (settings.price < 0) {
-      errors.push("Price cannot be negative");
+      errors.push(t("classes.priceCannotBeNegative"));
     }
 
     if (settings.duration < 15) {
-      errors.push("Duration must be at least 15 minutes");
+      errors.push(t("classes.durationMustBeAtLeast15"));
     }
 
     if (settings.min_attendance > settings.capacity) {
-      errors.push("Minimum attendance cannot exceed capacity");
+      errors.push(t("classes.minAttendanceCannotExceedCapacity"));
     }
 
     return errors;
@@ -150,8 +152,8 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
       <SmartModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Update Class Settings"
-        subtitle="Loading class data..."
+        title={t("classes.updateClassSettings")}
+        subtitle={t("classes.loadingClassData")}
       >
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -164,8 +166,8 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
     <SmartModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Update Class Settings"
-      subtitle={`Configure settings for ${classData.name}`}
+      title={t("classes.updateClassSettings")}
+      subtitle={t("classes.configureSettingsFor", { name: classData.name })}
       maxWidth="4xl"
       footer={
         <div className="flex items-center justify-between">
@@ -173,13 +175,13 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
             {hasChanges && (
               <div className="flex items-center space-x-1 text-sm text-orange-600">
                 <FiAlertTriangle className="h-4 w-4" />
-                <span>Unsaved changes</span>
+                <span>{t("classes.unsavedChanges")}</span>
               </div>
             )}
             {validationErrors.length > 0 && (
               <div className="flex items-center space-x-1 text-sm text-red-600">
                 <FiAlertTriangle className="h-4 w-4" />
-                <span>{validationErrors.length} validation errors</span>
+                <span>{t("classes.validationErrorsCount", { count: validationErrors.length })}</span>
               </div>
             )}
           </div>
@@ -189,7 +191,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t("common.cancel")}
             </SmartButton>
             <SmartButton
               variant="primary"
@@ -197,7 +199,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               loading={loading}
               disabled={loading || validationErrors.length > 0}
             >
-              {loading ? "Saving..." : "Save Settings"}
+              {loading ? t("classes.saving") : t("classes.saveSettings")}
             </SmartButton>
           </div>
         </div>
@@ -218,7 +220,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
             </div>
             <div className="text-right">
               <div className="text-sm text-light-600text-dark-400">
-                Current Capacity
+                {t("classes.currentCapacity")}
               </div>
               <div className="text-lg font-semibold text-dark-900text-white">
                 {classData.capacity}
@@ -233,12 +235,12 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
             {[
               {
                 id: "basic",
-                label: "Basic Settings",
+                label: t("classes.basicSettings"),
                 icon: <FiSettings className="h-4 w-4" />,
               },
               {
                 id: "advanced",
-                label: "Advanced",
+                label: t("classes.advanced"),
                 icon: <FiUsers className="h-4 w-4" />,
               },
             ].map((tab) => (
@@ -267,80 +269,80 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               className="space-y-6"
             >
               <FormSection
-                title="Basic Information"
-                subtitle="Core class settings and details"
+                title={t("classes.basicInformation")}
+                subtitle={t("classes.coreClassSettingsAndDetails")}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
-                    label="Class Type"
+                    label={t("classes.classType")}
                     value={settings.class_type}
                     onChange={(value) =>
                       handleSettingChange("class_type", value)
                     }
-                    placeholder="e.g., Yoga, HIIT, Strength"
+                    placeholder={t("classes.classTypePlaceholder")}
                   />
 
                   <FormField
-                    label="Location"
+                    label={t("classes.location")}
                     value={settings.location}
                     onChange={(value) => handleSettingChange("location", value)}
-                    placeholder="e.g., Studio A, Gym Floor"
+                    placeholder={t("classes.locationPlaceholder")}
                   />
 
                   <FormField
-                    label="Capacity"
+                    label={t("classes.capacity")}
                     type="number"
                     value={settings.capacity.toString()}
                     onChange={(value) =>
                       handleSettingChange("capacity", parseInt(value) || 0)
                     }
-                    placeholder="Maximum number of participants"
+                    placeholder={t("classes.capacityPlaceholder")}
                   />
 
                   <FormField
-                    label="Price ($)"
+                    label={t("classes.priceLabel")}
                     type="number"
                     value={settings.price.toString()}
                     onChange={(value) =>
                       handleSettingChange("price", parseFloat(value) || 0)
                     }
-                    placeholder="Class price per person"
+                    placeholder={t("classes.pricePlaceholder")}
                   />
 
                   <FormField
-                    label="Duration (minutes)"
+                    label={t("classes.durationMinutesLabel")}
                     type="number"
                     value={settings.duration.toString()}
                     onChange={(value) =>
                       handleSettingChange("duration", parseInt(value) || 0)
                     }
-                    placeholder="Class duration in minutes"
+                    placeholder={t("classes.durationPlaceholder")}
                   />
 
                   <SelectField
-                    label="Difficulty Level"
+                    label={t("classes.difficultyLevel")}
                     value={settings.difficulty}
                     onChange={(value) =>
                       handleSettingChange("difficulty", value)
                     }
                     options={[
-                      { value: "beginner", label: "Beginner" },
-                      { value: "intermediate", label: "Intermediate" },
-                      { value: "advanced", label: "Advanced" },
+                      { value: "beginner", label: t("classes.beginner") },
+                      { value: "intermediate", label: t("classes.intermediate") },
+                      { value: "advanced", label: t("classes.advanced") },
                     ]}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-dark-900text-white mb-2">
-                    Description
+                    {t("classes.description")}
                   </label>
                   <textarea
                     value={settings.description}
                     onChange={(e) =>
                       handleSettingChange("description", e.target.value)
                     }
-                    placeholder="Describe the class, what to expect, and any requirements..."
+                    placeholder={t("classes.descriptionPlaceholder")}
                     rows={4}
                     className="w-full px-4 py-3 border border-light-200border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50bg-dark-700 text-dark-900text-white"
                   />
@@ -356,12 +358,12 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               className="space-y-6"
             >
               <FormSection
-                title="Advanced Settings"
-                subtitle="Special requirements and configurations"
+                title={t("classes.advancedSettingsTitle")}
+                subtitle={t("classes.specialRequirementsAndConfigurations")}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
-                    label="Minimum Attendance"
+                    label={t("classes.minimumAttendance")}
                     type="number"
                     value={settings.min_attendance.toString()}
                     onChange={(value) =>
@@ -370,29 +372,29 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                         parseInt(value) || 0,
                       )
                     }
-                    placeholder="Minimum participants to run class"
+                    placeholder={t("classes.minAttendancePlaceholder")}
                   />
 
                   <FormField
-                    label="Max Waitlist Size"
+                    label={t("classes.maxWaitlistSizeLabel")}
                     type="number"
                     value={settings.max_waitlist.toString()}
                     onChange={(value) =>
                       handleSettingChange("max_waitlist", parseInt(value) || 0)
                     }
-                    placeholder="Maximum waitlist capacity"
+                    placeholder={t("classes.maxWaitlistPlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-dark-900text-white mb-2">
-                    Trainer Requirements
+                    {t("classes.trainerRequirements")}
                   </label>
                   <div className="space-y-2">
                     {[
-                      "Yoga certification",
-                      "First aid certified",
-                      "Experience with beginners",
+                      t("classes.yogaCertification"),
+                      t("classes.firstAidCertified"),
+                      t("classes.experienceWithBeginners"),
                     ].map((req, idx) => (
                       <div key={idx} className="flex items-center space-x-2">
                         <input
@@ -425,10 +427,10 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-dark-900text-white mb-2">
-                    Equipment Needed
+                    {t("classes.equipmentNeeded")}
                   </label>
                   <div className="space-y-2">
-                    {["Yoga mats", "Resistance bands", "Water bottles"].map(
+                    {[t("classes.yogaMats"), t("classes.resistanceBands"), t("classes.waterBottles")].map(
                       (equipment, idx) => (
                         <div key={idx} className="flex items-center space-x-2">
                           <input
@@ -464,7 +466,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-dark-900text-white mb-2">
-                    Special Instructions
+                    {t("classes.specialInstructions")}
                   </label>
                   <textarea
                     value={settings.special_instructions}
@@ -474,7 +476,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
                         e.target.value,
                       )
                     }
-                    placeholder="Any special instructions for participants or trainers..."
+                    placeholder={t("classes.specialInstructionsPlaceholder")}
                     rows={3}
                     className="w-full px-4 py-3 border border-light-200border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50bg-dark-700 text-dark-900text-white"
                   />
@@ -491,7 +493,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
               <FiAlertTriangle className="h-5 w-5 text-red-600text-red-400 mt-0.5" />
               <div>
                 <h4 className="text-sm font-semibold text-red-900text-red-100">
-                  Validation Errors
+                  {t("classes.validationErrorsTitle")}
                 </h4>
                 <ul className="text-sm text-red-700text-red-200 mt-1 space-y-1">
                   {validationErrors.map((error, idx) => (
@@ -507,17 +509,15 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         {isPro && (
           <div className="p-4 bg-green-50bg-green-900/10 border border-green-200border-green-800 rounded-xl">
             <h3 className="text-sm font-semibold text-green-900text-green-100 mb-2">
-              Smart Recommendations
+              {t("classes.smartRecommendations")}
             </h3>
             <div className="space-y-2 text-sm text-green-700text-green-300">
-              <p>• Consider increasing capacity based on historical demand</p>
+              <p>• {t("classes.considerIncreasingCapacity")}</p>
               <p>
-                • Set minimum attendance to 20% of capacity for optimal
-                experience
+                • {t("classes.setMinAttendanceSuggestion")}
               </p>
               <p>
-                • Enable auto-cancel to maintain class quality and trainer
-                satisfaction
+                • {t("classes.enableAutoCancelSuggestion")}
               </p>
             </div>
           </div>

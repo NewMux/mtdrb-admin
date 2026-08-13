@@ -157,7 +157,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         <div className="p-8 text-center">
           <div className="text-red-600 dark:text-red-400 mb-4">
             <FiEye className="h-8 w-8 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold">Error Loading Classes</h3>
+            <h3 className="text-lg font-semibold">{t("classes.errorLoadingClasses")}</h3>
             <p className="text-sm mt-2">{error}</p>
           </div>
         </div>
