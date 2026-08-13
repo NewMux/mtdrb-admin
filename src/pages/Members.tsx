@@ -447,7 +447,7 @@ const Members: React.FC = () => {
   // Export members function
   const handleExportMembers = React.useCallback(async () => {
     if (!tenantId) {
-      showError("Error", "No tenant ID found");
+      showError(t("common.error"), t("members.noTenantIdFound"));
       return;
     }
 
@@ -487,7 +487,7 @@ const Members: React.FC = () => {
       console.error("Export failed:", error);
       showError(
         t("members.exportFailed"),
-        `${t("members.failedToExport")}: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `${t("members.failedToExport")}: ${error instanceof Error ? error.message : t("messages.somethingWentWrong")}`,
       );
     }
   }, [tenantId, showSuccess, showError, t]);
@@ -601,10 +601,10 @@ const Members: React.FC = () => {
           openEditMemberModal(originalMember);
         }
       } catch (error) {
-        showError("Error", "Failed to open edit modal. Please try again.");
+        showError(t("common.error"), t("members.failedToOpenEditModal"));
       }
     },
-    [openEditMemberModal, showError, members],
+    [openEditMemberModal, showError, members, t],
   );
 
   const handleDeleteMember = React.useCallback(
@@ -615,10 +615,10 @@ const Members: React.FC = () => {
           openDeleteMemberModal(originalMember);
         }
       } catch (error) {
-        showError("Error", "Failed to open delete modal. Please try again.");
+        showError(t("common.error"), t("members.failedToOpenDeleteModal"));
       }
     },
-    [openDeleteMemberModal, showError, members],
+    [openDeleteMemberModal, showError, members, t],
   );
 
   const handleViewMember = React.useCallback(
@@ -629,10 +629,10 @@ const Members: React.FC = () => {
           openViewProfileModal(originalMember);
         }
       } catch (error) {
-        showError("Error", "Failed to open profile modal. Please try again.");
+        showError(t("common.error"), t("members.failedToOpenProfileModal"));
       }
     },
-    [openViewProfileModal, showError, members],
+    [openViewProfileModal, showError, members, t],
   );
 
   const handleAssignTrainer = React.useCallback(
@@ -644,12 +644,12 @@ const Members: React.FC = () => {
         }
       } catch (error) {
         showError(
-          "Error",
-          "Failed to open trainer assignment modal. Please try again.",
+          t("common.error"),
+          t("members.failedToOpenTrainerModal"),
         );
       }
     },
-    [openAssignTrainerModal, showError, members],
+    [openAssignTrainerModal, showError, members, t],
   );
 
   const handleCancelMembership = React.useCallback(
@@ -661,19 +661,19 @@ const Members: React.FC = () => {
         }
       } catch (error) {
         showError(
-          "Error",
-          "Failed to open cancel membership modal. Please try again.",
+          t("common.error"),
+          t("members.failedToOpenCancelModal"),
         );
       }
     },
-    [openCancelMembershipModal, showError, members],
+    [openCancelMembershipModal, showError, members, t],
   );
 
   // Handle adding a new member
   const handleAddMember = React.useCallback(
     async (memberData: Omit<Member, "id">) => {
       if (!tenantId) {
-        showError("Error", "No tenant ID found. Please log in again.");
+        showError(t("common.error"), t("members.noTenantIdFoundLogin"));
         return;
       }
 
@@ -738,20 +738,20 @@ const Members: React.FC = () => {
 
         // Success - refresh members list and show toast
         setRefreshKey((prev) => prev + 1);
-        showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
+        showSuccess(t("common.success"), t("members.memberAddedSuccessfully", { name: `${firstName} ${lastName}` }));
         handleAddMemberSuccess();
       } catch (error: unknown) {
         console.error("Failed to add member:", error);
         const message = error instanceof Error ? error.message : undefined;
         showError(
-          "Error",
-          message || "Failed to add member. Please try again.",
+          t("common.error"),
+          message || t("members.failedToAddMember"),
         );
       } finally {
         setModalLoading(false);
       }
     },
-    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess],
+    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess, t],
   );
 
   // Handle saving an edited member (persists EditMemberModal's form data)
@@ -800,17 +800,17 @@ const Members: React.FC = () => {
         if (error) throw error;
 
         setRefreshKey((prev) => prev + 1);
-        showSuccess("Success", "Member updated successfully!");
+        showSuccess(t("common.success"), t("members.memberUpdated"));
         handleEditMemberSuccess();
       } catch (error: unknown) {
         console.error("Failed to update member:", error);
         const message = error instanceof Error ? error.message : undefined;
-        showError("Error", message || "Failed to update member. Please try again.");
+        showError(t("common.error"), message || t("members.failedToUpdateMember"));
       } finally {
         setModalLoading(false);
       }
     },
-    [setModalLoading, showSuccess, showError, handleEditMemberSuccess],
+    [setModalLoading, showSuccess, showError, handleEditMemberSuccess, t],
   );
 
   // Handle confirming a member deletion
@@ -829,17 +829,17 @@ const Members: React.FC = () => {
         if (error) throw error;
 
         setRefreshKey((prev) => prev + 1);
-        showSuccess("Success", `${member.name || "Member"} deleted successfully!`);
+        showSuccess(t("common.success"), t("members.memberDeletedNamed", { name: member.name || t("members.title") }));
         handleDeleteMemberSuccess();
       } catch (error: unknown) {
         console.error("Failed to delete member:", error);
         const message = error instanceof Error ? error.message : undefined;
-        showError("Error", message || "Failed to delete member. Please try again.");
+        showError(t("common.error"), message || t("members.failedToDeleteMemberRetry"));
       } finally {
         setModalLoading(false);
       }
     },
-    [setModalLoading, showSuccess, showError, handleDeleteMemberSuccess],
+    [setModalLoading, showSuccess, showError, handleDeleteMemberSuccess, t],
   );
 
   // Handle saving a trainer assignment (or removal, when trainerId is "") for a member
@@ -859,21 +859,21 @@ const Members: React.FC = () => {
 
         setRefreshKey((prev) => prev + 1);
         showSuccess(
-          "Success",
+          t("common.success"),
           trainerId
-            ? `Trainer assigned to ${member.name || "member"} successfully!`
-            : `Trainer removed from ${member.name || "member"}.`,
+            ? t("members.trainerAssignedSuccessfully", { name: member.name || t("members.thisMember") })
+            : t("members.trainerRemovedFrom", { name: member.name || t("members.thisMember") }),
         );
         handleAssignTrainerSuccess();
       } catch (error: unknown) {
         console.error("Failed to assign trainer:", error);
         const message = error instanceof Error ? error.message : undefined;
-        showError("Error", message || "Failed to assign trainer. Please try again.");
+        showError(t("common.error"), message || t("members.failedToAssignTrainer"));
       } finally {
         setModalLoading(false);
       }
     },
-    [setModalLoading, showSuccess, showError, handleAssignTrainerSuccess],
+    [setModalLoading, showSuccess, showError, handleAssignTrainerSuccess, t],
   );
 
   const renderActiveTab = () => {
@@ -1090,7 +1090,7 @@ const Members: React.FC = () => {
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
-              aria-label="Advanced filters"
+              aria-label={t("members.advancedFilters")}
             >
               <FiFilter className="w-4 h-4" />
             </button>

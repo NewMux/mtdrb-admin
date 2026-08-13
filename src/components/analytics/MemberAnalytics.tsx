@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 import { useRTL } from "../../hooks/useRTL";
+import { useTranslation } from "react-i18next";
 
 type ActiveTab = "overview" | "performance" | "engagement";
 
@@ -48,6 +49,7 @@ interface MemberAnalyticsProps {
 
 const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   // Add null/undefined check
   if (!funnel || !Array.isArray(funnel)) {
     return (
@@ -58,17 +60,17 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Member Funnel
+              {t("analytics.memberFunnel")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Conversion stages overview</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.conversionStagesOverview")}</p>
           </div>
         </div>
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs">Loading funnel data...</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.noData")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.loadingFunnelData")}</p>
           </div>
         </div>
       </div>
@@ -82,16 +84,16 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
           <FiBarChart className="w-6 h-6 text-blue-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Member Funnel</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Conversion stages overview</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("analytics.memberFunnel")}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.conversionStagesOverview")}</p>
         </div>
       </div>
 
       <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
         <div className="text-center">
           <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Bar Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.barChart")}</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.chartIntegration")}</p>
         </div>
       </div>
 
@@ -108,7 +110,7 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
               <div className={`w-4 h-4 rounded-full ${stage.color}`} />
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <p className="font-medium text-gray-900 dark:text-white">{stage.stage}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{stage.count} members</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.membersCount", { count: stage.count })}</p>
               </div>
             </div>
             <span className="font-bold text-gray-900 dark:text-white">{stage.percentage}%</span>
@@ -121,6 +123,7 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
 
 const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   // Add null/undefined check
   if (!memberStatus || !Array.isArray(memberStatus)) {
     return (
@@ -131,10 +134,10 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Member Status
+              {t("analytics.memberStatusTitle")}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Current membership distribution
+              {t("analytics.currentMembershipDistribution")}
             </p>
           </div>
         </div>
@@ -142,8 +145,8 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs">Loading member status...</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.noData")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.loadingMemberStatus")}</p>
           </div>
         </div>
       </div>
@@ -157,9 +160,9 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
           <FiPieChart className="w-6 h-6 text-green-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Member Status</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("analytics.memberStatusTitle")}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Current membership distribution
+            {t("analytics.currentMembershipDistribution")}
           </p>
         </div>
       </div>
@@ -167,8 +170,8 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
       <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
         <div className="text-center">
           <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">🥧</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Pie Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.pieChart")}</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.chartIntegration")}</p>
         </div>
       </div>
 
@@ -188,7 +191,7 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
               />
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <p className="font-medium text-gray-900 dark:text-white">{status.status}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{status.count} members</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.membersCount", { count: status.count })}</p>
               </div>
             </div>
             <span className="font-bold text-gray-900 dark:text-white">
@@ -206,13 +209,16 @@ const MembersTable = ({
   members,
   icon,
   iconColor,
+  variant,
 }: {
   title: string;
   members: TopMember[];
   icon: React.ReactNode;
   iconColor: string;
+  variant: "spenders" | "longest";
 }) => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   // Add null/undefined check
   if (!members || !Array.isArray(members)) {
     return (
@@ -221,15 +227,15 @@ const MembersTable = ({
           <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Top performing members</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.topPerformingMembers")}</p>
           </div>
         </div>
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">👥</div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs">Loading member data...</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.noData")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.loadingMemberData")}</p>
           </div>
         </div>
       </div>
@@ -242,7 +248,7 @@ const MembersTable = ({
         <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Top performing members</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.topPerformingMembers")}</p>
         </div>
       </div>
 
@@ -279,12 +285,12 @@ const MembersTable = ({
             </div>
             <div className={isRTL ? 'text-left' : 'text-right'}>
               <p className="font-bold text-gray-900 dark:text-white">
-                {title.includes("Spenders")
+                {variant === "spenders"
                   ? `$${member.spend.toLocaleString()}`
                   : member.joinDate}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {title.includes("Spenders") ? "Total Spend" : "Member Since"}
+                {variant === "spenders" ? t("analytics.totalSpend") : t("analytics.memberSince")}
               </p>
             </div>
           </motion.div>
@@ -293,7 +299,7 @@ const MembersTable = ({
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <SmartButton variant="secondary" size="sm" className="w-full">
-          View Details
+          {t("analytics.viewDetails")}
         </SmartButton>
       </div>
     </div>
@@ -306,6 +312,7 @@ const NoShowsTable = ({
   noShows: MemberAnalyticsProps["noShows"];
 }) => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   // Add null/undefined check
   if (!noShows || !Array.isArray(noShows)) {
     return (
@@ -316,17 +323,17 @@ const NoShowsTable = ({
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              No-Show Members
+              {t("analytics.noShowMembers")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Members who need attention</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.membersNeedAttention")}</p>
           </div>
         </div>
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">👥</div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs">Loading no-show data...</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.noData")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.loadingNoShowData")}</p>
           </div>
         </div>
       </div>
@@ -341,9 +348,9 @@ const NoShowsTable = ({
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            No-Show Members
+            {t("analytics.noShowMembers")}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Members who need attention</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.membersNeedAttention")}</p>
         </div>
       </div>
 
@@ -362,11 +369,11 @@ const NoShowsTable = ({
               </div>
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <p className="font-medium text-gray-900 dark:text-white">{member.name}</p>
-                <p className="text-sm text-red-600 dark:text-red-400">{member.count} no-shows</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{t("analytics.noShowsCount", { count: member.count })}</p>
               </div>
             </div>
             <div className={isRTL ? 'text-left' : 'text-right'}>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Last seen</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.lastSeen")}</p>
               <p className="font-medium text-gray-900 dark:text-white">{member.lastSeen}</p>
             </div>
           </motion.div>
@@ -375,7 +382,7 @@ const NoShowsTable = ({
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <SmartButton variant="primary" size="sm" className="w-full">
-          View Details
+          {t("analytics.viewDetails")}
         </SmartButton>
       </div>
     </div>
@@ -388,6 +395,7 @@ const LTVTrendChart = ({
   ltvTrend: MemberAnalyticsProps["ltvTrend"];
 }) => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   // Add null/undefined check
   if (!ltvTrend || !Array.isArray(ltvTrend)) {
     return (
@@ -398,10 +406,10 @@ const LTVTrendChart = ({
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Lifetime Value Trend
+              {t("analytics.lifetimeValueTrend")}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Average member value over time
+              {t("analytics.avgMemberValueOverTime")}
             </p>
           </div>
         </div>
@@ -409,8 +417,8 @@ const LTVTrendChart = ({
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📈</div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs">Loading LTV data...</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.noData")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.loadingLtvData")}</p>
           </div>
         </div>
       </div>
@@ -425,10 +433,10 @@ const LTVTrendChart = ({
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Lifetime Value Trend
+            {t("analytics.lifetimeValueTrend")}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Average member value over time
+            {t("analytics.avgMemberValueOverTime")}
           </p>
         </div>
       </div>
@@ -436,8 +444,8 @@ const LTVTrendChart = ({
       <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
         <div className="text-center">
           <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📈</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Line Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t("analytics.lineChart")}</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs">{t("analytics.chartIntegration")}</p>
         </div>
       </div>
 
@@ -467,22 +475,23 @@ export default function MemberAnalytics({
   noShows,
 }: MemberAnalyticsProps) {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     {
       id: "overview",
-      label: "Overview",
+      label: t("analytics.overview"),
       icon: <FiBarChart className="w-4 h-4" />,
     },
     {
       id: "performance",
-      label: "Performance",
+      label: t("analytics.performance"),
       icon: <FiTrendingUp className="w-4 h-4" />,
     },
     {
       id: "engagement",
-      label: "Engagement",
+      label: t("analytics.engagement"),
       icon: <FiUsers className="w-4 h-4" />,
     },
   ];
@@ -492,9 +501,9 @@ export default function MemberAnalytics({
       {/* Header */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Member Analytics</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("analytics.memberAnalyticsTitle")}</h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Understand your member behavior and value
+            {t("analytics.memberAnalyticsSubtitle")}
           </p>
         </div>
         {/* Remove Export Data and Member Campaign buttons from MemberAnalytics header */}
@@ -529,16 +538,18 @@ export default function MemberAnalytics({
       {activeTab === "performance" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <MembersTable
-            title="Top Spenders"
+            title={t("analytics.topSpenders")}
             members={topSpenders}
             icon={<FiDollarSign className="w-6 h-6 text-green-600" />}
             iconColor="bg-green-100"
+            variant="spenders"
           />
           <MembersTable
-            title="Longest Members"
+            title={t("analytics.longestMembers")}
             members={longestMembers}
             icon={<FiClock className="w-6 h-6 text-blue-600" />}
             iconColor="bg-blue-100"
+            variant="longest"
           />
         </div>
       )}

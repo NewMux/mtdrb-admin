@@ -110,8 +110,8 @@ const AnalyticsFilters: React.FC = () => {
               >
                 <option value="">{t("members.allBranches")}</option>
                 <option value="main">{t("members.mainBranch")}</option>
-                <option value="downtown">Downtown</option>
-                <option value="westside">Westside</option>
+                <option value="downtown">{t("members.downtownBranch")}</option>
+                <option value="westside">{t("members.westsideBranch")}</option>
               </select>
 
               {/* Membership Type */}
@@ -137,11 +137,11 @@ const AnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, joinDateRange: e.target.value })
                 }
               >
-                <option value="last7days">Last 7 Days</option>
-                <option value="last30days">Last 30 Days</option>
-                <option value="last90days">Last 90 Days</option>
-                <option value="last6months">Last 6 Months</option>
-                <option value="lastyear">Last Year</option>
+                <option value="last7days">{t("members.last7Days")}</option>
+                <option value="last30days">{t("members.last30Days")}</option>
+                <option value="last90days">{t("members.last90Days")}</option>
+                <option value="last6months">{t("members.last6Months")}</option>
+                <option value="lastyear">{t("members.lastYear")}</option>
               </select>
 
               {/* Gender */}
@@ -196,7 +196,7 @@ const AnalyticsFilters: React.FC = () => {
                   setFilters({ ...filters, trainer: e.target.value })
                 }
               >
-                <option value="all">All Trainers</option>
+                <option value="all">{t("members.allTrainers")}</option>
                 <option value="sarah">Sarah Johnson</option>
                 <option value="mike">Mike Chen</option>
                 <option value="emma">Emma Davis</option>
@@ -368,7 +368,7 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement }) => {
             <FiStar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">Top 3</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{t("members.top3")}</div>
             <div className="text-sm text-gray-600 dark:text-gray-400">{t("members.mostPopularClasses")}</div>
           </div>
         </div>
@@ -941,7 +941,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       setError(null);
 
       if (!user) {
-        setError("User not authenticated");
+        setError(t("members.userNotAuthenticated"));
         setLoading(false);
         return;
       }
@@ -958,7 +958,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       }
 
       if (!tenantId) {
-        setError("Tenant ID not found");
+        setError(t("members.tenantIdNotFound"));
         setLoading(false);
         return;
       }
@@ -1241,7 +1241,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
           <FiRefreshCw className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
-          <p className="text-gray-600 dark:text-gray-400">Loading analytics data...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t("members.loadingAnalyticsData")}</p>
         </div>
       </div>
     );
