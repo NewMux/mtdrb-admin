@@ -6,6 +6,7 @@ import {
   FiCheckCircle,
   FiClock,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -24,6 +25,7 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [restoreType, setRestoreType] = useState("");
   const [scheduleRestore, setScheduleRestore] = useState(false);
   const [restoreDate, setRestoreDate] = useState("");
@@ -50,10 +52,10 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Restore Trainer
+                {t("trainers.restoreTrainer")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Reactivate trainer account and restore access
+                {t("trainers.restoreTrainerDesc")}
               </p>
             </div>
           </div>
@@ -73,11 +75,10 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
               <FiCheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-green-800 dark:text-green-200">
-                  Trainer can be restored
+                  {t("trainers.trainerCanBeRestored")}
                 </h3>
                 <p className="text-sm text-green-600 dark:text-green-300 mt-1">
-                  All trainer data is preserved and can be fully restored to the
-                  system.
+                  {t("trainers.restoreDataPreservedDesc")}
                 </p>
               </div>
             </div>
@@ -86,24 +87,24 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Removed Date:
+                  {t("trainers.removedDate")}:
                 </span>
                 <span className="font-medium text-red-600 dark:text-red-400">
                   2024-01-15
@@ -115,17 +116,17 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
           {/* Restore Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Restore Type
+              {t("trainers.restoreType")}
             </label>
             <select
               value={restoreType}
               onChange={(e) => setRestoreType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="">Select restore type</option>
-              <option value="immediate">Immediate Restoration</option>
-              <option value="scheduled">Scheduled Restoration</option>
-              <option value="conditional">Conditional Restoration</option>
+              <option value="">{t("trainers.selectRestoreType")}</option>
+              <option value="immediate">{t("trainers.immediateRestoration")}</option>
+              <option value="scheduled">{t("trainers.scheduledRestoration")}</option>
+              <option value="conditional">{t("trainers.conditionalRestoration")}</option>
             </select>
           </div>
 
@@ -144,13 +145,13 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                   htmlFor="scheduleRestore"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Schedule for later restoration
+                  {t("trainers.scheduleForLaterRestoration")}
                 </label>
               </div>
               {scheduleRestore && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Restoration Date
+                    {t("trainers.restorationDate")}
                   </label>
                   <input
                     type="datetime-local"
@@ -170,12 +171,10 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Recommendation
+                    {t("trainers.smartRecommendation")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    This trainer had excellent performance metrics before
-                    removal. Consider immediate restoration to maintain member
-                    relationships.
+                    {t("trainers.restoreRecommendationDesc")}
                   </p>
                 </div>
               </div>
@@ -188,11 +187,10 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
               <FiClock className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                  Data Recovery
+                  {t("trainers.dataRecovery")}
                 </h3>
                 <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                  The following data will be restored: Profile, Schedule, Member
-                  Assignments, Performance History, and Payment Records.
+                  {t("trainers.dataRecoveryDesc")}
                 </p>
               </div>
             </div>
@@ -205,7 +203,7 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleRestore}
@@ -217,7 +215,7 @@ const RestoreTrainerModal: React.FC<RestoreTrainerModalProps> = ({
             ) : (
               <FiUserPlus className="w-4 h-4" />
             )}
-            <span>Restore Trainer</span>
+            <span>{t("trainers.restoreTrainer")}</span>
           </button>
         </div>
       </div>

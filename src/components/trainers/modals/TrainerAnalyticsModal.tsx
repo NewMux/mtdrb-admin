@@ -7,6 +7,7 @@ import {
   FiCalendar,
   FiShield,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -25,6 +26,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [selectedMetric, setSelectedMetric] = useState("overview");
 
   const mockAnalytics = {
@@ -51,10 +53,10 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Trainer Analytics
+                {t("trainers.trainerAnalytics")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Detailed performance analytics and insights
+                {t("trainers.trainerAnalyticsDesc")}
               </p>
             </div>
           </div>
@@ -71,26 +73,26 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Analytics Period:
+                  {t("trainers.analyticsPeriod")}:
                 </span>
-                <span className="font-medium">Last 30 Days</span>
+                <span className="font-medium">{t("trainers.last30Days")}</span>
               </div>
             </div>
           </div>
@@ -105,7 +107,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               }`}
             >
-              Overview
+              {t("trainers.overview")}
             </button>
             <button
               onClick={() => setSelectedMetric("performance")}
@@ -115,7 +117,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               }`}
             >
-              Performance
+              {t("trainers.performance")}
             </button>
             <button
               onClick={() => setSelectedMetric("revenue")}
@@ -125,7 +127,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               }`}
             >
-              Revenue
+              {t("trainers.revenue")}
             </button>
             <button
               onClick={() => setSelectedMetric("members")}
@@ -135,7 +137,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               }`}
             >
-              Members
+              {t("trainers.members")}
             </button>
           </div>
 
@@ -155,7 +157,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   {mockAnalytics.totalMembers}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Members
+                  {t("trainers.totalMembers")}
                 </div>
               </div>
 
@@ -172,7 +174,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   {mockAnalytics.totalClasses}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Classes Taught
+                  {t("trainers.classesTaught")}
                 </div>
               </div>
 
@@ -189,7 +191,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   ${mockAnalytics.totalRevenue.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Revenue
+                  {t("trainers.totalRevenue")}
                 </div>
               </div>
 
@@ -206,7 +208,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   {mockAnalytics.averageRating}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Average Rating
+                  {t("trainers.averageRating")}
                 </div>
               </div>
             </div>
@@ -217,12 +219,12 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                  Performance Metrics
+                  {t("trainers.performanceMetrics")}
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Class Attendance Rate
+                      {t("trainers.classAttendanceRate")}
                     </span>
                     <span className="font-medium">
                       {mockAnalytics.classAttendance}%
@@ -230,7 +232,7 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Member Retention Rate
+                      {t("trainers.memberRetentionRate")}
                     </span>
                     <span className="font-medium">
                       {mockAnalytics.memberRetention}%
@@ -238,9 +240,9 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Average Class Size
+                      {t("trainers.averageClassSize")}
                     </span>
-                    <span className="font-medium">12.5 members</span>
+                    <span className="font-medium">{t("trainers.avgClassSizeValue")}</span>
                   </div>
                 </div>
               </div>
@@ -252,24 +254,24 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                  Revenue Breakdown
+                  {t("trainers.revenueBreakdown")}
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Group Classes
+                      {t("trainers.groupClasses")}
                     </span>
                     <span className="font-medium">$8,400</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Personal Training
+                      {t("trainers.personalTraining")}
                     </span>
                     <span className="font-medium">$3,600</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Special Events
+                      {t("trainers.specialEvents")}
                     </span>
                     <span className="font-medium">$500</span>
                   </div>
@@ -283,26 +285,26 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             <div className="space-y-4">
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                  Member Demographics
+                  {t("trainers.memberDemographics")}
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      New Members (30d)
+                      {t("trainers.newMembers30d")}
                     </span>
                     <span className="font-medium">12</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Returning Members
+                      {t("trainers.returningMembers")}
                     </span>
                     <span className="font-medium">77</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Average Age
+                      {t("trainers.averageAge")}
                     </span>
-                    <span className="font-medium">34 years</span>
+                    <span className="font-medium">{t("trainers.avgAgeValue")}</span>
                   </div>
                 </div>
               </div>
@@ -316,12 +318,10 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Analytics Insights
+                    {t("trainers.smartAnalyticsInsights")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Performance analysis shows 23% improvement in member
-                    engagement. Consider expanding class offerings during peak
-                    hours (6-8 PM) to capitalize on demand.
+                    {t("trainers.analyticsInsightDesc")}
                   </p>
                 </div>
               </div>
@@ -335,14 +335,14 @@ const TrainerAnalyticsModal: React.FC<TrainerAnalyticsModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
-              Export Data
+              {t("trainers.exportData")}
             </button>
             <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
-              Generate Report
+              {t("trainers.generateReport")}
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
+import { useTranslation } from "react-i18next";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -24,6 +25,7 @@ function getRedirectPath(state: unknown): string {
 
 // ===== SUBSCRIBE PAGE =====
 export default function Subscribe() {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
@@ -57,33 +59,33 @@ export default function Subscribe() {
   const plans = [
     {
       id: "starter",
-      name: "Starter",
+      name: t("landing.starter"),
       price: 80,
       period: "month",
-      description: "Perfect for single-location gyms",
+      description: t("subscribe.starterDescription"),
       features: [
-        "All core features",
-        "Single location",
-        "+$20 USD/month per extra location",
-        "Basic analytics",
-        "Email support"
+        t("landing.allCoreFeatures"),
+        t("landing.singleLocation"),
+        t("subscribe.extraLocationCostStarter"),
+        t("landing.basicAnalytics"),
+        t("landing.emailSupport")
       ],
       popular: false,
       color: "blue"
     },
     {
       id: "pro",
-      name: "Pro",
+      name: t("landing.pro"),
       price: 130,
       period: "month",
-      description: "Everything in Starter & scale your gym",
+      description: t("subscribe.proDescription"),
       features: [
-        "Everything in Starter",
-        "$10 USD/month per extra location",
-        "Unlimited members",
-        "Advanced analytics",
-        "Priority support",
-        "WhatsApp bot"
+        t("landing.everythingInStarter"),
+        t("subscribe.extraLocationCostPro"),
+        t("landing.unlimitedMembers"),
+        t("landing.advancedAnalytics"),
+        t("landing.prioritySupport"),
+        t("landing.whatsappBot")
       ],
       popular: true,
       color: "purple"
@@ -156,7 +158,7 @@ export default function Subscribe() {
         }
       }
     } catch (e) {
-      setError("Unexpected error");
+      setError(t("subscribe.unexpectedError"));
       if (import.meta.env.DEV) console.error("Subscribe error:", e);
     } finally {
       setSubscribing(false);
@@ -192,25 +194,25 @@ export default function Subscribe() {
             </div>
             
             <h1 className="text-4xl font-bold mb-4">
-              Choose your plan
+              {t("subscribe.choosePlan")}
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Start with a free trial, then choose the plan that fits your gym&apos;s needs. You can upgrade or downgrade anytime.
+              {t("subscribe.choosePlanDesc")}
             </p>
 
             {/* Feature Highlights */}
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <FiShield className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Secure payment processing</span>
+                <span className="text-blue-100">{t("subscribe.securePayment")}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FiZap className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Instant activation</span>
+                <span className="text-blue-100">{t("subscribe.instantActivation")}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FiUsers className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Cancel anytime</span>
+                <span className="text-blue-100">{t("subscribe.cancelAnytime")}</span>
               </div>
             </div>
           </motion.div>
@@ -223,10 +225,10 @@ export default function Subscribe() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Select Your Plan
+              {t("subscribe.selectYourPlan")}
             </h1>
             <p className="text-gray-600">
-              Start your 14-day free trial. No credit card required.
+              {t("subscribe.selectYourPlanDesc")}
             </p>
           </div>
 
@@ -247,7 +249,7 @@ export default function Subscribe() {
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
+                      {t("landing.most_popular")}
                     </span>
                   </div>
                 )}
@@ -288,7 +290,7 @@ export default function Subscribe() {
                   }}
                   disabled={subscribing}
                 >
-                  {subscribing ? "Processing..." : "Start Free Trial"}
+                  {subscribing ? t("subscribe.processing") : t("subscribe.startFreeTrial")}
                 </motion.button>
               </motion.div>
             ))}
@@ -315,26 +317,26 @@ export default function Subscribe() {
             <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
               <div className="flex items-center">
                 <FiShield className="h-4 w-4 mr-2" />
-                <span>SSL Secure</span>
+                <span>{t("subscribe.sslSecure")}</span>
               </div>
               <div className="flex items-center">
                 <FiCreditCard className="h-4 w-4 mr-2" />
-                <span>Multiple payment methods</span>
+                <span>{t("subscribe.multiplePaymentMethods")}</span>
               </div>
               <div className="flex items-center">
                 <FiStar className="h-4 w-4 mr-2" />
-                <span>30-day money back</span>
+                <span>{t("subscribe.moneyBackGuarantee")}</span>
               </div>
             </div>
 
             <p className="text-xs text-gray-400">
-              By subscribing, you agree to our{" "}
+              {t("subscribe.agreeToTerms")}{" "}
               <a href="#" className="text-blue-600 hover:text-blue-500">
-                Terms of Service
+                {t("auth.termsOfService")}
               </a>{" "}
-              and{" "}
+              {t("auth.and")}{" "}
               <a href="#" className="text-blue-600 hover:text-blue-500">
-                Privacy Policy
+                {t("auth.privacyPolicy")}
               </a>
             </p>
           </div>
@@ -345,7 +347,7 @@ export default function Subscribe() {
               to="/"
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              ← Back to Home
+              ← {t("auth.backToHome")}
             </Link>
           </div>
         </div>

@@ -86,7 +86,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         title={t("classes.deleteClass")}
-        subtitle={t("classes.loading") || "Loading class data..."}
+        subtitle={t("classes.loadingClassData")}
         maxWidth="2xl"
         slideFrom="right"
       >
@@ -105,8 +105,8 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
     <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
-      title={t("classes.deleteClass", "حذف الحصة")}
-      subtitle={t("classes.cancelClassAction", `حذف حصة ${classData.name} نهائياً`)}
+      title={t("classes.deleteClass")}
+      subtitle={t("classes.deleteClassPermanently", { name: classData.name })}
       maxWidth="2xl"
       slideFrom="right"
       footer={
@@ -115,7 +115,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
             {isHighImpact && (
               <div className="flex items-center gap-1 text-sm text-red-600">
                 <FiAlertTriangle className="h-4 w-4 flex-shrink-0" />
-                <span>{t("classes.highImpactAction", "إجراء عالي التأثير")}</span>
+                <span>{t("classes.highImpactAction")}</span>
               </div>
             )}
           </div>
@@ -125,7 +125,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
               onClick={onClose}
               disabled={loading}
             >
-              {t("common.cancel", "إلغاء")}
+              {t("common.cancel")}
             </SmartButton>
             <SmartButton
               variant="danger"
@@ -133,7 +133,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
               loading={loading}
               disabled={loading}
             >
-              {loading ? t("classes.deleting", "جاري الحذف...") : t("classes.deleteClass", "تأكيد الحذف")}
+              {loading ? t("classes.deleting") : t("classes.confirmDelete")}
             </SmartButton>
           </div>
         </div>
@@ -150,10 +150,10 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
             <FiAlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
             <div className="flex-1 text-start">
               <h4 className="text-sm font-semibold text-red-900 dark:text-red-100">
-                {t("classes.cannotBeUndone", "لا يمكن التراجع عن هذا الإجراء")}
+                {t("classes.thisActionCannotBeUndone")}
               </h4>
               <p className="text-sm text-red-700 dark:text-red-200 mt-1">
-                {t("classes.deleteClassWarning", "سيؤدي حذف هذه الحصة إلى إزالتها نهائياً من الجدول وإلغاء جميع التسجيلات والمرشحات المرتبطة بها.")}
+                {t("classes.deletingClassWillPermanentlyRemove")}
               </p>
             </div>
           </div>
@@ -174,7 +174,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
               </span>
             </div>
             <div>
-              <span className="text-light-600 dark:text-dark-400">Date:</span>
+              <span className="text-light-600 dark:text-dark-400">{t("classes.date")}:</span>
               <span className="ml-2 text-dark-900 dark:text-white font-medium">
                 {new Date(classData.date).toLocaleDateString()}
               </span>
@@ -284,7 +284,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                 onChange={(e) => setReason(e.target.value)}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
-                <option value="">Select a reason</option>
+                <option value="">{t("classes.selectReason")}</option>
                 {cancellationReasons.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}

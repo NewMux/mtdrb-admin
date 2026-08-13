@@ -16,6 +16,7 @@ import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   isOpen: boolean;
@@ -118,21 +119,22 @@ const initialFormData: TrainerFormData = {
   ],
 };
 
-const experienceLevels = [
-  { value: "beginner", label: "Beginner (0-2 years)" },
-  { value: "intermediate", label: "Intermediate (2-5 years)" },
-  { value: "advanced", label: "Advanced (5-10 years)" },
-  { value: "expert", label: "Expert (10+ years)" },
-];
-
-const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "on_leave", label: "On Leave" },
-  { value: "terminated", label: "Terminated" },
-];
-
 export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
+  const { t } = useTranslation();
+  const experienceLevels = [
+    { value: "beginner", label: t("trainers.experienceBeginner") },
+    { value: "intermediate", label: t("trainers.experienceIntermediate") },
+    { value: "advanced", label: t("trainers.experienceAdvanced") },
+    { value: "expert", label: t("trainers.experienceExpert") },
+  ];
+
+  const statusOptions = [
+    { value: "active", label: t("trainers.active") },
+    { value: "inactive", label: t("common.inactive") },
+    { value: "on_leave", label: t("trainers.onLeave") },
+    { value: "terminated", label: t("trainers.terminated") },
+  ];
+
   const [formData, setFormData] = useState<TrainerFormData>(initialFormData);
   const [fileUploads, setFileUploads] = useState<FileUpload[]>([]);
   const [loading, setLoading] = useState(false);
@@ -200,19 +202,19 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     const newErrors: Partial<TrainerFormData> = {};
 
     if (!formData.first_name.trim())
-      newErrors.first_name = "First name is required";
+      newErrors.first_name = t("trainers.firstNameRequired");
     if (!formData.last_name.trim())
-      newErrors.last_name = "Last name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    if (!formData.phone.trim()) newErrors.phone = "Phone is required";
+      newErrors.last_name = t("trainers.lastNameRequired");
+    if (!formData.email.trim()) newErrors.email = t("trainers.emailRequired");
+    if (!formData.phone.trim()) newErrors.phone = t("trainers.phoneRequired");
     if (!formData.specialty.trim())
-      newErrors.specialty = "Specialty is required";
+      newErrors.specialty = t("trainers.specialtyRequired");
     if (!formData.experience_level.trim())
-      newErrors.experience_level = "Experience level is required";
+      newErrors.experience_level = t("trainers.experienceLevelRequired");
     if (!formData.hourly_rate.trim())
-      newErrors.hourly_rate = "Hourly rate is required";
+      newErrors.hourly_rate = t("trainers.hourlyRateRequired");
     if (parseFloat(formData.hourly_rate) <= 0)
-      newErrors.hourly_rate = "Hourly rate must be greater than 0";
+      newErrors.hourly_rate = t("trainers.hourlyRateMustBePositive");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -231,7 +233,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("trainers.fillRequiredFields"));
       return;
     }
 
@@ -326,7 +328,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         if (docError) throw docError;
       }
 
-      toast.success("Trainer added successfully!");
+      toast.success(t("trainers.trainerAdded"));
       onSuccess?.();
       onClose();
 
@@ -337,7 +339,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setSubmitError(message);
-      toast.error("Failed to add trainer");
+      toast.error(t("trainers.failedToAddTrainer"));
     } finally {
       setLoading(false);
     }
@@ -354,7 +356,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         onClick={onClose}
         disabled={loading}
       >
-        Cancel
+        {t("common.cancel")}
       </SmartButton>
       <SmartButton
         variant="primary"
@@ -362,7 +364,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         loading={loading}
         className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
       >
-        {loading ? "Adding Trainer..." : "Add Trainer"}
+        {loading ? t("trainers.addingTrainer") : t("trainers.addTrainer")}
       </SmartButton>
     </>
   );
@@ -371,8 +373,8 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Trainer"
-      subtitle="Create a comprehensive trainer profile"
+      title={t("trainers.addNewTrainerTitle")}
+      subtitle={t("trainers.addNewTrainerSubtitle")}
       footer={footer}
       maxWidth="4xl"
       slideFrom="right"
@@ -385,83 +387,83 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               <FiUser className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Basic Information
+              {t("trainers.basicInformation")}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="First Name"
+              label={t("trainers.firstName")}
               name="first_name"
               value={formData.first_name}
               onChange={handleInputChange}
               required
-              aria-label="First name"
+              aria-label={t("trainers.firstName")}
               error={errors.first_name}
             />
             <AppleInput
-              label="Last Name"
+              label={t("trainers.lastName")}
               name="last_name"
               value={formData.last_name}
               onChange={handleInputChange}
               required
-              aria-label="Last name"
+              aria-label={t("trainers.lastName")}
               error={errors.last_name}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Email"
+              label={t("common.email")}
               name="email"
               type="email"
               value={formData.email}
               onChange={handleInputChange}
               required
-              aria-label="Email address"
+              aria-label={t("common.email")}
               error={errors.email}
             />
             <AppleInput
-              label="Phone"
+              label={t("common.phone")}
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
               required
-              aria-label="Phone number"
+              aria-label={t("common.phone")}
               error={errors.phone}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Date of Birth"
+              label={t("trainers.dateOfBirth")}
               name="date_of_birth"
               type="date"
               value={formData.date_of_birth}
               onChange={handleInputChange}
-              aria-label="Date of birth"
+              aria-label={t("trainers.dateOfBirth")}
             />
             <AppleSelect
-              label="Gender"
+              label={t("trainers.gender")}
               name="gender"
               value={formData.gender}
               onChange={handleInputChange}
-              aria-label="Gender"
+              aria-label={t("trainers.gender")}
             >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-              <option value="prefer_not_to_say">Prefer not to say</option>
+              <option value="">{t("trainers.selectGender")}</option>
+              <option value="male">{t("trainers.male")}</option>
+              <option value="female">{t("trainers.female")}</option>
+              <option value="other">{t("trainers.other")}</option>
+              <option value="prefer_not_to_say">{t("trainers.preferNotToSay")}</option>
             </AppleSelect>
           </div>
 
           <AppleInput
-            label="Address"
+            label={t("trainers.address")}
             name="address"
             value={formData.address}
             onChange={handleInputChange}
-            aria-label="Address"
+            aria-label={t("trainers.address")}
           />
         </section>
 
@@ -472,30 +474,30 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               <FiTarget className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Professional Information
+              {t("trainers.professionalInformation")}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Specialty"
+              label={t("trainers.specialty")}
               name="specialty"
               value={formData.specialty}
               onChange={handleInputChange}
               required
-              aria-label="Specialty"
+              aria-label={t("trainers.specialty")}
               error={errors.specialty}
             />
             <AppleSelect
-              label="Experience Level"
+              label={t("trainers.experienceLevel")}
               name="experience_level"
               value={formData.experience_level}
               onChange={handleInputChange}
               required
-              aria-label="Experience level"
+              aria-label={t("trainers.experienceLevel")}
               error={errors.experience_level}
             >
-              <option value="">Select experience level</option>
+              <option value="">{t("trainers.selectExperienceLevel")}</option>
               {experienceLevels.map((level) => (
                 <option key={level.value} value={level.value}>
                   {level.label}
@@ -506,7 +508,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Hourly Rate"
+              label={t("trainers.hourlyRate")}
               name="hourly_rate"
               type="number"
               min="0"
@@ -514,15 +516,15 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               value={formData.hourly_rate}
               onChange={handleInputChange}
               required
-              aria-label="Hourly rate"
+              aria-label={t("trainers.hourlyRate")}
               error={errors.hourly_rate}
             />
             <AppleSelect
-              label="Status"
+              label={t("trainers.status")}
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              aria-label="Status"
+              aria-label={t("trainers.status")}
             >
               {statusOptions.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -534,18 +536,18 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Education"
+              label={t("trainers.education")}
               name="education"
               value={formData.education}
               onChange={handleInputChange}
-              aria-label="Education"
+              aria-label={t("trainers.education")}
             />
             <AppleInput
-              label="Certifications"
+              label={t("trainers.certifications")}
               name="certifications"
               value={formData.certifications}
               onChange={handleInputChange}
-              aria-label="Certifications"
+              aria-label={t("trainers.certifications")}
             />
           </div>
         </section>
@@ -557,7 +559,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               <FiClock className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Availability
+              {t("trainers.availability")}
             </h3>
           </div>
 
@@ -581,7 +583,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                     htmlFor={`available-${index}`}
                     className="text-sm font-medium text-gray-700 dark:text-gray-200"
                   >
-                    {day.name}
+                    {t(`trainers.weekdays.${day.name.toLowerCase()}`)}
                   </label>
                 </div>
                 {day.available && (
@@ -594,7 +596,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                       }
                       className="px-3 py-1 border border-gray-300 dark:border-gray-500 rounded text-sm bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                     />
-                    <span className="text-gray-500 dark:text-gray-400">to</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t("common.to")}</span>
                     <input
                       type="time"
                       value={day.end_time}
@@ -617,7 +619,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               <FiUpload className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Documents & Files
+              {t("trainers.documentsAndFiles")}
             </h3>
           </div>
 
@@ -625,7 +627,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Profile Image
+                {t("trainers.profileImage")}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -640,7 +642,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                   className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiImage className="h-4 w-4 mr-2" />
-                  Upload Image
+                  {t("trainers.uploadImage")}
                 </label>
                 {getFileUploadsByType("profile").map((upload, index) => (
                   <div
@@ -657,7 +659,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                         removeFileUpload(fileUploads.indexOf(upload))
                       }
                       className="text-red-500 hover:text-red-700"
-                      aria-label="Remove profile image"
+                      aria-label={t("trainers.removeProfileImage")}
                     >
                       <FiX className="h-4 w-4" />
                     </button>
@@ -669,7 +671,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             {/* Certifications Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                Certifications
+                {t("trainers.certifications")}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -685,7 +687,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                   className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiFile className="h-4 w-4 mr-2" />
-                  Upload Certifications
+                  {t("trainers.uploadCertifications")}
                 </label>
                 {getFileUploadsByType("certifications").map((upload, index) => (
                   <div
@@ -702,7 +704,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                         removeFileUpload(fileUploads.indexOf(upload))
                       }
                       className="text-red-500 hover:text-red-700"
-                      aria-label="Remove certification file"
+                      aria-label={t("trainers.removeCertificationFile")}
                     >
                       <FiX className="h-4 w-4" />
                     </button>
@@ -714,7 +716,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             {/* National ID Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                National ID
+                {t("trainers.nationalId")}
               </label>
               <div className="flex items-center gap-4">
                 <input
@@ -729,7 +731,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                   className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiShield className="h-4 w-4 mr-2" />
-                  Upload National ID
+                  {t("trainers.uploadNationalId")}
                 </label>
                 {getFileUploadsByType("national_id").map((upload, index) => (
                   <div
@@ -746,7 +748,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                         removeFileUpload(fileUploads.indexOf(upload))
                       }
                       className="text-red-500 hover:text-red-700"
-                      aria-label="Remove national ID file"
+                      aria-label={t("trainers.removeNationalIdFile")}
                     >
                       <FiX className="h-4 w-4" />
                     </button>
@@ -764,28 +766,28 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
               <FiFileText className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Additional Information
+              {t("trainers.additionalInformation")}
             </h3>
           </div>
 
           <AppleTextarea
-            label="Bio"
+            label={t("trainers.bio")}
             name="bio"
             value={formData.bio}
             onChange={handleInputChange}
             rows={4}
-            placeholder="Tell us about yourself, your training philosophy, and what makes you unique..."
-            aria-label="Trainer biography"
+            placeholder={t("trainers.bioPlaceholder")}
+            aria-label={t("trainers.bio")}
           />
 
           <AppleTextarea
-            label="Notes"
+            label={t("common.notes")}
             name="notes"
             value={formData.notes}
             onChange={handleInputChange}
             rows={3}
-            placeholder="Any additional notes or special requirements..."
-            aria-label="Additional notes"
+            placeholder={t("trainers.notesPlaceholder")}
+            aria-label={t("trainers.additionalInformation")}
           />
         </section>
 

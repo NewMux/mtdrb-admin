@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiEdit,
   FiUser,
@@ -48,6 +49,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, smartSuggestions, updateTask, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
 
@@ -82,14 +84,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   }, [task]);
 
   const taskTypes: Array<{ value: TaskType; label: string; icon: string }> = [
-    { value: "onboarding", label: "Member Onboarding", icon: "👋" },
-    { value: "class_setup", label: "Class Setup", icon: "🏋️" },
-    { value: "maintenance", label: "Equipment Maintenance", icon: "🔧" },
-    { value: "cleaning", label: "Cleaning", icon: "🧹" },
-    { value: "equipment_check", label: "Equipment Check", icon: "✅" },
-    { value: "member_support", label: "Member Support", icon: "💬" },
-    { value: "admin", label: "Administrative", icon: "📋" },
-    { value: "custom", label: "Custom Task", icon: "📝" },
+    { value: "onboarding", label: t("tasks.typeOnboarding"), icon: "👋" },
+    { value: "class_setup", label: t("tasks.typeClassSetup"), icon: "🏋️" },
+    { value: "maintenance", label: t("tasks.typeMaintenance"), icon: "🔧" },
+    { value: "cleaning", label: t("tasks.roleCleaning"), icon: "🧹" },
+    { value: "equipment_check", label: t("tasks.typeEquipmentCheck"), icon: "✅" },
+    { value: "member_support", label: t("tasks.typeMemberSupport"), icon: "💬" },
+    { value: "admin", label: t("tasks.typeAdmin"), icon: "📋" },
+    { value: "custom", label: t("tasks.typeCustom"), icon: "📝" },
   ];
 
   const priorities: Array<{
@@ -97,10 +99,10 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     label: string;
     color: string;
   }> = [
-    { value: "low", label: "Low", color: "text-green-600 bg-green-50" },
-    { value: "medium", label: "Medium", color: "text-yellow-600 bg-yellow-50" },
-    { value: "high", label: "High", color: "text-orange-600 bg-orange-50" },
-    { value: "urgent", label: "Urgent", color: "text-red-600 bg-red-50" },
+    { value: "low", label: t("tasks.low"), color: "text-green-600 bg-green-50" },
+    { value: "medium", label: t("tasks.medium"), color: "text-yellow-600 bg-yellow-50" },
+    { value: "high", label: t("tasks.high"), color: "text-orange-600 bg-orange-50" },
+    { value: "urgent", label: t("tasks.urgent"), color: "text-red-600 bg-red-50" },
   ];
 
   const isOverdue = task?.dueDate && new Date(task.dueDate) < new Date();
@@ -139,8 +141,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Edit Task"
-      subtitle={`Editing: ${task.title}`}
+      title={t("tasks.updateTask")}
+      subtitle={`${t("tasks.editingPrefix")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -164,7 +166,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -176,22 +178,22 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {isPastDue ? "Task is Past Due" : "Task is Overdue"}
+                  {isPastDue ? t("tasks.taskPastDue") : t("tasks.taskIsOverdue")}
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                   {isPastDue
-                    ? "This task is more than 24 hours overdue. Consider reassignment or escalation."
-                    : "This task is overdue. Consider updating the deadline or priority."}
+                    ? t("tasks.taskPastDueEditDesc")
+                    : t("tasks.taskOverdueDesc")}
                 </p>
                 <div className="flex items-center space-x-4 mt-2">
                   <button className="text-sm text-red-600 hover:text-red-700 dark:text-red-400">
-                    Reassign
+                    {t("tasks.reassign")}
                   </button>
                   <button className="text-sm text-red-600 hover:text-red-700 dark:text-red-400">
-                    Escalate
+                    {t("tasks.escalate")}
                   </button>
                   <button className="text-sm text-red-600 hover:text-red-700 dark:text-red-400">
-                    Update Deadline
+                    {t("tasks.updateDeadline")}
                   </button>
                 </div>
               </div>
@@ -203,7 +205,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           {/* Task Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Task Name *
+              {t("tasks.taskName")} *
             </label>
             <input
               type="text"
@@ -212,7 +214,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="Enter task name..."
+              placeholder={t("tasks.taskNamePlaceholder")}
               required
             />
           </div>
@@ -220,7 +222,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           {/* Task Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Task Type *
+              {t("tasks.taskType")} *
             </label>
             <div className="grid grid-cols-2 gap-2">
               {taskTypes.map((type) => (
@@ -246,7 +248,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
+              {t("common.description")}
             </label>
             <textarea
               value={formData.description}
@@ -258,14 +260,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="Describe the task details..."
+              placeholder={t("tasks.taskDetailsPlaceholder")}
             />
           </div>
 
           {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Priority *
+              {t("tasks.priority")} *
             </label>
             <div className="grid grid-cols-4 gap-2">
               {priorities.map((priority) => (
@@ -288,7 +290,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           {/* Due Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Due Date
+              {t("tasks.dueDate")}
             </label>
             <div className="relative">
               <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -306,7 +308,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           {/* Assigned To */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Assigned To
+              {t("tasks.assignedTo")}
             </label>
             <div className="relative">
               <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -320,7 +322,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   }))
                 }
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="email@mtdrb.com"
+                placeholder={t("tasks.emailPlaceholder")}
               />
             </div>
           </div>
@@ -330,14 +332,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
                 <FiActivity className="w-4 h-4" />
-                <span>Task History</span>
+                <span>{t("tasks.taskHistory")}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setShowHistory(!showHistory)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showHistory ? "Hide" : "Show"} history
+                {showHistory ? t("tasks.hide") : t("tasks.show")} {t("tasks.historyLower")}
               </button>
             </div>
 
@@ -350,13 +352,13 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Created by
+                      {t("tasks.createdBy")}
                     </span>
                     <span className="font-medium">{task.createdBy}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Created at
+                      {t("tasks.createdAtLabel")}
                     </span>
                     <span className="font-medium">
                       {new Date(task.createdAt).toLocaleDateString()}
@@ -364,7 +366,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Last updated
+                      {t("tasks.lastUpdated")}
                     </span>
                     <span className="font-medium">
                       {new Date(task.updatedAt).toLocaleDateString()}
@@ -373,7 +375,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   {task.completedAt && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">
-                        Completed at
+                        {t("tasks.completedAtLabel")}
                       </span>
                       <span className="font-medium">
                         {new Date(task.completedAt).toLocaleDateString()}
@@ -390,14 +392,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Smart Suggestions
+                  {t("tasks.smartSuggestions")}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowAiSuggestions(!showAiSuggestions)}
                   className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
                 >
-                  {showAiSuggestions ? "Hide" : "Show"} suggestions
+                  {showAiSuggestions ? t("tasks.hide") : t("tasks.show")} {t("tasks.suggestionsLower")}
                 </button>
               </div>
 
@@ -422,7 +424,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                           </p>
                           <div className="flex items-center space-x-4 mt-2">
                             <span className="text-xs text-gray-500">
-                              Confidence: {suggestion.confidence}%
+                              {t("tasks.confidenceLabel", { value: suggestion.confidence })}
                             </span>
                             <span
                               className={`text-xs px-2 py-1 rounded ${
@@ -433,7 +435,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                                     : "bg-green-100 text-green-700"
                               }`}
                             >
-                              {suggestion.impact} impact
+                              {t(`tasks.${suggestion.impact}`)} {t("tasks.impactSuffix")}
                             </span>
                           </div>
                         </div>
@@ -459,7 +461,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Smart updates available
+                  {t("tasks.smartUpdatesAvailable")}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -468,7 +470,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -476,7 +478,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiEdit className="w-4 h-4" />
-                  <span>{loading ? "Updating..." : "Update Task"}</span>
+                  <span>{loading ? t("tasks.updatingTask") : t("tasks.updateTask")}</span>
                 </button>
               </div>
             </div>

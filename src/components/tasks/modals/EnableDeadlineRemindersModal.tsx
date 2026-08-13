@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiBell,
   FiZap,
@@ -17,12 +18,13 @@ interface EnableDeadlineRemindersModalProps {
 export const EnableDeadlineRemindersModal: React.FC<
   EnableDeadlineRemindersModalProps
 > = ({ open, onClose, isPro = false }) => {
+  const { t } = useTranslation();
   const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
   const [reminderSettings, setReminderSettings] = React.useState({
     enabled: true,
     daysBefore: 1,
-    message: 'Your task "{task_name}" is due in {days} days.',
+    message: t("tasks.templateDefaultMessage"),
     deliveryMethods: {
       app: true,
       email: true,
@@ -38,20 +40,20 @@ export const EnableDeadlineRemindersModal: React.FC<
   const deliveryMethods = [
     {
       key: "app",
-      label: "In-App Notification",
-      description: "Push notifications within the app",
+      label: t("tasks.deliveryInApp"),
+      description: t("tasks.deliveryInAppDesc"),
       icon: "📱",
     },
     {
       key: "email",
-      label: "Email",
-      description: "Email notifications",
+      label: t("common.email"),
+      description: t("tasks.deliveryEmailDesc"),
       icon: "📧",
     },
     {
       key: "whatsapp",
-      label: "WhatsApp",
-      description: "WhatsApp messages (Pro only)",
+      label: t("tasks.deliveryWhatsApp"),
+      description: t("tasks.deliveryWhatsAppDesc"),
       icon: "💬",
       isPro: true,
     },
@@ -66,24 +68,22 @@ export const EnableDeadlineRemindersModal: React.FC<
   const messageTemplates: MessageTemplate[] = [
     {
       id: "default",
-      label: "Default",
-      message: 'Your task "{task_name}" is due in {days} days.',
+      label: t("tasks.templateDefault"),
+      message: t("tasks.templateDefaultMessage"),
     },
     {
       id: "urgent",
-      label: "Urgent",
-      message:
-        'URGENT: Task "{task_name}" is due in {days} days. Please prioritize.',
+      label: t("tasks.urgent"),
+      message: t("tasks.templateUrgentMessage"),
     },
     {
       id: "friendly",
-      label: "Friendly",
-      message:
-        'Hi! Just a friendly reminder that "{task_name}" is due in {days} days.',
+      label: t("tasks.templateFriendly"),
+      message: t("tasks.templateFriendlyMessage"),
     },
     {
       id: "custom",
-      label: "Custom",
+      label: t("tasks.templateCustom"),
       message: reminderSettings.message,
     },
   ];
@@ -148,8 +148,8 @@ export const EnableDeadlineRemindersModal: React.FC<
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Enable Deadline Reminders"
-      subtitle="Configure automatic deadline notifications"
+      title={t("tasks.enableDeadlineReminders")}
+      subtitle={t("tasks.enableDeadlineRemindersSubtitle")}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -173,7 +173,7 @@ export const EnableDeadlineRemindersModal: React.FC<
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -196,13 +196,13 @@ export const EnableDeadlineRemindersModal: React.FC<
               <div className="flex items-center space-x-2">
                 <FiBell className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Enable deadline reminders
+                  {t("tasks.enableDeadlineRemindersToggle")}
                 </span>
               </div>
             </label>
             {reminderSettings.enabled && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                Send reminders before task deadlines
+                {t("tasks.sendRemindersBeforeDeadlines")}
               </p>
             )}
           </div>
@@ -210,11 +210,11 @@ export const EnableDeadlineRemindersModal: React.FC<
           {/* Reminder Timing */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Send Reminder
+              {t("tasks.sendReminder")}
             </label>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Days before deadline:
+                {t("tasks.daysBeforeDeadline")}
               </span>
               <input
                 type="number"
@@ -235,7 +235,7 @@ export const EnableDeadlineRemindersModal: React.FC<
           {/* Message Templates */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Message Template
+              {t("tasks.messageTemplate")}
             </label>
             <div className="space-y-2">
               {messageTemplates.map((template) => (
@@ -261,7 +261,7 @@ export const EnableDeadlineRemindersModal: React.FC<
           {/* Custom Message */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Custom Message
+              {t("tasks.customMessage")}
             </label>
             <textarea
               value={reminderSettings.message}
@@ -273,17 +273,17 @@ export const EnableDeadlineRemindersModal: React.FC<
               }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="Enter custom message..."
+              placeholder={t("tasks.customMessagePlaceholder")}
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Use {"{task_name}"} and {"{days}"} as placeholders
+              {t("tasks.placeholdersHint")}
             </p>
           </div>
 
           {/* Delivery Methods */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Delivery Methods
+              {t("tasks.deliveryMethods")}
             </label>
             <div className="space-y-2">
               {deliveryMethods.map((method) => (
@@ -317,7 +317,7 @@ export const EnableDeadlineRemindersModal: React.FC<
                         </span>
                         {method.isPro && (
                           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-                            Pro
+                            {t("tasks.proBadge")}
                           </span>
                         )}
                       </div>
@@ -335,7 +335,7 @@ export const EnableDeadlineRemindersModal: React.FC<
           <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Smart Detection
+                {t("tasks.smartDetection")}
               </h3>
               <label className="flex items-center space-x-2">
                 <input
@@ -350,7 +350,7 @@ export const EnableDeadlineRemindersModal: React.FC<
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Enable smart detection
+                  {t("tasks.enableSmartDetection")}
                 </span>
               </label>
             </div>
@@ -361,9 +361,9 @@ export const EnableDeadlineRemindersModal: React.FC<
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2 text-sm text-gray-600 dark:text-gray-400"
               >
-                <p>• Detect tasks without deadlines</p>
-                <p>• Suggest follow-up for overdue tasks</p>
-                <p>• Learn from user behavior patterns</p>
+                <p>• {t("tasks.smartDetectionBullet1")}</p>
+                <p>• {t("tasks.smartDetectionBullet2")}</p>
+                <p>• {t("tasks.smartDetectionBullet3")}</p>
               </motion.div>
             )}
           </div>
@@ -374,18 +374,17 @@ export const EnableDeadlineRemindersModal: React.FC<
               <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Missing Deadlines Detected
+                  {t("tasks.missingDeadlinesDetected")}
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  {missingDeadlines.length} tasks in the last 30 days had
-                  missing or overdue deadlines.
+                  {t("tasks.missingDeadlinesDesc", { count: missingDeadlines.length })}
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowMissingDeadlines(!showMissingDeadlines)}
                   className="text-sm text-red-600 hover:text-red-700 dark:text-red-400 mt-2"
                 >
-                  {showMissingDeadlines ? "Hide" : "View"} details
+                  {showMissingDeadlines ? t("tasks.hide") : t("common.view")} {t("common.details").toLowerCase()}
                 </button>
               </div>
             </div>
@@ -404,7 +403,7 @@ export const EnableDeadlineRemindersModal: React.FC<
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{task.title}</span>
                       <span className="text-red-600">
-                        {task.daysOverdue} days overdue
+                        {task.daysOverdue} {t("tasks.daysOverdueSuffix")}
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -420,14 +419,14 @@ export const EnableDeadlineRemindersModal: React.FC<
           <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Message Preview
+                {t("tasks.messagePreview")}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? "Hide" : "Show"} preview
+                {showPreview ? t("tasks.hide") : t("tasks.show")} {t("tasks.preview").toLowerCase()}
               </button>
             </div>
 
@@ -439,7 +438,7 @@ export const EnableDeadlineRemindersModal: React.FC<
               >
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
                   <div className="text-sm font-medium mb-2">
-                    Sample Reminder
+                    {t("tasks.sampleReminder")}
                   </div>
                   <div className="text-sm text-gray-700 dark:text-gray-300">
                     {getPreviewMessage()}
@@ -447,9 +446,9 @@ export const EnableDeadlineRemindersModal: React.FC<
                 </div>
 
                 <div className="text-xs text-blue-700 dark:text-blue-300">
-                  This message will be sent {reminderSettings.daysBefore} day
-                  {reminderSettings.daysBefore !== 1 ? "s" : ""} before the
-                  deadline.
+                  {t("tasks.messageSentPrefix")} {reminderSettings.daysBefore}{" "}
+                  {reminderSettings.daysBefore !== 1 ? t("tasks.days") : t("tasks.day")}{" "}
+                  {t("tasks.messageSentSuffix")}
                 </div>
               </motion.div>
             )}
@@ -461,12 +460,11 @@ export const EnableDeadlineRemindersModal: React.FC<
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {
-                    Object.values(reminderSettings.deliveryMethods).filter(
+                  {t("tasks.deliveryMethodsCount", {
+                    count: Object.values(reminderSettings.deliveryMethods).filter(
                       Boolean,
-                    ).length
-                  }{" "}
-                  delivery methods
+                    ).length,
+                  })}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -475,7 +473,7 @@ export const EnableDeadlineRemindersModal: React.FC<
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -483,7 +481,7 @@ export const EnableDeadlineRemindersModal: React.FC<
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiBell className="w-4 h-4" />
-                  <span>{loading ? "Enabling..." : "Enable Reminders"}</span>
+                  <span>{loading ? t("tasks.enabling") : t("tasks.enableReminders")}</span>
                 </button>
               </div>
             </div>

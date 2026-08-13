@@ -181,12 +181,12 @@ export function AddInvoiceModal({
       "application/pdf",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      toast.error(t("billing.invalidFileType"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(t("billing.fileSizeTooLarge"));
       return;
     }
 
@@ -245,7 +245,7 @@ export function AddInvoiceModal({
     if (isSubmitting) return;
 
     if (!authTenantId) {
-      toast.error("Tenant ID not found. Please ensure you're logged in.");
+      toast.error(t("billing.tenantIdNotFound"));
       return;
     }
 
@@ -299,14 +299,14 @@ export function AddInvoiceModal({
 
       toast.success(
         editingInvoice
-          ? "Invoice updated successfully"
-          : "Invoice added successfully",
+          ? t("billing.invoiceUpdated")
+          : t("billing.invoiceCreated"),
       );
       onInvoiceAdded();
       onClose();
     } catch (error) {
       console.error("Error saving invoice:", error);
-      toast.error("Failed to save invoice. Please try again.");
+      toast.error(t("billing.saveInvoiceFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -316,7 +316,7 @@ export function AddInvoiceModal({
   const handleClose = () => {
     if (isDirty) {
       const shouldClose = window.confirm(
-        "You have unsaved changes. Are you sure you want to close?",
+        t("billing.unsavedChangesConfirm"),
       );
       if (!shouldClose) return;
     }
@@ -386,7 +386,7 @@ export function AddInvoiceModal({
           </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
                 <AppleInput
-                  label={t("billing.title", "عنوان الفاتورة")}
+                  label={t("billing.invoiceTitleLabel")}
                   {...register("title")}
                   error={errors.title?.message}
                   required
@@ -421,7 +421,7 @@ export function AddInvoiceModal({
                   <option value="PT">{t("billing.ptType", "تدريب شخصي")}</option>
                   <option value="Class">{t("billing.classType", "حصص جماعية")}</option>
                   <option value="Facility">{t("billing.facilityType", "مرافق وخدمات")}</option>
-                  <option value="Other">{t("billing.otherType", "أخرى")}</option>
+                  <option value="Other">{t("billing.other")}</option>
                 </AppleSelect>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
@@ -517,7 +517,7 @@ export function AddInvoiceModal({
                         <div className="flex justify-center">
                           <img
                             src={filePreview}
-                            alt="Invoice preview"
+                            alt={t("billing.invoicePreviewAlt")}
                             className="max-w-xs max-h-32 object-contain rounded-lg"
                           />
                         </div>
@@ -601,7 +601,7 @@ export function AddInvoiceModal({
                   <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
                   <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
                   <option value="Draft">{t("billing.draft", "مسودة")}</option>
-                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
+                  <option value="Cancelled">{t("common.cancelled")}</option>
                 </AppleSelect>
                 <div className="flex items-center space-x-3 text-start">
                   <AppleToggle

@@ -150,6 +150,21 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "enrolled":
+        return t("classes.enrolled");
+      case "waitlist":
+        return t("classes.waitlist");
+      case "attended":
+        return t("classes.statusAttended");
+      case "no-show":
+        return t("classes.noShow");
+      default:
+        return status;
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "enrolled":
@@ -171,7 +186,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
         isOpen={isOpen}
         onClose={onClose}
         title={t("classes.classDetailsTitle")}
-        subtitle={t("classes.loading") || "Loading class data..."}
+        subtitle={t("classes.loadingClassData")}
         maxWidth="5xl"
         slideFrom="right"
       >
@@ -186,7 +201,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
     <UnifiedModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Class Details"
+      title={t("classes.classDetailsTitle")}
       subtitle={classData.name}
       maxWidth="5xl"
       slideFrom="right"
@@ -196,14 +211,14 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             <div className="flex items-center space-x-2 px-3 py-2 bg-blue-100bg-blue-900/30 rounded-lg border border-blue-200border-blue-800">
               <FiUsers className="h-4 w-4 text-blue-700text-blue-300" />
               <span className="text-sm font-medium text-blue-800text-blue-200">
-                {analytics?.total_enrolled || 0} enrolled
+                {t("classes.enrolledCount", { count: analytics?.total_enrolled || 0 })}
               </span>
             </div>
             {(analytics?.total_waitlist ?? 0) > 0 && (
               <div className="flex items-center space-x-2 px-3 py-2 bg-amber-100bg-amber-900/30 rounded-lg border border-amber-200border-amber-800">
                 <FiClock className="h-4 w-4 text-amber-700text-amber-300" />
                 <span className="text-sm font-medium text-amber-800text-amber-200">
-                  {analytics?.total_waitlist ?? 0} on waitlist
+                  {t("classes.onWaitlistCount", { count: analytics?.total_waitlist ?? 0 })}
                 </span>
               </div>
             )}
@@ -213,7 +228,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               onClick={onClose}
               className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -243,14 +258,14 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 <FiClock className="h-4 w-4" />
                 <span className="font-medium">{classData.start_time} - {classData.end_time}</span>
                 <span className="text-blue-200">•</span>
-                <span className="font-medium">{classData.trainer_name || "No trainer assigned"}</span>
+                <span className="font-medium">{classData.trainer_name || t("classes.notAssigned")}</span>
               </p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-white drop-shadow-sm">
                 {classData.enrolled_count}/{classData.capacity}
               </div>
-              <div className="text-blue-100 text-sm font-medium">Enrolled</div>
+              <div className="text-blue-100 text-sm font-medium">{t("classes.enrolled")}</div>
               <div className="mt-2">
                 <div className="w-24 h-2 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm">
                   <div 
@@ -271,17 +286,17 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             {[
               {
                 id: "overview",
-                label: "Overview",
+                label: t("classes.overview"),
                 icon: <FiCalendar className="h-4 w-4" />,
               },
               {
                 id: "members",
-                label: "Members",
+                label: t("classes.members"),
                 icon: <FiUsers className="h-4 w-4" />,
               },
               {
                 id: "analytics",
-                label: "Analytics",
+                label: t("classes.analytics"),
                 icon: <FiTrendingUp className="h-4 w-4" />,
               },
             ].map((tab) => (
@@ -318,7 +333,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div>
                       <p className="text-sm text-green-600text-green-400 font-medium">
-                        Attendance Rate
+                        {t("classes.attendanceRate")}
                       </p>
                       <p className="text-xl font-bold text-green-700text-green-300">
                         {analytics?.attendance_rate || 0}%
@@ -334,7 +349,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div>
                       <p className="text-sm text-blue-600text-blue-400 font-medium">
-                        Capacity Utilization
+                        {t("classes.capacityUtilization")}
                       </p>
                       <p className="text-xl font-bold text-blue-700text-blue-300">
                         {analytics?.capacity_utilization || 0}%
@@ -350,7 +365,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div>
                       <p className="text-sm text-yellow-600text-yellow-400 font-medium">
-                        Trainer Rating
+                        {t("classes.trainerRating")}
                       </p>
                       <p className="text-xl font-bold text-yellow-700text-yellow-300">
                         {analytics?.trainer_rating || 0}/5
@@ -368,40 +383,40 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       <FiCalendar className="h-4 w-4 text-brand-600" />
                     </div>
                     <h3 className="text-sm font-semibold text-dark-900text-white">
-                      Class Information
+                      {t("classes.classInformation")}
                     </h3>
                   </div>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Class Type:
+                        {t("classes.classType")}:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        {classData.type || "General"}
+                        {classData.type || t("classes.general")}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Duration:
+                        {t("classes.duration")}:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        60 minutes
+                        {t("classes.minutesValue", { count: 60 })}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Location:
+                        {t("classes.location")}:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        {classData.location || "Studio A"}
+                        {classData.location || t("classes.defaultStudio")}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Difficulty:
+                        {t("classes.difficulty")}:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        Intermediate
+                        {t("classes.intermediate")}
                       </span>
                     </div>
                   </div>
@@ -413,13 +428,13 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       <FiDollarSign className="h-4 w-4 text-green-600" />
                     </div>
                     <h3 className="text-sm font-semibold text-dark-900text-white">
-                      Financial Summary
+                      {t("classes.financialSummary")}
                     </h3>
                   </div>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Revenue:
+                        {t("classes.revenue")}:
                       </span>
                       <span className="text-green-600text-green-400 font-semibold">
                         ${analytics?.revenue || 0}
@@ -427,7 +442,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Cost per Member:
+                        {t("classes.costPerMember")}:
                       </span>
                       <span className="text-dark-900text-white font-medium">
                         $45
@@ -435,7 +450,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Profit Margin:
+                        {t("classes.profitMargin")}:
                       </span>
                       <span className="text-green-600text-green-400 font-semibold">
                         65%
@@ -443,10 +458,10 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
                       <span className="text-light-600text-dark-400">
-                        Popular Time:
+                        {t("classes.popularTime")}:
                       </span>
                       <span className={`font-medium ${analytics?.popular_time_slot ? 'text-green-600text-green-400' : 'text-orange-600text-orange-400'}`}>
-                        {analytics?.popular_time_slot ? "Yes" : "No"}
+                        {analytics?.popular_time_slot ? t("common.yes") : t("common.no")}
                       </span>
                     </div>
                   </div>
@@ -463,17 +478,17 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-dark-900text-white">
-                  Class Members ({members.length})
+                  {t("classes.classMembersCount", { count: members.length })}
                 </h3>
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-light-600text-dark-400">
-                    Filter:
+                    {t("common.filter")}:
                   </span>
                   <select className="text-xs border border-light-200border-dark-600 rounded-lg px-2 py-1 bg-light-50bg-dark-700">
-                    <option value="all">All Members</option>
-                    <option value="enrolled">Enrolled</option>
-                    <option value="waitlist">Waitlist</option>
-                    <option value="vip">VIP Members</option>
+                    <option value="all">{t("classes.allMembers")}</option>
+                    <option value="enrolled">{t("classes.enrolled")}</option>
+                    <option value="waitlist">{t("classes.waitlist")}</option>
+                    <option value="vip">{t("classes.vipMembers")}</option>
                   </select>
                 </div>
               </div>
@@ -494,7 +509,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${getStatusColor(member.status)}`}
                           >
-                            {member.status}
+                            {getStatusLabel(member.status)}
                           </span>
                         </div>
                         <div>
@@ -515,7 +530,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       <div className="flex items-center space-x-4 text-xs">
                         <div className="text-center">
                           <div className="text-light-600text-dark-400">
-                            Joined
+                            {t("classes.joined")}
                           </div>
                           <div className="font-medium text-dark-900text-white">
                             {new Date(member.joined_date).toLocaleDateString()}
@@ -523,7 +538,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                         </div>
                         <div className="text-center">
                           <div className="text-light-600text-dark-400">
-                            Attendance
+                            {t("classes.attendance")}
                           </div>
                           <div className="font-medium text-dark-900text-white">
                             {member.attendance_history}%
@@ -547,22 +562,22 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
                   <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
-                    Enrollment Trend
+                    {t("classes.enrollmentTrend")}
                   </h3>
                   <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
                     <span className="text-sm text-gray-500">
-                      Chart Placeholder
+                      {t("classes.chartPlaceholder")}
                     </span>
                   </div>
                 </div>
 
                 <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
                   <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
-                    Attendance Pattern
+                    {t("classes.attendancePattern")}
                   </h3>
                   <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
                     <span className="text-sm text-gray-500">
-                      Chart Placeholder
+                      {t("classes.chartPlaceholder")}
                     </span>
                   </div>
                 </div>
@@ -571,7 +586,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               {/* Performance Metrics */}
               <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
                 <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
-                  Performance Metrics
+                  {t("classes.performanceMetrics")}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
@@ -579,7 +594,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       {analytics?.attendance_rate || 0}%
                     </div>
                     <div className="text-light-600text-dark-400">
-                      Attendance Rate
+                      {t("classes.attendanceRate")}
                     </div>
                   </div>
                   <div className="text-center">
@@ -587,7 +602,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       {analytics?.capacity_utilization || 0}%
                     </div>
                     <div className="text-light-600text-dark-400">
-                      Capacity Used
+                      {t("classes.capacityUsed")}
                     </div>
                   </div>
                   <div className="text-center">
@@ -595,7 +610,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       {analytics?.trainer_rating || 0}/5
                     </div>
                     <div className="text-light-600text-dark-400">
-                      Trainer Rating
+                      {t("classes.trainerRating")}
                     </div>
                   </div>
                   <div className="text-center">
@@ -603,7 +618,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       ${analytics?.revenue || 0}
                     </div>
                     <div className="text-light-600text-dark-400">
-                      Revenue
+                      {t("classes.revenue")}
                     </div>
                   </div>
                 </div>

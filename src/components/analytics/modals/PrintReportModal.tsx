@@ -14,6 +14,7 @@ import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
 import { exportPDF } from "../../../utils/exportData";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface PrintReportModalProps {
   open: boolean;
@@ -23,40 +24,6 @@ interface PrintReportModalProps {
   onSuccess?: () => void;
   isPro?: boolean;
 }
-
-const layoutOptions = [
-  {
-    id: "summary",
-    label: "Summary",
-    description: "Key metrics and highlights only",
-    icon: FiFileText,
-  },
-  {
-    id: "detailed",
-    label: "Detailed",
-    description: "Complete report with all data",
-    icon: FiList,
-  },
-  {
-    id: "grid",
-    label: "Grid Layout",
-    description: "Organized in grid format",
-    icon: FiGrid,
-  },
-];
-
-const printSettings = [
-  {
-    id: "portrait",
-    label: "Portrait",
-    description: "Standard vertical layout",
-  },
-  {
-    id: "landscape",
-    label: "Landscape",
-    description: "Wide horizontal layout",
-  },
-];
 
 export default function PrintReportModal({
   open,
@@ -68,6 +35,41 @@ export default function PrintReportModal({
 }: PrintReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
   const { tenantId } = useAuth();
+  const { t } = useTranslation();
+
+  const layoutOptions = [
+    {
+      id: "summary",
+      label: t("reports.summary"),
+      description: t("reports.summaryDesc"),
+      icon: FiFileText,
+    },
+    {
+      id: "detailed",
+      label: t("reports.detailed"),
+      description: t("reports.detailedDesc"),
+      icon: FiList,
+    },
+    {
+      id: "grid",
+      label: t("reports.gridLayout"),
+      description: t("reports.gridLayoutDesc"),
+      icon: FiGrid,
+    },
+  ];
+
+  const printSettings = [
+    {
+      id: "portrait",
+      label: t("reports.portrait"),
+      description: t("reports.portraitDesc"),
+    },
+    {
+      id: "landscape",
+      label: t("reports.landscape"),
+      description: t("reports.landscapeDesc"),
+    },
+  ];
 
   const isProUser = isPro ?? true;
 
@@ -170,13 +172,13 @@ export default function PrintReportModal({
       </head>
       <body>
         <h1>${safeName}</h1>
-        <p class="subtitle">Generated on ${new Date().toLocaleDateString()}</p>
+        <p class="subtitle">${escapeHtml(t("reports.generatedOn", { date: new Date().toLocaleDateString() }))}</p>
         <div class="stats">
-          <div class="stat"><div class="value">${summary.totalMembers}</div><div class="label">Total Members</div></div>
-          <div class="stat"><div class="value">${summary.attendanceRate}%</div><div class="label">Attendance Rate</div></div>
-          <div class="stat"><div class="value">$${summary.monthlyRevenue.toLocaleString()}</div><div class="label">Monthly Revenue</div></div>
+          <div class="stat"><div class="value">${summary.totalMembers}</div><div class="label">${escapeHtml(t("members.totalMembers"))}</div></div>
+          <div class="stat"><div class="value">${summary.attendanceRate}%</div><div class="label">${escapeHtml(t("reports.attendanceRate"))}</div></div>
+          <div class="stat"><div class="value">$${summary.monthlyRevenue.toLocaleString()}</div><div class="label">${escapeHtml(t("dashboard.monthlyRevenue"))}</div></div>
         </div>
-        ${pageNumbers ? '<div class="page-number">Page 1 of 1</div>' : ""}
+        ${pageNumbers ? `<div class="page-number">${escapeHtml(t("reports.pageOfPages"))}</div>` : ""}
       </body>
     </html>
   `;
@@ -187,7 +189,7 @@ export default function PrintReportModal({
     try {
       const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        toast.error("Please allow pop-ups to print this report");
+        toast.error(t("reports.pleaseAllowPopups"));
         return;
       }
       printWindow.document.write(buildReportHtml());
@@ -207,17 +209,17 @@ export default function PrintReportModal({
       const filename = `${reportName.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`;
       exportPDF(
         [
-          { Metric: "Total Members", Value: summary.totalMembers },
-          { Metric: "Attendance Rate", Value: `${summary.attendanceRate}%` },
-          { Metric: "Monthly Revenue", Value: `$${summary.monthlyRevenue.toLocaleString()}` },
+          { Metric: t("members.totalMembers"), Value: summary.totalMembers },
+          { Metric: t("reports.attendanceRate"), Value: `${summary.attendanceRate}%` },
+          { Metric: t("dashboard.monthlyRevenue"), Value: `$${summary.monthlyRevenue.toLocaleString()}` },
         ],
         filename,
         reportName,
       );
-      toast.success("PDF downloaded");
+      toast.success(t("reports.pdfDownloaded"));
     } catch (error) {
       console.error("PDF generation failed:", error);
-      toast.error("Failed to generate PDF");
+      toast.error(t("reports.failedToGeneratePdf"));
     } finally {
       setPrinting(false);
     }
@@ -244,8 +246,8 @@ export default function PrintReportModal({
     <SmartAnalyticsModal
       open={open}
       onClose={onClose}
-      title="Print Report"
-      subtitle={`Print "${reportName}" (ID: ${reportId}) with custom layout options`}
+      title={t("reports.printReport")}
+      subtitle={t("reports.printReportSubtitle", { name: reportName, id: reportId })}
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
@@ -264,12 +266,12 @@ export default function PrintReportModal({
       ))}
       {!isProUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
-          Printing reports is available on Pro plans.
+          {t("reports.printingProFeature")}
         </div>
       )}
 
       {/* Layout Options */}
-      <Section title="Layout Options">
+      <Section title={t("reports.layoutOptions")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {layoutOptions.map((layout) => {
             const Icon = layout.icon;
@@ -312,11 +314,11 @@ export default function PrintReportModal({
       </Section>
 
       {/* Print Settings */}
-      <Section title="Print Settings">
+      <Section title={t("reports.printSettings")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">
-              Orientation
+              {t("reports.orientation")}
             </label>
             <select
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
@@ -332,7 +334,7 @@ export default function PrintReportModal({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Content Options
+              {t("reports.contentOptions")}
             </label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
@@ -343,7 +345,7 @@ export default function PrintReportModal({
                   className="rounded"
                 />
                 <span className="text-sm text-gray-600">
-                  Include charts and graphs
+                  {t("reports.includeChartsGraphs")}
                 </span>
               </label>
               <label className="flex items-center gap-2">
@@ -354,7 +356,7 @@ export default function PrintReportModal({
                   className="rounded"
                 />
                 <span className="text-sm text-gray-600">
-                  Include headers and footers
+                  {t("reports.includeHeadersFooters")}
                 </span>
               </label>
               <label className="flex items-center gap-2">
@@ -364,7 +366,7 @@ export default function PrintReportModal({
                   onChange={(e) => setPageNumbers(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">Add page numbers</span>
+                <span className="text-sm text-gray-600">{t("reports.addPageNumbers")}</span>
               </label>
             </div>
           </div>
@@ -372,37 +374,28 @@ export default function PrintReportModal({
       </Section>
 
       {/* Smart Recommendations */}
-      <Section title="Smart Recommendations">
+      <Section title={t("reports.smartRecommendations")}>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <FiSettings className="text-yellow-600 mt-1" />
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">Print Advice</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">{t("reports.printAdvice")}</h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Use <strong>Landscape</strong> orientation for wide tables
-                  </span>
+                  <span>{t("reports.printAdviceLandscape")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Consider <strong>Summary</strong> layout for executive
-                    presentations
-                  </span>
+                  <span>{t("reports.printAdviceSummary")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Split by branch if report exceeds <strong>10 pages</strong>
-                  </span>
+                  <span>{t("reports.printAdviceSplit")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Enable <strong>charts</strong> for better visual impact
-                  </span>
+                  <span>{t("reports.printAdviceCharts")}</span>
                 </li>
               </ul>
             </div>
@@ -411,7 +404,7 @@ export default function PrintReportModal({
       </Section>
 
       {/* Preview Toggle */}
-      <Section title="Preview">
+      <Section title={t("reports.preview")}>
         <div className="space-y-4">
           <label className="flex items-center gap-2">
             <input
@@ -420,7 +413,7 @@ export default function PrintReportModal({
               onChange={(e) => setShowPreview(e.target.checked)}
               className="rounded"
             />
-            <span className="font-medium">Show print preview</span>
+            <span className="font-medium">{t("reports.showPrintPreview")}</span>
           </label>
 
           {showPreview && (
@@ -436,7 +429,7 @@ export default function PrintReportModal({
                     {reportName}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Generated on {new Date().toLocaleDateString()}
+                    {t("reports.generatedOn", { date: new Date().toLocaleDateString() })}
                   </p>
                 </div>
 
@@ -446,14 +439,14 @@ export default function PrintReportModal({
                       <div className="text-2xl font-bold text-blue-600">
                         {summary.totalMembers.toLocaleString()}
                       </div>
-                      <div className="text-sm text-gray-600">Total Members</div>
+                      <div className="text-sm text-gray-600">{t("members.totalMembers")}</div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">
                         {summary.attendanceRate}%
                       </div>
                       <div className="text-sm text-gray-600">
-                        Attendance Rate
+                        {t("reports.attendanceRate")}
                       </div>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
@@ -461,7 +454,7 @@ export default function PrintReportModal({
                         ${summary.monthlyRevenue.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">
-                        Monthly Revenue
+                        {t("dashboard.monthlyRevenue")}
                       </div>
                     </div>
                   </div>
@@ -469,7 +462,7 @@ export default function PrintReportModal({
 
                 {pageNumbers && (
                   <div className="text-center text-xs text-gray-500 mt-6">
-                    Page 1 of 1
+                    {t("reports.pageOfPages")}
                   </div>
                 )}
               </div>
@@ -486,7 +479,7 @@ export default function PrintReportModal({
             onClick={onClose}
             disabled={loading || printing}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="bg-green-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-green-700 transition disabled:opacity-60 flex items-center gap-2"
@@ -496,12 +489,12 @@ export default function PrintReportModal({
             {printing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Generating PDF...
+                {t("reports.generatingPdf")}
               </>
             ) : (
               <>
                 <FiDownload />
-                Download PDF
+                {t("reports.downloadPdf")}
               </>
             )}
           </button>
@@ -513,12 +506,12 @@ export default function PrintReportModal({
             {printing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Printing...
+                {t("reports.printingButton")}
               </>
             ) : (
               <>
                 <FiPrinter />
-                Print Report
+                {t("reports.printReport")}
               </>
             )}
           </button>

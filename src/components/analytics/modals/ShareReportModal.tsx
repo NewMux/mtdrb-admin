@@ -12,6 +12,7 @@ import {
 import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
+import { useTranslation } from "react-i18next";
 
 interface ShareReportModalProps {
   open: boolean;
@@ -22,33 +23,6 @@ interface ShareReportModalProps {
   isPro?: boolean;
 }
 
-const permissionLevels = [
-  {
-    id: "view",
-    label: "View Only",
-    description: "Can view but not edit or share",
-    icon: FiUnlock,
-  },
-  {
-    id: "comment",
-    label: "Comment",
-    description: "Can view and add comments",
-    icon: FiUsers,
-  },
-  {
-    id: "edit",
-    label: "Edit",
-    description: "Can view, comment, and edit",
-    icon: FiLock,
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    description: "Full access including sharing",
-    icon: FiLock,
-  },
-];
-
 export default function ShareReportModal({
   open,
   onClose,
@@ -57,6 +31,34 @@ export default function ShareReportModal({
   isPro,
 }: ShareReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
+  const { t } = useTranslation();
+
+  const permissionLevels = [
+    {
+      id: "view",
+      label: t("reports.viewOnly"),
+      description: t("reports.viewOnlyDesc"),
+      icon: FiUnlock,
+    },
+    {
+      id: "comment",
+      label: t("reports.comment"),
+      description: t("reports.commentDesc"),
+      icon: FiUsers,
+    },
+    {
+      id: "edit",
+      label: t("reports.editPermission"),
+      description: t("reports.editPermissionDesc"),
+      icon: FiLock,
+    },
+    {
+      id: "admin",
+      label: t("reports.admin"),
+      description: t("reports.adminDesc"),
+      icon: FiLock,
+    },
+  ];
 
   const isProUser = isPro ?? true;
 
@@ -99,14 +101,14 @@ export default function ShareReportModal({
       await navigator.clipboard.writeText(shareLink);
       toast.success(
         selectedRecipients.length > 0
-          ? `Link copied - send it to ${selectedRecipients.join(", ")} yourself (automatic email delivery isn't set up yet)`
-          : "Link copied to clipboard",
+          ? t("reports.linkCopiedSendYourself", { recipients: selectedRecipients.join(", ") })
+          : t("reports.linkCopiedToClipboard"),
       );
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Failed to share report:", error);
-      toast.error("Failed to copy share link");
+      toast.error(t("reports.failedToCopyLink"));
     } finally {
       setSharing(false);
     }
@@ -145,8 +147,8 @@ export default function ShareReportModal({
     <SmartAnalyticsModal
       open={open}
       onClose={onClose}
-      title="Share Report"
-      subtitle={`Share "${reportName}" with your team`}
+      title={t("reports.shareReport")}
+      subtitle={t("reports.shareReportSubtitle", { name: reportName })}
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
@@ -165,16 +167,16 @@ export default function ShareReportModal({
       ))}
       {!isProUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
-          Sharing reports is available on Pro plans.
+          {t("reports.sharingProFeature")}
         </div>
       )}
 
       {/* Share Link */}
-      <Section title="Share Link">
+      <Section title={t("reports.shareLink")}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-              <FiLink /> Direct Link
+              <FiLink /> {t("reports.directLink")}
             </label>
             <div className="flex gap-2">
               <input
@@ -190,12 +192,12 @@ export default function ShareReportModal({
                 {linkCopied ? (
                   <>
                     <FiCheckCircle />
-                    Copied!
+                    {t("reports.copied")}
                   </>
                 ) : (
                   <>
                     <FiCopy />
-                    Copy
+                    {t("reports.copy")}
                   </>
                 )}
               </button>
@@ -205,7 +207,7 @@ export default function ShareReportModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-                <FiLock /> Permission Level
+                <FiLock /> {t("reports.permissionLevel")}
               </label>
               <select
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
@@ -221,7 +223,7 @@ export default function ShareReportModal({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-                <FiClock /> Expiration
+                <FiClock /> {t("reports.expiration")}
               </label>
               <input
                 type="date"
@@ -236,10 +238,10 @@ export default function ShareReportModal({
       </Section>
 
       {/* Recipients */}
-      <Section title="Add Recipients">
+      <Section title={t("reports.addRecipients")}>
         <div className="space-y-4">
           <p className="text-sm text-gray-500">
-            Type an email address to note who this was shared with (delivery isn&apos;t automated yet - copy the link and send it yourself).
+            {t("reports.recipientsHelp")}
           </p>
           {/* Recipient email entry */}
           <div className="relative flex gap-2">
@@ -262,7 +264,7 @@ export default function ShareReportModal({
               disabled={!recipientInput.trim()}
               className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
             >
-              Add
+              {t("common.add")}
             </button>
           </div>
 
@@ -270,7 +272,7 @@ export default function ShareReportModal({
           {selectedRecipients.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">
-                Selected Recipients ({selectedRecipients.length})
+                {t("reports.selectedRecipients", { count: selectedRecipients.length })}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {selectedRecipients.map((email) => (
@@ -294,36 +296,28 @@ export default function ShareReportModal({
       </Section>
 
       {/* Smart Recommendations */}
-      <Section title="Smart Recommendations">
+      <Section title={t("reports.smartRecommendations")}>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <FiShare2 className="text-blue-600 mt-1" />
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
-                Smart Suggestions
+                {t("reports.smartSuggestions")}
               </h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Recommended permission: <strong>View Only</strong> for this
-                    report type
-                  </span>
+                  <span>{t("reports.recommendedPermission")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Set expiration to <strong>7 days</strong> for sensitive data
-                  </span>
+                  <span>{t("reports.expirationSuggestion")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Only add recipients who should have access - the link
-                    still requires them to log in to your tenant
-                  </span>
+                  <span>{t("reports.recipientsSuggestion")}</span>
                   {!isPro && (
-                    <FiLock className="text-gray-400" title="Pro feature" />
+                    <FiLock className="text-gray-400" title={t("reports.proFeature")} />
                   )}
                 </li>
               </ul>
@@ -333,36 +327,36 @@ export default function ShareReportModal({
       </Section>
 
       {/* Share Summary */}
-      <Section title="Share Summary">
+      <Section title={t("reports.shareSummary")}>
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">Report</span>
+              <span className="font-medium text-gray-900">{t("reports.report")}</span>
               <span className="text-gray-600">{reportName}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">Permission</span>
+              <span className="font-medium text-gray-900">{t("reports.permission")}</span>
               <span className="text-gray-600 capitalize">
                 {selectedPermission}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">Recipients</span>
+              <span className="font-medium text-gray-900">{t("reports.recipients")}</span>
               <span className="text-gray-600">
-                {selectedRecipients.length} people
+                {t("reports.peopleCount", { count: selectedRecipients.length })}
               </span>
             </div>
             {expirationDate && (
               <div className="flex items-center justify-between">
-                <span className="font-medium text-gray-900">Expires</span>
+                <span className="font-medium text-gray-900">{t("reports.expires")}</span>
                 <span className="text-gray-600">
                   {new Date(expirationDate).toLocaleDateString()}
                 </span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">Link Access</span>
-              <span className="text-gray-600">Requires login to your tenant</span>
+              <span className="font-medium text-gray-900">{t("reports.linkAccess")}</span>
+              <span className="text-gray-600">{t("reports.requiresLoginToTenant")}</span>
             </div>
           </div>
         </div>
@@ -376,7 +370,7 @@ export default function ShareReportModal({
             onClick={onClose}
             disabled={loading || sharing}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
@@ -386,12 +380,12 @@ export default function ShareReportModal({
             {sharing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Sharing...
+                {t("reports.sharingButton")}
               </>
             ) : (
               <>
                 <FiShare2 />
-                Share Report
+                {t("reports.shareReport")}
               </>
             )}
           </button>

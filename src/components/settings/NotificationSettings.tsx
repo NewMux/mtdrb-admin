@@ -9,6 +9,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchGymSettings, updateGymSettings } from "../../api/settings";
 
@@ -44,6 +45,7 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
 export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   refreshKey,
 }) => {
+  const { t } = useTranslation();
   const { tenantId } = useAuth();
   const [settings, setSettings] = useState(DEFAULT_NOTIFICATION_SETTINGS);
   const [existingMetadata, setExistingMetadata] = useState<Record<string, unknown>>({});
@@ -67,7 +69,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
 
   const handleSaveSettings = useCallback(async () => {
     if (!tenantId) {
-      toast.error("No tenant ID found. Please log in again.");
+      toast.error(t("settings.noTenantIdFound"));
       return;
     }
     setIsSaving(true);
@@ -79,21 +81,21 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
         },
       });
       if (error) throw error;
-      toast.success("Notification settings saved");
+      toast.success(t("settings.notificationSettingsSaved"));
     } catch (error) {
       console.error("Failed to save notification settings:", error);
-      toast.error("Failed to save notification settings");
+      toast.error(t("settings.notificationSettingsSaveFailed"));
     } finally {
       setIsSaving(false);
     }
-  }, [tenantId, existingMetadata, settings]);
+  }, [tenantId, existingMetadata, settings, t]);
 
   const handleTestNotification = useCallback((channel: string) => {
     toast(
-      `Test ${channel} notifications aren't set up yet - connect an email/SMS/push provider to enable this.`,
+      t("settings.testNotificationNotSetUp", { channel }),
       { icon: "ℹ️" },
     );
-  }, []);
+  }, [t]);
 
   const handleToggle = (path: string, value: boolean) => {
     const keys = path.split(".");
@@ -124,29 +126,29 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   const channels = [
     {
       key: "emailNotifications",
-      label: "Email Notifications",
-      description: "Receive notifications via email",
+      label: t("settings.emailNotifications"),
+      description: t("settings.emailNotificationsDesc"),
       icon: <FiMail className="h-5 w-5 text-blue-600" />,
       enabled: settings.emailNotifications,
     },
     {
       key: "smsNotifications",
-      label: "SMS Notifications",
-      description: "Receive notifications via text message",
+      label: t("settings.smsNotifications"),
+      description: t("settings.smsNotificationsDesc"),
       icon: <FiPhone className="h-5 w-5 text-green-600" />,
       enabled: settings.smsNotifications,
     },
     {
       key: "pushNotifications",
-      label: "Push Notifications",
-      description: "Receive browser and mobile push notifications",
+      label: t("settings.pushNotifications"),
+      description: t("settings.pushNotificationsDesc"),
       icon: <FiBell className="h-5 w-5 text-purple-600" />,
       enabled: settings.pushNotifications,
     },
     {
       key: "inAppNotifications",
-      label: "In-App Notifications",
-      description: "Show notifications within the application",
+      label: t("settings.inAppNotifications"),
+      description: t("settings.inAppNotificationsDesc"),
       icon: <FiZap className="h-5 w-5 text-orange-600" />,
       enabled: settings.inAppNotifications,
     },
@@ -155,38 +157,38 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   const notificationTypes = [
     {
       key: "memberUpdates",
-      label: "Member Updates",
-      description: "New member registrations, profile changes",
+      label: t("settings.memberUpdates"),
+      description: t("settings.memberUpdatesDesc"),
       enabled: settings.preferences.memberUpdates,
     },
     {
       key: "classReminders",
-      label: "Class Reminders",
-      description: "Upcoming class notifications and changes",
+      label: t("settings.classReminders"),
+      description: t("settings.classRemindersDesc"),
       enabled: settings.preferences.classReminders,
     },
     {
       key: "paymentAlerts",
-      label: "Payment Alerts",
-      description: "Payment due dates, failed payments, receipts",
+      label: t("settings.paymentAlerts"),
+      description: t("settings.paymentAlertsDesc"),
       enabled: settings.preferences.paymentAlerts,
     },
     {
       key: "systemAlerts",
-      label: "System Alerts",
-      description: "System maintenance, security alerts",
+      label: t("settings.systemAlerts"),
+      description: t("settings.systemAlertsDesc"),
       enabled: settings.preferences.systemAlerts,
     },
     {
       key: "promotions",
-      label: "Promotions & Marketing",
-      description: "Special offers and promotional campaigns",
+      label: t("settings.promotionsMarketing"),
+      description: t("settings.promotionsMarketingDesc"),
       enabled: settings.preferences.promotions,
     },
     {
       key: "reports",
-      label: "Reports & Analytics",
-      description: "Weekly reports and analytics summaries",
+      label: t("settings.reportsAnalytics"),
+      description: t("settings.reportsAnalyticsDesc"),
       enabled: settings.preferences.reports,
     },
   ];
@@ -196,10 +198,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Notification Settings
+            {t("settings.notificationSettingsTitle")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Configure how and when you receive notifications
+            {t("settings.notificationSettingsSubtitle")}
           </p>
         </div>
         <div className="flex gap-3 mt-6">
@@ -208,25 +210,25 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
             disabled={isSaving}
             className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
           >
-            {isSaving ? "Saving..." : "Save Settings"}
+            {isSaving ? t("settings.saving") : t("settings.saveSettings")}
           </button>
           <button
             onClick={() => handleTestNotification("email")}
             className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
           >
-            Test Email
+            {t("settings.testEmail")}
           </button>
           <button
             onClick={() => handleTestNotification("SMS")}
             className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
           >
-            Test SMS
+            {t("settings.testSms")}
           </button>
           <button
             onClick={() => handleTestNotification("push")}
             className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all duration-300 ease-in-out font-semibold min-h-[44px]"
           >
-            Test Push
+            {t("settings.testPush")}
           </button>
         </div>
       </div>
@@ -236,7 +238,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
         <div className="flex items-center mb-6">
           <FiBell className="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Notification Channels
+            {t("settings.notificationChannels")}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,14 +277,14 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center mb-6">
           <FiClock className="h-6 w-6 text-purple-600 dark:text-purple-400 mr-3" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Quiet Hours</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("settings.quietHoursTitle")}</h2>
         </div>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Enable Quiet Hours</h3>
+              <h3 className="font-medium text-gray-900 dark:text-white">{t("settings.enableQuietHours")}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Limit notifications during specified hours
+                {t("settings.limitNotificationsDesc")}
               </p>
             </div>
             <button
@@ -307,7 +309,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Start Time
+                  {t("settings.startTime")}
                 </label>
                 <input
                   type="time"
@@ -320,7 +322,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  End Time
+                  {t("settings.endTime")}
                 </label>
                 <input
                   type="time"
@@ -341,7 +343,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
         <div className="flex items-center mb-6">
           <FiUsers className="h-6 w-6 text-green-600 dark:text-green-400 mr-3" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Notification Types
+            {t("settings.notificationTypesTitle")}
           </h2>
         </div>
         <div className="space-y-3">
@@ -378,13 +380,13 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
         <div className="flex items-center mb-6">
           <FiSettings className="h-6 w-6 text-orange-600 dark:text-orange-400 mr-3" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Frequency Settings
+            {t("settings.frequencySettingsTitle")}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Marketing Notifications
+              {t("settings.marketingNotifications")}
             </label>
             <select
               value={settings.frequency.marketing}
@@ -393,15 +395,15 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               }
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
-              <option value="never">Never</option>
-              <option value="weekly">Weekly</option>
-              <option value="bi-weekly">Bi-weekly</option>
-              <option value="monthly">Monthly</option>
+              <option value="never">{t("settings.freqNever")}</option>
+              <option value="weekly">{t("settings.freqWeekly")}</option>
+              <option value="bi-weekly">{t("settings.freqBiWeekly")}</option>
+              <option value="monthly">{t("settings.freqMonthly")}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              System Updates
+              {t("settings.systemUpdates")}
             </label>
             <select
               value={settings.frequency.updates}
@@ -410,14 +412,14 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               }
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
-              <option value="immediate">Immediate</option>
-              <option value="daily">Daily Summary</option>
-              <option value="weekly">Weekly Summary</option>
+              <option value="immediate">{t("settings.freqImmediate")}</option>
+              <option value="daily">{t("settings.freqDailySummary")}</option>
+              <option value="weekly">{t("settings.freqWeeklySummary")}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Alert Notifications
+              {t("settings.alertNotificationsLabel")}
             </label>
             <select
               value={settings.frequency.alerts}
@@ -426,9 +428,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               }
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 focus:border-blue-600 focus:ring-0 dark:text-gray-100"
             >
-              <option value="immediate">Immediate</option>
-              <option value="hourly">Hourly</option>
-              <option value="daily">Daily</option>
+              <option value="immediate">{t("settings.freqImmediate")}</option>
+              <option value="hourly">{t("settings.freqHourly")}</option>
+              <option value="daily">{t("settings.freqDaily")}</option>
             </select>
           </div>
         </div>
@@ -437,32 +439,32 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
       {/* Test Notifications */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-          Test Notifications
+          {t("settings.testNotificationsTitle")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <button
             onClick={() => handleTestNotification("email")}
             className="px-4 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors"
           >
-            Test Email
+            {t("settings.testEmail")}
           </button>
           <button
             onClick={() => handleTestNotification("SMS")}
             className="px-4 py-3 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-colors"
           >
-            Test SMS
+            {t("settings.testSms")}
           </button>
           <button
             onClick={() => handleTestNotification("push")}
             className="px-4 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors"
           >
-            Test Push
+            {t("settings.testPush")}
           </button>
           <button
             onClick={() => handleTestNotification("in-app")}
             className="px-4 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-colors"
           >
-            Test In-App
+            {t("settings.testInApp")}
           </button>
         </div>
       </div>

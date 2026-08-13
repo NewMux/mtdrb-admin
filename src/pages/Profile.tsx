@@ -3,9 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
+import { useTranslation } from "react-i18next";
 
 // ===== PROFILE PAGE (SCAFFOLD) =====
 export default function Profile() {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -42,22 +44,22 @@ export default function Profile() {
             className="h-12 w-auto mx-auto"
           />
         </div>
-        <h1 className="text-2xl font-bold mb-2 text-blue-900">Profile</h1>
+        <h1 className="text-2xl font-bold mb-2 text-blue-900">{t("profile.title")}</h1>
         <div className="mb-6 text-center">
           <div className="text-blue-900 font-semibold text-lg">
-            {user?.user_metadata?.name || "No name set"}
+            {user?.user_metadata?.name || t("profile.noNameSet")}
           </div>
           <div className="text-blue-400 text-base">{user?.email}</div>
         </div>
         {/* Placeholder for profile editing */}
         <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out min-h-[44px]">
-          Save Changes
+          {t("settings.saveChanges")}
         </button>
         <Link
           to="/dashboard"
           className="mt-8 text-blue-400 hover:text-blue-600 text-sm underline transition"
         >
-          ← Back to Dashboard
+          ← {t("profile.backToDashboard")}
         </Link>
       </motion.div>
     </div>

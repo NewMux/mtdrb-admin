@@ -5,6 +5,7 @@ import {
   FiUserMinus,
   FiShield,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -23,6 +24,7 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,10 +53,10 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Remove Trainer
+                {t("trainers.removeTrainer")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Permanently remove trainer from the system
+                {t("trainers.removeTrainerDesc")}
               </p>
             </div>
           </div>
@@ -74,11 +76,10 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
               <FiAlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div>
                 <h3 className="font-medium text-red-800 dark:text-red-200">
-                  This action cannot be undone
+                  {t("trainers.actionCannotBeUndone")}
                 </h3>
                 <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                  Removing this trainer will permanently delete their profile,
-                  schedule, and all associated data.
+                  {t("trainers.removeWarningDesc")}
                 </p>
               </div>
             </div>
@@ -87,27 +88,27 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Status:
+                  {t("common.status")}:
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  Active
+                  {t("trainers.active")}
                 </span>
               </div>
             </div>
@@ -116,19 +117,19 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
           {/* Reason Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Reason for Removal
+              {t("trainers.reasonForRemoval")}
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              <option value="">Select a reason</option>
-              <option value="performance">Performance Issues</option>
-              <option value="conduct">Code of Conduct Violation</option>
-              <option value="resignation">Resignation</option>
-              <option value="termination">Termination</option>
-              <option value="other">Other</option>
+              <option value="">{t("trainers.selectReason")}</option>
+              <option value="performance">{t("trainers.performanceIssues")}</option>
+              <option value="conduct">{t("trainers.conductViolation")}</option>
+              <option value="resignation">{t("trainers.resignation")}</option>
+              <option value="termination">{t("trainers.termination")}</option>
+              <option value="other">{t("trainers.other")}</option>
             </select>
           </div>
 
@@ -139,12 +140,10 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Recommendation
+                    {t("trainers.smartRecommendation")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Consider scheduling a final performance review before
-                    removal. This trainer has shown consistent improvement in
-                    recent months.
+                    {t("trainers.removeRecommendationDesc")}
                   </p>
                 </div>
               </div>
@@ -154,13 +153,13 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
           {/* Confirmation */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Type &quot;REMOVE&quot; to confirm
+              {t("trainers.typeToConfirm", { word: "REMOVE" })}
             </label>
             <input
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Type REMOVE to confirm"
+              placeholder={t("trainers.typeRemoveToConfirmPlaceholder")}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
@@ -172,7 +171,7 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleRemove}
@@ -184,7 +183,7 @@ const RemoveTrainerModal: React.FC<RemoveTrainerModalProps> = ({
             ) : (
               <FiUserMinus className="w-4 h-4" />
             )}
-            <span>Remove Trainer</span>
+            <span>{t("trainers.removeTrainer")}</span>
           </button>
         </div>
       </div>

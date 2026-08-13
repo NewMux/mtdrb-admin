@@ -239,7 +239,7 @@ const Trainers: React.FC = () => {
     {
       name: t("trainers.classesThisWeek"),
       value: String(classesThisWeek),
-      change: "This week",
+      change: t("trainers.thisWeek"),
       icon: FiClock,
       color: "from-green-500 to-green-600",
     },
@@ -451,7 +451,7 @@ const Trainers: React.FC = () => {
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
-              aria-label="Advanced filters"
+              aria-label={t("trainers.advancedFilters")}
             >
               <FiFilter className="w-4 h-4" />
             </button>
@@ -565,15 +565,15 @@ const Trainers: React.FC = () => {
           </label>
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allSpecialties")}</option>
-            <option value="strength">Strength Training</option>
-            <option value="cardio">Cardio</option>
-            <option value="hiit">HIIT</option>
-            <option value="yoga">Yoga</option>
-            <option value="pilates">Pilates</option>
-            <option value="crossfit">CrossFit</option>
-            <option value="boxing">Boxing</option>
-            <option value="nutrition">Nutrition</option>
-            <option value="rehabilitation">Rehabilitation</option>
+            <option value="strength">{t("trainers.strengthTraining")}</option>
+            <option value="cardio">{t("trainers.cardio")}</option>
+            <option value="hiit">{t("trainers.hiit")}</option>
+            <option value="yoga">{t("trainers.yoga")}</option>
+            <option value="pilates">{t("trainers.pilates")}</option>
+            <option value="crossfit">{t("trainers.crossfit")}</option>
+            <option value="boxing">{t("trainers.boxing")}</option>
+            <option value="nutrition">{t("trainers.nutrition")}</option>
+            <option value="rehabilitation">{t("trainers.rehabilitation")}</option>
           </select>
         </div>
 
@@ -584,10 +584,10 @@ const Trainers: React.FC = () => {
           </label>
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allLevels")}</option>
-            <option value="beginner">Beginner (0-2 years)</option>
-            <option value="intermediate">Intermediate (2-5 years)</option>
-            <option value="advanced">Advanced (5-10 years)</option>
-            <option value="expert">Expert (10+ years)</option>
+            <option value="beginner">{t("trainers.experienceBeginner")}</option>
+            <option value="intermediate">{t("trainers.experienceIntermediate")}</option>
+            <option value="advanced">{t("trainers.experienceAdvanced")}</option>
+            <option value="expert">{t("trainers.experienceExpert")}</option>
           </select>
         </div>
 
@@ -598,10 +598,10 @@ const Trainers: React.FC = () => {
           </label>
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.anyRating")}</option>
-            <option value="4.5">4.5+ Stars</option>
-            <option value="4.0">4.0+ Stars</option>
-            <option value="3.5">3.5+ Stars</option>
-            <option value="3.0">3.0+ Stars</option>
+            <option value="4.5">{t("trainers.starsAndAbove", { rating: "4.5" })}</option>
+            <option value="4.0">{t("trainers.starsAndAbove", { rating: "4.0" })}</option>
+            <option value="3.5">{t("trainers.starsAndAbove", { rating: "3.5" })}</option>
+            <option value="3.0">{t("trainers.starsAndAbove", { rating: "3.0" })}</option>
           </select>
         </div>
 
@@ -613,8 +613,8 @@ const Trainers: React.FC = () => {
           <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allStatuses")}</option>
             <option value="active">{t("trainers.active")}</option>
-            <option value="inactive">Inactive</option>
-            <option value="on_leave">On Leave</option>
+            <option value="inactive">{t("common.inactive")}</option>
+            <option value="on_leave">{t("trainers.onLeave")}</option>
             <option value="available">{t("trainers.available")}</option>
             <option value="busy">{t("trainers.busy")}</option>
           </select>

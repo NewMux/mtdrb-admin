@@ -150,16 +150,16 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
   };
 
   const classTypes = [
-    { value: "yoga", label: "Yoga" },
-    { value: "pilates", label: "Pilates" },
-    { value: "hiit", label: "HIIT" },
-    { value: "strength", label: "Strength Training" },
-    { value: "cardio", label: "Cardio" },
-    { value: "spinning", label: "Spinning" },
-    { value: "zumba", label: "Zumba" },
-    { value: "boxing", label: "Boxing" },
-    { value: "martial-arts", label: "Martial Arts" },
-    { value: "dance", label: "Dance" },
+    { value: "yoga", label: t("classes.yoga") },
+    { value: "pilates", label: t("classes.pilates") },
+    { value: "hiit", label: t("classes.hiit") },
+    { value: "strength", label: t("classes.strengthTraining") },
+    { value: "cardio", label: t("classes.cardio") },
+    { value: "spinning", label: t("classes.spinning") },
+    { value: "zumba", label: t("classes.zumba") },
+    { value: "boxing", label: t("classes.boxing") },
+    { value: "martial-arts", label: t("classes.martialArts") },
+    { value: "dance", label: t("classes.dance") },
   ];
 
   const recurrenceOptions = [
@@ -191,7 +191,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {conflicts.length > 0 && (
           <div className="flex items-center gap-1 text-sm text-orange-600">
             <FiAlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <span>{t("classes.conflictsDetected", `تم اكتشاف ${conflicts.length} تعارض`)}</span>
+            <span>{t("classes.conflictsDetected", { count: conflicts.length })}</span>
           </div>
         )}
       </div>

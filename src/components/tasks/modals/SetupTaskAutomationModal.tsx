@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiSettings,
   FiZap,
@@ -31,6 +32,7 @@ interface AutomationFormData {
 export const SetupTaskAutomationModal: React.FC<
   SetupTaskAutomationModalProps
 > = ({ open, onClose, isPro = false }) => {
+  const { t } = useTranslation();
   const { loading, createAutomation, alerts, clearAlerts } = useSmartTaskModal({
     isPro,
   });
@@ -58,20 +60,20 @@ export const SetupTaskAutomationModal: React.FC<
   }> = [
     {
       value: "recurring",
-      label: "Recurring",
-      description: "Tasks that repeat on a schedule",
+      label: t("tasks.automationTypeRecurring"),
+      description: t("tasks.automationTypeRecurringDesc"),
       icon: "🔄",
     },
     {
       value: "triggered",
-      label: "Triggered",
-      description: "Tasks triggered by events",
+      label: t("tasks.automationTypeTriggered"),
+      description: t("tasks.automationTypeTriggeredDesc"),
       icon: "⚡",
     },
     {
       value: "scheduled",
-      label: "Scheduled",
-      description: "One-time scheduled tasks",
+      label: t("tasks.automationTypeScheduled"),
+      description: t("tasks.automationTypeScheduledDesc"),
       icon: "📅",
     },
   ];
@@ -81,9 +83,9 @@ export const SetupTaskAutomationModal: React.FC<
     label: string;
     color: string;
   }> = [
-    { value: "low", label: "Low", color: "text-green-600 bg-green-50" },
-    { value: "medium", label: "Medium", color: "text-yellow-600 bg-yellow-50" },
-    { value: "high", label: "High", color: "text-orange-600 bg-orange-50" },
+    { value: "low", label: t("tasks.low"), color: "text-green-600 bg-green-50" },
+    { value: "medium", label: t("tasks.medium"), color: "text-yellow-600 bg-yellow-50" },
+    { value: "high", label: t("tasks.high"), color: "text-orange-600 bg-orange-50" },
   ];
 
   interface AutomationTemplate {
@@ -100,8 +102,8 @@ export const SetupTaskAutomationModal: React.FC<
   const templates: AutomationTemplate[] = [
     {
       id: "daily_cleaning",
-      name: "Daily Cleaning Checklist",
-      description: "Automated daily cleaning tasks for gym maintenance",
+      name: t("tasks.templateDailyCleaning"),
+      description: t("tasks.templateDailyCleaningDesc"),
       type: "recurring",
       schedule: "daily 6:00 AM",
       assignee: "cleaning@mtdrb.com",
@@ -109,8 +111,8 @@ export const SetupTaskAutomationModal: React.FC<
     },
     {
       id: "member_onboarding",
-      name: "Member Onboarding",
-      description: "Automated onboarding tasks when new member joins",
+      name: t("tasks.typeOnboarding"),
+      description: t("tasks.templateMemberOnboardingDesc"),
       type: "triggered",
       trigger: "new_member_registration",
       assignee: "trainer@mtdrb.com",
@@ -118,8 +120,8 @@ export const SetupTaskAutomationModal: React.FC<
     },
     {
       id: "monthly_equipment",
-      name: "Monthly Equipment Check",
-      description: "Monthly equipment maintenance and safety checks",
+      name: t("tasks.templateMonthlyEquipment"),
+      description: t("tasks.templateMonthlyEquipmentDesc"),
       type: "scheduled",
       schedule: "monthly 1st 9:00 AM",
       assignee: "maintenance@mtdrb.com",
@@ -127,8 +129,8 @@ export const SetupTaskAutomationModal: React.FC<
     },
     {
       id: "weekly_inventory",
-      name: "Weekly Inventory Check",
-      description: "Weekly inventory and supply check",
+      name: t("tasks.templateWeeklyInventory"),
+      description: t("tasks.templateWeeklyInventoryDesc"),
       type: "recurring",
       schedule: "weekly monday 8:00 AM",
       assignee: "admin@mtdrb.com",
@@ -193,8 +195,8 @@ export const SetupTaskAutomationModal: React.FC<
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Setup Task Automation"
-      subtitle="Create automated task workflows"
+      title={t("tasks.setupTaskAutomation")}
+      subtitle={t("tasks.setupTaskAutomationSubtitle")}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -218,7 +220,7 @@ export const SetupTaskAutomationModal: React.FC<
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -227,7 +229,7 @@ export const SetupTaskAutomationModal: React.FC<
           {/* Templates */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Quick Templates
+              {t("tasks.quickTemplates")}
             </label>
             <div className="grid grid-cols-1 gap-2">
               {templates.map((template) => (
@@ -273,7 +275,7 @@ export const SetupTaskAutomationModal: React.FC<
           {/* Automation Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Automation Name *
+              {t("tasks.automationName")} *
             </label>
             <input
               type="text"
@@ -282,7 +284,7 @@ export const SetupTaskAutomationModal: React.FC<
                 setAutomationData((prev) => ({ ...prev, name: e.target.value }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="Enter automation name..."
+              placeholder={t("tasks.automationNamePlaceholder")}
               required
             />
           </div>
@@ -290,7 +292,7 @@ export const SetupTaskAutomationModal: React.FC<
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
+              {t("common.description")}
             </label>
             <textarea
               value={automationData.description}
@@ -302,14 +304,14 @@ export const SetupTaskAutomationModal: React.FC<
               }
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="Describe the automation..."
+              placeholder={t("tasks.automationDescriptionPlaceholder")}
             />
           </div>
 
           {/* Automation Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Automation Type *
+              {t("tasks.automationType")} *
             </label>
             <div className="grid grid-cols-1 gap-2">
               {automationTypes.map((type) => (
@@ -346,7 +348,7 @@ export const SetupTaskAutomationModal: React.FC<
           {automationData.type === "recurring" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Schedule *
+                {t("tasks.schedule")} *
               </label>
               <select
                 value={automationData.schedule}
@@ -359,20 +361,20 @@ export const SetupTaskAutomationModal: React.FC<
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 required
               >
-                <option value="">Select schedule...</option>
-                <option value="daily 6:00 AM">Daily at 6:00 AM</option>
-                <option value="daily 8:00 AM">Daily at 8:00 AM</option>
+                <option value="">{t("tasks.selectSchedule")}</option>
+                <option value="daily 6:00 AM">{t("tasks.scheduleDaily6am")}</option>
+                <option value="daily 8:00 AM">{t("tasks.scheduleDaily8am")}</option>
                 <option value="weekly monday 9:00 AM">
-                  Weekly on Monday at 9:00 AM
+                  {t("tasks.scheduleWeeklyMon9am")}
                 </option>
                 <option value="weekly friday 5:00 PM">
-                  Weekly on Friday at 5:00 PM
+                  {t("tasks.scheduleWeeklyFri5pm")}
                 </option>
                 <option value="monthly 1st 9:00 AM">
-                  Monthly on 1st at 9:00 AM
+                  {t("tasks.scheduleMonthly1st9am")}
                 </option>
                 <option value="monthly 15th 2:00 PM">
-                  Monthly on 15th at 2:00 PM
+                  {t("tasks.scheduleMonthly15th2pm")}
                 </option>
               </select>
             </div>
@@ -381,7 +383,7 @@ export const SetupTaskAutomationModal: React.FC<
           {automationData.type === "triggered" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Trigger Event *
+                {t("tasks.triggerEvent")} *
               </label>
               <select
                 value={automationData.trigger}
@@ -394,16 +396,16 @@ export const SetupTaskAutomationModal: React.FC<
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 required
               >
-                <option value="">Select trigger...</option>
+                <option value="">{t("tasks.selectTrigger")}</option>
                 <option value="new_member_registration">
-                  New Member Registration
+                  {t("tasks.triggerNewMember")}
                 </option>
-                <option value="class_booking">Class Booking</option>
+                <option value="class_booking">{t("tasks.triggerClassBooking")}</option>
                 <option value="equipment_issue">
-                  Equipment Issue Reported
+                  {t("tasks.triggerEquipmentIssue")}
                 </option>
-                <option value="maintenance_request">Maintenance Request</option>
-                <option value="member_complaint">Member Complaint</option>
+                <option value="maintenance_request">{t("tasks.triggerMaintenanceRequest")}</option>
+                <option value="member_complaint">{t("tasks.triggerMemberComplaint")}</option>
               </select>
             </div>
           )}
@@ -411,7 +413,7 @@ export const SetupTaskAutomationModal: React.FC<
           {/* Assignee */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Default Assignee
+              {t("tasks.defaultAssignee")}
             </label>
             <input
               type="email"
@@ -423,14 +425,14 @@ export const SetupTaskAutomationModal: React.FC<
                 }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="email@mtdrb.com"
+              placeholder={t("tasks.emailPlaceholder")}
             />
           </div>
 
           {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Default Priority
+              {t("tasks.defaultPriority")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {priorities.map((priority) => (
@@ -459,14 +461,14 @@ export const SetupTaskAutomationModal: React.FC<
           <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Preview
+                {t("tasks.preview")}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? "Hide" : "Show"} preview
+                {showPreview ? t("tasks.hide") : t("tasks.show")} {t("tasks.preview").toLowerCase()}
               </button>
             </div>
 
@@ -477,7 +479,7 @@ export const SetupTaskAutomationModal: React.FC<
                 className="space-y-2"
               >
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Upcoming tasks from this automation:
+                  {t("tasks.upcomingTasksFromAutomation")}
                 </div>
                 {previewTasks.map((task) => (
                   <div
@@ -519,8 +521,8 @@ export const SetupTaskAutomationModal: React.FC<
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {automationData.enabled
-                    ? "Automation will be active"
-                    : "Automation will be disabled"}
+                    ? t("tasks.automationActive")
+                    : t("tasks.automationDisabled")}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -529,7 +531,7 @@ export const SetupTaskAutomationModal: React.FC<
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -537,7 +539,7 @@ export const SetupTaskAutomationModal: React.FC<
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <FiSettings className="w-4 h-4" />
-                  <span>{loading ? "Creating..." : "Create Automation"}</span>
+                  <span>{loading ? t("tasks.creatingAutomation") : t("tasks.createAutomation")}</span>
                 </button>
               </div>
             </div>

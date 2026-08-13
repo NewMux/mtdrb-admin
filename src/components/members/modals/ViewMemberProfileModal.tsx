@@ -36,7 +36,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
     return null;
   }
 
-  const memberName = member.name ?? "عضو";
+  const memberName = member.name ?? t("members.unknown");
   const status = member.status ?? "inactive";
   const membershipLabel =
     member.membership_type ?? member.membershipType ?? "Standard";
@@ -90,8 +90,8 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
         <SmartModal
           isOpen={isOpen}
           onClose={onClose}
-          title={t("members.viewProfileTitle", "الملف الشخصي للعضو")}
-          subtitle={t("members.viewProfileSubtitle", `عرض الملف الشخصي للعضو ${memberName}`)}
+          title={t("members.viewProfileTitle")}
+          subtitle={t("members.viewProfileSubtitle", { name: memberName })}
         >
           <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Header with Avatar and Basic Info */}
@@ -165,7 +165,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       <FiMapPin className="w-4 h-4 text-gray-500" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Address</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">{t("members.address")}</p>
                       <p className="text-sm font-medium text-gray-900">
                         {member.address}
                       </p>
@@ -179,7 +179,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       <FiPhone className="w-4 h-4 text-gray-500" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Emergency Contact</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">{t("members.emergencyContact")}</p>
                       <p className="text-sm font-medium text-gray-900">
                         {member.emergency_contact}
                       </p>
@@ -193,7 +193,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                 <FiCalendar className="w-5 h-5 mr-2" />
-                Membership Details
+                {t("members.membershipDetails")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -202,11 +202,11 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                     <FiCalendar className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Join Date</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">{t("members.joinDate")}</p>
                     <p className="text-sm font-medium text-gray-900">
                       {joinDateValue
                         ? new Date(joinDateValue).toLocaleDateString()
-                        : "Unknown"}
+                        : t("members.unknown")}
                     </p>
                   </div>
                 </div>
@@ -216,11 +216,11 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                     <FiActivity className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Last Visit</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">{t("members.lastVisit")}</p>
                     <p className="text-sm font-medium text-gray-900">
                       {lastVisitValue
                         ? new Date(lastVisitValue).toLocaleDateString()
-                        : "Never"}
+                        : t("members.never")}
                     </p>
                   </div>
                 </div>
@@ -230,7 +230,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                     <FiTrendingUp className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Membership Type</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">{t("members.membershipType")}</p>
                     <p className="text-sm font-medium text-gray-900">
                       {membershipLabel}
                     </p>
@@ -243,7 +243,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                 <FiTarget className="w-5 h-5 mr-2" />
-                Fitness Profile
+                {t("members.fitnessProfile")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -252,7 +252,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                     <div className="flex items-center space-x-2 mb-3">
                       <FiTarget className="w-4 h-4 text-gray-500" />
                       <span className="text-sm font-medium text-gray-700">
-                        Fitness Goals
+                        {t("members.fitnessGoals")}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -275,7 +275,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       <div className="flex items-center space-x-2 mb-3">
                         <FiHeart className="w-4 h-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
-                          Health Conditions
+                          {t("members.healthConditions")}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -300,7 +300,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <FiUser className="w-5 h-5 mr-2" />
-                  Personal Trainer
+                  {t("members.personalTrainer")}
                 </h3>
 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -310,10 +310,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
-                        Personal Trainer
+                        {t("members.personalTrainer")}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Assigned trainer ID: {member.trainer_id}
+                        {t("members.assignedTrainerId", { id: member.trainer_id })}
                       </p>
                     </div>
                   </div>
@@ -326,7 +326,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <FiFileText className="w-5 h-5 mr-2" />
-                  Notes
+                  {t("common.notes")}
                 </h3>
 
                 <div className="bg-gray-50 rounded-lg p-4">

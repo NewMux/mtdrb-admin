@@ -8,6 +8,7 @@ import {
   FiCalendar,
   FiZap,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 // Removed import from mockReports - define type locally
 interface SmartInsight {
   id: string;
@@ -76,6 +77,7 @@ export default function SmartInsightCards({
   onActionClick,
   isPro = false,
 }: SmartInsightCardsProps) {
+  const { t } = useTranslation();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -109,13 +111,13 @@ export default function SmartInsightCards({
         <div className="text-center">
           <div className="text-4xl mb-4">🧠</div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Smart Insights
+            {t("analytics.smartInsights")}
           </h3>
           <p className="text-gray-600 mb-4">
-            Get smart recommendations to optimize your gym operations
+            {t("analytics.smartInsightsUpsellDesc")}
           </p>
           <button className="bg-blue-600 text-white px-6 py-2 rounded-xl font-medium hover:bg-blue-700 transition-colors">
-            Upgrade to Pro
+            {t("analytics.upgradeToPro")}
           </button>
         </div>
       </motion.div>
@@ -131,10 +133,10 @@ export default function SmartInsightCards({
     >
       <div className="flex items-center gap-2 mb-6">
         <div className="text-2xl">🧠</div>
-        <h3 className="text-xl font-semibold text-gray-900">Smart Insights</h3>
+        <h3 className="text-xl font-semibold text-gray-900">{t("analytics.smartInsights")}</h3>
         <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          Smart Insights: ON
+          {t("analytics.smartInsightsOn")}
         </div>
       </div>
 
@@ -169,10 +171,10 @@ export default function SmartInsightCards({
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">
-                    <span className="font-medium">Cause:</span> {insight.cause}
+                    <span className="font-medium">{t("analytics.cause")}</span> {insight.cause}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Suggestion:</span>{" "}
+                    <span className="font-medium">{t("analytics.suggestion")}</span>{" "}
                     {insight.suggestion}
                   </p>
                 </div>

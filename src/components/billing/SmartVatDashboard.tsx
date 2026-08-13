@@ -273,18 +273,22 @@ export default function SmartVatDashboard({
         const previousMonth = monthlyBreakdown[monthlyBreakdown.length - 2].vatCollected;
         if (previousMonth > 0) {
           const change = ((currentMonth - previousMonth) / previousMonth) * 100;
-          trends.push(`VAT collection ${change >= 0 ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}% this month`);
+          trends.push(
+            change >= 0
+              ? t("billing.vatCollectionIncreased", { percent: Math.abs(change).toFixed(1) })
+              : t("billing.vatCollectionDecreased", { percent: Math.abs(change).toFixed(1) }),
+          );
         }
       }
 
       if (netVatPayable > 0) {
         alerts.push(
-          `VAT return due: ${netVatPayable.toFixed(2)} AED payable`,
+          t("billing.vatReturnDuePayable", { amount: netVatPayable.toFixed(2) }),
         );
       }
 
-      recommendations.push("Consider implementing automated VAT filing");
-      recommendations.push("Review expense categorization for better VAT recovery");
+      recommendations.push(t("billing.recommendAutomatedFiling"));
+      recommendations.push(t("billing.recommendReviewExpenseCategorization"));
 
       setInsights({ trends, recommendations, alerts });
 
@@ -316,7 +320,7 @@ export default function SmartVatDashboard({
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -360,7 +364,7 @@ export default function SmartVatDashboard({
 
       if (error) throw error;
 
-      toast.success("VAT return generated successfully");
+      toast.success(t("billing.vatReturnGenerated"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
       console.error("Error generating VAT return:", error);

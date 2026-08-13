@@ -55,13 +55,13 @@ export default function EditTrainerModal({
   const validateForm = (): boolean => {
     const newErrors: Partial<Trainer> = {};
 
-    if (!formData.name.trim()) newErrors.name = t("trainers.nameRequired", "الاسم مطلوب");
-    if (!formData.email.trim()) newErrors.email = t("trainers.emailRequired", "البريد مطلوب");
-    if (!formData.phone.trim()) newErrors.phone = t("trainers.phoneRequired", "الهاتف مطلوب");
+    if (!formData.name.trim()) newErrors.name = t("trainers.nameRequired");
+    if (!formData.email.trim()) newErrors.email = t("trainers.emailRequired");
+    if (!formData.phone.trim()) newErrors.phone = t("trainers.phoneRequired");
     if (!formData.specialty.trim())
-      newErrors.specialty = t("trainers.specialtyRequired", "التخصص مطلوب");
+      newErrors.specialty = t("trainers.specialtyRequired");
     if (!formData.experience.trim())
-      newErrors.experience = t("trainers.experienceRequired", "الخبرة مطلوبة");
+      newErrors.experience = t("trainers.experienceRequired");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -117,11 +117,11 @@ export default function EditTrainerModal({
 
       if (error) throw error;
 
-      toast.success(t("trainers.updateSuccess", "تم تحديث بيانات المدرب بنجاح"));
+      toast.success(t("trainers.trainerUpdated"));
       onSuccess?.();
       onClose();
     } catch (error) {
-      toast.error(t("trainers.updateError", "حدث خطأ أثناء التحديث"));
+      toast.error(t("trainers.updateError"));
     } finally {
       setLoading(false);
     }
@@ -137,21 +137,21 @@ export default function EditTrainerModal({
       open={isOpen}
       onClose={handleClose}
       onAction={handleSubmit}
-      actionLabel={loading ? t("trainers.updating", "جاري التحديث...") : t("trainers.updateTrainer", "تحديث المدرب")}
-      title={t("trainers.editTrainerTitle", "تعديل بيانات المدرب")}
-      subtitle={t("trainers.editTrainerSubtitle", `تحديث الملف الشخصي للمدرب ${trainer.name}`)}
+      actionLabel={loading ? t("trainers.updating") : t("trainers.updateTrainer")}
+      title={t("trainers.editTrainer")}
+      subtitle={t("trainers.editTrainerSubtitle", { name: trainer.name })}
     >
       <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Personal Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
             <FiUser className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            <span>{t("trainers.personalInfo", "البيانات الشخصية")}</span>
+            <span>{t("trainers.personalInfo")}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.fullName", "الاسم الكامل")} *
+                {t("trainers.fullName")} *
               </label>
               <input
                 type="text"
@@ -160,7 +160,7 @@ export default function EditTrainerModal({
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
                   errors.name ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder={t("trainers.namePlaceholder", "سارة أحمد")}
+                placeholder={t("trainers.namePlaceholder")}
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.name && (
@@ -170,7 +170,7 @@ export default function EditTrainerModal({
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.email", "البريد الإلكتروني")} *
+                {t("common.email")} *
               </label>
               <input
                 type="email"
@@ -189,7 +189,7 @@ export default function EditTrainerModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.phone", "رقم الهاتف")} *
+                {t("common.phone")} *
               </label>
               <input
                 type="tel"
@@ -208,7 +208,7 @@ export default function EditTrainerModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.experience", "سنوات الخبرة")} *
+                {t("trainers.yearsOfExperience")} *
               </label>
               <input
                 type="text"
@@ -219,7 +219,7 @@ export default function EditTrainerModal({
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
                   errors.experience ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="5 سنوات"
+                placeholder={t("trainers.experiencePlaceholder")}
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.experience && (
@@ -233,12 +233,12 @@ export default function EditTrainerModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <FiTarget className="text-green-500 flex-shrink-0" />
-            <span>{t("trainers.professionalInfo", "البيانات المهنية")}</span>
+            <span>{t("trainers.professionalInfo")}</span>
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.specialty", "التخصص")} *
+                {t("trainers.specialty")} *
               </label>
               <input
                 type="text"
@@ -247,7 +247,7 @@ export default function EditTrainerModal({
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
                   errors.specialty ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="يوغا ولياقة"
+                placeholder={t("trainers.specialtyPlaceholder")}
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.specialty && (
@@ -257,7 +257,7 @@ export default function EditTrainerModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.status", "الحالة")}
+                {t("trainers.status")}
               </label>
               <select
                 value={formData.status}
@@ -267,16 +267,16 @@ export default function EditTrainerModal({
                 className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                 dir={isRTL ? "rtl" : "ltr"}
               >
-                <option value="active">{t("trainers.active", "نشط")}</option>
-                <option value="available">{t("trainers.available", "متاح")}</option>
-                <option value="busy">{t("trainers.busy", "مشغول")}</option>
-                <option value="inactive">{t("trainers.inactive", "غير نشط")}</option>
+                <option value="active">{t("trainers.active")}</option>
+                <option value="available">{t("trainers.available")}</option>
+                <option value="busy">{t("trainers.busy")}</option>
+                <option value="inactive">{t("common.inactive")}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.rating", "التقييم")}
+                {t("trainers.rating")}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -296,7 +296,7 @@ export default function EditTrainerModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("trainers.classesAssigned", "الحصص المسندة")}
+                {t("trainers.classesAssigned")}
               </label>
               <input
                 type="number"

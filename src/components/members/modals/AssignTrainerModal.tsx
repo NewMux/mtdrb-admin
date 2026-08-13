@@ -172,7 +172,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
           open={isOpen}
           onClose={handleClose}
           title={t("members.assignPersonalTrainer", "تعيين مدرب شخصي")}
-          subtitle={t("members.assignTrainerToMember", `تعيين مدرب للعضو ${member.name}`)}
+          subtitle={t("members.assignTrainerToMember", { name: member.name })}
           modalRef={modalRef}
         >
           <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>
@@ -279,7 +279,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                             <FiUsers className="w-3 h-3" />
                             <span>
                               {trainer.currentMembers}/{trainer.maxMembers}{" "}
-                              members
+                              {t("members.members")}
                             </span>
                           </div>
                         </div>
@@ -306,7 +306,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
                     {!isAvailable(trainer) && (
                       <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                        Trainer is at full capacity
+                        {t("members.trainerAtFullCapacity")}
                       </div>
                     )}
                   </div>
@@ -318,7 +318,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                 <FiTarget className="w-5 h-5 mr-2" />
-                Member Information
+                {t("members.memberInformation")}
               </h3>
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
@@ -355,7 +355,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       })()}
                       {member.goals && member.goals.length > 0 && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Goals: {member.goals.slice(0, 2).join(", ")}
+                          {t("members.goalsLabel")} {member.goals.slice(0, 2).join(", ")}
                           {member.goals.length > 2 && "..."}
                         </span>
                       )}
@@ -372,7 +372,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 onClick={handleClose}
                 disabled={isAssigning}
               >
-                Cancel
+                {t("common.cancel")}
               </SmartButton>
 
               <SmartButton
@@ -381,7 +381,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                 disabled={!selectedTrainer || isAssigning}
                 icon={<FiUser className="w-4 h-4" />}
               >
-                {isAssigning ? "Assigning..." : "Assign Trainer"}
+                {isAssigning ? t("members.assigning") : t("members.assignTrainer")}
               </SmartButton>
             </div>
           </div>

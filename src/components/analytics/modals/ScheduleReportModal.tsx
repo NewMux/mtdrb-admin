@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal, type AnalyticsFilters } from "./useSmartAnalyticsModal";
+import { useTranslation } from "react-i18next";
 
 interface ScheduleReportModalProps {
   open: boolean;
@@ -18,33 +19,6 @@ interface ScheduleReportModalProps {
   onSuccess?: () => void;
   isPro?: boolean;
 }
-
-const reportTemplates = [
-  {
-    id: "member_overview",
-    name: "Member Overview",
-    description: "Comprehensive member activity and engagement metrics",
-    recommendedFrequency: "weekly",
-  },
-  {
-    id: "financial_summary",
-    name: "Financial Summary",
-    description: "Revenue, expenses, and profit analysis",
-    recommendedFrequency: "monthly",
-  },
-  {
-    id: "class_performance",
-    name: "Class Performance",
-    description: "Class attendance, capacity, and trainer performance",
-    recommendedFrequency: "weekly",
-  },
-  {
-    id: "vat_report",
-    name: "VAT Report",
-    description: "VAT calculations and compliance data",
-    recommendedFrequency: "quarterly",
-  },
-];
 
 // Real next-occurrence date for the chosen frequency/start date, since
 // delivery isn't automated yet there's nothing to show but the math.
@@ -72,48 +46,6 @@ const computeNextDelivery = (
   return next;
 };
 
-const frequencies = [
-  {
-    id: "daily",
-    label: "Daily",
-    description: "Every day at 9:00 AM",
-    icon: FiClock,
-  },
-  {
-    id: "weekly",
-    label: "Weekly",
-    description: "Every Monday at 9:00 AM",
-    icon: FiCalendar,
-  },
-  {
-    id: "monthly",
-    label: "Monthly",
-    description: "First day of month at 9:00 AM",
-    icon: FiCalendar,
-  },
-  {
-    id: "quarterly",
-    label: "Quarterly",
-    description: "First day of quarter at 9:00 AM",
-    icon: FiCalendar,
-  },
-];
-
-const deliveryMethods = [
-  {
-    id: "email",
-    label: "Email",
-    description: "Send to email addresses",
-    icon: FiMail,
-  },
-  {
-    id: "slack",
-    label: "Slack",
-    description: "Send to Slack channel",
-    icon: FiMessageSquare,
-  },
-];
-
 export default function ScheduleReportModal({
   open,
   onClose,
@@ -122,6 +54,76 @@ export default function ScheduleReportModal({
 }: ScheduleReportModalProps) {
   const { loading, scheduleReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
+  const { t } = useTranslation();
+
+  const reportTemplates = [
+    {
+      id: "member_overview",
+      name: t("reports.memberOverview"),
+      description: t("reports.memberOverviewDesc"),
+      recommendedFrequency: "weekly",
+    },
+    {
+      id: "financial_summary",
+      name: t("reports.financialSummary"),
+      description: t("reports.financialSummaryDesc"),
+      recommendedFrequency: "monthly",
+    },
+    {
+      id: "class_performance",
+      name: t("reports.classPerformance"),
+      description: t("reports.classPerformanceDesc"),
+      recommendedFrequency: "weekly",
+    },
+    {
+      id: "vat_report",
+      name: t("reports.vatReport"),
+      description: t("reports.vatReportDesc"),
+      recommendedFrequency: "quarterly",
+    },
+  ];
+
+  const frequencies = [
+    {
+      id: "daily",
+      label: t("reports.daily"),
+      description: t("reports.dailyDesc"),
+      icon: FiClock,
+    },
+    {
+      id: "weekly",
+      label: t("reports.weekly"),
+      description: t("reports.weeklyDesc"),
+      icon: FiCalendar,
+    },
+    {
+      id: "monthly",
+      label: t("reports.monthly"),
+      description: t("reports.monthlyDesc"),
+      icon: FiCalendar,
+    },
+    {
+      id: "quarterly",
+      label: t("reports.quarterly"),
+      description: t("reports.quarterlyDesc"),
+      icon: FiCalendar,
+    },
+  ];
+
+  const deliveryMethods = [
+    {
+      id: "email",
+      label: t("common.email"),
+      description: t("reports.sendToEmail"),
+      icon: FiMail,
+    },
+    {
+      id: "slack",
+      label: t("reports.slack"),
+      description: t("reports.sendToSlackChannel"),
+      icon: FiMessageSquare,
+    },
+  ];
 
   const isProUser = isPro ?? true;
 
@@ -165,7 +167,7 @@ export default function ScheduleReportModal({
   };
 
   const getSelectedTemplate = () =>
-    reportTemplates.find((t) => t.id === selectedTemplate);
+    reportTemplates.find((template) => template.id === selectedTemplate);
 
   function Section({
     title,
@@ -188,8 +190,8 @@ export default function ScheduleReportModal({
     <SmartAnalyticsModal
       open={open}
       onClose={onClose}
-      title="Schedule Report"
-      subtitle="Set up automated report delivery with smart recommendations"
+      title={t("analytics.scheduleReport")}
+      subtitle={t("reports.scheduleReportSubtitle")}
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
@@ -215,12 +217,12 @@ export default function ScheduleReportModal({
       ))}
       {!isProUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
-          Scheduling reports is available on Pro plans.
+          {t("reports.schedulingProFeature")}
         </div>
       )}
 
       {/* Report Template Selection */}
-      <Section title="Select Report Template">
+      <Section title={t("reports.selectReportTemplate")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reportTemplates.map((template) => (
             <label
@@ -254,7 +256,7 @@ export default function ScheduleReportModal({
       </Section>
 
       {/* Frequency Selection */}
-      <Section title="Frequency">
+      <Section title={t("reports.frequency")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {frequencies.map((freq) => {
             const Icon = freq.icon;
@@ -298,7 +300,7 @@ export default function ScheduleReportModal({
                     </h4>
                     {isRecommended && (
                       <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                        Recommended
+                        {t("reports.recommended")}
                       </span>
                     )}
                   </div>
@@ -311,7 +313,7 @@ export default function ScheduleReportModal({
       </Section>
 
       {/* Delivery Method */}
-      <Section title="Delivery Method">
+      <Section title={t("reports.deliveryMethod")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {deliveryMethods.map((method) => {
             const Icon = method.icon;
@@ -360,11 +362,11 @@ export default function ScheduleReportModal({
       </Section>
 
       {/* Recipients */}
-      <Section title="Recipients">
+      <Section title={t("reports.recipients")}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">
-              Email Addresses
+              {t("reports.emailAddresses")}
             </label>
             <textarea
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 min-h-[80px]"
@@ -372,14 +374,14 @@ export default function ScheduleReportModal({
               onChange={(e) =>
                 setRecipients(e.target.value.split(",").map((r) => r.trim()))
               }
-              placeholder="admin@mtdrb.com, employee@mtdrb.com"
+              placeholder={t("reports.emailAddressesPlaceholder")}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Separate multiple emails with commas
+              {t("reports.separateEmailsWithCommas")}
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Start Date</label>
+            <label className="block text-sm font-medium mb-1">{t("reports.startDate")}</label>
             <input
               type="date"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
@@ -391,37 +393,28 @@ export default function ScheduleReportModal({
       </Section>
 
       {/* Smart Recommendations */}
-      <Section title="Smart Recommendations">
+      <Section title={t("reports.smartRecommendations")}>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <FiZap className="text-blue-600 mt-1" />
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
-                Smart Suggestions
+                {t("reports.smartSuggestions")}
               </h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Optimal delivery time: <strong>9:00 AM</strong> (highest
-                    engagement)
-                  </span>
+                  <span>{t("reports.optimalDeliveryTime")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Consider <strong>monthly</strong> frequency for financial
-                    reports to reduce noise
-                  </span>
+                  <span>{t("reports.monthlyFrequencySuggestion")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span>•</span>
-                  <span>
-                    Add <strong>Slack integration</strong> for team
-                    collaboration
-                  </span>
+                  <span>{t("reports.slackIntegrationSuggestion")}</span>
                   {!isPro && (
-                    <FiLock className="text-gray-400" title="Pro feature" />
+                    <FiLock className="text-gray-400" title={t("reports.proFeature")} />
                   )}
                 </li>
               </ul>
@@ -432,9 +425,9 @@ export default function ScheduleReportModal({
 
       {/* Upcoming Schedule Preview */}
       {selectedTemplate && (
-        <Section title="Upcoming Schedule">
+        <Section title={t("reports.upcomingSchedule")}>
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
-            Automatic delivery isn&apos;t set up yet - this saves your schedule request for when it is, it won&apos;t send anything on its own right now.
+            {t("reports.deliveryNotAutomatedWarning")}
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="space-y-3">
@@ -443,12 +436,12 @@ export default function ScheduleReportModal({
                   {getSelectedTemplate()?.name}
                 </h4>
                 <span className="text-sm text-gray-600">
-                  {frequency} delivery
+                  {t("reports.deliveryFrequency", { frequency })}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-white rounded-lg p-3 border">
-                  <div className="font-medium text-gray-900">Would Next Occur</div>
+                  <div className="font-medium text-gray-900">{t("reports.wouldNextOccur")}</div>
                   <div className="text-gray-600">
                     {computeNextDelivery(startDate, frequency).toLocaleDateString(undefined, {
                       weekday: "long",
@@ -460,16 +453,16 @@ export default function ScheduleReportModal({
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
                   <div className="font-medium text-gray-900">
-                    Delivery Method
+                    {t("reports.deliveryMethod")}
                   </div>
                   <div className="text-gray-600 capitalize">
                     {deliveryMethod}
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
-                  <div className="font-medium text-gray-900">Recipients</div>
+                  <div className="font-medium text-gray-900">{t("reports.recipients")}</div>
                   <div className="text-gray-600">
-                    {recipients.length} email(s)
+                    {t("reports.recipientsCount", { count: recipients.length })}
                   </div>
                 </div>
               </div>
@@ -486,7 +479,7 @@ export default function ScheduleReportModal({
             onClick={onClose}
             disabled={loading || scheduling}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
@@ -496,12 +489,12 @@ export default function ScheduleReportModal({
             {scheduling ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Scheduling...
+                {t("reports.schedulingButton")}
               </>
             ) : (
               <>
                 <FiClock />
-                Schedule Report
+                {t("analytics.scheduleReport")}
               </>
             )}
           </button>

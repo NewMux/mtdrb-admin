@@ -171,24 +171,24 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   };
 
   const classTypes = [
-    { value: "yoga", label: "Yoga" },
-    { value: "pilates", label: "Pilates" },
-    { value: "hiit", label: "HIIT" },
-    { value: "strength", label: "Strength Training" },
-    { value: "cardio", label: "Cardio" },
-    { value: "spinning", label: "Spinning" },
-    { value: "zumba", label: "Zumba" },
-    { value: "boxing", label: "Boxing" },
-    { value: "martial-arts", label: "Martial Arts" },
-    { value: "dance", label: "Dance" },
+    { value: "yoga", label: t("classes.yoga") },
+    { value: "pilates", label: t("classes.pilates") },
+    { value: "hiit", label: t("classes.hiit") },
+    { value: "strength", label: t("classes.strengthTraining") },
+    { value: "cardio", label: t("classes.cardio") },
+    { value: "spinning", label: t("classes.spinning") },
+    { value: "zumba", label: t("classes.zumba") },
+    { value: "boxing", label: t("classes.boxing") },
+    { value: "martial-arts", label: t("classes.martialArts") },
+    { value: "dance", label: t("classes.dance") },
   ];
 
   const recurrenceOptions = [
-    { value: "none", label: "No Recurrence" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-    { value: "biweekly", label: "Bi-weekly" },
-    { value: "monthly", label: "Monthly" },
+    { value: "none", label: t("classes.noRecurrence") },
+    { value: "daily", label: t("classes.daily") },
+    { value: "weekly", label: t("classes.weekly") },
+    { value: "biweekly", label: t("classes.biweekly") },
+    { value: "monthly", label: t("classes.monthly") },
   ];
 
   const isFormValid =
@@ -231,13 +231,13 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             {isPro && recommendations.length > 0 && (
               <div className="flex items-center gap-1 text-sm text-blue-600">
                 <FiZap className="h-4 w-4 flex-shrink-0" />
-                <span>{t("classes.smartSuggestions", `${recommendations.length} مقترحات ذكية`)}</span>
+                <span>{t("classes.smartSuggestionsCount", { count: recommendations.length })}</span>
               </div>
             )}
             {hasChanges() && (
               <div className="flex items-center gap-1 text-sm text-orange-600">
                 <FiAlertCircle className="h-4 w-4 flex-shrink-0" />
-                <span>{t("classes.changesDetected", "تم اكتشاف تغييرات")}</span>
+                <span>{t("classes.changesDetected")}</span>
               </div>
             )}
           </div>
@@ -265,11 +265,11 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-dark-900 dark:text-white">
-                Class Status
+                {t("classes.classStatus")}
               </h3>
               <p className="text-sm text-light-600 dark:text-dark-400">
-                {classData.enrolled_count} enrolled • {classData.waitlist_count}{" "}
-                on waitlist
+                {t("classes.enrolledCount", { count: classData.enrolled_count })} •{" "}
+                {t("classes.onWaitlistCount", { count: classData.waitlist_count })}
               </p>
             </div>
             <div
@@ -281,7 +281,16 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                     : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
               }`}
             >
-              {classData.status}
+              {(() => {
+                const statusMap: Record<string, string> = {
+                  upcoming: t("classes.upcoming"),
+                  active: t("classes.active"),
+                  completed: t("classes.completed"),
+                  cancelled: t("classes.cancelled"),
+                  scheduled: t("classes.scheduled"),
+                };
+                return statusMap[classData.status] || classData.status;
+              })()}
             </div>
           </div>
         </div>
@@ -311,34 +320,34 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
         {/* Class Information */}
         <FormSection
-          title="Class Information"
-          subtitle="Basic details about your class"
+          title={t("classes.classInformation")}
+          subtitle={t("classes.basicDetailsAboutClass")}
           icon={<FiEdit className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              label="Class Name"
+              label={t("classes.className")}
               value={formData.name}
               onChange={(value) => handleInputChange("name", value)}
-              placeholder="e.g., Morning Yoga Flow"
+              placeholder={t("classes.classNamePlaceholderFlow")}
               error={getError("name")}
               required
             />
             <SelectField
-              label="Class Type"
+              label={t("classes.classType")}
               value={formData.type}
               onChange={(value) => handleInputChange("type", value)}
               options={classTypes}
-              placeholder="Select class type"
+              placeholder={t("classes.selectClassType")}
               error={getError("type")}
               required
             />
           </div>
           <FormField
-            label="Description"
+            label={t("classes.description")}
             value={formData.description}
             onChange={(value) => handleInputChange("description", value)}
-            placeholder="Describe the class, equipment needed, difficulty level..."
+            placeholder={t("classes.describeClassEquipment")}
             type="textarea"
           />
         </FormSection>
@@ -346,44 +355,44 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         {/* Trainer & Location */}
         <FormSection
           title={t("classes.trainerLocation")}
-          subtitle="Assign trainer and select room"
+          subtitle={t("classes.assignTrainerAndSelectRoom")}
           icon={<FiUser className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <SelectField
-              label="Trainer"
+              label={t("classes.trainer")}
               value={formData.trainer_id}
               onChange={(value) => handleInputChange("trainer_id", value)}
               options={trainers.map((trainer) => ({
                 value: trainer.id,
                 label: trainer.name,
               }))}
-              placeholder="Select trainer"
+              placeholder={t("classes.selectTrainer")}
               error={getError("trainer_id")}
               required
             />
             <SelectField
-              label="Room"
+              label={t("classes.room")}
               value={formData.room_id}
               onChange={(value) => handleInputChange("room_id", value)}
               options={rooms.map((room) => ({
                 value: room.id,
-                label: `${room.name} (${room.capacity} capacity)`,
+                label: t("classes.roomCapacityOption", { name: room.name, capacity: room.capacity }),
               }))}
-              placeholder="Select room"
+              placeholder={t("classes.selectRoom")}
             />
           </div>
         </FormSection>
 
         {/* Time & Date */}
         <FormSection
-          title="Time & Date"
-          subtitle="Schedule your class"
+          title={t("classes.dateTime")}
+          subtitle={t("classes.scheduleYourClass")}
           icon={<FiClock className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DateField
-              label="Date"
+              label={t("classes.date")}
               value={formData.date}
               onChange={(value) => handleInputChange("date", value)}
               error={getError("date")}
@@ -391,14 +400,14 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
               min={new Date().toISOString().split("T")[0]}
             />
             <TimeField
-              label="Start Time"
+              label={t("classes.startTime")}
               value={formData.start_time}
               onChange={(value) => handleInputChange("start_time", value)}
               error={getError("start_time")}
               required
             />
             <TimeField
-              label="End Time"
+              label={t("classes.endTime")}
               value={formData.end_time}
               onChange={(value) => handleInputChange("end_time", value)}
               error={getError("end_time")}
@@ -409,12 +418,12 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
         {/* Recurrence */}
         <FormSection
-          title="Recurrence"
-          subtitle="Set up recurring classes"
+          title={t("classes.recurrence")}
+          subtitle={t("classes.setUpRecurringClasses")}
           icon={<FiCalendar className="h-5 w-5" />}
         >
           <SelectField
-            label="Recurrence Pattern"
+            label={t("classes.recurrencePattern")}
             value={formData.recurrence}
             onChange={(value) => handleInputChange("recurrence", value)}
             options={recurrenceOptions}
@@ -423,13 +432,13 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
 
         {/* Capacity */}
         <FormSection
-          title="Capacity"
-          subtitle="Set maximum number of participants"
+          title={t("classes.capacity")}
+          subtitle={t("classes.setMaximumParticipants")}
           icon={<FiUsers className="h-5 w-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              label="Maximum Capacity"
+              label={t("classes.maximumCapacity")}
               value={formData.capacity.toString()}
               onChange={(value) =>
                 handleInputChange("capacity", parseInt(value) || 0)
@@ -441,7 +450,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
               <FiCheck className="h-4 w-4 text-green-600" />
               <span className="text-sm text-green-700 dark:text-green-300">
-                Available spots: {formData.capacity - classData.enrolled_count}
+                {t("classes.availableSpots", { count: formData.capacity - classData.enrolled_count })}
               </span>
             </div>
           </div>
@@ -450,8 +459,8 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         {/* Notification Settings */}
         {hasChanges() && classData.enrolled_count > 0 && (
           <FormSection
-            title="Member Notifications"
-            subtitle="Notify enrolled members about changes"
+            title={t("classes.memberNotifications")}
+            subtitle={t("classes.notifyMembersAboutChanges")}
             icon={<FiBell className="h-5 w-5" />}
           >
             <div className="flex items-center space-x-3 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -466,8 +475,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                 htmlFor="notify-members"
                 className="text-sm text-blue-900 dark:text-blue-100"
               >
-                Send notification to {classData.enrolled_count} enrolled members
-                about schedule changes
+                {t("classes.sendNotificationToMembers", { count: classData.enrolled_count })}
               </label>
             </div>
           </FormSection>

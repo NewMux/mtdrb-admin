@@ -27,17 +27,6 @@ interface CancellationReason {
   label: string;
 }
 
-const CANCELLATION_REASONS: CancellationReason[] = [
-  { id: "too_expensive", label: "Too expensive" },
-  { id: "not_using", label: "Not using the features" },
-  { id: "switching_competitor", label: "Switching to a competitor" },
-  { id: "closing_business", label: "Closing my business" },
-  { id: "missing_features", label: "Missing features I need" },
-  { id: "technical_issues", label: "Technical issues" },
-  { id: "temporary_pause", label: "Need a temporary break" },
-  { id: "other", label: "Other reason" },
-];
-
 /**
  * CancelSubscriptionModal - Modal for canceling MTDRB SaaS subscription
  * 
@@ -56,7 +45,18 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
-  
+
+  const CANCELLATION_REASONS: CancellationReason[] = [
+    { id: "too_expensive", label: t("settings.reasonTooExpensive") },
+    { id: "not_using", label: t("settings.reasonNotUsingFeatures") },
+    { id: "switching_competitor", label: t("settings.reasonSwitchingCompetitor") },
+    { id: "closing_business", label: t("settings.reasonClosingBusiness") },
+    { id: "missing_features", label: t("settings.reasonMissingFeatures") },
+    { id: "technical_issues", label: t("settings.reasonTechnicalIssues") },
+    { id: "temporary_pause", label: t("settings.reasonTemporaryPause") },
+    { id: "other", label: t("settings.reasonOther") },
+  ];
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [feedback, setFeedback] = useState<string>("");
@@ -75,7 +75,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
 
   const handleCancelSubscription = async () => {
     if (confirmText.toLowerCase() !== "cancel") {
-      setError("Please type 'cancel' to confirm");
+      setError(t("settings.typeCancelToConfirmError"));
       return;
     }
 
@@ -122,7 +122,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
       onSuccess();
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel subscription");
+      setError(err instanceof Error ? err.message : t("settings.cancelSubscriptionFailed"));
     } finally {
       setIsProcessing(false);
     }

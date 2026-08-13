@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiArrowUp,
   FiZap,
@@ -17,6 +18,7 @@ interface EnablePrioritySortingModalProps {
 export const EnablePrioritySortingModal: React.FC<
   EnablePrioritySortingModalProps
 > = ({ open, onClose, isPro = false }) => {
+  const { t } = useTranslation();
   const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
   const [sortingEnabled, setSortingEnabled] = React.useState(true);
@@ -41,36 +43,36 @@ export const EnablePrioritySortingModal: React.FC<
   const sortingFactorsOptions = [
     {
       key: "deadline",
-      label: "Deadline",
-      description: "Tasks closer to due date get higher priority",
+      label: t("tasks.factorDeadline"),
+      description: t("tasks.factorDeadlineDesc"),
       icon: "⏰",
       isPro: false,
     },
     {
       key: "impact",
-      label: "Business Impact",
-      description: "Tasks with higher business impact prioritized",
+      label: t("tasks.factorImpact"),
+      description: t("tasks.factorImpactDesc"),
       icon: "📈",
       isPro: false,
     },
     {
       key: "taskType",
-      label: "Task Type",
-      description: "Certain task types get priority (e.g., onboarding)",
+      label: t("tasks.taskType"),
+      description: t("tasks.factorTaskTypeDesc"),
       icon: "🏷️",
       isPro: false,
     },
     {
       key: "assignee",
-      label: "Assignee Availability",
-      description: "Consider assignee workload and availability",
+      label: t("tasks.factorAssignee"),
+      description: t("tasks.factorAssigneeDesc"),
       icon: "👤",
       isPro: false,
     },
     {
       key: "aiWeight",
-      label: "Smart Weight Scoring",
-      description: "Smart-powered priority scoring based on historical data",
+      label: t("tasks.factorAiWeight"),
+      description: t("tasks.factorAiWeightDesc"),
       icon: "🤖",
       isPro: true,
     },
@@ -150,8 +152,8 @@ export const EnablePrioritySortingModal: React.FC<
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Enable Priority Sorting"
-      subtitle="Configure automatic task prioritization"
+      title={t("tasks.enablePrioritySorting")}
+      subtitle={t("tasks.enablePrioritySortingSubtitle")}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -175,7 +177,7 @@ export const EnablePrioritySortingModal: React.FC<
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -193,13 +195,13 @@ export const EnablePrioritySortingModal: React.FC<
               <div className="flex items-center space-x-2">
                 <FiArrowUp className="w-4 h-4 text-blue-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Enable automatic priority sorting
+                  {t("tasks.enableAutomaticPrioritySorting")}
                 </span>
               </div>
             </label>
             {sortingEnabled && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                Tasks will be automatically sorted by priority in your inbox
+                {t("tasks.autoSortDesc")}
               </p>
             )}
           </div>
@@ -207,7 +209,7 @@ export const EnablePrioritySortingModal: React.FC<
           {/* Sorting Factors */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Sorting Factors
+              {t("tasks.sortingFactors")}
             </label>
             <div className="space-y-2">
               {sortingFactorsOptions.map((factor) => (
@@ -254,7 +256,7 @@ export const EnablePrioritySortingModal: React.FC<
                       factor.key as keyof typeof sortingFactors
                     ] && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500">Weight:</span>
+                        <span className="text-xs text-gray-500">{t("tasks.weightLabel")}</span>
                         <input
                           type="range"
                           min="0"
@@ -282,7 +284,7 @@ export const EnablePrioritySortingModal: React.FC<
           {/* Weight Distribution */}
           <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Weight Distribution
+              {t("tasks.weightDistribution")}
             </h3>
             <div className="space-y-2">
               {Object.entries(weights).map(([factor, weight]) => {
@@ -321,14 +323,14 @@ export const EnablePrioritySortingModal: React.FC<
           <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Sorting Preview
+                {t("tasks.sortingPreview")}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? "Hide" : "Show"} preview
+                {showPreview ? t("tasks.hide") : t("tasks.show")} {t("tasks.preview").toLowerCase()}
               </button>
             </div>
 
@@ -339,7 +341,7 @@ export const EnablePrioritySortingModal: React.FC<
                 className="space-y-2"
               >
                 <div className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-                  Tasks sorted by priority score:
+                  {t("tasks.tasksSortedByScore")}
                 </div>
                 {sortedTasks.map((task, index) => (
                   <div
@@ -392,15 +394,15 @@ export const EnablePrioritySortingModal: React.FC<
                 <FiLock className="w-5 h-5 text-yellow-500 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                    Pro Features Available
+                    {t("tasks.proFeaturesAvailable")}
                   </h4>
                   <div className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-                    <p>• Smart Weight Scoring for smarter prioritization</p>
-                    <p>• Advanced analytics and insights</p>
-                    <p>• Custom sorting algorithms</p>
+                    <p>• {t("tasks.proFeatureSmartWeight")}</p>
+                    <p>• {t("tasks.proFeatureAdvancedAnalytics")}</p>
+                    <p>• {t("tasks.proFeatureCustomSorting")}</p>
                   </div>
                   <button className="text-sm text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 mt-2">
-                    Upgrade to Pro
+                    {t("tasks.upgradeToPro")}
                   </button>
                 </div>
               </div>
@@ -413,8 +415,9 @@ export const EnablePrioritySortingModal: React.FC<
               <div className="flex items-center space-x-2">
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {Object.values(sortingFactors).filter(Boolean).length} factors
-                  enabled
+                  {t("tasks.factorsEnabled", {
+                    count: Object.values(sortingFactors).filter(Boolean).length,
+                  })}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -423,7 +426,7 @@ export const EnablePrioritySortingModal: React.FC<
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -432,7 +435,7 @@ export const EnablePrioritySortingModal: React.FC<
                 >
                   <FiArrowUp className="w-4 h-4" />
                   <span>
-                    {loading ? "Enabling..." : "Enable Priority Sorting"}
+                    {loading ? t("tasks.enabling") : t("tasks.enablePrioritySorting")}
                   </span>
                 </button>
               </div>

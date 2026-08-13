@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiPause,
   FiClock,
@@ -22,6 +23,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, changeTaskStatus, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
 
@@ -33,43 +35,43 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
   const pauseReasons = [
     {
       value: "blocked",
-      label: "Blocked",
-      description: "Waiting for information or resources",
+      label: t("tasks.pauseReasonBlocked"),
+      description: t("tasks.pauseReasonBlockedDesc"),
       icon: "🚫",
       color: "text-red-600 bg-red-50",
     },
     {
       value: "waiting_response",
-      label: "Waiting on Response",
-      description: "Waiting for someone else to respond",
+      label: t("tasks.pauseReasonWaiting"),
+      description: t("tasks.pauseReasonWaitingDesc"),
       icon: "⏳",
       color: "text-yellow-600 bg-yellow-50",
     },
     {
       value: "not_priority",
-      label: "Not Priority",
-      description: "Lower priority than other tasks",
+      label: t("tasks.pauseReasonNotPriority"),
+      description: t("tasks.pauseReasonNotPriorityDesc"),
       icon: "📉",
       color: "text-gray-600 bg-gray-50",
     },
     {
       value: "personal",
-      label: "Personal Matter",
-      description: "Personal emergency or conflict",
+      label: t("tasks.pauseReasonPersonal"),
+      description: t("tasks.pauseReasonPersonalDesc"),
       icon: "👤",
       color: "text-blue-600 bg-blue-50",
     },
     {
       value: "technical",
-      label: "Technical Issue",
-      description: "Technical problem or system issue",
+      label: t("tasks.pauseReasonTechnical"),
+      description: t("tasks.pauseReasonTechnicalDesc"),
       icon: "🔧",
       color: "text-purple-600 bg-purple-50",
     },
     {
       value: "other",
-      label: "Other",
-      description: "Other reason not listed above",
+      label: t("tasks.pauseReasonOther"),
+      description: t("tasks.pauseReasonOtherDesc"),
       icon: "❓",
       color: "text-gray-600 bg-gray-50",
     },
@@ -93,8 +95,8 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Pause Task"
-      subtitle={`Pausing: ${task.title}`}
+      title={t("tasks.pauseTask")}
+      subtitle={`${t("tasks.pausingPrefix")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -118,7 +120,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -126,29 +128,29 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
         {/* Task Info */}
         <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Task Information
+            {t("tasks.taskInformation")}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.titleLabel")}:</span>
               <span className="font-medium">{task.title}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.typeLabel")}:</span>
               <span className="font-medium capitalize">
                 {task.type.replace("_", " ")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">
-                Priority:
+                {t("tasks.priority")}:
               </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Due date:
+                  {t("tasks.dueDate")}:
                 </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -161,7 +163,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
         {/* Pause Reason */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Reason for Pausing *
+            {t("tasks.reasonForPausing")} *
           </label>
           <div className="grid grid-cols-2 gap-2">
             {pauseReasons.map((pauseReason) => (
@@ -194,14 +196,14 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
         {/* Optional Note */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Additional Details (Optional)
+            {t("tasks.additionalDetailsOptional")}
           </label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            placeholder="Provide more details about why the task is being paused..."
+            placeholder={t("tasks.pauseNotePlaceholder")}
           />
         </div>
 
@@ -211,7 +213,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiClock className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Smart Reminder
+                {t("tasks.smartReminder")}
               </span>
             </div>
             <label className="flex items-center space-x-2">
@@ -222,7 +224,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 className="text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Enable auto-resume reminder
+                {t("tasks.enableAutoResumeReminder")}
               </span>
             </label>
           </div>
@@ -235,7 +237,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
             >
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Remind me in:
+                  {t("tasks.remindMeIn")}
                 </label>
                 <div className="flex items-center space-x-2">
                   <input
@@ -247,13 +249,13 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                     className="w-20 px-2 py-1 border border-gray-300 rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    days
+                    {t("tasks.days")}
                   </span>
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                You&apos;ll receive a notification to resume this task in{" "}
-                {reminderDays} day{reminderDays !== 1 ? "s" : ""}.
+                {t("tasks.resumeReminderPrefix")}{" "}
+                {reminderDays} {reminderDays !== 1 ? t("tasks.days") : t("tasks.day")}.
               </p>
             </motion.div>
           )}
@@ -265,13 +267,13 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
             <FiAlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Pause Impact
+                {t("tasks.pauseImpact")}
               </h4>
               <div className="text-sm text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-                <p>• Task progress will be saved</p>
-                <p>• Team members will be notified</p>
-                <p>• Related tasks may be affected</p>
-                <p>• Performance metrics will reflect pause time</p>
+                <p>• {t("tasks.taskProgressSaved")}</p>
+                <p>• {t("tasks.teamMembersNotified")}</p>
+                <p>• {t("tasks.relatedTasksAffected")}</p>
+                <p>• {t("tasks.performanceMetricsReflectPause")}</p>
               </div>
             </div>
           </div>
@@ -284,8 +286,8 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {enableReminder
-                  ? `Auto-resume in ${reminderDays} days`
-                  : "No auto-resume set"}
+                  ? t("tasks.autoResumeInDays", { days: reminderDays })
+                  : t("tasks.noAutoResumeSet")}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -294,7 +296,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -303,7 +305,7 @@ export const PauseTaskModal: React.FC<PauseTaskModalProps> = ({
                 className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiPause className="w-4 h-4" />
-                <span>{loading ? "Pausing..." : "Pause Task"}</span>
+                <span>{loading ? t("tasks.pausingTask") : t("tasks.pauseTask")}</span>
               </button>
             </div>
           </div>

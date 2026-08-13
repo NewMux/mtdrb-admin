@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiCalendar,
   FiUser,
@@ -62,6 +63,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   onSuccess,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
@@ -132,15 +134,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     const newErrors: Array<{ field: string; message: string }> = [];
 
     if (!data.title.trim()) {
-      newErrors.push({ field: "title", message: "Task title is required" });
+      newErrors.push({ field: "title", message: t("tasks.titleRequired") });
     }
 
     if (!data.type) {
-      newErrors.push({ field: "type", message: "Task type is required" });
+      newErrors.push({ field: "type", message: t("tasks.typeRequired") });
     }
 
     if (!data.priority) {
-      newErrors.push({ field: "priority", message: "Priority is required" });
+      newErrors.push({ field: "priority", message: t("tasks.priorityRequired") });
     }
 
     setErrors(newErrors);
@@ -182,21 +184,21 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   };
 
   const taskTypes = [
-    { value: "onboarding", label: "Member Onboarding" },
-    { value: "class_setup", label: "Class Setup" },
-    { value: "maintenance", label: "Equipment Maintenance" },
-    { value: "cleaning", label: "Facility Cleaning" },
-    { value: "equipment_check", label: "Equipment Check" },
-    { value: "member_support", label: "Member Support" },
-    { value: "admin", label: "Administrative" },
-    { value: "custom", label: "Custom Task" },
+    { value: "onboarding", label: t("tasks.typeOnboarding") },
+    { value: "class_setup", label: t("tasks.typeClassSetup") },
+    { value: "maintenance", label: t("tasks.typeMaintenance") },
+    { value: "cleaning", label: t("tasks.typeCleaning") },
+    { value: "equipment_check", label: t("tasks.typeEquipmentCheck") },
+    { value: "member_support", label: t("tasks.typeMemberSupport") },
+    { value: "admin", label: t("tasks.typeAdmin") },
+    { value: "custom", label: t("tasks.typeCustom") },
   ];
 
   const priorityOptions = [
-    { value: "low", label: "Low Priority" },
-    { value: "medium", label: "Medium Priority" },
-    { value: "high", label: "High Priority" },
-    { value: "urgent", label: "Urgent" },
+    { value: "low", label: t("tasks.priorityOptionLow") },
+    { value: "medium", label: t("tasks.priorityOptionMedium") },
+    { value: "high", label: t("tasks.priorityOptionHigh") },
+    { value: "urgent", label: t("tasks.urgent") },
   ];
 
   // TODO: Fetch trainers from Supabase
@@ -230,7 +232,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {errors.length > 0 && (
           <div className="flex items-center space-x-1 text-sm text-orange-600">
             <FiAlertTriangle className="h-4 w-4" />
-            <span>{errors.length} validation errors</span>
+            <span>{errors.length} {t("tasks.validationErrors")}</span>
           </div>
         )}
       </div>
@@ -240,7 +242,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           onClick={onClose}
           disabled={loading}
         >
-          Cancel
+          {t("common.cancel")}
         </SmartButton>
         <SmartButton
           variant="primary"
@@ -249,7 +251,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           disabled={!isFormValid || loading}
           className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
-          {loading ? "Creating Task..." : "Create Task"}
+          {loading ? t("tasks.creatingTask") : t("tasks.createTask")}
         </SmartButton>
       </div>
     </>
@@ -259,8 +261,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     <UnifiedModal
       isOpen={open}
       onClose={onClose}
-      title="Add New Task"
-      subtitle="Create a new task with smart automation"
+      title={t("tasks.addNewTask")}
+      subtitle={t("tasks.addTaskSubtitle")}
       footer={footer}
       maxWidth="4xl"
       slideFrom="right"
@@ -282,12 +284,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             <div className="flex items-center space-x-2 mb-3">
               <FiZap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Smart Recommendations
+                {t("tasks.smartRecommendations")}
               </h3>
               <div className="flex items-center space-x-1 bg-purple-100 px-2 py-1 rounded-full">
                 <FiStar className="h-3 w-3 text-purple-600" />
                 <span className="text-xs font-medium text-purple-700">
-                  PRO
+                  {t("tasks.proBadgeUpper")}
                 </span>
               </div>
             </div>
@@ -316,31 +318,31 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <FiSettings className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Task Details
+              {t("tasks.taskDetails")}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleInput
-              label="Task Title"
+              label={t("tasks.taskTitle")}
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="e.g., Setup new yoga equipment"
+              placeholder={t("tasks.taskTitlePlaceholder")}
               error={getError("title")}
               required
-              aria-label="Task title"
+              aria-label={t("tasks.taskTitle")}
             />
             <AppleSelect
-              label="Task Type"
+              label={t("tasks.taskType")}
               name="type"
               value={formData.type}
               onChange={handleInputChange}
               required
-              aria-label="Task type"
+              aria-label={t("tasks.taskType")}
               error={getError("type")}
             >
-              <option value="">Select task type</option>
+              <option value="">{t("tasks.selectTaskType")}</option>
               {taskTypes.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
@@ -350,13 +352,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           </div>
 
           <AppleTextarea
-            label="Description"
+            label={t("common.description")}
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Describe the task, requirements, and expected outcomes..."
+            placeholder={t("tasks.taskDescriptionPlaceholder")}
             rows={4}
-            aria-label="Task description"
+            aria-label={t("common.description")}
           />
         </section>
 
@@ -367,18 +369,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <FiUser className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Priority & Assignment
+              {t("tasks.priorityAssignmentSection")}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AppleSelect
-              label="Priority Level"
+              label={t("tasks.priorityLevel")}
               name="priority"
               value={formData.priority}
               onChange={handleInputChange}
               required
-              aria-label="Priority level"
+              aria-label={t("tasks.priorityLevel")}
               error={getError("priority")}
             >
               {priorityOptions.map((priority) => (
@@ -388,14 +390,14 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               ))}
             </AppleSelect>
             <AppleSelect
-              label="Assigned To"
+              label={t("tasks.assignedTo")}
               name="assignedTo"
               value={formData.assignedTo}
               onChange={handleInputChange}
-              aria-label="Assigned to"
+              aria-label={t("tasks.assignedTo")}
               error={getError("assignedTo")}
             >
-              <option value="">Select staff member</option>
+              <option value="">{t("tasks.selectStaffMember")}</option>
               {staffOptions.map((staff) => (
                 <option key={staff.value} value={staff.value}>
                   {staff.label}
@@ -413,7 +415,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             >
               <FiInfo className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm text-blue-700 dark:text-blue-300">
-                Priority auto-set to {formData.priority} based on task type
+                {t("tasks.priorityAutoSetNotice", {
+                  priority: t(`tasks.${formData.priority}`),
+                })}
               </span>
             </motion.div>
           )}
@@ -426,38 +430,38 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               <FiCalendar className="h-5 w-5 text-white" />
             </div>
             <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Schedule & Organization
+              {t("tasks.scheduleOrganizationSection")}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <AppleInput
-              label="Due Date"
+              label={t("tasks.dueDate")}
               name="dueDate"
               type="date"
               value={formData.dueDate}
               onChange={handleInputChange}
-              aria-label="Due date"
+              aria-label={t("tasks.dueDate")}
               error={getError("dueDate")}
               min={new Date().toISOString().split("T")[0]}
             />
             <AppleInput
-              label="Estimated Hours"
+              label={t("tasks.estimatedHours")}
               name="estimatedHours"
               type="number"
               value={formData.estimatedHours.toString()}
               onChange={handleInputChange}
-              aria-label="Estimated hours"
+              aria-label={t("tasks.estimatedHours")}
               error={getError("estimatedHours")}
               min="1"
             />
             <AppleInput
-              label="Tags"
+              label={t("tasks.tagsLabel")}
               name="tags"
               value={formData.tags}
               onChange={handleInputChange}
-              placeholder="maintenance, equipment, urgent"
-              aria-label="Tags"
+              placeholder={t("tasks.tagsPlaceholder")}
+              aria-label={t("tasks.tagsLabel")}
               error={getError("tags")}
             />
           </div>
@@ -471,7 +475,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <FiTrendingUp className="h-5 w-5 text-white" />
               </div>
             <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Recent Similar Tasks
+              {t("tasks.recentSimilarTasks")}
             </h3>
             </div>
 

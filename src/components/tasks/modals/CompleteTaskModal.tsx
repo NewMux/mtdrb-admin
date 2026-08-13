@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiCheck,
   FiUpload,
@@ -22,6 +23,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, changeTaskStatus, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
 
@@ -63,22 +65,22 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
   const outcomeOptions = [
     {
       value: "success",
-      label: "Successfully Completed",
+      label: t("tasks.outcomeSuccess"),
       color: "text-green-600 bg-green-50",
     },
     {
       value: "partial",
-      label: "Partially Completed",
+      label: t("tasks.outcomePartial"),
       color: "text-yellow-600 bg-yellow-50",
     },
     {
       value: "blocked",
-      label: "Blocked/Unable to Complete",
+      label: t("tasks.outcomeBlocked"),
       color: "text-red-600 bg-red-50",
     },
     {
       value: "deferred",
-      label: "Deferred to Later",
+      label: t("tasks.outcomeDeferred"),
       color: "text-blue-600 bg-blue-50",
     },
   ];
@@ -91,8 +93,8 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Complete Task"
-      subtitle={`Completing: ${task.title}`}
+      title={t("tasks.completeTask")}
+      subtitle={`${t("tasks.completingPrefix")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -116,7 +118,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -128,12 +130,12 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               <FiAlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {isPastDue ? "Task is Past Due" : "Task is Late"}
+                  {isPastDue ? t("tasks.taskPastDue") : t("tasks.taskIsLate")}
                 </h4>
                 <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                   {isPastDue
-                    ? "This task is more than 24 hours overdue. It will be auto-tagged for review."
-                    : "This task is overdue. Consider adding a note about the delay."}
+                    ? t("tasks.taskPastDueDesc")
+                    : t("tasks.taskLateDesc")}
                 </p>
                 <div className="mt-2">
                   <label className="flex items-center space-x-2">
@@ -144,7 +146,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                       className="text-red-600 focus:ring-red-500"
                     />
                     <span className="text-sm text-red-700 dark:text-red-300">
-                      Auto-tag for review
+                      {t("tasks.autoTagForReview")}
                     </span>
                   </label>
                 </div>
@@ -156,33 +158,33 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         {/* Task Info */}
         <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Task Information
+            {t("tasks.taskInformation")}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.titleLabel")}:</span>
               <span className="font-medium">{task.title}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.typeLabel")}:</span>
               <span className="font-medium capitalize">
                 {task.type.replace("_", " ")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-gray-600 dark:text-gray-400">
-                Priority:
+                {t("tasks.priority")}:
               </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             {task.dueDate && (
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Due date:
+                  {t("tasks.dueDate")}:
                 </span>
                 <span className={`font-medium ${isLate ? "text-red-600" : ""}`}>
                   {new Date(task.dueDate).toLocaleDateString()}
-                  {isLate && " (Late)"}
+                  {isLate && ` ${t("tasks.lateSuffix")}`}
                 </span>
               </div>
             )}
@@ -192,7 +194,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         {/* Outcome Summary */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Completion Outcome
+            {t("tasks.completionOutcome")}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {outcomeOptions.map((option) => (
@@ -215,21 +217,21 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         {/* Comment */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Completion Comment
+            {t("tasks.completionComment")}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            placeholder="Describe what was accomplished..."
+            placeholder={t("tasks.completionCommentPlaceholder")}
           />
         </div>
 
         {/* File Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Attach Files
+            {t("tasks.attachFiles")}
           </label>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center dark:border-gray-600">
             <FiUpload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -244,10 +246,10 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               htmlFor="file-upload"
               className="cursor-pointer text-blue-600 hover:text-blue-700 dark:text-blue-400"
             >
-              Choose files
+              {t("tasks.chooseFiles")}
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              or drag and drop
+              {t("tasks.orDragAndDrop")}
             </p>
           </div>
 
@@ -271,7 +273,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                     onClick={() => removeFile(index)}
                     className="text-red-500 hover:text-red-700"
                   >
-                    Remove
+                    {t("tasks.removeWord")}
                   </button>
                 </div>
               ))}
@@ -285,15 +287,15 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             <FiZap className="w-5 h-5 text-blue-500 mt-0.5" />
             <div>
               <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Smart Logic Applied
+                {t("tasks.smartLogicApplied")}
               </h4>
               <div className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1">
                 {isLate && (
-                  <p>• Task marked as late - auto-tagged for review</p>
+                  <p>• {t("tasks.taskMarkedLate")}</p>
                 )}
-                <p>• Completion time tracked automatically</p>
-                <p>• Performance metrics updated</p>
-                <p>• Related tasks may be unblocked</p>
+                <p>• {t("tasks.completionTimeTracked")}</p>
+                <p>• {t("tasks.performanceMetricsUpdated")}</p>
+                <p>• {t("tasks.relatedTasksUnblocked")}</p>
               </div>
             </div>
           </div>
@@ -305,7 +307,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             <div className="flex items-center space-x-2">
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {isLate ? "Late completion detected" : "Ready to complete"}
+                {isLate ? t("tasks.lateCompletionDetected") : t("tasks.readyToComplete")}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -314,7 +316,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -323,7 +325,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiCheck className="w-4 h-4" />
-                <span>{loading ? "Completing..." : "Complete Task"}</span>
+                <span>{loading ? t("tasks.completingTask") : t("tasks.completeTask")}</span>
               </button>
             </div>
           </div>

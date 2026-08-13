@@ -33,7 +33,7 @@ import { useRTL } from "../../hooks/useRTL";
 const SMART_SUGGESTIONS: Record<
   string,
   {
-    description: string;
+    descriptionKey: string;
     type: InvoiceType;
     unitPrice: number;
     vatRate: VatRate;
@@ -41,42 +41,42 @@ const SMART_SUGGESTIONS: Record<
   }
 > = {
   PT: {
-    description: "Personal Training Session",
+    descriptionKey: "billing.suggestPersonalTraining",
     type: "PT",
     unitPrice: 50,
     vatRate: 5,
     currency: "BHD",
   },
   MEMBERSHIP: {
-    description: "Monthly Membership",
+    descriptionKey: "billing.suggestMonthlyMembership",
     type: "Membership",
     unitPrice: 100,
     vatRate: 5,
     currency: "BHD",
   },
   CLASS: {
-    description: "Group Fitness Class",
+    descriptionKey: "billing.suggestGroupFitnessClass",
     type: "Class",
     unitPrice: 25,
     vatRate: 5,
     currency: "BHD",
   },
   EQUIPMENT: {
-    description: "Equipment Rental",
+    descriptionKey: "billing.suggestEquipmentRental",
     type: "Facility",
     unitPrice: 15,
     vatRate: 5,
     currency: "BHD",
   },
   CONSULTATION: {
-    description: "Fitness Consultation",
+    descriptionKey: "billing.suggestFitnessConsultation",
     type: "PT",
     unitPrice: 75,
     vatRate: 5,
     currency: "BHD",
   },
   SUPPLEMENTS: {
-    description: "Nutrition Supplements",
+    descriptionKey: "billing.suggestNutritionSupplements",
     type: "Other",
     unitPrice: 45,
     vatRate: 5,
@@ -85,11 +85,11 @@ const SMART_SUGGESTIONS: Record<
 };
 
 // VAT Rate options
-const VAT_RATES: { value: VatRate; label: string }[] = [
-  { value: 0, label: "0% - Exempt" },
-  { value: 5, label: "5% - Standard" },
-  { value: 10, label: "10% - Reduced" },
-  { value: 15, label: "15% - Premium" },
+const VAT_RATES: { value: VatRate; labelKey: string }[] = [
+  { value: 0, labelKey: "billing.vatExempt" },
+  { value: 5, labelKey: "billing.vatStandard" },
+  { value: 10, labelKey: "billing.vatReduced" },
+  { value: 15, labelKey: "billing.vatPremium" },
 ];
 
 interface ClientHistory {
@@ -285,7 +285,7 @@ export function NewInvoiceModal({
       }
 
       if (overdueInvoices > 0) {
-        toast.error(`Client has ${overdueInvoices} overdue invoice(s)!`, {
+        toast.error(t("billing.clientOverdueInvoices", { count: overdueInvoices }), {
           duration: 4000,
           icon: "⚠️",
         });
@@ -293,7 +293,7 @@ export function NewInvoiceModal({
     } catch (error) {
       console.error("Error loading client history:", error);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (selectedClient?.id) {
@@ -320,7 +320,7 @@ export function NewInvoiceModal({
       setItems(newItems);
     } catch (error) {
       console.error("Error updating item:", error);
-      toast.error("Error updating item");
+      toast.error(t("billing.errorUpdatingItem"));
     }
   };
 
@@ -348,7 +348,7 @@ export function NewInvoiceModal({
     const suggestion =
       SMART_SUGGESTIONS[suggestionKey as keyof typeof SMART_SUGGESTIONS];
     if (suggestion) {
-      handleItemChange(index, "description", suggestion.description);
+      handleItemChange(index, "description", t(suggestion.descriptionKey));
       handleItemChange(index, "unit_price", suggestion.unitPrice);
       handleItemChange(index, "vat_rate", suggestion.vatRate);
     }
@@ -356,18 +356,17 @@ export function NewInvoiceModal({
 
   const handleSave = async (saveAsDraft: boolean = false) => {
     if (!selectedClient) {
-      toast.error("Please select a client");
+      toast.error(t("billing.selectClientRequired"));
       return;
     }
 
     if (items.length === 0 || items.every((item) => !item.description)) {
-      toast.error("Please add at least one line item");
+      toast.error(t("billing.lineItemRequired"));
       return;
     }
 
     setIsSaving(true);
     try {
-      const action = editingInvoice ? "updated" : "created";
       const invoicePayload = {
         invoice_number: invoiceData.invoice_number || `INV-${Date.now()}`,
         type: invoiceData.type,
@@ -403,14 +402,14 @@ export function NewInvoiceModal({
 
       if (result.error) throw result.error;
 
-      toast.success(`Invoice ${action} successfully!`);
+      toast.success(editingInvoice ? t("billing.invoiceUpdated") : t("billing.invoiceCreated"));
       onSave();
       onClose();
     } catch (error: unknown) {
       console.error("Error saving invoice:", error);
       const message =
-        error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to save invoice: ${message}`);
+        error instanceof Error ? error.message : t("billing.unknown");
+      toast.error(t("billing.saveInvoiceFailedWithReason", { message }));
     } finally {
       setIsSaving(false);
     }
@@ -546,7 +545,7 @@ export function NewInvoiceModal({
                   <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
                   <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
                   <option value="Draft">{t("billing.draft", "مسودة")}</option>
-                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
+                  <option value="Cancelled">{t("common.cancelled")}</option>
                 </AppleSelect>
                 <AppleSelect
                   label={t("billing.type", "نوع الفاتورة")}
@@ -585,7 +584,7 @@ export function NewInvoiceModal({
                         "Error selecting client:",
                         error,
                       );
-                      toast.error("Error selecting client");
+                      toast.error(t("billing.errorSelectingClient"));
                     }
                   }}
                 >
@@ -801,7 +800,7 @@ export function NewInvoiceModal({
                                   }
                                   className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
                                 >
-                                  {suggestion.description}
+                                  {t(suggestion.descriptionKey)}
                                 </button>
                               ),
                             )}
@@ -865,7 +864,7 @@ export function NewInvoiceModal({
                               key={rate.value}
                               value={rate.value}
                             >
-                              {rate.label}
+                              {t(rate.labelKey)}
                             </option>
                           ))}
                         </select>

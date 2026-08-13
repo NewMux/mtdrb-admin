@@ -34,27 +34,28 @@ type EditMemberForm = {
   idDocument?: File | null;
 };
 
-const schema = z.object({
-  name: z.string().min(1, "Full Name is required"),
-  age: z.coerce
-    .number()
-    .min(16, "Must be at least 16 years old")
-    .max(100, "Invalid age"),
-  gender: z.enum(["Male", "Female", "Other"]),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone: z.string().min(1, "Phone number is required"),
-  fitnessGoal: z.enum([
-    "Weight Loss",
-    "Muscle Gain",
-    "General Fitness",
-    "Athletic Performance",
-    "Rehabilitation",
-    "Stress Relief",
-  ]),
-  injuries: z.string().optional(),
-  staffNotes: z.string().optional(),
-  idDocument: z.any().optional(),
-});
+const buildSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t("members.fullNameRequired")),
+    age: z.coerce
+      .number()
+      .min(16, t("members.ageMinRequired"))
+      .max(100, t("members.invalidAge")),
+    gender: z.enum(["Male", "Female", "Other"]),
+    email: z.string().email(t("members.invalidEmailAddress")).optional().or(z.literal("")),
+    phone: z.string().min(1, t("members.phoneRequired")),
+    fitnessGoal: z.enum([
+      "Weight Loss",
+      "Muscle Gain",
+      "General Fitness",
+      "Athletic Performance",
+      "Rehabilitation",
+      "Stress Relief",
+    ]),
+    injuries: z.string().optional(),
+    staffNotes: z.string().optional(),
+    idDocument: z.any().optional(),
+  });
 
 interface EditMemberModalProps {
   isOpen: boolean;
@@ -86,7 +87,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
     setValue,
     formState: { errors, isValid },
   } = useForm<EditMemberForm>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(buildSchema(t)),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -293,7 +294,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone Number *
+                    {t("members.phoneNumber")} *
                   </label>
                   <Controller
                     name="phone"
@@ -315,7 +316,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email (Optional)
+                    {t("members.emailOptional")}
                   </label>
                   <Controller
                     name="email"
@@ -350,10 +351,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Fitness Goals
+                    {t("members.fitnessGoals")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Select primary fitness objective
+                    {t("members.fitnessGoalsDesc")}
                   </p>
                 </div>
               </div>
@@ -366,32 +367,38 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       {
                         value: "Weight Loss",
                         icon: "⚖️",
-                        description: "Lose weight and get leaner",
+                        label: t("members.goalWeightLoss"),
+                        description: t("members.goalWeightLossDesc"),
                       },
                       {
                         value: "Muscle Gain",
                         icon: "💪",
-                        description: "Build muscle and strength",
+                        label: t("members.goalMuscleGain"),
+                        description: t("members.goalMuscleGainDesc"),
                       },
                       {
                         value: "General Fitness",
                         icon: "🏃",
-                        description: "Stay healthy and active",
+                        label: t("members.goalGeneralFitness"),
+                        description: t("members.goalGeneralFitnessDesc"),
                       },
                       {
                         value: "Athletic Performance",
                         icon: "🏆",
-                        description: "Improve sports performance",
+                        label: t("members.goalAthleticPerformance"),
+                        description: t("members.goalAthleticPerformanceDesc"),
                       },
                       {
                         value: "Rehabilitation",
                         icon: "🩺",
-                        description: "Recover from injury",
+                        label: t("members.goalRehabilitation"),
+                        description: t("members.goalRehabilitationDesc"),
                       },
                       {
                         value: "Stress Relief",
                         icon: "🧘",
-                        description: "Reduce stress and relax",
+                        label: t("members.goalStressRelief"),
+                        description: t("members.goalStressReliefDesc"),
                       },
                     ].map((goal) => (
                       <button
@@ -408,7 +415,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                           <span className="text-2xl">{goal.icon}</span>
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {goal.value}
+                              {goal.label}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400">
                               {goal.description}
@@ -439,17 +446,17 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Medical Info
+                    {t("members.medicalInformation")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Injuries, medical conditions, and staff notes
+                    {t("members.medicalInfoDesc")}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Injuries / Medical Conditions
+                    {t("members.injuriesConditionsLabel")}
                   </label>
                   <Controller
                     name="injuries"
@@ -459,14 +466,14 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                         {...field}
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Describe any injuries or medical conditions..."
+                        placeholder={t("members.describeInjuriesPlaceholder")}
                       />
                     )}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Staff Notes
+                    {t("members.staffNotes")}
                   </label>
                   <Controller
                     name="staffNotes"
@@ -476,7 +483,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                         {...field}
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Add any notes for staff..."
+                        placeholder={t("members.staffNotesPlaceholder")}
                       />
                     )}
                   />
@@ -496,16 +503,16 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Document Upload
+                    {t("members.documentUpload")}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Upload ID for verification
+                    {t("members.uploadIdForVerification")}
                   </p>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  ID Document
+                  {t("members.idDocument")}
                 </label>
                 <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                   <input
@@ -523,17 +530,17 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                           {uploadedFile.name}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          File uploaded successfully
+                          {t("members.fileUploadedSuccessfully")}
                         </p>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <FiUpload className="w-8 h-8 text-gray-400 mx-auto" />
                         <p className="text-gray-600 dark:text-gray-400">
-                          Click to upload or drag and drop
+                          {t("members.clickToUploadOrDragDrop")}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          PNG, JPG, PDF up to 10MB
+                          {t("members.fileSizeLimit")}
                         </p>
                       </div>
                     )}
