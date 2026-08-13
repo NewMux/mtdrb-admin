@@ -79,14 +79,14 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
           // Validate required fields
           if (!row.name || !row.email) {
             newErrors.push(
-              `Row ${i + 1}: Missing required fields (name or email)`,
+              t("members.rowMissingFields", { row: i + 1 }),
             );
             continue;
           }
 
           // Validate email format
           if (!/\S+@\S+\.\S+/.test(row.email)) {
-            newErrors.push(`Row ${i + 1}: Invalid email format`);
+            newErrors.push(t("members.rowInvalidEmail", { row: i + 1 }));
             continue;
           }
 
@@ -128,7 +128,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("No user found");
+        throw new Error(t("members.noUserFound"));
       }
 
       // Get tenant_id from memberships table
@@ -139,7 +139,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
         .single();
 
       if (membershipError || !membershipData?.tenant_id) {
-        throw new Error("Failed to get organization details");
+        throw new Error(t("members.failedToGetOrgDetails"));
       }
 
       const tenantId = membershipData.tenant_id;
@@ -191,7 +191,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
 
         if (insertError) {
           importErrors.push(
-            `Batch ${i + 1}: ${insertError.message}`,
+            t("members.batchError", { batch: i + 1, message: insertError.message }),
           );
         } else {
           successCount += batch.length;
@@ -200,13 +200,13 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
 
       if (importErrors.length > 0 && successCount === 0) {
         throw new Error(
-          `Import failed: ${importErrors.join("; ")}`,
+          t("members.importFailedWithErrors", { errors: importErrors.join("; ") }),
         );
       }
 
       if (importErrors.length > 0) {
         setErrors([
-          `Imported ${successCount} members. Some errors occurred: ${importErrors.join("; ")}`,
+          t("members.importedWithErrors", { count: successCount, errors: importErrors.join("; ") }),
         ]);
       }
 
@@ -214,7 +214,9 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
     } catch (error) {
       console.error("Import failed:", error);
       setErrors([
-        `Import failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("members.importFailedGeneric", {
+          message: error instanceof Error ? error.message : t("messages.somethingWentWrong"),
+        }),
       ]);
     } finally {
       setIsUploading(false);
@@ -313,7 +315,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                   <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                   <div className="text-start">
                     <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-                      {t("members.importErrors", `أخطاء الاستيراد (${errors.length})`)}
+                      {t("members.importErrors", { count: errors.length })}
                     </h4>
                     <ul className="space-y-1 text-xs text-red-700 dark:text-red-300">
                       {errors.map((error, index) => (
@@ -333,7 +335,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {t("members.previewMembers", `معاينة (${importedData.length} عضو)`)}
+                    {t("members.previewMembers", { count: importedData.length })}
                   </h3>
                   <SmartButton
                     variant="ghost"
@@ -350,16 +352,16 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                       <thead className="bg-gray-50bg-gray-800">
                         <tr>
                           <th className="px-4 py-2 text-left text-gray-700text-gray-300">
-                            Name
+                            {t("common.name")}
                           </th>
                           <th className="px-4 py-2 text-left text-gray-700text-gray-300">
-                            Email
+                            {t("common.email")}
                           </th>
                           <th className="px-4 py-2 text-left text-gray-700text-gray-300">
-                            Status
+                            {t("common.status")}
                           </th>
                           <th className="px-4 py-2 text-left text-gray-700text-gray-300">
-                            Type
+                            {t("members.type")}
                           </th>
                         </tr>
                       </thead>
@@ -392,7 +394,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                     </table>
                     {importedData.length > 10 && (
                       <div className="px-4 py-2 text-xs text-gray-500text-gray-400 text-center">
-                        Showing first 10 of {importedData.length} members
+                        {t("members.showingFirstMembers", { shown: 10, count: importedData.length })}
                       </div>
                     )}
                   </div>
@@ -402,7 +404,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                   <div className="flex items-center space-x-2">
                     <FiCheck className="w-5 h-5 text-green-600text-green-400" />
                     <span className="text-sm font-medium text-green-800text-green-200">
-                      {importedData.length} members ready to import
+                      {t("members.membersReadyToImport", { count: importedData.length })}
                     </span>
                   </div>
                 </div>
@@ -416,7 +418,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                 onClick={handleClose}
                 disabled={isUploading}
               >
-                Cancel
+                {t("common.cancel")}
               </SmartButton>
 
               <SmartButton
@@ -428,8 +430,8 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                 icon={<FiUpload className="w-4 h-4" />}
               >
                 {isUploading
-                  ? "Importing..."
-                  : `Import ${importedData.length} Members`}
+                  ? t("members.importing")
+                  : t("members.importCountMembers", { count: importedData.length })}
               </SmartButton>
             </div>
           </div>

@@ -8,6 +8,7 @@ import {
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 import { useRTL } from "../../hooks/useRTL";
+import { useTranslation } from "react-i18next";
 
 type ActiveTab = "overview" | "breakdown" | "products";
 
@@ -58,6 +59,7 @@ const ChartPlaceholder = ({
   data: ChartPreviewItem[];
   type?: "line" | "bar" | "pie";
 }) => {
+  const { t } = useTranslation();
   if (!data || !Array.isArray(data)) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
@@ -66,7 +68,7 @@ const ChartPlaceholder = ({
             <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Loading data...</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.loadingData")}</p>
             </div>
           </div>
         </div>
@@ -79,11 +81,11 @@ const ChartPlaceholder = ({
               {type === "pie" && "🥧"}
             </div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              {type === "line" && "Line Chart"}
-              {type === "bar" && "Bar Chart"}
-              {type === "pie" && "Pie Chart"}
+              {type === "line" && t("analytics.lineChart")}
+              {type === "bar" && t("analytics.barChart")}
+              {type === "pie" && t("analytics.pieChart")}
             </p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">No data available</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t("analytics.noData")}</p>
           </div>
         </div>
       </div>
@@ -97,7 +99,7 @@ const ChartPlaceholder = ({
           <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{data.length} data points</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.dataPointsCount", { count: data.length })}</p>
           </div>
         </div>
       </div>
@@ -110,11 +112,11 @@ const ChartPlaceholder = ({
             {type === "pie" && "🥧"}
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {type === "line" && "Line Chart"}
-            {type === "bar" && "Bar Chart"}
-            {type === "pie" && "Pie Chart"}
+            {type === "line" && t("analytics.lineChart")}
+            {type === "bar" && t("analytics.barChart")}
+            {type === "pie" && t("analytics.pieChart")}
           </p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Chart.js integration</p>
+          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t("analytics.chartIntegration")}</p>
         </div>
       </div>
 
@@ -134,7 +136,7 @@ const ChartPlaceholder = ({
                   : typeof item.amount === "number"
                     ? `$${item.amount.toLocaleString()}`
                     : typeof item.units === "number"
-                      ? `${item.units} units`
+                      ? t("analytics.unitsSold", { count: item.units })
                       : ""}
               </span>
             </div>
@@ -150,6 +152,7 @@ const VATSummaryCard = ({
 }: {
   vatSummary: RevenueOverviewProps["vatSummary"];
 }) => {
+  const { t } = useTranslation();
   const handleGenerateVATReport = () => {
     // TODO: Implement VAT report generation
   };
@@ -161,28 +164,28 @@ const VATSummaryCard = ({
             <FiPieChart className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("analytics.vatSummaryTitle")}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Tax breakdown for the period
+              {t("analytics.taxBreakdownForPeriod")}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.totalRevenue")}</p>
             <div className="w-20 h-6 bg-gray-200 dark:bg-gray-600 rounded mx-auto mt-2"></div>
           </div>
           <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400">VAT Collected</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.vatCollected")}</p>
             <div className="w-16 h-6 bg-gray-200 dark:bg-gray-600 rounded mx-auto mt-2"></div>
           </div>
           <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400">VAT Refunded</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.vatRefunded")}</p>
             <div className="w-16 h-6 bg-gray-200 dark:bg-gray-600 rounded mx-auto mt-2"></div>
           </div>
           <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Net VAT</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.netVat")}</p>
             <div className="w-16 h-6 bg-gray-200 dark:bg-gray-600 rounded mx-auto mt-2"></div>
           </div>
         </div>
@@ -194,7 +197,7 @@ const VATSummaryCard = ({
             size="sm"
             className="w-full"
           >
-            Generate VAT Report
+            {t("analytics.generateVatReport")}
           </SmartButton>
         </div>
       </div>
@@ -208,32 +211,32 @@ const VATSummaryCard = ({
           <FiPieChart className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Tax breakdown for the period</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("analytics.vatSummaryTitle")}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.taxBreakdownForPeriod")}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.totalRevenue")}</p>
           <p className="text-xl font-bold text-gray-900 dark:text-white">
             ${vatSummary.total.toLocaleString()}
           </p>
         </div>
         <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">VAT Collected</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.vatCollected")}</p>
           <p className="text-xl font-bold text-green-600 dark:text-green-400">
             ${vatSummary.collected.toLocaleString()}
           </p>
         </div>
         <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">VAT Refunded</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.vatRefunded")}</p>
           <p className="text-xl font-bold text-red-600 dark:text-red-400">
             ${vatSummary.refunded.toLocaleString()}
           </p>
         </div>
         <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Net VAT</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.netVat")}</p>
           <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
             ${vatSummary.net.toLocaleString()}
           </p>
@@ -247,7 +250,7 @@ const VATSummaryCard = ({
           size="sm"
           className="w-full"
         >
-          Generate VAT Report
+          {t("analytics.generateVatReport")}
         </SmartButton>
       </div>
     </div>
@@ -259,6 +262,7 @@ const TopProductsTable = ({
 }: {
   products: RevenueOverviewProps["topProducts"];
 }) => {
+  const { t } = useTranslation();
   const handleViewAll = () => {
     // TODO: Implement view all products functionality
   };
@@ -272,13 +276,13 @@ const TopProductsTable = ({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Top Products
+                {t("analytics.topProducts")}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Best performing packages</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.bestPerformingPackages")}</p>
             </div>
           </div>
           <SmartButton onClick={handleViewAll} variant="secondary" size="sm">
-            View All
+            {t("analytics.viewAll")}
           </SmartButton>
         </div>
 
@@ -315,13 +319,13 @@ const TopProductsTable = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Top Products
+              {t("analytics.topProducts")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Best performing packages</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.bestPerformingPackages")}</p>
           </div>
         </div>
         <SmartButton onClick={handleViewAll} variant="secondary" size="sm">
-          View All
+          {t("analytics.viewAll")}
         </SmartButton>
       </div>
 
@@ -343,7 +347,7 @@ const TopProductsTable = ({
               <div>
                 <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {product.units} units sold
+                  {t("analytics.unitsSold", { count: product.units })}
                 </p>
               </div>
             </div>
@@ -351,7 +355,7 @@ const TopProductsTable = ({
               <p className="font-bold text-gray-900 dark:text-white">
                 ${product.revenue.toLocaleString()}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Revenue</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{t("analytics.revenue")}</p>
             </div>
           </motion.div>
         ))}
@@ -369,22 +373,23 @@ export default function RevenueOverview({
   vatSummary,
 }: RevenueOverviewProps) {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
     {
       id: "overview",
-      label: "Overview",
+      label: t("analytics.overview"),
       icon: <FiBarChart className="w-4 h-4" />,
     },
     {
       id: "breakdown",
-      label: "Breakdown",
+      label: t("analytics.breakdown"),
       icon: <FiPieChart className="w-4 h-4" />,
     },
     {
       id: "products",
-      label: "Products",
+      label: t("analytics.products"),
       icon: <FiPieChart className="w-4 h-4" />,
     },
   ];
@@ -394,9 +399,9 @@ export default function RevenueOverview({
       {/* Header */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Revenue Overview</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("analytics.revenueOverviewTitle")}</h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Track your financial performance across all channels
+            {t("analytics.revenueOverviewSubtitle")}
           </p>
         </div>
       </div>
@@ -423,7 +428,7 @@ export default function RevenueOverview({
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartPlaceholder
-            title="Revenue Trend"
+            title={t("analytics.revenueTrend")}
             icon={<FiTrendingUp className="w-6 h-6 text-blue-600" />}
             data={timeSeriesData}
             type="line"
@@ -435,19 +440,19 @@ export default function RevenueOverview({
       {activeTab === "breakdown" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ChartPlaceholder
-            title="By Membership Type"
+            title={t("analytics.byMembershipType")}
             icon={<FiUsers className="w-6 h-6 text-green-600" />}
             data={membershipRevenue}
             type="pie"
           />
           <ChartPlaceholder
-            title="By Payment Method"
+            title={t("analytics.byPaymentMethod")}
             icon={<FiPieChart className="w-6 h-6 text-purple-600" />}
             data={paymentMethodRevenue}
             type="bar"
           />
           <ChartPlaceholder
-            title="By Source"
+            title={t("analytics.bySource")}
             icon={<FiPieChart className="w-6 h-6 text-orange-600" />}
             data={sourceRevenue}
             type="pie"
@@ -459,7 +464,7 @@ export default function RevenueOverview({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <TopProductsTable products={topProducts} />
           <ChartPlaceholder
-            title="Product Performance"
+            title={t("analytics.productPerformance")}
             icon={<FiPieChart className="w-6 h-6 text-purple-600" />}
             data={topProducts}
             type="bar"

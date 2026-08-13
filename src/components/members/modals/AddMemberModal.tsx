@@ -169,42 +169,65 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   const goalOptions = [
-    { value: "weight_loss", label: "Weight Loss" },
-    { value: "muscle_gain", label: "Muscle Gain" },
-    { value: "strength", label: "Strength Training" },
-    { value: "endurance", label: "Endurance" },
-    { value: "flexibility", label: "Flexibility" },
-    { value: "general_fitness", label: "General Fitness" },
+    { value: "weight_loss", label: t("members.goalWeightLoss") },
+    { value: "muscle_gain", label: t("members.goalMuscleGain") },
+    { value: "strength", label: t("members.goalStrengthTraining") },
+    { value: "endurance", label: t("members.goalEndurance") },
+    { value: "flexibility", label: t("members.goalFlexibility") },
+    { value: "general_fitness", label: t("members.goalGeneralFitness") },
   ];
 
   const healthConditionOptions = [
-    { value: "asthma", label: "Asthma" },
-    { value: "heart_condition", label: "Heart Condition" },
-    { value: "back_pain", label: "Back Pain" },
-    { value: "knee_injury", label: "Knee Injury" },
-    { value: "diabetes", label: "Diabetes" },
-    { value: "hypertension", label: "Hypertension" },
+    { value: "asthma", label: t("members.conditionAsthma") },
+    { value: "heart_condition", label: t("members.conditionHeartCondition") },
+    { value: "back_pain", label: t("members.conditionBackPain") },
+    { value: "knee_injury", label: t("members.conditionKneeInjury") },
+    { value: "diabetes", label: t("members.conditionDiabetes") },
+    { value: "hypertension", label: t("members.conditionHypertension") },
   ];
+
+  // Displayed labels for the medical-conditions/injuries checkbox lists below.
+  // The underlying English value is still what's stored on the member record;
+  // only the label shown to the user is translated.
+  const medicalConditionLabels: Record<string, string> = {
+    Asthma: t("members.conditionAsthma"),
+    "Heart Condition": t("members.conditionHeartCondition"),
+    Diabetes: t("members.conditionDiabetes"),
+    Hypertension: t("members.conditionHypertension"),
+    "Back Pain": t("members.conditionBackPain"),
+    "Knee Injury": t("members.conditionKneeInjury"),
+  };
+  const medicalConditionLabel = (value: string) => medicalConditionLabels[value] ?? value;
+
+  const injuryLabels: Record<string, string> = {
+    Shoulder: t("members.injuryShoulder"),
+    Knee: t("members.injuryKnee"),
+    Back: t("members.injuryBack"),
+    Ankle: t("members.injuryAnkle"),
+    Wrist: t("members.injuryWrist"),
+    Hip: t("members.injuryHip"),
+  };
+  const injuryLabel = (value: string) => injuryLabels[value] ?? value;
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t("members.nameRequired");
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("members.emailRequired");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("members.invalidEmailAddress");
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = t("members.phoneRequired");
     }
 
     if (!formData.membershipType) {
-      newErrors.membershipType = "Membership type is required";
+      newErrors.membershipType = t("members.membershipTypeRequired");
     }
 
     setErrors(newErrors);
@@ -522,12 +545,12 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           </div>
 
           <AppleInput
-            label="Address"
+            label={t("members.address")}
             name="address"
             value={formData.address}
             onChange={handleInputChange}
-            aria-label="Address"
-            placeholder="Enter full address"
+            aria-label={t("members.address")}
+            placeholder={t("members.enterFullAddress")}
           />
         </section>
         {/* Health & Fitness Section */}
@@ -691,7 +714,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Medical Conditions
+                {t("members.medicalConditions")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -719,7 +742,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">{condition}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{medicalConditionLabel(condition)}</span>
                   </label>
                 ))}
               </div>
@@ -750,7 +773,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                       }
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-xs text-gray-700 dark:text-gray-300">{injury}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300">{injuryLabel(injury)}</span>
                   </label>
                 ))}
               </div>

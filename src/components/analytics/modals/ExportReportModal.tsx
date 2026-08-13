@@ -15,6 +15,7 @@ import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 import type { Database } from "../../../types/supabase";
+import { useTranslation } from "react-i18next";
 
 interface ExportReportModalProps {
   open: boolean;
@@ -75,69 +76,70 @@ const quarterStartMonth = (currentQuarter - 1) * 3;
 const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
 const quarterEnd = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
 
-const initialSavedReports = [
-  {
-    id: "1",
-    name: "Member Overview Report",
-    description: "Comprehensive member activity and engagement metrics",
-    lastGenerated: new Date().toISOString(),
-    size: "—",
-    sections: ["Attendance", "Payments", "Progress"],
-    isStale: false,
-  },
-  {
-    id: "2",
-    name: `Financial Summary Q${currentQuarter}`,
-    description: `Revenue, expenses, and profit analysis for Q${currentQuarter} ${now.getFullYear()}`,
-    lastGenerated: new Date().toISOString(),
-    size: "—",
-    sections: ["Revenue", "Expenses", "Profit", "VAT"],
-    isStale: false,
-  },
-  {
-    id: "3",
-    name: "Custom Report Template",
-    description: "Your custom report with attendance and payment data",
-    lastGenerated: new Date().toISOString(),
-    size: "—",
-    sections: ["Attendance", "Payment", "Trainer Feedback"],
-    isStale: false,
-  },
-];
-
-const exportFormats = [
-  {
-    id: "csv",
-    label: "CSV",
-    description: "Spreadsheet format, good for data analysis",
-    icon: FiFileText,
-  },
-  {
-    id: "excel",
-    label: "Excel",
-    description: "Rich formatting and charts",
-    icon: FiFileText,
-  },
-  {
-    id: "pdf",
-    label: "PDF",
-    description: "Professional presentation format",
-    icon: FiFileText,
-  },
-  {
-    id: "json",
-    label: "JSON",
-    description: "API-friendly data format",
-    icon: FiFileText,
-  },
-];
-
 export default function ExportReportModal({
   open,
   onClose,
   onSuccess,
   isPro,
 }: ExportReportModalProps) {
+  const { t } = useTranslation();
+
+  const initialSavedReports = [
+    {
+      id: "1",
+      name: t("reports.memberOverviewReportName"),
+      description: t("reports.memberOverviewDesc"),
+      lastGenerated: new Date().toISOString(),
+      size: "—",
+      sections: [t("reports.sectionAttendance"), t("reports.sectionPayments"), t("reports.sectionProgress")],
+      isStale: false,
+    },
+    {
+      id: "2",
+      name: t("reports.financialSummaryQuarterName", { quarter: currentQuarter }),
+      description: t("reports.financialSummaryQuarterDesc", { quarter: currentQuarter, year: now.getFullYear() }),
+      lastGenerated: new Date().toISOString(),
+      size: "—",
+      sections: [t("reports.sectionRevenue"), t("reports.sectionExpenses"), t("reports.sectionProfit"), t("reports.sectionVat")],
+      isStale: false,
+    },
+    {
+      id: "3",
+      name: t("reports.customReportTemplateName"),
+      description: t("reports.customReportDesc"),
+      lastGenerated: new Date().toISOString(),
+      size: "—",
+      sections: [t("reports.sectionAttendance"), t("reports.sectionPayment"), t("reports.sectionTrainerFeedback")],
+      isStale: false,
+    },
+  ];
+
+  const exportFormats = [
+    {
+      id: "csv",
+      label: t("reports.csv"),
+      description: t("reports.csvDesc"),
+      icon: FiFileText,
+    },
+    {
+      id: "excel",
+      label: t("reports.excel"),
+      description: t("reports.excelDesc"),
+      icon: FiFileText,
+    },
+    {
+      id: "pdf",
+      label: t("reports.pdf"),
+      description: t("reports.pdfDesc"),
+      icon: FiFileText,
+    },
+    {
+      id: "json",
+      label: t("reports.json"),
+      description: t("reports.jsonDesc"),
+      icon: FiFileText,
+    },
+  ];
   const { tenantId } = useAuth();
   const { loading, generateReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
@@ -158,12 +160,12 @@ export default function ExportReportModal({
 
   const handleExport = async () => {
     if (!selectedReport) {
-      toast.error("Please select a report to export");
+      toast.error(t("reports.pleaseSelectReport"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(t("reports.noTenantIdFound"));
       return;
     }
 
@@ -171,7 +173,7 @@ export default function ExportReportModal({
     try {
       const report = savedReports.find((r) => r.id === selectedReport);
       if (!report) {
-        toast.error("Report not found");
+        toast.error(t("reports.reportNotFound"));
         return;
       }
 
@@ -336,14 +338,16 @@ export default function ExportReportModal({
 
       const result = await generateReport();
       if (result.success) {
-        toast.success("Report exported successfully");
+        toast.success(t("reports.reportExportedSuccessfully"));
         onSuccess?.();
         onClose();
       }
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("reports.failedToExportGeneric", {
+          message: error instanceof Error ? error.message : t("messages.somethingWentWrong"),
+        }),
       );
     } finally {
       setExporting(false);
@@ -360,7 +364,7 @@ export default function ExportReportModal({
             : report,
         ),
       );
-      toast.success("Report data refreshed");
+      toast.success(t("reports.reportDataRefreshed"));
     } finally {
       setExporting(false);
     }
@@ -390,8 +394,8 @@ export default function ExportReportModal({
     <SmartAnalyticsModal
       open={open}
       onClose={onClose}
-      title="Export Report"
-      subtitle="Select a saved report and export in your preferred format"
+      title={t("reports.exportReport")}
+      subtitle={t("reports.exportReportSubtitle")}
     >
       {/* Alerts */}
       {alerts.map((alert, i) => (
@@ -417,12 +421,12 @@ export default function ExportReportModal({
       ))}
       {!isProUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm mb-4">
-          Exporting reports is available on Pro plans.
+          {t("reports.exportingProFeature")}
         </div>
       )}
 
       {/* Saved Reports */}
-      <Section title="Select Report">
+      <Section title={t("reports.selectReport")}>
         <div className="space-y-3">
           {savedReports.map((report) => (
             <label
@@ -443,7 +447,7 @@ export default function ExportReportModal({
                   {report.isStale && (
                     <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1">
                       <FiClock className="w-3 h-3" />
-                      Stale
+                      {t("reports.stale")}
                     </span>
                   )}
                 </div>
@@ -451,12 +455,11 @@ export default function ExportReportModal({
                   {report.description}
                 </p>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>Size: {report.size}</span>
+                  <span>{t("reports.sizeLabel", { size: report.size })}</span>
                   <span>
-                    Last generated:{" "}
-                    {new Date(report.lastGenerated).toLocaleDateString()}
+                    {t("reports.lastGeneratedLabel", { date: new Date(report.lastGenerated).toLocaleDateString() })}
                   </span>
-                  <span>Sections: {report.sections.join(", ")}</span>
+                  <span>{t("reports.sectionsLabel", { sections: report.sections.join(", ") })}</span>
                 </div>
               </div>
               {report.isStale && (
@@ -466,7 +469,7 @@ export default function ExportReportModal({
                     handleRefreshReport(report.id);
                   }}
                   className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                  title="Refresh report data"
+                  title={t("reports.refreshReportData")}
                 >
                   <FiRefreshCw
                     className={`w-4 h-4 ${exporting ? "animate-spin" : ""}`}
@@ -481,11 +484,11 @@ export default function ExportReportModal({
       {/* Export Options */}
       {selectedReport && (
         <>
-          <Section title="Export Options">
+          <Section title={t("reports.exportOptions")}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-                  <FiDownload /> Format
+                  <FiDownload /> {t("reports.format")}
                 </label>
                 <select
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
@@ -501,7 +504,7 @@ export default function ExportReportModal({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-                  <FiImage /> Content
+                  <FiImage /> {t("reports.content")}
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2">
@@ -512,13 +515,13 @@ export default function ExportReportModal({
                       className="rounded"
                     />
                     <span className="text-sm text-gray-600">
-                      Include charts and graphs
+                      {t("reports.includeChartsGraphs")}
                     </span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="rounded" />
                     <span className="text-sm text-gray-600">
-                      Include raw data
+                      {t("reports.includeRawData")}
                     </span>
                   </label>
                 </div>
@@ -527,17 +530,17 @@ export default function ExportReportModal({
           </Section>
 
           {/* Report Preview */}
-          <Section title="Report Preview">
+          <Section title={t("reports.reportPreview")}>
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-semibold text-gray-900">
                   {getSelectedReport()?.name}
                 </h4>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>Size: {getSelectedReport()?.size}</span>
+                  <span>{t("reports.sizeLabel", { size: getSelectedReport()?.size })}</span>
                   <span>•</span>
                   <span>
-                    Format:{" "}
+                    {t("reports.formatLabel")}{" "}
                     {exportFormats.find((f) => f.id === exportFormat)?.label}
                   </span>
                 </div>
@@ -548,7 +551,7 @@ export default function ExportReportModal({
                     <div className="text-sm font-medium text-gray-900 mb-1">
                       {section}
                     </div>
-                    <div className="text-xs text-gray-500">Section {i + 1}</div>
+                    <div className="text-xs text-gray-500">{t("reports.sectionNumber", { number: i + 1 })}</div>
                   </div>
                 ))}
               </div>
@@ -557,8 +560,7 @@ export default function ExportReportModal({
                   <div className="flex items-center gap-2 text-sm text-yellow-700">
                     <FiAlertTriangle className="text-yellow-500" />
                     <span>
-                      This report contains data older than 7 days. Consider
-                      refreshing for the latest information.
+                      {t("reports.staleDataWarning")}
                     </span>
                   </div>
                 </div>
@@ -576,7 +578,7 @@ export default function ExportReportModal({
             onClick={onClose}
             disabled={loading || exporting}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 flex items-center gap-2"
@@ -586,12 +588,12 @@ export default function ExportReportModal({
             {exporting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Exporting...
+                {t("reports.exportingButton")}
               </>
             ) : (
               <>
                 <FiDownload />
-                Export Report
+                {t("reports.exportReport")}
               </>
             )}
           </button>
