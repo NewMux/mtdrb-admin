@@ -8,6 +8,7 @@ import {
   FiShield,
   FiDownload,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -26,6 +27,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -87,10 +89,10 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Trainer Schedule
+                {t("trainers.trainerSchedule")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage trainer availability and appointments
+                {t("trainers.trainerScheduleDesc")}
               </p>
             </div>
           </div>
@@ -107,27 +109,27 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Availability:
+                  {t("trainers.availability")}:
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  Available
+                  {t("trainers.available")}
                 </span>
               </div>
             </div>
@@ -140,7 +142,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                 12
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Classes This Week
+                {t("trainers.classesThisWeek")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -148,7 +150,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                 8
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Personal Sessions
+                {t("trainers.personalSessions")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -156,7 +158,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                 85%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Capacity Utilized
+                {t("trainers.capacityUtilization")}
               </div>
             </div>
           </div>
@@ -164,12 +166,12 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
           {/* Add Schedule */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Add Schedule Item
+              {t("trainers.addScheduleItem")}
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Date
+                  {t("common.date")}
                 </label>
                 <input
                   type="date"
@@ -180,23 +182,23 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Activity Type
+                  {t("trainers.activityType")}
                 </label>
                 <select
                   value={activityType}
                   onChange={(e) => setActivityType(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select activity</option>
-                  <option value="class">Group Class</option>
-                  <option value="session">Personal Training</option>
-                  <option value="consultation">Consultation</option>
-                  <option value="meeting">Staff Meeting</option>
+                  <option value="">{t("trainers.selectActivity")}</option>
+                  <option value="class">{t("trainers.groupClass")}</option>
+                  <option value="session">{t("trainers.personalTraining")}</option>
+                  <option value="consultation">{t("trainers.consultation")}</option>
+                  <option value="meeting">{t("trainers.staffMeeting")}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Start Time
+                  {t("trainers.startTime")}
                 </label>
                 <input
                   type="time"
@@ -207,7 +209,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  End Time
+                  {t("trainers.endTime")}
                 </label>
                 <input
                   type="time"
@@ -233,7 +235,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
               ) : (
                 <FiPlus className="w-4 h-4" />
               )}
-              <span>Add to Schedule</span>
+              <span>{t("trainers.addToSchedule")}</span>
             </button>
           </div>
 
@@ -244,11 +246,10 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Schedule Optimization
+                    {t("trainers.smartScheduleOptimization")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Analysis shows peak demand between 6-8 PM. Consider adding
-                    evening classes to maximize revenue and member satisfaction.
+                    {t("trainers.scheduleOptimizationDesc")}
                   </p>
                 </div>
               </div>
@@ -258,7 +259,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
           {/* Schedule List */}
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Upcoming Schedule
+              {t("trainers.upcomingSchedule")}
             </h3>
             <div className="space-y-3">
               {mockSchedule.map((item) => (
@@ -286,7 +287,7 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
                             : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                         }`}
                       >
-                        {item.status}
+                        {item.status === "confirmed" ? t("trainers.confirmedStatus") : t("common.pending")}
                       </span>
                       <div className="flex space-x-2">
                         <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
@@ -310,16 +311,16 @@ const TrainerScheduleModal: React.FC<TrainerScheduleModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center space-x-2">
               <FiCalendar className="w-4 h-4" />
-              <span>Calendar View</span>
+              <span>{t("trainers.calendarView")}</span>
             </button>
             <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
               <FiDownload className="w-4 h-4" />
-              <span>Export Schedule</span>
+              <span>{t("trainers.exportSchedule")}</span>
             </button>
           </div>
         </div>

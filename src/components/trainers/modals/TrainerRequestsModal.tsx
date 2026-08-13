@@ -7,6 +7,7 @@ import {
   FiClock,
   FiShield,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -25,6 +26,7 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   const mockRequests = [
@@ -90,10 +92,10 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Trainer Requests
+                {t("trainers.trainerRequests")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage trainer requests and approvals
+                {t("trainers.trainerRequestsDesc")}
               </p>
             </div>
           </div>
@@ -110,27 +112,27 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Active Requests:
+                  {t("trainers.activeRequests")}:
                 </span>
                 <span className="font-medium text-orange-600 dark:text-orange-400">
-                  2 Pending
+                  {t("trainers.pendingCount", { count: 2 })}
                 </span>
               </div>
             </div>
@@ -143,7 +145,7 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                 2
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Pending Requests
+                {t("trainers.pendingRequests")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -151,7 +153,7 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                 1
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Approved This Month
+                {t("trainers.approvedThisMonth")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -159,7 +161,7 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                 3.2
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Avg. Response Time (days)
+                {t("trainers.avgResponseTimeDays")}
               </div>
             </div>
           </div>
@@ -171,12 +173,10 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Request Analysis
+                    {t("trainers.smartRequestAnalysis")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    This trainer has a 95% approval rate for reasonable
-                    requests. Consider fast-tracking schedule and equipment
-                    requests to maintain satisfaction.
+                    {t("trainers.requestAnalysisDesc")}
                   </p>
                 </div>
               </div>
@@ -186,7 +186,7 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
           {/* Requests List */}
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Recent Requests
+              {t("trainers.recentRequests")}
             </h3>
             <div className="space-y-3">
               {mockRequests.map((request) => (
@@ -209,7 +209,11 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                                 : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           }`}
                         >
-                          {request.priority}
+                          {request.priority === "high"
+                            ? t("trainers.priorityHigh")
+                            : request.priority === "medium"
+                              ? t("trainers.priorityMedium")
+                              : t("trainers.priorityLow")}
                         </span>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -220,7 +224,11 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
                                 : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                           }`}
                         >
-                          {request.status}
+                          {request.status === "approved"
+                            ? t("trainers.statusApproved")
+                            : request.status === "rejected"
+                              ? t("trainers.statusRejected")
+                              : t("common.pending")}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -261,16 +269,16 @@ const TrainerRequestsModal: React.FC<TrainerRequestsModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center space-x-2">
               <FiClock className="w-4 h-4" />
-              <span>Request History</span>
+              <span>{t("trainers.requestHistory")}</span>
             </button>
             <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
               <FiMessageSquare className="w-4 h-4" />
-              <span>Bulk Actions</span>
+              <span>{t("trainers.bulkActions")}</span>
             </button>
           </div>
         </div>

@@ -270,10 +270,10 @@ const FilterBar: React.FC<{
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="">{t("common.allTypes") || "All Types"}</option>
-                <option value="yoga">Yoga</option>
-                <option value="hiit">HIIT</option>
-                <option value="strength">Strength</option>
-                <option value="pilates">Pilates</option>
+                <option value="yoga">{t("trainers.yoga")}</option>
+                <option value="hiit">{t("trainers.hiit")}</option>
+                <option value="strength">{t("trainers.strength")}</option>
+                <option value="pilates">{t("trainers.pilates")}</option>
               </select>
             </div>
 
@@ -308,9 +308,9 @@ const FilterBar: React.FC<{
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="">{t("common.allTypes") || "All Types"}</option>
-                <option value="basic">Basic</option>
-                <option value="premium">Premium</option>
-                <option value="vip">VIP</option>
+                <option value="basic">{t("trainers.membershipBasic")}</option>
+                <option value="premium">{t("trainers.membershipPremium")}</option>
+                <option value="vip">{t("trainers.membershipVip")}</option>
               </select>
             </div>
           </div>
@@ -507,7 +507,7 @@ export default function TrainerPerformanceDashboard({
       // Top class types
       const classTypeCounts = new Map<string, number>();
       completedClasses.forEach((cls) => {
-        const type = cls.class_type || cls.name || "Unknown";
+        const type = cls.class_type || cls.name || t("trainers.unknownClassType");
         classTypeCounts.set(type, (classTypeCounts.get(type) || 0) + 1);
       });
       const topClassTypes = Array.from(classTypeCounts.entries())
@@ -527,9 +527,9 @@ export default function TrainerPerformanceDashboard({
       });
       const totalTimeDist = timeDistribution.Morning + timeDistribution.Afternoon + timeDistribution.Evening;
       const sessionTimeDistribution = [
-        { time: "Morning", percentage: totalTimeDist > 0 ? (timeDistribution.Morning / totalTimeDist) * 100 : 0 },
-        { time: "Afternoon", percentage: totalTimeDist > 0 ? (timeDistribution.Afternoon / totalTimeDist) * 100 : 0 },
-        { time: "Evening", percentage: totalTimeDist > 0 ? (timeDistribution.Evening / totalTimeDist) * 100 : 0 },
+        { time: t("trainers.morning"), percentage: totalTimeDist > 0 ? (timeDistribution.Morning / totalTimeDist) * 100 : 0 },
+        { time: t("trainers.afternoon"), percentage: totalTimeDist > 0 ? (timeDistribution.Afternoon / totalTimeDist) * 100 : 0 },
+        { time: t("trainers.evening"), percentage: totalTimeDist > 0 ? (timeDistribution.Evening / totalTimeDist) * 100 : 0 },
       ];
 
       // Calculate capacity and fill rate

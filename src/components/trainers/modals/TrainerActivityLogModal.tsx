@@ -6,6 +6,7 @@ import {
   FiDownload,
   FiTrendingUp,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -24,6 +25,7 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const [selectedActivity, setSelectedActivity] = useState("all");
 
@@ -71,10 +73,10 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Activity Log
+                {t("trainers.activityLog")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                View trainer activity and performance history
+                {t("trainers.activityLogDesc")}
               </p>
             </div>
           </div>
@@ -91,27 +93,27 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Status:
+                  {t("common.status")}:
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  Active
+                  {t("trainers.active")}
                 </span>
               </div>
             </div>
@@ -121,33 +123,33 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Time Period
+                {t("trainers.timePeriod")}
               </label>
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
-                <option value="7d">Last 7 days</option>
-                <option value="30d">Last 30 days</option>
-                <option value="90d">Last 90 days</option>
-                <option value="1y">Last year</option>
+                <option value="7d">{t("trainers.last7Days")}</option>
+                <option value="30d">{t("trainers.last30Days")}</option>
+                <option value="90d">{t("trainers.last90Days")}</option>
+                <option value="1y">{t("trainers.lastYear")}</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Activity Type
+                {t("trainers.activityType")}
               </label>
               <select
                 value={selectedActivity}
                 onChange={(e) => setSelectedActivity(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
-                <option value="all">All Activities</option>
-                <option value="class_taught">Classes Taught</option>
-                <option value="member_assigned">Member Assignments</option>
-                <option value="payment_received">Payments</option>
-                <option value="schedule_updated">Schedule Updates</option>
+                <option value="all">{t("trainers.allActivities")}</option>
+                <option value="class_taught">{t("trainers.classesTaught")}</option>
+                <option value="member_assigned">{t("trainers.memberAssignments")}</option>
+                <option value="payment_received">{t("trainers.payments")}</option>
+                <option value="schedule_updated">{t("trainers.scheduleUpdates")}</option>
               </select>
             </div>
           </div>
@@ -159,12 +161,10 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
                 <FiTrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Insights
+                    {t("trainers.smartInsights")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Performance trend: +15% improvement in member satisfaction
-                    over the last 30 days. Consider increasing class capacity
-                    based on demand patterns.
+                    {t("trainers.activityInsightDesc")}
                   </p>
                 </div>
               </div>
@@ -174,7 +174,7 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
           {/* Activity Logs */}
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Recent Activity
+              {t("trainers.recentActivity")}
             </h3>
             <div className="space-y-3">
               {mockActivityLogs.map((log) => (
@@ -212,16 +212,16 @@ const TrainerActivityLogModal: React.FC<TrainerActivityLogModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center space-x-2">
               <FiFilter className="w-4 h-4" />
-              <span>Filter</span>
+              <span>{t("common.filter")}</span>
             </button>
             <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
               <FiDownload className="w-4 h-4" />
-              <span>Export</span>
+              <span>{t("trainers.export")}</span>
             </button>
           </div>
         </div>

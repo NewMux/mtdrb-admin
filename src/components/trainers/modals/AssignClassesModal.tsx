@@ -6,6 +6,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 
@@ -46,6 +47,7 @@ export default function AssignClassesModal({
   trainer,
   onSuccess,
 }: AssignClassesModalProps) {
+  const { t } = useTranslation();
   const [classes, setClasses] = React.useState<ClassAssignment[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [selectedClasses, setSelectedClasses] = React.useState<string[]>([]);
@@ -78,7 +80,7 @@ export default function AssignClassesModal({
       })),
     );
 
-    toast.success(`Classes assigned successfully to ${trainer.name}!`);
+    toast.success(t("trainers.classesAssignedSuccess", { name: trainer.name }));
     setLoading(false);
     onSuccess?.();
     onClose();
@@ -93,8 +95,8 @@ export default function AssignClassesModal({
     <ColorfulModalUI
       open={isOpen}
       onClose={handleClose}
-      title="Assign Classes"
-      subtitle={`Assign classes to ${trainer.name}`}
+      title={t("trainers.assignClasses")}
+      subtitle={t("trainers.assignClassesToName", { name: trainer.name })}
     >
       <div className="space-y-6">
         {/* Trainer Info */}
@@ -108,8 +110,7 @@ export default function AssignClassesModal({
             <h3 className="font-semibold text-gray-900">{trainer.name}</h3>
             <p className="text-sm text-gray-600">{trainer.specialty}</p>
             <p className="text-sm text-gray-600">
-              Currently assigned: {classes.filter((c) => c.assigned).length}{" "}
-              classes
+              {t("trainers.currentlyAssignedCount", { count: classes.filter((c) => c.assigned).length })}
             </p>
           </div>
         </div>
@@ -118,7 +119,7 @@ export default function AssignClassesModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiCalendar className="text-blue-500" />
-            Available Classes
+            {t("trainers.availableClasses")}
           </h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {classes.map((classItem) => (
@@ -148,14 +149,14 @@ export default function AssignClassesModal({
                         {classItem.time}
                       </span>
                       <span>{classItem.day}</span>
-                      <span>Capacity: {classItem.capacity}</span>
+                      <span>{t("trainers.capacityValue", { value: classItem.capacity })}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {classItem.assigned && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Currently Assigned
+                      {t("trainers.currentlyAssignedBadge")}
                     </span>
                   )}
                 </div>
@@ -166,16 +167,16 @@ export default function AssignClassesModal({
 
         {/* Summary */}
         <div className="bg-blue-50 rounded-lg p-4">
-          <h4 className="font-medium text-blue-900 mb-2">Assignment Summary</h4>
+          <h4 className="font-medium text-blue-900 mb-2">{t("trainers.assignmentSummary")}</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-blue-700">Selected Classes:</span>
+              <span className="text-blue-700">{t("trainers.selectedClasses")}:</span>
               <span className="font-medium text-blue-900 ml-2">
                 {selectedClasses.length}
               </span>
             </div>
             <div>
-              <span className="text-blue-700">Total Hours:</span>
+              <span className="text-blue-700">{t("trainers.totalHours")}:</span>
               <span className="font-medium text-blue-900 ml-2">
                 {selectedClasses.length * 1.5}h
               </span>
@@ -193,7 +194,7 @@ export default function AssignClassesModal({
           disabled={loading}
         >
           <FiX className="h-4 w-4 mr-2" />
-          Cancel
+          {t("common.cancel")}
         </SmartButton>
 
         <SmartButton
@@ -203,7 +204,7 @@ export default function AssignClassesModal({
           loading={loading}
         >
           <FiSave className="h-4 w-4 mr-2" />
-          {loading ? "Assigning..." : "Assign Classes"}
+          {loading ? t("trainers.assigning") : t("trainers.assignClasses")}
         </SmartButton>
       </div>
     </ColorfulModalUI>
