@@ -251,7 +251,7 @@ const Branches: React.FC = () => {
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-700"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
-              aria-label="Advanced filters"
+              aria-label={t("branches.advancedFilters")}
             >
               <FiFilter className="w-4 h-4" />
             </button>

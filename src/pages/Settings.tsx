@@ -638,7 +638,7 @@ const Settings: React.FC = () => {
                       <div className="w-20 h-20 rounded-full ring-2 ring-white shadow-sm overflow-hidden">
                         <img
                           src={settings.profile.profilePicture}
-                          alt="Profile"
+                          alt={t("settings.profile")}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             // Fallback to initials if image fails to load

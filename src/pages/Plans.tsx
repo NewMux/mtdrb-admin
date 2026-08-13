@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   FiPackage,
   FiPlus,
@@ -68,6 +69,7 @@ const emptyPlanForm: PlanFormData = {
 };
 
 export default function Plans() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [, setUser] = useState<User | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -88,7 +90,7 @@ export default function Plans() {
   // Plan KPIs
   const planKPIs = [
     {
-      title: "Total Plans",
+      title: t("plans.totalPlans"),
       value: plans.length,
       change: "+2",
       trend: "up" as const,
@@ -96,7 +98,7 @@ export default function Plans() {
       color: "blue" as const,
     },
     {
-      title: "Active Plans",
+      title: t("plans.activePlans"),
       value: plans.filter((p) => p.status === "active").length,
       change: "+1",
       trend: "up" as const,
@@ -104,7 +106,7 @@ export default function Plans() {
       color: "green" as const,
     },
     {
-      title: "Total Members",
+      title: t("plans.totalMembers"),
       value: plans.reduce((sum, p) => sum + p.members_count, 0),
       change: "+18.5%",
       trend: "up" as const,
@@ -112,7 +114,7 @@ export default function Plans() {
       color: "purple" as const,
     },
     {
-      title: "Avg Plan Value",
+      title: t("plans.avgPlanValue"),
       value:
         plans.length > 0
           ? `$${(plans.reduce((sum, p) => sum + p.price, 0) / plans.length).toFixed(0)}`
@@ -126,7 +128,7 @@ export default function Plans() {
 
   const contextualActions = [
     {
-      label: "Create Plan",
+      label: t("plans.createPlan"),
       icon: <FiPlus className="h-4 w-4" />,
       onClick: () => {
         setSelectedPlan(null);
@@ -137,13 +139,13 @@ export default function Plans() {
       variant: "primary" as const,
     },
     {
-      label: "Plan Analytics",
+      label: t("plans.planAnalytics"),
       icon: <FiBarChart className="h-4 w-4" />,
       onClick: () => navigate("/dashboard/analytics"),
       variant: "secondary" as const,
     },
     {
-      label: "Member Plans",
+      label: t("plans.memberPlans"),
       icon: <FiUsers className="h-4 w-4" />,
       onClick: () => navigate("/dashboard/members"),
       variant: "ghost" as const,
@@ -189,9 +191,9 @@ export default function Plans() {
       );
     } catch (error) {
       console.error("Error fetching plans:", error);
-      toast.error("Failed to load plans");
+      toast.error(t("plans.failedToLoadPlans"));
     }
-  }, [tenantId]);
+  }, [tenantId, t]);
 
   useEffect(() => {
     fetchPlans();
@@ -212,15 +214,15 @@ export default function Plans() {
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!window.confirm("Delete this plan? This cannot be undone.")) return;
+    if (!window.confirm(t("plans.deletePlanConfirm"))) return;
     try {
       const { error } = await supabase.from("plans").delete().eq("id", planId);
       if (error) throw error;
       setPlans((prev) => prev.filter((p) => p.id !== planId));
-      toast.success("Plan deleted successfully");
+      toast.success(t("plans.planDeleted"));
     } catch (error) {
       console.error("Error deleting plan:", error);
-      toast.error("Failed to delete plan");
+      toast.error(t("plans.failedToDeletePlan"));
     }
   };
 
@@ -233,14 +235,14 @@ export default function Plans() {
 
   const validatePlanForm = (): boolean => {
     const errors: Partial<Record<keyof PlanFormData, string>> = {};
-    if (!planForm.name.trim()) errors.name = "Plan name is required";
+    if (!planForm.name.trim()) errors.name = t("plans.planNameRequired");
     const priceNum = parseFloat(planForm.price);
     if (!planForm.price || isNaN(priceNum) || priceNum < 0) {
-      errors.price = "Enter a valid price";
+      errors.price = t("plans.enterValidPrice");
     }
     const durationNum = parseInt(planForm.duration, 10);
     if (!planForm.duration || isNaN(durationNum) || durationNum <= 0) {
-      errors.duration = "Enter a valid duration in days";
+      errors.duration = t("plans.enterValidDuration");
     }
     setPlanFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -249,7 +251,7 @@ export default function Plans() {
   const handleSavePlan = async () => {
     if (!validatePlanForm()) return;
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(t("plans.noTenantId"));
       return;
     }
 
@@ -274,11 +276,11 @@ export default function Plans() {
           .update(payload)
           .eq("id", selectedPlan.id);
         if (error) throw error;
-        toast.success("Plan updated successfully");
+        toast.success(t("plans.planUpdated"));
       } else {
         const { error } = await supabase.from("plans").insert([payload]);
         if (error) throw error;
-        toast.success("Plan created successfully");
+        toast.success(t("plans.planCreated"));
       }
 
       setShowPlanModal(false);
@@ -288,7 +290,7 @@ export default function Plans() {
     } catch (error) {
       console.error("Error saving plan:", error);
       toast.error(
-        (error instanceof Error ? error.message : undefined) || "Failed to save plan",
+        (error instanceof Error ? error.message : undefined) || t("plans.failedToSavePlan"),
       );
     } finally {
       setSavingPlan(false);
@@ -325,13 +327,13 @@ export default function Plans() {
   });
 
   if (loading) {
-    return <SmartLoading message="Loading Smart Plan Management..." />;
+    return <SmartLoading message={t("plans.loadingPlans")} />;
   }
 
   return (
     <PageLayout
-      title="Smart Plan Management"
-      subtitle="Smart-powered membership plans and pricing optimization"
+      title={t("plans.pageTitle")}
+      subtitle={t("plans.pageSubtitle")}
       actions={
         <div className="flex items-center space-x-3">
           {contextualActions.map((action, index) => (
@@ -356,8 +358,8 @@ export default function Plans() {
 
       {/* KPI Overview */}
       <Section
-        title="Plan Overview"
-        subtitle="Real-time membership plan performance"
+        title={t("plans.planOverview")}
+        subtitle={t("plans.planOverviewDesc")}
       >
         <StatsGrid columns={4}>
           {planKPIs.map((kpi, index) => (
@@ -373,7 +375,7 @@ export default function Plans() {
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
-              placeholder="Search plans..."
+              placeholder={t("plans.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -386,9 +388,9 @@ export default function Plans() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="all">{t("plans.allStatus")}</option>
+          <option value="active">{t("common.active")}</option>
+          <option value="inactive">{t("common.inactive")}</option>
         </select>
 
         <FilterButton
@@ -401,7 +403,7 @@ export default function Plans() {
       {showAdvancedFilters && (
         <SmartCard className="mt-4 p-4">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-semibold text-gray-700">Advanced Filters</h4>
+            <h4 className="text-sm font-semibold text-gray-700">{t("plans.advancedFilters")}</h4>
             <button
               onClick={() => {
                 setPriceRange({ min: "", max: "" });
@@ -409,13 +411,13 @@ export default function Plans() {
               }}
               className="text-sm text-blue-600 hover:text-blue-800"
             >
-              Clear All
+              {t("plans.clearAll")}
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                Min Price
+                {t("plans.minPrice")}
               </label>
               <input
                 type="number"
@@ -427,29 +429,29 @@ export default function Plans() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                Max Price
+                {t("plans.maxPrice")}
               </label>
               <input
                 type="number"
                 value={priceRange.max}
                 onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                placeholder="No limit"
+                placeholder={t("plans.noLimit")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                Duration
+                {t("plans.duration")}
               </label>
               <select
                 value={durationFilter}
                 onChange={(e) => setDurationFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
-                <option value="all">All Durations</option>
-                <option value="monthly">Monthly (up to 31 days)</option>
-                <option value="quarterly">Quarterly (32-92 days)</option>
-                <option value="annual">Annual (93+ days)</option>
+                <option value="all">{t("plans.allDurations")}</option>
+                <option value="monthly">{t("plans.monthlyDuration")}</option>
+                <option value="quarterly">{t("plans.quarterlyDuration")}</option>
+                <option value="annual">{t("plans.annualDuration")}</option>
               </select>
             </div>
           </div>
@@ -458,14 +460,14 @@ export default function Plans() {
 
       {/* Plans Grid */}
       <Section
-        title="Membership Plans"
-        subtitle="Manage and optimize your pricing strategy"
+        title={t("plans.membershipPlans")}
+        subtitle={t("plans.membershipPlansDesc")}
       >
         {filteredPlans.length === 0 ? (
           <EmptyState
             icon={<FiPackage className="h-16 w-16" />}
-            title="No Plans Found"
-            description="Start by creating your first membership plan to manage pricing."
+            title={t("plans.noPlansFound")}
+            description={t("plans.noPlansFoundDesc")}
             action={
               <SmartButton
                 onClick={() => {
@@ -477,7 +479,7 @@ export default function Plans() {
                 variant="primary"
               >
                 <FiPlus className="h-4 w-4 mr-2" />
-                Create First Plan
+                {t("plans.createFirstPlan")}
               </SmartButton>
             }
           />
@@ -513,13 +515,13 @@ export default function Plans() {
                       ${plan.price}
                     </div>
                     <div className="text-sm text-gray-600">
-                      per {plan.duration} days
+                      {t("plans.perDays", { count: plan.duration })}
                     </div>
                   </div>
 
                   {/* Features */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">Features:</h4>
+                    <h4 className="font-medium text-gray-900">{t("plans.featuresLabel")}</h4>
                     <ul className="space-y-1">
                       {plan.features.slice(0, 3).map((feature, index) => (
                         <li
@@ -532,7 +534,7 @@ export default function Plans() {
                       ))}
                       {plan.features.length > 3 && (
                         <li className="text-sm text-gray-500">
-                          +{plan.features.length - 3} more features
+                          {t("plans.moreFeatures", { count: plan.features.length - 3 })}
                         </li>
                       )}
                     </ul>
@@ -543,7 +545,7 @@ export default function Plans() {
                     <div className="flex items-center text-gray-600">
                       <FiUsers className="h-4 w-4 mr-1" />
                       <span className="text-sm">
-                        {plan.members_count} members
+                        {t("plans.membersCount", { count: plan.members_count })}
                       </span>
                     </div>
                     <div className="flex space-x-2">
@@ -552,14 +554,14 @@ export default function Plans() {
                         size="sm"
                         onClick={() => handleEditPlan(plan)}
                       >
-                        Edit
+                        {t("common.edit")}
                       </SmartButton>
                       <SmartButton
                         variant="danger"
                         size="sm"
                         onClick={() => handleDeletePlan(plan.id)}
                       >
-                        Delete
+                        {t("common.delete")}
                       </SmartButton>
                     </div>
                   </div>
@@ -572,14 +574,14 @@ export default function Plans() {
 
       {/* Plan Analytics */}
       <Section
-        title="Plan Performance"
-        subtitle="Insights and recommendations for pricing optimization"
+        title={t("plans.planPerformance")}
+        subtitle={t("plans.planPerformanceDesc")}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SmartCard>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Popular Plans
+                {t("plans.popularPlans")}
               </h3>
               <div className="space-y-4">
                 {plans
@@ -605,7 +607,7 @@ export default function Plans() {
                             {plan.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            ${plan.price}/month
+                            {t("plans.priceMonthly", { price: plan.price })}
                           </p>
                         </div>
                       </div>
@@ -613,7 +615,7 @@ export default function Plans() {
                         <p className="font-medium text-gray-900">
                           {plan.members_count}
                         </p>
-                        <p className="text-sm text-gray-600">members</p>
+                        <p className="text-sm text-gray-600">{t("plans.membersLabel")}</p>
                       </div>
                     </div>
                   ))}
@@ -624,19 +626,18 @@ export default function Plans() {
           <SmartCard>
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Pricing Recommendations
+                {t("plans.pricingRecommendations")}
               </h3>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-xl">
                   <div className="flex items-center mb-2">
                     <FiTrendingUp className="h-5 w-5 text-blue-600 mr-2" />
                     <p className="font-medium text-blue-900">
-                      Optimize Basic Plan
+                      {t("plans.optimizeBasicPlan")}
                     </p>
                   </div>
                   <p className="text-sm text-blue-800">
-                    Consider increasing Basic plan price by $5 based on demand
-                    analysis
+                    {t("plans.optimizeBasicPlanDesc")}
                   </p>
                 </div>
 
@@ -644,11 +645,11 @@ export default function Plans() {
                   <div className="flex items-center mb-2">
                     <FiZap className="h-5 w-5 text-green-600 mr-2" />
                     <p className="font-medium text-green-900">
-                      Family Plan Opportunity
+                      {t("plans.familyPlanOpportunity")}
                     </p>
                   </div>
                   <p className="text-sm text-green-800">
-                    23% of members have requested family pricing options
+                    {t("plans.familyPlanOpportunityDesc")}
                   </p>
                 </div>
               </div>
@@ -661,11 +662,11 @@ export default function Plans() {
       <UnifiedModal
         isOpen={showPlanModal}
         onClose={handleClosePlanModal}
-        title={selectedPlan ? "Edit Plan" : "Create New Plan"}
+        title={selectedPlan ? t("plans.editPlan") : t("plans.createNewPlan")}
         subtitle={
           selectedPlan
-            ? "Update this membership plan's pricing and features"
-            : "Set up a new membership plan for your gym"
+            ? t("plans.updatePlanDesc")
+            : t("plans.createPlanDesc")
         }
         maxWidth="2xl"
         footer={
@@ -675,7 +676,7 @@ export default function Plans() {
               onClick={handleClosePlanModal}
               disabled={savingPlan}
             >
-              Cancel
+              {t("common.cancel")}
             </SmartButton>
             <SmartButton
               variant="primary"
@@ -683,10 +684,10 @@ export default function Plans() {
               loading={savingPlan}
             >
               {savingPlan
-                ? "Saving..."
+                ? t("plans.saving")
                 : selectedPlan
-                  ? "Save Changes"
-                  : "Create Plan"}
+                  ? t("plans.saveChanges")
+                  : t("plans.createPlan")}
             </SmartButton>
           </>
         }
@@ -699,58 +700,58 @@ export default function Plans() {
           className="space-y-4"
         >
           <AppleInput
-            label="Plan Name"
+            label={t("plans.planNameLabel")}
             value={planForm.name}
             onChange={(e) => handlePlanFormChange("name", e.target.value)}
             required
             error={planFormErrors.name}
-            placeholder="Gold Membership"
+            placeholder={t("plans.planNamePlaceholder")}
           />
 
           <AppleTextarea
-            label="Description"
+            label={t("common.description")}
             value={planForm.description}
             onChange={(e) => handlePlanFormChange("description", e.target.value)}
-            placeholder="Full gym access with unlimited classes"
+            placeholder={t("plans.descriptionPlaceholder")}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <AppleInput
-              label="Price"
+              label={t("plans.formPriceLabel")}
               type="number"
               value={planForm.price}
               onChange={(e) => handlePlanFormChange("price", e.target.value)}
               required
               error={planFormErrors.price}
-              placeholder="99.00"
+              placeholder={t("plans.pricePlaceholder")}
             />
             <AppleInput
-              label="Duration (days)"
+              label={t("plans.durationDaysLabel")}
               type="number"
               value={planForm.duration}
               onChange={(e) => handlePlanFormChange("duration", e.target.value)}
               required
               error={planFormErrors.duration}
-              placeholder="30"
+              placeholder={t("plans.durationPlaceholder")}
             />
           </div>
 
           <AppleInput
-            label="Features (comma-separated)"
+            label={t("plans.featuresCommaLabel")}
             value={planForm.features}
             onChange={(e) => handlePlanFormChange("features", e.target.value)}
-            placeholder="Unlimited classes, Personal trainer, Locker access"
+            placeholder={t("plans.featuresPlaceholder")}
           />
 
           <AppleSelect
-            label="Status"
+            label={t("common.status")}
             value={planForm.status}
             onChange={(e) =>
               handlePlanFormChange("status", e.target.value as "active" | "inactive")
             }
           >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="active">{t("common.active")}</option>
+            <option value="inactive">{t("common.inactive")}</option>
           </AppleSelect>
         </form>
       </UnifiedModal>
