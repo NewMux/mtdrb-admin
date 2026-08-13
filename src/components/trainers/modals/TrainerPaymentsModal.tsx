@@ -6,6 +6,7 @@ import {
   FiDownload,
   FiShield,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -24,6 +25,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [paymentType, setPaymentType] = useState("");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -78,10 +80,10 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Trainer Payments
+                {t("trainers.trainerPayments")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage payments and financial records
+                {t("trainers.trainerPaymentsDesc")}
               </p>
             </div>
           </div>
@@ -98,26 +100,26 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Payment Method:
+                  {t("trainers.paymentMethodLabel")}:
                 </span>
-                <span className="font-medium">Direct Deposit</span>
+                <span className="font-medium">{t("trainers.directDeposit")}</span>
               </div>
             </div>
           </div>
@@ -129,7 +131,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                 $1,650
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Total Paid This Month
+                {t("trainers.totalPaidThisMonth")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -137,7 +139,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                 $150
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Pending Payments
+                {t("trainers.pendingPayments")}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -145,7 +147,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                 $2,100
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Expected This Month
+                {t("trainers.expectedThisMonth")}
               </div>
             </div>
           </div>
@@ -153,28 +155,28 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
           {/* Process Payment */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Process Payment
+              {t("trainers.processPayment")}
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Payment Type
+                  {t("trainers.paymentType")}
                 </label>
                 <select
                   value={paymentType}
                   onChange={(e) => setPaymentType(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select payment type</option>
-                  <option value="salary">Salary</option>
-                  <option value="bonus">Bonus</option>
-                  <option value="commission">Commission</option>
-                  <option value="overtime">Overtime</option>
+                  <option value="">{t("trainers.selectPaymentType")}</option>
+                  <option value="salary">{t("trainers.salary")}</option>
+                  <option value="bonus">{t("trainers.bonus")}</option>
+                  <option value="commission">{t("trainers.commission")}</option>
+                  <option value="overtime">{t("trainers.overtime")}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Amount ($)
+                  {t("trainers.amountUsd")}
                 </label>
                 <input
                   type="number"
@@ -195,7 +197,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
               ) : (
                 <FiDollarSign className="w-4 h-4" />
               )}
-              <span>Process Payment</span>
+              <span>{t("trainers.processPayment")}</span>
             </button>
           </div>
 
@@ -206,12 +208,10 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Insights
+                    {t("trainers.smartInsights")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Payment trend analysis shows 12% increase in earnings this
-                    month. Consider performance-based bonus structure to
-                    maintain motivation.
+                    {t("trainers.paymentInsightDesc")}
                   </p>
                 </div>
               </div>
@@ -221,7 +221,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
           {/* Payment History */}
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Payment History
+              {t("trainers.paymentHistory")}
             </h3>
             <div className="space-y-3">
               {mockPayments.map((payment) => (
@@ -249,7 +249,7 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
                             : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                         }`}
                       >
-                        {payment.status}
+                        {payment.status === "paid" ? t("trainers.paid") : t("common.pending")}
                       </span>
                     </div>
                   </div>
@@ -265,16 +265,16 @@ const TrainerPaymentsModal: React.FC<TrainerPaymentsModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors flex items-center space-x-2">
               <FiCalendar className="w-4 h-4" />
-              <span>Payment Schedule</span>
+              <span>{t("trainers.paymentSchedule")}</span>
             </button>
             <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2">
               <FiDownload className="w-4 h-4" />
-              <span>Export Report</span>
+              <span>{t("trainers.exportReport")}</span>
             </button>
           </div>
         </div>

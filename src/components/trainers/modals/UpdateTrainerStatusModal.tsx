@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 import { useSmartTrainerModal } from "./useSmartTrainerModal";
 import { FiLock, FiCalendar } from "react-icons/fi";
@@ -17,6 +18,7 @@ export default function UpdateTrainerStatusModal({
   trainerId,
   onSuccess,
 }: UpdateTrainerStatusModalProps) {
+  const { t } = useTranslation();
   const { trainer, alerts } =
     useSmartTrainerModal({ trainerId });
   const [status, setStatus] = React.useState("active");
@@ -53,19 +55,19 @@ export default function UpdateTrainerStatusModal({
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving..." : "Update Status"}
+            {saving ? t("trainers.saving") : t("trainers.updateTrainerStatus")}
           </button>
           <button
             className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             onClick={onClose}
             disabled={saving}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </>
       }
     >
-      <h2 className="text-xl font-semibold mb-4">Update Trainer Status</h2>
+      <h2 className="text-xl font-semibold mb-4">{t("trainers.updateTrainerStatus")}</h2>
       {/* Alerts */}
       {alerts.map((a, i) => (
         <div
@@ -77,21 +79,21 @@ export default function UpdateTrainerStatusModal({
       ))}
       {/* Status Options */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-1">Status</label>
+        <label className="block text-sm font-medium mb-1">{t("trainers.status")}</label>
         <select
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          <option value="active">Active</option>
-          <option value="on_leave">On Leave</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{t("trainers.active")}</option>
+          <option value="on_leave">{t("trainers.onLeave")}</option>
+          <option value="inactive">{t("common.inactive")}</option>
         </select>
       </div>
       {status === "on_leave" && (
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1 flex items-center gap-2">
-            <FiCalendar /> Leave Until
+            <FiCalendar /> {t("trainers.leaveUntil")}
           </label>
           <input
             type="date"
@@ -103,26 +105,26 @@ export default function UpdateTrainerStatusModal({
       )}
       <div className="mb-6">
         <label className="block text-sm font-medium mb-1">
-          Note (optional)
+          {t("trainers.noteOptional")}
         </label>
         <textarea
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 min-h-[60px]"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Add a note..."
+          placeholder={t("trainers.addANote")}
         />
       </div>
       {/* Smart/Pro: Suggest backup trainers if On Leave */}
       {status === "on_leave" && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <FiLock className="text-gray-400" title="Pro feature" />
+            <FiLock className="text-gray-400" title={t("trainers.proFeature")} />
             <span className="font-semibold text-gray-900">
-              Smart: Suggest backup trainers
+              {t("trainers.smartSuggestBackupTrainers")}
             </span>
           </div>
           <div className="text-gray-500 text-sm">
-            (Pro) System will suggest available backup trainers for this period.
+            {t("trainers.proSuggestBackupDesc")}
           </div>
         </div>
       )}

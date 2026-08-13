@@ -8,6 +8,7 @@ import {
   FiTrendingUp,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
 
@@ -36,6 +37,7 @@ export default function WorkflowConfigurationModal({
   onSuccess,
   workflowName = "Workflow",
 }: WorkflowConfigurationModalProps) {
+  const { t } = useTranslation();
   const [config, setConfig] = React.useState<WorkflowConfig>({
     name: workflowName,
     description: "",
@@ -57,7 +59,7 @@ export default function WorkflowConfigurationModal({
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    toast.success("Workflow configuration updated successfully!");
+    toast.success(t("trainers.workflowConfigUpdated"));
     setLoading(false);
     onSuccess?.();
     onClose();
@@ -72,33 +74,33 @@ export default function WorkflowConfigurationModal({
     <ColorfulModalUI
       open={isOpen}
       onClose={handleClose}
-      title="Configure Workflow"
-      subtitle={`Customize settings for ${workflowName}`}
+      title={t("trainers.configureWorkflow")}
+      subtitle={t("trainers.customizeSettingsFor", { name: workflowName })}
     >
       <div className="space-y-6">
         {/* Basic Information */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiSettings className="text-blue-500" />
-            Basic Configuration
+            {t("trainers.basicConfiguration")}
           </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Workflow Name
+                {t("trainers.workflowName")}
               </label>
               <input
                 type="text"
                 value={config.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter workflow name"
+                placeholder={t("trainers.enterWorkflowName")}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                {t("common.description")}
               </label>
               <textarea
                 value={config.description}
@@ -107,7 +109,7 @@ export default function WorkflowConfigurationModal({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={3}
-                placeholder="Describe what this workflow does..."
+                placeholder={t("trainers.describeWorkflow")}
               />
             </div>
           </div>
@@ -117,15 +119,15 @@ export default function WorkflowConfigurationModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiZap className="text-green-500" />
-            Trigger Conditions
+            {t("trainers.triggerConditions")}
           </h3>
           <div className="space-y-3">
             {[
-              "When trainer availability changes",
-              "When class capacity reaches 80%",
-              "When member requests exceed capacity",
-              "When performance metrics drop below threshold",
-              "When new trainer is added to system",
+              t("trainers.triggerTrainerAvailability"),
+              t("trainers.triggerClassCapacity"),
+              t("trainers.triggerMemberRequests"),
+              t("trainers.triggerPerformanceDrop"),
+              t("trainers.triggerNewTrainer"),
             ].map((condition, index) => (
               <label key={index} className="flex items-center space-x-3">
                 <input
@@ -156,16 +158,16 @@ export default function WorkflowConfigurationModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiTarget className="text-purple-500" />
-            Actions
+            {t("trainers.actionsLabel")}
           </h3>
           <div className="space-y-3">
             {[
-              "Send notification to trainer",
-              "Automatically assign backup trainer",
-              "Adjust class schedule",
-              "Send member notification",
-              "Generate performance report",
-              "Optimize trainer workload",
+              t("trainers.actionNotifyTrainer"),
+              t("trainers.actionAssignBackup"),
+              t("trainers.actionAdjustSchedule"),
+              t("trainers.actionNotifyMember"),
+              t("trainers.actionGenerateReport"),
+              t("trainers.actionOptimizeWorkload"),
             ].map((action, index) => (
               <label key={index} className="flex items-center space-x-3">
                 <input
@@ -193,23 +195,23 @@ export default function WorkflowConfigurationModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiClock className="text-orange-500" />
-            Schedule
+            {t("trainers.scheduleLabel")}
           </h3>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Execution Frequency
+                {t("trainers.executionFrequency")}
               </label>
               <select
                 value={config.schedule}
                 onChange={(e) => handleInputChange("schedule", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="immediate">Immediate</option>
-                <option value="hourly">Hourly</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
+                <option value="immediate">{t("trainers.immediate")}</option>
+                <option value="hourly">{t("trainers.hourly")}</option>
+                <option value="daily">{t("trainers.daily")}</option>
+                <option value="weekly">{t("trainers.weekly")}</option>
+                <option value="monthly">{t("trainers.monthly")}</option>
               </select>
             </div>
           </div>
@@ -219,7 +221,7 @@ export default function WorkflowConfigurationModal({
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiTrendingUp className="text-emerald-500" />
-            Advanced Settings
+            {t("trainers.advancedSettings")}
           </h3>
           <div className="space-y-4">
             <label className="flex items-center space-x-3">
@@ -232,7 +234,7 @@ export default function WorkflowConfigurationModal({
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">
-                Send notifications for workflow events
+                {t("trainers.sendWorkflowNotifications")}
               </span>
             </label>
 
@@ -246,7 +248,7 @@ export default function WorkflowConfigurationModal({
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">
-                Auto-optimize based on performance data
+                {t("trainers.autoOptimizeDesc")}
               </span>
             </label>
           </div>
@@ -259,7 +261,7 @@ export default function WorkflowConfigurationModal({
             onClick={handleClose}
             disabled={loading}
           >
-            Cancel
+            {t("common.cancel")}
           </SmartButton>
           <SmartButton
             variant="primary"
@@ -267,7 +269,7 @@ export default function WorkflowConfigurationModal({
             loading={loading}
             icon={<FiSave className="w-4 h-4" />}
           >
-            Save Configuration
+            {t("trainers.saveConfiguration")}
           </SmartButton>
         </div>
       </div>

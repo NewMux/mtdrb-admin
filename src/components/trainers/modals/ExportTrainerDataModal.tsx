@@ -7,6 +7,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
 import { exportCSV, exportPDF, exportExcel } from "../../../utils/exportData";
@@ -58,44 +59,44 @@ interface BookingExportRecord {
 
 type ExportRow = Record<string, string | number>;
 
-const exportOptions: ExportOption[] = [
-  {
-    id: "all-trainers",
-    name: "All Trainers",
-    description: "Complete list of all trainers with basic information",
-    icon: FiUsers,
-    format: "csv",
-  },
-  {
-    id: "trainer-performance",
-    name: "Performance Report",
-    description: "Detailed performance metrics and ratings for all trainers",
-    icon: FiFileText,
-    format: "xlsx",
-  },
-  {
-    id: "trainer-schedule",
-    name: "Schedule Report",
-    description: "Current class assignments and availability for all trainers",
-    icon: FiCalendar,
-    format: "csv",
-  },
-  {
-    id: "trainer-analytics",
-    name: "Analytics Report",
-    description: "Comprehensive analytics and insights (Pro feature)",
-    icon: FiFileText,
-    format: "pdf",
-  },
-];
-
 export default function ExportTrainerDataModal({
   isOpen,
   onClose,
   onSuccess,
   isPro = false,
 }: ExportTrainerDataModalProps) {
+  const { t } = useTranslation();
   const { tenantId } = useAuth();
+  const exportOptions: ExportOption[] = [
+    {
+      id: "all-trainers",
+      name: t("trainers.allTrainers"),
+      description: t("trainers.allTrainersExportDesc"),
+      icon: FiUsers,
+      format: "csv",
+    },
+    {
+      id: "trainer-performance",
+      name: t("trainers.performanceReport"),
+      description: t("trainers.performanceReportDesc"),
+      icon: FiFileText,
+      format: "xlsx",
+    },
+    {
+      id: "trainer-schedule",
+      name: t("trainers.scheduleReport"),
+      description: t("trainers.scheduleReportDesc"),
+      icon: FiCalendar,
+      format: "csv",
+    },
+    {
+      id: "trainer-analytics",
+      name: t("trainers.analyticsReport"),
+      description: t("trainers.analyticsReportDesc"),
+      icon: FiFileText,
+      format: "pdf",
+    },
+  ];
   const [selectedOptions, setSelectedOptions] = React.useState<string[]>([
     "all-trainers",
   ]);
@@ -120,12 +121,12 @@ export default function ExportTrainerDataModal({
 
   const handleExport = async () => {
     if (selectedOptions.length === 0) {
-      toast.error("Please select at least one export option");
+      toast.error(t("trainers.pleaseSelectExportOption"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(t("trainers.noTenantFound"));
       return;
     }
 
@@ -312,14 +313,16 @@ export default function ExportTrainerDataModal({
       }
 
       toast.success(
-        `Export completed! ${selectedOptions.length} file(s) downloaded.`,
+        t("trainers.exportCompleted", { count: selectedOptions.length }),
       );
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        t("trainers.exportFailedWithReason", {
+          reason: error instanceof Error ? error.message : t("trainers.unknownError"),
+        }),
       );
     } finally {
       setLoading(false);
@@ -335,25 +338,25 @@ export default function ExportTrainerDataModal({
     <ColorfulModalUI
       open={isOpen}
       onClose={handleClose}
-      title="Export Trainer Data"
-      subtitle="Select the data you want to export"
+      title={t("trainers.exportTrainerData")}
+      subtitle={t("trainers.selectDataToExport")}
     >
       <div className="space-y-6">
         {/* Date Range Selection */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Date Range
+            {t("trainers.dateRange")}
           </h3>
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="last-7-days">Last 7 days</option>
-            <option value="last-30-days">Last 30 days</option>
-            <option value="last-90-days">Last 90 days</option>
-            <option value="this-year">This year</option>
-            <option value="all-time">All time</option>
+            <option value="last-7-days">{t("trainers.last7Days")}</option>
+            <option value="last-30-days">{t("trainers.last30Days")}</option>
+            <option value="last-90-days">{t("trainers.last90Days")}</option>
+            <option value="this-year">{t("trainers.thisYear")}</option>
+            <option value="all-time">{t("trainers.allTime")}</option>
           </select>
         </div>
 
@@ -361,21 +364,21 @@ export default function ExportTrainerDataModal({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              Export Options
+              {t("trainers.exportOptionsLabel")}
             </h3>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSelectAll}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
-                Select All
+                {t("trainers.selectAll")}
               </button>
               <span className="text-gray-400">|</span>
               <button
                 onClick={handleDeselectAll}
                 className="text-sm text-gray-600 hover:text-gray-700 font-medium"
               >
-                Deselect All
+                {t("trainers.deselectAll")}
               </button>
             </div>
           </div>
@@ -412,7 +415,7 @@ export default function ExportTrainerDataModal({
                   </span>
                   {option.id === "trainer-analytics" && !isPro && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      PRO
+                      {t("trainers.proLabel")}
                     </span>
                   )}
                 </div>
@@ -424,16 +427,16 @@ export default function ExportTrainerDataModal({
         {/* Export Summary */}
         {selectedOptions.length > 0 && (
           <div className="bg-green-50 rounded-lg p-4">
-            <h4 className="font-medium text-green-900 mb-2">Export Summary</h4>
+            <h4 className="font-medium text-green-900 mb-2">{t("trainers.exportSummary")}</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-green-700">Selected Reports:</span>
+                <span className="text-green-700">{t("trainers.selectedReports")}:</span>
                 <span className="font-medium text-green-900 ml-2">
                   {selectedOptions.length}
                 </span>
               </div>
               <div>
-                <span className="text-green-700">Date Range:</span>
+                <span className="text-green-700">{t("trainers.dateRange")}:</span>
                 <span className="font-medium text-green-900 ml-2">
                   {dateRange
                     .replace("-", " ")
@@ -454,7 +457,7 @@ export default function ExportTrainerDataModal({
           disabled={loading}
         >
           <FiX className="h-4 w-4 mr-2" />
-          Cancel
+          {t("common.cancel")}
         </SmartButton>
 
         <SmartButton
@@ -464,7 +467,7 @@ export default function ExportTrainerDataModal({
           loading={loading}
         >
           <FiDownload className="h-4 w-4 mr-2" />
-          {loading ? "Exporting..." : "Export Data"}
+          {loading ? t("trainers.exporting") : t("trainers.exportData")}
         </SmartButton>
       </div>
     </ColorfulModalUI>

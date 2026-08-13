@@ -7,6 +7,7 @@ import {
   FiTrash2,
   FiShield,
 } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 import { SmartTrainerModal } from "./SmartTrainerModal";
 
 interface TrainerSummary {
@@ -25,6 +26,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
   onClose,
   trainer,
 }) => {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState("");
   const [noteType, setNoteType] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
@@ -84,10 +86,10 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Trainer Notes
+                {t("trainers.trainerNotes")}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Manage notes and observations about trainer
+                {t("trainers.trainerNotesDesc")}
               </p>
             </div>
           </div>
@@ -104,27 +106,27 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
           {/* Trainer Info */}
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-3">
-              Trainer Information
+              {t("trainers.trainerInformation")}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.name")}:</span>
                 <span className="font-medium">
                   {trainer?.name || "John Doe"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Email:</span>
+                <span className="text-gray-600 dark:text-gray-400">{t("common.email")}:</span>
                 <span className="font-medium">
                   {trainer?.email || "john@fit.com"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Status:
+                  {t("common.status")}:
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  Active
+                  {t("trainers.active")}
                 </span>
               </div>
             </div>
@@ -133,36 +135,36 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
           {/* Add New Note */}
           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Add New Note
+              {t("trainers.addNewNote")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Note Type
+                  {t("trainers.noteType")}
                 </label>
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
-                  <option value="">Select note type</option>
-                  <option value="performance">Performance</option>
-                  <option value="training">Training</option>
-                  <option value="feedback">Feedback</option>
-                  <option value="incident">Incident</option>
-                  <option value="general">General</option>
+                  <option value="">{t("trainers.selectNoteType")}</option>
+                  <option value="performance">{t("trainers.performance")}</option>
+                  <option value="training">{t("trainers.training")}</option>
+                  <option value="feedback">{t("trainers.feedback")}</option>
+                  <option value="incident">{t("trainers.incident")}</option>
+                  <option value="general">{t("trainers.general")}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Note Content
+                  {t("trainers.noteContent")}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter your note here..."
+                  placeholder={t("trainers.enterNoteHere")}
                 />
               </div>
               <div className="flex items-center space-x-3">
@@ -177,7 +179,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                   htmlFor="isPrivate"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Private note (only visible to managers)
+                  {t("trainers.privateNoteLabel")}
                 </label>
               </div>
               <button
@@ -190,7 +192,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                 ) : (
                   <FiPlus className="w-4 h-4" />
                 )}
-                <span>Add Note</span>
+                <span>{t("trainers.addNote")}</span>
               </button>
             </div>
           </div>
@@ -202,11 +204,10 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                 <FiShield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
                   <h3 className="font-medium text-blue-800 dark:text-blue-200">
-                    Smart Suggestion
+                    {t("trainers.smartSuggestion")}
                   </h3>
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                    Consider adding a note about the recent improvement in class
-                    attendance and member satisfaction scores.
+                    {t("trainers.noteSuggestionDesc")}
                   </p>
                 </div>
               </div>
@@ -216,7 +217,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
           {/* Existing Notes */}
           <div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-              Existing Notes
+              {t("trainers.existingNotes")}
             </h3>
             <div className="space-y-3">
               {mockNotes.map((note) => (
@@ -232,7 +233,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                         </span>
                         {note.isPrivate && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                            Private
+                            {t("trainers.privateBadge")}
                           </span>
                         )}
                       </div>
@@ -240,7 +241,7 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
                         {note.content}
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-                        <span>By {note.createdBy}</span>
+                        <span>{t("trainers.byAuthor", { author: note.createdBy })}</span>
                         <span>
                           {new Date(note.createdAt).toLocaleDateString()}
                         </span>
@@ -267,11 +268,11 @@ const TrainerNotesModal: React.FC<TrainerNotesModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            Close
+            {t("common.close")}
           </button>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors">
-              Export Notes
+              {t("trainers.exportNotes")}
             </button>
           </div>
         </div>
