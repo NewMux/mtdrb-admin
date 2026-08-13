@@ -22,6 +22,7 @@ import { SmartButton } from "../ui/DesignSystem";
 import ViewExpenseModal from "./modals/ViewExpenseModal";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import { createPrivateStorageUrl } from "../../utils/storage";
 
 interface ExpensesSectionProps {
   searchQuery: string;
@@ -112,12 +113,21 @@ export default function ExpensesSection({
     }
   }, [selectedIds, expenses]);
 
-  const handleDelete = async (expenseId: string) => {
+  const handleOpenReceipt = async (receiptPath: string) => {
+    const signedUrl = await createPrivateStorageUrl("expense-receipts", receiptPath);
+    if (!signedUrl) {
+      toast.error("Unable to open receipt");
+      return;
+    }
+    window.open(signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from("expenses")
         .delete()
-        .eq("id", expenseId);
+        .eq("id", id);
       if (error) throw error;
       toast.success("Expense deleted successfully");
       fetchExpenses();
@@ -422,7 +432,9 @@ export default function ExpensesSection({
                           title="Download Receipt"
                           onClick={(e) => {
                             e?.stopPropagation();
-                            window.open(expense.receipt_url, "_blank");
+                            if (expense.receipt_url) {
+                              void handleOpenReceipt(expense.receipt_url);
+                            }
                           }}
                         >
                           Download

@@ -5,6 +5,7 @@ import { AppleInput, AppleSelect, AppleTextarea } from "../../AppleStyleModal";
 import { Expense } from "../../../types";
 import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
+import { createPrivateStorageUrl } from "../../../utils/storage";
 import toast from "react-hot-toast";
 import { FiDownload, FiEdit2, FiSave, FiX } from "react-icons/fi";
 
@@ -27,7 +28,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
   mode = "view",
   onSuccess,
 }) => {
-  const { user } = useAuth();
+  const { tenantId } = useAuth();
   const [isEditing, setIsEditing] = useState(mode === "edit");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -59,7 +60,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!expense?.id || !user?.user_metadata?.tenant_id) return;
+    if (!expense?.id || !tenantId) return;
 
     setLoading(true);
     try {
@@ -75,7 +76,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
           updated_at: new Date().toISOString(),
         })
         .eq("id", expense.id)
-        .eq("tenant_id", user.user_metadata.tenant_id);
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
 
@@ -90,12 +91,22 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
     }
   };
 
-  const handleDownloadReceipt = () => {
-    if (expense?.receipt_url) {
-      window.open(expense.receipt_url, "_blank");
-    } else {
+  const handleDownloadReceipt = async () => {
+    if (!expense?.receipt_url) {
       toast.error("No receipt available for this expense");
+      return;
     }
+
+    const signedUrl = await createPrivateStorageUrl(
+      "expense-receipts",
+      expense.receipt_url,
+    );
+    if (!signedUrl) {
+      toast.error("Unable to open receipt");
+      return;
+    }
+
+    window.open(signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const formatCurrency = (amount: number | undefined) => {

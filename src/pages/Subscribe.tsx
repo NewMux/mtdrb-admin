@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
+import { useAuth } from "../contexts/AuthContext";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -29,6 +30,7 @@ export default function Subscribe() {
   const [subscribing, setSubscribing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [error, setError] = useState("");
+  const { userMetadata, tenantId: authTenantId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,8 +44,9 @@ export default function Subscribe() {
           return;
         }
         setUser(data.user as User);
-        // Check paid status - preserve original destination
-        if (data.user.user_metadata && data.user.user_metadata.paid) {
+        // Paid status is resolved from platform_subscriptions by AuthProvider;
+        // user_metadata is not an entitlement source.
+        if (userMetadata?.paid) {
           const from = getRedirectPath(location.state);
           navigate(from);
           return;
@@ -51,7 +54,7 @@ export default function Subscribe() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [navigate, location.state]);
+  }, [navigate, location.state, userMetadata?.paid]);
 
   // Subscription plans
   const plans = [
@@ -95,24 +98,17 @@ export default function Subscribe() {
     setSubscribing(true);
     setError("");
     try {
-      // First, update user metadata
-      const { error } = await supabase.auth.updateUser({
-        data: { 
-          paid: true,
-          subscription_tier: planId,
-          subscription_start: new Date().toISOString()
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-        setSubscribing(false);
-        return;
+      if (!["starter", "pro"].includes(planId)) {
+        throw new Error("Invalid subscription plan");
       }
 
-      // Upsert database platform subscription
-      const tenantId = user?.user_metadata?.tenant_id || user?.user_metadata?.tenantId;
-      if (tenantId) {
+      // Upsert the database subscription for the authenticated membership.
+      // The RLS policy requires an admin membership for this write.
+      const tenantId = authTenantId;
+      if (!tenantId) {
+        throw new Error("No organization membership found");
+      }
+      {
         const now = new Date();
         const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
         
@@ -139,21 +135,12 @@ export default function Subscribe() {
         }
       }
 
-      const { data } = await supabase.auth.getUser();
-      if (
-        data.user &&
-        data.user.user_metadata &&
-        (data.user.user_metadata.paid || data.user.user_metadata.tenant_id)
-      ) {
-        // Check if onboarding is completed
-        if (data.user.user_metadata.onboarding_completed) {
-          // Go to dashboard if onboarding is done
-          const from = getRedirectPath(location.state);
-          navigate(from);
-        } else {
-          // Go to onboarding if not completed
-          navigate("/onboarding");
-        }
+      // Onboarding completion is profile context, not authorization. The
+      // organization and entitlement have already been verified above.
+      if (user?.user_metadata?.onboarding_completed) {
+        navigate(getRedirectPath(location.state));
+      } else {
+        navigate("/onboarding");
       }
     } catch (e) {
       setError("Unexpected error");

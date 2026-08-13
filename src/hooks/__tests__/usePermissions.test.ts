@@ -18,7 +18,7 @@ describe("usePermissions", () => {
   describe("Role Checks", () => {
     it("should correctly identify admin role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "admin" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "admin" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "all" || perm === "read" || perm === "write"),
       });
 
@@ -32,7 +32,7 @@ describe("usePermissions", () => {
 
     it("should correctly identify employee role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "employee" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "employee" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write" || perm === "manage_staff"),
       });
 
@@ -46,7 +46,7 @@ describe("usePermissions", () => {
 
     it("should correctly identify trainer role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "trainer" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write_classes"),
       });
 
@@ -58,7 +58,7 @@ describe("usePermissions", () => {
       expect(result.current.userRole).toBe("trainer");
     });
 
-    it("should default to trainer when role is missing", () => {
+    it("should fail closed when membership context is missing", () => {
       mockUseAuth.mockReturnValue({
         userMetadata: null,
         hasPermission: vi.fn(() => false),
@@ -66,8 +66,8 @@ describe("usePermissions", () => {
 
       const { result } = renderHook(() => usePermissions());
 
-      expect(result.current.userRole).toBe("trainer");
-      // When userMetadata is null, hasRoleAccess returns false, so isTrainer will be false
+      expect(result.current.userRole).toBeUndefined();
+      // When membership context is null, all role access remains denied.
       expect(result.current.isTrainer).toBe(false);
     });
   });
@@ -75,7 +75,7 @@ describe("usePermissions", () => {
   describe("Permission Checks", () => {
     it("should return correct permissions for admin", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "admin" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "admin" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "all" || perm === "read" || perm === "write" || perm === "manage_staff" || perm === "write_classes"),
       });
 
@@ -91,7 +91,7 @@ describe("usePermissions", () => {
 
     it("should return correct permissions for employee", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "employee" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "employee" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write" || perm === "manage_staff"),
       });
 
@@ -107,7 +107,7 @@ describe("usePermissions", () => {
 
     it("should return correct permissions for trainer", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "trainer" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
         hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write_classes"),
       });
 
@@ -125,7 +125,7 @@ describe("usePermissions", () => {
   describe("hasRoleAccess", () => {
     it("should allow access when user has required role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "admin" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "admin" as UserRole },
         hasPermission: vi.fn(),
       });
 
@@ -138,7 +138,7 @@ describe("usePermissions", () => {
 
     it("should deny access when user has lower role", () => {
       mockUseAuth.mockReturnValue({
-        userMetadata: { role: "trainer" as UserRole },
+        userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
         hasPermission: vi.fn(),
       });
 

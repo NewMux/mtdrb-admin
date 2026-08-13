@@ -23,11 +23,19 @@ export default function Signup() {
         // Otherwise, let them complete the signup flow
         if (user.user_metadata?.paid && user.user_metadata?.onboarding_completed) {
           navigate("/dashboard", { replace: true });
-        } else if (user.user_metadata?.tenant_id) {
-          // Tenant/membership setup already completed in a prior attempt
-          // (e.g. this tab reloaded after a stuck retry) - skip straight to
-          // subscribe instead of showing the signup form again.
-          navigate("/subscribe", { replace: true });
+        } else {
+          const { data: membership } = await supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (membership?.tenant_id) {
+            // Membership setup already completed in a prior attempt.
+            navigate("/subscribe", { replace: true });
+          }
         }
         // If user is not paid and has no tenant yet, let the signup flow handle it
       }
@@ -157,15 +165,12 @@ export default function Signup() {
         tenantId = newTenantId;
       }
 
-      // Update user metadata with tenantId AND role
+      // Store the organization name as profile context only. Tenant and role
+      // authorization is resolved from the memberships table.
       await withTimeout(
         Promise.resolve(
           supabase.auth.updateUser({
-            data: {
-              tenant_id: tenantId,
-              role: "admin",
-              gym_name: gymName,
-            }
+            data: { gym_name: gymName },
           })
         ),
         10000,

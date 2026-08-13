@@ -11,6 +11,7 @@ import {
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 
@@ -56,6 +57,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
+  const { tenantId } = useAuth();
   
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedReason, setSelectedReason] = useState<string>("");
@@ -83,26 +85,30 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
     setError(null);
 
     try {
-      // Update user metadata to cancel subscription
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: {
-          paid: false,
-          subscription_tier: null,
-          subscription_cancelled: true,
-          subscription_cancelled_at: new Date().toISOString(),
-          cancellation_reason: selectedReason,
-          cancellation_feedback: feedback,
-        },
-      });
+      if (!tenantId) throw new Error("No organization membership found");
+
+      // Update the platform subscription row. RLS requires an admin membership
+      // and keeps entitlement state in the database rather than user metadata.
+      const { error: updateError } = await supabase
+        .from("platform_subscriptions")
+        .update({
+          status: "cancelled",
+          metadata: {
+            cancellation_reason: selectedReason,
+            cancellation_feedback: feedback,
+            subscription_cancelled_at: new Date().toISOString(),
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("tenant_id", tenantId);
 
       if (updateError) throw updateError;
 
       // Log the cancellation event (if activities table exists)
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
+        if (tenantId) {
           await supabase.from("activities").insert({
-            tenant_id: userData.user.user_metadata?.tenant_id,
+            tenant_id: tenantId,
             type: "subscription",
             title: "Subscription Cancelled",
             description: `${currentPlan} subscription cancelled. Reason: ${selectedReason}`,

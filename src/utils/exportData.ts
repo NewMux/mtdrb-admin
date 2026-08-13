@@ -1,5 +1,24 @@
 import { jsPDF } from "jspdf";
 
+const FORMULA_PREFIX = /^[=+\-@]/;
+
+const sanitizeSpreadsheetValue = (value: unknown): string | number | boolean => {
+  if (typeof value === "number" || typeof value === "boolean") return value;
+  const text = String(value ?? "");
+  return FORMULA_PREFIX.test(text) ? `'${text}` : text;
+};
+
+const escapeXml = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
+const sanitizeDownloadName = (filename: string): string =>
+  filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "export";
+
 export const exportJSON = (data: unknown, filename: string) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json",
@@ -7,7 +26,7 @@ export const exportJSON = (data: unknown, filename: string) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${filename}.json`;
+  a.download = `${sanitizeDownloadName(filename)}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -26,9 +45,7 @@ export const exportCSV = <T extends Record<string, unknown>>(
     ...data.map((row) =>
       headers
         .map((header) => {
-          const value = row[header];
-          // Escape commas and quotes
-          const escaped = String(value).replace(/"/g, '""');
+          const escaped = String(sanitizeSpreadsheetValue(row[header])).replace(/"/g, '""');
           return `"${escaped}"`;
         })
         .join(","),
@@ -39,7 +56,7 @@ export const exportCSV = <T extends Record<string, unknown>>(
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${filename}.csv`;
+  a.download = `${sanitizeDownloadName(filename)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -75,34 +92,65 @@ export const exportPDF = (data: unknown, filename: string, title?: string) => {
     addText(JSON.stringify(data, null, 2));
   }
 
-  doc.save(`${filename}.pdf`);
+  doc.save(`${sanitizeDownloadName(filename)}.pdf`);
 };
 
-export const exportExcel = async <T extends Record<string, unknown>>(
+const spreadsheetCell = (value: unknown): string => {
+  const safeValue = sanitizeSpreadsheetValue(value);
+  const type = typeof safeValue === "number"
+    ? "Number"
+    : typeof safeValue === "boolean"
+      ? "Boolean"
+      : "String";
+  return `<Cell><Data ss:Type="${type}">${escapeXml(safeValue)}</Data></Cell>`;
+};
+
+/**
+ * Generates Excel 2003 XML (SpreadsheetML), which Excel and LibreOffice open
+ * directly. It avoids a client-side workbook parser and neutralizes formulas.
+ */
+export const exportExcel = <T extends Record<string, unknown>>(
   data: T[],
   filename: string,
   sheetName: string = "Sheet1",
 ) => {
-  try {
-    // Dynamic import for xlsx to reduce bundle size
-    const XLSX = await import("xlsx");
+  if (!data.length) return;
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  const headers = Object.keys(data[0]);
+  const safeSheetName = sheetName
+    .replace(/[\\/:?*]/g, "_")
+    .replace(/\[/g, "_")
+    .replace(/\]/g, "_")
+    .slice(0, 31) || "Sheet1";
+  const headerRow = `<Row>${headers.map(spreadsheetCell).join("")}</Row>`;
+  const dataRows = data
+    .map((row) => `<Row>${headers.map((header) => spreadsheetCell(row[header])).join("")}</Row>`)
+    .join("");
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:x="urn:schemas-microsoft-com:office:excel"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="${escapeXml(safeSheetName)}">
+    <Table>
+      ${headerRow}
+      ${dataRows}
+    </Table>
+  </Worksheet>
+</Workbook>`;
 
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
-  } catch (error) {
-    console.error("Excel export failed:", error);
-    throw new Error("Excel export not available");
-  }
+  downloadBlob(
+    new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" }),
+    `${sanitizeDownloadName(filename)}.xls`,
+  );
 };
 
 export const downloadBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = filename;
+  a.download = sanitizeDownloadName(filename);
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

@@ -13,7 +13,7 @@ vi.mock("../../../contexts/AuthContext", () => ({
 
 // Helper to render with providers
 type AuthValue = {
-  userMetadata: { role?: UserRole } | null;
+  userMetadata: { tenant_id: string; role?: UserRole } | null;
   isLoading: boolean;
 };
 
@@ -85,7 +85,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "trainer" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -99,7 +99,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "admin" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "admin" as UserRole },
           isLoading: false,
         }
       );
@@ -113,7 +113,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "trainer" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -128,7 +128,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "trainer" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -147,7 +147,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "trainer" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -166,7 +166,7 @@ describe("PermissionGuard", () => {
           <div>Protected Content</div>
         </PermissionGuard>,
         {
-          userMetadata: { role: "trainer" as UserRole },
+          userMetadata: { tenant_id: "tenant-a", role: "trainer" as UserRole },
           isLoading: false,
         }
       );
@@ -200,7 +200,7 @@ describe("PermissionGuard", () => {
             <div>Protected Content</div>
           </PermissionGuard>,
           {
-            userMetadata: { role: userRole },
+            userMetadata: { tenant_id: "tenant-a", role: userRole },
             isLoading: false,
           }
         );

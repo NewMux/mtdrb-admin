@@ -262,7 +262,10 @@ export function AddExpenseModal({
       // Upload file if selected, otherwise keep whatever receipt was already there
       let receiptUrl = editingExpense?.receipt_url || null;
       if (selectedFile) {
-        const fileName = `receipts/${authTenantId}/${Date.now()}_${selectedFile.name}`;
+        const safeFileName = selectedFile.name
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .slice(-120);
+        const fileName = `receipts/${authTenantId}/${crypto.randomUUID()}_${safeFileName}`;
         const { error: uploadError } = await supabase.storage
           .from("expense-receipts")
           .upload(fileName, selectedFile);
@@ -271,11 +274,9 @@ export function AddExpenseModal({
           throw uploadError;
         }
 
-        const { data: urlData } = supabase.storage
-          .from("expense-receipts")
-          .getPublicUrl(fileName);
-
-        receiptUrl = urlData.publicUrl;
+        // Store only the object path. The bucket is private; callers must
+        // request a short-lived signed URL when they need to view the file.
+        receiptUrl = fileName;
       }
 
       const expensePayload = {

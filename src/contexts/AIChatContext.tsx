@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "./AuthContext";
@@ -240,9 +241,9 @@ export const AIChatProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (next.length > 0) {
           next[next.length - 1] = {
             role: "assistant",
-            text: i18n.language === "ar" 
-              ? "عذراً، حدث خطأ أثناء الاتصال بمساعد الذكاء الاصطناعي. يرجى التحقق من مفتاح الـ API في ملف الإعدادات."
-              : "Sorry, an error occurred while connecting to the AI Assistant. Please verify your VITE_GEMINI_API_KEY settings."
+              text: i18n.language === "ar"
+                ? "عذراً، تعذر الاتصال بمساعد الذكاء الاصطناعي. يرجى المحاولة مرة أخرى لاحقاً."
+                : "Sorry, the AI Assistant could not complete the request. Please try again later."
           };
         }
         return next;

@@ -4,7 +4,7 @@ import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { supabase, getCurrentUser } from "../supabaseClient";
-import { isValidRole, getDefaultRole } from "../types/roles";
+import { isValidRole } from "../types/roles";
 import { isLocalhost } from "../utils/isLocalhost";
 import { withTimeout } from "../utils/withTimeout";
 import {
@@ -51,12 +51,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
 
-    const rawRole = user.user_metadata?.role;
-    const validatedRole = isValidRole(rawRole) ? rawRole : getDefaultRole();
-    const tId = user.user_metadata?.tenant_id || user.user_metadata?.tenantId;
+    // Authorization state comes from the RLS-protected membership table. Auth
+    // user_metadata is user-editable profile data and must never determine a
+    // tenant or role.
+    let membership: { tenant_id: string; role: string } | null = null;
+    try {
+      const { data: membershipData, error: membershipError } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from("memberships")
+            .select("tenant_id, role")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle(),
+        ),
+        8000,
+        "Timed out checking organization membership",
+      );
 
-    let isPaid = user.user_metadata?.paid || false;
-    let tier = user.user_metadata?.subscription_tier || "free";
+      if (membershipError) throw membershipError;
+      membership = membershipData;
+    } catch (err) {
+      console.error("Error querying membership in handleUserMetadata:", err);
+    }
+
+    if (!membership?.tenant_id || !isValidRole(membership.role)) {
+      setUserMetadata(null);
+      setTenantId(null);
+      return null;
+    }
+
+    const tId = membership.tenant_id;
+    const validatedRole = membership.role;
+
+    let isPaid = false;
+    let tier: UserMetadata["subscription_tier"] = "free";
 
     if (tId) {
       try {
@@ -66,15 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .from("platform_subscriptions")
               .select("status, plan_tier")
               .eq("tenant_id", tId)
-              .maybeSingle()
+              .maybeSingle(),
           ),
           8000,
-          "Timed out checking subscription status"
+          "Timed out checking subscription status",
         );
 
         if (subData) {
-          isPaid = (subData.status === "active" || subData.status === "trialing");
-          tier = subData.plan_tier;
+          isPaid = subData.status === "active" || subData.status === "trialing";
+          tier = subData.plan_tier as UserMetadata["subscription_tier"];
         }
       } catch (err) {
         console.error("Error querying platform_subscriptions in handleUserMetadata:", err);
@@ -85,11 +115,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       tenant_id: tId,
       paid: isPaid,
       role: validatedRole,
-      subscription_tier: tier as UserMetadata["subscription_tier"],
+      subscription_tier: tier,
     };
 
     setUserMetadata(metadata);
     setTenantId(metadata.tenant_id);
+
+    // Compatibility mirror for older UI filters. This is local React state,
+    // not a persistence or authorization source; the values above came from
+    // the membership/subscription tables and all writes remain RLS-protected.
+    setUser((currentUser) => {
+      if (!currentUser || currentUser.id !== user.id) return currentUser;
+      return {
+        ...currentUser,
+        user_metadata: {
+          ...currentUser.user_metadata,
+          tenant_id: tId,
+          role: validatedRole,
+          paid: isPaid,
+          subscription_tier: tier,
+        },
+      };
+    });
+
     return metadata;
   }, []);
 

@@ -104,9 +104,7 @@ const App = () => {
       <MuiThemeProvider theme={theme}>
         <ThemeProvider>
           <PageThemeProvider>
-            <Router
-              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            >
+            <Router>
               <AuthProvider>
                 <SubscriptionProvider>
                   <UIProvider>

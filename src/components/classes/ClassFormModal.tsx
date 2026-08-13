@@ -258,7 +258,7 @@ export default function ClassFormModal({
     useState<ClassTypeOption | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<RoomOption | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
 
   const {
     register,
@@ -309,7 +309,7 @@ export default function ClassFormModal({
           const { data, error } = await supabase
             .from("trainers")
             .select("id, first_name, last_name, specialties, status")
-            .eq("tenant_id", user?.user_metadata?.tenant_id)
+            .eq("tenant_id", tenantId)
             .eq("status", "active")
             .order("first_name");
 
@@ -342,7 +342,7 @@ export default function ClassFormModal({
         reset();
       }
     }
-  }, [isOpen, mode, classData, reset, setValue, user?.user_metadata?.tenant_id]);
+  }, [isOpen, mode, classData, reset, setValue, tenantId]);
 
   // Update class type suggestions when type changes
   useEffect(() => {
@@ -368,7 +368,7 @@ export default function ClassFormModal({
   }, [watchRoom, setValue, watchCapacity]);
 
   const onSubmit = async (data: FormData) => {
-    if (!user?.user_metadata?.tenant_id) {
+    if (!tenantId || !user) {
       toast.error("Please log in again");
       return;
     }
@@ -382,7 +382,7 @@ export default function ClassFormModal({
       const { data: trainerConflicts, error: trainerError } = await supabase
         .from("classes")
         .select("id, name, start_time, end_time, trainer_id, room")
-        .eq("tenant_id", user.user_metadata.tenant_id)
+        .eq("tenant_id", tenantId)
         .eq("trainer_id", data.trainer_id)
         .neq("id", classData?.id || "")
         .or(
@@ -401,7 +401,7 @@ export default function ClassFormModal({
         const { data: roomConflicts, error: roomError } = await supabase
           .from("classes")
           .select("id, name, start_time, end_time, trainer_id, room")
-          .eq("tenant_id", user.user_metadata.tenant_id)
+          .eq("tenant_id", tenantId)
           .eq("room", data.room)
           .neq("id", classData?.id || "")
           .or(
@@ -417,7 +417,7 @@ export default function ClassFormModal({
 
       const classPayload = {
         ...data,
-        tenant_id: user.user_metadata.tenant_id,
+        tenant_id: tenantId,
         created_by: user.id,
       };
 
@@ -427,7 +427,7 @@ export default function ClassFormModal({
           .from("classes")
           .update(classPayload)
           .eq("id", classData.id)
-          .eq("tenant_id", user.user_metadata.tenant_id)
+          .eq("tenant_id", tenantId)
           .select()
           .single();
 

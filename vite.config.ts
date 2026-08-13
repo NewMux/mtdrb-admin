@@ -16,7 +16,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Do not publish original source content in production artifacts.
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {

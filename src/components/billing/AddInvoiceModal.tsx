@@ -254,7 +254,10 @@ export function AddInvoiceModal({
       // Upload file if selected
       let invoiceUrl = null;
       if (selectedFile) {
-        const fileName = `invoices/${authTenantId}/${Date.now()}_${selectedFile.name}`;
+        const safeFileName = selectedFile.name
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .slice(-120);
+        const fileName = `invoices/${authTenantId}/${crypto.randomUUID()}_${safeFileName}`;
         const { error: uploadError } = await supabase.storage
           .from("invoice-files")
           .upload(fileName, selectedFile);
@@ -263,11 +266,9 @@ export function AddInvoiceModal({
           throw uploadError;
         }
 
-        const { data: urlData } = supabase.storage
-          .from("invoice-files")
-          .getPublicUrl(fileName);
-
-        invoiceUrl = urlData.publicUrl;
+        // Store only the object path. The bucket is private; callers must
+        // request a short-lived signed URL when they need to view the file.
+        invoiceUrl = fileName;
       }
 
       const invoicePayload = {

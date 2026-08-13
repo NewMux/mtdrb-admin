@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
-import toast from "react-hot-toast";
 import { isLocalhost } from "../utils/isLocalhost";
 
 interface AuthSetupProps {
@@ -172,91 +171,28 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           return;
         }
 
-        // User doesn't have membership, create one
-        // First, check if they have a tenant_id in metadata and if that tenant exists
-        const metaTenantId = user.user_metadata?.tenant_id || user.user_metadata?.tenantId;
-        let tenantData = null;
-
-        if (metaTenantId) {
-          const { data: existingTenant, error: tenantError } = await supabase
-            .from("tenants")
-            .select("id, name")
-            .eq("id", metaTenantId)
-            .single();
-
-          if (!tenantError && existingTenant) {
-            tenantData = existingTenant;
-          }
-        }
-
-        if (!tenantData) {
-          // Create tenant and membership using RPC function (bypasses RLS)
-          const gymName = user.user_metadata?.gym_name || "My Gym";
-          const { data: newTenantId, error: newTenantError } = await supabase
-            .rpc('create_tenant_with_membership', {
-              p_tenant_name: gymName,
-              p_user_role: 'admin',
-              p_tenant_metadata: {
-                has_plans: false,
-                has_trainers: false,
-                has_classes: false,
-              }
-            });
-
-          if (newTenantError) {
-            console.error("Error creating tenant:", newTenantError);
-            throw new Error(
-              "Unable to create your organization. Please try again.",
-            );
-          }
-
-          if (!newTenantId) {
-            throw new Error("Unable to create your organization.");
-          }
-
-          // Fetch the created tenant to get full data
-          const { data: fetchedTenant, error: fetchError } = await supabase
-            .from("tenants")
-            .select("id, name")
-            .eq("id", newTenantId)
-            .single();
-
-          if (fetchError || !fetchedTenant) {
-            throw new Error("Unable to verify created organization.");
-          }
-
-          tenantData = fetchedTenant;
-        } else {
-          // Tenant exists but user doesn't have membership - create membership
-          const { error: insertError } = await supabase
-            .from("memberships")
-            .insert({
-              user_id: user.id,
-              tenant_id: tenantData.id,
-              role: "admin",
-            })
-            .select("id, tenant_id, role")
-            .single();
-
-          if (insertError) {
-            console.error("Error creating membership:", insertError);
-            throw new Error("Unable to set up your account. Please try again.");
-          }
-        }
-
-        // Update user metadata with tenant ID AND role
-        // This ensures PermissionGuard can check the user's role
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { 
-            tenant_id: tenantData.id,
-            role: "admin", // Set role in user_metadata so PermissionGuard works
+        // A user without a membership may create only a new organization for
+        // their own account. The database RPC ignores caller-supplied roles,
+        // rejects users who already belong to an organization, and creates the
+        // tenant and initial admin membership atomically. Never attach a user
+        // to a tenant from browser-controlled user metadata.
+        const gymName = user.user_metadata?.gym_name || "My Gym";
+        const { data: newTenantId, error: newTenantError } = await supabase.rpc(
+          "create_tenant_with_membership",
+          {
+            p_tenant_name: gymName,
+            p_user_role: "admin",
+            p_tenant_metadata: {
+              has_plans: false,
+              has_trainers: false,
+              has_classes: false,
+            },
           },
-        });
+        );
 
-        if (updateError) {
-          throw new Error(
-            "Unable to complete account setup. Please try again.",
-          );
+        if (newTenantError || !newTenantId) {
+          console.error("Error creating tenant:", newTenantError);
+          throw new Error("Unable to create your organization. Please try again.");
         }
 
         finishSetup();
@@ -285,7 +221,6 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           return;
         }
 
-        // Check and fix user metadata if needed
         const {
           data: { user },
           error: getUserError,
@@ -301,36 +236,14 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           console.warn("AuthSetup: getUser() error, continuing:", getUserError);
         }
 
+        // Membership and role are resolved from the database. Do not repair or
+        // copy tenant/role values from user_metadata in the browser.
         if (user) {
-          const metadata = user.user_metadata;
-
-          // Fix tenant_id metadata if needed
-          if (!metadata.tenant_id && metadata.tenantId) {
-            toast.loading("Updating your user profile...");
-
-            const { error: updateError } = await supabase.auth.updateUser({
-              data: {
-                tenant_id: metadata.tenantId,
-                tenantId: null,
-              },
-            });
-
-            toast.dismiss();
-            if (updateError) {
-              throw new Error(
-                "Failed to update user profile. Please try logging in again.",
-              );
-            } else {
-              toast.success("Profile updated successfully! Reloading...");
-              setIsLoading(false);
-              setTimeout(() => window.location.reload(), 1500);
-              return;
-            }
-          }
+          await setupUserMembership();
+        } else {
+          finishSetup();
+          clearTimeout(timeoutId);
         }
-
-        // Proceed with membership setup
-        await setupUserMembership();
       } catch (err) {
         console.error("AuthSetup runSetup error:", err);
         failSetup((err as Error).message || "An unexpected error occurred.");

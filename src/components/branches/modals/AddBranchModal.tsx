@@ -156,20 +156,17 @@ export default function AddBranchModal({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      let tenantId = user.user_metadata?.tenant_id;
-      if (!tenantId) {
-        const { data: membershipData } = await supabase
-          .from("memberships")
-          .select("tenant_id")
-          .eq("user_id", user.id)
-          .single();
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
-        if (membershipData) {
-          tenantId = membershipData.tenant_id;
-        }
-      }
-
-      if (!tenantId) throw new Error("No tenant ID found");
+      if (membershipError) throw membershipError;
+      const tenantId = membershipData?.tenant_id;
+      if (!tenantId) throw new Error("No organization membership found");
 
       const branchData: Omit<Branch, "id" | "created_at" | "updated_at"> = {
         tenant_id: tenantId,

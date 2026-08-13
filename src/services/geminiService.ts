@@ -1,198 +1,62 @@
-/**
- * Gemini Service
- * Handles communication with the Google Gemini API directly from the browser.
- */
+import { supabase } from "../supabaseClient";
 
 export interface ChatMessage {
   role: "user" | "model" | "assistant";
   text: string;
 }
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
+interface GeminiResponse {
+  text?: string;
+  error?: string;
+}
+
 const DEFAULT_MODEL = "gemini-1.5-flash";
 
 /**
- * Gets the Gemini API key from environment variables
+ * AI requests are proxied through Supabase so the provider secret never ships
+ * in the Vite bundle. The Edge Function performs authentication, tenant
+ * membership checks, input limits, model allowlisting, and provider access.
  */
-export function getGeminiApiKey(): string | null {
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!envKey) return null;
-  // Clean potential whitespace or quotes
-  return envKey.trim().replace(/^["']|["']$/g, "");
+async function requestGemini(
+  messages: ChatMessage[],
+  systemInstruction?: string,
+  modelName: string = DEFAULT_MODEL,
+): Promise<string> {
+  const { data, error } = await supabase.functions.invoke<GeminiResponse>(
+    "gemini-chat",
+    {
+      body: { messages, systemInstruction, modelName },
+    },
+  );
+
+  if (error) {
+    throw new Error("AI request could not be completed");
+  }
+
+  if (!data?.text) {
+    throw new Error(data?.error || "AI provider returned an empty response");
+  }
+
+  return data.text;
 }
 
 /**
- * Formats the chat message history to Gemini API format.
- * Roles in Gemini must be exactly "user" or "model".
- */
-function formatMessagesForGemini(messages: ChatMessage[]) {
-  return messages.map((msg) => ({
-    role: msg.role === "assistant" ? "model" : "user",
-    parts: [{ text: msg.text }],
-  }));
-}
-
-interface GeminiRequestPayload {
-  contents: ReturnType<typeof formatMessagesForGemini>;
-  systemInstruction?: { parts: { text: string }[] };
-  generationConfig?: {
-    temperature?: number;
-    topP?: number;
-    topK?: number;
-    maxOutputTokens?: number;
-  };
-}
-
-/**
- * Stream responses from Gemini API using fetch and Server-Sent Events (SSE).
- * Yields chunk texts as they arrive.
+ * Compatibility wrapper for the existing streaming UI. The server response is
+ * intentionally returned as one bounded chunk until true server streaming is
+ * added; the provider key and tenant authorization remain server-side.
  */
 export async function* streamGeminiResponse(
   messages: ChatMessage[],
   systemInstruction?: string,
-  modelName: string = DEFAULT_MODEL
+  modelName: string = DEFAULT_MODEL,
 ): AsyncGenerator<string, void, unknown> {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY is not configured. Please add it to your .env file.");
-  }
-
-  const url = `${GEMINI_API_URL}/${modelName}:streamGenerateContent?alt=sse&key=${apiKey}`;
-  const formattedContents = formatMessagesForGemini(messages);
-
-  const payload: GeminiRequestPayload = {
-    contents: formattedContents,
-  };
-
-  if (systemInstruction) {
-    payload.systemInstruction = {
-      parts: [{ text: systemInstruction }],
-    };
-  }
-
-  // Optimize safety and settings for gym management assistant
-  payload.generationConfig = {
-    temperature: 0.3,
-    topP: 0.8,
-    topK: 40,
-    maxOutputTokens: 2048,
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    let errorText = "";
-    try {
-      const errorJson = await response.json();
-      errorText = errorJson.error?.message || response.statusText;
-    } catch {
-      errorText = await response.text();
-    }
-    throw new Error(`Gemini API Error: ${errorText || response.statusText}`);
-  }
-
-  if (!response.body) {
-    throw new Error("No response body received from Gemini API");
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let buffer = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-
-        if (trimmed.startsWith("data: ")) {
-          const jsonStr = trimmed.slice(6).trim();
-          if (jsonStr === "[DONE]") continue;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const textChunk = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (textChunk) {
-              yield textChunk;
-            }
-          } catch (e) {
-            console.error("Error parsing Gemini stream chunk:", e, trimmed);
-          }
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
+  yield await requestGemini(messages, systemInstruction, modelName);
 }
 
-/**
- * Non-streaming content generation fallback
- */
 export async function generateGeminiResponse(
   messages: ChatMessage[],
   systemInstruction?: string,
-  modelName: string = DEFAULT_MODEL
+  modelName: string = DEFAULT_MODEL,
 ): Promise<string> {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error("VITE_GEMINI_API_KEY is not configured. Please add it to your .env file.");
-  }
-
-  const url = `${GEMINI_API_URL}/${modelName}:generateContent?key=${apiKey}`;
-  const formattedContents = formatMessagesForGemini(messages);
-
-  const payload: GeminiRequestPayload = {
-    contents: formattedContents,
-  };
-
-  if (systemInstruction) {
-    payload.systemInstruction = {
-      parts: [{ text: systemInstruction }],
-    };
-  }
-
-  payload.generationConfig = {
-    temperature: 0.3,
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    let errorText = "";
-    try {
-      const errorJson = await response.json();
-      errorText = errorJson.error?.message || response.statusText;
-    } catch {
-      errorText = await response.text();
-    }
-    throw new Error(`Gemini API Error: ${errorText}`);
-  }
-
-  const data = await response.json();
-  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!responseText) {
-    throw new Error("Invalid or empty response from Gemini API");
-  }
-
-  return responseText;
+  return requestGemini(messages, systemInstruction, modelName);
 }
