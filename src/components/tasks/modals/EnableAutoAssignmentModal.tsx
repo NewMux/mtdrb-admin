@@ -1,5 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   FiZap,
   FiCheck,
@@ -16,6 +17,7 @@ interface EnableAutoAssignmentModalProps {
 export const EnableAutoAssignmentModal: React.FC<
   EnableAutoAssignmentModalProps
 > = ({ open, onClose, isPro = false }) => {
+  const { t } = useTranslation();
   const { loading, alerts, clearAlerts } = useSmartTaskModal({ isPro });
 
   const [assignmentType, setAssignmentType] = React.useState<
@@ -28,32 +30,32 @@ export const EnableAutoAssignmentModal: React.FC<
   const assignmentTypes = [
     {
       value: "round_robin" as const,
-      label: "Round Robin",
-      description: "Assign tasks in rotation order",
+      label: t("tasks.assignmentRoundRobin"),
+      description: t("tasks.assignmentRoundRobinDesc"),
       icon: "🔄",
       isPro: false,
     },
     {
       value: "availability" as const,
-      label: "Availability Based",
-      description: "Assign to most available team member",
+      label: t("tasks.assignmentAvailability"),
+      description: t("tasks.assignmentAvailabilityDesc"),
       icon: "📊",
       isPro: false,
     },
     {
       value: "role_based" as const,
-      label: "Role Based",
-      description: "Assign based on task type and role",
+      label: t("tasks.assignmentRoleBased"),
+      description: t("tasks.assignmentRoleBasedDesc"),
       icon: "👥",
       isPro: true,
     },
   ];
 
   const roles = [
-    { value: "trainer", label: "Trainer", count: 8 },
-    { value: "maintenance", label: "Maintenance", count: 3 },
-    { value: "admin", label: "Administrative", count: 2 },
-    { value: "cleaning", label: "Cleaning", count: 4 },
+    { value: "trainer", label: t("tasks.roleTrainer"), count: 8 },
+    { value: "maintenance", label: t("tasks.roleMaintenance"), count: 3 },
+    { value: "admin", label: t("tasks.typeAdmin"), count: 2 },
+    { value: "cleaning", label: t("tasks.roleCleaning"), count: 4 },
   ];
 
   const mockTeamMembers = [
@@ -122,23 +124,23 @@ export const EnableAutoAssignmentModal: React.FC<
       return {
         nextAssignee: "Mike Chen",
         queue: ["Sarah Johnson", "David Rodriguez", "Emma Wilson"],
-        description: "Tasks will be assigned in rotation order",
+        description: t("tasks.assignmentRoundRobinDesc"),
       };
     } else if (assignmentType === "availability") {
       return {
         nextAssignee: "Alex Thompson",
         queue: ["Mike Chen", "David Rodriguez", "Sarah Johnson"],
-        description: "Tasks assigned to most available team member",
+        description: t("tasks.assignmentAvailabilityDesc"),
       };
     } else {
       return {
-        nextAssignee: "Role-based assignment",
+        nextAssignee: t("tasks.roleBasedAssignmentLabel"),
         queue: [
           "Trainer: Mike Chen",
           "Maintenance: David Rodriguez",
           "Admin: Emma Wilson",
         ],
-        description: "Tasks assigned based on type and role",
+        description: t("tasks.assignmentRoleBasedDesc"),
       };
     }
   };
@@ -149,8 +151,8 @@ export const EnableAutoAssignmentModal: React.FC<
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title="Enable Auto Assignment"
-      subtitle="Configure automatic task assignment"
+      title={t("tasks.enableAutoAssignment")}
+      subtitle={t("tasks.enableAutoAssignmentSubtitle")}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -174,7 +176,7 @@ export const EnableAutoAssignmentModal: React.FC<
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -183,7 +185,7 @@ export const EnableAutoAssignmentModal: React.FC<
           {/* Assignment Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Assignment Logic *
+              {t("tasks.assignmentLogic")} *
             </label>
             <div className="space-y-2">
               {assignmentTypes.map((type) => (
@@ -212,7 +214,7 @@ export const EnableAutoAssignmentModal: React.FC<
                         </span>
                         {type.isPro && (
                           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-                            Pro
+                            {t("tasks.proBadge")}
                           </span>
                         )}
                       </div>
@@ -230,7 +232,7 @@ export const EnableAutoAssignmentModal: React.FC<
           {assignmentType === "role_based" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                Include Roles
+                {t("tasks.includeRoles")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {roles.map((role) => (
@@ -247,7 +249,7 @@ export const EnableAutoAssignmentModal: React.FC<
                     <div className="flex-1">
                       <div className="text-sm font-medium">{role.label}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {role.count} members
+                        {t("tasks.membersCount", { count: role.count })}
                       </div>
                     </div>
                   </label>
@@ -260,7 +262,7 @@ export const EnableAutoAssignmentModal: React.FC<
           <div className="border border-gray-200 rounded-lg p-4 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Override Options
+                {t("tasks.overrideOptions")}
               </h3>
               <label className="flex items-center space-x-2">
                 <input
@@ -270,7 +272,7 @@ export const EnableAutoAssignmentModal: React.FC<
                   className="text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Enable manual override
+                  {t("tasks.enableManualOverride")}
                 </span>
               </label>
             </div>
@@ -281,9 +283,9 @@ export const EnableAutoAssignmentModal: React.FC<
                 animate={{ opacity: 1, height: "auto" }}
                 className="space-y-2 text-sm text-gray-600 dark:text-gray-400"
               >
-                <p>• Admins can manually assign tasks</p>
-                <p>• Override assignments are logged</p>
-                <p>• Auto-assignment resumes after manual override</p>
+                <p>• {t("tasks.overrideBulletAdmins")}</p>
+                <p>• {t("tasks.overrideBulletLogged")}</p>
+                <p>• {t("tasks.overrideBulletResumes")}</p>
               </motion.div>
             )}
           </div>
@@ -292,14 +294,14 @@ export const EnableAutoAssignmentModal: React.FC<
           <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Assignment Preview
+                {t("tasks.assignmentPreview")}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
               >
-                {showPreview ? "Hide" : "Show"} preview
+                {showPreview ? t("tasks.hide") : t("tasks.show")} {t("tasks.preview").toLowerCase()}
               </button>
             </div>
 
@@ -311,7 +313,7 @@ export const EnableAutoAssignmentModal: React.FC<
               >
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
                   <div className="text-sm font-medium mb-2">
-                    Next Assignment
+                    {t("tasks.nextAssignment")}
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
@@ -323,7 +325,7 @@ export const EnableAutoAssignmentModal: React.FC<
 
                 <div className="bg-white rounded p-3 dark:bg-gray-800">
                   <div className="text-sm font-medium mb-2">
-                    Assignment Queue
+                    {t("tasks.assignmentQueue")}
                   </div>
                   <div className="space-y-1">
                     {previewData.queue.map((member, index) => (
@@ -348,7 +350,7 @@ export const EnableAutoAssignmentModal: React.FC<
           {/* Team Overview */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Team Overview
+              {t("tasks.teamOverview")}
             </h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {mockTeamMembers.map((member) => (
@@ -377,7 +379,7 @@ export const EnableAutoAssignmentModal: React.FC<
                             : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {member.availability}
+                      {t(`tasks.${member.availability}`)}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {member.lastAssigned}
@@ -395,8 +397,8 @@ export const EnableAutoAssignmentModal: React.FC<
                 <FiZap className="w-4 h-4 text-blue-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {assignmentType === "role_based" && selectedRoles.length > 0
-                    ? `${selectedRoles.length} roles selected`
-                    : `${mockTeamMembers.length} team members available`}
+                    ? t("tasks.rolesSelected", { count: selectedRoles.length })
+                    : t("tasks.teamMembersAvailable", { count: mockTeamMembers.length })}
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -405,7 +407,7 @@ export const EnableAutoAssignmentModal: React.FC<
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -418,7 +420,7 @@ export const EnableAutoAssignmentModal: React.FC<
                 >
                   <FiCheck className="w-4 h-4" />
                   <span>
-                    {loading ? "Enabling..." : "Enable Auto Assignment"}
+                    {loading ? t("tasks.enabling") : t("tasks.enableAutoAssignment")}
                   </span>
                 </button>
               </div>

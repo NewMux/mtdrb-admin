@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiTrash2,
   FiArchive,
@@ -22,6 +23,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
   taskId,
   isPro = false,
 }) => {
+  const { t } = useTranslation();
   const { loading, task, deleteTask, alerts, clearAlerts } = useSmartTaskModal({
     taskId,
     isPro,
@@ -58,8 +60,8 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
     <SmartTaskModal
       open={open}
       onClose={onClose}
-      title={deleteType === "archive" ? "Archive Task" : "Delete Task"}
-      subtitle={`${deleteType === "archive" ? "Archive" : "Delete"}: ${task.title}`}
+      title={deleteType === "archive" ? t("tasks.archiveTask") : t("tasks.deleteTask")}
+      subtitle={`${deleteType === "archive" ? t("tasks.archiveWord") : t("common.delete")}: ${task.title}`}
     >
       <div className="space-y-6">
         {/* Alerts */}
@@ -83,7 +85,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
               onClick={clearAlerts}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Clear alerts
+              {t("tasks.clearAlerts")}
             </button>
           </div>
         )}
@@ -95,13 +97,13 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             <div>
               <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
                 {deleteType === "archive"
-                  ? "Archive Task"
-                  : "Delete Task Permanently"}
+                  ? t("tasks.archiveTask")
+                  : t("tasks.deleteTaskPermanently")}
               </h4>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                 {deleteType === "archive"
-                  ? "This task will be moved to archive and can be restored later."
-                  : "This action cannot be undone. The task will be permanently deleted."}
+                  ? t("tasks.archiveTaskDesc")
+                  : t("tasks.deleteTaskDesc")}
               </p>
             </div>
           </div>
@@ -110,27 +112,27 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
         {/* Task Details */}
         <div className="bg-gray-50 rounded-lg p-4 dark:bg-gray-800">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Task Details
+            {t("tasks.taskDetails")}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Title:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.titleLabel")}:</span>
               <span className="font-medium">{task.title}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Type:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.typeLabel")}:</span>
               <span className="font-medium capitalize">
                 {task.type.replace("_", " ")}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">
-                Priority:
+                {t("tasks.priority")}:
               </span>
               <span className="font-medium capitalize">{task.priority}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Status:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t("tasks.status")}:</span>
               <span className="font-medium capitalize">
                 {task.status.replace("_", " ")}
               </span>
@@ -138,7 +140,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             {task.assignedTo && (
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Assigned to:
+                  {t("tasks.assignedTo")}:
                 </span>
                 <span className="font-medium">{task.assignedTo}</span>
               </div>
@@ -146,7 +148,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             {task.dueDate && (
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">
-                  Due date:
+                  {t("tasks.dueDate")}:
                 </span>
                 <span className="font-medium">
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -163,15 +165,14 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
               <FiLink className="w-5 h-5 text-yellow-500 mt-0.5" />
               <div>
                 <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Linked to Automation
+                  {t("tasks.linkedToAutomation")}
                 </h4>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  This task is part of an automated workflow. Deleting it may
-                  affect the automation.
+                  {t("tasks.linkedToAutomationDesc")}
                 </p>
                 <div className="mt-2">
                   <button className="text-sm text-yellow-600 hover:text-yellow-700 dark:text-yellow-400">
-                    View automation details
+                    {t("tasks.viewAutomationDetails")}
                   </button>
                 </div>
               </div>
@@ -182,7 +183,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
         {/* Action Type Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Action Type
+            {t("tasks.actionType")}
           </label>
           <div className="space-y-2">
             <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 cursor-pointer dark:border-gray-600">
@@ -198,10 +199,10 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 <FiArchive className="w-4 h-4 text-blue-500" />
                 <div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    Archive Task
+                    {t("tasks.archiveTask")}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Move to archive (can be restored later)
+                    {t("tasks.moveToArchiveDesc")}
                   </div>
                 </div>
               </div>
@@ -220,10 +221,10 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 <FiTrash2 className="w-4 h-4 text-red-500" />
                 <div>
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    Delete Permanently
+                    {t("tasks.deletePermanently")}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Permanently delete (cannot be undone)
+                    {t("tasks.permanentlyDeleteDesc")}
                   </div>
                 </div>
               </div>
@@ -234,12 +235,12 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
         {/* Confirmation */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Confirmation
+            {t("tasks.confirmationLabel")}
           </label>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            Type{" "}
+            {t("tasks.typeToConfirmPrefix")}{" "}
             <strong>{deleteType === "archive" ? "ARCHIVE" : "DELETE"}</strong>{" "}
-            to confirm
+            {t("tasks.typeToConfirmSuffix")}
           </p>
           <input
             type="text"
@@ -257,8 +258,8 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
               <FiZap className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {isLinkedToAutomation
-                  ? "Automation linked"
-                  : "No automation linked"}
+                  ? t("tasks.automationLinked")
+                  : t("tasks.noAutomationLinked")}
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -267,7 +268,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
@@ -286,12 +287,12 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 {deleteType === "archive" ? (
                   <>
                     <FiArchive className="w-4 h-4" />
-                    <span>{loading ? "Archiving..." : "Archive Task"}</span>
+                    <span>{loading ? t("tasks.archivingTask") : t("tasks.archiveTask")}</span>
                   </>
                 ) : (
                   <>
                     <FiTrash2 className="w-4 h-4" />
-                    <span>{loading ? "Deleting..." : "Delete Task"}</span>
+                    <span>{loading ? t("tasks.deletingTask") : t("tasks.deleteTask")}</span>
                   </>
                 )}
               </button>
