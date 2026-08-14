@@ -177,9 +177,9 @@ export default function Subscribe() {
 
       if (subTableError) throw subTableError;
 
-      // The tenant and subscription are now ready; onboarding collects the
-      // remaining gym details before the first dashboard visit.
-      navigate("/onboarding", { replace: true });
+      // The tenant and subscription are ready. Enter the dashboard now; the
+      // remaining gym details can be completed later from Settings.
+      navigate("/dashboard", { replace: true });
     } catch (subscribeError) {
       setError(
         subscribeError instanceof Error
