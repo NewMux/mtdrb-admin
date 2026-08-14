@@ -111,8 +111,9 @@ export const api = {
       return supabase
         .from("members")
         .select("*")
-        .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
-        .order("name", { ascending: true });
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .order("first_name", { ascending: true })
+        .order("last_name", { ascending: true });
     },
   },
 

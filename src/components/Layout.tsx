@@ -4,8 +4,6 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import PageThemeDetector from "./PageThemeDetector";
-import { AIChatButton } from "./ai/AIChatButton";
-import { AIChatPanel } from "./ai/AIChatPanel";
 import { useRTL } from "../hooks/useRTL";
 
 const Layout: React.FC = () => {
@@ -44,9 +42,6 @@ const Layout: React.FC = () => {
           </main>
         </div>
       </div>
-      {/* AI Chat Assistant */}
-      <AIChatButton />
-      <AIChatPanel />
     </div>
   );
 };

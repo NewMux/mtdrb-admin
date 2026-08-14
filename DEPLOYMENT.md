@@ -4,8 +4,6 @@
 
 The application contains tenant, member, billing, VAT, and private-document data. Do not expose a new production deployment until the authorization and storage migrations below have been applied to the target Supabase project and the negative security tests have passed.
 
-Before rollout, rotate any Gemini key that was ever stored in `VITE_GEMINI_API_KEY` or shipped in a previous client bundle. Removing the variable from Vercel does not invalidate a key that has already been exposed.
-
 ## Database schema and migrations
 
 Run the following SQL files in the Supabase SQL editor or through the Supabase CLI, in order:
@@ -27,23 +25,6 @@ After applying the migrations, verify the effective deployed state in Supabase:
 - The storage policies only allow paths in the form `receipts/<tenant UUID>/...` or `invoices/<tenant UUID>/...` and validate the membership role.
 - A user from tenant A cannot select, insert, update, delete, or export tenant B’s records or files.
 
-## Gemini Edge Function
-
-AI calls no longer go directly from the browser to Google. Deploy the function from the repository root:
-
-```bash
-supabase functions deploy gemini-chat
-supabase secrets set GEMINI_API_KEY="<rotated-provider-key>" ALLOWED_ORIGINS="https://<production-domain>"
-```
-
-For local development with a real Supabase project, include the local origin in `ALLOWED_ORIGINS`:
-
-```bash
-supabase secrets set ALLOWED_ORIGINS="https://<production-domain>,http://localhost:3000"
-```
-
-The function authenticates the Supabase bearer token, resolves the caller’s membership from the database, validates message length and count, allowlists the model, and returns generic provider errors. Do not add `GEMINI_API_KEY` to Vercel, `VITE_*` variables, Git, or any browser-visible configuration. Supabase platform variables such as `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and the function runtime token are provided by the Edge Function runtime.
-
 ## Environment variables
 
 Required in Vercel Production and/or a local `.env`:
@@ -56,7 +37,7 @@ Optional:
 - `VITE_APP_URL` — the canonical application URL used for authentication redirects. If unset, the app falls back to `window.location.origin`.
 - `VITE_FORCE_REAL_CLIENT=true` — required when local development should use a real Supabase project instead of the mock client.
 
-Do not set `VITE_GEMINI_API_KEY`. The key belongs only in Supabase Edge Function secrets.
+The MTDRB AI assistant, its browser integration, and its Edge Function are not part of this deployment.
 
 ## Financial document migration
 
@@ -72,7 +53,7 @@ Supabase’s free tier may pause a project after inactivity. If authentication o
 
 ## Local development and validation
 
-The default `npm run dev` path on `localhost` uses the mock Supabase client and demo data. This is controlled by `src/utils/isLocalhost.ts`. The AI Edge Function requires a real Supabase session, so use `VITE_FORCE_REAL_CLIENT=true` when testing AI, RLS, storage, or database functions locally.
+The default `npm run dev` path on `localhost` uses the mock Supabase client and demo data. This is controlled by `src/utils/isLocalhost.ts`. Use `VITE_FORCE_REAL_CLIENT=true` when testing RLS, storage, or database functions locally.
 
 Run the following before deployment:
 

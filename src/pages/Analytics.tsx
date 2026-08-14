@@ -280,7 +280,7 @@ export default function Analytics() {
         supabase
           .from("members")
           .select(
-            "id, name, full_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
+            "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
           )
           .eq("tenant_id", tenantId),
         supabase
@@ -338,7 +338,11 @@ export default function Analytics() {
       }
 
       const branches = branchesResult.data || [];
-      const members = (membersResult.data || []) as Member[];
+      const members = (membersResult.data || []).map((member) => ({
+        ...member,
+        name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
+        full_name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
+      })) as Member[];
       const invoices = (invoicesResult.data || []) as Invoice[];
       const bookings = bookingsResult.data || [];
 
