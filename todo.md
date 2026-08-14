@@ -81,5 +81,5 @@
 - [x] Verify the live POS success path hands off to the new print-ready bespoke-order invoice.
 - [x] Verify the live POS success path refreshes the invoice and tailoring production data after checkout.
 - [x] Save a client-review checkpoint for POS-based bespoke tailoring checkout.
-- [x] Commit the verified POS tailoring checkout release and push it to the selected repository main branch.
-- [x] Replace the selected repository main branch with the verified Tailor ERP release after explicit user approval.
+- [ ] Commit the verified POS tailoring checkout release and push it to the selected repository main branch.
+- [ ] Replace the selected repository main branch with the verified Tailor ERP release after explicit user approval.
