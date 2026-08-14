@@ -1,23 +1,43 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "noEmit": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "strict": true,
-    "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "preserve",
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
+
+    /* Bundler mode */
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+
+    /* Vite specific */
+    "types": ["vite/client"],
+    
+    /* Path aliases */
     "baseUrl": ".",
-    "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./client/src/*"],
-      "@shared/*": ["./shared/*"]
+      "@/*": ["src/*"]
     }
-  }
-}
+  },
+  "include": ["src", "src/vite-env.d.ts"],
+  "exclude": [
+    "src/test/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**/*"
+  ],
+  "references": [{ "path": "./tsconfig.node.json" }]
+} 
