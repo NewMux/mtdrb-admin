@@ -1,12 +1,11 @@
 # Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+**/node_modules
+.pnpm-store/
 
-# Production build
+# Build outputs
 dist/
 build/
+*.dist
 
 # Environment variables
 .env
@@ -15,7 +14,7 @@ build/
 .env.test.local
 .env.production.local
 
-# IDE files
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
@@ -34,12 +33,18 @@ Thumbs.db
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
+*.bak
 
 # Coverage directory used by tools like istanbul
 coverage/
@@ -50,6 +55,9 @@ coverage/
 
 # Dependency directories
 jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -82,6 +90,9 @@ jspm_packages/
 # Nuxt.js build / generate output
 .nuxt
 
+# Gatsby files
+.cache/
+
 # Storybook build outputs
 .out
 .storybook-out
@@ -90,16 +101,14 @@ jspm_packages/
 tmp/
 temp/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# Vercel
-.vercel 
-.vercel
+# Webdev artifacts (checkpoint zips, migrations, etc.)
+.webdev/
+
+# Manus version file (auto-generated, not part of source)
+client/public/__manus__/version.json
+.project-config.json
