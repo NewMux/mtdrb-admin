@@ -83,3 +83,31 @@
 - [x] Save a client-review checkpoint for POS-based bespoke tailoring checkout.
 - [x] Commit the verified POS tailoring checkout release and push it to the selected repository main branch.
 - [x] Replace the selected repository main branch with the verified Tailor ERP release after explicit user approval.
+- [x] Add a filterable sales-history workspace with invoice and payment-status detail.
+- [x] Add a controlled manual-sale entry workflow that issues a linked invoice without inventory deduction.
+- [x] Add monthly revenue and sales reporting with a branded CSV export for Excel.
+- [ ] Integrate SMS/WhatsApp ready-for-collection notifications when a tailoring order becomes ready, subject to provider approval and credentials.
+- [ ] Confirm the client’s chosen SMS or WhatsApp provider, approved sender, message template, and consent policy before activating customer messaging.
+- [x] Diagnose and fix the client login journey so an invited client can access the production ERP without relying on the developer session.
+- [x] Redesign the owner-managed role library and assignment experience for clear, self-service staff administration.
+- [x] Retire preassigned access in favor of the owner-approved access queue, preserving the completed design history.
+- [x] Add owner-friendly role templates for manager, cashier, tailor, inventory, and payroll responsibilities.
+- [x] Verify client access and role-management journeys on desktop and mobile, then save a client-access review checkpoint.
+- [x] Supersede the preassigned-invite login test with the owner-approved pending-access workflow.
+- [x] Supersede the preassigned-invite checkpoint requirement with the owner-approved access release checkpoint.
+- [x] Add an owner approval queue for newly signed-in users, with approve and reject actions before ERP access is activated.
+- [x] Let the owner approve a pending user by assigning a created custom role or selecting exact role permissions.
+- [x] Add a shareable production login link with clear staff sign-in instructions.
+- [x] Verify the owner approval, rejection, role assignment, and login-link journeys on desktop and mobile.
+- [x] Let the owner approve a pending user with a one-off role defined by exact permission checkboxes.
+- [x] Verify the rejection path keeps a pending user blocked and records the owner decision.
+- [x] Verify the shareable production login-link path reaches the sign-in / pending-approval state.
+- [x] Save a client-review checkpoint for owner-approved staff access.
+- [x] Verify the shared production login link in an unauthenticated browser session through the sign-in screen and successful alternate-account sign-in; the live pending-access table is available for owner review.
+- [x] Save a client-review checkpoint covering the completed owner-approved access workflow.
+- [x] Build filterable sales history with invoice, customer, payment, and source detail.
+- [x] Add controlled manual-sale entry that records a sale and invoice without inventory deduction.
+- [x] Build branded monthly reporting with CSV export for Excel.
+- [x] Add automated coverage and verify the sales, manual-entry, and reporting experiences on desktop and mobile.
+- [x] Submit and verify a clearly labeled demo manual sale end to end, including its invoice and zero inventory deduction.
+- [x] Save a client-review checkpoint for sales history, manual sales, and branded CSV reporting.

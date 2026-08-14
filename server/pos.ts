@@ -152,6 +152,7 @@ export const posRouter = router({
         total: money(input.paymentAmount),
         paymentMethod: input.paymentMethod,
         paymentStatus,
+        source: "tailoring",
         createdBy: ctx.user.id,
       });
       const saleHeader = Array.isArray(saleResult) ? saleResult[0] : saleResult;
