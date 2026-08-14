@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { FiLoader } from "react-icons/fi";

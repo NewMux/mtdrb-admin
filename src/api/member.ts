@@ -9,7 +9,8 @@ export async function getAllMembers(tenantId: string): Promise<Member[]> {
     .from("members")
     .select("*")
     .eq("tenant_id", tenantId)
-    .order("name", { ascending: true });
+    .order("first_name", { ascending: true })
+    .order("last_name", { ascending: true });
   if (error) throw error;
   return data || [];
 }

@@ -223,6 +223,32 @@ const Billing: React.FC = () => {
   ]);
 
 
+  // Load persisted billing-tab settings for the current tenant.
+  React.useEffect(() => {
+    if (!tenantId) return;
+
+    const loadBillingSettings = async () => {
+      const { data, error } = await supabase
+        .from("gym_settings")
+        .select("metadata")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to load billing settings:", error);
+        return;
+      }
+
+      const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
+      const saved = metadata.billing_settings as Partial<typeof settings> | undefined;
+      if (saved) {
+        setSettings((previous) => ({ ...previous, ...saved }));
+      }
+    };
+
+    void loadBillingSettings();
+  }, [tenantId]);
+
   // Fetch billing data
   React.useEffect(() => {
     const fetchBillingData = async () => {
@@ -420,8 +446,52 @@ const Billing: React.FC = () => {
     toast.success(t("billing.dataRefreshed"));
   };
 
-  const handleSettingsChange = (setting: keyof typeof settings) => {
-    setSettings((prev) => ({ ...prev, [setting]: !prev[setting] }));
+  const handleSettingsChange = async (setting: keyof typeof settings) => {
+    if (!tenantId) {
+      toast.error(t("billing.failedToSave", "Unable to save billing settings"));
+      return;
+    }
+
+    const nextValue = !settings[setting];
+    setSettings((previous) => ({ ...previous, [setting]: nextValue }));
+
+    const { data: currentSettings, error: readError } = await supabase
+      .from("gym_settings")
+      .select("metadata")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+
+    if (readError) {
+      setSettings((previous) => ({ ...previous, [setting]: !nextValue }));
+      toast.error(t("billing.failedToSave", "Unable to save billing settings"));
+      return;
+    }
+
+    const metadata = (currentSettings?.metadata ?? {}) as Record<string, unknown>;
+    const currentBilling = (metadata.billing_settings ?? {}) as Partial<typeof settings>;
+    const { error: saveError } = await supabase
+      .from("gym_settings")
+      .upsert(
+        {
+          tenant_id: tenantId,
+          metadata: {
+            ...metadata,
+            billing_settings: {
+              ...currentBilling,
+              [setting]: nextValue,
+            },
+          },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "tenant_id" },
+      );
+
+    if (saveError) {
+      setSettings((previous) => ({ ...previous, [setting]: !nextValue }));
+      toast.error(t("billing.failedToSave", "Unable to save billing settings"));
+      return;
+    }
+
     toast.success(t("messages.updated"));
   };
 

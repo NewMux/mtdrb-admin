@@ -204,8 +204,17 @@ export default function Onboarding() {
         throw new Error("User not found. Please sign in again.");
       }
 
-      // Get or create tenant
-      let tenantId = user.user_metadata?.tenant_id;
+      // Get or create tenant from the database-backed membership.
+      const { data: membership, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (membershipError) throw membershipError;
+      let tenantId = membership?.tenant_id;
       
       if (!tenantId) {
         // Create tenant and membership using RPC function (bypasses RLS)
@@ -235,13 +244,6 @@ export default function Onboarding() {
         
         tenantId = tenantIdData;
 
-        // Update user metadata with tenantId AND role
-        await supabase.auth.updateUser({
-          data: { 
-            tenant_id: tenantId,
-            role: "admin" // Set role so PermissionGuard works
-          }
-        });
       } else {
         // Update existing tenant with onboarding data
         // Store additional data in metadata JSONB field

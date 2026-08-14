@@ -13,7 +13,6 @@ import {
   FiDollarSign,
   FiShield,
   FiTarget,
-  FiRefreshCw,
   FiEye,
   FiEdit,
   FiSend,
@@ -86,7 +85,6 @@ export default function SmartVatDashboard({
   } | null>(null);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
   const [loading, setLoading] = useState(true);
-  const [complianceLoading, setComplianceLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
   const fetchDashboardData = useCallback(async () => {
@@ -322,20 +320,6 @@ export default function SmartVatDashboard({
     fetchDashboardData();
   }, [fetchDashboardData, refreshKey]);
 
-  const handleRunComplianceCheck = async () => {
-    try {
-      setComplianceLoading(true);
-      // Compliance score is derived from live data (overdue/rejected returns),
-      // so "running a check" means recomputing against the latest records.
-      await fetchDashboardData();
-      toast.success(t("billing.complianceCheckCompleted"));
-    } catch (error) {
-      toast.error(t("billing.complianceCheckFailed"));
-    } finally {
-      setComplianceLoading(false);
-    }
-  };
-
   const handleGenerateVatReturn = async () => {
     if (!tenantId || !dashboardData) return;
     try {
@@ -475,15 +459,6 @@ export default function SmartVatDashboard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <SmartButton
-            size="sm"
-            variant="primary"
-            icon={<FiRefreshCw size={16} />}
-            onClick={handleRunComplianceCheck}
-            disabled={complianceLoading}
-          >
-            {complianceLoading ? t("billing.checking", "جاري الفحص...") : t("billing.runComplianceCheck", "فحص الامتثال الضريبي")}
-          </SmartButton>
           <SmartButton
             size="sm"
             variant="primary"

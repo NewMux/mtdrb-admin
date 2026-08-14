@@ -8,6 +8,14 @@ import { useAuth } from "../../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { FiDownload, FiEdit2, FiSave, FiX, FiPrinter } from "react-icons/fi";
 
+const escapeHtml = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 interface ViewInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,7 +35,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
   mode = "view",
   onSuccess,
 }) => {
-  const { user } = useAuth();
+  const { tenantId } = useAuth();
   const [isEditing, setIsEditing] = useState(mode === "edit");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -59,7 +67,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!invoice?.id || !user?.user_metadata?.tenant_id) return;
+    if (!invoice?.id || !tenantId) return;
 
     setLoading(true);
     try {
@@ -74,7 +82,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
           updated_at: new Date().toISOString(),
         })
         .eq("id", invoice.id)
-        .eq("tenant_id", user.user_metadata.tenant_id);
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
 
@@ -124,11 +132,21 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
 
   const handlePrintInvoice = () => {
     const amount = invoice?.amount ?? invoice?.total;
-    const statusClass = invoice?.status?.toLowerCase() || "pending";
+    const rawStatus = invoice?.status?.toLowerCase() || "pending";
+    const statusClass = ["paid", "unpaid", "overdue", "pending"].includes(rawStatus)
+      ? rawStatus
+      : "pending";
+    const invoiceNumber = escapeHtml(
+      invoice?.invoice_number || invoice?.id?.slice(0, 8) || "N/A",
+    );
+    const invoiceStatus = escapeHtml(invoice?.status?.toUpperCase() || "N/A");
+    const memberName = escapeHtml(invoice?.member?.name || "N/A");
+    const notes = escapeHtml(invoice?.notes || "Membership Fee");
+    const paymentMethod = escapeHtml(invoice?.payment_method || "N/A");
     const printContent = `
       <html>
         <head>
-          <title>Invoice #${invoice?.invoice_number || invoice?.id?.slice(0, 8)}</title>
+          <title>Invoice #${invoiceNumber}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 40px; }
             h1 { color: #333; }
@@ -145,17 +163,17 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
         <body>
           <div class="invoice-header">
             <h1>INVOICE</h1>
-            <p><strong>#${invoice?.invoice_number || invoice?.id?.slice(0, 8)}</strong></p>
+            <p><strong>#${invoiceNumber}</strong></p>
           </div>
           <div class="invoice-details">
             <p><strong>Date:</strong> ${formatDate(invoice?.created_at)}</p>
             <p><strong>Due Date:</strong> ${formatDate(invoice?.due_date)}</p>
-            <p><strong>Status:</strong> <span class="status status-${statusClass}">${invoice?.status?.toUpperCase() || "N/A"}</span></p>
-            <p><strong>Member:</strong> ${invoice?.member?.name || "N/A"}</p>
+            <p><strong>Status:</strong> <span class="status status-${statusClass}">${invoiceStatus}</span></p>
+            <p><strong>Member:</strong> ${memberName}</p>
           </div>
           <div class="invoice-details">
-            <p><strong>Notes:</strong> ${invoice?.notes || "Membership Fee"}</p>
-            <p><strong>Payment Method:</strong> ${invoice?.payment_method || "N/A"}</p>
+            <p><strong>Notes:</strong> ${notes}</p>
+            <p><strong>Payment Method:</strong> ${paymentMethod}</p>
           </div>
           <p class="amount">Total: ${formatCurrency(amount)}</p>
         </body>

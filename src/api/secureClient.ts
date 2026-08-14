@@ -85,21 +85,17 @@ class SecureApiClient {
       );
     }
 
-    // Get tenant ID from user metadata or memberships
-    let tenantId = user.user_metadata?.tenant_id;
-    if (!tenantId) {
-      const { data: membershipData } = await supabase
-        .from("memberships")
-        .select("tenant_id")
-        .eq("user_id", user.id)
-        .single();
+    // Resolve organization membership from the database. User metadata is
+    // profile data and is not an authorization source.
+    const { data: membershipData, error: membershipError } = await supabase
+      .from("memberships")
+      .select("tenant_id, role")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
 
-      if (membershipData) {
-        tenantId = membershipData.tenant_id;
-      }
-    }
-
-    if (!tenantId) {
+    if (membershipError || !membershipData?.tenant_id) {
       throw errorHandler.processError(
         new Error("No tenant access"),
         ErrorContext.AUTHORIZATION,
@@ -107,7 +103,7 @@ class SecureApiClient {
       );
     }
 
-    return { user, tenantId };
+    return { user, tenantId: membershipData.tenant_id };
   }
 
   private async checkRateLimit(userId: string): Promise<void> {
@@ -554,7 +550,15 @@ class SecureApiClient {
   async checkPermission(permission: string): Promise<boolean> {
     try {
       const { user } = await this.checkAuth();
-      const userMetadata = user.user_metadata;
+      const { data: membership, error } = await supabase
+        .from("memberships")
+        .select("role")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !membership?.role) return false;
 
       const rolePermissions: Record<string, string[]> = {
         admin: ["all"],
@@ -562,9 +566,7 @@ class SecureApiClient {
         trainer: ["read", "write_classes"],
       };
 
-      const userRole = (userMetadata?.role || "trainer") as string;
-      const permissions = rolePermissions[userRole] || ["read"];
-
+      const permissions = rolePermissions[membership.role] || [];
       return permissions.includes(permission) || permissions.includes("all");
     } catch {
       return false;

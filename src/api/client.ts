@@ -111,8 +111,9 @@ export const api = {
       return supabase
         .from("members")
         .select("*")
-        .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
-        .order("name", { ascending: true });
+        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .order("first_name", { ascending: true })
+        .order("last_name", { ascending: true });
     },
   },
 
@@ -234,20 +235,17 @@ export const api = {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      let tenantId = user.user_metadata?.tenant_id;
-      if (!tenantId) {
-        const { data: membershipData } = await supabase
-          .from("memberships")
-          .select("tenant_id")
-          .eq("user_id", user.id)
-          .single();
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
-        if (membershipData) {
-          tenantId = membershipData.tenant_id;
-        }
-      }
-
-      if (!tenantId) throw new Error("No tenant ID found");
+      if (membershipError) throw membershipError;
+      const tenantId = membershipData?.tenant_id;
+      if (!tenantId) throw new Error("No organization membership found");
 
       const { data, error } = await supabase
         .from("branches")
@@ -335,12 +333,32 @@ export const api = {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Update user metadata with selected branch
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (membershipError || !membershipData?.tenant_id) {
+        throw membershipError || new Error("No organization membership found");
+      }
+
+      const { data: branch, error: branchError } = await supabase
+        .from("branches")
+        .select("id")
+        .eq("id", branchId)
+        .eq("tenant_id", membershipData.tenant_id)
+        .maybeSingle();
+
+      if (branchError) throw branchError;
+      if (!branch) throw new Error("Branch does not belong to your organization");
+
+      // Branch selection is a convenience preference only, never an
+      // authorization source. Do not copy arbitrary metadata from the user.
       const { error } = await supabase.auth.updateUser({
-        data: {
-          ...user.user_metadata,
-          selected_branch_id: branchId,
-        },
+        data: { selected_branch_id: branchId },
       });
 
       if (error) throw error;

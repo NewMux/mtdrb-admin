@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,12 +12,8 @@ import {
   FiX,
   FiCalendar,
   FiCheckCircle,
-  FiActivity,
-  FiBell,
-  FiLink,
 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
-import { handleTapWebhookEvent } from "../api/webhooks";
 import TabsNav from "../components/ui/TabsNav";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -31,19 +27,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
-import { NotificationSettings } from "../components/settings/NotificationSettings";
-import { IntegrationSettings } from "../components/settings/IntegrationSettings";
-
-// Row shape for the "platform_subscriptions" table (not yet part of the
-// generated Database types, so it's modelled locally from actual usage).
-interface PlatformSubscription {
-  status?: string;
-  plan_tier?: string;
-  amount?: number;
-  currency?: string;
-  created_at?: string;
-  metadata?: { retry_count?: number } | null;
-}
 
 const Settings: React.FC = () => {
   usePageThemeContext();
@@ -85,51 +68,37 @@ const Settings: React.FC = () => {
   // Local state
   const [activeTab, setActiveTab] = useState("general");
 
-  const [platformSubscription, setPlatformSubscription] = useState<PlatformSubscription | null>(null);
 
-  // Fetch subscription info on mount
-  const fetchSubscriptionInfo = async () => {
+  // Fetch billing state from the membership-scoped subscription row.
+  const fetchSubscriptionInfo = useCallback(async () => {
+    if (!tenantId) {
+      setSubscriptionInfo({ tier: "Free", isPaid: false });
+      return;
+    }
+
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        const user = userData.user;
-        const tenantId = user.user_metadata?.tenant_id || user.user_metadata?.tenantId;
-        
-        let tier = user.user_metadata?.subscription_tier || "Free";
-        let startDate = user.user_metadata?.subscription_start;
-        let isPaid = !!user.user_metadata?.paid;
+      const { data: subData, error: subscriptionError } = await supabase
+        .from("platform_subscriptions")
+        .select("status, plan_tier, amount, currency, created_at, metadata")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
 
-        if (tenantId) {
-          const { data: subData } = await supabase
-            .from("platform_subscriptions")
-            .select("*")
-            .eq("tenant_id", tenantId)
-            .maybeSingle();
+      if (subscriptionError) throw subscriptionError;
 
-          if (subData) {
-            setPlatformSubscription(subData);
-            tier = subData.plan_tier;
-            isPaid = (subData.status === "active" || subData.status === "trialing");
-            startDate = subData.created_at;
-          } else {
-            setPlatformSubscription(null);
-          }
-        }
-
-        setSubscriptionInfo({
-          tier,
-          startDate,
-          isPaid,
-        });
-      }
+      setSubscriptionInfo({
+        tier: subData?.plan_tier || "Free",
+        startDate: subData?.created_at,
+        isPaid: subData?.status === "active" || subData?.status === "trialing",
+      });
     } catch (error) {
       console.error("Failed to fetch subscription info:", error);
+      setSubscriptionInfo({ tier: "Free", isPaid: false });
     }
-  };
+  }, [tenantId]);
 
   useEffect(() => {
-    fetchSubscriptionInfo();
-  }, []);
+    void fetchSubscriptionInfo();
+  }, [fetchSubscriptionInfo]);
 
   // Handle subscription cancellation success
   const handleSubscriptionCancelled = () => {
@@ -298,8 +267,6 @@ const Settings: React.FC = () => {
     { id: "general", name: t("settings.general"), icon: FiSettings },
     { id: "profile", name: t("settings.profile"), icon: FiUser },
     { id: "security", name: t("settings.security"), icon: FiShield },
-    { id: "notifications", name: t("settings.notifications", "Notifications"), icon: FiBell },
-    { id: "integrations", name: t("settings.integrations", "Integrations"), icon: FiLink },
     { id: "billing", name: t("settings.billing"), icon: FiCreditCard },
   ];
 
@@ -1097,249 +1064,6 @@ const Settings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tap Payments Webhook Simulator */}
-              <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm border border-blue-100 dark:border-blue-900/50">
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-2 p-6 pb-0`}>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                      <FiActivity className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        {t("settings.webhookSimulator", "Tap Payments Webhook Simulator")}
-                      </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t("settings.webhookSimulatorDesc", "Simulate sandbox subscription event webhooks for testing proration, retries, and access revocation.")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 pt-4">
-                  {/* Current Active Status Banner */}
-                  <div className="mb-6 p-4 rounded-2xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                      {t("settings.currentDbSubscription", "Current Database Subscription State")}
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <span className="text-xs text-gray-400 block">{t("settings.status", "Status")}</span>
-                        <span className={`text-sm font-semibold capitalize ${
-                          platformSubscription?.status === "active" ? "text-green-600" :
-                          platformSubscription?.status === "past_due" ? "text-yellow-600" :
-                          platformSubscription?.status === "trialing" ? "text-blue-600" : "text-red-600"
-                        }`}>
-                          {platformSubscription?.status || "No record"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-400 block">{t("settings.tier", "Plan Tier")}</span>
-                        <span className="text-sm font-semibold capitalize text-gray-700 dark:text-gray-300">
-                          {platformSubscription?.plan_tier || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-400 block">{t("settings.retries", "Failed Retries")}</span>
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                          {platformSubscription?.metadata?.retry_count || 0} / 3
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-400 block">{t("settings.amount", "Billing Amount")}</span>
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                          {platformSubscription?.amount ? `${platformSubscription.amount} ${platformSubscription.currency || 'AED'}` : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                    {platformSubscription?.status === "past_due" && (
-                      <div className="mt-3 text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/10 p-2.5 rounded-xl border border-yellow-100 dark:border-yellow-900/20">
-                        {t("settings.gracePeriodWarn", "Warning: Last payment retry failed. Tenant is in grace period.")}
-                      </div>
-                    )}
-                    {platformSubscription?.status === "failed" && (
-                      <div className="mt-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2.5 rounded-xl border border-red-100 dark:border-red-900/20">
-                        {t("settings.lapsedWarn", "Access Revoked: Subscription has failed. Dashboard access is blocked.")}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                          {t("settings.simSuccess", "Simulate Payment Success")}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          {t("settings.simSuccessDesc", "Sends charge.succeeded webhook. Activates subscription, resets retries, and sets period end to 30 days out.")}
-                        </p>
-                      </div>
-                      <SmartButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                          if (!tenantId) return;
-                          const res = await handleTapWebhookEvent({
-                            id: "evt_test_success",
-                            event: "charge.succeeded",
-                            created: Math.floor(Date.now() / 1000),
-                            data: {
-                              id: "sub_mock_" + Date.now(),
-                              status: "ACTIVE",
-                              amount: subscriptionInfo.tier === "pro" ? 199.00 : 99.00,
-                              currency: "AED",
-                              metadata: { tenant_id: tenantId },
-                              current_period_end: Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000)
-                            }
-                          });
-                          if (res.success) {
-                            showSuccess(t("settings.success"), t("settings.successWebhookProcessed", "Payment success webhook processed successfully."));
-                            await fetchSubscriptionInfo();
-                          }
-                        }}
-                      >
-                        {t("settings.fireSuccess", "Fire Succeeded Webhook")}
-                      </SmartButton>
-                    </div>
-
-                    <div className="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                          {t("settings.simFailedRetry", "Simulate Retry Payment Failure")}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          {t("settings.simFailedRetryDesc", "Sends charge.failed webhook. Increments retry counter. Status becomes 'past_due' (under 3 retries) and access remains active.")}
-                        </p>
-                      </div>
-                      <SmartButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                          if (!tenantId) return;
-                          const nextRetry = (platformSubscription?.metadata?.retry_count || 0) + 1;
-                          if (nextRetry >= 3) {
-                            showError(t("settings.error"), t("settings.failedRetryMax", "Click 'Simulate Lapsed' for 3+ attempts."));
-                            return;
-                          }
-                          const res = await handleTapWebhookEvent({
-                            id: "evt_test_failed_retry",
-                            event: "charge.failed",
-                            created: Math.floor(Date.now() / 1000),
-                            data: {
-                              id: "sub_mock_" + Date.now(),
-                              status: "RETRY",
-                              amount: subscriptionInfo.tier === "pro" ? 199.00 : 99.00,
-                              currency: "AED",
-                              metadata: { tenant_id: tenantId },
-                              charge: {
-                                status: "FAILED",
-                                error: {
-                                  code: "declined",
-                                  message: "Card has insufficient funds"
-                                }
-                              }
-                            }
-                          });
-                          if (res.success) {
-                            showSuccess(t("settings.success"), t("settings.failedWebhookProcessed", "Failed payment retry logged successfully."));
-                            await fetchSubscriptionInfo();
-                          }
-                        }}
-                      >
-                        {t("settings.fireFailedRetry", "Fire Failed Retry Webhook")}
-                      </SmartButton>
-                    </div>
-
-                    <div className="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                          {t("settings.simRevoke", "Simulate Lapsed Revocation")}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          {t("settings.simRevokeDesc", "Simulates 3rd payment attempt failing. Sets status to 'failed', locking access. Revokes premium dashboard access immediately.")}
-                        </p>
-                      </div>
-                      <SmartButton
-                        variant="danger"
-                        size="sm"
-                        onClick={async () => {
-                          if (!tenantId) return;
-                          const res = await handleTapWebhookEvent({
-                            id: "evt_test_revoke",
-                            event: "charge.failed",
-                            created: Math.floor(Date.now() / 1000),
-                            data: {
-                              id: "sub_mock_" + Date.now(),
-                              status: "FAILED",
-                              amount: subscriptionInfo.tier === "pro" ? 199.00 : 99.00,
-                              currency: "AED",
-                              metadata: { tenant_id: tenantId },
-                              charge: {
-                                status: "FAILED",
-                                error: {
-                                  code: "declined",
-                                  message: "Card blocked. Max retries exceeded."
-                                }
-                              }
-                            }
-                          });
-                          if (res.success) {
-                            showSuccess(t("settings.success"), t("settings.revocationProcessed", "Lapsed revocation webhook processed. Access will be blocked."));
-                            // Force checkAuth in AuthContext to trigger immediate redirection!
-                            // We can reload the page to let AuthProvider route guard boot user out
-                            setTimeout(() => {
-                              window.location.reload();
-                            }, 1500);
-                          }
-                        }}
-                      >
-                        {t("settings.fireRevocation", "Fire Revoke Access Webhook")}
-                      </SmartButton>
-                    </div>
-
-                    <div className="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1">
-                          {t("settings.simUpgrade", "Simulate Upgrade Proration")}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          {t("settings.simUpgradeDesc", "Simulates user upgrading from Starter to Pro plan. Tap calculates prorated charge of 100 AED. Plan tier becomes Pro.")}
-                        </p>
-                      </div>
-                      <SmartButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                          if (!tenantId) return;
-                          const res = await handleTapWebhookEvent({
-                            id: "evt_test_upgrade",
-                            event: "subscription.updated",
-                            created: Math.floor(Date.now() / 1000),
-                            data: {
-                              id: "sub_mock_" + Date.now(),
-                              status: "ACTIVE",
-                              amount: 100.00, // Prorated amount
-                              currency: "AED",
-                              metadata: { 
-                                tenant_id: tenantId,
-                                plan_tier: "pro" 
-                              },
-                              current_period_end: Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000)
-                            }
-                          });
-                          if (res.success) {
-                            showSuccess(t("settings.success"), t("settings.upgradeProcessed", "Prorated plan upgrade processed successfully."));
-                            await fetchSubscriptionInfo();
-                          }
-                        }}
-                      >
-                        {t("settings.fireUpgrade", "Fire Plan Upgrade Webhook")}
-                      </SmartButton>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Billing Information Card */}
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
@@ -1380,7 +1104,7 @@ const Settings: React.FC = () => {
                         {t("settings.currentPlan")}
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {settings.billing.currentPlan}
+                        {subscriptionInfo.tier === "Free" ? t("settings.freePlan", "Free") : subscriptionInfo.tier}
                       </p>
                     </div>
                     <SmartButton
@@ -1464,13 +1188,6 @@ const Settings: React.FC = () => {
             </div>
           )}
 
-          {activeTab === "notifications" && (
-            <NotificationSettings refreshKey={1} />
-          )}
-
-          {activeTab === "integrations" && (
-            <IntegrationSettings refreshKey={1} />
-          )}
         </motion.div>
       </AnimatePresence>
 

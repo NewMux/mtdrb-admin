@@ -17,7 +17,6 @@ import { WorkoutPlansProvider } from "./contexts/WorkoutPlansContext";
 import { Toaster } from "react-hot-toast";
 import { errorHandler } from "./services/errorHandler";
 import { ErrorContext } from "./services/errorHandler";
-import { AIChatProvider } from "./contexts/AIChatContext";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -104,14 +103,11 @@ const App = () => {
       <MuiThemeProvider theme={theme}>
         <ThemeProvider>
           <PageThemeProvider>
-            <Router
-              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            >
+            <Router>
               <AuthProvider>
                 <SubscriptionProvider>
                   <UIProvider>
-                    <AIChatProvider>
-                      <Toaster
+                    <Toaster
                       position="top-right"
                       toastOptions={{
                         duration: 4000,
@@ -315,7 +311,6 @@ const App = () => {
                       {/* Catch all route */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                    </AIChatProvider>
                   </UIProvider>
                 </SubscriptionProvider>
               </AuthProvider>

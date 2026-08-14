@@ -175,17 +175,17 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not authenticated");
-      // Get tenant ID
-      let tenantId = session.user.user_metadata?.tenantId;
-      if (!tenantId) {
-        const { data: membershipData } = await supabase
-          .from("memberships")
-          .select("tenant_id")
-          .eq("user_id", session.user.id)
-          .single();
-        if (membershipData) tenantId = membershipData.tenant_id;
-      }
-      if (!tenantId) throw new Error("No tenant ID found");
+      // Resolve tenant ID from the database membership.
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (membershipError) throw membershipError;
+      const tenantId = membershipData?.tenant_id;
+      if (!tenantId) throw new Error("No organization membership found");
       // Fetch trainers
       const { data: trainersData, error: trainersError } = await supabase
         .from("trainers")
@@ -361,16 +361,16 @@ const ClassFormDrawer: React.FC<ClassFormDrawerProps> = ({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not authenticated");
-      let tenantId = session.user.user_metadata?.tenantId;
-      if (!tenantId) {
-        const { data: membershipData } = await supabase
-          .from("memberships")
-          .select("tenant_id")
-          .eq("user_id", session.user.id)
-          .single();
-        if (membershipData) tenantId = membershipData.tenant_id;
-      }
-      if (!tenantId) throw new Error("No tenant ID found");
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (membershipError) throw membershipError;
+      const tenantId = membershipData?.tenant_id;
+      if (!tenantId) throw new Error("No organization membership found");
 
       // 1. Upload files if any
       const attachments: string[] = [];

@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { hasRole, UserRole, getDefaultRole } from "../../types/roles";
+import { hasRole, UserRole } from "../../types/roles";
 
 interface PermissionGuardProps {
   /**
@@ -62,8 +62,9 @@ export default function PermissionGuard({
     );
   }
 
-  // If no user metadata, user is not authenticated
-  if (!userMetadata) {
+  // If no database-backed membership metadata, fail closed. A browser
+  // session alone is not enough to establish tenant access.
+  if (!userMetadata?.tenant_id) {
     if (fallbackPath) {
       return <Navigate to={fallbackPath} replace />;
     }
@@ -81,8 +82,8 @@ export default function PermissionGuard({
     );
   }
 
-  // Get user's role (default to trainer if not set)
-  const userRole = (userMetadata.role || getDefaultRole()) as UserRole;
+  // The role was resolved from the membership table by AuthProvider.
+  const userRole = userMetadata.role as UserRole;
 
   // Check if user has required role
   const hasPermission = hasRole(userRole, requiredRole);

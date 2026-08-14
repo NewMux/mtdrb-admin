@@ -1,5 +1,5 @@
 import { useAuth } from "../contexts/AuthContext";
-import { hasRole, UserRole, getDefaultRole } from "../types/roles";
+import { hasRole, UserRole } from "../types/roles";
 
 /**
  * Custom hook for permission checking
@@ -16,14 +16,15 @@ import { hasRole, UserRole, getDefaultRole } from "../types/roles";
 export function usePermissions() {
   const { userMetadata, hasPermission } = useAuth();
 
-  // Get user's role (default to trainer if not set)
-  const userRole = (userMetadata?.role || getDefaultRole()) as UserRole;
+  // AuthProvider derives this role from the membership table. Fail closed
+  // when that database-backed context is unavailable.
+  const userRole = userMetadata?.role as UserRole | undefined;
 
   /**
    * Check if user has a specific role or higher
    */
   const hasRoleAccess = (requiredRole: UserRole): boolean => {
-    if (!userMetadata) return false;
+    if (!userMetadata?.tenant_id || !userRole) return false;
     return hasRole(userRole, requiredRole);
   };
 

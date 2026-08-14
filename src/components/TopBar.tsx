@@ -36,7 +36,7 @@ interface AppNotification {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
-  const { user } = useAuth();
+  const { tenantId } = useAuth();
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,9 +75,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
   // Fetch notifications
   const fetchNotifications = React.useCallback(async () => {
-    const tenantId = user?.user_metadata?.tenant_id;
-    
-    // Skip if no tenant_id or if it's the invalid/null UUID
+    // Skip if no database-backed tenant or if it's the invalid/null UUID
     if (!tenantId || tenantId === "00000000-0000-0000-0000-000000000000") {
       setNotifications([]);
       setUnreadCount(0);
@@ -151,18 +149,18 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       setNotifications([]);
       setUnreadCount(0);
     }
-  }, [user]);
+  }, [tenantId]);
 
-  // Fetch notifications on mount and when user changes
+  // Fetch notifications on mount and when tenant changes
   React.useEffect(() => {
-    if (user?.user_metadata?.tenant_id) {
+    if (tenantId) {
       fetchNotifications();
       // Refresh notifications every 30 seconds
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
     return undefined;
-  }, [user, fetchNotifications]);
+  }, [tenantId, fetchNotifications]);
 
   // Close dropdowns when clicking outside
   React.useEffect(() => {
@@ -259,7 +257,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                         <button
                           onClick={async () => {
                             // Mark all as read
-                            if (user?.user_metadata?.tenant_id) {
+                            if (tenantId) {
                               const unreadNotifications = notifications.filter(
                                 (n) => !n.read_at && n.is_read !== true
                               );
