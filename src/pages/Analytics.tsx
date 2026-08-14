@@ -10,6 +10,8 @@ import {
   FiFilter,
   FiTarget,
   FiCheckCircle,
+  FiActivity,
+  FiClock,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 import { toast } from "react-hot-toast";
@@ -30,6 +32,17 @@ import SmartInsightCards from "../components/reports/SmartInsightCards";
 
 type MemberAnalyticsData = React.ComponentProps<typeof MemberAnalytics>;
 type RevenueOverviewData = React.ComponentProps<typeof RevenueOverview>;
+
+interface ClassAnalyticsData {
+  totalClasses: number;
+  classesChange: number;
+  upcomingClasses: number;
+  completedClasses: number;
+  totalBookings: number;
+  bookingsChange: number;
+  avgCapacityUtilization: number;
+  byType: Array<{ type: string; classCount: number; bookingCount: number; percentage: number }>;
+}
 
 /**
  * Format a date to YYYY-MM-DD.
@@ -199,6 +212,8 @@ export default function Analytics() {
     useState<MemberAnalyticsData | null>(null);
   const [revenueOverviewData, setRevenueOverviewData] =
     useState<RevenueOverviewData | null>(null);
+  const [classAnalyticsData, setClassAnalyticsData] =
+    useState<ClassAnalyticsData | null>(null);
   const [branchOptions, setBranchOptions] = useState<
     Array<{ id: string; name: string }>
   >([]);
@@ -265,6 +280,7 @@ export default function Analytics() {
         membersResult,
         invoicesResult,
         bookingsResult,
+        classesResult,
       ] = await Promise.all([
         supabase
           .from("gym_settings")
@@ -297,6 +313,10 @@ export default function Analytics() {
           .eq("tenant_id", tenantId)
           .gte("created_at", queryStart)
           .lte("created_at", queryEnd),
+        supabase
+          .from("classes")
+          .select("id, type, status, start_time, end_time, capacity, current_bookings")
+          .eq("tenant_id", tenantId),
       ]);
 
       // Handle errors with better messaging
@@ -337,6 +357,15 @@ export default function Analytics() {
         }
       }
 
+      if (classesResult.error) {
+        console.error("Error fetching classes:", classesResult.error);
+        if (classesResult.error.code === "PGRST116") {
+          console.warn("classes table does not exist, continuing without classes");
+        } else {
+          throw new Error(`Failed to fetch classes: ${classesResult.error.message}`);
+        }
+      }
+
       const branches = branchesResult.data || [];
       const members = (membersResult.data || []).map((member) => ({
         ...member,
@@ -345,6 +374,7 @@ export default function Analytics() {
       })) as Member[];
       const invoices = (invoicesResult.data || []) as Invoice[];
       const bookings = bookingsResult.data || [];
+      const classesData = classesResult.data || [];
 
       const invoiceCurrency =
         invoices.find((invoice) => invoice.currency)?.currency || "";
@@ -777,6 +807,81 @@ export default function Analytics() {
           net: vatCollected - vatRefunded,
         },
       });
+
+      const now = new Date();
+      const classesInPeriod = classesData.filter((cls) => {
+        if (!cls.start_time) return false;
+        const started = new Date(cls.start_time);
+        return started >= start && started <= end;
+      });
+      const classesPrevious = classesData.filter((cls) => {
+        if (!cls.start_time) return false;
+        const started = new Date(cls.start_time);
+        return started >= previousStart && started <= previousEnd;
+      });
+      const upcomingClasses = classesData.filter(
+        (cls) => cls.start_time && new Date(cls.start_time) > now,
+      ).length;
+      const completedClasses = classesData.filter(
+        (cls) =>
+          cls.status === "completed" ||
+          (cls.end_time && new Date(cls.end_time) < now),
+      ).length;
+
+      const classesWithCapacity = classesInPeriod.filter(
+        (cls) => (cls.capacity || 0) > 0,
+      );
+      const avgCapacityUtilization = classesWithCapacity.length
+        ? (classesWithCapacity.reduce(
+            (sum, cls) =>
+              sum + (cls.current_bookings || 0) / (cls.capacity || 1),
+            0,
+          ) /
+            classesWithCapacity.length) *
+          100
+        : 0;
+
+      const typeBreakdownMap = new Map<
+        string,
+        { classCount: number; bookingCount: number }
+      >();
+      classesInPeriod.forEach((cls) => {
+        const type = cls.type || "Other";
+        const existing = typeBreakdownMap.get(type) || {
+          classCount: 0,
+          bookingCount: 0,
+        };
+        typeBreakdownMap.set(type, {
+          classCount: existing.classCount + 1,
+          bookingCount: existing.bookingCount + (cls.current_bookings || 0),
+        });
+      });
+      const totalTypedClasses = classesInPeriod.length || 1;
+      const byType = Array.from(typeBreakdownMap.entries())
+        .map(([type, data]) => ({
+          type,
+          classCount: data.classCount,
+          bookingCount: data.bookingCount,
+          percentage: Math.round((data.classCount / totalTypedClasses) * 100),
+        }))
+        .sort((a, b) => b.classCount - a.classCount);
+
+      setClassAnalyticsData({
+        totalClasses: classesInPeriod.length,
+        classesChange: calculateChange(
+          classesInPeriod.length,
+          classesPrevious.length,
+        ),
+        upcomingClasses,
+        completedClasses,
+        totalBookings: currentBookings.length,
+        bookingsChange: calculateChange(
+          currentBookings.length,
+          previousBookings.length,
+        ),
+        avgCapacityUtilization,
+        byType,
+      });
     } catch (error: unknown) {
       console.error("Error fetching analytics data:", error);
 
@@ -1166,6 +1271,96 @@ export default function Analytics() {
                   <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading class analytics...</p>
                 </div>
               </div>
+            ) : classAnalyticsData && classAnalyticsData.totalClasses + classAnalyticsData.upcomingClasses + classAnalyticsData.completedClasses > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    {
+                      name: t("analytics.classes"),
+                      value: classAnalyticsData.totalClasses.toLocaleString(),
+                      change: `${classAnalyticsData.classesChange >= 0 ? "+" : ""}${classAnalyticsData.classesChange.toFixed(1)}% vs previous period`,
+                      icon: FiCalendar,
+                      color: "from-purple-500 to-purple-600",
+                    },
+                    {
+                      name: t("classes.upcomingSessions") || "Upcoming Classes",
+                      value: classAnalyticsData.upcomingClasses.toLocaleString(),
+                      change: `${classAnalyticsData.completedClasses.toLocaleString()} completed`,
+                      icon: FiClock,
+                      color: "from-blue-500 to-blue-600",
+                    },
+                    {
+                      name: t("analytics.classAttendance") || "Class Bookings",
+                      value: classAnalyticsData.totalBookings.toLocaleString(),
+                      change: `${classAnalyticsData.bookingsChange >= 0 ? "+" : ""}${classAnalyticsData.bookingsChange.toFixed(1)}% vs previous period`,
+                      icon: FiUsers,
+                      color: "from-green-500 to-green-600",
+                    },
+                    {
+                      name: t("analytics.capacityUtilization") || "Avg Capacity Utilization",
+                      value: `${classAnalyticsData.avgCapacityUtilization.toFixed(1)}%`,
+                      change: t("analytics.forPeriod") || "for selected period",
+                      icon: FiActivity,
+                      color: "from-yellow-500 to-orange-500",
+                    },
+                  ].map((stat, index) => (
+                    <motion.div
+                      key={stat.name}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            {stat.name}
+                          </p>
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            {stat.value}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                            {stat.change}
+                          </p>
+                        </div>
+                        <div
+                          className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
+                        >
+                          <stat.icon className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {classAnalyticsData.byType.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t("analytics.classesByType") || "Classes by Type"}
+                    </h3>
+                    <div className="space-y-3">
+                      {classAnalyticsData.byType.map((entry) => (
+                        <div key={entry.type} className="space-y-1">
+                          <div className={`flex items-center justify-between text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
+                              {entry.type}
+                            </span>
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {entry.classCount} {entry.classCount === 1 ? "class" : "classes"} · {entry.bookingCount} bookings
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-purple-500 rounded-full"
+                              style={{ width: `${entry.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
                 <FiCalendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
