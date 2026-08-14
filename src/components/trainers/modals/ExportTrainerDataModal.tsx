@@ -28,10 +28,6 @@ interface ExportOption {
   format: "csv" | "xlsx" | "pdf";
 }
 
-// The generated Database["public"]["Tables"]["trainers"|"classes"|"class_bookings"]
-// types in src/types/supabase.ts don't model every column actually queried here
-// (e.g. average_rating, date, price, attended) — these describe the real shape
-// returned/read by this component's queries.
 interface TrainerExportRecord {
   id: string;
   first_name?: string;
@@ -42,18 +38,22 @@ interface TrainerExportRecord {
   specialties?: string[] | string;
   hourly_rate?: number;
   created_at?: string;
-  average_rating?: number | string;
+  rating?: number | string;
 }
 
 interface ClassExportRecord {
   id: string;
+  name?: string;
+  start_time?: string;
+  end_time?: string;
   status?: string;
+  price?: number;
 }
 
 interface BookingExportRecord {
   id: string;
-  price?: number;
-  attended?: boolean;
+  class_id: string;
+  status?: string;
 }
 
 type ExportRow = Record<string, string | number>;
@@ -190,22 +190,26 @@ export default function ExportTrainerDataModal({
             (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
-                .select("id")
+                .select("id, price")
                 .eq("trainer_id", trainer.id)
                 .eq("tenant_id", tenantId)
                 .gte("created_at", startDate.toISOString());
 
-              const { data: bookings } = await supabase
-                .from("class_bookings")
-                .select("id, price")
-                .in(
-                  "class_id",
-                  (classes || []).map((c) => c.id),
-                )
-                .eq("tenant_id", tenantId);
+              const classIds = (classes || []).map((c) => c.id);
+              const { data: bookings } = classIds.length
+                ? await supabase
+                    .from("class_bookings")
+                    .select("id, class_id, status")
+                    .in("class_id", classIds)
+                    .eq("tenant_id", tenantId)
+                : { data: [] as BookingExportRecord[] };
 
+              const classPrices = new Map(
+                ((classes || []) as ClassExportRecord[]).map((c) => [c.id, c.price || 0]),
+              );
               const totalRevenue = ((bookings || []) as BookingExportRecord[]).reduce(
-                (sum: number, b) => sum + (b.price || 0),
+                (sum: number, b) =>
+                  b.status === "cancelled" ? sum : sum + (classPrices.get(b.class_id) || 0),
                 0,
               );
 
@@ -215,7 +219,7 @@ export default function ExportTrainerDataModal({
                 "Total Classes": classes?.length || 0,
                 "Total Bookings": bookings?.length || 0,
                 "Total Revenue": totalRevenue,
-                "Average Rating": trainer.average_rating || "N/A",
+                "Average Rating": trainer.rating ?? "N/A",
                 Status: trainer.status || "active",
               };
             }),
@@ -228,11 +232,23 @@ export default function ExportTrainerDataModal({
             (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
-                .select("id, name, start_time, end_time, date, status")
+                .select("id, name, start_time, end_time, status")
                 .eq("trainer_id", trainer.id)
                 .eq("tenant_id", tenantId)
-                .gte("date", startDate.toISOString().split("T")[0])
-                .order("date", { ascending: true });
+                .gte("start_time", startDate.toISOString())
+                .order("start_time", { ascending: true });
+
+              const { data: schedule } = await supabase
+                .from("trainer_schedule")
+                .select("day_of_week, start_time, end_time, is_available, specific_date")
+                .eq("trainer_id", trainer.id)
+                .eq("tenant_id", tenantId)
+                .order("day_of_week", { ascending: true });
+
+              const availableSlots = (schedule || []).filter((slot) => slot.is_available !== false);
+              const availability = availableSlots.length
+                ? `${availableSlots.length} configured slot${availableSlots.length === 1 ? "" : "s"}`
+                : "Not configured";
 
               return {
                 "Trainer Name": `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || trainer.email || "",
@@ -244,7 +260,7 @@ export default function ExportTrainerDataModal({
                 "Completed Classes": ((classes || []) as ClassExportRecord[]).filter(
                   (c) => c.status === "completed",
                 ).length,
-                Availability: "Mon-Fri, 6AM-8PM", // TODO: Fetch from schedule table
+                Availability: availability,
               };
             }),
           );
@@ -256,29 +272,35 @@ export default function ExportTrainerDataModal({
             (trainers || []).map(async (trainer: TrainerExportRecord) => {
               const { data: classes } = await supabase
                 .from("classes")
-                .select("id, name, date, start_time, end_time")
+                .select("id, name, start_time, end_time, price")
                 .eq("trainer_id", trainer.id)
                 .eq("tenant_id", tenantId)
                 .gte("created_at", startDate.toISOString());
 
-              const { data: bookings } = await supabase
-                .from("class_bookings")
-                .select("id, price, attended")
-                .in(
-                  "class_id",
-                  (classes || []).map((c) => c.id),
-                )
-                .eq("tenant_id", tenantId);
+              const classIds = (classes || []).map((c) => c.id);
+              const { data: bookings } = classIds.length
+                ? await supabase
+                    .from("class_bookings")
+                    .select("id, class_id, status")
+                    .in("class_id", classIds)
+                    .eq("tenant_id", tenantId)
+                : { data: [] as BookingExportRecord[] };
 
+              const classPrices = new Map(
+                ((classes || []) as ClassExportRecord[]).map((c) => [c.id, c.price || 0]),
+              );
               const typedBookings = (bookings || []) as BookingExportRecord[];
-              const totalRevenue = typedBookings.reduce(
-                (sum: number, b) => sum + (b.price || 0),
+              const activeBookings = typedBookings.filter((b) => b.status !== "cancelled");
+              const totalRevenue = activeBookings.reduce(
+                (sum: number, b) => sum + (classPrices.get(b.class_id) || 0),
                 0,
               );
               const attendanceRate =
-                typedBookings.length > 0
-                  ? ((typedBookings.filter((b) => b.attended).length /
-                      typedBookings.length) *
+                activeBookings.length > 0
+                  ? ((activeBookings.filter((b) =>
+                      b.status === "completed" || b.status === "checked_in",
+                    ).length /
+                      activeBookings.length) *
                       100).toFixed(2)
                   : "0";
 
@@ -289,7 +311,7 @@ export default function ExportTrainerDataModal({
                 "Total Bookings": bookings?.length || 0,
                 "Total Revenue": totalRevenue,
                 "Attendance Rate": `${attendanceRate}%`,
-                "Average Rating": trainer.average_rating || "N/A",
+                "Average Rating": trainer.rating ?? "N/A",
                 Status: trainer.status || "active",
                 "Specialties": Array.isArray(trainer.specialties)
                   ? trainer.specialties.join(", ")

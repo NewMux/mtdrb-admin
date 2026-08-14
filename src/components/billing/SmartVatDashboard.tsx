@@ -35,6 +35,7 @@ type VatTab = "overview" | "returns" | "compliance" | "analytics";
 interface InvoiceSummary {
   amount?: number | string | null;
   total?: number | string | null;
+  vat_total?: number | string | null;
   status?: string | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
@@ -84,6 +85,7 @@ export default function SmartVatDashboard({
     alerts: string[];
   } | null>(null);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
+  const [currency, setCurrency] = useState("AED");
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
@@ -97,10 +99,18 @@ export default function SmartVatDashboard({
     try {
       setLoading(true);
 
-      // Fetch invoices to calculate VAT
+      const { data: settingsData } = await supabase
+        .from("gym_settings")
+        .select("currency, vat_rate")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      const configuredVatRate = Number(settingsData?.vat_rate ?? 5);
+      setCurrency(settingsData?.currency || "AED");
+
+      // Fetch invoices to calculate VAT from the live invoice schema.
       const { data: invoices, error: invoicesError } = await supabase
         .from("invoices")
-        .select("amount, status, created_at, metadata, total")
+        .select("amount, status, created_at, metadata, total, vat_total")
         .eq("tenant_id", tenantId);
 
       if (invoicesError) {
@@ -162,12 +172,16 @@ export default function SmartVatDashboard({
       const vatReturnsList: VatReturn[] = (vatReturnsData ?? []) as VatReturn[];
 
       // Calculate VAT collected (5% of paid invoices)
+      const invoiceVat = (invoice: InvoiceSummary) => {
+        const storedVat = invoice.vat_total == null ? Number.NaN : Number(invoice.vat_total);
+        if (Number.isFinite(storedVat)) return storedVat;
+        const amount = Number(invoice.amount || invoice.total || 0);
+        return (amount * configuredVatRate) / 100;
+      };
+
       const totalVatCollected = invoiceList
         .filter(inv => inv.status === "paid" || inv.status === "completed")
-        .reduce((sum, inv) => {
-          const amount = Number(inv.amount || inv.total || 0);
-          return sum + (amount * 0.05);
-        }, 0);
+        .reduce((sum, inv) => sum + invoiceVat(inv), 0);
 
       // Calculate VAT paid from expenses
       const totalVatPaid = expenseList
@@ -189,16 +203,28 @@ export default function SmartVatDashboard({
           return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
         });
 
-        const monthVat = monthInvoices.reduce((sum, inv) => {
-          const amount = Number(inv.amount || inv.total || 0);
-          return sum + (amount * 0.05);
-        }, 0);
+        const monthVat = monthInvoices.reduce(
+          (sum, inv) => sum + invoiceVat(inv),
+          0,
+        );
         
         monthlyBreakdown.push({
           month: month.toISOString().substring(0, 7),
           vatCollected: monthVat,
-          vatPaid: 0, // Would need expense data by month
-          netVat: monthVat,
+          vatPaid: expenseList
+            .filter(exp => {
+              if (exp.status === "cancelled") return false;
+              const expenseDate = new Date(exp.date || "");
+              return expenseDate >= monthStart && expenseDate <= monthEnd;
+            })
+            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
+          netVat: monthVat - expenseList
+            .filter(exp => {
+              if (exp.status === "cancelled") return false;
+              const expenseDate = new Date(exp.date || "");
+              return expenseDate >= monthStart && expenseDate <= monthEnd;
+            })
+            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
         });
       }
 
@@ -214,8 +240,7 @@ export default function SmartVatDashboard({
           const type =
             (typeof metadata.type === "string" ? metadata.type : undefined) ||
             "membership";
-          const amount = Number(inv.amount || inv.total || 0);
-          const vat = amount * 0.05;
+          const vat = invoiceVat(inv);
           categoryMap.set(type, (categoryMap.get(type) || 0) + vat);
         });
 
@@ -276,9 +301,7 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(
-          `VAT return due: ${netVatPayable.toFixed(2)} AED payable`,
-        );
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || "AED"} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -420,11 +443,16 @@ export default function SmartVatDashboard({
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "BHD",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    const code = /^[A-Z]{3}$/.test(currency) ? currency : "AED";
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      return `${code} ${amount.toFixed(2)}`;
+    }
   };
 
   const getComplianceColor = (score: number) => {

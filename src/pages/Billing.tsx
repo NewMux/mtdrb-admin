@@ -140,18 +140,39 @@ const Billing: React.FC = () => {
     paymentReminders: true,
     vatEnabled: false,
   });
+  const [currency, setCurrency] = React.useState("AED");
+
+  const formatMoney = React.useCallback(
+    (value: number, maximumFractionDigits = 2) => {
+      const code = /^[A-Z]{3}$/.test(currency) ? currency : "AED";
+      try {
+        return new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: code,
+          minimumFractionDigits: maximumFractionDigits,
+          maximumFractionDigits,
+        }).format(value);
+      } catch {
+        return `${code} ${value.toLocaleString(undefined, {
+          minimumFractionDigits: maximumFractionDigits,
+          maximumFractionDigits,
+        })}`;
+      }
+    },
+    [currency],
+  );
 
   const [billingStats, setBillingStats] = React.useState([
     {
       name: "",
-      value: "$0",
+      value: "—",
       change: "",
       icon: FiDollarSign,
       color: "from-green-500 to-green-600",
     },
     {
       name: "",
-      value: "$0",
+      value: "—",
       change: "",
       icon: FiCreditCard,
       color: "from-yellow-500 to-orange-500",
@@ -165,7 +186,7 @@ const Billing: React.FC = () => {
     },
     {
       name: "",
-      value: "$0",
+      value: "—",
       change: "",
       icon: FiShoppingCart,
       color: "from-red-500 to-red-600",
@@ -177,34 +198,34 @@ const Billing: React.FC = () => {
     setBillingStats([
       {
         name: t("billing.totalRevenue"),
-        value: "$0",
+        value: "—",
         change: t("messages.loading"),
         icon: FiDollarSign,
         color: "from-green-500 to-green-600",
       },
       {
         name: t("billing.pendingPayments"),
-        value: "$0",
+        value: "—",
         change: t("messages.loading"),
         icon: FiCreditCard,
         color: "from-yellow-500 to-orange-500",
       },
       {
         name: t("billing.totalInvoices"),
-        value: "0",
+        value: formatMoney(0, 0),
         change: t("messages.loading"),
         icon: FiFileText,
         color: "from-blue-500 to-blue-600",
       },
       {
         name: t("billing.expensesLabel"),
-        value: "$0",
+        value: "—",
         change: t("messages.loading"),
         icon: FiShoppingCart,
         color: "from-red-500 to-red-600",
       },
     ]);
-  }, [t]);
+  }, [t, formatMoney]);
 
   const tabs = [
     { id: "overview", name: t("billing.overview"), icon: FiDollarSign },
@@ -230,7 +251,7 @@ const Billing: React.FC = () => {
     const loadBillingSettings = async () => {
       const { data, error } = await supabase
         .from("gym_settings")
-        .select("metadata")
+        .select("metadata, currency")
         .eq("tenant_id", tenantId)
         .maybeSingle();
 
@@ -240,6 +261,7 @@ const Billing: React.FC = () => {
       }
 
       const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
+      setCurrency(data?.currency || "AED");
       const saved = metadata.billing_settings as Partial<typeof settings> | undefined;
       if (saved) {
         setSettings((previous) => ({ ...previous, ...saved }));
@@ -356,7 +378,7 @@ const Billing: React.FC = () => {
         setBillingStats([
           {
             name: t("billing.totalRevenue"),
-            value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            value: formatMoney(totalRevenue, 0),
             change: revenueChange >= 0 
               ? `+${revenueChange.toFixed(1)}% ${t("billing.fromLastMonth")}` 
               : `${revenueChange.toFixed(1)}% ${t("billing.fromLastMonth")}`,
@@ -365,7 +387,7 @@ const Billing: React.FC = () => {
           },
           {
             name: t("billing.pendingPayments"),
-            value: `$${pendingPayments.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            value: formatMoney(pendingPayments, 0),
             change: pendingChange >= 0 
               ? `+${pendingChange.toFixed(1)}% ${t("billing.fromLastMonth")}` 
               : `${pendingChange.toFixed(1)}% ${t("billing.fromLastMonth")}`,
@@ -383,7 +405,7 @@ const Billing: React.FC = () => {
           },
           {
             name: t("billing.expensesLabel"),
-            value: `$${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+            value: formatMoney(totalExpenses, 0),
             change: expensesChange >= 0 
               ? `+${expensesChange.toFixed(1)}% ${t("billing.fromLastMonth")}` 
               : `${expensesChange.toFixed(1)}% ${t("billing.fromLastMonth")}`,
@@ -438,7 +460,7 @@ const Billing: React.FC = () => {
     };
 
     fetchBillingData();
-  }, [tenantId, refreshKey, t]);
+  }, [tenantId, refreshKey, t, currency, formatMoney]);
 
   // Button handlers
   const handleRefreshData = () => {
@@ -620,7 +642,7 @@ const Billing: React.FC = () => {
                             {invoice.member?.name || t("billing.nA")}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 text-start">
-                            ${invoice.total.toFixed(2)}
+                            {formatMoney(invoice.total, 2)}
                           </td>
                           <td className="py-3 px-4 text-start">
                             <span
@@ -716,7 +738,7 @@ const Billing: React.FC = () => {
                           {invoice.member?.name || t("billing.nA")}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 text-start">
-                          ${Number(invoice.total ?? invoice.amount ?? 0).toFixed(2)}
+                          {formatMoney(Number(invoice.total ?? invoice.amount ?? 0), 2)}
                         </td>
                         <td className="py-3 px-4 text-start">
                           <span
@@ -822,7 +844,7 @@ const Billing: React.FC = () => {
                           {expense.category}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 text-start">
-                          ${Number(expense.amount ?? 0).toFixed(2)}
+                          {formatMoney(Number(expense.amount ?? 0), 2)}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 text-start">
                           {expense.date
