@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "../contexts/AuthContext";
+import { withTimeout } from "../utils/withTimeout";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -34,26 +35,45 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check auth and paid status on mount
+  // Check auth and paid status on mount. Never leave the page blank if an
+  // Auth/Supabase request stalls in the browser.
   useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(async ({ data }) => {
+    let cancelled = false;
+
+    const checkAuth = async () => {
+      try {
+        const { data, error: userError } = await withTimeout(
+          supabase.auth.getUser(),
+          8000,
+          "Authentication is taking longer than expected. Please try again.",
+        );
+
+        if (userError) throw userError;
         if (!data.user) {
           navigate("/login");
           return;
         }
-        setUser(data.user as User);
+
+        if (cancelled) return;
+        setUser(data.user);
         // Paid status is resolved from platform_subscriptions by AuthProvider;
         // user_metadata is not an entitlement source.
         if (userMetadata?.paid) {
-          const from = getRedirectPath(location.state);
-          navigate(from);
-          return;
+          navigate(getRedirectPath(location.state));
         }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch (authError) {
+        if (!cancelled) {
+          setError(authError instanceof Error ? authError.message : "Unable to verify your account");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void checkAuth();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, location.state, userMetadata?.paid]);
 
   // Subscription plans
@@ -102,55 +122,83 @@ export default function Subscribe() {
         throw new Error("Invalid subscription plan");
       }
 
-      // Upsert the database subscription for the authenticated membership.
-      // The RLS policy requires an admin membership for this write.
-      const tenantId = authTenantId;
+      const currentUser = user ?? (await withTimeout(
+        supabase.auth.getUser(),
+        8000,
+        "Authentication is taking longer than expected. Please try again.",
+      )).data.user;
+      if (!currentUser) throw new Error("Please sign in again before choosing a plan.");
+
+      // Prefer AuthProvider's membership-derived tenant, but resolve it
+      // directly when the provider has not finished hydrating yet.
+      let tenantId = authTenantId;
       if (!tenantId) {
-        throw new Error("No organization membership found");
+        const { data: membership, error: membershipError } = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from("memberships")
+              .select("tenant_id")
+              .eq("user_id", currentUser.id)
+              .order("created_at", { ascending: true })
+              .limit(1)
+              .maybeSingle(),
+          ),
+          8000,
+          "Organization setup is taking longer than expected. Please try again.",
+        );
+        if (membershipError) throw membershipError;
+        tenantId = membership?.tenant_id ?? null;
       }
-      {
-        const now = new Date();
-        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        
-        const { error: subTableError } = await supabase
-          .from("platform_subscriptions")
-          .upsert({
-            tenant_id: tenantId,
-            status: "active",
-            plan_tier: planId,
-            amount: plans.find((p) => p.id === planId)?.price ?? 0,
-            currency: "USD",
-            current_period_end: periodEnd,
-            metadata: {
-              method: "trial_checkout",
-              last_payment_date: now.toISOString()
-            },
-            updated_at: now.toISOString()
-          }, {
-            onConflict: "tenant_id"
-          });
+      if (!tenantId) throw new Error("No organization membership found. Please restart signup.");
 
-        if (subTableError) {
-          console.error("Error updating platform_subscription row:", subTableError);
-        }
-      }
+      const now = new Date();
+      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { error: subTableError } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from("platform_subscriptions")
+            .upsert({
+              tenant_id: tenantId,
+              status: "active",
+              plan_tier: planId,
+              amount: plans.find((p) => p.id === planId)?.price ?? 0,
+              currency: "USD",
+              current_period_end: periodEnd,
+              metadata: {
+                method: "trial_checkout",
+                last_payment_date: now.toISOString(),
+              },
+              updated_at: now.toISOString(),
+            }, { onConflict: "tenant_id" }),
+        ),
+        15000,
+        "Subscription activation is taking longer than expected. Please try again.",
+      );
 
-      // Onboarding completion is profile context, not authorization. The
-      // organization and entitlement have already been verified above.
-      if (user?.user_metadata?.onboarding_completed) {
-        navigate(getRedirectPath(location.state));
-      } else {
-        navigate("/onboarding");
-      }
-    } catch (e) {
-      setError("Unexpected error");
-      if (import.meta.env.DEV) console.error("Subscribe error:", e);
+      if (subTableError) throw subTableError;
+
+      // The tenant and subscription are ready. Enter the dashboard now; the
+      // remaining gym details can be completed later from Settings.
+      navigate("/dashboard", { replace: true });
+    } catch (subscribeError) {
+      setError(
+        subscribeError instanceof Error
+          ? subscribeError.message
+          : "Unable to activate the subscription. Please try again.",
+      );
+      if (import.meta.env.DEV) console.error("Subscribe error:", subscribeError);
     } finally {
       setSubscribing(false);
     }
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-gray-600">Checking your account...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex">

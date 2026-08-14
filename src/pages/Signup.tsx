@@ -87,12 +87,13 @@ export default function Signup() {
       setError(error.message);
     } else if (data?.user) {
       // Store the user and session from signup response
-      setSignedUpUser(data.user);
+      const createdUser = data.user;
+      setSignedUpUser(createdUser);
       // If session is available, it's already set in Supabase client
       // If email confirmation is required, session might be null
       if (data.session) {
         // Session is available - auto-create tenant and proceed
-        await createTenantAndProceed();
+        await createTenantAndProceed(createdUser);
       } else {
         // Email confirmation might be required
         // Check Supabase settings - if email confirmation is disabled, session should be available
@@ -100,7 +101,7 @@ export default function Signup() {
         setTimeout(async () => {
           const { data: sessionData } = await supabase.auth.getSession();
           if (sessionData?.session) {
-            await createTenantAndProceed();
+            await createTenantAndProceed(createdUser);
           } else {
             setError(t("auth.checkEmailConfirm"));
           }
@@ -112,13 +113,14 @@ export default function Signup() {
   };
 
   // ===== AUTO-CREATE TENANT AND PROCEED =====
-  const createTenantAndProceed = async () => {
+  const createTenantAndProceed = async (setupUser?: User) => {
     setShowOnboarding(true); // Show loading modal
     setOnboardingLoading(true);
     setOnboardingError("");
 
     try {
-      if (!signedUpUser) {
+      const userForSetup = setupUser ?? signedUpUser;
+      if (!userForSetup) {
         throw new Error("Missing signed-up user. Please refresh and try again.");
       }
 
@@ -130,16 +132,14 @@ export default function Signup() {
           supabase
             .from("memberships")
             .select("tenant_id")
-            .eq("user_id", signedUpUser.id)
+            .eq("user_id", userForSetup.id)
             .maybeSingle()
         ),
         10000,
         "Checking your account is taking longer than expected. Please try again."
       );
 
-      let tenantId: string | null | undefined = existingMembership?.tenant_id;
-
-      if (!tenantId) {
+      if (!existingMembership?.tenant_id) {
         // Create Tenant/org and membership using RPC function (bypasses RLS)
         const { data: newTenantId, error: tenantError } = await withTimeout(
           Promise.resolve(
@@ -162,20 +162,10 @@ export default function Signup() {
           throw new Error("Failed to create organization: No tenant ID returned");
         }
 
-        tenantId = newTenantId;
       }
 
-      // Store the organization name as profile context only. Tenant and role
-      // authorization is resolved from the memberships table.
-      await withTimeout(
-        Promise.resolve(
-          supabase.auth.updateUser({
-            data: { gym_name: gymName },
-          })
-        ),
-        10000,
-        "Setting up your account is taking longer than expected. Please try again."
-      );
+      // The gym name was already captured during signup. Avoid a second,
+      // nonessential Auth metadata request that can block the redirect.
 
       // Redirect to subscribe
       navigate("/subscribe");
