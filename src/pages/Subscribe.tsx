@@ -24,6 +24,28 @@ function getRedirectPath(state: unknown): string {
   return "/dashboard";
 }
 
+// Supabase PostgREST errors are structured objects, not always instances of
+// Error. Preserve their message/details/code so database and RLS failures are
+// actionable in the UI instead of becoming a generic fallback.
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (!error || typeof error !== "object") return fallback;
+
+  const errorObject = error as Record<string, unknown>;
+  const nestedError =
+    errorObject.error && typeof errorObject.error === "object"
+      ? (errorObject.error as Record<string, unknown>)
+      : undefined;
+  const message =
+    (typeof errorObject.message === "string" && errorObject.message) ||
+    (typeof nestedError?.message === "string" && nestedError.message);
+  const details = typeof errorObject.details === "string" ? errorObject.details : undefined;
+  const hint = typeof errorObject.hint === "string" ? errorObject.hint : undefined;
+  const code = typeof errorObject.code === "string" ? errorObject.code : undefined;
+
+  return [message, details, hint, code && `Code: ${code}`].filter(Boolean).join(" ") || fallback;
+}
+
 // ===== SUBSCRIBE PAGE =====
 export default function Subscribe() {
   const [user, setUser] = useState<User | null>(null);
@@ -63,7 +85,7 @@ export default function Subscribe() {
         }
       } catch (authError) {
         if (!cancelled) {
-          setError(authError instanceof Error ? authError.message : "Unable to verify your account");
+          setError(getErrorMessage(authError, "Unable to verify your account"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -182,9 +204,10 @@ export default function Subscribe() {
       navigate("/dashboard", { replace: true });
     } catch (subscribeError) {
       setError(
-        subscribeError instanceof Error
-          ? subscribeError.message
-          : "Unable to activate the subscription. Please try again.",
+        getErrorMessage(
+          subscribeError,
+          "Unable to activate the subscription. Please try again.",
+        ),
       );
       if (import.meta.env.DEV) console.error("Subscribe error:", subscribeError);
     } finally {
