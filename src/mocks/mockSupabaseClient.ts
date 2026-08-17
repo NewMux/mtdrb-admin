@@ -69,10 +69,55 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function getTableRows(table: string): Record<string, unknown>[] {
-  const rows = DEMO_TABLES[table];
-  if (!rows) return [];
-  return clone(rows) as Record<string, unknown>[];
+type MockRow = Record<string, unknown>;
+type MockTableStore = Record<string, MockRow[]>;
+
+// Keep localhost writes in memory for the lifetime of the app session. The
+// demo data remains the initial seed, while reads after a write observe the
+// same mutable state instead of reloading the seed on every query.
+const MOCK_TABLE_STORE_KEY = "mtdrb.mockTableStore";
+let mockTableStore: MockTableStore | null = null;
+
+function getMockTableStore(): MockTableStore {
+  if (mockTableStore) return mockTableStore;
+
+  if (typeof window !== "undefined") {
+    const persistedStore = window.sessionStorage.getItem(MOCK_TABLE_STORE_KEY);
+    if (persistedStore) {
+      try {
+        const parsedStore = JSON.parse(persistedStore) as MockTableStore;
+        if (parsedStore && typeof parsedStore === "object") {
+          mockTableStore = parsedStore;
+        }
+      } catch {
+        window.sessionStorage.removeItem(MOCK_TABLE_STORE_KEY);
+      }
+    }
+  }
+
+  mockTableStore ??= {};
+  return mockTableStore;
+}
+
+function persistMockTableStore(): void {
+  if (typeof window !== "undefined" && mockTableStore) {
+    window.sessionStorage.setItem(
+      MOCK_TABLE_STORE_KEY,
+      JSON.stringify(mockTableStore),
+    );
+  }
+}
+
+function getMutableTableRows(table: string): MockRow[] {
+  const store = getMockTableStore();
+  if (!(table in store)) {
+    store[table] = clone(DEMO_TABLES[table] ?? []) as MockRow[];
+  }
+  return store[table];
+}
+
+function getTableRows(table: string): MockRow[] {
+  return clone(getMutableTableRows(table));
 }
 
 function matchesOr(row: Record<string, unknown>, expr: string): boolean {
@@ -242,18 +287,68 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
 
   private execute(): { data: unknown; error: unknown; count?: number } {
     if (this.op === "insert" || this.op === "upsert") {
-      const rows = Array.isArray(this.payload) ? this.payload : [this.payload];
-      return { data: this.wantSingle ? rows[0] : rows, error: null };
+      const incomingRows = (Array.isArray(this.payload) ? this.payload : [this.payload]).filter(
+        (row): row is MockRow => Boolean(row) && typeof row === "object",
+      );
+      const tableRows = getMutableTableRows(this.table);
+      const returnedRows: MockRow[] = [];
+
+      for (const incomingRow of incomingRows) {
+        let existingIndex = -1;
+        if (this.op === "upsert") {
+          const conflictField = incomingRow.tenant_id != null ? "tenant_id" : "id";
+          if (incomingRow[conflictField] != null) {
+            existingIndex = tableRows.findIndex(
+              (row) => row[conflictField] === incomingRow[conflictField],
+            );
+          }
+        }
+
+        if (existingIndex >= 0) {
+          tableRows[existingIndex] = { ...tableRows[existingIndex], ...clone(incomingRow) };
+          returnedRows.push(clone(tableRows[existingIndex]));
+        } else {
+          const insertedRow = clone(incomingRow);
+          tableRows.push(insertedRow);
+          returnedRows.push(clone(insertedRow));
+        }
+      }
+
+      persistMockTableStore();
+      return {
+        data: this.wantSingle ? returnedRows[0] ?? null : returnedRows,
+        error: null,
+      };
     }
 
     if (this.op === "update") {
-      let rows = applyFilters(getTableRows(this.table), this.filters);
-      rows = rows.map((r) => ({ ...r, ...(this.payload as object) }));
-      return { data: this.wantSingle ? rows[0] ?? null : rows, error: null };
+      const tableRows = getMutableTableRows(this.table);
+      const updatedRows: MockRow[] = [];
+      for (let index = 0; index < tableRows.length; index += 1) {
+        if (!applyFilters([tableRows[index]], this.filters).length) continue;
+        tableRows[index] = { ...tableRows[index], ...(this.payload as object) };
+        updatedRows.push(clone(tableRows[index]));
+      }
+      persistMockTableStore();
+      return {
+        data: this.wantSingle ? updatedRows[0] ?? null : updatedRows,
+        error: null,
+      };
     }
 
     if (this.op === "delete") {
-      return { data: this.wantSingle ? null : [], error: null };
+      const tableRows = getMutableTableRows(this.table);
+      const deletedRows = tableRows.filter(
+        (row) => applyFilters([row], this.filters).length > 0,
+      );
+      getMockTableStore()[this.table] = tableRows.filter(
+        (row) => applyFilters([row], this.filters).length === 0,
+      );
+      persistMockTableStore();
+      return {
+        data: this.wantSingle ? clone(deletedRows[0] ?? null) : clone(deletedRows),
+        error: null,
+      };
     }
 
     let rows = applyFilters(getTableRows(this.table), this.filters);

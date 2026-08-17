@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "./useToast";
 import {
@@ -59,7 +59,7 @@ export interface ValidationErrors {
 }
 
 export const useSettings = () => {
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const { showSuccess, showError } = useToast();
 
   // State
@@ -119,6 +119,9 @@ export const useSettings = () => {
   const [originalSettings, setOriginalSettings] = useState<SettingsData | null>(
     null,
   );
+  const settingsRef = useRef(settings);
+  const sectionChangesRef = useRef(sectionChanges);
+  const hasChangesRef = useRef(hasChanges);
 
   // Convert API data to local format
   const apiToLocalFormat = useCallback(
@@ -171,7 +174,7 @@ export const useSettings = () => {
   const localToApiFormat = useCallback(
     (localData: SettingsData): Partial<GymSettings> => {
       return {
-        tenant_id: user?.user_metadata?.tenant_id || "",
+        tenant_id: tenantId || "",
         gym_name: localData.general.gymName,
         timezone: localData.general.timezone,
         currency: localData.general.currency,
@@ -200,7 +203,7 @@ export const useSettings = () => {
         vat_rate: localData.gymOperations.vatRate,
       };
     },
-    [user],
+    [tenantId],
   );
 
   // Load settings
@@ -209,7 +212,6 @@ export const useSettings = () => {
 
     setLoading(true);
     try {
-      const tenantId = user.user_metadata?.tenant_id;
       if (!tenantId) {
         showError("Organization unavailable", "Your account is not connected to an organization yet.");
         return;
@@ -223,6 +225,7 @@ export const useSettings = () => {
 
       if (apiSettings) {
         const localSettings = apiToLocalFormat(apiSettings);
+        settingsRef.current = localSettings;
         setSettings(localSettings);
         setOriginalSettings(localSettings);
       }
@@ -232,24 +235,24 @@ export const useSettings = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, apiToLocalFormat, showError]);
+  }, [user, tenantId, apiToLocalFormat, showError]);
 
   // Save settings
   const saveSettings = useCallback(
     async (section?: keyof SettingsData) => {
       if (!user) return;
-      if (!user.user_metadata?.tenant_id) {
+      if (!tenantId) {
         showError("Organization unavailable", "Your account is not connected to an organization yet.");
         return;
       }
 
       // If saving a specific section, check if that section has changes
-      if (section && !sectionChanges[section]) {
+      if (section && !sectionChangesRef.current[section]) {
         return;
       }
 
       // If saving all, check if there are any changes
-      if (!section && !hasChanges) return;
+      if (!section && !hasChangesRef.current) return;
 
       if (section) {
         setSavingSection(section);
@@ -259,11 +262,12 @@ export const useSettings = () => {
 
       try {
         // If saving a specific section, merge with original settings
-        let settingsToSave = settings;
+        const currentSettings = settingsRef.current;
+        let settingsToSave = currentSettings;
         if (section && originalSettings) {
           settingsToSave = {
             ...originalSettings,
-            [section]: settings[section],
+            [section]: currentSettings[section],
           };
         }
 
@@ -282,34 +286,43 @@ export const useSettings = () => {
           
           if (section) {
             // Only update the saved section, preserve other unsaved changes
-            setSettings((prev) => ({
-              ...prev,
+            const nextSettings = {
+              ...settingsRef.current,
               [section]: localSettings[section],
-            }));
-            
+            };
+            settingsRef.current = nextSettings;
+            setSettings(nextSettings);
+
             // Clear changes for this section
-            setSectionChanges((prev) => ({
-              ...prev,
+            const nextSectionChanges = {
+              ...sectionChangesRef.current,
               [section]: false,
-            }));
-            
+            };
+            sectionChangesRef.current = nextSectionChanges;
+            setSectionChanges(nextSectionChanges);
+
             // Check if there are any other changes
-            const otherChanges = Object.entries(sectionChanges).some(
+            const otherChanges = Object.entries(nextSectionChanges).some(
               ([key, hasChange]) => key !== section && hasChange,
             );
+            hasChangesRef.current = otherChanges;
             setHasChanges(otherChanges);
           } else {
             // Update all settings when saving everything
+            settingsRef.current = localSettings;
             setSettings(localSettings);
+            hasChangesRef.current = false;
             setHasChanges(false);
-            setSectionChanges({
+            const clearedSectionChanges = {
               general: false,
               profile: false,
               security: false,
               billing: false,
               integrations: false,
               gymOperations: false,
-            });
+            };
+            sectionChangesRef.current = clearedSectionChanges;
+            setSectionChanges(clearedSectionChanges);
           }
           
           setErrors({});
@@ -333,9 +346,7 @@ export const useSettings = () => {
     },
     [
       user,
-      settings,
-      hasChanges,
-      sectionChanges,
+      tenantId,
       originalSettings,
       localToApiFormat,
       apiToLocalFormat,
@@ -347,18 +358,24 @@ export const useSettings = () => {
   // Handle input changes
   const handleInputChange = useCallback(
     (section: keyof SettingsData, field: string, value: unknown) => {
-      setSettings((prev) => ({
-        ...prev,
+      const nextSettings = {
+        ...settingsRef.current,
         [section]: {
-          ...prev[section],
+          ...settingsRef.current[section],
           [field]: value,
         },
-      }));
-      setHasChanges(true);
-      setSectionChanges((prev) => ({
-        ...prev,
+      };
+      settingsRef.current = nextSettings;
+      setSettings(nextSettings);
+
+      const nextSectionChanges = {
+        ...sectionChangesRef.current,
         [section]: true,
-      }));
+      };
+      sectionChangesRef.current = nextSectionChanges;
+      setSectionChanges(nextSectionChanges);
+      hasChangesRef.current = true;
+      setHasChanges(true);
 
       // Clear validation error for this field
       if (errors[`${section}.${field}`]) {
@@ -375,25 +392,26 @@ export const useSettings = () => {
   // Validate settings
   const validateSettings = useCallback(
     (section?: keyof SettingsData) => {
+      const currentSettings = settingsRef.current;
       const newErrors: ValidationErrors = {};
 
       // If section is specified, only validate that section
       if (section === "general" || !section) {
-        if (!settings.general.gymName.trim()) {
+        if (!currentSettings.general.gymName.trim()) {
           newErrors["general.gymName"] = "Gym name is required";
         }
       }
 
       if (section === "profile" || !section) {
-        if (!settings.profile.firstName.trim()) {
+        if (!currentSettings.profile.firstName.trim()) {
           newErrors["profile.firstName"] = "First name is required";
         }
-        if (!settings.profile.lastName.trim()) {
+        if (!currentSettings.profile.lastName.trim()) {
           newErrors["profile.lastName"] = "Last name is required";
         }
         if (
-          !settings.profile.email ||
-          !/\S+@\S+\.\S+/.test(settings.profile.email)
+          !currentSettings.profile.email ||
+          !/\S+@\S+\.\S+/.test(currentSettings.profile.email)
         ) {
           newErrors["profile.email"] = "Valid email is required";
         }
@@ -401,22 +419,22 @@ export const useSettings = () => {
 
       if (section === "security" || !section) {
         if (
-          settings.security.passwordExpiry < 30 ||
-          settings.security.passwordExpiry > 365
+          currentSettings.security.passwordExpiry < 30 ||
+          currentSettings.security.passwordExpiry > 365
         ) {
           newErrors["security.passwordExpiry"] =
             "Password expiry must be between 30 and 365 days";
         }
         if (
-          settings.security.sessionTimeout < 5 ||
-          settings.security.sessionTimeout > 120
+          currentSettings.security.sessionTimeout < 5 ||
+          currentSettings.security.sessionTimeout > 120
         ) {
           newErrors["security.sessionTimeout"] =
             "Session timeout must be between 5 and 120 minutes";
         }
         if (
-          settings.security.minPasswordLength < 6 ||
-          settings.security.minPasswordLength > 20
+          currentSettings.security.minPasswordLength < 6 ||
+          currentSettings.security.minPasswordLength > 20
         ) {
           newErrors["security.minPasswordLength"] =
             "Minimum password length must be between 6 and 20 characters";
@@ -426,7 +444,7 @@ export const useSettings = () => {
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [settings],
+    [],
   );
 
   // Handle save with validation
@@ -455,10 +473,12 @@ export const useSettings = () => {
     (section?: keyof SettingsData) => {
       if (originalSettings) {
         if (section) {
-          setSettings((prev) => ({
-            ...prev,
+          const nextSettings = {
+            ...settingsRef.current,
             [section]: originalSettings[section],
-          }));
+          };
+          settingsRef.current = nextSettings;
+          setSettings(nextSettings);
           setSectionChanges((prev) => {
             const updated = {
               ...prev,
@@ -468,6 +488,8 @@ export const useSettings = () => {
             const otherChanges = Object.entries(updated).some(
               ([key, hasChange]) => key !== section && hasChange,
             );
+            sectionChangesRef.current = updated;
+            hasChangesRef.current = otherChanges;
             setHasChanges(otherChanges);
             return updated;
           });
@@ -476,16 +498,20 @@ export const useSettings = () => {
             "Changes for this section have been discarded.",
           );
         } else {
+          settingsRef.current = originalSettings;
           setSettings(originalSettings);
+          hasChangesRef.current = false;
           setHasChanges(false);
-          setSectionChanges({
+          const clearedSectionChanges = {
             general: false,
             profile: false,
             security: false,
             billing: false,
             integrations: false,
             gymOperations: false,
-          });
+          };
+          sectionChangesRef.current = clearedSectionChanges;
+          setSectionChanges(clearedSectionChanges);
           showSuccess("Settings reset", "All changes have been discarded.");
         }
         setErrors({});
