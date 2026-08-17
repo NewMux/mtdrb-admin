@@ -25,6 +25,7 @@ import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
+import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import type { Invoice, Expense } from "../types";
 
@@ -140,11 +141,11 @@ const Billing: React.FC = () => {
     paymentReminders: true,
     vatEnabled: false,
   });
-  const [currency, setCurrency] = React.useState("AED");
+  const [currency, setCurrency] = React.useState(DEFAULT_CURRENCY);
 
   const formatMoney = React.useCallback(
     (value: number, maximumFractionDigits = 2) => {
-      const code = /^[A-Z]{3}$/.test(currency) ? currency : "AED";
+      const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
       try {
         return new Intl.NumberFormat(undefined, {
           style: "currency",
@@ -261,7 +262,7 @@ const Billing: React.FC = () => {
       }
 
       const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
-      setCurrency(data?.currency || "AED");
+      setCurrency(data?.currency || DEFAULT_CURRENCY);
       const saved = metadata.billing_settings as Partial<typeof settings> | undefined;
       if (saved) {
         setSettings((previous) => ({ ...previous, ...saved }));

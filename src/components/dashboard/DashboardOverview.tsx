@@ -16,6 +16,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
 const kpiColorMap = {
@@ -60,7 +61,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const { isRTL } = useRTL();
   const [showTargetsModal, setShowTargetsModal] = useState(false);
   const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
-  const [currency, setCurrency] = useState("AED");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [primaryStats, setPrimaryStats] = useState([
     {
       name: t("dashboard.totalRevenue"),
@@ -201,9 +202,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         .eq("tenant_id", tenantId)
         .single();
 
-      const settingsCurrency = settings?.currency || "AED";
+      const settingsCurrency = settings?.currency || DEFAULT_CURRENCY;
       setCurrency(settingsCurrency);
-      const currencySymbol = settingsCurrency === "AED" ? "AED" : settingsCurrency === "SAR" ? "SAR" : "$";
+      const currencySymbol = settingsCurrency || "";
 
       // Extract targets from metadata
       const metadata = settings?.metadata as { dashboardTargets?: DashboardTargets } | null;

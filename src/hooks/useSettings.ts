@@ -6,6 +6,12 @@ import {
   saveGymSettingsWithValidation,
   GymSettings,
 } from "../api/settings";
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+  DEFAULT_TIMEZONE,
+  DEFAULT_VAT_RATE,
+} from "../config/runtimeConfig";
 
 export interface SettingsData {
   general: {
@@ -60,9 +66,9 @@ export const useSettings = () => {
   const [settings, setSettings] = useState<SettingsData>({
     general: {
       gymName: "",
-      timezone: "Asia/Riyadh",
-      currency: "SAR",
-      language: "English",
+      timezone: DEFAULT_TIMEZONE,
+      currency: DEFAULT_CURRENCY,
+      language: DEFAULT_LANGUAGE,
       darkMode: false,
     },
     profile: {
@@ -80,10 +86,10 @@ export const useSettings = () => {
       lockoutThreshold: 5,
     },
     billing: {
-      currentPlan: "Premium Plan - $99/month",
-      paymentMethod: "Visa ending in 4242",
-      autoRenewal: true,
-      billingCycle: "monthly",
+      currentPlan: "",
+      paymentMethod: "",
+      autoRenewal: false,
+      billingCycle: "",
     },
     integrations: {
       googleCalendar: false,
@@ -92,8 +98,8 @@ export const useSettings = () => {
       webhookUrl: "",
     },
     gymOperations: {
-      vatEnabled: true,
-      vatRate: 5.0,
+      vatEnabled: DEFAULT_VAT_RATE > 0,
+      vatRate: DEFAULT_VAT_RATE,
     },
   });
 
@@ -120,9 +126,9 @@ export const useSettings = () => {
       return {
         general: {
           gymName: apiData.gym_name || "",
-          timezone: apiData.timezone || "Asia/Riyadh",
-          currency: apiData.currency || "SAR",
-          language: apiData.language || "English",
+          timezone: apiData.timezone || DEFAULT_TIMEZONE,
+          currency: apiData.currency || DEFAULT_CURRENCY,
+          language: apiData.language || DEFAULT_LANGUAGE,
           darkMode: apiData.dark_mode || false,
         },
         profile: {
@@ -141,10 +147,10 @@ export const useSettings = () => {
           lockoutThreshold: apiData.lockout_threshold || 5,
         },
         billing: {
-          currentPlan: apiData.current_plan || "Premium Plan - $99/month",
-          paymentMethod: apiData.payment_method || "Visa ending in 4242",
-          autoRenewal: apiData.auto_renewal !== false,
-          billingCycle: apiData.billing_cycle || "monthly",
+          currentPlan: apiData.current_plan || "",
+          paymentMethod: apiData.payment_method || "",
+          autoRenewal: apiData.auto_renewal === true,
+          billingCycle: apiData.billing_cycle || "",
         },
         integrations: {
           googleCalendar: apiData.google_calendar || false,
@@ -153,8 +159,8 @@ export const useSettings = () => {
           webhookUrl: apiData.webhook_url || "",
         },
         gymOperations: {
-          vatEnabled: apiData.vat_enabled !== false,
-          vatRate: apiData.vat_rate || 5.0,
+          vatEnabled: apiData.vat_enabled === true,
+          vatRate: apiData.vat_rate ?? DEFAULT_VAT_RATE,
         },
       };
     },
@@ -165,7 +171,7 @@ export const useSettings = () => {
   const localToApiFormat = useCallback(
     (localData: SettingsData): Partial<GymSettings> => {
       return {
-        tenant_id: user?.user_metadata?.tenant_id || user?.id || "",
+        tenant_id: user?.user_metadata?.tenant_id || "",
         gym_name: localData.general.gymName,
         timezone: localData.general.timezone,
         currency: localData.general.currency,
@@ -203,7 +209,11 @@ export const useSettings = () => {
 
     setLoading(true);
     try {
-      const tenantId = user.user_metadata?.tenant_id || user.id;
+      const tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        showError("Organization unavailable", "Your account is not connected to an organization yet.");
+        return;
+      }
       const { settings: apiSettings, error } = await getGymSettings(tenantId);
 
       if (error) {
@@ -228,6 +238,10 @@ export const useSettings = () => {
   const saveSettings = useCallback(
     async (section?: keyof SettingsData) => {
       if (!user) return;
+      if (!user.user_metadata?.tenant_id) {
+        showError("Organization unavailable", "Your account is not connected to an organization yet.");
+        return;
+      }
 
       // If saving a specific section, check if that section has changes
       if (section && !sectionChanges[section]) {

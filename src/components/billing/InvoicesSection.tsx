@@ -19,6 +19,7 @@ import { toast } from "react-hot-toast";
 import { AppleInput, AppleSelect } from "../AppleStyleModal";
 import { SmartTable, SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 import { useAuth } from "../../contexts/AuthContext";
 import ViewInvoiceModal from "./modals/ViewInvoiceModal";
 
@@ -129,7 +130,7 @@ export default function InvoicesSection({
           email: inv.members.email || '',
         } : undefined,
         amount: Number(inv.amount || inv.total || 0),
-        currency: inv.currency || "AED",
+        currency: inv.currency || DEFAULT_CURRENCY,
         status: inv.status || 'draft',
         due_date: inv.due_date,
         paid_date: inv.paid_date,

@@ -6,6 +6,12 @@ import {
   FiDatabase,
   FiWifi,
 } from "react-icons/fi";
+import {
+  DEFAULT_APP_NAME,
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+  DEFAULT_TIMEZONE,
+} from "../../config/runtimeConfig";
 
 interface SystemSettingsProps {
   refreshKey: number;
@@ -13,10 +19,10 @@ interface SystemSettingsProps {
 
 export const SystemSettings: React.FC<SystemSettingsProps> = () => {
   const [settings, setSettings] = useState({
-    systemName: "MTDRB Gym Management",
-    timezone: "America/New_York",
-    language: "en",
-    currency: "USD",
+    systemName: DEFAULT_APP_NAME,
+    timezone: DEFAULT_TIMEZONE,
+    language: DEFAULT_LANGUAGE.slice(0, 2).toLowerCase(),
+    currency: DEFAULT_CURRENCY,
     dateFormat: "MM/DD/YYYY",
     timeFormat: "12h",
     maintenanceMode: false,

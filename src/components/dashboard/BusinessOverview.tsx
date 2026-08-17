@@ -12,6 +12,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Color mappings for KPI cards
 const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
@@ -196,8 +197,8 @@ const BusinessOverview: React.FC = () => {
         .eq("tenant_id", tenantId)
         .single();
 
-      const currency = settings?.currency || "AED";
-      const currencySymbol = currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : currency === "BHD" ? "BHD" : "$";
+      const currency = settings?.currency || DEFAULT_CURRENCY;
+      const currencySymbol = currency || "";
 
       setKpis([
         {

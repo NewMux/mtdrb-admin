@@ -14,6 +14,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -289,8 +290,8 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
         .eq("tenant_id", tenantId)
         .single();
 
-      const currency = settings?.currency || "AED";
-      const currencySymbol = currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : "$";
+      const currency = settings?.currency || DEFAULT_CURRENCY;
+      const currencySymbol = currency || "";
 
       // Find inactive members (haven't visited in 14+ days)
       const fourteenDaysAgo = new Date();

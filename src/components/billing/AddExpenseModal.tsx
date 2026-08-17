@@ -28,6 +28,11 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import {
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_VAT_RATE,
+  PLATFORM_CURRENCY,
+} from "../../config/runtimeConfig";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -128,7 +133,7 @@ export function AddExpenseModal({
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
-      vat_rate: 15,
+      vat_rate: DEFAULT_VAT_RATE,
       internal_notes: "",
       public_notes: "",
     },
@@ -172,7 +177,7 @@ export function AddExpenseModal({
         recurring: editingExpense.recurring || false,
         recurring_frequency: editingExpense.recurring_frequency || "monthly",
         vat_included: false,
-        vat_rate: 15,
+        vat_rate: DEFAULT_VAT_RATE,
         internal_notes: editingExpense.internal_notes || "",
         public_notes: editingExpense.public_notes || "",
       });
@@ -292,9 +297,9 @@ export function AddExpenseModal({
         recurring: data.recurring,
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
-        country_code: "AE",
+        country_code: DEFAULT_COUNTRY_CODE || null,
         vat_amount: calculateVatAmount(),
-        currency: "BHD",
+        currency: PLATFORM_CURRENCY,
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
         ...(editingExpense

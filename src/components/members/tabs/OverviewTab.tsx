@@ -10,6 +10,7 @@ import {
   FiMessageCircle,
   FiFileText,
 } from "react-icons/fi";
+import { DEFAULT_CURRENCY } from "../../../config/runtimeConfig";
 
 interface MembershipPlan {
   name?: string;
@@ -83,7 +84,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             <FiDollarSign className="text-green-500" />
             <span className="font-semibold text-green-700 text-lg">
               {plan?.price || member.membership_price || "-"}{" "}
-              {plan?.currency || "BHD"}
+              {plan?.currency || DEFAULT_CURRENCY}
             </span>
           </div>
           {daysLeft !== null && (

@@ -23,6 +23,7 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 
 interface SmartVatDashboardProps {
@@ -85,7 +86,7 @@ export default function SmartVatDashboard({
     alerts: string[];
   } | null>(null);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
-  const [currency, setCurrency] = useState("AED");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
@@ -104,8 +105,8 @@ export default function SmartVatDashboard({
         .select("currency, vat_rate")
         .eq("tenant_id", tenantId)
         .maybeSingle();
-      const configuredVatRate = Number(settingsData?.vat_rate ?? 5);
-      setCurrency(settingsData?.currency || "AED");
+      const configuredVatRate = Number(settingsData?.vat_rate ?? DEFAULT_VAT_RATE);
+      setCurrency(settingsData?.currency || DEFAULT_CURRENCY);
 
       // Fetch invoices to calculate VAT from the live invoice schema.
       const { data: invoices, error: invoicesError } = await supabase
@@ -301,7 +302,7 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || "AED"} payable`);
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || DEFAULT_CURRENCY} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -443,7 +444,7 @@ export default function SmartVatDashboard({
   }
 
   const formatCurrency = (amount: number) => {
-    const code = /^[A-Z]{3}$/.test(currency) ? currency : "AED";
+    const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",

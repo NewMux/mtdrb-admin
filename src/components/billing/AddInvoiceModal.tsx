@@ -29,6 +29,11 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import {
+  DEFAULT_COUNTRY_CODE,
+  DEFAULT_VAT_RATE,
+  PLATFORM_CURRENCY,
+} from "../../config/runtimeConfig";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -117,7 +122,7 @@ export function AddInvoiceModal({
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
-      vat_rate: 15,
+      vat_rate: DEFAULT_VAT_RATE,
       internal_notes: "",
       public_notes: "",
     },
@@ -162,7 +167,7 @@ export function AddInvoiceModal({
         recurring: false,
         recurring_frequency: "monthly",
         vat_included: false,
-        vat_rate: 15,
+        vat_rate: DEFAULT_VAT_RATE,
         internal_notes: "",
         public_notes: "",
       });
@@ -236,7 +241,7 @@ export function AddInvoiceModal({
         : typeof watchedAmount === "string"
           ? parseFloat(watchedAmount)
           : 0;
-    const vatRate = watch("vat_rate") || 15;
+    const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
@@ -283,9 +288,9 @@ export function AddInvoiceModal({
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
         created_by: user?.id,
-        country_code: "AE",
+        country_code: DEFAULT_COUNTRY_CODE || null,
         vat_amount: calculateVatAmount(),
-        currency: "BHD",
+        currency: PLATFORM_CURRENCY,
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
       };

@@ -6,6 +6,7 @@ import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-i
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "../contexts/AuthContext";
 import { withTimeout } from "../utils/withTimeout";
+import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -98,49 +99,15 @@ export default function Subscribe() {
     };
   }, [navigate, location.state, userMetadata?.paid]);
 
-  // Subscription plans
-  const plans = [
-    {
-      id: "starter",
-      name: "Starter",
-      price: 80,
-      period: "month",
-      description: "Perfect for single-location gyms",
-      features: [
-        "All core features",
-        "Single location",
-        "+$20 USD/month per extra location",
-        "Basic analytics",
-        "Email support"
-      ],
-      popular: false,
-      color: "blue"
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: 130,
-      period: "month",
-      description: "Everything in Starter & scale your gym",
-      features: [
-        "Everything in Starter",
-        "$10 USD/month per extra location",
-        "Unlimited members",
-        "Advanced analytics",
-        "Priority support",
-        "WhatsApp bot"
-      ],
-      popular: true,
-      color: "purple"
-    }
-  ];
+  const plans = SUBSCRIPTION_PLANS;
 
   // Handle subscription
   const handleSubscribe = async (planId: string) => {
     setSubscribing(true);
     setError("");
     try {
-      if (!["starter", "pro"].includes(planId)) {
+      const plan = plans.find((candidate) => candidate.id === planId);
+      if (!plan) {
         throw new Error("Invalid subscription plan");
       }
 
@@ -183,8 +150,8 @@ export default function Subscribe() {
               tenant_id: tenantId,
               status: "active",
               plan_tier: planId,
-              amount: plans.find((p) => p.id === planId)?.price ?? 0,
-              currency: "USD",
+              amount: plan.price,
+              currency: plan.currency,
               current_period_end: periodEnd,
               metadata: {
                 method: "trial_checkout",
@@ -319,7 +286,7 @@ export default function Subscribe() {
                   </p>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold text-gray-900">
-                      ${plan.price}
+                      {plan.currency} {plan.price}
                     </span>
                     <span className="text-gray-500 ml-1">/{plan.period}</span>
                   </div>

@@ -23,6 +23,7 @@ import ViewExpenseModal from "./modals/ViewExpenseModal";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { createPrivateStorageUrl } from "../../utils/storage";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 interface ExpensesSectionProps {
   searchQuery: string;
@@ -359,11 +360,11 @@ export default function ExpensesSection({
                   </td>
                   <td className="px-6 py-4 text-blue-900 dark:text-blue-100 whitespace-nowrap">
                     {(expense.amount || 0).toFixed(2)}{" "}
-                    {expense.currency || "BHD"}
+                    {expense.currency || DEFAULT_CURRENCY}
                   </td>
                   <td className="px-6 py-4 text-blue-700 dark:text-blue-300 whitespace-nowrap">
                     {(expense.vat_amount || 0).toFixed(2)}{" "}
-                    {expense.currency || "BHD"}
+                    {expense.currency || DEFAULT_CURRENCY}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(expense.status)}

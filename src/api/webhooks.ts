@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient";
 import { Json } from "../types/supabase";
+import { PLATFORM_CURRENCY } from "../config/runtimeConfig";
 
 // Webhook payloads are strongly-typed interfaces (not index-signature compatible
 // with Json), but they only ever contain JSON-serializable data — this cast is the
@@ -75,7 +76,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
           status: targetStatus,
           plan_tier: targetTier,
           amount: targetAmount,
-          currency: data.currency || "AED",
+          currency: data.currency || PLATFORM_CURRENCY,
           metadata: {
             ...currentSub?.metadata,
             last_failed_at: now,
@@ -117,7 +118,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
           status: "active",
           plan_tier: targetTier,
           amount: targetAmount,
-          currency: data.currency || "AED",
+          currency: data.currency || PLATFORM_CURRENCY,
           current_period_end: targetPeriodEnd,
           metadata: {
             ...currentSub?.metadata,
@@ -163,7 +164,7 @@ export const handleTapWebhookEvent = async (payload: TapWebhookEvent) => {
           status: data.status?.toLowerCase() === "active" || data.status?.toLowerCase() === "trial" ? "active" : "trialing",
           plan_tier: newTier,
           amount: targetAmount,
-          currency: data.currency || "AED",
+          currency: data.currency || PLATFORM_CURRENCY,
           current_period_end: targetPeriodEnd,
           metadata: {
             ...currentSub?.metadata,

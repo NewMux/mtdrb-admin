@@ -13,6 +13,12 @@ import {
   FiArrowRight, 
   FiArrowLeft,
 } from "react-icons/fi";
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+  DEFAULT_TIMEZONE,
+  DEFAULT_VAT_RATE,
+} from "../config/runtimeConfig";
 
 // Pull a human-readable message out of an unknown thrown value, checking the
 // common shapes Supabase errors can take (message, nested error.message, code).
@@ -81,12 +87,12 @@ export default function Onboarding() {
   const [formData, setFormData] = useState({
     // Step 1: Gym Info
     gymName: "",
-    country: "Saudi Arabia",
-    language: "English",
-    vatEnabled: true,
+    country: "",
+    language: DEFAULT_LANGUAGE,
+    vatEnabled: DEFAULT_VAT_RATE > 0,
     vatNumber: "",
-    currency: "SAR",
-    timezone: "Asia/Riyadh",
+    currency: DEFAULT_CURRENCY,
+    timezone: DEFAULT_TIMEZONE,
     
     // Step 2: Branch Setup
     branchName: "",
@@ -275,9 +281,9 @@ export default function Onboarding() {
           .from("gym_settings")
           .upsert({
             tenant_id: tenantId,
-            currency: formData.currency || "AED",
+            currency: formData.currency || DEFAULT_CURRENCY,
             vat_enabled: formData.vatEnabled,
-            vat_rate: formData.vatEnabled ? 5.0 : 0.0,
+            vat_rate: formData.vatEnabled ? DEFAULT_VAT_RATE : 0.0,
             metadata: {
               country: formData.country,
               language: formData.language,

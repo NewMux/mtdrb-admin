@@ -1,4 +1,10 @@
 import { supabase } from "../supabaseClient";
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_LANGUAGE,
+  DEFAULT_TIMEZONE,
+  DEFAULT_VAT_RATE,
+} from "../config/runtimeConfig";
 
 export interface GymSettings {
   id?: string;
@@ -132,10 +138,10 @@ export const createDefaultSettings = async (
   try {
     const defaultSettings: GymSettings = {
       tenant_id: tenantId,
-      gym_name: "MTDRB Gym",
-      timezone: "Asia/Riyadh",
-      currency: "SAR",
-      language: "English",
+      gym_name: "",
+      timezone: DEFAULT_TIMEZONE,
+      currency: DEFAULT_CURRENCY,
+      language: DEFAULT_LANGUAGE,
       dark_mode: false,
       first_name: "",
       last_name: "",
@@ -147,16 +153,16 @@ export const createDefaultSettings = async (
       min_password_length: 8,
       require_special_chars: true,
       lockout_threshold: 5,
-      current_plan: "Premium Plan - $99/month",
-      payment_method: "Visa ending in 4242",
-      auto_renewal: true,
-      billing_cycle: "monthly",
+      current_plan: "",
+      payment_method: "",
+      auto_renewal: false,
+      billing_cycle: "",
       google_calendar: false,
-      stripe_payments: true,
+      stripe_payments: false,
       slack_notifications: false,
       webhook_url: "",
-      vat_enabled: true,
-      vat_rate: 5.0,
+      vat_enabled: DEFAULT_VAT_RATE > 0,
+      vat_rate: DEFAULT_VAT_RATE,
     };
 
     const { data, error } = await supabase

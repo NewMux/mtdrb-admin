@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../supabaseClient";
+import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../../config/runtimeConfig";
 
 interface BillingData {
   memberId?: string;
@@ -64,7 +65,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   }, []);
 
   // VAT calculation
-  const calculateVAT = (amount: number, vatRate: number = 15) => {
+  const calculateVAT = (amount: number, vatRate: number = DEFAULT_VAT_RATE) => {
     return (amount * vatRate) / 100;
   };
 
@@ -169,13 +170,16 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
         }
       }
 
-      // VAT rate suggestion (standard 15% for UAE)
+      // VAT rate suggestion uses configured tenant/runtime settings.
+      const vatDescription = DEFAULT_VAT_RATE > 0
+        ? `VAT rate should be ${DEFAULT_VAT_RATE}% for this service type.`
+        : "Configure the VAT rate for this service type.";
       if (context.includes("vat") || context.includes("tax")) {
         realSuggestions.push({
           id: "vat-rate",
           type: "optimization",
           title: "VAT Rate",
-          description: "VAT rate should be 15% for this service type in UAE.",
+          description: vatDescription,
           confidence: 1.0,
           impact: "low",
           action: "Apply correct VAT",
@@ -189,7 +193,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
           id: "default-vat",
           type: "optimization",
           title: "VAT Rate",
-          description: "VAT rate should be 15% for this service type.",
+          description: vatDescription,
+
           confidence: 1.0,
           impact: "low",
           action: "Apply correct VAT",
@@ -208,7 +213,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   };
 
   // Auto-calculate totals
-  const calculateTotals = (subtotal: number, vatRate: number = 15) => {
+  const calculateTotals = (subtotal: number, vatRate: number = DEFAULT_VAT_RATE) => {
     const vat = calculateVAT(subtotal, vatRate);
     const total = subtotal + vat;
 
@@ -224,8 +229,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   const getSmartDefaults = async (memberId?: string) => {
     if (!memberId) {
       return {
-        vatRate: 15, // Standard UAE VAT rate
-        currency: "AED",
+        vatRate: DEFAULT_VAT_RATE,
+        currency: DEFAULT_CURRENCY,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0], // 30 days from now
@@ -254,8 +259,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
         .single();
 
       return {
-        vatRate: 15, // Standard UAE VAT rate
-        currency: "AED",
+        vatRate: DEFAULT_VAT_RATE,
+        currency: DEFAULT_CURRENCY,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
@@ -265,8 +270,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     } catch (error) {
       console.error("Error fetching member defaults:", error);
       return {
-        vatRate: 15,
-        currency: "AED",
+        vatRate: DEFAULT_VAT_RATE,
+        currency: DEFAULT_CURRENCY,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],

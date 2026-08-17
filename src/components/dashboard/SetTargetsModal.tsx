@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 interface DashboardTargets {
   revenue?: number;
@@ -32,7 +33,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
   onClose,
   onSave,
   currentTargets,
-  currency = "AED",
+  currency = DEFAULT_CURRENCY,
 }) => {
   const { tenantId } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -102,7 +103,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
         .upsert({
           tenant_id: tenantId,
           metadata: updatedMetadata,
-          currency: currentSettings?.currency || currency || "AED",
+          currency: currentSettings?.currency || currency || DEFAULT_CURRENCY,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: "tenant_id"
@@ -131,7 +132,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
     }
   };
 
-  const currencySymbol = currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : "$";
+  const currencySymbol = currency || "";
 
   const footer = (
     <>

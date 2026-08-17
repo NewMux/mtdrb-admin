@@ -7,6 +7,7 @@ import { supabase } from "../../../supabaseClient";
 import { useAuth } from "../../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { FiDownload, FiEdit2, FiSave, FiX, FiPrinter } from "react-icons/fi";
+import { DEFAULT_CURRENCY } from "../../../config/runtimeConfig";
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
@@ -190,9 +191,15 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
 
   const formatCurrency = (amount: number | undefined) => {
     if (amount === undefined) return "N/A";
-    return new Intl.NumberFormat("en-US", {
+    if (!DEFAULT_CURRENCY) {
+      return amount.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     }).format(amount);
   };
 
