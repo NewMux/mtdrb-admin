@@ -32,6 +32,7 @@ import Members from "./pages/Members";
 import Classes from "./pages/Classes";
 import Trainers from "./pages/Trainers";
 import Analytics from "./pages/Analytics";
+import Attendance from "./pages/Attendance";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
@@ -194,6 +195,15 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
+                        {/* Attendance - requires employee or higher */}
+                        <Route
+                          path="attendance"
+                          element={
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                              <Attendance />
+                            </PermissionGuard>
+                          }
+                        />
                         {/* Insights - requires employee or higher */}
                         <Route 
                           path="insights" 
@@ -275,6 +285,10 @@ const App = () => {
                       <Route
                         path="/analytics"
                         element={<Navigate to="/dashboard/analytics" replace />}
+                      />
+                      <Route
+                        path="/attendance"
+                        element={<Navigate to="/dashboard/attendance" replace />}
                       />
                       <Route
                         path="/reports"

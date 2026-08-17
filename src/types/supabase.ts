@@ -729,6 +729,179 @@ export interface Database {
           metadata?: Json;
         };
       };
+      attendance_connectors: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          branch_id: string | null;
+          provider: string;
+          connection_type: "webhook" | "cloud_api" | "local_gateway" | "csv" | "manual";
+          status: "pending" | "active" | "error" | "revoked";
+          credentials_ref: string | null;
+          last_sync_at: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          branch_id?: string | null;
+          provider?: string;
+          connection_type?: "webhook" | "cloud_api" | "local_gateway" | "csv" | "manual";
+          status?: "pending" | "active" | "error" | "revoked";
+          credentials_ref?: string | null;
+          last_sync_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          branch_id?: string | null;
+          provider?: string;
+          connection_type?: "webhook" | "cloud_api" | "local_gateway" | "csv" | "manual";
+          status?: "pending" | "active" | "error" | "revoked";
+          credentials_ref?: string | null;
+          last_sync_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      attendance_devices: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          branch_id: string | null;
+          connector_id: string | null;
+          name: string;
+          device_type: "kiosk" | "terminal" | "gateway" | "qr" | "nfc" | "manual";
+          external_device_id: string | null;
+          status: "active" | "paused" | "revoked";
+          last_seen_at: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          branch_id?: string | null;
+          connector_id?: string | null;
+          name: string;
+          device_type?: "kiosk" | "terminal" | "gateway" | "qr" | "nfc" | "manual";
+          external_device_id?: string | null;
+          status?: "active" | "paused" | "revoked";
+          last_seen_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          branch_id?: string | null;
+          connector_id?: string | null;
+          name?: string;
+          device_type?: "kiosk" | "terminal" | "gateway" | "qr" | "nfc" | "manual";
+          external_device_id?: string | null;
+          status?: "active" | "paused" | "revoked";
+          last_seen_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      attendance_member_identities: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          member_id: string;
+          connector_id: string | null;
+          identity_type: "vendor_user_id" | "badge_uid_hash" | "qr_token_hash" | "passkey_credential";
+          external_identifier: string;
+          status: "active" | "revoked" | "pending";
+          last_used_at: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          member_id: string;
+          connector_id?: string | null;
+          identity_type: "vendor_user_id" | "badge_uid_hash" | "qr_token_hash" | "passkey_credential";
+          external_identifier: string;
+          status?: "active" | "revoked" | "pending";
+          last_used_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          member_id?: string;
+          connector_id?: string | null;
+          identity_type?: "vendor_user_id" | "badge_uid_hash" | "qr_token_hash" | "passkey_credential";
+          external_identifier?: string;
+          status?: "active" | "revoked" | "pending";
+          last_used_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+      };
+      attendance_events: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          branch_id: string | null;
+          member_id: string;
+          connector_id: string | null;
+          device_id: string | null;
+          external_event_id: string;
+          occurred_at: string;
+          received_at: string;
+          direction: "check_in" | "check_out" | "access";
+          method: "qr" | "pin" | "passkey" | "nfc" | "vendor_biometric" | "staff";
+          source_type: "web" | "device" | "gateway" | "vendor_cloud" | "import";
+          status: "accepted" | "duplicate" | "unresolved" | "rejected" | "review";
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          branch_id?: string | null;
+          member_id: string;
+          connector_id?: string | null;
+          device_id?: string | null;
+          external_event_id: string;
+          occurred_at?: string;
+          received_at?: string;
+          direction?: "check_in" | "check_out" | "access";
+          method?: "qr" | "pin" | "passkey" | "nfc" | "vendor_biometric" | "staff";
+          source_type?: "web" | "device" | "gateway" | "vendor_cloud" | "import";
+          status?: "accepted" | "duplicate" | "unresolved" | "rejected" | "review";
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          branch_id?: string | null;
+          member_id?: string;
+          connector_id?: string | null;
+          device_id?: string | null;
+          external_event_id?: string;
+          occurred_at?: string;
+          received_at?: string;
+          direction?: "check_in" | "check_out" | "access";
+          method?: "qr" | "pin" | "passkey" | "nfc" | "vendor_biometric" | "staff";
+          source_type?: "web" | "device" | "gateway" | "vendor_cloud" | "import";
+          status?: "accepted" | "duplicate" | "unresolved" | "rejected" | "review";
+          metadata?: Json;
+        };
+      };
       health_check: {
         Row: {
           id: string;

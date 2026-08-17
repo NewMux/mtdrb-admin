@@ -6,6 +6,7 @@ import {
   FiCalendar,
   FiDollarSign,
   FiBarChart2,
+  FiActivity,
   FiSettings,
   FiCheckSquare,
   FiUser,
@@ -27,6 +28,7 @@ const getNavigation = (t: TFunction) => [
   { name: t("sidebar.trainers"), href: "/dashboard/trainers", icon: FiUser },
   { name: t("sidebar.billing"), href: "/dashboard/billing", icon: FiDollarSign },
   { name: t("sidebar.analytics"), href: "/dashboard/analytics", icon: FiBarChart2 },
+  { name: t("sidebar.attendance"), href: "/dashboard/attendance", icon: FiActivity },
   { name: t("sidebar.tasks"), href: "/dashboard/tasks", icon: FiCheckSquare },
   { name: t("sidebar.branches"), href: "/dashboard/branches", icon: FiMapPin },
   { name: t("sidebar.settings"), href: "/dashboard/settings", icon: FiSettings },
@@ -38,6 +40,7 @@ function getActiveSidebarItem(pathname: string): string {
   if (pathname.startsWith("/dashboard/trainers")) return "/dashboard/trainers";
   if (pathname.startsWith("/dashboard/billing")) return "/dashboard/billing";
   if (pathname.startsWith("/dashboard/analytics")) return "/dashboard/analytics";
+  if (pathname.startsWith("/dashboard/attendance")) return "/dashboard/attendance";
   if (pathname.startsWith("/dashboard/tasks")) return "/dashboard/tasks";
   if (pathname.startsWith("/dashboard/branches")) return "/dashboard/branches";
   if (pathname.startsWith("/dashboard/settings")) return "/dashboard/settings";
