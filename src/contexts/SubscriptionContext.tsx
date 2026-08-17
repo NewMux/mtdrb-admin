@@ -90,11 +90,26 @@ export function SubscriptionProvider({
       }
     };
 
-    getUser();
+    void getUser();
+
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void checkSubscription(session?.user ?? null);
+    });
+
+    return () => {
+      authSubscription.unsubscribe();
+    };
   }, []);
 
-  const checkSubscription = async (currentUser: User) => {
-    if (!currentUser) return;
+  const checkSubscription = async (currentUser: User | null) => {
+    if (!currentUser) {
+      setIsPro(false);
+      setSubscription(null);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);

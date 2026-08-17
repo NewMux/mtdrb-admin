@@ -565,7 +565,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
               <AnimatePresence>
                 {filteredMembers.map((member, index) => (
                   <motion.tr
-                    key={member.id}
+                    key={`${member.id}-${member.email ?? index}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}

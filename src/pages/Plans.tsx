@@ -13,7 +13,6 @@ import {
   FiActivity,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
-import type { User } from "@supabase/supabase-js";
 import { useAuth } from "../contexts/AuthContext";
 import { UnifiedModal } from "../components/ui/UnifiedModal";
 import { AppleInput, AppleTextarea, AppleSelect } from "../components/AppleStyleModal";
@@ -69,7 +68,6 @@ const emptyPlanForm: PlanFormData = {
 
 export default function Plans() {
   const [loading, setLoading] = useState(true);
-  const [, setUser] = useState<User | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -150,21 +148,13 @@ export default function Plans() {
     },
   ];
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        navigate("/login");
-      } else if (!data.user.user_metadata || !data.user.user_metadata.paid) {
-        navigate("/subscribe");
-      } else {
-        setUser(data.user);
-      }
-      setLoading(false);
-    });
-  }, [navigate]);
-
   const fetchPlans = useCallback(async () => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("plans")
@@ -190,6 +180,8 @@ export default function Plans() {
     } catch (error) {
       console.error("Error fetching plans:", error);
       toast.error("Failed to load plans");
+    } finally {
+      setLoading(false);
     }
   }, [tenantId]);
 

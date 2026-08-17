@@ -180,6 +180,7 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
   private rangeFrom?: number;
   private rangeTo?: number;
   private wantSingle = false;
+  private allowEmptySingle = false;
   private op: "select" | "insert" | "update" | "delete" | "upsert" = "select";
   private payload?: unknown;
 
@@ -277,11 +278,13 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
 
   single() {
     this.wantSingle = true;
+    this.allowEmptySingle = false;
     return this;
   }
 
   maybeSingle() {
     this.wantSingle = true;
+    this.allowEmptySingle = true;
     return this;
   }
 
@@ -373,7 +376,9 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
       if (rows.length === 0) {
         return {
           data: null,
-          error: { code: "PGRST116", message: "No rows found" },
+          error: this.allowEmptySingle
+            ? null
+            : { code: "PGRST116", message: "No rows found" },
         };
       }
       return { data: rows[0], error: null };

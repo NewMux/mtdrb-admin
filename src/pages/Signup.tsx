@@ -13,34 +13,36 @@ export default function Signup() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   
-  // Check if user is already authenticated and redirect if needed
-  // Only redirect if user is fully set up (paid and onboarded)
+  // Check whether an authenticated user already completed organization setup.
+  // Membership and subscription tables are authoritative; auth metadata is not.
   React.useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Only redirect if user is fully set up (paid and onboarded)
-        // Otherwise, let them complete the signup flow
-        if (user.user_metadata?.paid && user.user_metadata?.onboarding_completed) {
-          navigate("/dashboard", { replace: true });
-        } else {
-          const { data: membership } = await supabase
-            .from("memberships")
-            .select("tenant_id")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: true })
-            .limit(1)
-            .maybeSingle();
+      if (!user) return;
 
-          if (membership?.tenant_id) {
-            // Membership setup already completed in a prior attempt.
-            navigate("/subscribe", { replace: true });
-          }
-        }
-        // If user is not paid and has no tenant yet, let the signup flow handle it
-      }
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (!membership?.tenant_id) return;
+
+      const { data: subscription } = await supabase
+        .from("platform_subscriptions")
+        .select("status")
+        .eq("tenant_id", membership.tenant_id)
+        .maybeSingle();
+
+      const hasActiveSubscription =
+        subscription?.status === "active" || subscription?.status === "trialing";
+      navigate(hasActiveSubscription ? "/dashboard" : "/subscribe", {
+        replace: true,
+      });
     };
-    checkAuth();
+    void checkAuth();
   }, [navigate]);
 
   // ===== FORM STATE =====

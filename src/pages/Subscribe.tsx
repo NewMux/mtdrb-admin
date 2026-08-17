@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
 import type { User } from "@supabase/supabase-js";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
 
@@ -54,7 +55,13 @@ export default function Subscribe() {
   const [subscribing, setSubscribing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [error, setError] = useState("");
-  const { userMetadata, tenantId: authTenantId } = useAuth();
+  const { tenantId: authTenantId } = useAuth();
+  const {
+    isLoading: subscriptionLoading,
+    subscription,
+  } = useSubscription();
+  const hasActiveSubscription =
+    subscription?.status === "active" || subscription?.status === "trialing";
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -79,9 +86,7 @@ export default function Subscribe() {
 
         if (cancelled) return;
         setUser(data.user);
-        // Paid status is resolved from platform_subscriptions by AuthProvider;
-        // user_metadata is not an entitlement source.
-        if (userMetadata?.paid) {
+        if (hasActiveSubscription) {
           navigate(getRedirectPath(location.state));
         }
       } catch (authError) {
@@ -97,7 +102,12 @@ export default function Subscribe() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, location.state, userMetadata?.paid]);
+  }, [
+    hasActiveSubscription,
+    location.state,
+    navigate,
+    subscriptionLoading,
+  ]);
 
   const plans = SUBSCRIPTION_PLANS;
 
@@ -182,7 +192,7 @@ export default function Subscribe() {
     }
   };
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <p className="text-gray-600">Checking your account...</p>

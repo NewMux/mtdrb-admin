@@ -16,6 +16,7 @@ import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { supabase } from "../supabaseClient";
 import { getSmartInsights as fetchSmartInsights } from "../api/automation";
 import type { Member, Invoice } from "../types";
@@ -149,10 +150,16 @@ const ANALYTICS_URL_TABS: readonly AnalyticsView[] = [
 
 export default function Analytics() {
   usePageThemeContext();
-  const { user, isLoading: authLoading, userMetadata } = useAuth();
+  const { user, isLoading: authLoading, tenantId } = useAuth();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
-  const tenantId = userMetadata?.tenant_id || null;
+  const {
+    isPro,
+    isLoading: subscriptionLoading,
+    subscription,
+  } = useSubscription();
+  const hasActiveSubscription =
+    subscription?.status === "active" || subscription?.status === "trialing";
 
   // Track loading state
   const [loading, setLoading] = useState(false);
@@ -204,8 +211,6 @@ export default function Analytics() {
   >([]);
   const [, setCurrencyCode] = useState<string>("");
   const navigate = useNavigate();
-
-  const isPro = userMetadata?.subscription_tier === "premium" || userMetadata?.subscription_tier === "enterprise";
 
   const tabs: { id: AnalyticsView; name: string; icon: IconType }[] = React.useMemo(() => [
     { id: "overview", name: t("analytics.overview"), icon: FiBarChart2 },
@@ -830,8 +835,8 @@ export default function Analytics() {
   ]);
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) {
+    // Wait for auth and entitlement resolution to finish.
+    if (authLoading || subscriptionLoading) {
       return;
     }
 
@@ -841,17 +846,25 @@ export default function Analytics() {
       return;
     }
 
-    // Check if user has paid subscription
-    if (!userMetadata?.paid) {
+    // Analytics requires an active subscription, regardless of stale auth metadata.
+    if (!hasActiveSubscription) {
       navigate("/subscribe");
       return;
     }
 
-    // User is authenticated and paid, fetch initial data
+    // User is authenticated and subscribed, fetch initial data.
     if (tenantId) {
       fetchInitialData();
     }
-  }, [authLoading, fetchInitialData, navigate, user, userMetadata, tenantId]);
+  }, [
+    authLoading,
+    fetchInitialData,
+    hasActiveSubscription,
+    navigate,
+    subscriptionLoading,
+    tenantId,
+    user,
+  ]);
 
   // Handle URL parameters for tab selection
   useEffect(() => {
@@ -864,8 +877,8 @@ export default function Analytics() {
 
   // Fetch dashboard data when tenantId is available or filters change
   useEffect(() => {
-    if (authLoading) {
-      // Still waiting for auth, don't fetch yet
+    if (authLoading || subscriptionLoading || !hasActiveSubscription) {
+      // Still waiting for auth/entitlements or access is not active.
       return;
     }
 
@@ -880,12 +893,14 @@ export default function Analytics() {
   }, [
     authLoading,
     fetchDashboardData,
+    hasActiveSubscription,
     filters.branch,
     filters.dateRange,
     filters.customStartDate,
     filters.customEndDate,
     filters.minRevenue,
     filters.maxRevenue,
+    subscriptionLoading,
     tenantId,
   ]);
 

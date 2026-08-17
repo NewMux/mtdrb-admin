@@ -69,20 +69,11 @@ export default function Login() {
       setLoading(false);
       setError(t("auth.invalidCredentials"));
     } else {
-      // Check paid status
-      const { data } = await supabase.auth.getUser();
       setLoading(false);
-      if (
-        data.user &&
-        data.user.user_metadata &&
-        data.user.user_metadata.paid
-      ) {
-        // Get intended destination from URL state or default to dashboard
-        const from = getRedirectPath(location.state);
-        navigate(from);
-      } else {
-        navigate("/subscribe");
-      }
+      // Entitlement is resolved centrally by SubscriptionProvider and enforced
+      // by subscription-aware pages, not by mirrored user metadata.
+      const from = getRedirectPath(location.state);
+      navigate(from);
     }
   };
 
