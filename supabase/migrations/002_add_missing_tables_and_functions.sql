@@ -30,18 +30,22 @@ CREATE INDEX IF NOT EXISTS idx_plans_status ON plans(status);
 
 ALTER TABLE plans ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view plans for their tenant" ON plans;
 CREATE POLICY "Users can view plans for their tenant"
   ON plans FOR SELECT
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can insert plans for their tenant" ON plans;
 CREATE POLICY "Users can insert plans for their tenant"
   ON plans FOR INSERT
   WITH CHECK (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can update plans for their tenant" ON plans;
 CREATE POLICY "Users can update plans for their tenant"
   ON plans FOR UPDATE
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can delete plans for their tenant" ON plans;
 CREATE POLICY "Users can delete plans for their tenant"
   ON plans FOR DELETE
   USING (tenant_id = get_user_tenant_id());
@@ -72,18 +76,22 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view subscriptions for their tenant" ON subscriptions;
 CREATE POLICY "Users can view subscriptions for their tenant"
   ON subscriptions FOR SELECT
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can insert subscriptions for their tenant" ON subscriptions;
 CREATE POLICY "Users can insert subscriptions for their tenant"
   ON subscriptions FOR INSERT
   WITH CHECK (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can update subscriptions for their tenant" ON subscriptions;
 CREATE POLICY "Users can update subscriptions for their tenant"
   ON subscriptions FOR UPDATE
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can delete subscriptions for their tenant" ON subscriptions;
 CREATE POLICY "Users can delete subscriptions for their tenant"
   ON subscriptions FOR DELETE
   USING (tenant_id = get_user_tenant_id());
@@ -112,18 +120,22 @@ CREATE INDEX IF NOT EXISTS idx_trainer_schedule_trainer_id ON trainer_schedule(t
 
 ALTER TABLE trainer_schedule ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view trainer_schedule for their tenant" ON trainer_schedule;
 CREATE POLICY "Users can view trainer_schedule for their tenant"
   ON trainer_schedule FOR SELECT
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can insert trainer_schedule for their tenant" ON trainer_schedule;
 CREATE POLICY "Users can insert trainer_schedule for their tenant"
   ON trainer_schedule FOR INSERT
   WITH CHECK (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can update trainer_schedule for their tenant" ON trainer_schedule;
 CREATE POLICY "Users can update trainer_schedule for their tenant"
   ON trainer_schedule FOR UPDATE
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can delete trainer_schedule for their tenant" ON trainer_schedule;
 CREATE POLICY "Users can delete trainer_schedule for their tenant"
   ON trainer_schedule FOR DELETE
   USING (tenant_id = get_user_tenant_id());
@@ -153,18 +165,22 @@ CREATE INDEX IF NOT EXISTS idx_class_waitlist_member_id ON class_waitlist(member
 
 ALTER TABLE class_waitlist ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view class_waitlist for their tenant" ON class_waitlist;
 CREATE POLICY "Users can view class_waitlist for their tenant"
   ON class_waitlist FOR SELECT
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can insert class_waitlist for their tenant" ON class_waitlist;
 CREATE POLICY "Users can insert class_waitlist for their tenant"
   ON class_waitlist FOR INSERT
   WITH CHECK (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can update class_waitlist for their tenant" ON class_waitlist;
 CREATE POLICY "Users can update class_waitlist for their tenant"
   ON class_waitlist FOR UPDATE
   USING (tenant_id = get_user_tenant_id());
 
+DROP POLICY IF EXISTS "Users can delete class_waitlist for their tenant" ON class_waitlist;
 CREATE POLICY "Users can delete class_waitlist for their tenant"
   ON class_waitlist FOR DELETE
   USING (tenant_id = get_user_tenant_id());

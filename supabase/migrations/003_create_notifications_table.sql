@@ -29,6 +29,7 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for notifications
 -- Users can only see notifications for their tenant
+DROP POLICY IF EXISTS "Users can view notifications for their tenant" ON notifications;
 CREATE POLICY "Users can view notifications for their tenant"
   ON notifications
   FOR SELECT
@@ -41,6 +42,7 @@ CREATE POLICY "Users can view notifications for their tenant"
   );
 
 -- Users can insert notifications for their tenant
+DROP POLICY IF EXISTS "Users can insert notifications for their tenant" ON notifications;
 CREATE POLICY "Users can insert notifications for their tenant"
   ON notifications
   FOR INSERT
@@ -53,6 +55,7 @@ CREATE POLICY "Users can insert notifications for their tenant"
   );
 
 -- Users can update notifications for their tenant
+DROP POLICY IF EXISTS "Users can update notifications for their tenant" ON notifications;
 CREATE POLICY "Users can update notifications for their tenant"
   ON notifications
   FOR UPDATE
@@ -72,6 +75,7 @@ CREATE POLICY "Users can update notifications for their tenant"
   );
 
 -- Users can delete notifications for their tenant
+DROP POLICY IF EXISTS "Users can delete notifications for their tenant" ON notifications;
 CREATE POLICY "Users can delete notifications for their tenant"
   ON notifications
   FOR DELETE
@@ -92,6 +96,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS notifications_updated_at ON notifications;
 CREATE TRIGGER notifications_updated_at
   BEFORE UPDATE ON notifications
   FOR EACH ROW
