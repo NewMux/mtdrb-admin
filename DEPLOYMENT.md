@@ -14,6 +14,7 @@ Run the following SQL files in the Supabase SQL editor or through the Supabase C
 4. `supabase/migrations/006_create_tasks_table.sql` — creates the `tasks` table used by the Tasks page.
 5. `supabase/migrations/008_harden_authorization.sql` — replaces metadata-based authorization with membership-derived tenant and role checks, restricts membership administration, hardens security-definer functions, and removes anonymous execution access to sensitive RPCs.
 6. `supabase/migrations/009_secure_financial_storage.sql` — makes receipt and invoice buckets private, constrains file types and size, and creates tenant-scoped `storage.objects` policies.
+7. `supabase/migrations/20260820180000_create_pos_module.sql` — creates the tenant-scoped POS catalog, stock ledger, sales, returns, RLS policies, and atomic checkout/return RPCs.
 
 Do not use `supabase/complete_schema.sql` (v1) or the loose historical `fix_*.sql` files as a substitute for the ordered deployment. The `008` and `009` migrations are intentionally separate so an existing project can be upgraded without recreating data.
 
@@ -24,6 +25,7 @@ After applying the migrations, verify the effective deployed state in Supabase:
 - `expense-receipts` and `invoice-files` show `public = false`.
 - The storage policies only allow paths in the form `receipts/<tenant UUID>/...` or `invoices/<tenant UUID>/...` and validate the membership role.
 - A user from tenant A cannot select, insert, update, delete, or export tenant B’s records or files.
+- `pos_categories`, `pos_products`, `pos_stock_movements`, `pos_sales`, `pos_sale_items`, `pos_returns`, and `pos_return_items` have RLS enabled, and the POS RPCs reject anonymous callers and users below employee role.
 
 ## Environment variables
 

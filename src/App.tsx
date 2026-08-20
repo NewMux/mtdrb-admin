@@ -36,6 +36,7 @@ const Attendance = lazy(() => import("./pages/Attendance"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
+const POS = lazy(() => import("./pages/POS"));
 const Plans = lazy(() => import("./pages/Plans"));
 const Tasks = lazy(() => import("./pages/Tasks"));
 const Branches = lazy(() => import("./pages/Branches"));
@@ -238,6 +239,15 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
+                        {/* POS - requires employee or higher */}
+                        <Route
+                          path="pos"
+                          element={
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                              <POS />
+                            </PermissionGuard>
+                          }
+                        />
                         {/* Billing - requires employee or higher */}
                         <Route 
                           path="billing" 
@@ -304,6 +314,10 @@ const App = () => {
                       <Route
                         path="/settings"
                         element={<Navigate to="/dashboard/settings" replace />}
+                      />
+                      <Route
+                        path="/pos"
+                        element={<Navigate to="/dashboard/pos" replace />}
                       />
                       <Route
                         path="/billing"

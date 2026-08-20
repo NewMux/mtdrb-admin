@@ -456,3 +456,24 @@
   direction: ltr !important;
   text-align: left !important;
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .receipt-print-area,
+  .receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  .receipt-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+    background: #ffffff !important;
+  }
+}
