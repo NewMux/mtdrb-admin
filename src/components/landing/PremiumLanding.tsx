@@ -527,7 +527,7 @@ const PremiumLanding: React.FC = () => {
               <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.starter")}</h3>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-slate-900">{starterPlan?.price ?? 0}</span>
-                <span className="text-slate-600"> {currencyLabel} {t("landing.usdPerMonth")}</span>
+                <span className="text-slate-600"> {currencyLabel}{t("landing.usdPerMonth")}</span>
               </div>
               <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
@@ -540,7 +540,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
-                  <span className={isRTL ? 'order-1' : ''}>+{STARTER_EXTRA_LOCATION_PRICE} {currencyLabel} {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
+                  <span className={isRTL ? 'order-1' : ''}>+{STARTER_EXTRA_LOCATION_PRICE} {currencyLabel}{t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
@@ -574,7 +574,7 @@ const PremiumLanding: React.FC = () => {
               <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.pro")}</h3>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-slate-900">{proPlan?.price ?? 0}</span>
-                <span className="text-slate-600"> {currencyLabel} {t("landing.usdPerMonth")}</span>
+                <span className="text-slate-600"> {currencyLabel}{t("landing.usdPerMonth")}</span>
               </div>
               <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
@@ -583,7 +583,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
-                  <span className={isRTL ? 'order-1' : ''}>+{PRO_EXTRA_LOCATION_PRICE} {currencyLabel} {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
+                  <span className={isRTL ? 'order-1' : ''}>+{PRO_EXTRA_LOCATION_PRICE} {currencyLabel}{t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
