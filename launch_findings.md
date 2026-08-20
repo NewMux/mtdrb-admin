@@ -37,3 +37,12 @@
 - The production preview rendered the landing page with the expected navigation, feature sections, pricing cards, and Start Free Trial CTA.
 - Clicking the primary CTA navigated to `/signup` and rendered the complete signup form with gym name, full name, email, password, terms checkbox, legal links, and Create account button.
 - Route-level code splitting reduced the main JavaScript bundle from approximately 3.0 MB to approximately 193 kB, with the heavy dashboard modules emitted as route chunks.
+
+## Acquisition research notes
+
+Google’s official SEO guidance says that search engines can discover sites through links and sitemaps, that the crawler should be able to access the same CSS and JavaScript resources as users, and that descriptive URLs and clear site organization help users and search engines understand the site. Google’s Search Console guidance recommends verifying site ownership, checking the property dashboard, reviewing performance and index coverage, using URL Inspection, and monitoring security issues and manual actions.
+
+Sources reviewed:
+
+- https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+- https://support.google.com/webmasters/answer/10267942?hl=en
