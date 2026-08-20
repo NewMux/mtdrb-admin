@@ -20,6 +20,7 @@ import {
   Line,
 } from "recharts";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 interface MetricCardProps {
   title: string;
@@ -78,7 +79,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
   icon,
   change,
   changeType,
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
     <div>
       <div className="flex items-center justify-between">
@@ -97,11 +100,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
           <FiTrendingDown className="mr-1" />
         )}
         <span>{change}</span>
-        <span className="text-gray-500 ml-1">vs last month</span>
+        <span className="text-gray-500 ml-1">{t("insightsPage.vsLastMonth")}</span>
       </div>
     )}
   </div>
-);
+  );
+};
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, children }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
@@ -138,26 +142,28 @@ const AiSuggestionCard: React.FC<AiSuggestionCardProps> = ({
 
 const TrainerPerformanceCard: React.FC<TrainerPerformanceCardProps> = ({
   trainers,
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
     <h3 className="text-lg font-bold mb-4 text-gray-900">
-      Trainer Performance
+      {t("insightsPage.trainerPerformance")}
     </h3>
     <div className="overflow-x-auto">
       <table className="w-full text-sm text-left text-gray-500">
         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3">
-              Trainer
+              {t("insightsPage.trainer")}
             </th>
             <th scope="col" className="px-6 py-3">
-              Classes
+              {t("insightsPage.classes")}
             </th>
             <th scope="col" className="px-6 py-3">
-              Total Att.
+              {t("insightsPage.totalAttendance")}
             </th>
             <th scope="col" className="px-6 py-3">
-              Avg. Att.
+              {t("insightsPage.averageAttendance")}
             </th>
           </tr>
         </thead>
@@ -188,10 +194,12 @@ const TrainerPerformanceCard: React.FC<TrainerPerformanceCardProps> = ({
       </table>
     </div>
   </div>
-);
+  );
+};
 
 const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const { t } = useTranslation();
+  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
   const maxAttendance = Math.max(
@@ -211,7 +219,7 @@ const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h3 className="text-lg font-bold mb-4">Peak Times Heatmap</h3>
+      <h3 className="text-lg font-bold mb-4">{t("insightsPage.peakTimes")}</h3>
       <div className="flex gap-4">
         <div className="flex flex-col text-xs text-gray-500">
           {hours.map((hour) => (
@@ -223,7 +231,7 @@ const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
         <div className="grid grid-cols-7 gap-1 flex-1">
           {days.map((day, dayIndex) => (
             <div key={day} className="flex flex-col items-center">
-              <div className="text-xs font-semibold mb-2">{day}</div>
+              <div className="text-xs font-semibold mb-2">{t(`insightsPage.days.${day}`)}</div>
               <div className="flex flex-col gap-1">
                 {hours.map((hour) => {
                   const value = data[dayIndex]?.[hour] || 0;
@@ -254,6 +262,7 @@ export default function Insights({
   classes?: InsightClass[];
   bookings?: InsightBooking[];
 } = {}) {
+  const { t, i18n } = useTranslation();
   const {
     totalBookings,
     fillRate,
@@ -267,8 +276,8 @@ export default function Insights({
       return {
         totalBookings: 0,
         fillRate: "0%",
-        mostPopular: "N/A",
-        leastPopular: "N/A",
+        mostPopular: t("insightsPage.notAvailable"),
+        leastPopular: t("insightsPage.notAvailable"),
         classPopularity: [],
         trainerPerformance: [],
         heatmapData: {},
@@ -301,7 +310,7 @@ export default function Insights({
     const trainerStats = classes.reduce<
       Record<string, { name: string; classCount: number; totalAttendance: number }>
     >((acc, classInfo) => {
-      const trainerName = classInfo.trainer || "Unknown Trainer";
+      const trainerName = classInfo.trainer || t("insightsPage.unknownTrainer");
       if (!acc[trainerName]) {
         acc[trainerName] = {
           name: trainerName,
@@ -327,7 +336,7 @@ export default function Insights({
       .map(([classId, count]) => {
         const classInfo = classes.find((c) => c.id === classId);
         return {
-          name: classInfo?.name || "Unknown Class",
+          name: classInfo?.name || t("insightsPage.unknownClass"),
           attendance: count,
         };
       })
@@ -344,46 +353,46 @@ export default function Insights({
     return {
       totalBookings: currentTotalBookings,
       fillRate: `${currentFillRate.toFixed(1)}%`,
-      mostPopular: popularity.length > 0 ? popularity[0].name : "N/A",
+      mostPopular: popularity.length > 0 ? popularity[0].name : t("insightsPage.notAvailable"),
       leastPopular:
-        popularity.length > 0 ? popularity[popularity.length - 1].name : "N/A",
+        popularity.length > 0 ? popularity[popularity.length - 1].name : t("insightsPage.notAvailable"),
       classPopularity: popularity,
       trainerPerformance: trainerPerformanceData,
       heatmapData: heatmap,
     };
-  }, [classes, bookings]);
+  }, [classes, bookings, t]);
 
   return (
-    <div className="p-8 bg-gray-50">
+    <div className="p-8 bg-gray-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
       <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">
-        Insights & Analytics
+        {t("insightsPage.title")}
       </h1>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard
-          title="Most Popular Class"
+          title={t("insightsPage.mostPopular")}
           value={mostPopular}
           icon={<FiTrendingUp />}
           change="+12%"
           changeType="up"
         />
         <MetricCard
-          title="Least Popular Class"
+          title={t("insightsPage.leastPopular")}
           value={leastPopular}
           icon={<FiTrendingDown />}
           change="-8%"
           changeType="down"
         />
         <MetricCard
-          title="Average Fill Rate"
+          title={t("insightsPage.averageFill")}
           value={fillRate}
           icon={<FiBarChart2 />}
           change="+2%"
           changeType="up"
         />
         <MetricCard
-          title="Total Bookings"
+          title={t("insightsPage.totalBookings")}
           value={totalBookings}
           icon={<FiUsers />}
           change="+50"
@@ -398,13 +407,13 @@ export default function Insights({
         </div>
 
         <AiSuggestionCard
-          title="Smart Recommendations"
+          title={t("insightsPage.recommendations")}
           icon="🧠"
           suggestions={[]}
         />
 
         <div className="lg:col-span-2">
-          <ChartCard title="Class Popularity">
+          <ChartCard title={t("insightsPage.classPopularity")}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={classPopularity}
@@ -424,7 +433,7 @@ export default function Insights({
         <TrainerPerformanceCard trainers={trainerPerformance} />
 
         <div className="lg:col-span-3">
-          <ChartCard title="Attendance Trend (Last 6 Months)">
+          <ChartCard title={t("insightsPage.attendanceTrend")}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={[]}

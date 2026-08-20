@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
@@ -51,6 +52,8 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 // ===== SUBSCRIBE PAGE =====
 export default function Subscribe() {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
@@ -75,7 +78,7 @@ export default function Subscribe() {
         const { data, error: userError } = await withTimeout(
           supabase.auth.getUser(),
           8000,
-          "Authentication is taking longer than expected. Please try again.",
+          t("subscribe.authTimeout"),
         );
 
         if (userError) throw userError;
@@ -91,7 +94,7 @@ export default function Subscribe() {
         }
       } catch (authError) {
         if (!cancelled) {
-          setError(getErrorMessage(authError, "Unable to verify your account"));
+          setError(getErrorMessage(authError, t("subscribe.authTimeout")));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -107,6 +110,7 @@ export default function Subscribe() {
     location.state,
     navigate,
     subscriptionLoading,
+    t,
   ]);
 
   const plans = SUBSCRIPTION_PLANS;
@@ -124,9 +128,9 @@ export default function Subscribe() {
       const currentUser = user ?? (await withTimeout(
         supabase.auth.getUser(),
         8000,
-        "Authentication is taking longer than expected. Please try again.",
+        t("subscribe.authTimeout"),
       )).data.user;
-      if (!currentUser) throw new Error("Please sign in again before choosing a plan.");
+      if (!currentUser) throw new Error(t("onboarding.userNotFound"));
 
       // Prefer AuthProvider's membership-derived tenant, but resolve it
       // directly when the provider has not finished hydrating yet.
@@ -186,7 +190,7 @@ export default function Subscribe() {
       setError(
         getErrorMessage(
           subscribeError,
-          "Unable to activate the subscription. Please try again.",
+          t("subscribe.unableActivate"),
         ),
       );
       if (import.meta.env.DEV) console.error("Subscribe error:", subscribeError);
@@ -198,13 +202,13 @@ export default function Subscribe() {
   if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <p className="text-gray-600">Checking your account...</p>
+        <p className="text-gray-600">{t("subscribe.checkingAccount")}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex">
+    <div className="min-h-screen w-full flex" dir={isRTL ? "rtl" : "ltr"}>
       {/* ===== LEFT COLUMN - BRAND VISUALS ===== */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
         {/* Background Pattern */}
@@ -230,25 +234,25 @@ export default function Subscribe() {
             </div>
             
               <h1 className="text-4xl font-bold mb-4">
-              Start your free trial
+              {t("subscribe.startTrial")}
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Choose the workspace plan you want to explore. No credit card is required, and your 14-day trial is clearly marked in your account.
+              {t("subscribe.startTrialDescription")}
             </p>
 
             {/* Feature Highlights */}
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <FiShield className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Secure account and tenant isolation</span>
+                <span className="text-blue-100">{t("subscribe.secureAccount")}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FiZap className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Instant activation</span>
+                <span className="text-blue-100">{t("subscribe.instantActivation")}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FiUsers className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Cancel anytime</span>
+                <span className="text-blue-100">{t("subscribe.cancelAnytime")}</span>
               </div>
             </div>
           </motion.div>
@@ -261,10 +265,10 @@ export default function Subscribe() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Select Your Plan
+              {t("subscribe.selectPlan")}
             </h1>
             <p className="text-gray-600">
-              Start your 14-day free trial. No credit card required.
+              {t("subscribe.trialNoCard")}
             </p>
           </div>
 
@@ -285,28 +289,28 @@ export default function Subscribe() {
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
+                      {t("subscribe.mostPopular")}
                     </span>
                   </div>
                 )}
 
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {plan.name}
+                    {t(plan.id === "starter" ? "landing.starter" : "landing.pro")}
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    {plan.description}
+                    {t(plan.id === "starter" ? "subscribe.starterDescription" : "subscribe.proDescription")}
                   </p>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold text-gray-900">
                       {plan.currency} {plan.price}
                     </span>
-                    <span className="text-gray-500 ml-1">/{plan.period}</span>
+                    <span className="text-gray-500 ml-1">/{t(`subscribe.${plan.period}`)}</span>
                   </div>
                 </div>
 
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, index) => (
+                  {(t(plan.id === "starter" ? "subscribe.starterFeatures" : "subscribe.proFeatures", { returnObjects: true }) as string[]).map((feature, index) => (
                     <li key={index} className="flex items-center">
                       <FiCheck className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
                       <span className="text-gray-700">{feature}</span>
@@ -326,7 +330,7 @@ export default function Subscribe() {
                   }}
                   disabled={subscribing}
                 >
-                  {subscribing ? "Processing..." : "Start Free Trial"}
+                  {subscribing ? t("subscribe.processing") : t("subscribe.startFreeTrial")}
                 </motion.button>
               </motion.div>
             ))}
@@ -353,26 +357,26 @@ export default function Subscribe() {
             <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
               <div className="flex items-center">
                 <FiShield className="h-4 w-4 mr-2" />
-                <span>SSL Secure</span>
+                <span>{t("subscribe.sslSecure")}</span>
               </div>
               <div className="flex items-center">
                 <FiCreditCard className="h-4 w-4 mr-2" />
-                <span>No credit card required</span>
+                <span>{t("subscribe.noCreditCard")}</span>
               </div>
               <div className="flex items-center">
                 <FiStar className="h-4 w-4 mr-2" />
-                <span>14-day free trial</span>
+                <span>{t("subscribe.trial14")}</span>
               </div>
             </div>
 
             <p className="text-xs text-gray-400">
-              By starting a trial, you agree to our{" "}
+              {t("subscribe.agreeIntro")}{" "}
               <Link to="/terms" className="text-blue-600 hover:text-blue-500">
-                Terms of Service
+                {t("subscribe.terms")}
               </Link>{" "}
               and{" "}
               <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
-                Privacy Policy
+                {t("subscribe.privacy")}
               </Link>
             </p>
           </div>
@@ -383,7 +387,7 @@ export default function Subscribe() {
               to="/"
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              ← Back to Home
+              ← {t("subscribe.backHome")}
             </Link>
           </div>
         </div>

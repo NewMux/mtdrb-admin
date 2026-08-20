@@ -33,6 +33,15 @@ Required in Vercel Production and/or a local `.env`:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_APP_NAME` — the product name shown in the app shell.
+- `VITE_DEFAULT_LANGUAGE` — use `en` or `ar`; the language switcher persists the user’s choice.
+- `VITE_DEFAULT_TIMEZONE`
+- `VITE_DEFAULT_CURRENCY`
+- `VITE_DEFAULT_COUNTRY_CODE`
+- `VITE_DEFAULT_VAT_RATE`
+- `VITE_PLATFORM_CURRENCY`
+- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE`
+- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE`
 
 Optional:
 
@@ -47,7 +56,7 @@ New receipt and invoice records store an object path rather than a public URL. T
 
 ## Vercel
 
-The repository’s `vercel.json` uses `npm ci`, SPA routing, and security headers including `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS. Production source maps are disabled in `vite.config.ts`.
+The repository’s `vercel.json` uses `npm ci`, `npm run build:deploy`, SPA routing, and security headers including `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS. `build:deploy` runs typecheck and `scripts/check-env.mjs`, which fails fast if the public Supabase URL/key are missing or malformed. Production source maps are disabled in `vite.config.ts`.
 
 Use the actual Production deployment URL (Vercel → project → Domains — the one marked **Production**, not a `-git-<branch>-` preview alias). Confirm that Deployment Protection is not blocking Production if the application is intended to be publicly reachable.
 
@@ -68,5 +77,7 @@ npm run test:coverage
 npm audit --omit=dev
 npm run build:deploy
 ```
+
+`npm run build:deploy` must be run with the Production values configured in Vercel. A local build without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` is expected to fail with an actionable configuration message; this prevents a blank production artifact from being published.
 
 The release gate should fail on lint warnings, missing coverage, or critical/high production advisories. Any temporary dependency exception must be documented with an owner and expiration date.

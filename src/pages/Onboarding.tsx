@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
@@ -78,6 +79,7 @@ type SetOnboardingFormData = React.Dispatch<React.SetStateAction<OnboardingFormD
 // ===== ONBOARDING WIZARD =====
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -149,29 +151,29 @@ export default function Onboarding() {
   const steps = [
     {
       id: 0,
-      title: "Gym Information",
-      subtitle: "Tell us about your gym",
+      title: t("onboarding.gymInformation"),
+      subtitle: t("onboarding.gymInformationDesc"),
       icon: <FiHome className="h-6 w-6" />,
       component: <GymInfoStep formData={formData} setFormData={setFormData} />
     },
     {
       id: 1,
-      title: "Branch Setup",
-      subtitle: "Configure your main location",
+      title: t("onboarding.branchSetup"),
+      subtitle: t("onboarding.branchSetupDesc"),
       icon: <FiMapPin className="h-6 w-6" />,
       component: <BranchSetupStep formData={formData} setFormData={setFormData} />
     },
     {
       id: 2,
-      title: "Staff Setup",
-      subtitle: "Add yourself and your team",
+      title: t("onboarding.staffSetup"),
+      subtitle: t("onboarding.staffSetupDesc"),
       icon: <FiUsers className="h-6 w-6" />,
       component: <StaffSetupStep formData={formData} setFormData={setFormData} />
     },
     {
       id: 3,
-      title: "Branding",
-      subtitle: "Customize your gym's appearance",
+      title: t("onboarding.branding"),
+      subtitle: t("onboarding.brandingDesc"),
       icon: <FiUpload className="h-6 w-6" />,
       component: <BrandingStep formData={formData} setFormData={setFormData} />
     }
@@ -202,12 +204,12 @@ export default function Onboarding() {
       
       if (userError) {
         if (import.meta.env.DEV) console.error("Error getting user:", userError);
-        throw new Error(`Authentication error: ${userError.message}`);
+        throw new Error(t("onboarding.authError", { message: userError.message }));
       }
       
       if (!user) {
         if (import.meta.env.DEV) console.error("No user found");
-        throw new Error("User not found. Please sign in again.");
+        throw new Error(t("onboarding.userNotFound"));
       }
 
       // Get or create tenant from the database-backed membership.
@@ -414,19 +416,19 @@ export default function Onboarding() {
       });
 
       // Show success message
-      toast.success("Welcome to MTDRB! Your gym has been successfully set up.");
+      toast.success(t("onboarding.setupSuccess"));
       
       // Redirect to dashboard with success message
       navigate("/dashboard", { 
         replace: true,
         state: { 
-          message: "Welcome to MTDRB! Your gym has been successfully set up." 
+          message: t("onboarding.setupSuccess")
         } 
       });
 
     } catch (err: unknown) {
       if (import.meta.env.DEV) console.error("Onboarding completion error:", err);
-      const errorMessage = extractErrorMessage(err) || "Failed to complete onboarding";
+      const errorMessage = extractErrorMessage(err) || t("onboarding.setupFailed");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -444,17 +446,17 @@ export default function Onboarding() {
       
       navigate("/dashboard", { 
         state: { 
-          message: "Welcome to MTDRB! You can complete your setup later in settings." 
+          message: t("onboarding.setupSuccessMessage")
         } 
       });
     } catch (err: unknown) {
-      setError(extractErrorMessage(err) || "Failed to skip onboarding");
+      setError(extractErrorMessage(err) || t("onboarding.skipFailed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const isRTL = formData.language === "Arabic";
+  const isRTL = formData.language === "ar";
 
   if (!user) {
     return (
@@ -473,12 +475,12 @@ export default function Onboarding() {
             <div className="flex items-center gap-4">
               <img src="/mtdrb-logo.svg" alt="MTDRB" className="h-8 w-auto" />
               <div className="text-start">
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Setup Your Gym</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Complete your gym configuration</p>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t("onboarding.title")}</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t("onboarding.subtitle")}</p>
               </div>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Step {currentStep + 1} of {steps.length}
+              {t("onboarding.stepOf", { current: currentStep + 1, total: steps.length })}
             </div>
           </div>
         </div>
@@ -555,7 +557,7 @@ export default function Onboarding() {
                 className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <FiArrowLeft className="h-4 w-4 mr-2" />
-                Previous
+                {t("onboarding.previous")}
               </button>
 
               <div className="flex items-center space-x-4">
@@ -564,7 +566,7 @@ export default function Onboarding() {
                   disabled={loading}
                   className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
                 >
-                  Skip for now
+                  {t("onboarding.skip")}
                 </button>
                 
                 {currentStep < steps.length - 1 ? (
@@ -572,7 +574,7 @@ export default function Onboarding() {
                     onClick={nextStep}
                     className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                   >
-                    Next
+                    {t("onboarding.next")}
                     <FiArrowRight className="h-4 w-4 ml-2" />
                   </button>
                 ) : (
@@ -589,11 +591,11 @@ export default function Onboarding() {
                     {loading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Completing...
+                        {t("onboarding.completing")}
                       </>
                     ) : (
                       <>
-                        Complete Setup
+                        {t("onboarding.completeSetup")}
                         <FiCheck className="h-4 w-4 ml-2" />
                       </>
                     )}
@@ -611,67 +613,68 @@ export default function Onboarding() {
 // ===== STEP COMPONENTS =====
 
 function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
+  const { t, i18n } = useTranslation();
   const countries = [
-    "Saudi Arabia", "UAE", "Bahrain", "Kuwait", "Oman", "Qatar", "Egypt", "Jordan", "Lebanon"
-  ];
+    ["Saudi Arabia", "saudiArabia"], ["UAE", "uae"], ["Bahrain", "bahrain"], ["Kuwait", "kuwait"], ["Oman", "oman"], ["Qatar", "qatar"], ["Egypt", "egypt"], ["Jordan", "jordan"], ["Lebanon", "lebanon"]
+  ] as const;
 
   const currencies = [
-    { code: "SAR", name: "Saudi Riyal" },
-    { code: "AED", name: "UAE Dirham" },
-    { code: "BHD", name: "Bahraini Dinar" },
-    { code: "KWD", name: "Kuwaiti Dinar" },
-    { code: "OMR", name: "Omani Rial" },
-    { code: "QAR", name: "Qatari Riyal" }
-  ];
+    { code: "SAR", key: "sar" },
+    { code: "AED", key: "aed" },
+    { code: "BHD", key: "bhd" },
+    { code: "KWD", key: "kwd" },
+    { code: "OMR", key: "omr" },
+    { code: "QAR", key: "qar" }
+  ] as const;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Gym Name *
+            {t("onboarding.gymName")} *
           </label>
           <input
             type="text"
             value={formData.gymName}
             onChange={(e) => setFormData({ ...formData, gymName: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter your gym name"
+            placeholder={t("onboarding.gymNamePlaceholder")}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Country *
+            {t("onboarding.country")} *
           </label>
           <select
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {countries.map(country => (
-              <option key={country} value={country}>{country}</option>
+            {countries.map(([value, key]) => (
+              <option key={value} value={value}>{t(`onboarding.countries.${key}`)}</option>
             ))}
           </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Language
+            {t("onboarding.language")}
           </label>
           <select
             value={formData.language}
-            onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+            onChange={(e) => { const language = e.target.value; setFormData({ ...formData, language }); void i18n.changeLanguage(language); }}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
+            <option value="en">{t("onboarding.english")}</option>
+            <option value="ar">{t("onboarding.arabic")}</option>
           </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Currency
+            {t("onboarding.currency")}
           </label>
           <select
             value={formData.currency}
@@ -680,7 +683,7 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
           >
             {currencies.map(currency => (
               <option key={currency.code} value={currency.code}>
-                {currency.code} - {currency.name}
+                {currency.code} - {t(`onboarding.currencies.${currency.key}`)}
               </option>
             ))}
           </select>
@@ -697,21 +700,21 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="vatEnabled" className="text-sm font-medium text-gray-700">
-            Enable VAT/Tax reporting
+            {t("onboarding.vatEnabled")}
           </label>
         </div>
 
         {formData.vatEnabled && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              VAT Number
+              {t("onboarding.vatNumber")}
             </label>
             <input
               type="text"
               value={formData.vatNumber}
               onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter VAT number"
+              placeholder={t("onboarding.vatNumberPlaceholder")}
             />
           </div>
         )}
@@ -721,25 +724,26 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
 }
 
 function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Branch Name *
+            {t("onboarding.branchName")} *
           </label>
           <input
             type="text"
             value={formData.branchName}
             onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Main Branch"
+            placeholder={t("onboarding.branchNamePlaceholder")}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
+            {t("onboarding.phoneNumber")}
           </label>
           <input
             type="tel"
@@ -753,37 +757,37 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Email Address
+          {t("onboarding.emailAddress")}
         </label>
         <input
           type="email"
           value={formData.branchEmail}
           onChange={(e) => setFormData({ ...formData, branchEmail: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="info@yourgym.com"
+          placeholder={t("onboarding.emailPlaceholder")}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Address
+          {t("onboarding.address")}
         </label>
         <textarea
           value={formData.branchAddress}
           onChange={(e) => setFormData({ ...formData, branchAddress: e.target.value })}
           rows={3}
           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Enter your gym's address"
+          placeholder={t("onboarding.addressPlaceholder")}
         />
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Operating Hours</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{t("onboarding.operatingHours")}</h3>
         <div className="space-y-3">
           {Object.entries(formData.operatingHours).map(([day, hours]) => (
             <div key={day} className="flex items-center space-x-4">
               <div className="w-24 text-sm font-medium text-gray-700 capitalize">
-                {day}
+                {t(`onboarding.days.${day}`)}
               </div>
               <div className="flex items-center space-x-2">
                 <input
@@ -798,7 +802,7 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
                   })}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <span className="text-sm text-gray-500">Open</span>
+                <span className="text-sm text-gray-500">{t("onboarding.open")}</span>
               </div>
               {!hours.closed && (
                 <div className="flex items-center space-x-2">
@@ -814,7 +818,7 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
                     })}
                     className="px-3 py-1 border border-gray-300 rounded text-sm"
                   />
-                  <span className="text-sm text-gray-500">to</span>
+                  <span className="text-sm text-gray-500">{t("onboarding.to")}</span>
                   <input
                     type="time"
                     value={hours.close}
@@ -838,40 +842,41 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
 }
 
 function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
+  const { t } = useTranslation();
   const specializations = [
-    "General Fitness", "Weight Training", "Cardio", "Yoga", "Pilates", 
-    "CrossFit", "Swimming", "Martial Arts", "Nutrition", "Rehabilitation"
-  ];
+    ["General Fitness", "generalFitness"], ["Weight Training", "weightTraining"], ["Cardio", "cardio"], ["Yoga", "yoga"], ["Pilates", "pilates"],
+    ["CrossFit", "crossfit"], ["Swimming", "swimming"], ["Martial Arts", "martialArts"], ["Nutrition", "nutrition"], ["Rehabilitation", "rehabilitation"]
+  ] as const;
 
   return (
     <div className="space-y-8">
       {/* Owner Information */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Owner Information</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{t("onboarding.ownerInformation")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name *
+              {t("onboarding.fullName")} *
             </label>
             <input
               type="text"
               value={formData.ownerName}
               onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Your full name"
+              placeholder={t("onboarding.fullNamePlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address *
+              {t("onboarding.emailAddress")} *
             </label>
             <input
               type="email"
               value={formData.ownerEmail}
               onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="your@email.com"
+              placeholder={t("onboarding.emailPlaceholder")}
             />
           </div>
 
@@ -892,32 +897,32 @@ function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormDat
 
       {/* Trainer Information */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Add Your First Trainer</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{t("onboarding.addFirstTrainer")}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trainer Name
+              {t("onboarding.trainerName")}
             </label>
             <input
               type="text"
               value={formData.trainerName}
               onChange={(e) => setFormData({ ...formData, trainerName: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Trainer's full name"
+              placeholder={t("onboarding.trainerNamePlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Specialization
+              {t("onboarding.specialization")}
             </label>
             <select
               value={formData.trainerSpecialization}
               onChange={(e) => setFormData({ ...formData, trainerSpecialization: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {specializations.map(spec => (
-                <option key={spec} value={spec}>{spec}</option>
+              {specializations.map(([value, key]) => (
+                <option key={value} value={value}>{t(`onboarding.specializations.${key}`)}</option>
               ))}
             </select>
           </div>
@@ -931,13 +936,13 @@ function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormDat
               value={formData.trainerEmail}
               onChange={(e) => setFormData({ ...formData, trainerEmail: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="trainer@email.com"
+              placeholder={t("onboarding.trainerEmailPlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
+              {t("onboarding.phoneNumber")}
             </label>
             <input
               type="tel"
@@ -954,6 +959,7 @@ function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormDat
 }
 
 function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
+  const { t } = useTranslation();
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -966,12 +972,12 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
       {/* Logo Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Gym Logo
+          {t("onboarding.gymLogo")}
         </label>
         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
           <FiUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            Upload your gym&apos;s logo (optional)
+            {t("onboarding.uploadLogo")}
           </p>
           <input
             type="file"
@@ -984,11 +990,11 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
             htmlFor="logo-upload"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors"
           >
-            Choose File
+              {t("common.chooseFile", "Choose file")}
           </label>
           {formData.logo && (
             <p className="text-sm text-green-600 mt-2">
-              ✓ {formData.logo.name} selected
+              ✓ {formData.logo.name} {t("onboarding.logoSelected")}
             </p>
           )}
         </div>
@@ -996,7 +1002,7 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
         <p className="text-sm text-blue-800 dark:text-blue-300">
-          Your gym&apos;s branding will use the default MTDRB color scheme. You can customize other settings later in the Settings page.
+          {t("common.defaultBrandingHint", "Your gym's branding will use the default MTDRB color scheme. You can customize other settings later in Settings.")}
         </p>
       </div>
     </div>

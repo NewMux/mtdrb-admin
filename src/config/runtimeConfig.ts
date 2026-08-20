@@ -12,7 +12,8 @@ const readNumber = (key: string, fallback: number): number => {
 };
 
 export const DEFAULT_APP_NAME = readEnv("VITE_APP_NAME") || "MTDRB Fitness";
-export const DEFAULT_LANGUAGE = readEnv("VITE_DEFAULT_LANGUAGE") || "English";
+const configuredLanguage = (readEnv("VITE_DEFAULT_LANGUAGE") || "en").toLowerCase();
+export const DEFAULT_LANGUAGE = configuredLanguage.startsWith("ar") ? "ar" : "en";
 export const DEFAULT_TIMEZONE =
   readEnv("VITE_DEFAULT_TIMEZONE") ||
   (typeof Intl !== "undefined"
@@ -23,6 +24,8 @@ export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
   readEnv("VITE_PLATFORM_CURRENCY") || DEFAULT_CURRENCY || "USD";
+export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 20);
+export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 10);
 
 export type SubscriptionPlan = {
   id: "starter" | "pro";

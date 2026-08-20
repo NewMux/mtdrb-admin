@@ -9,26 +9,15 @@ const langs = [
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   const current = i18n.language;
+
   const isRTL = current === "ar";
 
-  React.useEffect(() => {
-    const handleLanguageChange = () => {
-      forceUpdate();
-    };
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
-  }, [i18n]);
 
   const setLang = async (code: string) => {
     try {
       await i18n.changeLanguage(code);
-      // Direction is automatically set by i18n listener, but set it here as well for immediate update
-      document.documentElement.dir = code === "ar" ? "rtl" : "ltr";
-      document.documentElement.lang = code;
+      // The i18n bootstrap owns document language and direction updates.
     } catch (error) {
       console.error('Error changing language:', error);
     }
@@ -43,8 +32,11 @@ export default function LanguageSwitcher() {
         const isActive = current === lang.code;
         return (
           <motion.button
+            type="button"
             key={lang.code}
             onClick={() => setLang(lang.code)}
+            aria-label={lang.code === "ar" ? "العربية" : "English"}
+            aria-pressed={isActive}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`

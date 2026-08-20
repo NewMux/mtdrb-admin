@@ -15,10 +15,14 @@ import {
 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../LanguageSwitcher";
+import { PLATFORM_CURRENCY, PRO_EXTRA_LOCATION_PRICE, STARTER_EXTRA_LOCATION_PRICE, SUBSCRIPTION_PLANS } from "../../config/runtimeConfig";
 
 const PremiumLanding: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const starterPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "starter");
+  const proPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "pro");
+  const currencyLabel = (starterPlan?.currency || proPlan?.currency || PLATFORM_CURRENCY).toUpperCase();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
@@ -259,7 +263,7 @@ const PremiumLanding: React.FC = () => {
               <div className="relative rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
                 <img
                   src="/Dashboard.png"
-                  alt="MTDRB Dashboard Preview"
+                  alt={t("landing.dashboardPreview")}
                   className="w-full h-auto object-cover"
                 />
               </div>
@@ -401,7 +405,7 @@ const PremiumLanding: React.FC = () => {
             <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200">
               <img
                 src="/Calendar.png"
-                alt="Smart Scheduling Calendar"
+                alt={t("landing.smartSchedulingImage")}
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -418,7 +422,7 @@ const PremiumLanding: React.FC = () => {
             <div className="order-2 md:order-1 relative rounded-3xl overflow-hidden shadow-lg border border-slate-200">
               <img
                 src="/Members.png"
-                alt="Member Retention Analytics Dashboard"
+                alt={t("landing.memberRetentionImage")}
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -485,7 +489,7 @@ const PremiumLanding: React.FC = () => {
             <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200">
               <img
                 src="/Billing.png"
-                alt="Financial Command Dashboard"
+                alt={t("landing.financialCommandImage")}
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -522,8 +526,8 @@ const PremiumLanding: React.FC = () => {
             >
               <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.starter")}</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">80</span>
-                <span className="text-slate-600"> {t("landing.usdPerMonth")}</span>
+                <span className="text-4xl font-bold text-slate-900">{starterPlan?.price ?? 0}</span>
+                <span className="text-slate-600"> {currencyLabel} {t("landing.usdPerMonth")}</span>
               </div>
               <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
@@ -536,7 +540,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
-                  <span className={isRTL ? 'order-1' : ''}>+$20 {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
+                  <span className={isRTL ? 'order-1' : ''}>+{STARTER_EXTRA_LOCATION_PRICE} {currencyLabel} {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
@@ -569,8 +573,8 @@ const PremiumLanding: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("landing.pro")}</h3>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">130</span>
-                <span className="text-slate-600"> {t("landing.usdPerMonth")}</span>
+                <span className="text-4xl font-bold text-slate-900">{proPlan?.price ?? 0}</span>
+                <span className="text-slate-600"> {currencyLabel} {t("landing.usdPerMonth")}</span>
               </div>
               <ul className={`space-y-4 mb-8 ${isRTL ? 'space-y-reverse' : ''}`}>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
@@ -579,7 +583,7 @@ const PremiumLanding: React.FC = () => {
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
-                  <span className={isRTL ? 'order-1' : ''}>$10 {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
+                  <span className={isRTL ? 'order-1' : ''}>+{PRO_EXTRA_LOCATION_PRICE} {currencyLabel} {t("landing.usdPerMonth")} {t("landing.perExtraLocation")}</span>
                 </li>
                 <li className={`flex items-center text-slate-700 ${isRTL ? 'justify-end' : ''}`}>
                   <FiCheck className={`w-5 h-5 text-[#40C4FF] flex-shrink-0 ${isRTL ? 'ml-3 order-2' : 'mr-3'}`} />
