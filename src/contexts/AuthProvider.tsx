@@ -7,6 +7,7 @@ import { supabase, getCurrentUser } from "../supabaseClient";
 import { isValidRole } from "../types/roles";
 import { isLocalhost } from "../utils/isLocalhost";
 import { withTimeout } from "../utils/withTimeout";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import {
   AuthContext,
   type AuthErrorState,
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           Promise.resolve(
             supabase
               .from("platform_subscriptions")
-              .select("status, plan_tier")
+              .select("status, plan_tier, trial_end, current_period_end")
               .eq("tenant_id", tId)
               .maybeSingle(),
           ),
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         if (subData) {
-          isPaid = subData.status === "active" || subData.status === "trialing";
+          isPaid = isSubscriptionEntitled(subData);
           tier = subData.plan_tier as UserMetadata["subscription_tier"];
         }
       } catch (err) {
@@ -244,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const gracePeriod = new Date(trialEnd || 0);
         const now = new Date();
-        if (now > gracePeriod) {
+        if (!Number.isNaN(gracePeriod.getTime()) && now > gracePeriod) {
           navigate("/subscribe", { replace: true });
         }
       }

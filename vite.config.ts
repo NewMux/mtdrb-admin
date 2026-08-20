@@ -32,6 +32,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    // Allow the sandbox's proxied preview host without disabling Vite's
+    // DNS-rebinding protection for arbitrary hostnames.
+    allowedHosts: ['localhost', '127.0.0.1', '::1', '.manus.computer'],
   },
   test: {
     globals: true,

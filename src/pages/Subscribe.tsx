@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -60,8 +61,7 @@ export default function Subscribe() {
     isLoading: subscriptionLoading,
     subscription,
   } = useSubscription();
-  const hasActiveSubscription =
-    subscription?.status === "active" || subscription?.status === "trialing";
+  const hasActiveSubscription = isSubscriptionEntitled(subscription);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -151,21 +151,24 @@ export default function Subscribe() {
       if (!tenantId) throw new Error("No organization membership found. Please restart signup.");
 
       const now = new Date();
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
       const { error: subTableError } = await withTimeout(
         Promise.resolve(
           supabase
             .from("platform_subscriptions")
             .upsert({
               tenant_id: tenantId,
-              status: "active",
+              status: "trialing",
               plan_tier: planId,
-              amount: plan.price,
+              amount: 0,
               currency: plan.currency,
-              current_period_end: periodEnd,
+              trial_end: trialEnd,
+              current_period_end: trialEnd,
               metadata: {
-                method: "trial_checkout",
-                last_payment_date: now.toISOString(),
+                method: "self_serve_trial",
+                trial_days: 14,
+                intended_plan_price: plan.price,
+                started_at: now.toISOString(),
               },
               updated_at: now.toISOString(),
             }, { onConflict: "tenant_id" }),
@@ -226,18 +229,18 @@ export default function Subscribe() {
               />
             </div>
             
-            <h1 className="text-4xl font-bold mb-4">
-              Choose your plan
+              <h1 className="text-4xl font-bold mb-4">
+              Start your free trial
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Start with a free trial, then choose the plan that fits your gym&apos;s needs. You can upgrade or downgrade anytime.
+              Choose the workspace plan you want to explore. No credit card is required, and your 14-day trial is clearly marked in your account.
             </p>
 
             {/* Feature Highlights */}
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <FiShield className="h-5 w-5 text-blue-300" />
-                <span className="text-blue-100">Secure payment processing</span>
+                <span className="text-blue-100">Secure account and tenant isolation</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FiZap className="h-5 w-5 text-blue-300" />
@@ -354,23 +357,23 @@ export default function Subscribe() {
               </div>
               <div className="flex items-center">
                 <FiCreditCard className="h-4 w-4 mr-2" />
-                <span>Multiple payment methods</span>
+                <span>No credit card required</span>
               </div>
               <div className="flex items-center">
                 <FiStar className="h-4 w-4 mr-2" />
-                <span>30-day money back</span>
+                <span>14-day free trial</span>
               </div>
             </div>
 
             <p className="text-xs text-gray-400">
-              By subscribing, you agree to our{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-500">
+              By starting a trial, you agree to our{" "}
+              <Link to="/terms" className="text-blue-600 hover:text-blue-500">
                 Terms of Service
-              </a>{" "}
+              </Link>{" "}
               and{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-500">
+              <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
                 Privacy Policy
-              </a>
+              </Link>
             </p>
           </div>
 

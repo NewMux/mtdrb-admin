@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 // Production deployment marker for mtdrb-fit 20260817.
 import {
   BrowserRouter as Router,
@@ -20,27 +20,27 @@ import { errorHandler } from "./services/errorHandler";
 import { ErrorContext } from "./services/errorHandler";
 
 // Pages
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Subscribe from "./pages/Subscribe";
-import Onboarding from "./pages/Onboarding";
-import Legal from "./pages/Legal";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Members from "./pages/Members";
-import Classes from "./pages/Classes";
-import Trainers from "./pages/Trainers";
-import Analytics from "./pages/Analytics";
-import Attendance from "./pages/Attendance";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import Billing from "./pages/Billing";
-import Plans from "./pages/Plans";
-import Tasks from "./pages/Tasks";
-import Branches from "./pages/Branches";
-import Insights from "./pages/Insights";
-import NotFound from "./pages/NotFound";
+const Landing = lazy(() => import("./pages/Landing"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Legal = lazy(() => import("./pages/Legal"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Members = lazy(() => import("./pages/Members"));
+const Classes = lazy(() => import("./pages/Classes"));
+const Trainers = lazy(() => import("./pages/Trainers"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Attendance = lazy(() => import("./pages/Attendance"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Billing = lazy(() => import("./pages/Billing"));
+const Plans = lazy(() => import("./pages/Plans"));
+const Tasks = lazy(() => import("./pages/Tasks"));
+const Branches = lazy(() => import("./pages/Branches"));
+const Insights = lazy(() => import("./pages/Insights"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Components
 import Layout from "./components/Layout";
@@ -119,7 +119,14 @@ const App = () => {
                         },
                       }}
                     />
-                    <Routes>
+                    <Suspense
+                      fallback={
+                        <div className="min-h-screen flex items-center justify-center bg-white text-slate-600">
+                          Loading MTDRB…
+                        </div>
+                      }
+                    >
+                      <Routes>
                       {/* Public routes */}
                       <Route path="/" element={<Landing />} />
                       <Route path="/login" element={<Login />} />
@@ -325,7 +332,8 @@ const App = () => {
 
                       {/* Catch all route */}
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
+                      </Routes>
+                    </Suspense>
                   </UIProvider>
                 </SubscriptionProvider>
               </AuthProvider>

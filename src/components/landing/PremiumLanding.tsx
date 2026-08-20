@@ -547,9 +547,11 @@ const PremiumLanding: React.FC = () => {
                   <span className={isRTL ? 'order-1' : ''}>{t("landing.emailSupport")}</span>
                 </li>
               </ul>
-              <button className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 font-semibold rounded-xl hover:border-slate-400 transition-all duration-200">
-                {t("landing.get_started")}
-              </button>
+              <Link to="/signup" className="block">
+                <button className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 font-semibold rounded-xl hover:border-slate-400 transition-all duration-200">
+                  {t("landing.get_started")}
+                </button>
+              </Link>
             </motion.div>
 
             {/* Pro Plan - Highlighted */}

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { isLocalhost } from "../utils/isLocalhost";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 interface Subscription {
   id: string;
@@ -10,7 +11,8 @@ interface Subscription {
   plan_type: string;
   created_at: string;
   expires_at?: string;
-}
+  trial_end?: string;
+};
 
 interface User {
   id: string;
@@ -134,7 +136,7 @@ export function SubscriptionProvider({
         .maybeSingle();
 
       if (subData) {
-        const isActive = (subData.status === 'active' || subData.status === 'trialing');
+        const isActive = isSubscriptionEntitled(subData);
         setIsPro(isActive && (subData.plan_tier === 'pro' || subData.plan_tier === 'enterprise'));
         setSubscription({
           id: subData.id,
@@ -142,7 +144,8 @@ export function SubscriptionProvider({
           status: subData.status,
           plan_type: subData.plan_tier,
           created_at: subData.created_at,
-          expires_at: subData.current_period_end
+          expires_at: subData.current_period_end,
+          trial_end: subData.trial_end,
         });
       } else {
         // Check if it's a demo/trial account or fallback to user metadata
