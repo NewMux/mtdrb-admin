@@ -37,6 +37,7 @@ const PremiumLanding: React.FC = () => {
   const starterPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "starter");
   const proPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "pro");
   const currencyLabel = (starterPlan?.currency || proPlan?.currency || PLATFORM_CURRENCY).toUpperCase();
+  const pricingCurrencyLabel = isRTL ? t("landing.currency_short") : currencyLabel;
 
 
   const scrollTo = (id: string) => {
@@ -113,7 +114,7 @@ const PremiumLanding: React.FC = () => {
   const navLinkClass = "text-[#0b1a44]/70 hover:text-[#0b1a44]";
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-[#0b1a44]" dir={direction}>
+    <div className="landing-page min-h-screen overflow-x-hidden bg-white text-[#0b1a44]" dir={direction}>
       <motion.nav
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -270,7 +271,7 @@ const PremiumLanding: React.FC = () => {
                     </div>
                     <div className="rounded-xl border border-white/70 bg-[#071450]/90 p-2.5 text-white shadow-lg backdrop-blur sm:p-3">
                       <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/45">{t("landing.hero_stat_revenue")}</p>
-                      <p className="mt-1 text-sm font-black text-[#489bfa] sm:text-lg">$45k</p>
+                      <p className="mt-1 text-sm font-black text-[#489bfa] sm:text-lg">{t("landing.hero_stat_revenue_value")}</p>
                     </div>
                   </div>
                 </div>
@@ -468,10 +469,10 @@ const PremiumLanding: React.FC = () => {
               <PlanCard
                 title={t("landing.starter")}
                 price={starterPlan?.price ?? 0}
-                currency={currencyLabel}
+                currency={pricingCurrencyLabel}
                 monthLabel={t("landing.usdPerMonth")}
                 perExtraLocationLabel={t("landing.perExtraLocation")}
-                extraLocation={`${STARTER_EXTRA_LOCATION_PRICE} ${currencyLabel}${t("landing.usdPerMonth")}`}
+                extraLocation={`${STARTER_EXTRA_LOCATION_PRICE} ${pricingCurrencyLabel}${t("landing.usdPerMonth")}`}
                 description={t("landing.plan_includes")}
                 features={[
                   t("landing.allCoreFeatures"),
@@ -484,10 +485,10 @@ const PremiumLanding: React.FC = () => {
                 featured
                 title={t("landing.pro")}
                 price={proPlan?.price ?? 0}
-                currency={currencyLabel}
+                currency={pricingCurrencyLabel}
                 monthLabel={t("landing.usdPerMonth")}
                 perExtraLocationLabel={t("landing.perExtraLocation")}
-                extraLocation={`${PRO_EXTRA_LOCATION_PRICE} ${currencyLabel}${t("landing.usdPerMonth")}`}
+                extraLocation={`${PRO_EXTRA_LOCATION_PRICE} ${pricingCurrencyLabel}${t("landing.usdPerMonth")}`}
                 description={t("landing.plan_includes")}
                 featuredLabel={t("landing.most_popular")}
                 features={[
