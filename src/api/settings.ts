@@ -6,33 +6,14 @@ import {
   DEFAULT_VAT_RATE,
 } from "../config/runtimeConfig";
 
+// The real `gym_settings` table only has these columns (verified directly
+// against the Supabase schema). Anything that isn't one of these - gym name,
+// profile fields, security policy, etc. - has no column to land in and must
+// go through `metadata` (jsonb) or a different table/API entirely.
 export interface GymSettings {
   id?: string;
   tenant_id: string;
-  gym_name?: string;
-  timezone?: string;
   currency?: string;
-  language?: string;
-  dark_mode?: boolean;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  phone?: string;
-  profile_picture?: string;
-  two_factor_auth?: boolean;
-  password_expiry?: number;
-  session_timeout?: number;
-  min_password_length?: number;
-  require_special_chars?: boolean;
-  lockout_threshold?: number;
-  current_plan?: string;
-  payment_method?: string;
-  auto_renewal?: boolean;
-  billing_cycle?: string;
-  google_calendar?: boolean;
-  stripe_payments?: boolean;
-  slack_notifications?: boolean;
-  webhook_url?: string;
   vat_enabled?: boolean;
   vat_rate?: number;
   created_at?: string;
@@ -138,31 +119,25 @@ export const createDefaultSettings = async (
   try {
     const defaultSettings: GymSettings = {
       tenant_id: tenantId,
-      gym_name: "",
-      timezone: DEFAULT_TIMEZONE,
       currency: DEFAULT_CURRENCY,
-      language: DEFAULT_LANGUAGE,
-      dark_mode: false,
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      two_factor_auth: false,
-      password_expiry: 90,
-      session_timeout: 30,
-      min_password_length: 8,
-      require_special_chars: true,
-      lockout_threshold: 5,
-      current_plan: "",
-      payment_method: "",
-      auto_renewal: false,
-      billing_cycle: "",
-      google_calendar: false,
-      stripe_payments: false,
-      slack_notifications: false,
-      webhook_url: "",
       vat_enabled: DEFAULT_VAT_RATE > 0,
       vat_rate: DEFAULT_VAT_RATE,
+      metadata: {
+        general: {
+          gym_name: "",
+          timezone: DEFAULT_TIMEZONE,
+          language: DEFAULT_LANGUAGE,
+          dark_mode: false,
+        },
+        security: {
+          two_factor_auth: false,
+          password_expiry: 90,
+          session_timeout: 30,
+          min_password_length: 8,
+          require_special_chars: true,
+          lockout_threshold: 5,
+        },
+      },
     };
 
     const { data, error } = await supabase
@@ -195,44 +170,10 @@ export const validateSettings = (
     errors.push("Tenant ID is required");
   }
 
-  // Gym name validation
-  if (settings.gym_name && settings.gym_name.trim().length === 0) {
-    errors.push("Gym name cannot be empty");
-  }
-
-  // Email validation
-  if (settings.email && !/\S+@\S+\.\S+/.test(settings.email)) {
-    errors.push("Invalid email format");
-  }
-
-  // Numeric validations
-  if (
-    settings.password_expiry &&
-    (settings.password_expiry < 30 || settings.password_expiry > 365)
-  ) {
-    errors.push("Password expiry must be between 30 and 365 days");
-  }
-
-  if (
-    settings.session_timeout &&
-    (settings.session_timeout < 5 || settings.session_timeout > 120)
-  ) {
-    errors.push("Session timeout must be between 5 and 120 minutes");
-  }
-
-  if (
-    settings.min_password_length &&
-    (settings.min_password_length < 6 || settings.min_password_length > 20)
-  ) {
-    errors.push("Minimum password length must be between 6 and 20 characters");
-  }
-
-  if (
-    settings.lockout_threshold &&
-    (settings.lockout_threshold < 1 || settings.lockout_threshold > 10)
-  ) {
-    errors.push("Lockout threshold must be between 1 and 10 attempts");
-  }
+  // Field-level validation for general/security values (gym name, password
+  // policy, etc.) happens in useSettings.ts's own validateSettings() against
+  // the local UI shape before it's converted for this API - those fields
+  // now live in `metadata`, not as typed top-level columns here.
 
   return {
     isValid: errors.length === 0,

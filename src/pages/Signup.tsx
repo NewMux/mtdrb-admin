@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import { withTimeout } from "../utils/withTimeout";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
+import { validatePassword, DEFAULT_PASSWORD_POLICY } from "../utils/passwordPolicy";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -76,6 +77,15 @@ export default function Signup() {
     // Validate gym name
     if (!gymName.trim()) {
       setError(t("auth.pleaseEnterGymName"));
+      setLoading(false);
+      return;
+    }
+
+    // No tenant exists yet for a brand-new signup, so there's no
+    // gym_settings row to configure a policy in - platform default only.
+    const passwordError = validatePassword(password, DEFAULT_PASSWORD_POLICY);
+    if (passwordError) {
+      setError(passwordError);
       setLoading(false);
       return;
     }

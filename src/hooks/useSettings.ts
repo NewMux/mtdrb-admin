@@ -6,12 +6,32 @@ import {
   saveGymSettingsWithValidation,
   GymSettings,
 } from "../api/settings";
+import { supabase } from "../supabaseClient";
 import {
   DEFAULT_CURRENCY,
   DEFAULT_LANGUAGE,
   DEFAULT_TIMEZONE,
   DEFAULT_VAT_RATE,
 } from "../config/runtimeConfig";
+
+// Shape of the general/security data nested under gym_settings.metadata -
+// there's no dedicated column for any of this, so it's stored as JSON
+// alongside the other namespaced keys already living there (dashboardTargets).
+interface GeneralMetadata {
+  gym_name?: string;
+  timezone?: string;
+  language?: string;
+  dark_mode?: boolean;
+}
+
+interface SecurityMetadata {
+  two_factor_auth?: boolean;
+  password_expiry?: number;
+  session_timeout?: number;
+  min_password_length?: number;
+  require_special_chars?: boolean;
+  lockout_threshold?: number;
+}
 
 export interface SettingsData {
   general: {
@@ -35,18 +55,6 @@ export interface SettingsData {
     minPasswordLength: number;
     requireSpecialChars: boolean;
     lockoutThreshold: number;
-  };
-  billing: {
-    currentPlan: string;
-    paymentMethod: string;
-    autoRenewal: boolean;
-    billingCycle: string;
-  };
-  integrations: {
-    googleCalendar: boolean;
-    stripePayments: boolean;
-    slackNotifications: boolean;
-    webhookUrl: string;
   };
   gymOperations: {
     vatEnabled: boolean;
@@ -85,18 +93,6 @@ export const useSettings = () => {
       requireSpecialChars: true,
       lockoutThreshold: 5,
     },
-    billing: {
-      currentPlan: "",
-      paymentMethod: "",
-      autoRenewal: false,
-      billingCycle: "",
-    },
-    integrations: {
-      googleCalendar: false,
-      stripePayments: true,
-      slackNotifications: false,
-      webhookUrl: "",
-    },
     gymOperations: {
       vatEnabled: DEFAULT_VAT_RATE > 0,
       vatRate: DEFAULT_VAT_RATE,
@@ -111,8 +107,6 @@ export const useSettings = () => {
     general: false,
     profile: false,
     security: false,
-    billing: false,
-    integrations: false,
     gymOperations: false,
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -122,44 +116,46 @@ export const useSettings = () => {
   const settingsRef = useRef(settings);
   const sectionChangesRef = useRef(sectionChanges);
   const hasChangesRef = useRef(hasChanges);
+  // Metadata as last loaded from the DB, so a general/security save doesn't
+  // clobber other namespaced keys already living there (e.g. dashboardTargets,
+  // set by the Dashboard's target editor).
+  const rawMetadataRef = useRef<Record<string, unknown>>({});
 
-  // Convert API data to local format
+  // Convert API data to local format. Profile fields come from the auth
+  // user object (see Fix 2), not from gym_settings - there's no profiles
+  // table for them to live in.
   const apiToLocalFormat = useCallback(
     (apiData: GymSettings): SettingsData => {
+      const generalMeta = (apiData.metadata?.general || {}) as GeneralMetadata;
+      const securityMeta = (apiData.metadata?.security || {}) as SecurityMetadata;
+      const userMetadata = user?.user_metadata as
+        | { full_name?: string; name?: string; phone?: string; avatar_url?: string }
+        | undefined;
+      const fullName = userMetadata?.full_name || userMetadata?.name || "";
+      const [firstName = "", ...lastNameParts] = fullName.split(" ");
+
       return {
         general: {
-          gymName: apiData.gym_name || "",
-          timezone: apiData.timezone || DEFAULT_TIMEZONE,
+          gymName: generalMeta.gym_name || "",
+          timezone: generalMeta.timezone || DEFAULT_TIMEZONE,
           currency: apiData.currency || DEFAULT_CURRENCY,
-          language: apiData.language || DEFAULT_LANGUAGE,
-          darkMode: apiData.dark_mode || false,
+          language: generalMeta.language || DEFAULT_LANGUAGE,
+          darkMode: generalMeta.dark_mode || false,
         },
         profile: {
-          firstName: apiData.first_name || "",
-          lastName: apiData.last_name || "",
-          email: apiData.email || user?.email || "",
-          phone: apiData.phone || "",
-          profilePicture: apiData.profile_picture,
+          firstName,
+          lastName: lastNameParts.join(" "),
+          email: user?.email || "",
+          phone: userMetadata?.phone || "",
+          profilePicture: userMetadata?.avatar_url,
         },
         security: {
-          twoFactorAuth: apiData.two_factor_auth || false,
-          passwordExpiry: apiData.password_expiry || 90,
-          sessionTimeout: apiData.session_timeout || 30,
-          minPasswordLength: apiData.min_password_length || 8,
-          requireSpecialChars: apiData.require_special_chars !== false,
-          lockoutThreshold: apiData.lockout_threshold || 5,
-        },
-        billing: {
-          currentPlan: apiData.current_plan || "",
-          paymentMethod: apiData.payment_method || "",
-          autoRenewal: apiData.auto_renewal === true,
-          billingCycle: apiData.billing_cycle || "",
-        },
-        integrations: {
-          googleCalendar: apiData.google_calendar || false,
-          stripePayments: apiData.stripe_payments !== false,
-          slackNotifications: apiData.slack_notifications || false,
-          webhookUrl: apiData.webhook_url || "",
+          twoFactorAuth: securityMeta.two_factor_auth || false,
+          passwordExpiry: securityMeta.password_expiry || 90,
+          sessionTimeout: securityMeta.session_timeout || 30,
+          minPasswordLength: securityMeta.min_password_length || 8,
+          requireSpecialChars: securityMeta.require_special_chars !== false,
+          lockoutThreshold: securityMeta.lockout_threshold || 5,
         },
         gymOperations: {
           vatEnabled: apiData.vat_enabled === true,
@@ -167,40 +163,39 @@ export const useSettings = () => {
         },
       };
     },
-    [user?.email],
+    [user],
   );
 
-  // Convert local format to API format
+  // Convert local format to API format for the gym_settings table (general/
+  // security/gymOperations only - profile is saved separately via
+  // supabase.auth.updateUser, see saveProfile below).
   const localToApiFormat = useCallback(
-    (localData: SettingsData): Partial<GymSettings> => {
+    (
+      localData: SettingsData,
+      existingMetadata: Record<string, unknown> = {},
+    ): Partial<GymSettings> => {
       return {
         tenant_id: tenantId || "",
-        gym_name: localData.general.gymName,
-        timezone: localData.general.timezone,
         currency: localData.general.currency,
-        language: localData.general.language,
-        dark_mode: localData.general.darkMode,
-        first_name: localData.profile.firstName,
-        last_name: localData.profile.lastName,
-        email: localData.profile.email,
-        phone: localData.profile.phone,
-        profile_picture: localData.profile.profilePicture,
-        two_factor_auth: localData.security.twoFactorAuth,
-        password_expiry: localData.security.passwordExpiry,
-        session_timeout: localData.security.sessionTimeout,
-        min_password_length: localData.security.minPasswordLength,
-        require_special_chars: localData.security.requireSpecialChars,
-        lockout_threshold: localData.security.lockoutThreshold,
-        current_plan: localData.billing.currentPlan,
-        payment_method: localData.billing.paymentMethod,
-        auto_renewal: localData.billing.autoRenewal,
-        billing_cycle: localData.billing.billingCycle,
-        google_calendar: localData.integrations.googleCalendar,
-        stripe_payments: localData.integrations.stripePayments,
-        slack_notifications: localData.integrations.slackNotifications,
-        webhook_url: localData.integrations.webhookUrl,
         vat_enabled: localData.gymOperations.vatEnabled,
         vat_rate: localData.gymOperations.vatRate,
+        metadata: {
+          ...existingMetadata,
+          general: {
+            gym_name: localData.general.gymName,
+            timezone: localData.general.timezone,
+            language: localData.general.language,
+            dark_mode: localData.general.darkMode,
+          },
+          security: {
+            two_factor_auth: localData.security.twoFactorAuth,
+            password_expiry: localData.security.passwordExpiry,
+            session_timeout: localData.security.sessionTimeout,
+            min_password_length: localData.security.minPasswordLength,
+            require_special_chars: localData.security.requireSpecialChars,
+            lockout_threshold: localData.security.lockoutThreshold,
+          },
+        },
       };
     },
     [tenantId],
@@ -224,6 +219,7 @@ export const useSettings = () => {
       }
 
       if (apiSettings) {
+        rawMetadataRef.current = apiSettings.metadata || {};
         const localSettings = apiToLocalFormat(apiSettings);
         settingsRef.current = localSettings;
         setSettings(localSettings);
@@ -236,6 +232,45 @@ export const useSettings = () => {
       setLoading(false);
     }
   }, [user, tenantId, apiToLocalFormat, showError]);
+
+  // Profile is saved via Supabase Auth, not gym_settings - there's no
+  // profiles table for name/phone/avatar to land in. Email changes go
+  // through a distinct call, since updateUser({email}) triggers Supabase's
+  // email-confirmation flow rather than changing immediately.
+  const saveProfile = useCallback(
+    async (localData: SettingsData) => {
+      const fullName = `${localData.profile.firstName} ${localData.profile.lastName}`.trim();
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName,
+          phone: localData.profile.phone,
+          avatar_url: localData.profile.profilePicture,
+        },
+      });
+
+      if (metadataError) {
+        return { success: false, error: metadataError.message, emailChangeRequested: false };
+      }
+
+      let emailChangeRequested = false;
+      if (localData.profile.email && localData.profile.email !== user?.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: localData.profile.email,
+        });
+        if (emailError) {
+          return { success: false, error: emailError.message, emailChangeRequested: false };
+        }
+        emailChangeRequested = true;
+      }
+
+      // supabase.auth.updateUser() already updates the local session and
+      // fires a USER_UPDATED event that AuthProvider's onAuthStateChange
+      // listener picks up globally - no need to force a full token refresh
+      // here (that would also flip the whole app's isLoading state).
+      return { success: true, error: null, emailChangeRequested };
+    },
+    [user?.email],
+  );
 
   // Save settings
   const saveSettings = useCallback(
@@ -261,8 +296,39 @@ export const useSettings = () => {
       }
 
       try {
-        // If saving a specific section, merge with original settings
         const currentSettings = settingsRef.current;
+
+        // Profile has its own save path entirely (Supabase Auth, not
+        // gym_settings) since it's a fundamentally different API call.
+        if (section === "profile") {
+          const { success, error, emailChangeRequested } =
+            await saveProfile(currentSettings);
+
+          if (!success) {
+            showError("Failed to save profile", error || "Please try again.");
+            return;
+          }
+
+          setOriginalSettings({ ...(originalSettings ?? currentSettings), profile: currentSettings.profile });
+          const nextSectionChanges = { ...sectionChangesRef.current, profile: false };
+          sectionChangesRef.current = nextSectionChanges;
+          setSectionChanges(nextSectionChanges);
+          const otherChanges = Object.entries(nextSectionChanges).some(
+            ([key, hasChange]) => key !== "profile" && hasChange,
+          );
+          hasChangesRef.current = otherChanges;
+          setHasChanges(otherChanges);
+          setErrors({});
+          showSuccess(
+            "Profile settings saved successfully",
+            emailChangeRequested
+              ? "Check your new email address to confirm the change."
+              : "Your changes have been applied.",
+          );
+          return;
+        }
+
+        // If saving a specific section, merge with original settings
         let settingsToSave = currentSettings;
         if (section && originalSettings) {
           settingsToSave = {
@@ -271,7 +337,17 @@ export const useSettings = () => {
           };
         }
 
-        const apiData = localToApiFormat(settingsToSave);
+        // Saving "all" (no section) also covers profile, since it's not
+        // part of the gym_settings payload below.
+        if (!section) {
+          const { success, error } = await saveProfile(settingsToSave);
+          if (!success) {
+            showError("Failed to save profile", error || "Please try again.");
+            return;
+          }
+        }
+
+        const apiData = localToApiFormat(settingsToSave, rawMetadataRef.current);
         const { success, error, data } =
           await saveGymSettingsWithValidation(apiData);
 
@@ -281,9 +357,10 @@ export const useSettings = () => {
         }
 
         if (data) {
+          rawMetadataRef.current = data.metadata || {};
           const localSettings = apiToLocalFormat(data);
           setOriginalSettings(localSettings);
-          
+
           if (section) {
             // Only update the saved section, preserve other unsaved changes
             const nextSettings = {
@@ -317,14 +394,12 @@ export const useSettings = () => {
               general: false,
               profile: false,
               security: false,
-              billing: false,
-              integrations: false,
               gymOperations: false,
             };
             sectionChangesRef.current = clearedSectionChanges;
             setSectionChanges(clearedSectionChanges);
           }
-          
+
           setErrors({});
           showSuccess(
             section
@@ -350,6 +425,7 @@ export const useSettings = () => {
       originalSettings,
       localToApiFormat,
       apiToLocalFormat,
+      saveProfile,
       showSuccess,
       showError,
     ],
@@ -506,8 +582,6 @@ export const useSettings = () => {
             general: false,
             profile: false,
             security: false,
-            billing: false,
-            integrations: false,
             gymOperations: false,
           };
           sectionChangesRef.current = clearedSectionChanges;
