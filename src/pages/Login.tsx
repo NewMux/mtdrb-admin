@@ -243,12 +243,12 @@ export default function Login() {
                     {t("auth.rememberMe")}
                   </label>
                 </div>
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.forgotPassword")}
-                </a>
+                </Link>
               </div>
 
               {/* Error Message */}

@@ -1,5 +1,6 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import toast from "react-hot-toast";
+import { captureError } from "./monitoring";
 
 // Error types for different contexts
 export enum ErrorContext {
@@ -265,14 +266,16 @@ class ErrorHandler {
 
     // Log to external service in production
     if (import.meta.env.PROD) {
-      // Send to logging service (e.g., Sentry, LogRocket, etc.)
-      this.sendToLoggingService();
+      this.sendToLoggingService(error);
     }
   }
 
-  private sendToLoggingService(): void {
-    // Implementation for external logging service
-    // This would integrate with services like Sentry, DataDog, etc.
+  private sendToLoggingService(error: ProcessedError): void {
+    captureError(new Error(error.technicalMessage), {
+      code: error.code,
+      context: error.context,
+      userMessage: error.userMessage,
+    });
   }
 
   // Utility method for showing success messages
