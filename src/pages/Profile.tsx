@@ -36,7 +36,7 @@ export default function Profile() {
         <h1 className="text-2xl font-bold mb-2 text-blue-900">{t("profilePage.title")}</h1>
         <div className="mb-6 text-center">
           <div className="text-blue-900 font-semibold text-lg">
-            {user.user_metadata?.name || t("profilePage.noName")}
+            {user.user_metadata?.full_name || user.user_metadata?.name || t("profilePage.noName")}
           </div>
           <div className="text-blue-400 text-base">{user.email}</div>
         </div>
