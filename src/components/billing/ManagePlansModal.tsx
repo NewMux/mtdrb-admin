@@ -19,6 +19,7 @@ import {
 } from "../AppleStyleModal";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Add plan related types
 type subscription_plan_type = "Membership" | "PT" | "Class Pack" | "Online";
@@ -66,7 +67,7 @@ export function DeleteConfirmationModal({
       isOpen={isOpen}
       onClose={onClose}
       title={t("billing.deletePlan", "حذف الخطة")}
-      subtitle={t("billing.deletePlanConfirm", `هل أنت تأكد من رغبتك في حذف خطة الاشتراك "${planName}"؟ لا يمكن التراجع عن هذا الإجراء.`)}
+      subtitle={t("billing.deletePlanConfirm", 'Are you sure you want to delete the subscription plan "{{planName}}"? This action cannot be undone.', { planName })}
       footer={
         <div className="flex items-center justify-end gap-3 w-full" dir={isRTL ? "rtl" : "ltr"}>
           <SmartButton variant="secondary" onClick={onClose}>
@@ -82,7 +83,7 @@ export function DeleteConfirmationModal({
         <div className="flex items-center gap-3">
           <FiAlertTriangle className="text-red-500 text-2xl flex-shrink-0" />
           <p className="text-gray-700 dark:text-gray-300">
-            {t("billing.deletePlanConfirm", `هل أنت تأكد من رغبتك في حذف خطة الاشتراك "${planName}"؟ لا يمكن التراجع عن هذا الإجراء.`)}
+            {t("billing.deletePlanConfirm", 'Are you sure you want to delete the subscription plan "{{planName}}"? This action cannot be undone.', { planName })}
           </p>
         </div>
       </div>
@@ -293,10 +294,14 @@ export function ManagePlansModal({
                           </p>
                           <div className="flex items-center gap-4 mt-2">
                             <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                              {plan.price} د.ب
+                              {plan.price} {DEFAULT_CURRENCY}
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {plan.billing_cycle === "Monthly" || String(plan.billing_cycle).toLowerCase() === "monthly" ? "شهرياً" : plan.billing_cycle === "Weekly" ? "أسبوعياً" : "سنوياً"}
+                              {plan.billing_cycle === "Monthly" || String(plan.billing_cycle).toLowerCase() === "monthly"
+                                ? t("billing.monthly", "شهرياً")
+                                : plan.billing_cycle === "Weekly"
+                                  ? t("billing.weekly", "أسبوعياً")
+                                  : t("billing.yearly", "سنوياً")}
                             </span>
                             <span
                               className={`px-2 py-1 text-xs rounded-full font-medium ${plan.is_active

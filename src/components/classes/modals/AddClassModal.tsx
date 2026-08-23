@@ -243,7 +243,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {conflicts.length > 0 && (
           <div className="flex items-center gap-1 text-sm text-orange-600">
             <FiAlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <span>{t("classes.conflictsDetected", `تم اكتشاف ${conflicts.length} تعارض`)}</span>
+            <span>{t("classes.conflictsDetected", "{{count}} conflicts detected", { count: conflicts.length })}</span>
           </div>
         )}
       </div>

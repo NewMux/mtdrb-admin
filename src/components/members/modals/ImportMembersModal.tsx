@@ -278,7 +278,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                     htmlFor="file-upload"
                     className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    {t("members.chooseFile", "اختر الملف")}
+                    {t("common.chooseFile", "اختر الملف")}
                   </label>
                 </div>
               </div>
@@ -313,7 +313,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                   <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                   <div className="text-start">
                     <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-                      {t("members.importErrors", `أخطاء الاستيراد (${errors.length})`)}
+                      {t("members.importErrors", "أخطاء الاستيراد ({{count}})", { count: errors.length })}
                     </h4>
                     <ul className="space-y-1 text-xs text-red-700 dark:text-red-300">
                       {errors.map((error, index) => (
@@ -333,7 +333,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {t("members.previewMembers", `معاينة (${importedData.length} عضو)`)}
+                    {t("members.previewMembers", "معاينة ({{count}} عضو)", { count: importedData.length })}
                   </h3>
                   <SmartButton
                     variant="ghost"

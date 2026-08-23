@@ -36,7 +36,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
     return null;
   }
 
-  const memberName = member.name ?? "عضو";
+  const memberName = member.name ?? t("members.member", "عضو");
   const status = member.status ?? "inactive";
   const membershipLabel =
     member.membership_type ?? member.membershipType ?? "Standard";
@@ -91,7 +91,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
           isOpen={isOpen}
           onClose={onClose}
           title={t("members.viewProfileTitle", "الملف الشخصي للعضو")}
-          subtitle={t("members.viewProfileSubtitle", `عرض الملف الشخصي للعضو ${memberName}`)}
+          subtitle={t("members.viewProfileSubtitle", "عرض الملف الشخصي لهذا العضو")}
         >
           <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Header with Avatar and Basic Info */}

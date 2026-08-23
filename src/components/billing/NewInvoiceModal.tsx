@@ -633,7 +633,7 @@ export function NewInvoiceModal({
                         {clientHistory.outstandingBalance.toFixed(
                           3,
                         )}{" "}
-                        د.ب
+                        {DEFAULT_CURRENCY}
                       </span>
                     </div>
                     <div>
@@ -879,7 +879,7 @@ export function NewInvoiceModal({
                             {t("billing.total", "الإجمالي")}
                           </label>
                           <div className="px-4 py-2.5 bg-green-50 dark:bg-green-900/20 rounded-xl text-gray-900 dark:text-white font-medium border border-green-200 dark:border-green-800">
-                            {item.total.toFixed(3)} د.ب
+                            {item.total.toFixed(3)} {DEFAULT_CURRENCY}
                           </div>
                         </div>
                         {items.length > 1 && (
@@ -917,19 +917,19 @@ export function NewInvoiceModal({
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.subtotal", "المجموع الفرعي:")}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {subtotal.toFixed(3)} د.ب
+                      {subtotal.toFixed(3)} {DEFAULT_CURRENCY}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.vatTotal", "إجمالي الضريبة:")}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {vat_total.toFixed(3)} د.ب
+                      {vat_total.toFixed(3)} {DEFAULT_CURRENCY}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.discountTotal", "الخصم:")}</span>
                     <span className="font-medium text-red-600 dark:text-red-400">
-                      -{discount_total.toFixed(3)} د.ب
+                      -{discount_total.toFixed(3)} {DEFAULT_CURRENCY}
                     </span>
                   </div>
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
@@ -938,7 +938,7 @@ export function NewInvoiceModal({
                         {t("billing.grandTotal", "المجموع الكلي:")}
                       </span>
                       <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                        {total.toFixed(3)} د.b
+                        {total.toFixed(3)} {DEFAULT_CURRENCY}
                       </span>
                     </div>
                   </div>
@@ -947,7 +947,7 @@ export function NewInvoiceModal({
                       {t("billing.paidAmountLabel", "المبلغ المدفوع:")}
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {invoiceData.paid_amount.toFixed(3)} د.ب
+                      {invoiceData.paid_amount.toFixed(3)} {DEFAULT_CURRENCY}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -961,7 +961,7 @@ export function NewInvoiceModal({
                           : "font-medium text-green-600 dark:text-green-400"
                       }
                     >
-                      {remaining_balance.toFixed(3)} د.ب
+                      {remaining_balance.toFixed(3)} {DEFAULT_CURRENCY}
                     </span>
                   </div>
                 </div>

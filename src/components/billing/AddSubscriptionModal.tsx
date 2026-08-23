@@ -404,7 +404,13 @@ export function AddSubscriptionModal({
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                   />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {feature.name === "Gym Access" ? "دخول الصالة الرياضية" : feature.name === "Group Classes" ? "الحصص الجماعية" : feature.name === "Personal Training" ? "التدريب الشخصي الفردي" : "الحصص والتدريب أونلاين"}
+                    {feature.name === "Gym Access"
+                      ? t("billing.featureGymAccess", "دخول الصالة الرياضية")
+                      : feature.name === "Group Classes"
+                        ? t("billing.featureGroupClasses", "الحصص الجماعية")
+                        : feature.name === "Personal Training"
+                          ? t("billing.featurePersonalTraining", "التدريب الشخصي الفردي")
+                          : t("billing.featureOnlineClasses", "الحصص والتدريب أونلاين")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

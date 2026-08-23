@@ -22,6 +22,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 interface SmartBillingDashboardProps {
   refreshKey: number;
@@ -235,7 +236,7 @@ export default function SmartBillingDashboard({
             <div className="text-start">
               <div className="text-sm opacity-90">{t("billing.totalRevenue", "إجمالي الإيرادات")}</div>
               <div className="text-2xl font-bold">
-                {metrics.totalRevenue.toFixed(0)} د.ب
+                {metrics.totalRevenue.toFixed(0)} {DEFAULT_CURRENCY}
               </div>
             </div>
           </div>
@@ -248,7 +249,7 @@ export default function SmartBillingDashboard({
               <FiActivity className="text-blue-300 flex-shrink-0" />
             )}
             <span className="text-sm opacity-90">
-              {revenueGrowth.percentage.toFixed(1)}% {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
+              {revenueGrowth.percentage.toFixed(1)}% {t("billing.fromLastMonth", "مقارنة بالشهر الماضي")}
             </span>
           </div>
         </motion.div>
@@ -266,7 +267,7 @@ export default function SmartBillingDashboard({
             <div className="text-start">
               <div className="text-sm opacity-90">{t("billing.vatCollected", "ضريبة القيمة المضافة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.vatCollected.toFixed(0)} د.ب
+                {metrics.vatCollected.toFixed(0)} {DEFAULT_CURRENCY}
               </div>
             </div>
           </div>
@@ -291,7 +292,7 @@ export default function SmartBillingDashboard({
             <div className="text-start">
               <div className="text-sm opacity-90">{t("billing.outstandingAmount", "المبالغ المعلقة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.outstandingAmount.toFixed(0)} د.ب
+                {metrics.outstandingAmount.toFixed(0)} {DEFAULT_CURRENCY}
               </div>
             </div>
           </div>
@@ -316,7 +317,7 @@ export default function SmartBillingDashboard({
             <div className="text-start">
               <div className="text-sm opacity-90">{t("billing.averageInvoice", "متوسط الفاتورة")}</div>
               <div className="text-2xl font-bold">
-                {metrics.averageInvoiceValue.toFixed(0)} د.ب
+                {metrics.averageInvoiceValue.toFixed(0)} {DEFAULT_CURRENCY}
               </div>
             </div>
           </div>
@@ -329,7 +330,7 @@ export default function SmartBillingDashboard({
               <FiActivity className="text-purple-300 flex-shrink-0" />
             )}
             <span className="text-sm opacity-90">
-              {revenueGrowth.percentage >= 0 ? "+" : ""}{revenueGrowth.percentage.toFixed(1)}% {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
+              {revenueGrowth.percentage >= 0 ? "+" : ""}{revenueGrowth.percentage.toFixed(1)}% {t("billing.fromLastMonth", "مقارنة بالشهر الماضي")}
             </span>
           </div>
         </motion.div>
@@ -362,7 +363,7 @@ export default function SmartBillingDashboard({
               </div>
               <div className="text-start">
                 <div className="font-bold text-gray-900 dark:text-white">
-                  {metrics.membershipRevenue.toFixed(0)} د.ب
+                  {metrics.membershipRevenue.toFixed(0)} {DEFAULT_CURRENCY}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
@@ -383,7 +384,7 @@ export default function SmartBillingDashboard({
               </div>
               <div className="text-start">
                 <div className="font-bold text-gray-900 dark:text-white">
-                  {metrics.classRevenue.toFixed(0)} د.ب
+                  {metrics.classRevenue.toFixed(0)} {DEFAULT_CURRENCY}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
@@ -406,7 +407,7 @@ export default function SmartBillingDashboard({
               </div>
               <div className="text-start">
                 <div className="font-bold text-gray-900 dark:text-white">
-                  {metrics.ptRevenue.toFixed(0)} د.ب
+                  {metrics.ptRevenue.toFixed(0)} {DEFAULT_CURRENCY}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {metrics.totalRevenue
@@ -473,7 +474,7 @@ export default function SmartBillingDashboard({
               </div>
               <div className="text-start">
                 <div className="font-bold text-yellow-600 dark:text-yellow-400">
-                  {(metrics.vatCollected * 0.8).toFixed(0)} د.ب
+                  {(metrics.vatCollected * 0.8).toFixed(0)} {DEFAULT_CURRENCY}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">{t("billing.estimatedPayment", "دفعة مقدرة")}</div>
               </div>

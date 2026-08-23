@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let loggedIn = typeof window !== "undefined" ? sessionStorage.getItem("mock_logged_in") : null;
         
         if (loggedIn === null && typeof window !== "undefined") {
-          const publicRoutes = ["/", "/login", "/signup"];
+          const publicRoutes = ["/", "/login", "/signup", "/reset-password", "/forgot-password"];
           if (publicRoutes.includes(location.pathname)) {
             loggedIn = "false";
           } else {
@@ -181,6 +181,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "/signup",
           "/subscribe",
           "/onboarding",
+          "/reset-password",
+          "/forgot-password",
         ];
         if (publicRoutes.includes(location.pathname)) {
           setIsLoading(false);
@@ -214,6 +216,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/reset-password",
+        "/forgot-password",
       ];
       if (publicRoutes.includes(location.pathname)) {
         setIsLoading(false);
@@ -236,6 +240,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/reset-password",
+        "/forgot-password",
       ];
       if (!publicRoutes.includes(location.pathname)) {
         navigate("/login", {
@@ -271,7 +277,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         case "SIGNED_IN":
           if (!sessionUser) break;
 
-          if (location.pathname === "/signup") {
+          if (
+            location.pathname === "/signup" ||
+            location.pathname === "/reset-password" ||
+            location.pathname === "/forgot-password"
+          ) {
             break;
           }
 

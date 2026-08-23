@@ -201,7 +201,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
           open={isOpen}
           onClose={handleClose}
           title={t("members.assignPersonalTrainer", "تعيين مدرب شخصي")}
-          subtitle={t("members.assignTrainerToMember", `تعيين مدرب للعضو ${member.name}`)}
+          subtitle={t("members.assignTrainerToMember", "تعيين مدرب لهذا العضو")}
           modalRef={modalRef}
         >
           <div className="space-y-6 text-start" dir={isRTL ? "rtl" : "ltr"}>

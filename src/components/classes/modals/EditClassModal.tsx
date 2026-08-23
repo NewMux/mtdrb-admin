@@ -231,7 +231,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             {isPro && recommendations.length > 0 && (
               <div className="flex items-center gap-1 text-sm text-blue-600">
                 <FiZap className="h-4 w-4 flex-shrink-0" />
-                <span>{t("classes.smartSuggestions", `${recommendations.length} مقترحات ذكية`)}</span>
+                <span>{t("classes.smartSuggestions", "{{count}} smart suggestions", { count: recommendations.length })}</span>
               </div>
             )}
             {hasChanges() && (
