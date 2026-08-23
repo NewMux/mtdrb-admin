@@ -20,6 +20,7 @@ import {
 import { SmartCard as Card, KPICard, SmartLoading as Loading } from "../ui";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 interface MemberAnalyticsProps {
   refreshKey?: number;
@@ -580,7 +581,7 @@ export default function MemberAnalytics({
     },
     {
       title: t("members.monthlyRevenue", "الإيرادات الشهرية"),
-      value: `${analytics.monthlyRecurringRevenue.toFixed(0)} د.ب`,
+      value: `${analytics.monthlyRecurringRevenue.toFixed(0)} ${DEFAULT_CURRENCY}`,
       change: "+12.3%",
       trend: "up" as const,
       icon: <FiDollarSign className="h-6 w-6" />,
@@ -596,7 +597,7 @@ export default function MemberAnalytics({
     },
     {
       title: t("members.lifetimeValue", "القيمة الدائمة للعضو"),
-      value: `${analytics.averageLifetimeValue.toFixed(0)} د.ب`,
+      value: `${analytics.averageLifetimeValue.toFixed(0)} ${DEFAULT_CURRENCY}`,
       change: "+8.7%",
       trend: "up" as const,
       icon: <FiTarget className="h-6 w-6" />,
@@ -631,7 +632,7 @@ export default function MemberAnalytics({
     },
     {
       title: t("members.arpu", "متوسط الإيراد للعضو"),
-      value: `${analytics.arpu.toFixed(0)} د.ب`,
+      value: `${analytics.arpu.toFixed(0)} ${DEFAULT_CURRENCY}`,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
     },

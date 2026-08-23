@@ -219,7 +219,7 @@ export default function EditTrainerModal({
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
                   errors.experience ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="5 سنوات"
+                placeholder={t("trainers.experiencePlaceholder", "5 سنوات")}
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.experience && (
@@ -247,7 +247,7 @@ export default function EditTrainerModal({
                 className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all ${
                   errors.specialty ? "border-red-300 bg-red-50 dark:bg-red-900/20" : "border-gray-200 dark:border-gray-700"
                 }`}
-                placeholder="يوغا ولياقة"
+                placeholder={t("trainers.specialtyPlaceholder", "يوغا ولياقة")}
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.specialty && (

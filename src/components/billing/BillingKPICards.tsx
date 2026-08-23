@@ -91,7 +91,7 @@ const BillingKPICards: React.FC = () => {
                   {kpi.change}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
+                  {t("billing.fromLastMonth", "مقارنة بالشهر الماضي")}
                 </span>
               </div>
             </div>

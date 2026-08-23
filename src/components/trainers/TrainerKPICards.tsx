@@ -91,7 +91,7 @@ const TrainerKPICards: React.FC = () => {
                   {kpi.change}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {t("common.fromLastMonth", "مقارنة بالشهر الماضي")}
+                  {t("trainers.fromLastMonth", "من الشهر الماضي")}
                 </span>
               </div>
             </div>

@@ -516,17 +516,17 @@ export function AddExpenseModal({
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{totalAmount.toFixed(3)} د.ب</span>
+                  <span>{totalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
                 </div>
                 {watchedVatIncluded && (
                   <div className="flex justify-between text-sm">
                     <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                    <span>{vatAmount.toFixed(3)} د.ب</span>
+                    <span>{vatAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(3)} د.ب</span>
+                  <span>{finalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">
