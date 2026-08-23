@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let loggedIn = typeof window !== "undefined" ? sessionStorage.getItem("mock_logged_in") : null;
         
         if (loggedIn === null && typeof window !== "undefined") {
-          const publicRoutes = ["/", "/login", "/signup", "/reset-password", "/forgot-password"];
+          const publicRoutes = ["/", "/login", "/signup", "/reset-password", "/forgot-password", "/terms", "/privacy", "/refund"];
           if (publicRoutes.includes(location.pathname)) {
             loggedIn = "false";
           } else {
@@ -183,6 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "/onboarding",
           "/reset-password",
           "/forgot-password",
+          "/terms",
+          "/privacy",
+          "/refund",
         ];
         if (publicRoutes.includes(location.pathname)) {
           setIsLoading(false);
@@ -218,6 +221,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/onboarding",
         "/reset-password",
         "/forgot-password",
+        "/terms",
+        "/privacy",
+        "/refund",
       ];
       if (publicRoutes.includes(location.pathname)) {
         setIsLoading(false);
@@ -242,6 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/onboarding",
         "/reset-password",
         "/forgot-password",
+        "/terms",
+        "/privacy",
+        "/refund",
       ];
       if (!publicRoutes.includes(location.pathname)) {
         navigate("/login", {
@@ -280,7 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (
             location.pathname === "/signup" ||
             location.pathname === "/reset-password" ||
-            location.pathname === "/forgot-password"
+            location.pathname === "/forgot-password" ||
+            location.pathname === "/terms" ||
+            location.pathname === "/privacy" ||
+            location.pathname === "/refund"
           ) {
             break;
           }

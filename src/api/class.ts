@@ -326,9 +326,35 @@ export const getClassStats = async (): Promise<ClassStats> => {
 
 export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
   try {
-    const { data: classes, error } = await supabase.from("classes").select("*");
+    const { data: classes, error } = await supabase
+      .from("classes")
+      .select("*, trainers(rating)");
 
     if (error) throw error;
+
+    const classIds = (classes || []).map((c) => c.id);
+    const { data: bookings } = classIds.length
+      ? await supabase
+          .from("class_bookings")
+          .select("class_id, check_in_time")
+          .in("class_id", classIds)
+      : { data: [] as { class_id: string; check_in_time: string | null }[] };
+
+    const bookingsByClass = new Map<string, { total: number; checkedIn: number }>();
+    (bookings || []).forEach((b) => {
+      const entry = bookingsByClass.get(b.class_id) || { total: 0, checkedIn: 0 };
+      entry.total += 1;
+      if (b.check_in_time) entry.checkedIn += 1;
+      bookingsByClass.set(b.class_id, entry);
+    });
+
+    const trainerRatings = (classes || [])
+      .map((c) => (c.trainers as { rating: number | null } | null)?.rating)
+      .filter((r): r is number => typeof r === "number");
+    const averageTrainerRating =
+      trainerRatings.length > 0
+        ? trainerRatings.reduce((sum, r) => sum + r, 0) / trainerRatings.length
+        : 0;
 
     // Calculate popular times
     const popularTimes = {
@@ -368,6 +394,7 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
 
     // Weekly trends (last 4 weeks)
     const weeklyTrends = [];
+    const weeklyRevenue: number[] = [];
     for (let i = 3; i >= 0; i--) {
       const weekStart = new Date();
       weekStart.setDate(weekStart.getDate() - (weekStart.getDay() + i * 7));
@@ -380,17 +407,46 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
           return classDate >= weekStart && classDate <= weekEnd;
         }) || [];
 
+      const weekBookingTotals = weekClasses.reduce(
+        (totals, c) => {
+          const entry = bookingsByClass.get(c.id);
+          if (entry) {
+            totals.total += entry.total;
+            totals.checkedIn += entry.checkedIn;
+          }
+          return totals;
+        },
+        { total: 0, checkedIn: 0 },
+      );
+
       weeklyTrends.push({
         week: weekStart.toISOString().split("T")[0],
         totalClasses: weekClasses.length,
-        attendance: weekClasses.length * 0.7, // Mock attendance rate
+        attendance:
+          weekBookingTotals.total > 0
+            ? weekBookingTotals.checkedIn / weekBookingTotals.total
+            : 0,
       });
+
+      weeklyRevenue.push(
+        weekClasses.reduce((sum, c) => sum + (c.price || 0), 0),
+      );
     }
+
+    const [, , previousWeekRevenue, currentWeekRevenue] = weeklyRevenue;
+    const revenueGrowth =
+      previousWeekRevenue > 0
+        ? ((currentWeekRevenue - previousWeekRevenue) / previousWeekRevenue) *
+          100
+        : 0;
 
     return {
       popularTimes,
       classTypes,
-      classRating: { average: 4.5, totalReviews: 120 }, // Mock data
+      classRating: {
+        average: Math.round(averageTrainerRating * 10) / 10,
+        totalReviews: bookings?.length || 0,
+      },
       weeklyTrends,
       capacityStats: {
         thisWeek:
@@ -406,7 +462,7 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
         totalCapacity:
           classes?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0,
       },
-      revenueGrowth: 12.5, // Mock growth percentage
+      revenueGrowth: Math.round(revenueGrowth * 10) / 10,
     };
   } catch (error) {
     console.error("Error calculating class analytics:", error);

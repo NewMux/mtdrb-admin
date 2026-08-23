@@ -10,6 +10,7 @@ import { FormField, SelectField, FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
 
 interface ClassSettings {
   capacity: number;
@@ -75,13 +76,20 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const loadCurrentSettings = () => {
     if (classData) {
+      const start = classData.start_time ? new Date(classData.start_time) : null;
+      const end = classData.end_time ? new Date(classData.end_time) : null;
+      const durationMinutes =
+        start && end
+          ? Math.round((end.getTime() - start.getTime()) / 60000)
+          : 60;
+
       setSettings({
         capacity: classData.capacity || 20,
-        price: 25, // Mock price
-        duration: 60,
+        price: classData.price || 0,
+        duration: durationMinutes,
         difficulty: "intermediate",
         class_type: classData.type || "Yoga",
-        location: "Studio A",
+        location: classData.location || "",
         description: classData.description || "",
         auto_waitlist: true,
         auto_cancel: false,
@@ -107,7 +115,17 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const { error } = await supabase
+        .from("classes")
+        .update({
+          price: settings.price,
+          capacity: settings.capacity,
+          room: settings.location,
+          description: settings.description,
+        })
+        .eq("id", classId);
+
+      if (error) throw error;
 
       toast.success("Class settings updated successfully");
       setHasChanges(false);
