@@ -372,7 +372,7 @@ export default function ScheduleReportModal({
               onChange={(e) =>
                 setRecipients(e.target.value.split(",").map((r) => r.trim()))
               }
-              placeholder="admin@mtdrb.com, employee@mtdrb.com"
+              placeholder="admin@mtdrb.net, employee@mtdrb.net"
             />
             <p className="text-xs text-gray-500 mt-1">
               Separate multiple emails with commas

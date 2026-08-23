@@ -28,6 +28,22 @@ import {
   SUBSCRIPTION_PLANS,
 } from "../../config/runtimeConfig";
 
+// Short Arabic currency names for the codes this app actually bills in.
+// Falls back to the raw ISO code for anything not listed, so a misconfigured
+// or unmapped currency never silently mislabels itself as a different one.
+const CURRENCY_SHORT_LABELS_AR: Record<string, string> = {
+  USD: "دولار",
+  AED: "درهم",
+  SAR: "ريال سعودي",
+  OMR: "ريال عماني",
+  QAR: "ريال قطري",
+  KWD: "دينار كويتي",
+  BHD: "دينار بحريني",
+  EGP: "جنيه مصري",
+  EUR: "يورو",
+  GBP: "جنيه إسترليني",
+};
+
 const PremiumLanding: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
@@ -37,7 +53,9 @@ const PremiumLanding: React.FC = () => {
   const starterPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "starter");
   const proPlan = SUBSCRIPTION_PLANS.find((plan) => plan.id === "pro");
   const currencyLabel = (starterPlan?.currency || proPlan?.currency || PLATFORM_CURRENCY).toUpperCase();
-  const pricingCurrencyLabel = isRTL ? t("landing.currency_short") : currencyLabel;
+  const pricingCurrencyLabel = isRTL
+    ? CURRENCY_SHORT_LABELS_AR[currencyLabel] || currencyLabel
+    : currencyLabel;
 
 
   const scrollTo = (id: string) => {

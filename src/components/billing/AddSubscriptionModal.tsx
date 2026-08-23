@@ -13,7 +13,7 @@ import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { PLATFORM_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Add subscription related types
 type subscription_status =
@@ -110,7 +110,7 @@ export function AddSubscriptionModal({
     next_billing_date: null as string | null,
     billing_cycle: "monthly" as billing_cycle,
     amount: 0,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
     auto_renew: true,
     payment_method: null as PaymentMethodType | null,
     vat_percentage: 0,
@@ -170,7 +170,7 @@ export function AddSubscriptionModal({
         next_billing_date: null,
         billing_cycle: "monthly",
         amount: 0,
-        currency: PLATFORM_CURRENCY,
+        currency: DEFAULT_CURRENCY,
         auto_renew: true,
         payment_method: null,
         vat_percentage: 0,

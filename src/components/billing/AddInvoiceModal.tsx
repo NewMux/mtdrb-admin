@@ -31,8 +31,8 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import {
   DEFAULT_COUNTRY_CODE,
+  DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
-  PLATFORM_CURRENCY,
 } from "../../config/runtimeConfig";
 
 interface AddInvoiceModalProps {
@@ -290,7 +290,7 @@ export function AddInvoiceModal({
         created_by: user?.id,
         country_code: DEFAULT_COUNTRY_CODE || null,
         vat_amount: calculateVatAmount(),
-        currency: PLATFORM_CURRENCY,
+        currency: DEFAULT_CURRENCY,
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
       };

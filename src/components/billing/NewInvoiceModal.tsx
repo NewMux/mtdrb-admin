@@ -28,7 +28,7 @@ import { SmartModal } from "../ui/SmartModal";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { PLATFORM_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Smart suggestions for line items
 const SMART_SUGGESTIONS: Record<
@@ -46,42 +46,42 @@ const SMART_SUGGESTIONS: Record<
     type: "PT",
     unitPrice: 50,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
   MEMBERSHIP: {
     description: "Monthly Membership",
     type: "Membership",
     unitPrice: 100,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
   CLASS: {
     description: "Group Fitness Class",
     type: "Class",
     unitPrice: 25,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
   EQUIPMENT: {
     description: "Equipment Rental",
     type: "Facility",
     unitPrice: 15,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
   CONSULTATION: {
     description: "Fitness Consultation",
     type: "PT",
     unitPrice: 75,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
   SUPPLEMENTS: {
     description: "Nutrition Supplements",
     type: "Other",
     unitPrice: 45,
     vatRate: 5,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
   },
 };
 
@@ -137,7 +137,7 @@ export function NewInvoiceModal({
     due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
     payment_method: "card" as PaymentMethodType,
     paid_amount: 0,
-    currency: PLATFORM_CURRENCY,
+    currency: DEFAULT_CURRENCY,
     notes: "",
   });
 
@@ -212,7 +212,7 @@ export function NewInvoiceModal({
           editingInvoice.due_date || dayjs().add(7, "day").format("YYYY-MM-DD"),
         payment_method: editingInvoice.payment_method || "card",
         paid_amount: editingInvoice.paid_amount || 0,
-        currency: editingInvoice.currency || PLATFORM_CURRENCY,
+        currency: editingInvoice.currency || DEFAULT_CURRENCY,
         notes: editingInvoice.notes || "",
       });
       setSelectedClient(editingInvoice.member || null);
@@ -230,7 +230,7 @@ export function NewInvoiceModal({
         due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
         payment_method: "card" as PaymentMethodType,
         paid_amount: 0,
-        currency: PLATFORM_CURRENCY,
+        currency: DEFAULT_CURRENCY,
         notes: "",
       });
       setSelectedClient(null);

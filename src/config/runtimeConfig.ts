@@ -19,7 +19,7 @@ export const DEFAULT_TIMEZONE =
   (typeof Intl !== "undefined"
     ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
     : "UTC");
-export const DEFAULT_CURRENCY = readEnv("VITE_DEFAULT_CURRENCY") || "";
+export const DEFAULT_CURRENCY = readEnv("VITE_DEFAULT_CURRENCY") || "USD";
 export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
