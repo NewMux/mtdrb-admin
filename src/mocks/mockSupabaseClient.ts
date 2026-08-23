@@ -461,6 +461,7 @@ export function createMockSupabaseClient() {
           error: null,
         };
       },
+      resetPasswordForEmail: async () => ({ data: {}, error: null }),
       updateUser: async (attributes?: UserAttributes) => {
         if (attributes?.data) {
           currentMockUser = {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   FiTrendingUp,
   FiBarChart,
@@ -150,8 +151,9 @@ const VATSummaryCard = ({
 }: {
   vatSummary: RevenueOverviewProps["vatSummary"];
 }) => {
+  const navigate = useNavigate();
   const handleGenerateVATReport = () => {
-    // TODO: Implement VAT report generation
+    navigate("/dashboard/billing");
   };
   if (!vatSummary || typeof vatSummary !== "object") {
     return (
@@ -259,8 +261,9 @@ const TopProductsTable = ({
 }: {
   products: RevenueOverviewProps["topProducts"];
 }) => {
+  const navigate = useNavigate();
   const handleViewAll = () => {
-    // TODO: Implement view all products functionality
+    navigate("/dashboard/billing");
   };
   if (!products || !Array.isArray(products)) {
     return (

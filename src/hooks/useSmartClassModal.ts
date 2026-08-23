@@ -104,6 +104,7 @@ export interface UseSmartClassModalReturn {
   fetchClass: () => Promise<void>;
   fetchTrainers: () => Promise<void>;
   fetchRooms: () => Promise<void>;
+  createRoom: (name: string, capacity: number) => Promise<SmartRoom | null>;
   checkConflicts: (
     trainerId: string,
     startTime: string,
@@ -261,14 +262,90 @@ export const useSmartClassModal = ({
   // Fetch rooms
   const fetchRooms = useCallback(async () => {
     try {
-      // TODO: Fetch rooms from Supabase when rooms table is available
-      // For now, return empty array - no mock data
-      setRooms([]);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+
+      if (!tenantId) {
+        setRooms([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("id, name, capacity, equipment")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+
+      setRooms(
+        (data || []).map((room) => ({
+          id: room.id,
+          name: room.name,
+          capacity: room.capacity,
+          equipment: room.equipment || [],
+        })),
+      );
     } catch (error) {
       console.error("Error fetching rooms:", error);
       setRooms([]);
     }
   }, []);
+
+  // Create a room (admin-only per RLS; callers should surface the resulting
+  // error to non-admins rather than assume this always succeeds)
+  const createRoom = useCallback(
+    async (name: string, capacity: number): Promise<SmartRoom | null> => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+
+        let tenantId = user.user_metadata?.tenant_id;
+        if (!tenantId) {
+          const { data: membershipData } = await supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", user.id)
+            .single();
+          tenantId = membershipData?.tenant_id;
+        }
+        if (!tenantId) return null;
+
+        const { data, error } = await supabase
+          .from("rooms")
+          .insert({ tenant_id: tenantId, name, capacity })
+          .select("id, name, capacity, equipment")
+          .single();
+
+        if (error) throw error;
+
+        const room: SmartRoom = {
+          id: data.id,
+          name: data.name,
+          capacity: data.capacity,
+          equipment: data.equipment || [],
+        };
+        setRooms((prev) => [...prev, room].sort((a, b) => a.name.localeCompare(b.name)));
+        return room;
+      } catch (error) {
+        console.error("Error creating room:", error);
+        toast.error("Failed to create room");
+        return null;
+      }
+    },
+    [],
+  );
 
   // Check for conflicts
   const checkConflicts = useCallback(async (
@@ -661,6 +738,7 @@ export const useSmartClassModal = ({
     fetchClass,
     fetchTrainers,
     fetchRooms,
+    createRoom,
 
     // Validation and conflict checking
     checkConflicts,

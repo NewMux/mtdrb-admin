@@ -77,21 +77,36 @@ const SendClassPromotionModal: React.FC<SendClassPromotionModalProps> = ({
         }
 
         if (tenantId) {
-          const { data, error } = await supabase
-            .from("members")
-            .select("id, first_name, last_name, email, status")
-            .eq("tenant_id", tenantId);
+          const [{ data, error }, { data: bookings }] = await Promise.all([
+            supabase
+              .from("members")
+              .select("id, first_name, last_name, email, status")
+              .eq("tenant_id", tenantId),
+            supabase
+              .from("class_bookings")
+              .select("member_id, created_at")
+              .eq("tenant_id", tenantId)
+              .in("status", ["checked_in", "completed"])
+              .order("created_at", { ascending: false }),
+          ]);
 
           if (error) throw error;
-          
+
+          const lastClassByMember = new Map<string, string>();
+          for (const booking of bookings || []) {
+            if (!lastClassByMember.has(booking.member_id)) {
+              lastClassByMember.set(booking.member_id, booking.created_at);
+            }
+          }
+
           const formattedMembers: Member[] = (data || []).map((m: { id: string; first_name: string; last_name: string; email: string; status: string }) => ({
             id: m.id,
             name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.email,
             email: m.email,
             status: m.status,
-            lastClass: undefined, // TODO: Fetch from class_bookings
+            lastClass: lastClassByMember.get(m.id),
           }));
-          
+
           setMembers(formattedMembers);
         }
       } catch (error) {

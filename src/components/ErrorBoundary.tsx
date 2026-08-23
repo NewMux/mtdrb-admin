@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
+import { captureError } from "../services/monitoring";
 
 interface Props {
   children: ReactNode;
@@ -29,6 +30,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     this.setState({ error, errorInfo });
+
+    captureError(error, { componentStack: errorInfo.componentStack ?? undefined });
 
     if (this.props.onError) {
       this.props.onError(error, errorInfo);

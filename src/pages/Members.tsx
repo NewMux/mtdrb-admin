@@ -50,6 +50,7 @@ type MemberRow = Database["public"]["Tables"]["members"]["Row"];
 // Shape of the application-specific data stored in members.metadata (jsonb)
 interface MemberRowMetadata {
   gender?: string;
+  age?: number;
   last_check_in?: string;
   check_in_count?: number;
   membership_price?: number | string;
@@ -202,7 +203,7 @@ const Members: React.FC = () => {
             name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || m.email,
             email: m.email,
             phone: m.phone || "",
-            age: 25, // TODO: Calculate from metadata or add age field
+            age: metadata.age ?? 18,
             gender: (["Male", "Female", "Other"].includes(metadata.gender ?? "")
               ? metadata.gender
               : "Other") as "Male" | "Female" | "Other",

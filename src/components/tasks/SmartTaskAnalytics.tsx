@@ -57,23 +57,11 @@ interface SmartTaskAnalyticsProps {
   refreshKey: number;
 }
 
-// Removed mock data - using real data from Supabase
-// TODO: Fetch from Supabase
+// This initial value is only ever visible while `loading` is true (the
+// render below gates on it), so it never reaches the user - it just seeds
+// useState before fetchTaskAnalytics()'s real Supabase-computed data lands.
 const emptyTaskAnalyticsData = {
   filters: {
-    branches: [
-      { id: "main", name: "Main Branch", selected: true },
-      { id: "north", name: "North Branch", selected: false },
-      { id: "south", name: "South Branch", selected: false },
-      { id: "east", name: "East Branch", selected: false },
-    ],
-    staff: [
-      { id: "sarah", name: "Sarah Johnson", selected: true },
-      { id: "mike", name: "Mike Chen", selected: true },
-      { id: "emma", name: "Emma Davis", selected: false },
-      { id: "alex", name: "Alex Rodriguez", selected: false },
-      { id: "lisa", name: "Lisa Thompson", selected: false },
-    ],
     dateRanges: [
       { id: "last-7-days", name: "Last 7 Days", selected: false },
       { id: "last-30-days", name: "Last 30 Days", selected: true },
@@ -203,6 +191,7 @@ const emptyTaskAnalyticsData = {
 const AnalyticsFilters: React.FC = () => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
+  const { tenantId } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
     branch: "all",
@@ -211,6 +200,36 @@ const AnalyticsFilters: React.FC = () => {
     status: "all",
     priority: "all",
   });
+  const [branchOptions, setBranchOptions] = useState<{ id: string; name: string }[]>([]);
+  const [staffOptions, setStaffOptions] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      if (!tenantId) return;
+      const [{ data: branches }, { data: trainers }] = await Promise.all([
+        supabase
+          .from("branches")
+          .select("id, name")
+          .eq("tenant_id", tenantId)
+          .eq("is_active", true)
+          .order("name", { ascending: true }),
+        supabase
+          .from("trainers")
+          .select("id, first_name, last_name")
+          .eq("tenant_id", tenantId)
+          .eq("status", "active")
+          .order("first_name", { ascending: true }),
+      ]);
+      setBranchOptions((branches || []).map((b) => ({ id: b.id, name: b.name })));
+      setStaffOptions(
+        (trainers || []).map((s) => ({
+          id: s.id,
+          name: `${s.first_name || ""} ${s.last_name || ""}`.trim(),
+        })),
+      );
+    };
+    loadFilterOptions();
+  }, [tenantId]);
 
   const toggleFilters = () => {
     setIsExpanded(!isExpanded);
@@ -250,10 +269,11 @@ const AnalyticsFilters: React.FC = () => {
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="all">{t("tasks.allBranches")}</option>
-                <option value="main">Main Branch</option>
-                <option value="north">North Branch</option>
-                <option value="south">South Branch</option>
-                <option value="east">East Branch</option>
+                {branchOptions.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
               </select>
 
               {/* Assigned To */}
@@ -266,11 +286,11 @@ const AnalyticsFilters: React.FC = () => {
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="all">{t("tasks.allStaff")}</option>
-                <option value="sarah">Sarah Johnson</option>
-                <option value="mike">Mike Chen</option>
-                <option value="emma">Emma Davis</option>
-                <option value="alex">Alex Rodriguez</option>
-                <option value="lisa">Lisa Thompson</option>
+                {staffOptions.map((staff) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.name}
+                  </option>
+                ))}
               </select>
 
               {/* Date Range */}

@@ -18,7 +18,8 @@ import {
   SmartRecommendationCard,
   ConflictAlert,
 } from "./SmartFormComponents";
-import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { useSmartClassModal, SmartRecommendation } from "../../../hooks/useSmartClassModal";
+import { toast } from "react-hot-toast";
 import { SmartButton } from "../../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
@@ -79,7 +80,58 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
     validateForm,
     getPopularTimeSlots,
     saveClass,
+    createRoom,
   } = useSmartClassModal({ isPro });
+
+  const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomCapacity, setNewRoomCapacity] = useState(10);
+  const [addingRoom, setAddingRoom] = useState(false);
+  const [showAddRoom, setShowAddRoom] = useState(false);
+
+  const handleCreateRoom = async () => {
+    if (!newRoomName.trim()) return;
+    setAddingRoom(true);
+    try {
+      const room = await createRoom(newRoomName.trim(), newRoomCapacity);
+      if (room) {
+        setFormData((prev) => ({ ...prev, room_id: room.id }));
+        setNewRoomName("");
+        setNewRoomCapacity(10);
+        setShowAddRoom(false);
+      }
+    } finally {
+      setAddingRoom(false);
+    }
+  };
+
+  const handleApplyRecommendation = (recommendation: SmartRecommendation) => {
+    switch (recommendation.type) {
+      case "capacity":
+        setFormData((prev) => ({
+          ...prev,
+          capacity: Math.max(prev.capacity + 1, Math.ceil(prev.capacity * 1.2)),
+        }));
+        toast.success(t("classes.capacityIncreased", "Capacity increased"));
+        break;
+      case "timing":
+      case "scheduling":
+        if (popularTimeSlots[0]) {
+          setFormData((prev) => ({ ...prev, start_time: popularTimeSlots[0] }));
+          toast.success(t("classes.timeApplied", "Popular time slot applied"));
+        } else {
+          toast(t("classes.noSuggestedTime", "No suggested time available yet"));
+        }
+        break;
+      case "trainer":
+        document.getElementsByName("trainer_id")[0]?.focus();
+        break;
+      case "location":
+        document.getElementsByName("room_id")[0]?.focus();
+        break;
+      default:
+        toast(t("classes.noAutomaticChange", "No automatic change for this recommendation"));
+    }
+  };
 
   useEffect(() => {
     const fetchPopularSlots = async () => {
@@ -258,9 +310,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                 <SmartRecommendationCard
                   key={recommendation.id}
                   recommendation={recommendation}
-                  onApply={() => {
-                    // TODO: Implement recommendation application
-                  }}
+                  onApply={() => handleApplyRecommendation(recommendation)}
                 />
               ))}
             </div>
@@ -345,20 +395,58 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                 </option>
               ))}
             </AppleSelect>
-            <AppleSelect
-              label={t("classes.room")}
-              name="room_id"
-              value={formData.room_id}
-              onChange={handleInputChange}
-              aria-label={t("classes.room")}
-            >
-              <option value="">{t("classes.selectRoom")}</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name} ({room.capacity} {t("classes.capacity")})
-                </option>
-              ))}
-            </AppleSelect>
+            <div>
+              <AppleSelect
+                label={t("classes.room")}
+                name="room_id"
+                value={formData.room_id}
+                onChange={handleInputChange}
+                aria-label={t("classes.room")}
+              >
+                <option value="">{t("classes.selectRoom")}</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name} ({room.capacity} {t("classes.capacity")})
+                  </option>
+                ))}
+              </AppleSelect>
+              {!showAddRoom ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAddRoom(true)}
+                  className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                >
+                  + {t("classes.addNewRoom", "Add new room")}
+                </button>
+              ) : (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newRoomName}
+                    onChange={(e) => setNewRoomName(e.target.value)}
+                    placeholder={t("classes.roomName", "Room name")}
+                    className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    value={newRoomCapacity}
+                    onChange={(e) => setNewRoomCapacity(parseInt(e.target.value) || 0)}
+                    className="w-16 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                  <SmartButton
+                    variant="secondary"
+                    size="sm"
+                    type="button"
+                    onClick={handleCreateRoom}
+                    loading={addingRoom}
+                    disabled={addingRoom || !newRoomName.trim()}
+                  >
+                    {t("common.add", "Add")}
+                  </SmartButton>
+                </div>
+              )}
+            </div>
           </div>
         </section>
         {/* Date & Time Section */}

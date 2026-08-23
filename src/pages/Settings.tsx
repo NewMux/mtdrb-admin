@@ -245,9 +245,30 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleViewLoginHistory = () => {
-    // TODO: Implement login history view
-    showSuccess(t("settings.loginHistory"), t("settings.loginHistoryFeature"));
+  const [showLoginHistoryModal, setShowLoginHistoryModal] = useState(false);
+  const [loginHistory, setLoginHistory] = useState<
+    { id: string; created_at: string; description: string }[]
+  >([]);
+  const [loadingLoginHistory, setLoadingLoginHistory] = useState(false);
+
+  const handleViewLoginHistory = async () => {
+    setShowLoginHistoryModal(true);
+    setLoadingLoginHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from("activities")
+        .select("id, created_at, description")
+        .eq("tenant_id", tenantId)
+        .eq("type", "login")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (!error && data) {
+        setLoginHistory(data);
+      }
+    } finally {
+      setLoadingLoginHistory(false);
+    }
   };
 
   const handleUpgradePlan = () => {
@@ -1283,6 +1304,40 @@ const Settings: React.FC = () => {
               {changingPassword ? t("settings.changing") : t("settings.changePassword")}
             </SmartButton>
           </div>
+        </div>
+      </SmartModal>
+
+      {/* Login History Modal */}
+      <SmartModal
+        isOpen={showLoginHistoryModal}
+        onClose={() => setShowLoginHistoryModal(false)}
+        title={t("settings.loginHistory")}
+        size="md"
+      >
+        <div className="space-y-3">
+          {loadingLoginHistory ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : loginHistory.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+              {t("settings.noLoginHistory", "No sign-ins recorded yet.")}
+            </p>
+          ) : (
+            loginHistory.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {entry.description}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {new Date(entry.created_at).toLocaleString()}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </SmartModal>
 

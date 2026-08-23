@@ -18,6 +18,8 @@ import {
   type SmartSuggestion,
 } from "./useSmartTaskModal";
 import { SmartButton } from "../../ui/DesignSystem";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
 // Removed mock data - using real data from Supabase
 
 interface AddTaskModalProps {
@@ -75,10 +77,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [recentTasks, setRecentTasks] = useState<RecentTask[]>([]);
+  const [staff, setStaff] = useState<{ id: string; name: string }[]>([]);
   const [errors, setErrors] = useState<
     Array<{ field: string; message: string }>
   >([]);
 
+  const { tenantId } = useAuth();
   const { createTask, smartSuggestions } =
     useSmartTaskModal({
       isPro,
@@ -86,33 +90,44 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
 
   useEffect(() => {
     const fetchRecentTasks = async () => {
-      // TODO: Fetch recent tasks from Supabase
-      const tasks: RecentTask[] = [
-        {
-          id: "1",
-          title: "Setup new member onboarding for Sarah",
-          type: "onboarding",
-          priority: "high",
-        },
-        {
-          id: "2",
-          title: "Equipment maintenance check",
-          type: "maintenance",
-          priority: "medium",
-        },
-        {
-          id: "3",
-          title: "Class setup for Yoga session",
-          type: "class_setup",
-          priority: "medium",
-        },
-      ];
-      setRecentTasks(tasks);
+      if (!tenantId) return;
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("id, title, type, priority")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      if (!error && data) {
+        setRecentTasks(data as RecentTask[]);
+      }
     };
     if (open) {
       fetchRecentTasks();
     }
-  }, [open]);
+  }, [open, tenantId]);
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      if (!tenantId) return;
+      const { data, error } = await supabase
+        .from("trainers")
+        .select("id, first_name, last_name")
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .order("first_name", { ascending: true });
+      if (!error && data) {
+        setStaff(
+          data.map((trainer) => ({
+            id: trainer.id,
+            name: `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim(),
+          })),
+        );
+      }
+    };
+    if (open) {
+      fetchStaff();
+    }
+  }, [open, tenantId]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -199,13 +214,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     { value: "urgent", label: "Urgent" },
   ];
 
-  // TODO: Fetch trainers from Supabase
-  const staffOptions: Array<{ value: string; label: string }> = (
-    [] as Array<{ id: string; name: string }>
-  ).map((trainer) => ({
-    value: trainer.id,
-    label: trainer.name,
-  }));
+  const staffOptions: Array<{ value: string; label: string }> = staff.map(
+    (trainer) => ({
+      value: trainer.id,
+      label: trainer.name,
+    }),
+  );
 
   const isFormValid = formData.title && formData.type && formData.priority;
 
