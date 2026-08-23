@@ -148,28 +148,13 @@ export function SubscriptionProvider({
           trial_end: subData.trial_end,
         });
       } else {
-        // Check if it's a demo/trial account or fallback to user metadata
-        const { data: userData } = await supabase.auth.getUser();
-        const userMeta = userData?.user?.user_metadata;
-        const isDemoAccount = currentUser.email?.includes("demo") || 
-                             currentUser.email?.includes("test") ||
-                             currentUser.email?.includes("trial") ||
-                             !!userMeta?.paid;
-        
-        if (isDemoAccount) {
-          const plan = userMeta?.subscription_tier || "pro";
-          setIsPro(plan === "pro" || plan === "enterprise");
-          setSubscription({
-            id: "metadata-subscription",
-            member_id: currentUser.id,
-            status: "active",
-            plan_type: plan,
-            created_at: new Date().toISOString(),
-          });
-        } else {
-          setIsPro(false);
-          setSubscription(null);
-        }
+        // No platform_subscriptions row for this tenant: not entitled. Never
+        // fall back to auth user_metadata (an email substring or a
+        // client-editable field via supabase.auth.updateUser()) to decide
+        // paid/Pro status -- that would let any signed-up user grant
+        // themselves Pro access for free.
+        setIsPro(false);
+        setSubscription(null);
       }
     } catch (error) {
       console.error("Error checking subscription:", error);
@@ -207,27 +192,21 @@ export function SubscriptionProvider({
 export function useSubscription() {
   const context = useContext(SubscriptionContext);
   if (context === undefined) {
-    console.warn("useSubscription was called outside of a SubscriptionProvider. Returning default fallback context.");
+    console.warn("useSubscription was called outside of a SubscriptionProvider. Returning a fail-closed fallback context.");
     return {
-      isPro: true,
+      isPro: false,
       isLoading: false,
-      subscription: {
-        id: "fallback-subscription",
-        member_id: "fallback-member",
-        status: "active",
-        plan_type: "enterprise",
-        created_at: new Date().toISOString(),
-      },
+      subscription: null,
       proFeatures: {
-        deepAnalytics: true,
-        advancedReports: true,
-        automationEngine: true,
-        memberInsights: true,
-        bulkOperations: true,
-        customBranding: true,
-        apiAccess: true,
+        deepAnalytics: false,
+        advancedReports: false,
+        automationEngine: false,
+        memberInsights: false,
+        bulkOperations: false,
+        customBranding: false,
+        apiAccess: false,
       },
-      checkProFeature: () => true,
+      checkProFeature: () => false,
       upgradePrompt: () => {},
     };
   }

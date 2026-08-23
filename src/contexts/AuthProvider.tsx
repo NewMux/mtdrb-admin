@@ -220,34 +220,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // metadata.paid already reflects isSubscriptionEntitled() computed from
+      // the RLS-protected platform_subscriptions row in handleUserMetadata.
+      // Do not re-derive entitlement here from user_metadata.trial_end: it is
+      // client-editable via supabase.auth.updateUser() and would let any user
+      // grant themselves indefinite access by setting a future trial_end.
       if (metadata && !metadata.paid) {
-        let trialEnd = user?.user_metadata?.trial_end;
-        if (metadata.tenant_id) {
-          try {
-            const { data: subData } = await withTimeout(
-              Promise.resolve(
-                supabase
-                  .from("platform_subscriptions")
-                  .select("trial_end")
-                  .eq("tenant_id", metadata.tenant_id)
-                  .maybeSingle()
-              ),
-              8000,
-              "Timed out checking trial status"
-            );
-            if (subData?.trial_end) {
-              trialEnd = subData.trial_end;
-            }
-          } catch {
-            // trial_end lookup failed; fall through with default grace period
-          }
-        }
-
-        const gracePeriod = new Date(trialEnd || 0);
-        const now = new Date();
-        if (!Number.isNaN(gracePeriod.getTime()) && now > gracePeriod) {
-          navigate("/subscribe", { replace: true });
-        }
+        navigate("/subscribe", { replace: true });
       }
     } catch (err) {
       const errorState = handleAuthError(err);
@@ -296,34 +275,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             break;
           }
 
+          // See the comment in checkAuth: entitlement must come only from
+          // metadata.paid (derived server-side), never from user_metadata.
           if (metadata && !metadata.paid) {
-            let trialEnd = sessionUser.user_metadata?.trial_end;
-            if (metadata.tenant_id) {
-              try {
-                const { data: subData } = await withTimeout(
-                  Promise.resolve(
-                    supabase
-                      .from("platform_subscriptions")
-                      .select("trial_end")
-                      .eq("tenant_id", metadata.tenant_id)
-                      .maybeSingle()
-                  ),
-                  8000,
-                  "Timed out checking trial status"
-                );
-                if (subData?.trial_end) {
-                  trialEnd = subData.trial_end;
-                }
-              } catch {
-                // trial_end lookup failed; fall through with default grace period
-              }
-            }
-            const gracePeriod = new Date(trialEnd || 0);
-            const now = new Date();
-            if (now > gracePeriod) {
-              navigate("/subscribe");
-              break;
-            }
+            navigate("/subscribe");
+            break;
           }
           if (
             metadata?.paid &&

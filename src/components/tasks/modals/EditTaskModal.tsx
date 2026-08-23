@@ -320,7 +320,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   }))
                 }
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="email@mtdrb.com"
+                placeholder="email@mtdrb.net"
               />
             </div>
           </div>

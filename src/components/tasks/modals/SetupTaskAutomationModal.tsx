@@ -104,7 +104,7 @@ export const SetupTaskAutomationModal: React.FC<
       description: "Automated daily cleaning tasks for gym maintenance",
       type: "recurring",
       schedule: "daily 6:00 AM",
-      assignee: "cleaning@mtdrb.com",
+      assignee: "cleaning@mtdrb.net",
       priority: "medium",
     },
     {
@@ -113,7 +113,7 @@ export const SetupTaskAutomationModal: React.FC<
       description: "Automated onboarding tasks when new member joins",
       type: "triggered",
       trigger: "new_member_registration",
-      assignee: "trainer@mtdrb.com",
+      assignee: "trainer@mtdrb.net",
       priority: "high",
     },
     {
@@ -122,7 +122,7 @@ export const SetupTaskAutomationModal: React.FC<
       description: "Monthly equipment maintenance and safety checks",
       type: "scheduled",
       schedule: "monthly 1st 9:00 AM",
-      assignee: "maintenance@mtdrb.com",
+      assignee: "maintenance@mtdrb.net",
       priority: "medium",
     },
     {
@@ -131,7 +131,7 @@ export const SetupTaskAutomationModal: React.FC<
       description: "Weekly inventory and supply check",
       type: "recurring",
       schedule: "weekly monday 8:00 AM",
-      assignee: "admin@mtdrb.com",
+      assignee: "admin@mtdrb.net",
       priority: "low",
     },
   ];
@@ -423,7 +423,7 @@ export const SetupTaskAutomationModal: React.FC<
                 }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-              placeholder="email@mtdrb.com"
+              placeholder="email@mtdrb.net"
             />
           </div>
 

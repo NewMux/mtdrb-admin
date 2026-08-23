@@ -6,6 +6,7 @@ import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "r
 import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import { withTimeout } from "../utils/withTimeout";
+import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -57,20 +58,28 @@ export default function Signup() {
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
   const [signedUpUser, setSignedUpUser] = React.useState<User | null>(null);
+  const { isLocked, remainingSeconds, registerFailure } = useAuthAttemptLimiter(
+    "signup",
+    email,
+  );
 
   // ===== HANDLE SIGNUP SUBMIT =====
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) {
+      setError(t("auth.tooManyAttempts", { seconds: remainingSeconds }));
+      return;
+    }
     setLoading(true);
     setError("");
-    
+
     // Validate gym name
     if (!gymName.trim()) {
       setError(t("auth.pleaseEnterGymName"));
       setLoading(false);
       return;
     }
-    
+
     // Sign up with Supabase
     // Use VITE_APP_URL for email redirects, fallback to current origin
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
@@ -86,6 +95,7 @@ export default function Signup() {
     });
     setLoading(false);
     if (error) {
+      registerFailure();
       setError(error.message);
     } else if (data?.user) {
       // Store the user and session from signup response
@@ -412,15 +422,17 @@ export default function Signup() {
               <motion.button
                 type="submit"
                 className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
-                whileHover={{ scale: loading ? 1 : 1.02 }}
-                whileTap={{ scale: loading ? 1 : 0.98 }}
-                disabled={loading}
+                whileHover={{ scale: loading || isLocked ? 1 : 1.02 }}
+                whileTap={{ scale: loading || isLocked ? 1 : 0.98 }}
+                disabled={loading || isLocked}
               >
                 {loading ? (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`animate-spin rounded-full h-5 w-5 border-b-2 border-white ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
                     {t("auth.creatingAccount")}
                   </div>
+                ) : isLocked ? (
+                  t("auth.tooManyAttempts", { seconds: remainingSeconds })
                 ) : (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {t("auth.createAccountButton")}

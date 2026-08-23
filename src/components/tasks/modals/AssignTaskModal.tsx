@@ -37,7 +37,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     {
       id: "1",
       name: "Mike Chen",
-      email: "mike.chen@mtdrb.com",
+      email: "mike.chen@mtdrb.net",
       role: "trainer",
       department: "fitness",
       currentLoad: 3,
@@ -48,7 +48,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     {
       id: "2",
       name: "Sarah Johnson",
-      email: "sarah.johnson@mtdrb.com",
+      email: "sarah.johnson@mtdrb.net",
       role: "trainer",
       department: "fitness",
       currentLoad: 5,
@@ -59,7 +59,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     {
       id: "3",
       name: "David Rodriguez",
-      email: "david.rodriguez@mtdrb.com",
+      email: "david.rodriguez@mtdrb.net",
       role: "maintenance",
       department: "facilities",
       currentLoad: 2,
@@ -70,7 +70,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     {
       id: "4",
       name: "Emma Wilson",
-      email: "emma.wilson@mtdrb.com",
+      email: "emma.wilson@mtdrb.net",
       role: "admin",
       department: "operations",
       currentLoad: 4,
@@ -81,7 +81,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     {
       id: "5",
       name: "Alex Thompson",
-      email: "alex.thompson@mtdrb.com",
+      email: "alex.thompson@mtdrb.net",
       role: "trainer",
       department: "fitness",
       currentLoad: 1,
@@ -103,7 +103,7 @@ export const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
     if (!task) return;
 
     const assigneeEmail = assignToSelf
-      ? "current_user@mtdrb.com"
+      ? "current_user@mtdrb.net"
       : selectedAssignee;
     const result = await assignTask(task.id, assigneeEmail);
     if (result.success) {

@@ -4,6 +4,7 @@ import { FiShield, FiFileText, FiRefreshCw, FiArrowLeft, FiHelpCircle } from "re
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../hooks/useRTL";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import { PLATFORM_CURRENCY } from "../config/runtimeConfig";
 
 interface LegalProps {
   initialTab?: "terms" | "privacy" | "refund";
@@ -110,10 +111,10 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   : "If you have any legal questions regarding our terms or privacy policy, please contact our legal support team."}
               </p>
               <a
-                href="mailto:legal@mtdrb.com"
+                href="mailto:legal@mtdrb.net"
                 className="mt-3 block text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400"
               >
-                legal@mtdrb.com
+                legal@mtdrb.net
               </a>
             </div>
           </aside>
@@ -159,8 +160,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "جميع أسعار الباقات تُحتسب بالدرهم الإماراتي (AED). يتم تحصيل الرسوم شهريًا أو سنويًا وفقًا لاختيارك. تجدد الاشتراكات تلقائيًا ما لم تقم بإلغاء الاشتراك من لوحة إعدادات الفوترة قبل نهاية الفترة الحالية."
-                      : "All subscription fees are billed in UAE Dirhams (AED). Fees are payable in advance on a recurring monthly or annual basis. Subscriptions automatically renew unless cancelled through your dashboard billing settings prior to the renewal date."}
+                      ? `جميع أسعار الباقات تُحتسب بعملة ${PLATFORM_CURRENCY}. يتم تحصيل الرسوم شهريًا أو سنويًا وفقًا لاختيارك. تجدد الاشتراكات تلقائيًا ما لم تقم بإلغاء الاشتراك من لوحة إعدادات الفوترة قبل نهاية الفترة الحالية.`
+                      : `All subscription fees are billed in ${PLATFORM_CURRENCY}. Fees are payable in advance on a recurring monthly or annual basis. Subscriptions automatically renew unless cancelled through your dashboard billing settings prior to the renewal date.`}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">

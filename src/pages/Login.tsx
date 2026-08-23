@@ -7,6 +7,7 @@ import { useNavigate, Link, useLocation, Navigate } from "react-router-dom";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
+import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -39,6 +40,8 @@ export default function Login() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const { isLocked, remainingSeconds, registerFailure, reset } =
+    useAuthAttemptLimiter("login", email);
 
   // Immediate redirect if already authenticated (including dev bypass)
   // Use Navigate component for synchronous redirect to prevent flickering
@@ -59,6 +62,10 @@ export default function Login() {
   // ===== HANDLE LOGIN SUBMIT =====
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) {
+      setError(t("auth.tooManyAttempts", { seconds: remainingSeconds }));
+      return;
+    }
     setLoading(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({
@@ -67,9 +74,11 @@ export default function Login() {
     });
     if (error) {
       setLoading(false);
+      registerFailure();
       setError(t("auth.invalidCredentials"));
     } else {
       setLoading(false);
+      reset();
       // Entitlement is resolved centrally by SubscriptionProvider and enforced
       // by subscription-aware pages, not by mirrored user metadata.
       const from = getRedirectPath(location.state);
@@ -262,15 +271,17 @@ export default function Login() {
               <motion.button
                 type="submit"
                 className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
-                whileHover={{ scale: loading ? 1 : 1.02 }}
-                whileTap={{ scale: loading ? 1 : 0.98 }}
-                disabled={loading}
+                whileHover={{ scale: loading || isLocked ? 1 : 1.02 }}
+                whileTap={{ scale: loading || isLocked ? 1 : 0.98 }}
+                disabled={loading || isLocked}
               >
                 {loading ? (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`animate-spin rounded-full h-5 w-5 border-b-2 border-white ${isRTL ? 'ml-2' : 'mr-2'}`}></div>
                     {t("common.loading")}
                   </div>
+                ) : isLocked ? (
+                  t("auth.tooManyAttempts", { seconds: remainingSeconds })
                 ) : (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                     {t("auth.signIn")}
