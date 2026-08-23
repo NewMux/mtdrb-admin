@@ -139,8 +139,7 @@ export default function ExportReportModal({
   isPro,
 }: ExportReportModalProps) {
   const { tenantId } = useAuth();
-  const { loading, generateReport, alerts, clearAlerts } =
-    useSmartAnalyticsModal();
+  const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
   const isProUser = isPro ?? true;
 
@@ -334,12 +333,9 @@ export default function ExportReportModal({
         exportJSON(exportData, filename);
       }
 
-      const result = await generateReport();
-      if (result.success) {
-        toast.success("Report exported successfully");
-        onSuccess?.();
-        onClose();
-      }
+      toast.success("Report exported successfully");
+      onSuccess?.();
+      onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(

@@ -23,6 +23,7 @@ import TrainerPerformanceDashboard from "../components/trainers/TrainerPerforman
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { supabase } from "../supabaseClient";
 import { mapDbTrainerToUI } from "../mocks/demoData";
+import { exportCSV } from "../utils/exportData";
 
 // Import all modals
 import {
@@ -191,8 +192,23 @@ const Trainers: React.FC = () => {
 
   const handleExport = async () => {
     try {
-      toast.loading(t("trainers.export") + "...");
-      // TODO: Implement real export functionality
+      if (trainers.length === 0) {
+        toast.error(t("trainers.exportFailed"));
+        return;
+      }
+      exportCSV(
+        trainers.map((trainer) => ({
+          name: trainer.name,
+          email: trainer.email,
+          phone: trainer.phone,
+          specialty: trainer.specialty,
+          rating: trainer.rating,
+          status: trainer.status,
+          classes: trainer.classes,
+          experience: trainer.experience,
+        })),
+        "trainers",
+      );
       toast.success(t("trainers.exportSuccessful"));
     } catch (error) {
       toast.error(t("trainers.exportFailed"));

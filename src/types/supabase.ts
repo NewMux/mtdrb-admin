@@ -137,6 +137,41 @@ export interface Database {
           metadata?: Json;
         };
       };
+      rooms: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          capacity: number;
+          equipment?: string[];
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+          metadata?: Json;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          capacity?: number;
+          equipment?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          name?: string;
+          capacity?: number;
+          equipment?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+          metadata?: Json;
+        };
+      };
       expenses: {
         Row: {
           id: string;
@@ -298,10 +333,12 @@ export interface Database {
             | "class"
             | "signup"
             | "renewal"
-            | "booking";
+            | "booking"
+            | "login";
           title: string;
           description: string;
           user?: string;
+          user_id?: string;
           amount?: string;
           status?: "success" | "pending" | "failed";
           metadata?: Json;
@@ -316,10 +353,12 @@ export interface Database {
             | "class"
             | "signup"
             | "renewal"
-            | "booking";
+            | "booking"
+            | "login";
           title: string;
           description: string;
           user?: string;
+          user_id?: string;
           amount?: string;
           status?: "success" | "pending" | "failed";
           metadata?: Json;
@@ -334,10 +373,12 @@ export interface Database {
             | "class"
             | "signup"
             | "renewal"
-            | "booking";
+            | "booking"
+            | "login";
           title?: string;
           description?: string;
           user?: string;
+          user_id?: string;
           amount?: string;
           status?: "success" | "pending" | "failed";
           metadata?: Json;
@@ -359,6 +400,7 @@ export interface Database {
           expiry_date?: string;
           trainer_id?: string;
           assigned_branch_id?: string;
+          date_of_birth?: string;
           metadata?: Json;
         };
         Insert: {
@@ -376,6 +418,7 @@ export interface Database {
           expiry_date?: string;
           trainer_id?: string;
           assigned_branch_id?: string;
+          date_of_birth?: string;
           metadata?: Json;
         };
         Update: {
@@ -393,6 +436,7 @@ export interface Database {
           expiry_date?: string;
           trainer_id?: string;
           assigned_branch_id?: string;
+          date_of_birth?: string;
           metadata?: Json;
         };
       };
@@ -409,6 +453,7 @@ export interface Database {
           specialties: string[];
           rating?: number;
           hourly_rate: number;
+          max_members: number;
           metadata?: Json;
         };
         Insert: {
@@ -423,6 +468,7 @@ export interface Database {
           specialties: string[];
           rating?: number;
           hourly_rate: number;
+          max_members?: number;
           metadata?: Json;
         };
         Update: {
@@ -437,6 +483,7 @@ export interface Database {
           specialties?: string[];
           rating?: number;
           hourly_rate?: number;
+          max_members?: number;
           metadata?: Json;
         };
       };

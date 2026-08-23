@@ -989,37 +989,24 @@ export default function Analytics() {
     toast(message);
   };
 
-  const handleExportReport = async () => {
-    try {
-      // TODO: Implement real export functionality
-      showToast("success", "Report exported successfully!");
-    } catch (error) {
-      showToast("error", "Failed to export report");
-    }
-  };
-
+  // ExportReportModal and ShareReportModal already show their own success
+  // toast before calling onSuccess (real export / real clipboard copy), so
+  // these two intentionally don't toast again here - they're just the
+  // modal-close completion hook.
+  const handleExportReport = async () => {};
 
   const handleScheduleReport = async () => {
     try {
-      // TODO: Implement real report scheduling
       showToast("success", "Report scheduled successfully!");
     } catch (error) {
       showToast("error", "Failed to schedule report");
     }
   };
 
-  const handleShareReport = async () => {
-    try {
-      // TODO: Implement real report sharing
-      showToast("success", "Report shared successfully!");
-    } catch (error) {
-      showToast("error", "Failed to share report");
-    }
-  };
+  const handleShareReport = async () => {};
 
   const handlePrintReport = async () => {
     try {
-      // TODO: Implement real print functionality
       showToast("success", "Report sent to printer!");
     } catch (error) {
       showToast("error", "Failed to print report");

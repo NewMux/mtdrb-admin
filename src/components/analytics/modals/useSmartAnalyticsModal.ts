@@ -171,23 +171,6 @@ export const useSmartAnalyticsModal = (
     }
   };
 
-  // Generate and export report
-  const generateReport = async () => {
-    setLoading(true);
-    try {
-      // TODO: Implement real report generation and export
-      setAlerts([
-        { type: "info", message: "Report generated and exported successfully" },
-      ]);
-      return { success: true, downloadUrl: "/api/reports/download/123" };
-    } catch (error) {
-      setAlerts([{ type: "error", message: "Failed to generate report" }]);
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Schedule recurring report. There's no cron/email-delivery backend yet,
   // so this can't actually deliver reports on schedule - it persists the
   // request for real (in gym_settings.metadata) so it isn't just a fake
@@ -308,7 +291,6 @@ export const useSmartAnalyticsModal = (
     reportPreview,
     alerts,
     generatePreview,
-    generateReport,
     scheduleReport,
     saveTemplate,
     applyRecommendation,

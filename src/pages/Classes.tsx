@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
+import { supabase } from "../supabaseClient";
 import { Class } from "../types";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useRTL } from "../hooks/useRTL";
@@ -164,6 +165,18 @@ export default function SmartClassManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [trainerOptions, setTrainerOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    type: "",
+    trainerId: "",
+    dateFrom: "",
+    dateTo: "",
+  });
+  const [appliedAdvancedFilters, setAppliedAdvancedFilters] = useState(
+    advancedFilters,
+  );
 
   // Analytics & Insights State
   const [classStats, setClassStats] = useState<ClassStats>({
@@ -329,6 +342,45 @@ export default function SmartClassManagement() {
 
     initializeData();
   }, [fetchSmartInsights]);
+
+  useEffect(() => {
+    const loadTrainerOptions = async () => {
+      const { data, error } = await supabase
+        .from("trainers")
+        .select("id, first_name, last_name")
+        .order("first_name", { ascending: true });
+      if (!error && data) {
+        setTrainerOptions(
+          data.map((trainer) => ({
+            id: trainer.id,
+            name: `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim() || t("common.unknown", "Unknown"),
+          })),
+        );
+      }
+    };
+    loadTrainerOptions();
+  }, [t]);
+
+  const filteredClasses = classes.filter((classItem) => {
+    if (appliedAdvancedFilters.type && classItem.type !== appliedAdvancedFilters.type) {
+      return false;
+    }
+    if (
+      appliedAdvancedFilters.trainerId &&
+      classItem.trainer_id !== appliedAdvancedFilters.trainerId
+    ) {
+      return false;
+    }
+    if (appliedAdvancedFilters.dateFrom) {
+      const start = classItem.start_time ? new Date(classItem.start_time) : null;
+      if (!start || start < new Date(appliedAdvancedFilters.dateFrom)) return false;
+    }
+    if (appliedAdvancedFilters.dateTo) {
+      const start = classItem.start_time ? new Date(classItem.start_time) : null;
+      if (!start || start > new Date(appliedAdvancedFilters.dateTo)) return false;
+    }
+    return true;
+  });
 
   // Modal handlers
   const handleAddClass = () => {
@@ -543,7 +595,7 @@ export default function SmartClassManagement() {
               </div>
 
               <ClassTable
-                classes={classes}
+                classes={filteredClasses}
                 onEdit={handleEditClass}
                 onDelete={handleDeleteClass}
                 onView={handleViewClass}
@@ -792,8 +844,15 @@ export default function SmartClassManagement() {
         onClose={() => setShowAdvancedFilters(false)}
         title={t("classes.advancedFilters")}
         clearLabel={t("classes.clearFilters")}
+        onApply={() => {
+          setAppliedAdvancedFilters(advancedFilters);
+          setShowAdvancedFilters(false);
+        }}
         onClear={() => {
           setSelectedFilter("all");
+          const cleared = { type: "", trainerId: "", dateFrom: "", dateTo: "" };
+          setAdvancedFilters(cleared);
+          setAppliedAdvancedFilters(cleared);
         }}
       >
         {/* Class Type Filter */}
@@ -801,7 +860,14 @@ export default function SmartClassManagement() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Class Type
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select
+            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
+            dir={isRTL ? "rtl" : "ltr"}
+            value={advancedFilters.type}
+            onChange={(e) =>
+              setAdvancedFilters((prev) => ({ ...prev, type: e.target.value }))
+            }
+          >
             <option value="">All Types</option>
             <option value="yoga">Yoga</option>
             <option value="pilates">Pilates</option>
@@ -819,9 +885,20 @@ export default function SmartClassManagement() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Trainer
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select
+            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
+            dir={isRTL ? "rtl" : "ltr"}
+            value={advancedFilters.trainerId}
+            onChange={(e) =>
+              setAdvancedFilters((prev) => ({ ...prev, trainerId: e.target.value }))
+            }
+          >
             <option value="">All Trainers</option>
-            {/* TODO: Populate with actual trainers */}
+            {trainerOptions.map((trainer) => (
+              <option key={trainer.id} value={trainer.id}>
+                {trainer.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -836,12 +913,20 @@ export default function SmartClassManagement() {
               className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
               placeholder={t("classes.from")}
               dir={isRTL ? "rtl" : "ltr"}
+              value={advancedFilters.dateFrom}
+              onChange={(e) =>
+                setAdvancedFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
+              }
             />
             <input
               type="date"
               className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
               placeholder={t("classes.to")}
               dir={isRTL ? "rtl" : "ltr"}
+              value={advancedFilters.dateTo}
+              onChange={(e) =>
+                setAdvancedFilters((prev) => ({ ...prev, dateTo: e.target.value }))
+              }
             />
           </div>
         </div>

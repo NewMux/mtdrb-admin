@@ -79,10 +79,43 @@ export default function Login() {
     } else {
       setLoading(false);
       reset();
+      void logLoginActivity();
       // Entitlement is resolved centrally by SubscriptionProvider and enforced
       // by subscription-aware pages, not by mirrored user metadata.
       const from = getRedirectPath(location.state);
       navigate(from);
+    }
+  };
+
+  // Best-effort sign-in record for Settings > Security > Login History.
+  // Never blocks or fails the login itself - if this errors (e.g. no
+  // membership yet), it just silently doesn't get logged this once.
+  const logLoginActivity = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!membership?.tenant_id) return;
+
+      await supabase.from("activities").insert({
+        tenant_id: membership.tenant_id,
+        type: "login",
+        title: "Signed in",
+        description: `${user.email || "A user"} signed in`,
+        user_id: user.id,
+        status: "success",
+      });
+    } catch {
+      // Non-critical - login already succeeded.
     }
   };
 

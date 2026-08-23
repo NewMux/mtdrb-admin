@@ -29,8 +29,7 @@ interface Trainer {
   id: string;
   name: string;
   specialization: string;
-  rating: number;
-  experience: string;
+  rating: number | null;
   availability: string;
   currentMembers: number;
   maxMembers: number;
@@ -39,8 +38,32 @@ interface Trainer {
 
 type TrainerRow = Pick<
   Database["public"]["Tables"]["trainers"]["Row"],
-  "id" | "first_name" | "last_name" | "email" | "specialties" | "hourly_rate"
+  "id" | "first_name" | "last_name" | "email" | "specialties" | "rating" | "max_members"
 >;
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const formatAvailability = (
+  schedule: { day_of_week: number | null; start_time: string | null; end_time: string | null }[],
+): string => {
+  if (schedule.length === 0) return "No schedule set";
+  const byTime = new Map<string, number[]>();
+  for (const slot of schedule) {
+    if (slot.day_of_week === null || !slot.start_time || !slot.end_time) continue;
+    const key = `${slot.start_time.slice(0, 5)}-${slot.end_time.slice(0, 5)}`;
+    const days = byTime.get(key) || [];
+    days.push(slot.day_of_week);
+    byTime.set(key, days);
+  }
+  if (byTime.size === 0) return "No schedule set";
+  return Array.from(byTime.entries())
+    .map(([time, days]) => {
+      const sorted = [...days].sort((a, b) => a - b);
+      const labels = sorted.map((d) => DAY_LABELS[d]).join(", ");
+      return `${labels} ${time}`;
+    })
+    .join(" • ");
+};
 
 const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
   isOpen,
@@ -74,30 +97,36 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         if (tenantId) {
           const { data, error } = await supabase
             .from("trainers")
-            .select("id, first_name, last_name, email, specialties, hourly_rate")
+            .select("id, first_name, last_name, email, specialties, rating, max_members")
             .eq("tenant_id", tenantId)
             .eq("status", "active");
 
           if (error) throw error;
 
-          // Get member counts for each trainer
+          // Get member counts and real weekly schedule for each trainer
           const trainersWithCounts = await Promise.all(
             (data || []).map(async (t: TrainerRow) => {
-              const { count } = await supabase
-                .from("members")
-                .select("*", { count: "exact", head: true })
-                .eq("trainer_id", t.id)
-                .eq("status", "active");
+              const [{ count }, { data: schedule }] = await Promise.all([
+                supabase
+                  .from("members")
+                  .select("*", { count: "exact", head: true })
+                  .eq("trainer_id", t.id)
+                  .eq("status", "active"),
+                supabase
+                  .from("trainer_schedule")
+                  .select("day_of_week, start_time, end_time")
+                  .eq("trainer_id", t.id)
+                  .eq("is_available", true),
+              ]);
 
               return {
                 id: t.id,
                 name: `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email,
                 specialization: (t.specialties || []).join(", "),
-                rating: 4.5, // TODO: Calculate from reviews
-                experience: "N/A", // TODO: Add experience field
-                availability: "Mon-Fri, 6AM-8PM", // TODO: Fetch from schedule
+                rating: t.rating ?? null,
+                availability: formatAvailability(schedule || []),
                 currentMembers: count || 0,
-                maxMembers: 15, // TODO: Add max_members field to trainers table
+                maxMembers: t.max_members,
                 avatar: `${t.first_name?.[0] || ''}${t.last_name?.[0] || ''}`.toUpperCase() || "T",
               };
             })
@@ -201,10 +230,8 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       <div className="flex items-center gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
                         <div className="flex items-center gap-1">
                           <FiStar className="w-3 h-3 text-yellow-500" />
-                          <span>{currentTrainer.rating}</span>
+                          <span>{currentTrainer.rating ?? "—"}</span>
                         </div>
-                        <span>•</span>
-                        <span>{currentTrainer.experience}</span>
                       </div>
                     </div>
                     <SmartButton
@@ -254,15 +281,9 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                             <div className="flex items-center space-x-1">
                               <FiStar className="w-3 h-3 text-yellow-500" />
                               <span className="text-xs text-gray-600 dark:text-gray-400">
-                                {trainer.rating}
+                                {trainer.rating ?? "—"}
                               </span>
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              •
-                            </span>
-                            <span className="text-xs text-gray-600 dark:text-gray-400">
-                              {trainer.experience}
-                            </span>
                           </div>
                         </div>
 
