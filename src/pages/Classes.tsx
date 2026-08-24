@@ -151,7 +151,7 @@ export default function SmartClassManagement() {
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  useSubscription();
+  const { isPro } = useSubscription();
 
   // View State
   const [activeView, setActiveView] = useState<ClassesView>("dashboard");
@@ -744,6 +744,7 @@ export default function SmartClassManagement() {
             isOpen={activeModal === "add"}
             onClose={closeModal}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -753,6 +754,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -780,6 +782,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -789,6 +792,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -798,6 +802,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -816,6 +821,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 
@@ -825,6 +831,7 @@ export default function SmartClassManagement() {
             onClose={closeModal}
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
+            isPro={isPro}
           />
         )}
 

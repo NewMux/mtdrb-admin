@@ -1404,6 +1404,7 @@ export default function Analytics() {
             open={modalState.export}
             onClose={() => closeModal("export")}
             onSuccess={handleExportReport}
+            isPro={isPro}
           />
         )}
 
@@ -1412,6 +1413,7 @@ export default function Analytics() {
             open={modalState.scheduleReport}
             onClose={() => closeModal("scheduleReport")}
             onSuccess={handleScheduleReport}
+            isPro={isPro}
           />
         )}
 
@@ -1420,6 +1422,7 @@ export default function Analytics() {
             open={modalState.shareReport}
             onClose={() => closeModal("shareReport")}
             onSuccess={handleShareReport}
+            isPro={isPro}
           />
         )}
 
@@ -1428,6 +1431,7 @@ export default function Analytics() {
             open={modalState.printReport}
             onClose={() => closeModal("printReport")}
             onSuccess={handlePrintReport}
+            isPro={isPro}
           />
         )}
 

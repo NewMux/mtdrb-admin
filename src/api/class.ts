@@ -216,6 +216,25 @@ export const bookClass = async (
   memberId: string,
 ): Promise<ClassBooking | null> => {
   try {
+    const { data: classRow, error: classError } = await supabase
+      .from("classes")
+      .select("capacity")
+      .eq("id", classId)
+      .single();
+    if (classError) throw classError;
+
+    const { count: bookedCount, error: countError } = await supabase
+      .from("class_bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("class_id", classId)
+      .eq("status", "booked");
+    if (countError) throw countError;
+
+    if (classRow && (bookedCount ?? 0) >= classRow.capacity) {
+      toast.error("Class is at full capacity");
+      return null;
+    }
+
     const { data, error } = await supabase
       .from("class_bookings")
       .insert({
