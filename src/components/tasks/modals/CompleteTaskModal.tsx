@@ -8,6 +8,8 @@ import {
 } from "react-icons/fi";
 import { SmartTaskModal } from "./SmartTaskModal";
 import { useSmartTaskModal } from "./useSmartTaskModal";
+import { useAuth } from "../../../contexts/AuthContext";
+import { supabase } from "../../../supabaseClient";
 
 interface CompleteTaskModalProps {
   open: boolean;
@@ -24,11 +26,13 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
 }) => {
   const { loading, task, changeTaskStatus, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
+  const { tenantId } = useAuth();
 
   const [comment, setComment] = React.useState("");
   const [outcomeSummary, setOutcomeSummary] = React.useState("");
   const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([]);
   const [showLateWarning, setShowLateWarning] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
 
   // Check if task is late
   const isLate = task?.dueDate && new Date(task.dueDate) < new Date();
@@ -54,7 +58,35 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
   const handleCompleteTask = async () => {
     if (!task) return;
 
-    const result = await changeTaskStatus(task.id, "completed", comment);
+    let attachments: string[] = [];
+    if (uploadedFiles.length > 0 && tenantId) {
+      setUploading(true);
+      try {
+        const uploads = await Promise.all(
+          uploadedFiles.map(async (file) => {
+            const safeFileName = file.name
+              .replace(/[^a-zA-Z0-9._-]/g, "_")
+              .slice(-120);
+            const path = `attachments/${tenantId}/${task.id}/${crypto.randomUUID()}_${safeFileName}`;
+            const { error } = await supabase.storage
+              .from("task-attachments")
+              .upload(path, file);
+            if (error) throw error;
+            return path;
+          }),
+        );
+        attachments = uploads;
+      } catch (error) {
+        console.error("Error uploading task attachments:", error);
+      } finally {
+        setUploading(false);
+      }
+    }
+
+    const result = await changeTaskStatus(task.id, "completed", comment, {
+      outcome: outcomeSummary,
+      attachments,
+    });
     if (result.success) {
       onClose();
     }
@@ -319,11 +351,11 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
               <button
                 type="button"
                 onClick={handleCompleteTask}
-                disabled={loading || !outcomeSummary}
+                disabled={loading || uploading || !outcomeSummary}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <FiCheck className="w-4 h-4" />
-                <span>{loading ? "Completing..." : "Complete Task"}</span>
+                <span>{uploading ? "Uploading..." : loading ? "Completing..." : "Complete Task"}</span>
               </button>
             </div>
           </div>
