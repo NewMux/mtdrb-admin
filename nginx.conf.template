@@ -20,11 +20,26 @@ server {
         try_files $uri /index.html;
     }
 
+    # Nginx does not inherit server-level add_header directives once a
+    # location declares its own add_header. Repeat the security headers here
+    # so the SPA shell keeps them when Cache-Control is set locally.
     location = /index.html {
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN}; form-action 'self'" always;
         add_header Cache-Control "no-cache";
     }
 
     location ~* \.(?:js|css|svg|png|jpg|jpeg|gif|ico|webp|woff2?|ttf|eot)$ {
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN}; form-action 'self'" always;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
