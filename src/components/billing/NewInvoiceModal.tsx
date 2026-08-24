@@ -369,8 +369,8 @@ export function NewInvoiceModal({
     setIsSaving(true);
     try {
       const action = editingInvoice ? "updated" : "created";
+      const existingMetadata = (editingInvoice?.metadata as Record<string, unknown>) || {};
       const invoicePayload = {
-        invoice_number: invoiceData.invoice_number || `INV-${Date.now()}`,
         type: invoiceData.type,
         status: saveAsDraft ? "Draft" : invoiceData.status,
         member_id: selectedClient.id,
@@ -379,13 +379,17 @@ export function NewInvoiceModal({
         payment_method: invoiceData.payment_method,
         paid_amount: invoiceData.paid_amount,
         currency: invoiceData.currency,
-        notes: invoiceData.notes,
-        subtotal,
         vat_total,
-        discount_total,
         total,
         line_items: items,
         tenant_id: tenantId,
+        metadata: {
+          ...existingMetadata,
+          invoice_number: invoiceData.invoice_number || `INV-${Date.now()}`,
+          notes: invoiceData.notes,
+          subtotal,
+          discount_total,
+        },
       };
 
       let result;

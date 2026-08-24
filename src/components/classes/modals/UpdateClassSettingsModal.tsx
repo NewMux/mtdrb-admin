@@ -82,22 +82,23 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
         start && end
           ? Math.round((end.getTime() - start.getTime()) / 60000)
           : 60;
+      const advanced = (classData.metadata?.advanced as Partial<ClassSettings>) || {};
 
       setSettings({
         capacity: classData.capacity || 20,
         price: classData.price || 0,
         duration: durationMinutes,
-        difficulty: "intermediate",
+        difficulty: advanced.difficulty || "intermediate",
         class_type: classData.type || "Yoga",
         location: classData.location || "",
         description: classData.description || "",
-        auto_waitlist: true,
-        auto_cancel: false,
-        min_attendance: 3,
-        max_waitlist: 10,
-        trainer_requirements: [],
-        equipment_needed: [],
-        special_instructions: "",
+        auto_waitlist: advanced.auto_waitlist ?? true,
+        auto_cancel: advanced.auto_cancel ?? false,
+        min_attendance: advanced.min_attendance ?? 3,
+        max_waitlist: advanced.max_waitlist ?? 10,
+        trainer_requirements: advanced.trainer_requirements || [],
+        equipment_needed: advanced.equipment_needed || [],
+        special_instructions: advanced.special_instructions || "",
       });
     }
   };
@@ -115,6 +116,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
     setLoading(true);
     try {
+      const existingMetadata = classData?.metadata || {};
       const { error } = await supabase
         .from("classes")
         .update({
@@ -122,6 +124,19 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
           capacity: settings.capacity,
           room: settings.location,
           description: settings.description,
+          metadata: {
+            ...existingMetadata,
+            advanced: {
+              difficulty: settings.difficulty,
+              auto_waitlist: settings.auto_waitlist,
+              auto_cancel: settings.auto_cancel,
+              min_attendance: settings.min_attendance,
+              max_waitlist: settings.max_waitlist,
+              trainer_requirements: settings.trainer_requirements,
+              equipment_needed: settings.equipment_needed,
+              special_instructions: settings.special_instructions,
+            },
+          },
         })
         .eq("id", classId);
 

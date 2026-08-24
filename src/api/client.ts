@@ -55,6 +55,55 @@ interface GymSettings {
 // Removed mock data - using real data from Supabase
 // Removed isDev - always use real Supabase
 
+/** Raw `branches` row as it actually exists in the database. */
+interface BranchRow {
+  id: string;
+  tenant_id: string;
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  is_active: boolean;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+function fromBranchRow(row: BranchRow): Branch {
+  const metadata = row.metadata || {};
+  return {
+    id: row.id,
+    tenant_id: row.tenant_id,
+    name: row.name,
+    address: row.address ?? undefined,
+    phone: row.phone ?? undefined,
+    email: row.email ?? undefined,
+    is_active: row.is_active,
+    manager_name: metadata.manager_name as string | undefined,
+    business_hours: metadata.business_hours as Branch["business_hours"],
+    booking_policies: metadata.booking_policies as Branch["booking_policies"],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function toBranchRow(
+  data: Partial<Branch>,
+  existingMetadata: Record<string, unknown> = {},
+): Record<string, unknown> {
+  const { manager_name, business_hours, booking_policies, ...rest } = data;
+  const row: Record<string, unknown> = { ...rest };
+  if (manager_name !== undefined || business_hours !== undefined || booking_policies !== undefined) {
+    row.metadata = {
+      ...existingMetadata,
+      ...(manager_name !== undefined && { manager_name }),
+      ...(business_hours !== undefined && { business_hours }),
+      ...(booking_policies !== undefined && { booking_policies }),
+    };
+  }
+  return row;
+}
+
 export const api = {
   auth: {
     signUp: async (email: string, password: string, name: string) => {
@@ -699,35 +748,52 @@ export const api = {
   },
 
   branches: {
+    // `manager_name`/`business_hours`/`booking_policies` aren't real columns
+    // on `branches` - they live under `metadata`. This boundary keeps the
+    // rest of the app working with the flat `Branch` shape it already uses.
     getAll: async (): Promise<ApiResponse<Branch[]>> => {
-      return supabase
+      const result = await supabase
         .from("branches")
         .select("*")
         .order("name", { ascending: true });
+      return { ...result, data: result.data?.map(fromBranchRow) ?? null };
     },
     getById: async (id: string): Promise<ApiResponse<Branch>> => {
-      return supabase.from("branches").select("*").eq("id", id).single();
+      const result = await supabase.from("branches").select("*").eq("id", id).single();
+      return { ...result, data: result.data ? fromBranchRow(result.data) : null };
     },
     create: async (data: Omit<Branch, "id" | "created_at">): Promise<ApiResponse<Branch>> => {
-      return supabase.from("branches").insert(data).select().single();
+      const result = await supabase
+        .from("branches")
+        .insert(toBranchRow(data))
+        .select()
+        .single();
+      return { ...result, data: result.data ? fromBranchRow(result.data) : null };
     },
     update: async (id: string, data: Partial<Branch>): Promise<ApiResponse<Branch>> => {
-      return supabase
+      const { data: existingRow } = await supabase
         .from("branches")
-        .update(data)
+        .select("metadata")
+        .eq("id", id)
+        .single();
+      const result = await supabase
+        .from("branches")
+        .update(toBranchRow(data, (existingRow?.metadata as Record<string, unknown>) || {}))
         .eq("id", id)
         .select()
         .single();
+      return { ...result, data: result.data ? fromBranchRow(result.data) : null };
     },
     delete: async (id: string): Promise<ApiResponse<null>> => {
       return supabase.from("branches").delete().eq("id", id);
     },
     getActive: async (): Promise<ApiResponse<Branch[]>> => {
-      return supabase
+      const result = await supabase
         .from("branches")
         .select("*")
         .eq("is_active", true)
         .order("name", { ascending: true });
+      return { ...result, data: result.data?.map(fromBranchRow) ?? null };
     },
   },
 

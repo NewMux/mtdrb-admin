@@ -71,7 +71,7 @@ const invoiceSchema = z.object({
   date: z.string().min(1, "Date is required"),
   category: z.string().min(1, "Category is required"),
   payment_method: z.string().min(1, "Payment method is required"),
-  client: z.string().optional(),
+  member_id: z.string().min(1, "Client is required"),
   description: z.string().optional(),
   status: z.string().min(1, "Status is required"),
   recurring: z.boolean().default(false),
@@ -99,7 +99,24 @@ export function AddInvoiceModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const clientInputRef = useRef<HTMLInputElement>(null);
+  const [memberOptions, setMemberOptions] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!isOpen || !authTenantId) return;
+    supabase
+      .from("members")
+      .select("id, first_name, last_name")
+      .eq("tenant_id", authTenantId)
+      .order("first_name", { ascending: true })
+      .then(({ data }) => {
+        setMemberOptions(
+          (data || []).map((m) => ({
+            id: m.id,
+            name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Unknown",
+          })),
+        );
+      });
+  }, [isOpen, authTenantId]);
 
   const {
     register,
@@ -116,7 +133,7 @@ export function AddInvoiceModal({
       date: new Date().toISOString().split("T")[0],
       category: "Other",
       payment_method: "card",
-      client: "",
+      member_id: "",
       description: "",
       status: "Unpaid",
       recurring: false,
@@ -161,7 +178,7 @@ export function AddInvoiceModal({
           editingInvoice.issue_date || new Date().toISOString().split("T")[0],
         category: editingInvoice.type || "Other",
         payment_method: editingInvoice.payment_method || "card",
-        client: editingInvoice.member?.name || "",
+        member_id: editingInvoice.member?.id || "",
         description: editingInvoice.notes || "",
         status: editingInvoice.status || "Unpaid",
         recurring: false,
@@ -227,12 +244,6 @@ export function AddInvoiceModal({
     e.preventDefault();
   };
 
-  // Handle client autocomplete
-  const handleClientInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setValue("client", value);
-  };
-
   // Calculate VAT amount
   const calculateVatAmount = () => {
     const amount =
@@ -277,22 +288,24 @@ export function AddInvoiceModal({
       }
 
       const invoicePayload = {
-        title: data.title,
+        member_id: data.member_id,
         issue_date: data.date,
         amount: parseFloat(data.amount.toString()),
         type: data.category as InvoiceType,
         payment_method: data.payment_method,
-        member: data.client || null,
-        notes: data.description || null,
-        invoice_url: invoiceUrl,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
-        created_by: user?.id,
-        country_code: DEFAULT_COUNTRY_CODE || null,
-        vat_amount: calculateVatAmount(),
         currency: DEFAULT_CURRENCY,
-        internal_notes: data.internal_notes || null,
-        public_notes: data.public_notes || null,
+        vat_total: calculateVatAmount(),
+        metadata: {
+          title: data.title,
+          notes: data.description || null,
+          invoice_url: invoiceUrl,
+          created_by: user?.id,
+          country_code: DEFAULT_COUNTRY_CODE || null,
+          internal_notes: data.internal_notes || null,
+          public_notes: data.public_notes || null,
+        },
       };
 
       const { error } = await supabase
@@ -431,14 +444,19 @@ export function AddInvoiceModal({
                 </AppleSelect>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
-                <AppleInput
+                <AppleSelect
                   label={t("billing.client", "العميل / العضو")}
-                  {...register("client")}
-                  error={errors.client?.message}
-                  placeholder={t("billing.enterClientName", "أدخل اسم العميل")}
-                  onChange={handleClientInput}
-                  ref={clientInputRef}
-                />
+                  {...register("member_id")}
+                  error={errors.member_id?.message}
+                  required
+                >
+                  <option value="">{t("billing.selectClient", "اختر العميل")}</option>
+                  {memberOptions.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </AppleSelect>
                 <AppleSelect
                   label={t("billing.paymentMethod", "طريقة الدفع")}
                   {...register("payment_method")}
