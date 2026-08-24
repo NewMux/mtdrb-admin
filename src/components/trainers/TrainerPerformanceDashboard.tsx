@@ -20,6 +20,7 @@ import {
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import type { Database } from "../../types/supabase";
+import { exportCSV } from "../../utils/exportData";
 import { useRTL } from "../../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import {
@@ -44,13 +45,18 @@ interface TrainerPerformanceDashboardProps {
 }
 
 interface FilterState {
-  branches: string[];
   trainer: string;
   dateRange: string;
   classType: string;
-  memberGender: string;
   membershipType: string;
 }
+
+const initialFilters: FilterState = {
+  trainer: "",
+  dateRange: "30d",
+  classType: "",
+  membershipType: "",
+};
 
 interface PerformanceMetrics {
   totalSessions: number;
@@ -90,13 +96,11 @@ interface ChartData {
 }
 
 type TrainerRow = Database["public"]["Tables"]["trainers"]["Row"];
-// Classes row plus `class_type`, a column this file reads defensively as a
-// fallback (`cls.class_type || cls.name`) but that isn't modeled on the
-// hand-written classes Row type.
-type ClassRow = Database["public"]["Tables"]["classes"]["Row"] & {
-  class_type?: string;
-};
+type ClassRow = Database["public"]["Tables"]["classes"]["Row"];
 type ClassWithTrainer = ClassRow & { trainers: TrainerRow | null };
+// `classes` has no dedicated "type" column - it's nested under metadata.
+const getClassType = (cls: ClassRow): string | undefined =>
+  (cls.metadata as { type?: string } | null)?.type;
 // Bookings joined with member + class data. `classes.trainers` is read
 // defensively below even though this query's join doesn't request it.
 type ClassBookingWithRelations =
@@ -148,10 +152,93 @@ const emptyChartData: ChartData = {
   topVsBottomTrainers: [],
 };
 
+interface CoreStats {
+  totalSessions: number;
+  avgAttendancePerClass: number;
+  totalAttendance: number;
+  cancelledSessions: number;
+  revenueGenerated: number;
+  avgRevenuePerSession: number;
+  revenuePerMember: number;
+  uniqueMembersTrained: number;
+  repeatClients: number;
+  avgMemberSessionsPerMonth: number;
+  sessionFillRate: number;
+  noShows: number;
+}
+
+type InvoiceRow = { amount?: number | string | null; total?: number | string | null };
+
+// Shared by the current and previous period so trend badges reflect a real
+// period-over-period comparison instead of a hardcoded literal.
+function computeCoreStats(
+  classes: ClassRow[],
+  bookings: ClassBookingWithRelations[],
+  invoices: InvoiceRow[],
+  periodDays: number,
+): CoreStats {
+  const completedClasses = classes.filter((c) => c.status === "completed");
+  const cancelledClasses = classes.filter((c) => c.status === "cancelled");
+  const totalSessions = completedClasses.length;
+  const totalAttendance = bookings.filter(
+    (b) => b.status === "checked_in" || b.status === "completed",
+  ).length;
+  const avgAttendancePerClass = totalSessions > 0 ? totalAttendance / totalSessions : 0;
+  const noShows = bookings.filter((b) => b.status === "no_show").length;
+
+  const revenueGenerated = invoices.reduce(
+    (sum, inv) => sum + parseFloat(String(inv.amount || inv.total || "0")),
+    0,
+  );
+  const avgRevenuePerSession = totalSessions > 0 ? revenueGenerated / totalSessions : 0;
+
+  const uniqueMemberIds = new Set(bookings.map((b) => b.member_id).filter(Boolean));
+  const uniqueMembersTrained = uniqueMemberIds.size;
+
+  const memberBookingCounts = new Map<string, number>();
+  bookings.forEach((b) => {
+    if (b.member_id) {
+      memberBookingCounts.set(b.member_id, (memberBookingCounts.get(b.member_id) || 0) + 1);
+    }
+  });
+  const repeatClients = Array.from(memberBookingCounts.values()).filter((c) => c > 1).length;
+
+  const totalCapacity = completedClasses.reduce((sum, c) => sum + (c.capacity || 0), 0);
+  const sessionFillRate = totalCapacity > 0 ? (totalAttendance / totalCapacity) * 100 : 0;
+
+  return {
+    totalSessions,
+    avgAttendancePerClass,
+    totalAttendance,
+    cancelledSessions: cancelledClasses.length,
+    revenueGenerated,
+    avgRevenuePerSession,
+    revenuePerMember: uniqueMembersTrained > 0 ? revenueGenerated / uniqueMembersTrained : 0,
+    uniqueMembersTrained,
+    repeatClients,
+    avgMemberSessionsPerMonth:
+      uniqueMembersTrained > 0 ? totalAttendance / uniqueMembersTrained / (periodDays / 30) : 0,
+    sessionFillRate,
+    noShows,
+  };
+}
+
+// null means "no meaningful comparison" (no activity in the prior period),
+// shown as no trend badge rather than a fake +/-.
+function pctChange(current: number, previous: number): number | null {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / previous) * 100;
+}
+
+type MetricChanges = Partial<Record<keyof CoreStats, number | null>>;
+
 const FilterBar: React.FC<{
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
-}> = ({ filters, onFilterChange }) => {
+  trainerOptions: { id: string; name: string }[];
+  onReset: () => void;
+  onExport: () => void;
+}> = ({ filters, onFilterChange, trainerOptions, onReset, onExport }) => {
   const { isRTL } = useRTL();
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -182,11 +269,17 @@ const FilterBar: React.FC<{
 
         {isExpanded && (
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2`}>
-            <button className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors`}>
+            <button
+              onClick={onReset}
+              className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors`}
+            >
               <FiRefreshCw className="w-4 h-4" />
               {t("common.reset") || "Reset"}
             </button>
-            <button className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}>
+            <button
+              onClick={onExport}
+              className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors`}
+            >
               <FiDownload className="w-4 h-4" />
               {t("trainers.export")}
             </button>
@@ -204,24 +297,6 @@ const FilterBar: React.FC<{
           className="overflow-hidden"
         >
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
-            {/* Branch Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("common.branch") || "Branch"}
-              </label>
-              <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                value={filters.branches[0] || ""}
-                onChange={(e) => updateFilter("branches", [e.target.value])}
-                dir={isRTL ? "rtl" : "ltr"}
-              >
-                <option value="">{t("common.allBranches") || "All Branches"}</option>
-                <option value="main">{t("common.mainBranch") || "Main Branch"}</option>
-                <option value="north">{t("common.northBranch") || "North Branch"}</option>
-                <option value="south">{t("common.southBranch") || "South Branch"}</option>
-              </select>
-            </div>
-
             {/* Trainer Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -234,9 +309,11 @@ const FilterBar: React.FC<{
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="">{t("trainers.allTrainers")}</option>
-                <option value="sarah">Sarah Johnson</option>
-                <option value="mike">Mike Chen</option>
-                <option value="emma">Emma Davis</option>
+                {trainerOptions.map((trainer) => (
+                  <option key={trainer.id} value={trainer.id}>
+                    {trainer.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -274,23 +351,6 @@ const FilterBar: React.FC<{
                 <option value="hiit">HIIT</option>
                 <option value="strength">Strength</option>
                 <option value="pilates">Pilates</option>
-              </select>
-            </div>
-
-            {/* Member Gender Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t("common.gender") || "Gender"}
-              </label>
-              <select
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                value={filters.memberGender}
-                onChange={(e) => updateFilter("memberGender", e.target.value)}
-                dir={isRTL ? "rtl" : "ltr"}
-              >
-                <option value="">{t("common.all") || "All"}</option>
-                <option value="male">{t("common.male") || "Male"}</option>
-                <option value="female">{t("common.female") || "Female"}</option>
               </select>
             </div>
 
@@ -406,19 +466,14 @@ export default function TrainerPerformanceDashboard({
   const { tenantId } = useAuth();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
-  const [filters, setFilters] = useState<FilterState>({
-    branches: [],
-    trainer: "",
-    dateRange: "30d",
-    classType: "",
-    memberGender: "",
-    membershipType: "",
-  });
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
 
   const [metrics, setMetrics] = useState<PerformanceMetrics>(
     emptyPerformanceMetrics,
   );
   const [chartData, setChartData] = useState<ChartData>(emptyChartData);
+  const [metricChanges, setMetricChanges] = useState<MetricChanges>({});
+  const [trainerOptions, setTrainerOptions] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchTrainerAnalyticsData = useCallback(async () => {
@@ -430,50 +485,74 @@ export default function TrainerPerformanceDashboard({
       const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
       const days = daysMap[filters.dateRange] || 30;
       const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      const prevStartDate = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000);
       const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
-      // Fetch classes
-      let classesQuery = supabase
-        .from("classes")
-        .select("*, trainers(*)")
-        .eq("tenant_id", tenantId)
-        .gte("start_time", formatDate(startDate));
+      const fetchClasses = async (from: Date, to?: Date) => {
+        let query = supabase
+          .from("classes")
+          .select("*, trainers(*)")
+          .eq("tenant_id", tenantId)
+          .gte("start_time", formatDate(from));
+        if (to) query = query.lt("start_time", formatDate(to));
+        if (filters.trainer) query = query.eq("trainer_id", filters.trainer);
+        if (filters.classType) query = query.eq("metadata->>type", filters.classType);
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as ClassWithTrainer[];
+      };
 
-      if (filters.trainer) {
-        classesQuery = classesQuery.eq("trainer_id", filters.trainer);
-      }
-      if (filters.classType) {
-        classesQuery = classesQuery.eq("class_type", filters.classType);
-      }
+      const fetchBookings = async (from: Date, to?: Date) => {
+        let query = supabase
+          .from("class_bookings")
+          .select("*, members(*), classes(*)")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(from));
+        if (to) query = query.lt("created_at", formatDate(to));
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as ClassBookingWithRelations[];
+      };
 
-      const { data: classesData, error: classesError } = await classesQuery;
-      if (classesError) throw classesError;
-      const classes = (classesData || []) as ClassWithTrainer[];
+      const fetchInvoices = async (from: Date, to?: Date) => {
+        let query = supabase
+          .from("invoices")
+          .select("*")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", formatDate(from))
+          .in("status", ["paid", "completed"]);
+        if (to) query = query.lt("created_at", formatDate(to));
+        const { data, error } = await query;
+        if (error) throw error;
+        return data || [];
+      };
 
-      // Fetch class bookings
-      let bookingsQuery = supabase
-        .from("class_bookings")
-        .select("*, members(*), classes(*)")
-        .eq("tenant_id", tenantId)
-        .gte("created_at", formatDate(startDate));
+      const [classes, bookings, invoices, prevClasses, prevBookings, prevInvoices] =
+        await Promise.all([
+          fetchClasses(startDate),
+          fetchBookings(startDate),
+          fetchInvoices(startDate),
+          fetchClasses(prevStartDate, startDate),
+          fetchBookings(prevStartDate, startDate),
+          fetchInvoices(prevStartDate, startDate),
+        ]);
 
-      if (filters.memberGender) {
-        bookingsQuery = bookingsQuery.eq("members.gender", filters.memberGender);
-      }
-
-      const { data: bookingsData, error: bookingsError } = await bookingsQuery;
-      if (bookingsError) throw bookingsError;
-      const bookings = (bookingsData || []) as ClassBookingWithRelations[];
-
-      // Fetch invoices for revenue
-      const { data: invoices, error: invoicesError } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .gte("created_at", formatDate(startDate))
-        .in("status", ["paid", "completed"]);
-
-      if (invoicesError) throw invoicesError;
+      const currentStats = computeCoreStats(classes, bookings, invoices, days);
+      const prevStats = computeCoreStats(prevClasses, prevBookings, prevInvoices, days);
+      setMetricChanges({
+        totalSessions: pctChange(currentStats.totalSessions, prevStats.totalSessions),
+        avgAttendancePerClass: pctChange(currentStats.avgAttendancePerClass, prevStats.avgAttendancePerClass),
+        totalAttendance: pctChange(currentStats.totalAttendance, prevStats.totalAttendance),
+        cancelledSessions: pctChange(currentStats.cancelledSessions, prevStats.cancelledSessions),
+        revenueGenerated: pctChange(currentStats.revenueGenerated, prevStats.revenueGenerated),
+        avgRevenuePerSession: pctChange(currentStats.avgRevenuePerSession, prevStats.avgRevenuePerSession),
+        revenuePerMember: pctChange(currentStats.revenuePerMember, prevStats.revenuePerMember),
+        uniqueMembersTrained: pctChange(currentStats.uniqueMembersTrained, prevStats.uniqueMembersTrained),
+        repeatClients: pctChange(currentStats.repeatClients, prevStats.repeatClients),
+        avgMemberSessionsPerMonth: pctChange(currentStats.avgMemberSessionsPerMonth, prevStats.avgMemberSessionsPerMonth),
+        sessionFillRate: pctChange(currentStats.sessionFillRate, prevStats.sessionFillRate),
+        noShows: pctChange(currentStats.noShows, prevStats.noShows),
+      });
 
       // Calculate metrics
       const completedClasses = (classes || []).filter(c => c.status === "completed");
@@ -507,7 +586,7 @@ export default function TrainerPerformanceDashboard({
       // Top class types
       const classTypeCounts = new Map<string, number>();
       completedClasses.forEach((cls) => {
-        const type = cls.class_type || cls.name || "Unknown";
+        const type = getClassType(cls) || cls.name || "Unknown";
         classTypeCounts.set(type, (classTypeCounts.get(type) || 0) + 1);
       });
       const topClassTypes = Array.from(classTypeCounts.entries())
@@ -613,6 +692,29 @@ export default function TrainerPerformanceDashboard({
         .select("*")
         .eq("tenant_id", tenantId);
 
+      setTrainerOptions(
+        (allTrainers || []).map((tr) => ({
+          id: tr.id,
+          name: `${tr.first_name || ""} ${tr.last_name || ""}`.trim() || tr.email,
+        })),
+      );
+
+      // Retention: share of members trained in this period who are still
+      // active, based on the joined member row each booking already carries.
+      const uniqueMembersMap = new Map<string, ClassBookingWithRelations["members"]>();
+      (bookings || []).forEach((b) => {
+        if (b.member_id && !uniqueMembersMap.has(b.member_id)) {
+          uniqueMembersMap.set(b.member_id, b.members);
+        }
+      });
+      const activeMembersTrained = Array.from(uniqueMembersMap.values()).filter(
+        (m) => m?.status === "active",
+      ).length;
+      const retentionRate =
+        uniqueMembersMap.size > 0
+          ? (activeMembersTrained / uniqueMembersMap.size) * 100
+          : 0;
+
       const topVsBottomTrainers = Array.from(trainerStats.entries())
         .map(([trainerId, stats]) => {
           const trainer =
@@ -641,7 +743,7 @@ export default function TrainerPerformanceDashboard({
         avgAttendancePerClass,
         totalAttendance,
         cancelledSessions: cancelledClasses.length,
-        retentionRate: 87.5, // Would need historical data
+        retentionRate,
         avgRating,
         revenueGenerated,
         avgRevenuePerSession,
@@ -649,10 +751,10 @@ export default function TrainerPerformanceDashboard({
         upsells: 0, // Would need upsell tracking
         uniqueMembersTrained,
         repeatClients,
-        avgTimeBetweenSessions: 4.2, // Would need booking history analysis
+        avgTimeBetweenSessions: 0, // Would need booking history analysis
         avgMemberSessionsPerMonth: uniqueMembersTrained > 0 ? totalAttendance / uniqueMembersTrained / (days / 30) : 0,
         topClassTypes,
-        avgSessionDuration: 55, // Would need actual duration data
+        avgSessionDuration: 0, // Would need actual duration data
         sessionTimeDistribution,
         sessionFillRate,
         lowRatingMembers: 0, // Would need member rating data
@@ -664,14 +766,7 @@ export default function TrainerPerformanceDashboard({
       setChartData({
         attendanceOverTime,
         revenueOverTime,
-        retentionCurve: [
-          { week: 1, percentage: 85 },
-          { week: 2, percentage: 72 },
-          { week: 3, percentage: 61 },
-          { week: 4, percentage: 53 },
-          { week: 5, percentage: 47 },
-          { week: 6, percentage: 42 },
-        ], // Would need historical retention data
+        retentionCurve: [], // Would need historical retention data
         ratingTrend,
         topVsBottomTrainers,
       });
@@ -687,6 +782,31 @@ export default function TrainerPerformanceDashboard({
     fetchTrainerAnalyticsData();
   }, [fetchTrainerAnalyticsData]);
 
+  const handleReset = () => setFilters(initialFilters);
+
+  const handleExport = () => {
+    exportCSV(
+      [
+        {
+          totalSessions: metrics.totalSessions,
+          avgAttendancePerClass: metrics.avgAttendancePerClass,
+          totalAttendance: metrics.totalAttendance,
+          cancelledSessions: metrics.cancelledSessions,
+          retentionRate: metrics.retentionRate,
+          avgRating: metrics.avgRating,
+          revenueGenerated: metrics.revenueGenerated,
+          avgRevenuePerSession: metrics.avgRevenuePerSession,
+          revenuePerMember: metrics.revenuePerMember,
+          uniqueMembersTrained: metrics.uniqueMembersTrained,
+          repeatClients: metrics.repeatClients,
+          sessionFillRate: metrics.sessionFillRate,
+          noShows: metrics.noShows,
+        },
+      ],
+      `trainer-performance-${filters.dateRange}`,
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -695,10 +815,29 @@ export default function TrainerPerformanceDashboard({
     );
   }
 
+  // Real period-over-period comparison for a MetricCard, or no badge at all
+  // when there's nothing meaningful to compare against.
+  const trendFor = (
+    key: keyof MetricChanges,
+  ): { trend?: "up" | "down"; trendValue?: string } => {
+    const change = metricChanges[key];
+    if (change === undefined || change === null) return {};
+    return {
+      trend: change >= 0 ? "up" : "down",
+      trendValue: `${change >= 0 ? "+" : ""}${change.toFixed(0)}%`,
+    };
+  };
+
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Filter Bar */}
-      <FilterBar filters={filters} onFilterChange={setFilters} />
+      <FilterBar
+        filters={filters}
+        onFilterChange={setFilters}
+        trainerOptions={trainerOptions}
+        onReset={handleReset}
+        onExport={handleExport}
+      />
 
       {/* Performance Overview */}
       <div className="space-y-6">
@@ -710,8 +849,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.totalSessionsLed")}
             value={metrics.totalSessions}
             subtitle={t("trainers.classesConducted")}
-            trend="up"
-            trendValue="+12%"
+            {...trendFor("totalSessions")}
             icon={<FiCalendar className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
@@ -719,8 +857,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.avgAttendancePerClass")}
             value={metrics.avgAttendancePerClass}
             subtitle={t("trainers.membersPerSession")}
-            trend="up"
-            trendValue="+8%"
+            {...trendFor("avgAttendancePerClass")}
             icon={<FiUsers className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
@@ -728,8 +865,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.totalAttendance")}
             value={metrics.totalAttendance.toLocaleString()}
             subtitle={t("trainers.allMembersAttended")}
-            trend="up"
-            trendValue="+15%"
+            {...trendFor("totalAttendance")}
             icon={<FiUser className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
@@ -737,8 +873,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.cancelledSessions")}
             value={metrics.cancelledSessions}
             subtitle={t("trainers.missedClasses")}
-            trend="down"
-            trendValue="-5%"
+            {...trendFor("cancelledSessions")}
             icon={<FiX className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
@@ -755,8 +890,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.revenueGenerated")}
             value={`$${metrics.revenueGenerated.toLocaleString()}`}
             subtitle={t("trainers.totalEarnings")}
-            trend="up"
-            trendValue="+18%"
+            {...trendFor("revenueGenerated")}
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
@@ -764,8 +898,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.avgRevenuePerSession")}
             value={`$${metrics.avgRevenuePerSession}`}
             subtitle={t("trainers.perClassEarnings")}
-            trend="up"
-            trendValue="+6%"
+            {...trendFor("avgRevenuePerSession")}
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
@@ -773,8 +906,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.revenuePerMember")}
             value={`$${metrics.revenuePerMember}`}
             subtitle={t("trainers.perAttendee")}
-            trend="up"
-            trendValue="+9%"
+            {...trendFor("revenuePerMember")}
             icon={<FiUser className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
@@ -782,8 +914,6 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.upsells")}
             value={metrics.upsells}
             subtitle={t("trainers.ptAddOnsSold")}
-            trend="up"
-            trendValue="+22%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
@@ -800,8 +930,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.uniqueMembersTrained")}
             value={metrics.uniqueMembersTrained}
             subtitle={t("trainers.differentAttendees")}
-            trend="up"
-            trendValue="+14%"
+            {...trendFor("uniqueMembersTrained")}
             icon={<FiUsers className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
@@ -809,8 +938,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.repeatClients")}
             value={metrics.repeatClients}
             subtitle={t("trainers.returningMembers")}
-            trend="up"
-            trendValue="+11%"
+            {...trendFor("repeatClients")}
             icon={<FiCheckCircle className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
@@ -818,8 +946,6 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.avgTimeBetweenSessions")}
             value={`${metrics.avgTimeBetweenSessions} ${t("trainers.days")}`}
             subtitle={t("trainers.memberFrequency")}
-            trend="down"
-            trendValue="-3%"
             icon={<FiClock className="w-6 h-6 text-white" />}
             color="bg-purple-500"
           />
@@ -827,8 +953,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.avgSessionsPerMonth")}
             value={metrics.avgMemberSessionsPerMonth}
             subtitle={t("trainers.perMemberAverage")}
-            trend="up"
-            trendValue="+7%"
+            {...trendFor("avgMemberSessionsPerMonth")}
             icon={<FiCalendar className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
@@ -903,8 +1028,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.sessionFillRate")}
             value={`${metrics.sessionFillRate}%`}
             subtitle={t("trainers.capacityUtilization")}
-            trend="up"
-            trendValue="+4%"
+            {...trendFor("sessionFillRate")}
             icon={<FiBarChart className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
@@ -921,8 +1045,6 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.lowRatingMembers")}
             value={metrics.lowRatingMembers}
             subtitle={t("trainers.rating2Stars")}
-            trend="down"
-            trendValue="-12%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
@@ -930,8 +1052,7 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.noShows")}
             value={metrics.noShows}
             subtitle={t("trainers.missedAppointments")}
-            trend="down"
-            trendValue="-8%"
+            {...trendFor("noShows")}
             icon={<FiX className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
@@ -939,8 +1060,6 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.classDropoffs")}
             value={metrics.classDropoffs}
             subtitle={t("trainers.oneTimeAttendees")}
-            trend="down"
-            trendValue="-15%"
             icon={<FiTrendingDown className="w-6 h-6 text-white" />}
             color="bg-yellow-500"
           />
@@ -948,8 +1067,6 @@ export default function TrainerPerformanceDashboard({
             title={t("trainers.churnRate")}
             value={`${metrics.churnRate}%`}
             subtitle={t("trainers.memberLoss")}
-            trend="down"
-            trendValue="-3%"
             icon={<FiActivity className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
