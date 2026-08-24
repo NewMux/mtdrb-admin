@@ -1,6 +1,20 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import {
   FiUsers,
   FiTrendingUp,
   FiBarChart,
@@ -11,6 +25,8 @@ import {
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 import { useRTL } from "../../hooks/useRTL";
+
+const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#06B6D4"];
 
 type ActiveTab = "overview" | "performance" | "engagement";
 
@@ -87,12 +103,20 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
         </div>
       </div>
 
-      <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
-        <div className="text-center">
-          <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Bar Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
-        </div>
+      <div className="h-48 mb-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={funnel}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="stage" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+              {funnel.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="space-y-3">
@@ -164,12 +188,25 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
         </div>
       </div>
 
-      <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
-        <div className="text-center">
-          <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">🥧</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Pie Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
-        </div>
+      <div className="h-48 mb-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={memberStatus}
+              cx="50%"
+              cy="50%"
+              outerRadius={70}
+              dataKey="count"
+              nameKey="status"
+              label={({ status, percentage }: { status: string; percentage: number }) => `${status}: ${percentage}%`}
+            >
+              {memberStatus.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="space-y-3">
@@ -433,12 +470,16 @@ const LTVTrendChart = ({
         </div>
       </div>
 
-      <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center mb-4">
-        <div className="text-center">
-          <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📈</div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Line Chart</p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs">Chart.js integration</p>
-        </div>
+      <div className="h-48 mb-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={ltvTrend}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+            <Line type="monotone" dataKey="ltv" stroke="#8B5CF6" strokeWidth={2} dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="space-y-2">
