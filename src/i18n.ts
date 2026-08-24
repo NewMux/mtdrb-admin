@@ -2261,6 +2261,9 @@ const resources = {
         unknownTrainer: "Unknown trainer",
         unknownClass: "Unknown class",
         notAvailable: "N/A",
+        suggestionNearCapacity: "\"{{name}}\" is nearly full - consider adding another session.",
+        suggestionLowAttendance: "\"{{name}}\" has low attendance - consider rescheduling or promoting it.",
+        suggestionLowFillRate: "Overall fill rate is below 40% - consider reducing class capacity or schedule frequency.",
         days: { sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat" }
       },
       messages: {
@@ -4455,6 +4458,9 @@ const resources = {
         unknownTrainer: "مدرب غير معروف",
         unknownClass: "حصة غير معروفة",
         notAvailable: "غير متاح",
+        suggestionNearCapacity: "حصة \"{{name}}\" شبه ممتلئة - يُنصح بإضافة حصة أخرى.",
+        suggestionLowAttendance: "حصة \"{{name}}\" ذات حضور منخفض - يُنصح بإعادة جدولتها أو الترويج لها.",
+        suggestionLowFillRate: "نسبة الامتلاء الإجمالية أقل من 40% - يُنصح بتقليل سعة الحصص أو تكرار الجدول.",
         days: { sun: "الأحد", mon: "الاثنين", tue: "الثلاثاء", wed: "الأربعاء", thu: "الخميس", fri: "الجمعة", sat: "السبت" }
       },
       messages: {
