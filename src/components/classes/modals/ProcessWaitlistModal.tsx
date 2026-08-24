@@ -3,20 +3,19 @@ import { motion } from "framer-motion";
 import {
   FiUsers,
   FiCheck,
-  FiStar,
 } from "react-icons/fi";
 import { UnifiedModal } from "../../ui/UnifiedModal";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { supabase } from "../../../supabaseClient";
+import { bookClass } from "../../../api/class";
 
 interface WaitlistMember {
   id: string;
+  memberId: string;
   name: string;
   email: string;
   joined_waitlist: string;
   attendance_score: number;
-  loyalty_score: number;
-  is_vip: boolean;
-  preferred_time?: string;
 }
 
 interface ProcessWaitlistModalProps {
@@ -64,47 +63,55 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   const [waitlistMembers, setWaitlistMembers] = useState<WaitlistMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [assignmentLogic, setAssignmentLogic] = useState<
-    "first-come" | "engagement" | "vip" | "manual"
+    "first-come" | "engagement" | "manual"
   >("first-come");
   const [availableSpots, setAvailableSpots] = useState(0);
 
   const { classData, fetchClass } = useSmartClassModal({ classId, isPro });
 
-  // Load mock waitlist data
-  const loadWaitlistData = () => {
-    const mockWaitlist: WaitlistMember[] = [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        joined_waitlist: "2024-01-15T10:30:00Z",
-        attendance_score: 95,
-        loyalty_score: 8.5,
-        is_vip: true,
-        preferred_time: "09:00",
-      },
-      {
-        id: "2",
-        name: "Mike Chen",
-        email: "mike@example.com",
-        joined_waitlist: "2024-01-15T11:15:00Z",
-        attendance_score: 87,
-        loyalty_score: 7.2,
-        is_vip: false,
-        preferred_time: "09:00",
-      },
-      {
-        id: "3",
-        name: "Emma Davis",
-        email: "emma@example.com",
-        joined_waitlist: "2024-01-15T12:00:00Z",
-        attendance_score: 92,
-        loyalty_score: 9.1,
-        is_vip: true,
-        preferred_time: "09:00",
-      },
-    ];
-    setWaitlistMembers(mockWaitlist);
+  const loadWaitlistData = async () => {
+    const { data: waitlistRows } = await supabase
+      .from("class_waitlist")
+      .select("id, member_id, created_at, members(first_name, last_name, email)")
+      .eq("class_id", classId)
+      .order("position", { ascending: true });
+
+    const members: WaitlistMember[] = (waitlistRows || []).map((w) => {
+      const m = w.members as { first_name?: string; last_name?: string; email?: string } | null;
+      return {
+        id: w.id,
+        memberId: w.member_id,
+        name: `${m?.first_name || ""} ${m?.last_name || ""}`.trim() || "Unknown",
+        email: m?.email || "",
+        joined_waitlist: w.created_at,
+        attendance_score: 0,
+      };
+    });
+
+    const memberIds = Array.from(new Set(members.map((m) => m.memberId)));
+    if (memberIds.length > 0) {
+      const { data: historyRows } = await supabase
+        .from("class_bookings")
+        .select("member_id, check_in_time")
+        .in("member_id", memberIds);
+
+      const totals = new Map<string, { total: number; checkedIn: number }>();
+      (historyRows || []).forEach((r) => {
+        const entry = totals.get(r.member_id) || { total: 0, checkedIn: 0 };
+        entry.total += 1;
+        if (r.check_in_time) entry.checkedIn += 1;
+        totals.set(r.member_id, entry);
+      });
+
+      members.forEach((m) => {
+        const entry = totals.get(m.memberId);
+        m.attendance_score = entry && entry.total > 0
+          ? Math.round((entry.checkedIn / entry.total) * 100)
+          : 0;
+      });
+    }
+
+    setWaitlistMembers(members);
   };
 
   // Load class data when modal opens
@@ -113,6 +120,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       fetchClass();
       loadWaitlistData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId, fetchClass]);
 
   // Calculate available spots
@@ -136,22 +144,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         );
         break;
       case "engagement":
-        sortedMembers.sort(
-          (a, b) =>
-            b.attendance_score +
-            b.loyalty_score -
-            (a.attendance_score + a.loyalty_score),
-        );
-        break;
-      case "vip":
-        sortedMembers.sort((a, b) => {
-          if (a.is_vip && !b.is_vip) return -1;
-          if (!a.is_vip && b.is_vip) return 1;
-          return (
-            new Date(a.joined_waitlist).getTime() -
-            new Date(b.joined_waitlist).getTime()
-          );
-        });
+        sortedMembers.sort((a, b) => b.attendance_score - a.attendance_score);
         break;
     }
 
@@ -172,8 +165,20 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
   const handleProcess = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const selectedWaitlistEntries = selectedMembers
+        .map((id) => getMemberById(id))
+        .filter((m): m is WaitlistMember => !!m);
+
+      for (const entry of selectedWaitlistEntries) {
+        const booking = await bookClass(classId, entry.memberId);
+        if (!booking) continue;
+
+        const { error: removeError } = await supabase
+          .from("class_waitlist")
+          .delete()
+          .eq("id", entry.id);
+        if (removeError) throw removeError;
+      }
 
       onSuccess?.();
       onClose();
@@ -276,12 +281,11 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               </label>
               <select
                 value={assignmentLogic}
-                onChange={(e) => setAssignmentLogic(e.target.value as "first-come" | "engagement" | "vip" | "manual")}
+                onChange={(e) => setAssignmentLogic(e.target.value as "first-come" | "engagement" | "manual")}
                 className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
                 <option value="first-come">First Come, First Served</option>
                 <option value="engagement">Engagement Score</option>
-                <option value="vip">VIP Priority</option>
                 <option value="manual">Manual Selection</option>
               </select>
             </div>
@@ -336,14 +340,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                         className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                       />
                       <div>
-                        <div className="flex items-center space-x-2">
-                          <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
-                            {member.name}
-                          </h4>
-                          {member.is_vip && (
-                            <FiStar className="h-3 w-3 text-yellow-500" />
-                          )}
-                        </div>
+                        <h4 className="text-sm font-semibold text-dark-900 dark:text-white">
+                          {member.name}
+                        </h4>
                         <p className="text-xs text-light-600 dark:text-dark-400">
                           {member.email}
                         </p>
@@ -367,14 +366,6 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                         </div>
                         <div className="font-medium text-dark-900 dark:text-white">
                           {member.attendance_score}%
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-light-600 dark:text-dark-400">
-                          Loyalty
-                        </div>
-                        <div className="font-medium text-dark-900 dark:text-white">
-                          {member.loyalty_score}/10
                         </div>
                       </div>
                     </div>
@@ -430,10 +421,9 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               Smart Suggestions
             </h3>
             <div className="space-y-2 text-sm text-blue-700 dark:text-blue-300">
-              <p>• Consider prioritizing VIP members for better retention</p>
               <p>• Members with 90%+ attendance are more likely to show up</p>
               <p>
-                • Balance between loyalty and recency for optimal engagement
+                • First-come assignment respects how long each member has waited
               </p>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { FormField, SelectField, FormSection } from "./SmartFormComponents";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
 
 interface ClassSettings {
   capacity: number;
@@ -75,21 +76,29 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const loadCurrentSettings = () => {
     if (classData) {
+      const start = classData.start_time ? new Date(classData.start_time) : null;
+      const end = classData.end_time ? new Date(classData.end_time) : null;
+      const durationMinutes =
+        start && end
+          ? Math.round((end.getTime() - start.getTime()) / 60000)
+          : 60;
+      const advanced = (classData.metadata?.advanced as Partial<ClassSettings>) || {};
+
       setSettings({
         capacity: classData.capacity || 20,
-        price: 25, // Mock price
-        duration: 60,
-        difficulty: "intermediate",
+        price: classData.price || 0,
+        duration: durationMinutes,
+        difficulty: advanced.difficulty || "intermediate",
         class_type: classData.type || "Yoga",
-        location: "Studio A",
+        location: classData.location || "",
         description: classData.description || "",
-        auto_waitlist: true,
-        auto_cancel: false,
-        min_attendance: 3,
-        max_waitlist: 10,
-        trainer_requirements: [],
-        equipment_needed: [],
-        special_instructions: "",
+        auto_waitlist: advanced.auto_waitlist ?? true,
+        auto_cancel: advanced.auto_cancel ?? false,
+        min_attendance: advanced.min_attendance ?? 3,
+        max_waitlist: advanced.max_waitlist ?? 10,
+        trainer_requirements: advanced.trainer_requirements || [],
+        equipment_needed: advanced.equipment_needed || [],
+        special_instructions: advanced.special_instructions || "",
       });
     }
   };
@@ -107,7 +116,31 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const existingMetadata = classData?.metadata || {};
+      const { error } = await supabase
+        .from("classes")
+        .update({
+          price: settings.price,
+          capacity: settings.capacity,
+          room: settings.location,
+          description: settings.description,
+          metadata: {
+            ...existingMetadata,
+            advanced: {
+              difficulty: settings.difficulty,
+              auto_waitlist: settings.auto_waitlist,
+              auto_cancel: settings.auto_cancel,
+              min_attendance: settings.min_attendance,
+              max_waitlist: settings.max_waitlist,
+              trainer_requirements: settings.trainer_requirements,
+              equipment_needed: settings.equipment_needed,
+              special_instructions: settings.special_instructions,
+            },
+          },
+        })
+        .eq("id", classId);
+
+      if (error) throw error;
 
       toast.success("Class settings updated successfully");
       setHasChanges(false);

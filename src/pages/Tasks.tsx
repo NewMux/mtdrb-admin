@@ -16,12 +16,14 @@ import AddButton from "../components/ui/AddButton";
 import { AddTaskModal } from "../components/tasks/modals/AddTaskModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { supabase } from "../supabaseClient";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 
 const Tasks: React.FC = () => {
   usePageThemeContext();
   const { tenantId } = useAuth();
+  const { isPro } = useSubscription();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
 
@@ -426,7 +428,7 @@ const Tasks: React.FC = () => {
         open={showAddTaskModal}
         onClose={() => setShowAddTaskModal(false)}
         onSuccess={handleTaskSuccess}
-        isPro={true}
+        isPro={isPro}
       />
     </div>
   );

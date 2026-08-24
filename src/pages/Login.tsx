@@ -40,8 +40,33 @@ export default function Login() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const [lockoutThreshold, setLockoutThreshold] = React.useState(5);
+
+  // The tenant's configured lockout threshold isn't known until we can
+  // resolve which gym this email belongs to - not possible pre-auth via the
+  // normal (RLS-protected) membership lookup, so this uses a narrow,
+  // anon-callable RPC that returns only the threshold number (default 5),
+  // the same either way whether or not the email has an account.
+  React.useEffect(() => {
+    if (!email || !email.includes("@")) return;
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      supabase
+        .rpc("get_lockout_threshold", { p_email: email })
+        .then(({ data }) => {
+          if (!cancelled && typeof data === "number") {
+            setLockoutThreshold(data);
+          }
+        });
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [email]);
+
   const { isLocked, remainingSeconds, registerFailure, reset } =
-    useAuthAttemptLimiter("login", email);
+    useAuthAttemptLimiter("login", email, lockoutThreshold);
 
   // Immediate redirect if already authenticated (including dev bypass)
   // Use Navigate component for synchronous redirect to prevent flickering

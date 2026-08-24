@@ -11,9 +11,34 @@ import {
   FiAlertCircle,
   FiDollarSign,
 } from "react-icons/fi";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
 import { UnifiedModal } from "../../ui/UnifiedModal";
 import { useTranslation } from "react-i18next";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { supabase } from "../../../supabaseClient";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 interface ClassMember {
   id: string;
@@ -22,7 +47,6 @@ interface ClassMember {
   status: "enrolled" | "waitlist" | "attended" | "no-show";
   joined_date: string;
   attendance_history: number;
-  is_vip: boolean;
 }
 
 interface ClassAnalytics {
@@ -35,6 +59,16 @@ interface ClassAnalytics {
   trainer_rating: number;
 }
 
+interface EnrollmentTrendPoint {
+  date: string;
+  count: number;
+}
+
+interface AttendancePatternPoint {
+  status: string;
+  count: number;
+}
+
 interface ViewClassDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,6 +76,15 @@ interface ViewClassDetailsModalProps {
   onSuccess?: () => void;
   isPro?: boolean;
 }
+
+// classData.start_time/end_time are "HH:mm" strings on the same day
+const getClassDurationMinutes = (startTime?: string, endTime?: string) => {
+  if (!startTime || !endTime) return 0;
+  const [startH, startM] = startTime.split(":").map(Number);
+  const [endH, endM] = endTime.split(":").map(Number);
+  if ([startH, startM, endH, endM].some((n) => Number.isNaN(n))) return 0;
+  return Math.max(0, endH * 60 + endM - (startH * 60 + startM));
+};
 
 const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
   isOpen,
@@ -52,10 +95,16 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
   isPro = false,
 }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_loading, setLoading] = useState(false);
   const [members, setMembers] = useState<ClassMember[]>([]);
+  const [memberFilter, setMemberFilter] = useState<
+    "all" | "enrolled" | "waitlist"
+  >("all");
   const [analytics, setAnalytics] = useState<ClassAnalytics | null>(null);
+  const [enrollmentTrend, setEnrollmentTrend] = useState<EnrollmentTrendPoint[]>([]);
+  const [attendancePattern, setAttendancePattern] = useState<AttendancePatternPoint[]>([]);
   const [activeTab, setActiveTab] = useState<
     "overview" | "members" | "analytics"
   >("overview");
@@ -71,68 +120,122 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, classId]);
 
-  // Load mock class details
-  const loadClassDetails = () => {
-    const mockMembers: ClassMember[] = [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        status: "enrolled",
-        joined_date: "2024-01-10T09:00:00Z",
-        attendance_history: 95,
-        is_vip: true,
-      },
-      {
-        id: "2",
-        name: "Mike Chen",
-        email: "mike@example.com",
-        status: "enrolled",
-        joined_date: "2024-01-12T14:30:00Z",
-        attendance_history: 87,
-        is_vip: false,
-      },
-      {
-        id: "3",
-        name: "Emma Davis",
-        email: "emma@example.com",
+  const loadClassDetails = async () => {
+    try {
+      const { data: classRow } = await supabase
+        .from("classes")
+        .select("capacity, price, trainer_id")
+        .eq("id", classId)
+        .single();
+
+      const { data: bookingRows } = await supabase
+        .from("class_bookings")
+        .select("member_id, status, check_in_time, created_at, members(first_name, last_name, email)")
+        .eq("class_id", classId)
+        .neq("status", "cancelled");
+
+      const { data: waitlistRows } = await supabase
+        .from("class_waitlist")
+        .select("member_id, created_at, members(first_name, last_name, email)")
+        .eq("class_id", classId)
+        .order("position", { ascending: true });
+
+      const memberName = (m: { first_name?: string | null; last_name?: string | null } | null) =>
+        `${m?.first_name || ""} ${m?.last_name || ""}`.trim() || "Unknown";
+
+      const bookedMembers: ClassMember[] = (bookingRows || []).map((b) => ({
+        id: b.member_id,
+        name: memberName(b.members as { first_name?: string; last_name?: string } | null),
+        email: (b.members as { email?: string } | null)?.email || "",
+        status: b.status === "attended" ? "attended" : b.status === "no-show" ? "no-show" : "enrolled",
+        joined_date: b.created_at,
+        attendance_history: 0,
+      }));
+
+      const waitlistedMembers: ClassMember[] = (waitlistRows || []).map((w) => ({
+        id: w.member_id,
+        name: memberName(w.members as { first_name?: string; last_name?: string } | null),
+        email: (w.members as { email?: string } | null)?.email || "",
         status: "waitlist",
-        joined_date: "2024-01-15T11:15:00Z",
-        attendance_history: 92,
-        is_vip: true,
-      },
-      {
-        id: "4",
-        name: "Alex Rodriguez",
-        email: "alex@example.com",
-        status: "enrolled",
-        joined_date: "2024-01-08T16:45:00Z",
-        attendance_history: 78,
-        is_vip: false,
-      },
-      {
-        id: "5",
-        name: "Lisa Wang",
-        email: "lisa@example.com",
-        status: "enrolled",
-        joined_date: "2024-01-14T10:20:00Z",
-        attendance_history: 89,
-        is_vip: false,
-      },
-    ];
+        joined_date: w.created_at,
+        attendance_history: 0,
+      }));
 
-    const mockAnalytics: ClassAnalytics = {
-      total_enrolled: 4,
-      total_waitlist: 1,
-      attendance_rate: 92.5,
-      revenue: 180,
-      capacity_utilization: 80,
-      popular_time_slot: true,
-      trainer_rating: 4.8,
-    };
+      // Real per-member historical attendance rate across all their bookings
+      const memberIds = Array.from(
+        new Set(bookedMembers.map((m) => m.id).filter(Boolean)),
+      );
+      if (memberIds.length > 0) {
+        const { data: historyRows } = await supabase
+          .from("class_bookings")
+          .select("member_id, check_in_time")
+          .in("member_id", memberIds);
 
-    setMembers(mockMembers);
-    setAnalytics(mockAnalytics);
+        const totals = new Map<string, { total: number; checkedIn: number }>();
+        (historyRows || []).forEach((r) => {
+          const entry = totals.get(r.member_id) || { total: 0, checkedIn: 0 };
+          entry.total += 1;
+          if (r.check_in_time) entry.checkedIn += 1;
+          totals.set(r.member_id, entry);
+        });
+
+        bookedMembers.forEach((m) => {
+          const entry = totals.get(m.id);
+          m.attendance_history = entry && entry.total > 0
+            ? Math.round((entry.checkedIn / entry.total) * 100)
+            : 0;
+        });
+      }
+
+      setMembers([...bookedMembers, ...waitlistedMembers]);
+
+      const capacity = classRow?.capacity || 0;
+      const price = classRow?.price || 0;
+      const enrolledCount = bookedMembers.length;
+      const checkedInCount = bookedMembers.filter((m) => m.status === "attended").length;
+      const noShowCount = bookedMembers.filter((m) => m.status === "no-show").length;
+
+      let trainerRating = 0;
+      if (classRow?.trainer_id) {
+        const { data: trainerRow } = await supabase
+          .from("trainers")
+          .select("rating")
+          .eq("id", classRow.trainer_id)
+          .single();
+        trainerRating = trainerRow?.rating || 0;
+      }
+
+      setAnalytics({
+        total_enrolled: enrolledCount,
+        total_waitlist: waitlistedMembers.length,
+        attendance_rate:
+          enrolledCount > 0 ? Math.round((checkedInCount / enrolledCount) * 100) : 0,
+        revenue: price * enrolledCount,
+        capacity_utilization:
+          capacity > 0 ? Math.round((enrolledCount / capacity) * 100) : 0,
+        popular_time_slot: capacity > 0 && enrolledCount / capacity >= 0.8,
+        trainer_rating: trainerRating,
+      });
+
+      const trendMap = new Map<string, number>();
+      (bookingRows || []).forEach((b) => {
+        const day = new Date(b.created_at).toISOString().split("T")[0];
+        trendMap.set(day, (trendMap.get(day) || 0) + 1);
+      });
+      setEnrollmentTrend(
+        Array.from(trendMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([date, count]) => ({ date, count })),
+      );
+
+      setAttendancePattern([
+        { status: "Enrolled", count: enrolledCount - checkedInCount - noShowCount },
+        { status: "Attended", count: checkedInCount },
+        { status: "No-show", count: noShowCount },
+      ]);
+    } catch (error) {
+      console.error("Error loading class details:", error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -385,7 +488,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                         Duration:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        60 minutes
+                        {getClassDurationMinutes(classData.start_time, classData.end_time)} minutes
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
@@ -393,15 +496,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                         Location:
                       </span>
                       <span className="text-dark-900text-white font-medium">
-                        {classData.location || "Studio A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
-                      <span className="text-light-600text-dark-400">
-                        Difficulty:
-                      </span>
-                      <span className="text-dark-900text-white font-medium">
-                        Intermediate
+                        {classData.location || "Not set"}
                       </span>
                     </div>
                   </div>
@@ -423,22 +518,6 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       </span>
                       <span className="text-green-600text-green-400 font-semibold">
                         ${analytics?.revenue || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
-                      <span className="text-light-600text-dark-400">
-                        Cost per Member:
-                      </span>
-                      <span className="text-dark-900text-white font-medium">
-                        $45
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
-                      <span className="text-light-600text-dark-400">
-                        Profit Margin:
-                      </span>
-                      <span className="text-green-600text-green-400 font-semibold">
-                        65%
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-light-100border-dark-700 last:border-b-0">
@@ -469,17 +548,28 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                   <span className="text-xs text-light-600text-dark-400">
                     Filter:
                   </span>
-                  <select className="text-xs border border-light-200border-dark-600 rounded-lg px-2 py-1 bg-light-50bg-dark-700">
+                  <select
+                    className="text-xs border border-light-200border-dark-600 rounded-lg px-2 py-1 bg-light-50bg-dark-700"
+                    value={memberFilter}
+                    onChange={(e) =>
+                      setMemberFilter(e.target.value as "all" | "enrolled" | "waitlist")
+                    }
+                  >
                     <option value="all">All Members</option>
                     <option value="enrolled">Enrolled</option>
                     <option value="waitlist">Waitlist</option>
-                    <option value="vip">VIP Members</option>
                   </select>
                 </div>
               </div>
 
               <div className="space-y-3">
-                {members.map((member, index) => (
+                {members
+                  .filter((member) => {
+                    if (memberFilter === "all") return true;
+                    if (memberFilter === "waitlist") return member.status === "waitlist";
+                    return member.status !== "waitlist";
+                  })
+                  .map((member, index) => (
                   <motion.div
                     key={member.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -502,9 +592,6 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                             <h4 className="text-sm font-semibold text-dark-900text-white">
                               {member.name}
                             </h4>
-                            {member.is_vip && (
-                              <FiStar className="h-3 w-3 text-yellow-500" />
-                            )}
                           </div>
                           <p className="text-xs text-light-600text-dark-400">
                             {member.email}
@@ -543,16 +630,55 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              {/* Analytics Charts Placeholder */}
+              {/* Analytics Charts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-light-50bg-dark-700 rounded-xl border border-light-200border-dark-600">
                   <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
                     Enrollment Trend
                   </h3>
-                  <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
-                    <span className="text-sm text-gray-500">
-                      Chart Placeholder
-                    </span>
+                  <div className="h-32">
+                    {enrollmentTrend.length > 0 ? (
+                      <Line
+                        data={{
+                          labels: enrollmentTrend.map((p) =>
+                            new Date(p.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            }),
+                          ),
+                          datasets: [
+                            {
+                              label: "Bookings",
+                              data: enrollmentTrend.map((p) => p.count),
+                              borderColor: "#3B82F6",
+                              backgroundColor: "rgba(59, 130, 246, 0.2)",
+                              tension: 0.3,
+                              fill: true,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { display: false } },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: { precision: 0, color: isDark ? "#cbd5e1" : "#475569" },
+                              grid: { color: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" },
+                            },
+                            x: {
+                              ticks: { color: isDark ? "#cbd5e1" : "#475569" },
+                              grid: { display: false },
+                            },
+                          },
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
+                        <span className="text-sm text-gray-500">No bookings yet</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -560,10 +686,42 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                   <h3 className="text-sm font-semibold text-dark-900text-white mb-3">
                     Attendance Pattern
                   </h3>
-                  <div className="h-32 bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
-                    <span className="text-sm text-gray-500">
-                      Chart Placeholder
-                    </span>
+                  <div className="h-32">
+                    {attendancePattern.some((p) => p.count > 0) ? (
+                      <Bar
+                        data={{
+                          labels: attendancePattern.map((p) => p.status),
+                          datasets: [
+                            {
+                              label: "Members",
+                              data: attendancePattern.map((p) => p.count),
+                              backgroundColor: ["#3B82F6", "#10B981", "#EF4444"],
+                              borderRadius: 4,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { display: false } },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: { precision: 0, color: isDark ? "#cbd5e1" : "#475569" },
+                              grid: { color: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" },
+                            },
+                            x: {
+                              ticks: { color: isDark ? "#cbd5e1" : "#475569" },
+                              grid: { display: false },
+                            },
+                          },
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
+                        <span className="text-sm text-gray-500">No bookings yet</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

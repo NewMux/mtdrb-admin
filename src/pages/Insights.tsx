@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FiUsers,
   FiBarChart2,
@@ -21,6 +21,8 @@ import {
 } from "recharts";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../supabaseClient";
 
 interface MetricCardProps {
   title: string;
@@ -255,32 +257,94 @@ const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
   );
 };
 
-export default function Insights({
-  classes = [],
-  bookings = [],
-}: {
-  classes?: InsightClass[];
-  bookings?: InsightBooking[];
-} = {}) {
+export default function Insights() {
   const { t, i18n } = useTranslation();
+  const { tenantId } = useAuth();
+  const [classes, setClasses] = useState<InsightClass[]>([]);
+  const [bookings, setBookings] = useState<InsightBooking[]>([]);
+  const [prevPeriodBookingCount, setPrevPeriodBookingCount] = useState(0);
+  const [prevPeriodFillRate, setPrevPeriodFillRate] = useState(0);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    const now = dayjs();
+    const periodStart = now.subtract(30, "day");
+    const prevPeriodStart = now.subtract(60, "day");
+
+    const loadData = async () => {
+      const { data: classRows } = await supabase
+        .from("classes")
+        .select("id, name, trainer_id, start_time, capacity, trainers(first_name, last_name)")
+        .eq("tenant_id", tenantId);
+
+      const mappedClasses: InsightClass[] = (classRows || []).map((c) => {
+        const trainerInfo = Array.isArray(c.trainers) ? c.trainers[0] : c.trainers;
+        return {
+          id: c.id,
+          name: c.name,
+          trainer: trainerInfo
+            ? `${trainerInfo.first_name || ""} ${trainerInfo.last_name || ""}`.trim()
+            : undefined,
+          start_time: c.start_time,
+          trainer_id: c.trainer_id,
+          capacity: c.capacity,
+        };
+      });
+      setClasses(mappedClasses);
+
+      const { data: bookingRows } = await supabase
+        .from("class_bookings")
+        .select("class_id, created_at")
+        .eq("tenant_id", tenantId)
+        .eq("status", "booked")
+        .gte("created_at", prevPeriodStart.toISOString());
+
+      const currentPeriod = (bookingRows || []).filter(
+        (b) => b.created_at && dayjs(b.created_at).isAfter(periodStart),
+      );
+      const previousPeriod = (bookingRows || []).filter(
+        (b) =>
+          b.created_at &&
+          dayjs(b.created_at).isAfter(prevPeriodStart) &&
+          dayjs(b.created_at).isBefore(periodStart),
+      );
+
+      setBookings(currentPeriod);
+      setPrevPeriodBookingCount(previousPeriod.length);
+
+      const totalCapacity = mappedClasses.reduce((acc, c) => acc + (c.capacity || 0), 0);
+      setPrevPeriodFillRate(
+        totalCapacity > 0 ? (previousPeriod.length / totalCapacity) * 100 : 0,
+      );
+    };
+
+    loadData();
+  }, [tenantId]);
+
   const {
     totalBookings,
     fillRate,
+    fillRateValue,
     mostPopular,
     leastPopular,
     classPopularity,
     trainerPerformance,
     heatmapData,
+    attendanceTrend,
+    aiSuggestions,
   } = useMemo(() => {
     if (!classes || !bookings || classes.length === 0) {
       return {
         totalBookings: 0,
         fillRate: "0%",
+        fillRateValue: 0,
         mostPopular: t("insightsPage.notAvailable"),
         leastPopular: t("insightsPage.notAvailable"),
         classPopularity: [],
         trainerPerformance: [],
         heatmapData: {},
+        attendanceTrend: [],
+        aiSuggestions: [],
       };
     }
 
@@ -350,17 +414,71 @@ export default function Insights({
     const currentFillRate =
       totalCapacity > 0 ? (currentTotalBookings / totalCapacity) * 100 : 0;
 
+    const trendByDay = bookings.reduce<Record<string, number>>((acc, b) => {
+      if (!b.created_at) return acc;
+      const day = dayjs(b.created_at).format("MMM D");
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {});
+    const attendanceTrendData = Object.entries(trendByDay)
+      .map(([name, attendance]) => ({
+        name,
+        attendance,
+        sortKey: dayjs(name, "MMM D").valueOf(),
+      }))
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .map(({ name, attendance }) => ({ name, attendance }));
+
+    const suggestions: AiSuggestion[] = [];
+    const nearCapacity = classes.find((c) => {
+      const attendance = classBookingCounts[c.id] || 0;
+      return (c.capacity || 0) > 0 && attendance / (c.capacity || 1) > 0.9;
+    });
+    if (nearCapacity) {
+      suggestions.push({
+        type: "good",
+        text: t("insightsPage.suggestionNearCapacity", {
+          name: nearCapacity.name || t("insightsPage.unknownClass"),
+        }),
+      });
+    }
+    if (popularity.length > 0) {
+      const lowest = popularity[popularity.length - 1];
+      if (lowest.attendance === 0 || lowest.attendance < currentTotalBookings / Math.max(popularity.length, 1) / 2) {
+        suggestions.push({
+          type: "warning",
+          text: t("insightsPage.suggestionLowAttendance", { name: lowest.name }),
+        });
+      }
+    }
+    if (currentFillRate > 0 && currentFillRate < 40) {
+      suggestions.push({
+        type: "warning",
+        text: t("insightsPage.suggestionLowFillRate"),
+      });
+    }
+
     return {
       totalBookings: currentTotalBookings,
       fillRate: `${currentFillRate.toFixed(1)}%`,
+      fillRateValue: currentFillRate,
       mostPopular: popularity.length > 0 ? popularity[0].name : t("insightsPage.notAvailable"),
       leastPopular:
         popularity.length > 0 ? popularity[popularity.length - 1].name : t("insightsPage.notAvailable"),
       classPopularity: popularity,
       trainerPerformance: trainerPerformanceData,
       heatmapData: heatmap,
+      attendanceTrend: attendanceTrendData,
+      aiSuggestions: suggestions,
     };
   }, [classes, bookings, t]);
+
+  const bookingsChange =
+    prevPeriodBookingCount > 0
+      ? ((totalBookings - prevPeriodBookingCount) / prevPeriodBookingCount) * 100
+      : null;
+  const fillRateChange =
+    prevPeriodFillRate > 0 ? fillRateValue - prevPeriodFillRate : null;
 
   return (
     <div className="p-8 bg-gray-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
@@ -374,29 +492,25 @@ export default function Insights({
           title={t("insightsPage.mostPopular")}
           value={mostPopular}
           icon={<FiTrendingUp />}
-          change="+12%"
-          changeType="up"
         />
         <MetricCard
           title={t("insightsPage.leastPopular")}
           value={leastPopular}
           icon={<FiTrendingDown />}
-          change="-8%"
-          changeType="down"
         />
         <MetricCard
           title={t("insightsPage.averageFill")}
           value={fillRate}
           icon={<FiBarChart2 />}
-          change="+2%"
-          changeType="up"
+          change={fillRateChange !== null ? `${fillRateChange >= 0 ? "+" : ""}${fillRateChange.toFixed(1)}pt` : undefined}
+          changeType={fillRateChange !== null && fillRateChange >= 0 ? "up" : "down"}
         />
         <MetricCard
           title={t("insightsPage.totalBookings")}
           value={totalBookings}
           icon={<FiUsers />}
-          change="+50"
-          changeType="up"
+          change={bookingsChange !== null ? `${bookingsChange >= 0 ? "+" : ""}${bookingsChange.toFixed(0)}%` : undefined}
+          changeType={bookingsChange !== null && bookingsChange >= 0 ? "up" : "down"}
         />
       </div>
 
@@ -409,7 +523,7 @@ export default function Insights({
         <AiSuggestionCard
           title={t("insightsPage.recommendations")}
           icon="🧠"
-          suggestions={[]}
+          suggestions={aiSuggestions}
         />
 
         <div className="lg:col-span-2">
@@ -436,7 +550,7 @@ export default function Insights({
           <ChartCard title={t("insightsPage.attendanceTrend")}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={[]}
+                data={attendanceTrend}
                 margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />

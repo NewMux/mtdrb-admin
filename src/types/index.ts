@@ -125,6 +125,7 @@ export interface Invoice {
     user: string;
     details: string;
   }[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface Expense {

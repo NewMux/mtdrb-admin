@@ -255,14 +255,34 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
     taskId: string,
     status: Task["status"],
     comment?: string,
+    completionDetails?: { outcome?: string; attachments?: string[] },
   ) => {
-    void comment;
     setLoading(true);
     try {
       const completedAt = status === "completed" ? new Date().toISOString() : null;
+      const update: Record<string, unknown> = {
+        status,
+        completed_at: completedAt || undefined,
+      };
+      if (comment || completionDetails?.outcome || completionDetails?.attachments?.length) {
+        const { data: existingRow } = await supabase
+          .from("tasks")
+          .select("metadata")
+          .eq("id", taskId)
+          .single();
+        update.metadata = {
+          ...((existingRow?.metadata as Record<string, unknown>) || {}),
+          completion: {
+            comment: comment || undefined,
+            outcome: completionDetails?.outcome,
+            attachments: completionDetails?.attachments,
+            completedAt,
+          },
+        };
+      }
       const { data, error } = await supabase
         .from("tasks")
-        .update({ status, completed_at: completedAt || undefined })
+        .update(update)
         .eq("id", taskId)
         .select()
         .single();

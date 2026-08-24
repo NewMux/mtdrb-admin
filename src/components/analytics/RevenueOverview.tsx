@@ -2,6 +2,20 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import {
   FiTrendingUp,
   FiBarChart,
   FiPieChart,
@@ -9,6 +23,8 @@ import {
 } from "react-icons/fi";
 import { SmartButton } from "../ui/DesignSystem";
 import { useRTL } from "../../hooks/useRTL";
+
+const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#06B6D4"];
 
 type ActiveTab = "overview" | "breakdown" | "products";
 
@@ -91,6 +107,12 @@ const ChartPlaceholder = ({
     );
   }
 
+  const chartData = data.map((item, index) => ({
+    label: item.period || item.category || item.name || `#${index + 1}`,
+    value: item.revenue ?? item.amount ?? item.units ?? 0,
+    color: (item as RevenueBreakdown).color || CHART_COLORS[index % CHART_COLORS.length],
+  }));
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -103,20 +125,55 @@ const ChartPlaceholder = ({
         </div>
       </div>
 
-      <div className="h-64 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">
-            {type === "line" && "📈"}
-            {type === "bar" && "📊"}
-            {type === "pie" && "🥧"}
+      <div className="h-64">
+        {chartData.length === 0 ? (
+          <div className="h-full bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">No data available</p>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {type === "line" && "Line Chart"}
-            {type === "bar" && "Bar Chart"}
-            {type === "pie" && "Pie Chart"}
-          </p>
-          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Chart.js integration</p>
-        </div>
+        ) : type === "line" ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+              <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : type === "bar" ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="label" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                dataKey="value"
+                nameKey="label"
+                label={({ label, value }: { label: string; value: number }) => `${label}: $${value.toLocaleString()}`}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {data.length > 0 && (

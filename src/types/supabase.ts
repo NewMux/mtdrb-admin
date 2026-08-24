@@ -990,6 +990,10 @@ export interface Database {
         Args: { tenant_id: string };
         Returns: Json;
       };
+      get_lockout_threshold: {
+        Args: { p_email: string };
+        Returns: number;
+      };
     };
     Enums: {
       [_ in never]: never;

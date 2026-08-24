@@ -56,7 +56,7 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
         amount: (invoice.amount ?? invoice.total)?.toString() || "",
         status: invoice.status || "Unpaid",
         due_date: invoice.due_date || "",
-        notes: invoice.notes || "",
+        notes: (invoice.metadata?.notes as string) || invoice.notes || "",
         payment_method: invoice.payment_method || "",
       });
       setIsEditing(mode === "edit");
@@ -78,9 +78,8 @@ const ViewInvoiceModal: React.FC<ViewInvoiceModalProps> = ({
           amount: parseFloat(formData.amount),
           status: formData.status,
           due_date: formData.due_date,
-          notes: formData.notes,
           payment_method: formData.payment_method,
-          updated_at: new Date().toISOString(),
+          metadata: { ...(invoice.metadata || {}), notes: formData.notes },
         })
         .eq("id", invoice.id)
         .eq("tenant_id", tenantId);

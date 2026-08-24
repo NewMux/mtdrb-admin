@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const MAX_ATTEMPTS = 5;
+const DEFAULT_MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 60_000;
 const STORAGE_PREFIX = "mtdrb_auth_attempts:";
 
@@ -40,7 +40,11 @@ const writeRecord = (key: string, record: AttemptRecord) => {
  * Supabase API directly instead of this form. Supabase Auth's own built-in
  * rate limiting (configured in the Supabase dashboard) is the real backstop.
  */
-export function useAuthAttemptLimiter(formId: string, identifier: string) {
+export function useAuthAttemptLimiter(
+  formId: string,
+  identifier: string,
+  maxAttempts: number = DEFAULT_MAX_ATTEMPTS,
+) {
   const key = `${STORAGE_PREFIX}${formId}:${identifier.trim().toLowerCase()}`;
   const [record, setRecord] = useState<AttemptRecord>(() => readRecord(key));
   const [now, setNow] = useState(() => Date.now());
@@ -64,13 +68,13 @@ export function useAuthAttemptLimiter(formId: string, identifier: string) {
     setRecord((prev) => {
       const count = prev.count + 1;
       const next: AttemptRecord =
-        count >= MAX_ATTEMPTS
+        count >= maxAttempts
           ? { count: 0, lockedUntil: Date.now() + LOCKOUT_MS }
           : { count, lockedUntil: prev.lockedUntil };
       writeRecord(key, next);
       return next;
     });
-  }, [key]);
+  }, [key, maxAttempts]);
 
   const reset = useCallback(() => {
     const next: AttemptRecord = { count: 0, lockedUntil: null };
@@ -78,5 +82,5 @@ export function useAuthAttemptLimiter(formId: string, identifier: string) {
     setRecord(next);
   }, [key]);
 
-  return { isLocked, remainingSeconds, registerFailure, reset, maxAttempts: MAX_ATTEMPTS };
+  return { isLocked, remainingSeconds, registerFailure, reset, maxAttempts };
 }

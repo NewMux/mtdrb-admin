@@ -27,6 +27,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
+import { validatePassword } from "../utils/passwordPolicy";
 
 const Settings: React.FC = () => {
   usePageThemeContext();
@@ -51,6 +52,9 @@ const Settings: React.FC = () => {
     tier: string;
     startDate?: string;
     isPaid: boolean;
+    status?: string;
+    trialEnd?: string;
+    currentPeriodEnd?: string;
   }>({ tier: "Free", isPaid: false });
 
   // Settings hook
@@ -79,7 +83,7 @@ const Settings: React.FC = () => {
     try {
       const { data: subData, error: subscriptionError } = await supabase
         .from("platform_subscriptions")
-        .select("status, plan_tier, amount, currency, created_at, metadata")
+        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, metadata")
         .eq("tenant_id", tenantId)
         .maybeSingle();
 
@@ -89,6 +93,9 @@ const Settings: React.FC = () => {
         tier: subData?.plan_tier || "Free",
         startDate: subData?.created_at,
         isPaid: subData?.status === "active" || subData?.status === "trialing",
+        status: subData?.status,
+        trialEnd: subData?.trial_end,
+        currentPeriodEnd: subData?.current_period_end,
       });
     } catch (error) {
       console.error("Failed to fetch subscription info:", error);
@@ -214,16 +221,22 @@ const Settings: React.FC = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 8) {
-      showError(t("settings.passwordTooShort"), "");
+    const passwordError = validatePassword(passwordData.newPassword, {
+      minLength: settings.security.minPasswordLength,
+      requireSpecialChars: settings.security.requireSpecialChars,
+    });
+    if (passwordError) {
+      showError(passwordError, "");
       return;
     }
 
     setChangingPassword(true);
     try {
-      // Update password using Supabase Auth
+      // Update password using Supabase Auth. password_changed_at backs the
+      // password-expiry check in AuthProvider.tsx.
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword,
+        data: { password_changed_at: new Date().toISOString() },
       });
 
       if (error) {
@@ -353,7 +366,6 @@ const Settings: React.FC = () => {
           "general": "general",
           "profile": "profile",
           "security": "security",
-          "billing": "billing",
         };
         const currentSection = sectionMap[activeTab];
         return currentSection && sectionChanges[currentSection] ? (
@@ -847,6 +859,9 @@ const Settings: React.FC = () => {
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {t("settings.twoFactorAuthDesc")}
                       </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        {t("settings.twoFactorAuthNotEnforced", "This preference is saved but not yet enforced at login.")}
+                      </p>
                     </div>
                     <button
                       onClick={() =>
@@ -1091,29 +1106,6 @@ const Settings: React.FC = () => {
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {t("settings.billingInformation")}
                   </h3>
-                  <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
-                    {sectionChanges.billing && (
-                      <SmartButton
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleReset("billing")}
-                        disabled={savingSection === "billing"}
-                        icon={<FiX className="w-4 h-4" />}
-                      >
-                        {t("settings.reset")}
-                      </SmartButton>
-                    )}
-                    <SmartButton
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleSaveSection("billing")}
-                      loading={savingSection === "billing"}
-                      disabled={!sectionChanges.billing || savingSection === "billing"}
-                      icon={<FiSave className="w-4 h-4" />}
-                    >
-                      {savingSection === "billing" ? t("settings.saving") : t("settings.saveChanges")}
-                    </SmartButton>
-                  </div>
                 </div>
                 <div className="p-6 pt-4">
 
@@ -1144,7 +1136,7 @@ const Settings: React.FC = () => {
                         {t("settings.paymentMethod")}
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {settings.billing.paymentMethod}
+                        {t("billing.notSet", "Not set")}
                       </p>
                     </div>
                     <SmartButton
@@ -1156,33 +1148,27 @@ const Settings: React.FC = () => {
                     </SmartButton>
                   </div>
 
-                  {/* Auto Renewal */}
+                  {/* Auto Renewal - read-only: reflects the real subscription
+                      status, there's no payment gateway to toggle this against */}
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                         {t("settings.autoRenewal")}
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.autoRenewalDesc")}
+                        {subscriptionInfo.status === "active"
+                          ? t("settings.autoRenewalActive", "Renews automatically")
+                          : subscriptionInfo.status === "trialing"
+                            ? t("settings.autoRenewalTrial", "Trial ends {{date}}", {
+                                date: subscriptionInfo.trialEnd
+                                  ? new Date(subscriptionInfo.trialEnd).toLocaleDateString()
+                                  : t("billing.notSet", "Not set"),
+                              })
+                            : subscriptionInfo.status === "cancelled"
+                              ? t("settings.autoRenewalCancelled", "Cancelled, will not renew")
+                              : t("settings.autoRenewalNone", "No active subscription")}
                       </p>
                     </div>
-                    <button
-                      onClick={() =>
-                        handleInputChange(
-                          "billing",
-                          "autoRenewal",
-                          !settings.billing.autoRenewal,
-                        )
-                      }
-                      className={`w-12 h-6 rounded-full transition-colors duration-200 ${
-                        settings.billing.autoRenewal
-                          ? "bg-sky-500"
-                          : "bg-gray-300"
-                      } flex items-center ${settings.billing.autoRenewal ? (isRTL ? "justify-start" : "justify-end") : (isRTL ? "justify-end" : "justify-start")} px-1`}
-                      aria-label={settings.billing.autoRenewal ? t("settings.disableAutoRenewal") : t("settings.enableAutoRenewal")}
-                    >
-                      <div className="w-4 h-4 bg-white rounded-full"></div>
-                    </button>
                   </div>
 
                   {/* Billing History */}

@@ -17,8 +17,30 @@ export default function ForgotPassword() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [sent, setSent] = React.useState(false);
+  const [lockoutThreshold, setLockoutThreshold] = React.useState(5);
+
+  // See Login.tsx for why this goes through a narrow, anon-callable RPC
+  // rather than a direct gym_settings lookup.
+  React.useEffect(() => {
+    if (!email || !email.includes("@")) return;
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      supabase
+        .rpc("get_lockout_threshold", { p_email: email })
+        .then(({ data }) => {
+          if (!cancelled && typeof data === "number") {
+            setLockoutThreshold(data);
+          }
+        });
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [email]);
+
   const { isLocked, remainingSeconds, registerFailure } =
-    useAuthAttemptLimiter("forgot-password", email);
+    useAuthAttemptLimiter("forgot-password", email, lockoutThreshold);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -299,7 +299,6 @@ export function AddExpenseModal({
         tenant_id: authTenantId,
         country_code: DEFAULT_COUNTRY_CODE || null,
         vat_amount: calculateVatAmount(),
-        currency: DEFAULT_CURRENCY,
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
         ...(editingExpense

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiDownload,
   FiFilter,
@@ -71,34 +71,30 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
   const { tenantId } = useAuth();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedMember, setSelectedMember] = useState("");
-  const [selectedTrainer, setSelectedTrainer] = useState("");
+  const [memberOptions, setMemberOptions] = useState<{ id: string; name: string }[]>([]);
   const [exportFormat, setExportFormat] = useState("csv");
   const [dataTypes, setDataTypes] = useState(["invoices", "expenses"]);
   const [isLoading, setIsLoading] = useState(false);
 
   useSmartBillingModal({});
 
-  const branches = [
-    t("billing.allBranches", "جميع الفروع"),
-    "الفرع الرئيسي - المنامة",
-    "مركز اللياقة - المحرق",
-    "مركز الرفاع",
-  ];
-
-  const members = [
-    t("billing.allMembers", "جميع الأعضاء"),
-    "أحمد علي",
-    "سارة خالد",
-    "محمد حسن",
-  ];
-
-  const trainers = [
-    t("billing.allTrainers", "جميع المدربين"),
-    "الكابتن علي",
-    "الكابتن مريم",
-  ];
+  useEffect(() => {
+    if (!open || !tenantId) return;
+    supabase
+      .from("members")
+      .select("id, first_name, last_name")
+      .eq("tenant_id", tenantId)
+      .order("first_name", { ascending: true })
+      .then(({ data }) => {
+        setMemberOptions(
+          (data || []).map((m) => ({
+            id: m.id,
+            name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Unknown",
+          })),
+        );
+      });
+  }, [open, tenantId]);
 
   const exportFormats = [
     { id: "csv", name: "CSV", description: t("billing.csvDesc", "قيم مفصولة بفواصل") },
@@ -168,7 +164,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
         if (endDate) {
           invoiceQuery = invoiceQuery.lte("created_at", endDate);
         }
-        if (selectedMember && selectedMember !== "All Members") {
+        if (selectedMember) {
           invoiceQuery = invoiceQuery.eq("member_id", selectedMember);
         }
 
@@ -401,26 +397,8 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
               <FiFilter className="w-4 h-4 flex-shrink-0" />
               <span>{t("billing.filters", "التصفية")}</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("billing.branch", "الفرع")}
-                </label>
-                <select
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  dir={isRTL ? "rtl" : "ltr"}
-                >
-                  <option value="">{t("billing.allBranches", "جميع الفروع")}</option>
-                  {branches.slice(1).map((branch) => (
-                    <option key={branch} value={branch}>
-                      {branch}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="max-w-sm">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t("billing.member", "العضو")}
                 </label>
@@ -431,27 +409,9 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                   dir={isRTL ? "rtl" : "ltr"}
                 >
                   <option value="">{t("billing.allMembers", "جميع الأعضاء")}</option>
-                  {members.slice(1).map((member) => (
-                    <option key={member} value={member}>
-                      {member}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("billing.trainer", "المدرب")}
-                </label>
-                <select
-                  value={selectedTrainer}
-                  onChange={(e) => setSelectedTrainer(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  dir={isRTL ? "rtl" : "ltr"}
-                >
-                  <option value="">{t("billing.allTrainers", "جميع المدربين")}</option>
-                  {trainers.slice(1).map((trainer) => (
-                    <option key={trainer} value={trainer}>
-                      {trainer}
+                  {memberOptions.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
                     </option>
                   ))}
                 </select>

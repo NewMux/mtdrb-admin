@@ -266,9 +266,18 @@ export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({
       expiry: `Hi ${member.name}, your membership expires in ${getDaysLeft(member.planEnd)} days. Renew now to keep your progress! 💪`,
       custom: `Hi ${member.name}, we have a special offer just for you! 🎉`,
     };
+    const message = templates[template as keyof typeof templates];
+    const digitsOnly = (member.phone || "").replace(/[^\d]/g, "");
 
-    toast.success(
-      `Mock WhatsApp sent to ${member.phone}: ${templates[template as keyof typeof templates]}`,
+    if (!digitsOnly) {
+      toast.error(`No phone number on file for ${member.name}`);
+      return;
+    }
+
+    window.open(
+      `https://wa.me/${digitsOnly}?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer",
     );
   };
 

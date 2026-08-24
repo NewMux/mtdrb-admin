@@ -121,19 +121,24 @@ const Billing: React.FC = () => {
   const [expenses, setExpenses] = React.useState<ExpenseRow[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
   const tenantIdValue = tenantId ?? "";
-  const clientOptions = React.useMemo(
-    () =>
-      invoices
-        .map((invoice) => {
-          const name = invoice.member?.name?.trim();
-          if (!name) return null;
-          return { id: invoice.id, name };
-        })
-        .filter(
-          (client): client is { id: string; name: string } => Boolean(client),
-        ),
-    [invoices],
-  );
+  const [clientOptions, setClientOptions] = React.useState<{ id: string; name: string }[]>([]);
+
+  React.useEffect(() => {
+    if (!tenantId) return;
+    supabase
+      .from("members")
+      .select("id, first_name, last_name")
+      .eq("tenant_id", tenantId)
+      .order("first_name", { ascending: true })
+      .then(({ data }) => {
+        setClientOptions(
+          (data || []).map((m) => ({
+            id: m.id,
+            name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Unknown",
+          })),
+        );
+      });
+  }, [tenantId]);
 
   // Settings state management
   const [settings, setSettings] = React.useState({

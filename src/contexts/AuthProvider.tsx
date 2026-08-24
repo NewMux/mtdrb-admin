@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let loggedIn = typeof window !== "undefined" ? sessionStorage.getItem("mock_logged_in") : null;
         
         if (loggedIn === null && typeof window !== "undefined") {
-          const publicRoutes = ["/", "/login", "/signup", "/reset-password", "/forgot-password"];
+          const publicRoutes = ["/", "/login", "/signup", "/reset-password", "/forgot-password", "/terms", "/privacy", "/refund"];
           if (publicRoutes.includes(location.pathname)) {
             loggedIn = "false";
           } else {
@@ -183,6 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "/onboarding",
           "/reset-password",
           "/forgot-password",
+          "/terms",
+          "/privacy",
+          "/refund",
         ];
         if (publicRoutes.includes(location.pathname)) {
           setIsLoading(false);
@@ -218,6 +221,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/onboarding",
         "/reset-password",
         "/forgot-password",
+        "/terms",
+        "/privacy",
+        "/refund",
       ];
       if (publicRoutes.includes(location.pathname)) {
         setIsLoading(false);
@@ -242,6 +248,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/onboarding",
         "/reset-password",
         "/forgot-password",
+        "/terms",
+        "/privacy",
+        "/refund",
       ];
       if (!publicRoutes.includes(location.pathname)) {
         navigate("/login", {
@@ -280,7 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (
             location.pathname === "/signup" ||
             location.pathname === "/reset-password" ||
-            location.pathname === "/forgot-password"
+            location.pathname === "/forgot-password" ||
+            location.pathname === "/terms" ||
+            location.pathname === "/privacy" ||
+            location.pathname === "/refund"
           ) {
             break;
           }
@@ -319,6 +331,115 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [checkAuth, navigate, location.pathname, handleUserMetadata]);
+
+  // Fetch the tenant's configured security policy (session timeout, password
+  // expiry) once the tenant is known - both live in gym_settings.metadata.
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState<
+    number | null
+  >(null);
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState<number | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!tenantId || isLocalhost()) {
+      setSessionTimeoutMinutes(null);
+      setPasswordExpiryDays(null);
+      return;
+    }
+
+    let cancelled = false;
+    supabase
+      .from("gym_settings")
+      .select("metadata")
+      .eq("tenant_id", tenantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const metadata = data?.metadata as
+          | { security?: { session_timeout?: number; password_expiry?: number } }
+          | null;
+        setSessionTimeoutMinutes(metadata?.security?.session_timeout ?? null);
+        setPasswordExpiryDays(metadata?.security?.password_expiry ?? null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId]);
+
+  // Password-expiry enforcement: password_changed_at is set in user_metadata
+  // whenever a password is successfully changed (Signup/ChangePassword/
+  // ResetPassword). If it's missing entirely (accounts predating this
+  // feature), don't treat that as expired - only enforce once we actually
+  // know when the password was last changed.
+  useEffect(() => {
+    if (!passwordExpiryDays || !user || isLocalhost()) return;
+    if (location.pathname.startsWith("/dashboard/settings")) return;
+
+    const changedAt = user.user_metadata?.password_changed_at as
+      | string
+      | undefined;
+    if (!changedAt) return;
+
+    const ageDays = (Date.now() - new Date(changedAt).getTime()) / 86_400_000;
+    if (ageDays >= passwordExpiryDays) {
+      // Settings (where Change Password lives) is admin-gated, so only
+      // force the redirect for admins - anyone else would just bounce back
+      // via PermissionGuard's fallback into a redirect loop. Non-admins
+      // still get the warning; there's no self-serve password change for
+      // them yet, a separate pre-existing gap.
+      if (userMetadata?.role === "admin") {
+        toast.error(
+          "Your password has expired and needs to be changed to continue.",
+        );
+        navigate("/dashboard/settings", { replace: true });
+      } else {
+        toast.error(
+          "Your password has expired. Please contact your gym admin to reset it.",
+        );
+      }
+    }
+  }, [passwordExpiryDays, user, userMetadata, location.pathname, navigate]);
+
+  // Track user activity and force sign-out once idle past the configured
+  // timeout. Pure client-side (no server session TTL change) - the same
+  // caveat as useAuthAttemptLimiter's lockout: a real backstop still needs
+  // Supabase Auth's own server-side session settings.
+  const lastActivityRef = useRef(Date.now());
+
+  useEffect(() => {
+    if (!sessionTimeoutMinutes || !user) return;
+
+    const markActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+    const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
+    activityEvents.forEach((event) =>
+      window.addEventListener(event, markActivity, { passive: true }),
+    );
+    markActivity();
+
+    const intervalId = setInterval(() => {
+      const idleMs = Date.now() - lastActivityRef.current;
+      if (idleMs >= sessionTimeoutMinutes * 60_000) {
+        supabase.auth.signOut().finally(() => {
+          setUser(null);
+          setUserMetadata(null);
+          setTenantId(null);
+          toast.error("You've been signed out due to inactivity.");
+          navigate("/login", { replace: true });
+        });
+      }
+    }, 30_000);
+
+    return () => {
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, markActivity),
+      );
+      clearInterval(intervalId);
+    };
+  }, [sessionTimeoutMinutes, user, navigate]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

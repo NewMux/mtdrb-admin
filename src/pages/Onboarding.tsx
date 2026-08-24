@@ -277,6 +277,25 @@ export default function Onboarding() {
         }
       }
 
+      // Upload the gym logo, if one was selected
+      let logoUrl: string | null = null;
+      if (formData.logo) {
+        try {
+          const safeFileName = formData.logo.name
+            .replace(/[^a-zA-Z0-9._-]/g, "_")
+            .slice(-120);
+          const path = `logos/${tenantId}/${crypto.randomUUID()}_${safeFileName}`;
+          const { error: logoUploadError } = await supabase.storage
+            .from("gym-logos")
+            .upload(path, formData.logo);
+          if (logoUploadError) throw logoUploadError;
+          logoUrl = path;
+        } catch (err) {
+          if (import.meta.env.DEV) console.error("Error uploading gym logo:", err);
+          // Continue anyway - logo is optional
+        }
+      }
+
       // Create or update gym settings for the tenant
       try {
         const { error: settingsError } = await supabase
@@ -287,9 +306,12 @@ export default function Onboarding() {
             vat_enabled: formData.vatEnabled,
             vat_rate: formData.vatEnabled ? DEFAULT_VAT_RATE : 0.0,
             metadata: {
-              country: formData.country,
-              language: formData.language,
-              timezone: formData.timezone,
+              general: {
+                country: formData.country,
+                language: formData.language,
+                timezone: formData.timezone,
+                ...(logoUrl && { logo_url: logoUrl }),
+              },
             },
             updated_at: new Date().toISOString()
           }, {

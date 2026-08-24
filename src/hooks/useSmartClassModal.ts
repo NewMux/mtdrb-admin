@@ -32,6 +32,7 @@ export interface SmartClass {
   price?: number;
   cost?: number;
   color?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SmartTrainer {
@@ -179,19 +180,19 @@ export const useSmartClassModal = ({
       const transformedClass: SmartClass = {
         id: classData.id,
         name: classData.name,
-        type: classData.type || "",
-        trainer_name: classData.trainers 
+        type: classData.metadata?.type || "",
+        trainer_name: classData.trainers
           ? `${classData.trainers.first_name || ''} ${classData.trainers.last_name || ''}`.trim()
           : "",
-        start_time: new Date(classData.start_time).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        start_time: new Date(classData.start_time).toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
         }),
-        end_time: new Date(classData.end_time).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        end_time: new Date(classData.end_time).toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
         }),
         date: new Date(classData.start_time).toISOString().split('T')[0],
         capacity: classData.capacity,
@@ -204,9 +205,11 @@ export const useSmartClassModal = ({
         location: classData.room || "",
         room_id: classData.room || "",
         trainer_id: classData.trainer_id,
-        recurrence: "none",
+        recurrence: classData.metadata?.recurrence_rule || "none",
         price: classData.price || 0,
         cost: classData.metadata?.cost || 0,
+        color: classData.metadata?.color,
+        metadata: classData.metadata || {},
       };
 
       setClassData(transformedClass);
@@ -583,6 +586,19 @@ export const useSmartClassModal = ({
       const startIso = new Date(`${dateVal}T${startVal}:00`).toISOString();
       const endIso = new Date(`${dateVal}T${endVal}:00`).toISOString();
 
+      // type/recurrence/color aren't real columns on `classes` - nest under
+      // metadata, merging with whatever's already there (e.g. `cost`, the
+      // Advanced Settings tab's fields) so we don't clobber it on save.
+      let existingMetadata: Record<string, unknown> = {};
+      if (classId) {
+        const { data: existingRow } = await supabase
+          .from("classes")
+          .select("metadata")
+          .eq("id", classId)
+          .single();
+        existingMetadata = (existingRow?.metadata as Record<string, unknown>) || {};
+      }
+
       const dbPayload = {
         tenant_id: tenantId,
         name: classData.name,
@@ -592,11 +608,13 @@ export const useSmartClassModal = ({
         end_time: endIso,
         capacity: classData.capacity,
         status: classData.status || "active",
-        type: classData.type,
         room: classData.room_id || null,
-        location: classData.room_id || null,
-        recurrence_rule: classData.recurrence || "none",
-        color: classData.color || "#0071E3",
+        metadata: {
+          ...existingMetadata,
+          type: classData.type,
+          recurrence_rule: classData.recurrence || "none",
+          color: classData.color || "#0071E3",
+        },
       };
 
       if (classId) {

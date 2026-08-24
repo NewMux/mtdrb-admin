@@ -6,6 +6,11 @@ import { supabase } from "../supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
 import { FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheckCircle } from "react-icons/fi";
 import { useRTL } from "../hooks/useRTL";
+import {
+  validatePassword,
+  DEFAULT_PASSWORD_POLICY,
+  type PasswordPolicy,
+} from "../utils/passwordPolicy";
 
 // ===== RESET PASSWORD PAGE =====
 // Reached via the recovery link Supabase emails from resetPasswordForEmail.
@@ -25,6 +30,8 @@ export default function ResetPassword() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [done, setDone] = React.useState(false);
+  const [passwordPolicy, setPasswordPolicy] =
+    React.useState<PasswordPolicy>(DEFAULT_PASSWORD_POLICY);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -58,12 +65,54 @@ export default function ResetPassword() {
     };
   }, []);
 
+  // The recovery link establishes a real session, so the tenant's
+  // configured password policy (if any) can be looked up the normal,
+  // RLS-protected way once we have it - falls back to the platform default.
+  React.useEffect(() => {
+    if (status !== "ready") return;
+    let cancelled = false;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!membership?.tenant_id || cancelled) return;
+
+      const { data: gymSettings } = await supabase
+        .from("gym_settings")
+        .select("metadata")
+        .eq("tenant_id", membership.tenant_id)
+        .maybeSingle();
+      if (cancelled) return;
+
+      const security = (gymSettings?.metadata as { security?: { min_password_length?: number; require_special_chars?: boolean } } | null)?.security;
+      if (security) {
+        setPasswordPolicy({
+          minLength: security.min_password_length ?? DEFAULT_PASSWORD_POLICY.minLength,
+          requireSpecialChars: security.require_special_chars ?? DEFAULT_PASSWORD_POLICY.requireSpecialChars,
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (password.length < 8) {
-      setError(t("auth.passwordMinLength"));
+    const passwordError = validatePassword(password, passwordPolicy);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
     if (password !== confirmPassword) {
@@ -72,7 +121,10 @@ export default function ResetPassword() {
     }
 
     setLoading(true);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+      data: { password_changed_at: new Date().toISOString() },
+    });
     setLoading(false);
 
     if (updateError) {
