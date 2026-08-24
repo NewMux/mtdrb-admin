@@ -36,22 +36,6 @@ interface Activity {
   created_at: string;
 }
 
-/** Gym settings configuration type */
-interface GymSettings {
-  id: string;
-  tenant_id: string;
-  name?: string;
-  timezone?: string;
-  currency?: string;
-  language?: string;
-  logo_url?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  metadata?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-}
 // Removed mock data - using real data from Supabase
 // Removed isDev - always use real Supabase
 
@@ -794,15 +778,6 @@ export const api = {
         .eq("is_active", true)
         .order("name", { ascending: true });
       return { ...result, data: result.data?.map(fromBranchRow) ?? null };
-    },
-  },
-
-  gymSettings: {
-    get: async (): Promise<ApiResponse<GymSettings>> => {
-      return supabase.from("gym_settings").select("*").single();
-    },
-    update: async (data: Partial<GymSettings>): Promise<ApiResponse<GymSettings>> => {
-      return supabase.from("gym_settings").upsert(data).select().single();
     },
   },
 };
