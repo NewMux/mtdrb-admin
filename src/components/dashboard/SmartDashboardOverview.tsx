@@ -241,7 +241,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .gte("created_at", formatDate(weekStart)),
         supabase
           .from("members")
-          .select("id, created_at, join_date")
+          .select("id, created_at, join_date, status, membership_status")
           .eq("tenant_id", tenantId),
       ]);
 
@@ -275,7 +275,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
       const retainedMembers = (allMembers.data || []).filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
-        return joinDate <= ninetyDaysAgo;
+        return joinDate <= ninetyDaysAgo && m.status === "active";
       }).length;
       const totalOldMembers = (allMembers.data || []).filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
