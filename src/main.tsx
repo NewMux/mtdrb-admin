@@ -4,8 +4,10 @@ import App from "./App";
 import "./i18n";
 import "./index.css";
 import { initMonitoring } from "./services/monitoring";
+import { captureMarketingAttribution } from "./utils/marketingTracking";
 
 initMonitoring();
+captureMarketingAttribution();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

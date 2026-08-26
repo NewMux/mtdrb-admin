@@ -24,6 +24,7 @@ import {
   STARTER_EXTRA_LOCATION_PRICE,
   SUBSCRIPTION_PLANS,
 } from "../../config/runtimeConfig";
+import { trackMarketingEvent } from "../../utils/marketingTracking";
 
 // Short Arabic currency names for the codes this app actually bills in.
 // Falls back to the raw ISO code for anything not listed, so a misconfigured
@@ -157,10 +158,11 @@ const PremiumLanding: React.FC = () => {
 
           <div className="hidden items-center gap-5 md:flex">
             <LanguageSwitcher />
-            <Link
-              to="/signup"
-              className="inline-flex items-center gap-1.5 rounded-full bg-appleBlue-500 px-4 py-1.5 text-[13px] font-medium text-white transition-colors duration-200 hover:bg-appleBlue-600"
-            >
+              <Link
+                to="/signup"
+                onClick={() => trackMarketingEvent("trial_cta_click", { placement: "nav" })}
+                className="inline-flex items-center gap-1.5 rounded-full bg-appleBlue-500 px-4 py-1.5 text-[13px] font-medium text-white transition-colors duration-200 hover:bg-appleBlue-600"
+              >
               {t("landing.get_started")}
             </Link>
           </div>
@@ -197,7 +199,10 @@ const PremiumLanding: React.FC = () => {
               </div>
               <Link
                 to="/signup"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  trackMarketingEvent("trial_cta_click", { placement: "mobile-nav" });
+                  setMobileMenuOpen(false);
+                }}
                 className="inline-flex items-center justify-center rounded-full bg-appleBlue-500 px-4 py-2.5 text-sm font-medium text-white"
               >
                 {t("landing.get_started")}
@@ -232,6 +237,7 @@ const PremiumLanding: React.FC = () => {
               <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   to="/signup"
+                  onClick={() => trackMarketingEvent("trial_cta_click", { placement: "hero" })}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-appleBlue-500 px-7 py-3 text-base font-medium text-white transition-colors duration-200 hover:bg-appleBlue-600"
                 >
                   {t("landing.startFreeTrial")}
@@ -296,6 +302,9 @@ const PremiumLanding: React.FC = () => {
                   <p className="mt-1 text-xs font-normal text-apple-gray-400">{t("landing.hero_stat_revenue")}</p>
                 </div>
               </div>
+              <p className="mx-auto mt-4 max-w-lg text-center text-[11px] leading-5 text-apple-gray-300">
+                {t("landing.hero_stat_note")}
+              </p>
             </motion.div>
           </div>
 
@@ -531,6 +540,7 @@ const PremiumLanding: React.FC = () => {
             <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-apple-gray-400">{t("landing.final_cta_desc")}</p>
             <Link
               to="/signup"
+              onClick={() => trackMarketingEvent("trial_cta_click", { placement: "final-cta" })}
               className="mt-9 inline-flex items-center gap-2 rounded-full bg-appleBlue-500 px-7 py-3 text-base font-medium text-white transition-colors duration-200 hover:bg-appleBlue-600"
             >
               {t("landing.final_cta_button")}
@@ -636,6 +646,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
     </ul>
     <Link
       to="/signup"
+      onClick={() => trackMarketingEvent("trial_cta_click", { placement: `${title.toLowerCase()}-pricing` })}
       className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-colors duration-200 ${
         featured ? "bg-appleBlue-500 text-white hover:bg-appleBlue-600" : "bg-apple-light text-apple-gray-700 hover:bg-apple-gray-100"
       }`}
