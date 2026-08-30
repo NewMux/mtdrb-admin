@@ -8,20 +8,19 @@
 // IMPORTANT: per MPGS's own docs, notification delivery isn't guaranteed-
 // timely and shouldn't be treated as the source of truth for settlement -
 // this handler only uses a notification as a trigger to re-fetch the
-// order's authoritative status via the Retrieve Order API, never by
-// trusting fields inside the notification body itself. That call
-// (retrieveAuthoritativeOrderStatus below) is NOT YET IMPLEMENTED: the
-// Retrieve Order/Transaction endpoint path and its response shape for
-// this MPGS API version haven't been confirmed against CrediMax's docs
-// yet. Everything else in this file (secret verification, session lookup,
-// idempotency, the platform_subscriptions/platform_checkout_sessions
-// writes) is complete and ready - only that one call needs finishing
-// before this function can be deployed.
+// order's authoritative status via the Retrieve Order API
+// (GET .../order/{orderid}), never by trusting fields inside the
+// notification body itself.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const MPGS_WEBHOOK_SECRET = Deno.env.get("MPGS_WEBHOOK_SECRET")!;
+
+const MPGS_GATEWAY_HOST = Deno.env.get("MPGS_GATEWAY_HOST") ?? "credimax.gateway.mastercard.com";
+const MPGS_API_VERSION = Deno.env.get("MPGS_API_VERSION") ?? "100";
+const MPGS_MERCHANT_ID = Deno.env.get("MPGS_MERCHANT_ID")!;
+const MPGS_API_PASSWORD = Deno.env.get("MPGS_API_PASSWORD")!;
 
 // Billing period granted per successful charge. Monthly to match
 // SUBSCRIPTION_PLANS' period="month" - this integration only covers a
@@ -34,21 +33,63 @@ type AuthoritativeOrderStatus =
   | { result: "FAILURE" }
   | { result: "PENDING" };
 
+// Only the fields this handler reads from Retrieve Order's response -
+// the real payload carries considerably more (transaction[], sourceOfFunds,
+// etc.) that isn't needed here.
+interface MpgsRetrieveOrderResponse {
+  result?: "SUCCESS" | "FAILURE" | "PENDING" | "UNKNOWN" | string;
+  currency?: string;
+  amount?: number;
+  totalCapturedAmount?: number;
+}
+
 /**
- * Calls MPGS's Retrieve Order (or Retrieve Transaction) API to get the
- * order's current, authoritative status - the only thing this handler
- * trusts for whether money actually moved.
- *
- * NOT YET IMPLEMENTED: needs the confirmed endpoint path and response
- * field names (order.status? transaction[].result? response.gatewayCode?)
- * from CrediMax's Retrieve Order/Query Transaction documentation.
+ * Calls MPGS's Retrieve Order API to get the order's current, authoritative
+ * status - the only thing this handler trusts for whether money actually
+ * moved. order.result is SUCCESS/FAILURE/PENDING/UNKNOWN; anything other
+ * than a clean SUCCESS or FAILURE is treated as still-pending rather than
+ * guessed at either way, so a later notification gets a chance to
+ * re-resolve it.
  */
 async function retrieveAuthoritativeOrderStatus(
-  _orderId: string,
+  orderId: string,
 ): Promise<AuthoritativeOrderStatus> {
-  throw new Error(
-    "retrieveAuthoritativeOrderStatus is not implemented - confirm MPGS's Retrieve Order/Transaction API contract before deploying this function",
+  const response = await fetch(
+    `https://${MPGS_GATEWAY_HOST}/api/rest/version/${MPGS_API_VERSION}/merchant/${MPGS_MERCHANT_ID}/order/${orderId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Basic " + btoa(`merchant.${MPGS_MERCHANT_ID}:${MPGS_API_PASSWORD}`),
+      },
+    },
   );
+
+  if (!response.ok) {
+    throw new Error(`MPGS Retrieve Order failed (${response.status}): ${await response.text()}`);
+  }
+
+  const order = (await response.json()) as MpgsRetrieveOrderResponse;
+
+  if (order.result === "SUCCESS") {
+    // totalCapturedAmount reflects what was actually captured (PURCHASE
+    // captures in the same step as authorization) - prefer it over the
+    // order-level amount field, which mirrors what was requested rather
+    // than what was confirmed charged.
+    const capturedAmount = order.totalCapturedAmount ?? order.amount;
+    if (capturedAmount == null || !order.currency) {
+      throw new Error("MPGS Retrieve Order returned SUCCESS without an amount/currency");
+    }
+    return { result: "SUCCESS", amount: capturedAmount, currency: order.currency };
+  }
+
+  if (order.result === "FAILURE") {
+    return { result: "FAILURE" };
+  }
+
+  if (order.result !== "PENDING") {
+    console.warn("mpgs-webhook: unrecognized order.result, treating as pending:", order.result);
+  }
+  return { result: "PENDING" };
 }
 
 Deno.serve(async (req) => {
@@ -104,6 +145,21 @@ Deno.serve(async (req) => {
     }
 
     const authoritative = await retrieveAuthoritativeOrderStatus(orderId);
+
+    if (
+      authoritative.result === "SUCCESS" &&
+      (authoritative.amount !== session.amount || authoritative.currency !== session.currency)
+    ) {
+      // Not a reason to reject the charge - the gateway's authoritative
+      // figures always win over what we originally requested - but a
+      // mismatch here (partial capture, currency surprise, misconfigured
+      // pricing) is worth knowing about rather than silently accepting.
+      console.warn("mpgs-webhook: captured amount/currency differs from requested", {
+        orderId,
+        requested: { amount: session.amount, currency: session.currency },
+        captured: { amount: authoritative.amount, currency: authoritative.currency },
+      });
+    }
 
     if (authoritative.result === "PENDING") {
       // Still in flight (e.g. mid-3DS-challenge) - leave as pending, a
