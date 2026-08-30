@@ -32,6 +32,7 @@ ARG VITE_PRO_PLAN_NAME
 ARG VITE_PRO_PRICE
 ARG VITE_PRO_EXTRA_LOCATION_PRICE
 ARG VITE_SENTRY_DSN
+ARG VITE_MPGS_GATEWAY_HOST
 
 # scripts/check-env.mjs fails this step fast if the two required vars above
 # are missing or malformed - same fail-fast behavior as the Vercel build.
@@ -45,9 +46,13 @@ FROM nginx:1.27-alpine
 # e.g. supabase.example.com. Left as a wildcard Supabase Cloud host by
 # default so the image still works during the staging/parallel-run phase.
 ENV SUPABASE_DOMAIN=*.supabase.co
-# Restricts nginx's built-in envsubst-on-startup to only this variable, so
+# CSP script-src/connect-src host for the MPGS/CrediMax payment gateway
+# (checkout.js is loaded from here). Override at deploy time if using a
+# different MPGS-based acquirer than CrediMax.
+ENV MPGS_GATEWAY_HOST=credimax.gateway.mastercard.com
+# Restricts nginx's built-in envsubst-on-startup to only these variables, so
 # nginx's own $uri-style config variables are never accidentally substituted.
-ENV NGINX_ENVSUBST_FILTER=^SUPABASE_DOMAIN$
+ENV NGINX_ENVSUBST_FILTER=^(SUPABASE_DOMAIN|MPGS_GATEWAY_HOST)$
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
