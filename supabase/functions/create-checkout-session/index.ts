@@ -97,6 +97,17 @@ Deno.serve(async (req) => {
 
     const orderId = crypto.randomUUID();
 
+    // CrediMax requires populating available customer/service data for
+    // their fraud engine (per their onboarding notice). Only real,
+    // already-known data is sent - never fabricated placeholders, which
+    // would misinform risk scoring rather than help it. Signup only
+    // collects a single "name" field (see Signup.tsx), so first/last name
+    // is a best-effort split rather than a guaranteed accurate split.
+    const fullName = (userData.user.user_metadata?.name as string | undefined)?.trim();
+    const [firstName, ...lastNameParts] = fullName ? fullName.split(/\s+/) : [];
+    const lastName = lastNameParts.length > 0 ? lastNameParts.join(" ") : undefined;
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+
     const mpgsResponse = await fetch(
       `https://${MPGS_GATEWAY_HOST}/api/rest/version/${MPGS_API_VERSION}/merchant/${MPGS_MERCHANT_ID}/session`,
       {
@@ -122,7 +133,21 @@ Deno.serve(async (req) => {
             currency: PLATFORM_CURRENCY,
             amount: plan.amount.toFixed(2),
             description: `MTDRB ${plan.name} plan subscription`,
+            item: [
+              {
+                name: `${plan.name} Plan - monthly subscription`,
+                quantity: 1,
+                unitPrice: plan.amount.toFixed(2),
+                category: "digital_services",
+              },
+            ],
           },
+          customer: {
+            email: userData.user.email,
+            ...(firstName ? { firstName } : {}),
+            ...(lastName ? { lastName } : {}),
+          },
+          ...(clientIp ? { device: { ipAddress: clientIp } } : {}),
         }),
       },
     );
