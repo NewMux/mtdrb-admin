@@ -115,6 +115,54 @@ export default function Subscribe() {
 
   const plans = SUBSCRIPTION_PLANS;
 
+  // Loads MPGS's hosted checkout.js (once) and hands the browser off to
+  // CrediMax's payment page for the given session.
+  const redirectToCredimaxCheckout = (gatewayHost: string, sessionId: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const existing = document.getElementById("credimax-checkout-js");
+      const onReady = () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const Checkout = (window as any).Checkout;
+          if (!Checkout) throw new Error("Checkout script did not load correctly.");
+          Checkout.configure({ session: { id: sessionId } });
+          Checkout.showPaymentPage();
+          resolve();
+        } catch (checkoutError) {
+          reject(checkoutError);
+        }
+      };
+
+      if (existing) {
+        onReady();
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "credimax-checkout-js";
+      script.src = `https://${gatewayHost}/static/checkout/checkout.min.js`;
+      script.onload = onReady;
+      script.onerror = () => reject(new Error("Could not load the payment page. Please try again."));
+      document.body.appendChild(script);
+    });
+  };
+
+  // An existing (trialing/past_due/cancelled/expired) subscription needs a
+  // real charge, not another free trial -- hand off to CrediMax instead of
+  // writing to platform_subscriptions directly (the self-service trigger
+  // would reject a client-set "active" status or nonzero amount anyway).
+  const handleRealCheckout = async (planId: string) => {
+    const { data, error: invokeError } = await supabase.functions.invoke("credimax-checkout", {
+      body: { planId },
+    });
+    if (invokeError) throw invokeError;
+    if (!data?.sessionId || !data?.gatewayHost) {
+      throw new Error("Could not start checkout. Please try again.");
+    }
+
+    await redirectToCredimaxCheckout(data.gatewayHost, data.sessionId);
+  };
+
   // Handle subscription
   const handleSubscribe = async (planId: string) => {
     setSubscribing(true);
@@ -123,6 +171,11 @@ export default function Subscribe() {
       const plan = plans.find((candidate) => candidate.id === planId);
       if (!plan) {
         throw new Error("Invalid subscription plan");
+      }
+
+      if (subscription) {
+        await handleRealCheckout(planId);
+        return;
       }
 
       const currentUser = user ?? (await withTimeout(

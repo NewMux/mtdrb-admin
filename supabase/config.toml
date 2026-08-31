@@ -1,0 +1,12 @@
+# Per-function settings for Supabase Edge Functions. This project has no
+# other local Supabase CLI config (migrations/schema are applied directly to
+# the hosted project per DEPLOYMENT.md's bootstrap path) -- this file exists
+# only to document and enforce JWT verification per function.
+
+[functions.credimax-checkout]
+verify_jwt = true
+
+[functions.credimax-webhook]
+# CrediMax calls this directly (not as a logged-in Supabase user) -- it
+# authenticates via HTTP Basic Auth instead (see the function's own code).
+verify_jwt = false
