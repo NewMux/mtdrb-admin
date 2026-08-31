@@ -62,9 +62,13 @@ After applying the migrations, verify the effective deployed state in Supabase:
 
 ## Environment variables
 
-Hard-required in Vercel Production and/or a local `.env` — `npm run build:deploy`'s
+Hard-required for any production build — Coolify **Build Variables**, Vercel
+Production, and/or a local `.env` alike — `npm run build:deploy`'s
 `scripts/check-env.mjs` fails the build if either is missing or malformed,
-and the app throws at runtime outside dev if they're absent:
+and the app throws at runtime outside dev if they're absent. Vite bakes
+these in at *build* time, not runtime, so on Coolify they must be set as
+Build Variables (see the `Dockerfile`), not just container environment
+variables:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
@@ -95,13 +99,26 @@ The MTDRB AI assistant, its browser integration, and its Edge Function are not p
 
 New receipt and invoice records store an object path rather than a public URL. The UI requests a five-minute signed URL only when a user opens a document. Existing values that use the old Supabase public URL format are converted to their object path by `src/utils/storage.ts`; arbitrary external URLs are rejected. After confirming signed access works, remove any old public bucket access and invalidate old public URLs where your storage policy permits.
 
-## Vercel
+## Hosting
 
-The repository’s `vercel.json` uses `npm ci`, `npm run build:deploy`, SPA routing, and security headers including `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS. `build:deploy` runs typecheck and `scripts/check-env.mjs`, which fails fast if the public Supabase URL/key are missing or malformed. Production source maps are disabled in `vite.config.ts`.
+Production runs self-hosted on Hetzner via Coolify: this repo builds as a
+Docker image (`Dockerfile`, multi-stage — `npm run build:deploy` in a
+build stage, served by `nginx.conf.template` in the runtime stage), with
+Coolify driving the build/deploy. See `SELF_HOSTING.md` for the full
+setup and the ongoing operational responsibilities that come with running
+your own Postgres/Supabase stack instead of a managed one (backups,
+patching, monitoring).
 
-Use the actual Production deployment URL (Vercel → project → Domains — the one marked **Production**, not a `-git-<branch>-` preview alias). Confirm that Deployment Protection is not blocking Production if the application is intended to be publicly reachable.
+The `nginx.conf.template` mirrors `vercel.json`'s SPA routing and security
+headers (`Content-Security-Policy`, `X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS)
+exactly, so the security posture this doc's release gate establishes
+carries over regardless of host. Production source maps stay disabled in
+`vite.config.ts`.
 
-Supabase’s free tier may pause a project after inactivity. If authentication or data requests hang, check whether the project is paused before diagnosing the client.
+`vercel.json` is left in the repo and may still be reachable as a rollback
+path during the post-migration soak window described in
+`SELF_HOSTING.md`; it isn't the active production deployment.
 
 ## Local development and validation
 

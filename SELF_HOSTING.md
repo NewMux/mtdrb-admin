@@ -1,16 +1,21 @@
 # Self-hosting on Hetzner + Coolify
 
-This is the migration runbook off Vercel + Supabase Cloud to a self-hosted
-stack on your own Hetzner server, using [Coolify](https://coolify.io) as
-the deployment layer. It assumes you've read the plan this came from: build
-and verify a staging copy first, only cut production traffic over once it's
-proven, and keep Vercel/Supabase Cloud alive as a rollback path through a
-soak window. **Do not skip straight to Step 5 (Cutover)** — this app has
-paying tenants and real billing data.
+**Status: this migration is complete — production runs on Hetzner +
+Coolify.** This doc started as the pre-migration runbook off Vercel +
+Supabase Cloud; Steps 2-5 below are kept as a record of the path that was
+followed (staging first, verify, then cut over) and as a reference for
+repeating any of it later — e.g. disaster recovery, or standing up a second
+environment. If you're setting up a *new* environment rather than
+operating the existing one, follow Steps 2-4 as written, substituting your
+own domains/values.
+
+Step 6 (ongoing operational responsibilities) is the live, actionable part
+of this doc now — that's what running your own Postgres/Supabase stack
+instead of a managed one requires going forward.
 
 Everything up to and including committing `Dockerfile`/`nginx.conf.template`
-to this repo was done in-session and doesn't need repeating. Everything
-below runs on your Hetzner box (or wherever you manage DNS/Supabase Cloud).
+to this repo was done in-session. Everything below ran on the Hetzner box
+(or wherever DNS/Supabase Cloud was managed) during the actual migration.
 
 ## What's already confirmed portable
 
@@ -117,9 +122,7 @@ below runs on your Hetzner box (or wherever you manage DNS/Supabase Cloud).
    restored from is not a verified backup). This is the biggest new
    responsibility you're taking on by leaving a managed database.
 
-## Step 5 — Cutover
-
-Only after Step 4 fully checks out:
+## Step 5 — Cutover (done)
 
 1. Deploy this repo's Coolify app again (or promote the staging one),
    this time with **Build Variables** pointed at the real self-hosted
@@ -129,19 +132,28 @@ Only after Step 4 fully checks out:
 3. Keep the Vercel deployment and Supabase Cloud project alive
    (un-pointed) as an immediate rollback path for a defined soak window —
    1-2 weeks is a reasonable default — before decommissioning either.
+   <!-- TODO: record whether Vercel/Supabase Cloud are still live as
+   rollback, and when the soak window closes/closed. -->
 4. Watch closely during the soak window: existing Sentry wiring
    (`VITE_SENTRY_DSN`) already covers frontend errors; add basic
    uptime/log monitoring for the new Postgres/Coolify stack (Coolify has
    built-in service health monitoring, or wire a simple external uptime
    check against the app and Supabase URLs).
 
+**JWT_SECRET decision made:** <!-- TODO: record which of the two Step 3.5
+options was taken — copied the Supabase Cloud project's secret (existing
+sessions kept working), or rotated to a fresh one (users were signed out
+once). -->
+
 ## Step 6 — Ongoing operational responsibilities
 
 None of these existed as your problem while on Vercel/Supabase Cloud —
-they do now:
+they do now. This is the live checklist for operating the deployment:
 
 - Scheduled, periodically **tested** Postgres backups (not just "backups
   exist" — prove a restore works, on a schedule).
+  <!-- TODO: confirm this is actually set up (schedule + last successful
+  restore test), not just planned. -->
 - A patching/upgrade cadence for Postgres and the Supabase stack images.
 - Basic monitoring/alerting for disk space, CPU, and service health — a
   single Hetzner box has none of Vercel/Supabase Cloud's automatic scaling
