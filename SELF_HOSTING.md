@@ -1,21 +1,25 @@
 # Self-hosting on Hetzner + Coolify
 
-**Status: this migration is complete — production runs on Hetzner +
-Coolify.** This doc started as the pre-migration runbook off Vercel +
-Supabase Cloud; Steps 2-5 below are kept as a record of the path that was
-followed (staging first, verify, then cut over) and as a reference for
-repeating any of it later — e.g. disaster recovery, or standing up a second
-environment. If you're setting up a *new* environment rather than
-operating the existing one, follow Steps 2-4 as written, substituting your
-own domains/values.
+**Status: partially migrated.** The frontend (this repo) is deployed on
+Coolify and live at `mtdrb.net` / `www.mtdrb.net`. The backend is **not**
+migrated yet — the live frontend still talks to the original Supabase
+Cloud project (`mtdrb-admin`, ref `dewplojbsxyytqixwfkb`,
+`https://dewplojbsxyytqixwfkb.supabase.co`). Steps 2-4 below are what's
+left: provision self-hosted Supabase via Coolify, migrate the data into
+it, and verify it before cutting the frontend over to point at it. Do
+**not** skip to Step 5 — that's a live app with paying tenants and real
+billing data pointed at the current Supabase Cloud project.
 
-Step 6 (ongoing operational responsibilities) is the live, actionable part
-of this doc now — that's what running your own Postgres/Supabase stack
-instead of a managed one requires going forward.
+The commands below have the real project ref, DB host, and Storage bucket
+names filled in (pulled directly from the live project) so they're
+close to copy-paste ready — you still need to supply your own DB password
+and the self-hosted instance's connection details once Step 2 exists.
 
 Everything up to and including committing `Dockerfile`/`nginx.conf.template`
-to this repo was done in-session. Everything below ran on the Hetzner box
-(or wherever DNS/Supabase Cloud was managed) during the actual migration.
+to this repo was done in an earlier session. Everything below runs on your
+Hetzner box (or wherever you manage DNS/Supabase Cloud) — no tool in this
+session can reach either one directly, so treat this as a runbook to
+execute yourself (or paste command output back for help debugging).
 
 ## What's already confirmed portable
 
@@ -59,9 +63,13 @@ to this repo was done in-session. Everything below ran on the Hetzner box
 ## Step 3 — Migrate data into staging (dry run)
 
 1. Dump the production Supabase Cloud database, including the `auth`
-   schema so existing users and password hashes carry over:
+   schema so existing users and password hashes carry over. The project's
+   DB host is `db.dewplojbsxyytqixwfkb.supabase.co` — get the password
+   from Supabase Dashboard → Project Settings → Database (or your saved
+   connection string) and substitute it below rather than pasting it
+   anywhere persistent:
    ```bash
-   pg_dump "$PROD_SUPABASE_DB_URL" \
+   pg_dump "postgresql://postgres:<DB_PASSWORD>@db.dewplojbsxyytqixwfkb.supabase.co:5432/postgres" \
      --schema=public --schema=auth --schema=storage \
      --no-owner --no-privileges \
      -f mtdrb_prod_dump.sql
@@ -78,15 +86,20 @@ to this repo was done in-session. Everything below ran on the Hetzner box
    directory is the authoritative source per `DEPLOYMENT.md`, and this step
    is what actually proves the dump + migrations together produce the
    right end state.
-4. Migrate Storage bucket contents (`expense-receipts`, `invoice-files`,
-   and any others in use) from Supabase Cloud to the self-hosted
-   Storage-api, which is S3-compatible:
+4. Migrate Storage bucket contents — the project currently has **four**
+   buckets in use, not just receipts/invoices — from Supabase Cloud to the
+   self-hosted Storage-api, which is S3-compatible:
    ```bash
    rclone sync supabase-cloud:expense-receipts staging-supabase:expense-receipts
+   rclone sync supabase-cloud:gym-logos staging-supabase:gym-logos
    rclone sync supabase-cloud:invoice-files staging-supabase:invoice-files
+   rclone sync supabase-cloud:task-attachments staging-supabase:task-attachments
    ```
    (configure both as S3-compatible `rclone` remotes first — Supabase Cloud
    and self-hosted Storage-api both expose an S3-compatible endpoint).
+   `gym-logos` is the one public bucket (`public = true`); the other three
+   are private. Preserve that distinction on the self-hosted side, or the
+   RLS/security release-gate checklist in `DEPLOYMENT.md` will fail on it.
 5. **Decide on the `JWT_SECRET` question now, not at cutover**: self-hosted
    GoTrue needs the *same* `JWT_SECRET` the Supabase Cloud project uses for
    existing user sessions/tokens to keep validating after cutover. Two
@@ -109,8 +122,9 @@ to this repo was done in-session. Everything below ran on the Hetzner box
    - RLS enabled on every table (`memberships`, `tenants`, invoices,
      expenses, VAT returns, POS tables, etc.)
    - `anon` has no execute privilege on tenant-derived or financial RPCs
-   - `expense-receipts` and `invoice-files` (and any other buckets) show
-     `public = false`
+   - `expense-receipts`, `invoice-files`, and `task-attachments` show
+     `public = false`; `gym-logos` is the one bucket that's intentionally
+     `public = true`
    - Storage policies only allow tenant-scoped paths and validate role
    - A user from tenant A genuinely cannot read/write/export tenant B's
      data
@@ -122,38 +136,36 @@ to this repo was done in-session. Everything below ran on the Hetzner box
    restored from is not a verified backup). This is the biggest new
    responsibility you're taking on by leaving a managed database.
 
-## Step 5 — Cutover (done)
+## Step 5 — Cutover (not started — backend still on Supabase Cloud)
 
-1. Deploy this repo's Coolify app again (or promote the staging one),
-   this time with **Build Variables** pointed at the real self-hosted
-   Supabase instance (not staging) and the runtime `SUPABASE_DOMAIN` env
-   var set to its real host.
-2. Switch your domain's DNS to the Hetzner-hosted frontend.
-3. Keep the Vercel deployment and Supabase Cloud project alive
-   (un-pointed) as an immediate rollback path for a defined soak window —
-   1-2 weeks is a reasonable default — before decommissioning either.
-   <!-- TODO: record whether Vercel/Supabase Cloud are still live as
-   rollback, and when the soak window closes/closed. -->
+Only after Step 4 fully checks out. Note the frontend deploy/DNS part of
+this step already happened (that's why `mtdrb.net` is live on Coolify
+today) — what's left is re-pointing it at the self-hosted backend instead
+of Supabase Cloud:
+
+1. Redeploy this repo's Coolify app with **Build Variables** changed to
+   point at the real self-hosted Supabase instance (not staging, not
+   `dewplojbsxyytqixwfkb.supabase.co`) and the runtime `SUPABASE_DOMAIN`
+   env var set to its real host.
+2. DNS for `mtdrb.net`/`www.mtdrb.net` already points at the Hetzner box —
+   nothing to change there, just the app's own config in step 1.
+3. Keep the Supabase Cloud project (`dewplojbsxyytqixwfkb`) alive and
+   un-pointed as an immediate rollback path for a defined soak window —
+   1-2 weeks is a reasonable default — before decommissioning it.
 4. Watch closely during the soak window: existing Sentry wiring
    (`VITE_SENTRY_DSN`) already covers frontend errors; add basic
    uptime/log monitoring for the new Postgres/Coolify stack (Coolify has
    built-in service health monitoring, or wire a simple external uptime
    check against the app and Supabase URLs).
 
-**JWT_SECRET decision made:** <!-- TODO: record which of the two Step 3.5
-options was taken — copied the Supabase Cloud project's secret (existing
-sessions kept working), or rotated to a fresh one (users were signed out
-once). -->
-
 ## Step 6 — Ongoing operational responsibilities
 
-None of these existed as your problem while on Vercel/Supabase Cloud —
-they do now. This is the live checklist for operating the deployment:
+None of these exist as a problem yet, while the backend is still on
+Supabase Cloud — but they will the moment Step 5 happens, so plan for them
+now rather than after cutover:
 
 - Scheduled, periodically **tested** Postgres backups (not just "backups
   exist" — prove a restore works, on a schedule).
-  <!-- TODO: confirm this is actually set up (schedule + last successful
-  restore test), not just planned. -->
 - A patching/upgrade cadence for Postgres and the Supabase stack images.
 - Basic monitoring/alerting for disk space, CPU, and service health — a
   single Hetzner box has none of Vercel/Supabase Cloud's automatic scaling
