@@ -8,8 +8,6 @@ import {
   FiDollarSign,
   FiTarget,
   FiAlertTriangle,
-  FiZap,
-  FiCheckCircle,
   FiClock,
   FiTrendingDown,
   FiSettings,
@@ -43,7 +41,6 @@ interface DeepAnalyticsData {
 
   // Engagement metrics
   averageVisitsPerMonth: number;
-  memberSatisfactionScore: number;
   activeEngagementRate: number;
 
   // Risk analytics
@@ -54,7 +51,6 @@ interface DeepAnalyticsData {
   // Growth analytics
   growthRate: number;
   acquisitionCost: number;
-  conversionRate: number;
 
   // Segmentation
   genderDistribution: { male: number; female: number; other: number };
@@ -67,15 +63,6 @@ interface DeepAnalyticsData {
     month: string;
     count: number;
     revenue: number;
-    churn: number;
-  }>;
-  cohortAnalysis: Array<{
-    cohort: string;
-    month0: number;
-    month1: number;
-    month3: number;
-    month6: number;
-    month12: number;
   }>;
 
   // Member behavior
@@ -96,14 +83,6 @@ interface DeepAnalyticsData {
     email: string;
     riskScore: number;
     reason: string;
-  }>;
-
-  // Predictions
-  predictedChurn: Array<{ month: string; predicted: number; actual?: number }>;
-  revenueForecasts: Array<{
-    month: string;
-    forecast: number;
-    confidence: number;
   }>;
 }
 
@@ -129,7 +108,6 @@ export default function MemberAnalytics({
 
     // Engagement metrics
     averageVisitsPerMonth: 0,
-    memberSatisfactionScore: 0,
     activeEngagementRate: 0,
 
     // Risk analytics
@@ -140,7 +118,6 @@ export default function MemberAnalytics({
     // Growth analytics
     growthRate: 0,
     acquisitionCost: 0,
-    conversionRate: 0,
 
     // Segmentation
     genderDistribution: { male: 0, female: 0, other: 0 },
@@ -150,16 +127,11 @@ export default function MemberAnalytics({
 
     // Time series data
     monthlyGrowth: [],
-    cohortAnalysis: [],
 
     // Member behavior
     topSpenders: [],
     longestMembers: [],
     atRiskList: [],
-
-    // Predictions
-    predictedChurn: [],
-    revenueForecasts: [],
   });
 
   useEffect(() => {
@@ -345,8 +317,6 @@ export default function MemberAnalytics({
         monthlyRecurringRevenue > 0
           ? monthlyRecurringRevenue / Math.max(newThisMonth, 1)
           : 0;
-      const conversionRate = Math.random() * 15 + 10; // Mock data: 10-25%
-      const memberSatisfactionScore = Math.random() * 20 + 80; // Mock data: 80-100%
 
       // Monthly growth with revenue data
       const monthlyGrowth = [];
@@ -372,13 +342,10 @@ export default function MemberAnalytics({
           })
           .reduce((sum, inv) => sum + (inv.amount || 0), 0);
 
-        const churn = Math.round(Math.random() * 5); // Mock churn data
-
         monthlyGrowth.push({
           month: month.format("MMM YYYY"),
           count,
           revenue: monthRevenue,
-          churn,
         });
       }
 
@@ -462,54 +429,6 @@ export default function MemberAnalytics({
         .sort((a, b) => b.riskScore - a.riskScore)
         .slice(0, 10);
 
-      // ===== PREDICTIVE DATA =====
-      const predictedChurn = [];
-      const revenueForecasts = [];
-
-      for (let i = 0; i < 6; i++) {
-        const futureMonth = dayjs().add(i, "month");
-        predictedChurn.push({
-          month: futureMonth.format("MMM YYYY"),
-          predicted: Math.max(2, Math.round(Math.random() * 8 + 2)), // 2-10% predicted churn
-        });
-
-        revenueForecasts.push({
-          month: futureMonth.format("MMM YYYY"),
-          forecast: Math.round(
-            monthlyRecurringRevenue * (1 + (Math.random() * 0.2 - 0.1)),
-          ), // ±10% variation
-          confidence: Math.round(Math.random() * 20 + 75), // 75-95% confidence
-        });
-      }
-
-      // Cohort analysis (simplified)
-      const cohortAnalysis = [];
-      for (let i = 0; i < 6; i++) {
-        const cohortMonth = dayjs().subtract(i, "month");
-        const cohortMembers = members.filter((m) => {
-          const joinDate = dayjs(m.joined_at || m.created_at);
-          return (
-            joinDate.month() === cohortMonth.month() &&
-            joinDate.year() === cohortMonth.year()
-          );
-        });
-
-        const month0 = cohortMembers.length;
-        const month1 = Math.round(month0 * 0.85); // 85% retention month 1
-        const month3 = Math.round(month0 * 0.7); // 70% retention month 3
-        const month6 = Math.round(month0 * 0.6); // 60% retention month 6
-        const month12 = Math.round(month0 * 0.5); // 50% retention month 12
-
-        cohortAnalysis.push({
-          cohort: cohortMonth.format("MMM YYYY"),
-          month0,
-          month1,
-          month3,
-          month6,
-          month12,
-        });
-      }
-
       setAnalytics({
         // Basic metrics
         totalMembers,
@@ -527,7 +446,6 @@ export default function MemberAnalytics({
 
         // Engagement metrics
         averageVisitsPerMonth,
-        memberSatisfactionScore,
         activeEngagementRate,
 
         // Risk analytics
@@ -538,7 +456,6 @@ export default function MemberAnalytics({
         // Growth analytics
         growthRate,
         acquisitionCost,
-        conversionRate,
 
         // Segmentation
         genderDistribution,
@@ -548,16 +465,11 @@ export default function MemberAnalytics({
 
         // Time series data
         monthlyGrowth,
-        cohortAnalysis,
 
         // Member behavior
         topSpenders,
         longestMembers,
         atRiskList,
-
-        // Predictions
-        predictedChurn,
-        revenueForecasts,
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -582,24 +494,18 @@ export default function MemberAnalytics({
     {
       title: t("members.monthlyRevenue", "الإيرادات الشهرية"),
       value: `${analytics.monthlyRecurringRevenue.toFixed(0)} ${DEFAULT_CURRENCY}`,
-      change: "+12.3%",
-      trend: "up" as const,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
     },
     {
       title: t("members.churnRisk", "مخاطر المغادرة"),
       value: `${analytics.churnPrediction.toFixed(1)}%`,
-      change: "-2.1%",
-      trend: "down" as const,
       icon: <FiAlertTriangle className="h-6 w-6" />,
       color: "red" as const,
     },
     {
       title: t("members.lifetimeValue", "القيمة الدائمة للعضو"),
       value: `${analytics.averageLifetimeValue.toFixed(0)} ${DEFAULT_CURRENCY}`,
-      change: "+8.7%",
-      trend: "up" as const,
       icon: <FiTarget className="h-6 w-6" />,
       color: "purple" as const,
     },
@@ -635,12 +541,6 @@ export default function MemberAnalytics({
       value: `${analytics.arpu.toFixed(0)} ${DEFAULT_CURRENCY}`,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
-    },
-    {
-      title: t("members.satisfaction", "معدل الرضا"),
-      value: `${analytics.memberSatisfactionScore.toFixed(1)}%`,
-      icon: <FiAward className="h-6 w-6" />,
-      color: "yellow" as const,
     },
   ];
 
@@ -757,9 +657,6 @@ export default function MemberAnalytics({
                         height: `${Math.max(4, (month.revenue / Math.max(...analytics.monthlyGrowth.map((m) => m.revenue))) * 50)}%`,
                       }}
                     />
-                  </div>
-                  <div className="text-xs text-red-500 mt-1">
-                    {month.churn} churned
                   </div>
                 </div>
               ))}
@@ -953,183 +850,6 @@ export default function MemberAnalytics({
           </div>
         </Card>
 
-        {/* Cohort Analysis */}
-        <Card className="xl:col-span-2">
-          <div className="p-6">
-            <div className="flex items-center mb-4">
-              <FiCheckCircle className="h-5 w-5 text-purple-600 mr-2" />
-              <h3 className="text-lg font-semibold">
-                Cohort Retention Analysis
-              </h3>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-2 text-gray-900 dark:text-gray-100">
-                      Cohort
-                    </th>
-                    <th className="text-center py-2 text-gray-900 dark:text-gray-100">
-                      Month 0
-                    </th>
-                    <th className="text-center py-2 text-gray-900 dark:text-gray-100">
-                      Month 1
-                    </th>
-                    <th className="text-center py-2 text-gray-900 dark:text-gray-100">
-                      Month 3
-                    </th>
-                    <th className="text-center py-2 text-gray-900 dark:text-gray-100">
-                      Month 6
-                    </th>
-                    <th className="text-center py-2 text-gray-900 dark:text-gray-100">
-                      Month 12
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analytics.cohortAnalysis.map((cohort, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-200 dark:border-gray-700"
-                    >
-                      <td className="py-2 font-medium text-gray-900 dark:text-gray-100">
-                        {cohort.cohort}
-                      </td>
-                      <td className="text-center py-2 text-gray-700 dark:text-gray-300">
-                        {cohort.month0}
-                      </td>
-                      <td className="text-center py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            cohort.month1 / cohort.month0 >= 0.8
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                              : cohort.month1 / cohort.month0 >= 0.6
-                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          }`}
-                        >
-                          {cohort.month1} (
-                          {((cohort.month1 / cohort.month0) * 100).toFixed(0)}%)
-                        </span>
-                      </td>
-                      <td className="text-center py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            cohort.month3 / cohort.month0 >= 0.7
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                              : cohort.month3 / cohort.month0 >= 0.5
-                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          }`}
-                        >
-                          {cohort.month3} (
-                          {((cohort.month3 / cohort.month0) * 100).toFixed(0)}%)
-                        </span>
-                      </td>
-                      <td className="text-center py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            cohort.month6 / cohort.month0 >= 0.6
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                              : cohort.month6 / cohort.month0 >= 0.4
-                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          }`}
-                        >
-                          {cohort.month6} (
-                          {((cohort.month6 / cohort.month0) * 100).toFixed(0)}%)
-                        </span>
-                      </td>
-                      <td className="text-center py-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            cohort.month12 / cohort.month0 >= 0.5
-                              ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                              : cohort.month12 / cohort.month0 >= 0.3
-                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          }`}
-                        >
-                          {cohort.month12} (
-                          {((cohort.month12 / cohort.month0) * 100).toFixed(0)}
-                          %)
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </Card>
-
-        {/* Predictive Analytics */}
-        <Card>
-          <div className="p-6">
-            <div className="flex items-center mb-4">
-              <FiZap className="h-5 w-5 text-orange-600 mr-2" />
-              <h3 className="text-lg font-semibold">Predictive Insights</h3>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-sm text-gray-600 mb-2">
-                  Churn Prediction (Next 6 Months)
-                </h4>
-                <div className="space-y-2">
-                  {analytics.predictedChurn
-                    .slice(0, 3)
-                    .map((prediction, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center"
-                      >
-                        <span className="text-sm">{prediction.month}</span>
-                        <span
-                          className={`text-sm font-medium ${
-                            prediction.predicted <= 5
-                              ? "text-green-600"
-                              : prediction.predicted <= 8
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                          }`}
-                        >
-                          {prediction.predicted}%
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-sm text-gray-600 mb-2">
-                  Revenue Forecast
-                </h4>
-                <div className="space-y-2">
-                  {analytics.revenueForecasts
-                    .slice(0, 3)
-                    .map((forecast, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center"
-                      >
-                        <span className="text-sm">{forecast.month}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-medium text-green-600">
-                            {forecast.forecast.toFixed(0)} BHD
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {forecast.confidence}% confidence
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* Action Items */}

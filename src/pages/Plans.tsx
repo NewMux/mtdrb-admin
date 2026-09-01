@@ -90,24 +90,18 @@ export default function Plans() {
     {
       title: t("plans.totalPlans"),
       value: plans.length,
-      change: "+2",
-      trend: "up" as const,
       icon: <FiPackage className="h-6 w-6" />,
       color: "blue" as const,
     },
     {
       title: t("plans.activePlans"),
       value: plans.filter((p) => p.status === "active").length,
-      change: "+1",
-      trend: "up" as const,
       icon: <FiActivity className="h-6 w-6" />,
       color: "green" as const,
     },
     {
       title: t("plans.totalMembers"),
       value: plans.reduce((sum, p) => sum + p.members_count, 0),
-      change: "+18.5%",
-      trend: "up" as const,
       icon: <FiUsers className="h-6 w-6" />,
       color: "purple" as const,
     },
@@ -117,8 +111,6 @@ export default function Plans() {
         plans.length > 0
           ? `$${(plans.reduce((sum, p) => sum + p.price, 0) / plans.length).toFixed(0)}`
           : "$0",
-      change: "+8.2%",
-      trend: "up" as const,
       icon: <FiDollarSign className="h-6 w-6" />,
       color: "green" as const,
     },

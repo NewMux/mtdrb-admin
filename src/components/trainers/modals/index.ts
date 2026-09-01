@@ -22,7 +22,6 @@ export { default as TrainerRequestsModal } from "./TrainerRequestsModal";
 
 // Analytics Modals
 export { default as TrainerKPICardModal } from "./TrainerKPICardModal";
-export { default as TrainerAnalyticsModal } from "./TrainerAnalyticsModal";
 export { default as TrainerAutomationModal } from "./TrainerAutomationModal";
 
 // Workflow Modals
