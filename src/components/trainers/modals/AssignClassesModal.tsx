@@ -8,6 +8,7 @@ import {
 import { toast } from "react-hot-toast";
 import ColorfulModalUI from "../../ui/ColorfulModalUI";
 import { SmartButton } from "../../ui/DesignSystem";
+import { supabase } from "../../../supabaseClient";
 
 interface Trainer {
   id: string;
@@ -39,7 +40,8 @@ interface ClassAssignment {
   assigned: boolean;
 }
 
-// Removed mock classes - fetch from Supabase
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export default function AssignClassesModal({
   isOpen,
   onClose,
@@ -47,16 +49,81 @@ export default function AssignClassesModal({
   onSuccess,
 }: AssignClassesModalProps) {
   const [classes, setClasses] = React.useState<ClassAssignment[]>([]);
+  const [fetching, setFetching] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [selectedClasses, setSelectedClasses] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    // Pre-select already assigned classes
-    const assignedClassIds = classes.filter((c) => c.assigned).map((c) => c.id);
-    setSelectedClasses(assignedClassIds);
+    if (!isOpen) return;
+    let cancelled = false;
+
+    const fetchClasses = async () => {
+      setFetching(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        let tenantId = user.user_metadata?.tenant_id;
+        if (!tenantId) {
+          const { data: membershipData } = await supabase
+            .from("memberships")
+            .select("tenant_id")
+            .eq("user_id", user.id)
+            .single();
+          tenantId = membershipData?.tenant_id;
+        }
+        if (!tenantId) return;
+
+        const { data, error } = await supabase
+          .from("classes")
+          .select("id, name, start_time, end_time, capacity, trainer_id")
+          .eq("tenant_id", tenantId)
+          .order("start_time", { ascending: true });
+        if (error) throw error;
+        if (cancelled) return;
+
+        setClasses(
+          (data || []).map((c) => {
+            const start = new Date(c.start_time);
+            return {
+              id: c.id,
+              name: c.name,
+              time: start.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              day: DAY_NAMES[start.getDay()],
+              capacity: c.capacity,
+              assigned: c.trainer_id === trainer.id,
+            };
+          }),
+        );
+      } catch (err) {
+        console.error("Error fetching classes:", err);
+        toast.error("Could not load classes");
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    };
+
+    void fetchClasses();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, trainer.id]);
+
+  React.useEffect(() => {
+    // Newly-selectable classes start unselected -- already-assigned classes
+    // aren't included here since this modal can only add classes to this
+    // trainer, not reassign them away (see handleToggleClass).
+    setSelectedClasses([]);
   }, [classes]);
 
   const handleToggleClass = (classId: string) => {
+    const target = classes.find((c) => c.id === classId);
+    if (!target || target.assigned) return; // can't unassign via this modal
     setSelectedClasses((prev) =>
       prev.includes(classId)
         ? prev.filter((id) => id !== classId)
@@ -65,23 +132,47 @@ export default function AssignClassesModal({
   };
 
   const handleSubmit = async () => {
+    if (selectedClasses.length === 0) {
+      onClose();
+      return;
+    }
+
     setLoading(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+      if (!tenantId) throw new Error("No tenant found");
 
-    // Update classes assignment status
-    setClasses((prev) =>
-      prev.map((c) => ({
-        ...c,
-        assigned: selectedClasses.includes(c.id),
-      })),
-    );
+      const { error } = await supabase
+        .from("classes")
+        .update({ trainer_id: trainer.id })
+        .in("id", selectedClasses)
+        .eq("tenant_id", tenantId);
+      if (error) throw error;
 
-    toast.success(`Classes assigned successfully to ${trainer.name}!`);
-    setLoading(false);
-    onSuccess?.();
-    onClose();
+      toast.success(
+        `${selectedClasses.length} class(es) assigned to ${trainer.name}!`,
+      );
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      console.error("Error assigning classes:", err);
+      toast.error("Failed to assign classes");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -121,22 +212,38 @@ export default function AssignClassesModal({
             Available Classes
           </h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
+            {fetching && (
+              <p className="text-sm text-gray-500 py-4 text-center">
+                Loading classes...
+              </p>
+            )}
+            {!fetching && classes.length === 0 && (
+              <p className="text-sm text-gray-500 py-4 text-center">
+                No classes found for this gym yet.
+              </p>
+            )}
             {classes.map((classItem) => (
               <div
                 key={classItem.id}
-                className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                  selectedClasses.includes(classItem.id)
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                  classItem.assigned
+                    ? "border-green-200 bg-green-50 cursor-default"
+                    : selectedClasses.includes(classItem.id)
+                      ? "border-blue-500 bg-blue-50 cursor-pointer"
+                      : "border-gray-200 hover:border-gray-300 cursor-pointer"
                 }`}
                 onClick={() => handleToggleClass(classItem.id)}
               >
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
-                    checked={selectedClasses.includes(classItem.id)}
+                    checked={
+                      classItem.assigned ||
+                      selectedClasses.includes(classItem.id)
+                    }
+                    disabled={classItem.assigned}
                     onChange={() => handleToggleClass(classItem.id)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60"
                   />
                   <div>
                     <h4 className="font-medium text-gray-900">

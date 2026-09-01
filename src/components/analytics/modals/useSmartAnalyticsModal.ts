@@ -247,41 +247,6 @@ export const useSmartAnalyticsModal = (
     }
   };
 
-  // Save custom template
-  const saveTemplate = async (template: Omit<ReportTemplate, "id">) => {
-    setLoading(true);
-    try {
-      // TODO: Save template to Supabase when report_templates table is available
-      const newTemplate = { ...template, id: Date.now().toString() };
-      setReportTemplates((prev) => [...prev, newTemplate]);
-      setAlerts([{ type: "info", message: "Template saved successfully" }]);
-      return { success: true };
-    } catch (error) {
-      setAlerts([{ type: "error", message: "Failed to save template" }]);
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Apply Smart recommendation
-  const applyRecommendation = async (insightId: string) => {
-    setLoading(true);
-    try {
-      void insightId;
-      // TODO: Implement real recommendation application
-      setAlerts([
-        { type: "info", message: "Recommendation applied successfully" },
-      ]);
-      return { success: true };
-    } catch (error) {
-      setAlerts([{ type: "error", message: "Failed to apply recommendation" }]);
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     loading,
     filters,
@@ -292,8 +257,6 @@ export const useSmartAnalyticsModal = (
     alerts,
     generatePreview,
     scheduleReport,
-    saveTemplate,
-    applyRecommendation,
     clearAlerts: () => setAlerts([]),
   };
 };

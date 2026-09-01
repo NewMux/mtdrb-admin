@@ -9,7 +9,6 @@ export { default as AssignTrainerModal } from "./AssignTrainerModal";
 export { default as ViewClassDetailsModal } from "./ViewClassDetailsModal";
 export { default as ExportClassDataModal } from "./ExportClassDataModal";
 export { default as UpdateClassSettingsModal } from "./UpdateClassSettingsModal";
-export { default as SendClassPromotionModal } from "./SendClassPromotionModal";
 
 // Base Components
 export { default as SmartModal } from "./SmartModal";

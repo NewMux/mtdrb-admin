@@ -39,7 +39,6 @@ import {
   ViewClassDetailsModal,
   ExportClassDataModal,
   UpdateClassSettingsModal,
-  SendClassPromotionModal,
 } from "../components/classes/modals";
 
 import {
@@ -65,7 +64,6 @@ type ModalType =
   | "cancel"
   | "export"
   | "settings"
-  | "sendPromotion"
   | null;
 
 type ClassesView =
@@ -825,15 +823,6 @@ export default function SmartClassManagement() {
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
             isPro={isPro}
-          />
-        )}
-
-        {activeModal === "sendPromotion" && selectedClass && (
-          <SendClassPromotionModal
-            isOpen={activeModal === "sendPromotion"}
-            onClose={closeModal}
-            classId={selectedClass.id}
-            onSuccess={handleClassModalSuccess}
           />
         )}
       </AnimatePresence>
