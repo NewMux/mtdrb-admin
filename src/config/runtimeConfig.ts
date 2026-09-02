@@ -27,6 +27,12 @@ export const PLATFORM_CURRENCY =
 export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 20);
 export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 10);
 
+// The MPGS/CrediMax gateway host checkout.js is loaded from. Not a secret -
+// the API password used to create a session lives only in the
+// create-checkout-session Edge Function, never here.
+export const MPGS_GATEWAY_HOST =
+  readEnv("VITE_MPGS_GATEWAY_HOST") || "credimax.gateway.mastercard.com";
+
 export type SubscriptionPlan = {
   id: "starter" | "pro";
   name: string;

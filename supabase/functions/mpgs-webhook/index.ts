@@ -1,0 +1,227 @@
+// Receives MPGS (CrediMax) webhook notifications for checkout transactions.
+//
+// This is a server-to-server endpoint, not browser-callable - no CORS
+// handling needed. Authenticity is verified via the X-Notification-Secret
+// header (configured in Merchant Administration > Admin > Webhook
+// Notifications, a gateway-generated 32-character secret).
+//
+// IMPORTANT: per MPGS's own docs, notification delivery isn't guaranteed-
+// timely and shouldn't be treated as the source of truth for settlement -
+// this handler only uses a notification as a trigger to re-fetch the
+// order's authoritative status via the Retrieve Order API
+// (GET .../order/{orderid}), never by trusting fields inside the
+// notification body itself.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const MPGS_WEBHOOK_SECRET = Deno.env.get("MPGS_WEBHOOK_SECRET")!;
+
+const MPGS_GATEWAY_HOST = Deno.env.get("MPGS_GATEWAY_HOST") ?? "credimax.gateway.mastercard.com";
+const MPGS_API_VERSION = Deno.env.get("MPGS_API_VERSION") ?? "100";
+const MPGS_MERCHANT_ID = Deno.env.get("MPGS_MERCHANT_ID")!;
+const MPGS_API_PASSWORD = Deno.env.get("MPGS_API_PASSWORD")!;
+
+// Billing period granted per successful charge. Monthly to match
+// SUBSCRIPTION_PLANS' period="month" - this integration only covers a
+// single paid period per checkout (see the plan's "explicitly deferred"
+// section on recurring/renewal billing).
+const BILLING_PERIOD_DAYS = 30;
+
+type AuthoritativeOrderStatus =
+  | { result: "SUCCESS"; amount: number; currency: string }
+  | { result: "FAILURE" }
+  | { result: "PENDING" };
+
+// Only the fields this handler reads from Retrieve Order's response -
+// the real payload carries considerably more (transaction[], sourceOfFunds,
+// etc.) that isn't needed here.
+interface MpgsRetrieveOrderResponse {
+  result?: "SUCCESS" | "FAILURE" | "PENDING" | "UNKNOWN" | string;
+  currency?: string;
+  amount?: number;
+  totalCapturedAmount?: number;
+}
+
+/**
+ * Calls MPGS's Retrieve Order API to get the order's current, authoritative
+ * status - the only thing this handler trusts for whether money actually
+ * moved. order.result is SUCCESS/FAILURE/PENDING/UNKNOWN; anything other
+ * than a clean SUCCESS or FAILURE is treated as still-pending rather than
+ * guessed at either way, so a later notification gets a chance to
+ * re-resolve it.
+ */
+async function retrieveAuthoritativeOrderStatus(
+  orderId: string,
+): Promise<AuthoritativeOrderStatus> {
+  const response = await fetch(
+    `https://${MPGS_GATEWAY_HOST}/api/rest/version/${MPGS_API_VERSION}/merchant/${MPGS_MERCHANT_ID}/order/${orderId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: "Basic " + btoa(`merchant.${MPGS_MERCHANT_ID}:${MPGS_API_PASSWORD}`),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`MPGS Retrieve Order failed (${response.status}): ${await response.text()}`);
+  }
+
+  const order = (await response.json()) as MpgsRetrieveOrderResponse;
+
+  if (order.result === "SUCCESS") {
+    // totalCapturedAmount reflects what was actually captured (PURCHASE
+    // captures in the same step as authorization) - prefer it over the
+    // order-level amount field, which mirrors what was requested rather
+    // than what was confirmed charged.
+    const capturedAmount = order.totalCapturedAmount ?? order.amount;
+    if (capturedAmount == null || !order.currency) {
+      throw new Error("MPGS Retrieve Order returned SUCCESS without an amount/currency");
+    }
+    return { result: "SUCCESS", amount: capturedAmount, currency: order.currency };
+  }
+
+  if (order.result === "FAILURE") {
+    return { result: "FAILURE" };
+  }
+
+  if (order.result !== "PENDING") {
+    console.warn("mpgs-webhook: unrecognized order.result, treating as pending:", order.result);
+  }
+  return { result: "PENDING" };
+}
+
+Deno.serve(async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const providedSecret = req.headers.get("x-notification-secret");
+  if (!providedSecret || providedSecret !== MPGS_WEBHOOK_SECRET) {
+    console.error("mpgs-webhook: invalid or missing X-Notification-Secret");
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const notificationId = req.headers.get("x-notification-id");
+  const attempt = req.headers.get("x-notification-attempt");
+
+  try {
+    const body = await req.json().catch(() => null);
+
+    // The notification's own claims about the transaction result are
+    // deliberately not read here (see file header) - only used to find
+    // which order this is about, matching the order.id we generated
+    // ourselves in create-checkout-session and stored on
+    // platform_checkout_sessions.mpgs_order_id.
+    const orderId: string | undefined = body?.order?.id ?? body?.transaction?.order?.id;
+    if (!orderId) {
+      console.error("mpgs-webhook: notification payload has no recognizable order id", {
+        notificationId,
+        attempt,
+      });
+      return new Response("Bad request: missing order id", { status: 400 });
+    }
+
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    const { data: session, error: sessionError } = await adminClient
+      .from("platform_checkout_sessions")
+      .select("id, tenant_id, plan_tier, amount, currency, status")
+      .eq("mpgs_order_id", orderId)
+      .maybeSingle();
+    if (sessionError) throw sessionError;
+    if (!session) {
+      console.error("mpgs-webhook: no checkout session found for order", orderId);
+      return new Response("Not found", { status: 404 });
+    }
+
+    // Idempotency: a redelivered notification (same or later attempt) for
+    // an order we've already resolved is a no-op, not an error - MPGS
+    // retries up to 20 times over 3 days regardless of whether we already
+    // handled an earlier delivery.
+    if (session.status !== "pending") {
+      return new Response("OK (already resolved)", { status: 200 });
+    }
+
+    const authoritative = await retrieveAuthoritativeOrderStatus(orderId);
+
+    if (
+      authoritative.result === "SUCCESS" &&
+      (authoritative.amount !== session.amount || authoritative.currency !== session.currency)
+    ) {
+      // Not a reason to reject the charge - the gateway's authoritative
+      // figures always win over what we originally requested - but a
+      // mismatch here (partial capture, currency surprise, misconfigured
+      // pricing) is worth knowing about rather than silently accepting.
+      console.warn("mpgs-webhook: captured amount/currency differs from requested", {
+        orderId,
+        requested: { amount: session.amount, currency: session.currency },
+        captured: { amount: authoritative.amount, currency: authoritative.currency },
+      });
+    }
+
+    if (authoritative.result === "PENDING") {
+      // Still in flight (e.g. mid-3DS-challenge) - leave as pending, a
+      // later notification will re-trigger this handler.
+      return new Response("OK (pending)", { status: 200 });
+    }
+
+    const now = new Date().toISOString();
+
+    if (authoritative.result === "SUCCESS") {
+      const currentPeriodEnd = new Date(
+        Date.now() + BILLING_PERIOD_DAYS * 24 * 60 * 60 * 1000,
+      ).toISOString();
+
+      const { error: subError } = await adminClient.from("platform_subscriptions").upsert(
+        {
+          tenant_id: session.tenant_id,
+          status: "active",
+          plan_tier: session.plan_tier,
+          amount: authoritative.amount,
+          currency: authoritative.currency,
+          current_period_end: currentPeriodEnd,
+          metadata: { last_order_id: orderId, last_event: "mpgs_checkout_success" },
+          updated_at: now,
+        },
+        { onConflict: "tenant_id" },
+      );
+      if (subError) throw subError;
+
+      await adminClient
+        .from("platform_checkout_sessions")
+        .update({ status: "completed", updated_at: now })
+        .eq("id", session.id);
+
+      await adminClient.from("activities").insert({
+        tenant_id: session.tenant_id,
+        type: "subscription",
+        title: "Subscription Active",
+        description: `Payment received for the ${session.plan_tier} plan.`,
+        status: "success",
+        metadata: { order_id: orderId },
+      });
+    } else {
+      await adminClient
+        .from("platform_checkout_sessions")
+        .update({ status: "failed", updated_at: now })
+        .eq("id", session.id);
+
+      await adminClient.from("activities").insert({
+        tenant_id: session.tenant_id,
+        type: "subscription",
+        title: "Payment Failed",
+        description: `Checkout for the ${session.plan_tier} plan did not complete.`,
+        status: "failed",
+        metadata: { order_id: orderId },
+      });
+    }
+
+    return new Response("OK", { status: 200 });
+  } catch (error) {
+    console.error("mpgs-webhook error:", error);
+    // Non-2xx so MPGS retries per its documented backoff schedule.
+    return new Response("Internal error", { status: 500 });
+  }
+});

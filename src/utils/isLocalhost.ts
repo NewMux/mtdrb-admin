@@ -1,8 +1,16 @@
 /**
  * Returns true when the app is running on localhost or local network (frontend-only dev mode).
+ *
+ * Gated on import.meta.env.DEV (a build-time constant Vite strips out of
+ * production builds) so this mock-admin bypass can never activate in a
+ * built/deployed bundle - even one served from a private IP or .local
+ * hostname (e.g. a self-hosted instance reached over an internal
+ * network/VPN before public DNS/TLS is wired up). It only ever applies to
+ * the `vite dev` dev server.
  */
 export function isLocalhost(): boolean {
   if (typeof window === "undefined") return false;
+  if (!import.meta.env.DEV) return false;
   // Opt out of the mock client on localhost to test against a real backend.
   if (import.meta.env.VITE_FORCE_REAL_CLIENT === "true") return false;
   const hostname = window.location.hostname;

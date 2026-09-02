@@ -6,14 +6,16 @@ server {
 
     # Mirrors vercel.json's security-headers block exactly, so moving hosts
     # doesn't regress the posture DEPLOYMENT.md/the security review established.
-    # SUPABASE_DOMAIN is substituted at container start (see Dockerfile) -
-    # set it to your self-hosted Supabase instance's host, e.g. supabase.example.com.
+    # SUPABASE_DOMAIN and MPGS_GATEWAY_HOST are substituted at container start
+    # (see Dockerfile) - set SUPABASE_DOMAIN to your self-hosted Supabase
+    # instance's host (e.g. supabase.example.com), and MPGS_GATEWAY_HOST to
+    # your payment gateway's host if not using CrediMax's default.
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN}; form-action 'self'" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://${MPGS_GATEWAY_HOST}; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN} https://${MPGS_GATEWAY_HOST}; form-action 'self'" always;
 
     # SPA routing - same fallback vercel.json's rewrites block provides.
     location / {
@@ -29,7 +31,7 @@ server {
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN}; form-action 'self'" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://${MPGS_GATEWAY_HOST}; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN} https://${MPGS_GATEWAY_HOST}; form-action 'self'" always;
         add_header Cache-Control "no-cache";
     }
 
@@ -39,7 +41,7 @@ server {
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN}; form-action 'self'" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' https://${MPGS_GATEWAY_HOST}; connect-src 'self' https://${SUPABASE_DOMAIN} wss://${SUPABASE_DOMAIN} https://${MPGS_GATEWAY_HOST}; form-action 'self'" always;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }

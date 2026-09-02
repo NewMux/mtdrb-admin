@@ -10,6 +10,7 @@ import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+import { startSubscriptionCheckout } from "../utils/mpgsCheckout";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -57,6 +58,7 @@ export default function Subscribe() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [error, setError] = useState("");
   const { tenantId: authTenantId } = useAuth();
@@ -199,6 +201,23 @@ export default function Subscribe() {
     }
   };
 
+  // Pay now via MPGS Hosted Checkout, as an alternative to the free trial
+  // above. startSubscriptionCheckout redirects the browser to Mastercard's
+  // hosted payment page on success - if it throws before that redirect
+  // happens (e.g. the Edge Function call itself failed), surface the error
+  // here instead.
+  const handleCheckout = async (planId: string) => {
+    setCheckingOut(true);
+    setError("");
+    try {
+      await startSubscriptionCheckout(planId as "starter" | "pro");
+    } catch (checkoutError) {
+      setError(getErrorMessage(checkoutError, t("subscribe.unableActivate")));
+      if (import.meta.env.DEV) console.error("Checkout error:", checkoutError);
+      setCheckingOut(false);
+    }
+  };
+
   if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -326,9 +345,22 @@ export default function Subscribe() {
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
+                    handleCheckout(plan.id);
+                  }}
+                  disabled={subscribing || checkingOut}
+                >
+                  {checkingOut
+                    ? t("subscribe.processing")
+                    : t("subscribe.subscribeNow", "Subscribe now")}
+                </motion.button>
+
+                <motion.button
+                  className="w-full mt-3 py-2.5 px-6 rounded-xl font-medium text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     handleSubscribe(plan.id);
                   }}
-                  disabled={subscribing}
+                  disabled={subscribing || checkingOut}
                 >
                   {subscribing ? t("subscribe.processing") : t("subscribe.startFreeTrial")}
                 </motion.button>
