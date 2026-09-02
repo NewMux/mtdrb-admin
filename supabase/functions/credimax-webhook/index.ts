@@ -18,6 +18,7 @@
 // password pair in CrediMax's merchant portal notification settings.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { timingSafeEqual } from "node:crypto";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,7 +32,10 @@ const CREDIMAX_API_VERSION = Deno.env.get("CREDIMAX_API_VERSION") || "100";
 const WEBHOOK_USERNAME = Deno.env.get("CREDIMAX_WEBHOOK_USERNAME");
 const WEBHOOK_PASSWORD = Deno.env.get("CREDIMAX_WEBHOOK_PASSWORD");
 
-const ORDER_ID_PATTERN = /^sub-([0-9a-f-]{36})-\d+$/i;
+// \d+$ without a multiline flag still matches before a trailing \n under
+// JS regex semantics -- require the digits to be the literal last
+// characters so a crafted "...-123\n" order id can't sneak past this check.
+const ORDER_ID_PATTERN = /^sub-([0-9a-f-]{36})-\d+$(?!\n)/i;
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -185,10 +189,30 @@ function isAuthorized(req: Request): boolean {
     const separatorIndex = decoded.indexOf(":");
     const username = decoded.slice(0, separatorIndex);
     const password = decoded.slice(separatorIndex + 1);
-    return username === WEBHOOK_USERNAME && password === WEBHOOK_PASSWORD;
+    return (
+      constantTimeEqual(username, WEBHOOK_USERNAME) &&
+      constantTimeEqual(password, WEBHOOK_PASSWORD)
+    );
   } catch {
     return false;
   }
+}
+
+// Plain === on secrets leaks how many leading characters matched via
+// response-time differences. timingSafeEqual requires equal-length
+// buffers, so a length mismatch is handled separately below -- that
+// branch alone leaks only the fact that lengths differ, not which
+// characters matched, a far smaller signal.
+function constantTimeEqual(a: string, b: string): boolean {
+  const bufA = new TextEncoder().encode(a);
+  const bufB = new TextEncoder().encode(b);
+  if (bufA.length !== bufB.length) {
+    // Still run a comparison of equal length to avoid a fast-path return
+    // that itself times differently from the equal-length branch.
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
 }
 
 // deno-lint-ignore no-explicit-any
