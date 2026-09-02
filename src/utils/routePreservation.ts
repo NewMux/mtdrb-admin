@@ -37,7 +37,12 @@ export const shouldRedirectToDefaultPage = (currentPath: string): boolean => {
 };
 
 export const isProtectedRoute = (path: string): boolean => {
-  return PROTECTED_ROUTES.some((route) => path.startsWith(route));
+  // Match the route itself or a nested path under it, not any path that
+  // merely shares its string prefix (e.g. "/dashboard-public" must not
+  // match "/dashboard").
+  return PROTECTED_ROUTES.some(
+    (route) => path === route || path.startsWith(`${route}/`),
+  );
 };
 
 export const isAuthRoute = (path: string): boolean => {
