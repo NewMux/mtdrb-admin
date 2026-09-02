@@ -26,6 +26,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
+const SubscribeCallback = lazy(() => import("./pages/SubscribeCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -137,6 +138,7 @@ const App = () => {
                       <Route path="/reset-password" element={<ResetPassword />} />
                       <Route path="/signup" element={<Signup />} />
                       <Route path="/subscribe" element={<Subscribe />} />
+                      <Route path="/subscribe/callback" element={<SubscribeCallback />} />
                       <Route path="/onboarding" element={<Onboarding />} />
                       <Route path="/terms" element={<Legal initialTab="terms" />} />
                       <Route path="/privacy" element={<Legal initialTab="privacy" />} />

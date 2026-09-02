@@ -89,7 +89,63 @@ Optional:
 - `VITE_FORCE_REAL_CLIENT=true` — required when local development should use a real Supabase project instead of the mock client.
 - `VITE_SENTRY_DSN` — enables production error monitoring (Sentry) via `src/services/monitoring.ts`. Unset by default; without it, runtime errors are only logged to the browser console and are otherwise invisible once deployed.
 
-The MTDRB AI assistant, its browser integration, and its Edge Function are not part of this deployment.
+The MTDRB AI assistant, its browser integration, and its (separate, unrelated)
+Edge Function are not part of this deployment.
+
+## Payment gateway (CrediMax) and Edge Functions
+
+Platform subscription billing (gym owners paying MTDRB for Starter/Pro
+plans) goes through CrediMax (Mastercard Payment Gateway Services), via two
+Supabase Edge Functions in `supabase/functions/`:
+
+- `credimax-checkout` — authenticated; creates a Hosted Checkout session for
+  the caller's tenant. JWT verification enabled.
+- `credimax-webhook` — public; receives CrediMax's payment notification, re-verifies
+  the order directly against the gateway (never trusts the notification
+  body alone), and is the only path allowed to set a subscription to
+  `active`/`past_due`/`failed` (see `enforce_platform_subscription_self_service()`
+  in `supabase/migrations/20260823120000_restrict_platform_subscription_self_service.sql`).
+  JWT verification disabled — authenticated via HTTP Basic Auth instead
+  (configure the same username/password in CrediMax's merchant-portal
+  webhook notification settings).
+
+These must be deployed (`supabase functions deploy credimax-checkout
+credimax-webhook`, or via the Supabase dashboard) whenever this repo is
+deployed to a new environment — unlike the rest of this app, they run
+server-side, not as part of the frontend build.
+
+Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*` —
+those are baked into the browser bundle and would leak a payment gateway
+credential publicly):
+
+- `CREDIMAX_MERCHANT_ID`, `CREDIMAX_API_PASSWORD` — from the CrediMax
+  merchant portal (`https://credimax.gateway.mastercard.com/merchant-portal`).
+- `CREDIMAX_GATEWAY_HOST` — defaults to `credimax.gateway.mastercard.com`.
+- `CREDIMAX_API_VERSION` — defaults to `100`.
+- `CREDIMAX_WEBHOOK_USERNAME`, `CREDIMAX_WEBHOOK_PASSWORD` — a pair you
+  choose; configure the same pair in CrediMax's merchant portal when setting
+  the webhook notification URL to `credimax-webhook`'s deployed URL.
+- `STARTER_PRICE`, `PRO_PRICE`, `PLATFORM_CURRENCY` — server-side pricing,
+  kept in sync with the equivalent `VITE_*` vars shown to users but not
+  trusted from the client for the actual charge.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase
+  provides these automatically to every Edge Function; nothing to set.
+- `APP_URL` — used to build the Hosted Checkout return URL. Defaults to
+  `https://mtdrb.net`.
+
+**This CrediMax merchant account (`E20910951`) is LIVE production, not
+sandbox.** Per CrediMax's onboarding requirements: run at least one real
+Visa and one real Mastercard test transaction (100 fils each) to confirm
+the setup, and email `pg@credimax.com.bh` before the site is live for real
+customers.
+
+The exact MPGS request/response field names in the two Edge Functions
+follow the standard v100 Hosted Checkout pattern but have not been verified
+against CrediMax's actual integration guide (network access to
+`credimax.gateway.mastercard.com` was unavailable when this was written) —
+confirm against
+`https://credimax.gateway.mastercard.com/api/documentation/integrationGuidelines/index.html`
+before relying on this for real customer traffic.
 
 ## Financial document migration
 
