@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 import {
   FiCalendar,
   FiUser,
@@ -184,9 +185,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
       if (result.success) {
         onSuccess?.();
         onClose();
+      } else {
+        toast.error("Failed to create task");
       }
     } catch (error) {
       console.error("Error creating task:", error);
+      toast.error("Failed to create task");
     } finally {
       setLoading(false);
     }

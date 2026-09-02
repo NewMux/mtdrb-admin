@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 import {
   FiAlertTriangle,
   FiBell,
@@ -100,6 +101,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Error cancelling class:", error);
+      toast.error("Failed to cancel class");
     } finally {
       setLoading(false);
     }

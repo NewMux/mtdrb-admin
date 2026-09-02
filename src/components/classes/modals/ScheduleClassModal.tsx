@@ -19,6 +19,7 @@ import {
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { toast } from "react-hot-toast";
+import { supabase } from "../../../supabaseClient";
 
 interface ScheduleClassModalProps {
   isOpen: boolean;
@@ -169,13 +170,54 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       toast.error("Please fill in all required fields");
       return;
     }
+    if (schedulePreview.length === 0) {
+      toast.error("No class sessions to schedule -- adjust the date range or days");
+      return;
+    }
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      toast.success("Recurring classes scheduled successfully");
+      let tenantId = user.user_metadata?.tenant_id;
+      if (!tenantId) {
+        const { data: membershipData } = await supabase
+          .from("memberships")
+          .select("tenant_id")
+          .eq("user_id", user.id)
+          .single();
+        tenantId = membershipData?.tenant_id;
+      }
+      if (!tenantId) throw new Error("No tenant found");
+
+      const selectedRoom = rooms.find((r) => r.id === formData.room_id);
+      const [startHour, startMinute] = formData.start_time.split(":");
+      const [endHour, endMinute] = formData.end_time.split(":");
+
+      const rows = schedulePreview.map((session) => {
+        const start = new Date(session.date);
+        start.setHours(Number(startHour), Number(startMinute), 0, 0);
+        const end = new Date(session.date);
+        end.setHours(Number(endHour), Number(endMinute), 0, 0);
+
+        return {
+          tenant_id: tenantId,
+          name: formData.name,
+          trainer_id: formData.trainer_id,
+          start_time: start.toISOString(),
+          end_time: end.toISOString(),
+          capacity: selectedRoom?.capacity || 20,
+          room: selectedRoom?.name || null,
+        };
+      });
+
+      const { error } = await supabase.from("classes").insert(rows);
+      if (error) throw error;
+
+      toast.success(`${rows.length} classes scheduled successfully`);
       onSuccess?.();
       onClose();
     } catch (error) {

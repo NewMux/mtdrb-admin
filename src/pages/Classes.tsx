@@ -39,7 +39,6 @@ import {
   ViewClassDetailsModal,
   ExportClassDataModal,
   UpdateClassSettingsModal,
-  SendClassPromotionModal,
 } from "../components/classes/modals";
 
 import {
@@ -65,7 +64,6 @@ type ModalType =
   | "cancel"
   | "export"
   | "settings"
-  | "sendPromotion"
   | null;
 
 type ClassesView =
@@ -209,28 +207,24 @@ export default function SmartClassManagement() {
     {
       name: t("classes.totalClasses"),
       value: classStats.totalClasses.toString(),
-      change: `+5 ${t("classes.fromLastWeek")}`,
       icon: FiCalendar,
       color: "from-blue-500 to-blue-600",
     },
     {
       name: t("classes.totalCapacity"),
       value: classStats.totalCapacity.toString(),
-      change: `+12% ${t("classes.fromLastWeek")}`,
       icon: FiUsers,
       color: "from-green-500 to-green-600",
     },
     {
       name: t("classes.bookedSpots"),
       value: classStats.bookedSpots.toString(),
-      change: `+8% ${t("classes.fromLastWeek")}`,
       icon: FiCheckCircle,
       color: "from-purple-500 to-purple-600",
     },
     {
       name: t("classes.revenue"),
       value: `$${classStats.revenue.toLocaleString()}`,
-      change: `+15% ${t("classes.fromLastWeek")}`,
       icon: FiDollarSign,
       color: "from-yellow-500 to-orange-500",
     },
@@ -487,9 +481,6 @@ export default function SmartClassManagement() {
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                         {stat.value}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                        {stat.change}
                       </p>
                     </div>
                   </div>
@@ -832,15 +823,6 @@ export default function SmartClassManagement() {
             classId={selectedClass.id}
             onSuccess={handleClassModalSuccess}
             isPro={isPro}
-          />
-        )}
-
-        {activeModal === "sendPromotion" && selectedClass && (
-          <SendClassPromotionModal
-            isOpen={activeModal === "sendPromotion"}
-            onClose={closeModal}
-            classId={selectedClass.id}
-            onSuccess={handleClassModalSuccess}
           />
         )}
       </AnimatePresence>

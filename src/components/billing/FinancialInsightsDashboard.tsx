@@ -1031,8 +1031,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.totalRevenue")}
             value={revenueMetrics.totalRevenue}
             subtitle={t("billing.thisPeriod")}
-            trend="up"
-            trendValue="+12%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-green-500"
             format="currency"
@@ -1042,8 +1040,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.mrr")}
             value={revenueMetrics.mrr}
             subtitle={t("billing.monthlyRecurringRevenue")}
-            trend="up"
-            trendValue="+8%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
             color="bg-blue-500"
             format="currency"
@@ -1053,8 +1049,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.avgRevenuePerMember")}
             value={revenueMetrics.avgRevenuePerMember}
             subtitle={t("billing.perMemberAverage")}
-            trend="up"
-            trendValue="+5%"
             icon={<FiUser className="w-6 h-6 text-white" />}
             color="bg-purple-500"
             format="currency"
@@ -1064,8 +1058,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.newRevenue")}
             value={revenueMetrics.newRevenue}
             subtitle={t("billing.thisPeriod")}
-            trend="up"
-            trendValue="+15%"
             icon={<FiAward className="w-6 h-6 text-white" />}
             color="bg-orange-500"
             format="currency"
@@ -1075,8 +1067,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.projectedRevenue")}
             value={revenueMetrics.projectedRevenue}
             subtitle={t("billing.nextMonth")}
-            trend="up"
-            trendValue="+9%"
             icon={<FiTarget className="w-6 h-6 text-white" />}
             color="bg-indigo-500"
             format="currency"
@@ -1086,8 +1076,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.revenueFromAddons")}
             value={revenueMetrics.revenueFromAddons}
             subtitle={t("billing.ptAndExtras")}
-            trend="up"
-            trendValue="+22%"
             icon={<FiPlus className="w-6 h-6 text-white" />}
             color="bg-teal-500"
             format="currency"
@@ -1106,8 +1094,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.totalInvoicesIssued")}
             value={invoiceMetrics.totalInvoicesIssued}
             subtitle={t("billing.thisPeriod")}
-            trend="up"
-            trendValue="+8%"
             icon={<FiFileText className="w-6 h-6 text-white" />}
             color="bg-blue-500"
           />
@@ -1115,8 +1101,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.paidInvoices")}
             value={invoiceMetrics.paidInvoices}
             subtitle={t("billing.successfullyPaid")}
-            trend="up"
-            trendValue="+6%"
             icon={<FiCheckCircle className="w-6 h-6 text-white" />}
             color="bg-green-500"
           />
@@ -1124,8 +1108,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.unpaidOverdue")}
             value={invoiceMetrics.unpaidOverdueInvoices}
             subtitle={t("billing.requiresAttention")}
-            trend="down"
-            trendValue="-12%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
@@ -1133,8 +1115,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.avgInvoiceValue")}
             value={invoiceMetrics.avgInvoiceValue}
             subtitle={t("billing.perInvoice")}
-            trend="up"
-            trendValue="+4%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-purple-500"
             format="currency"
@@ -1144,8 +1124,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.failedPayments")}
             value={invoiceMetrics.failedPayments}
             subtitle={t("billing.thisPeriod")}
-            trend="down"
-            trendValue="-18%"
             icon={<FiX className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
@@ -1269,8 +1247,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.totalExpenses")}
             value={expenseMetrics.totalExpenses}
             subtitle={t("billing.thisPeriod")}
-            trend="down"
-            trendValue="-3%"
             icon={<FiShoppingCart className="w-6 h-6 text-white" />}
             color="bg-red-500"
             format="currency"
@@ -1280,8 +1256,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.netProfit")}
             value={expenseMetrics.netProfit}
             subtitle={t("billing.revenueMinusExpenses")}
-            trend="up"
-            trendValue="+15%"
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
             color="bg-green-500"
             format="currency"
@@ -1291,8 +1265,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.avgProfitMargin")}
             value={expenseMetrics.avgProfitMargin}
             subtitle={t("billing.netProfitPercent")}
-            trend="up"
-            trendValue="+2%"
             icon={<FiPercent className="w-6 h-6 text-white" />}
             color="bg-blue-500"
             format="percentage"
@@ -1336,8 +1308,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.vatCollected")}
             value={vatMetrics.vatCollected}
             subtitle={t("billing.fromInvoices")}
-            trend="up"
-            trendValue="+12%"
             icon={<FiPercent className="w-6 h-6 text-white" />}
             color="bg-green-500"
             format="currency"
@@ -1347,8 +1317,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.vatPaid")}
             value={vatMetrics.vatPaid}
             subtitle={t("billing.onExpenses")}
-            trend="up"
-            trendValue="+8%"
             icon={<FiCreditCard className="w-6 h-6 text-white" />}
             color="bg-blue-500"
             format="currency"
@@ -1358,8 +1326,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.vatBalance")}
             value={vatMetrics.vatBalance}
             subtitle={t("billing.collectedMinusPaid")}
-            trend="up"
-            trendValue="+15%"
             icon={<FiDollarSign className="w-6 h-6 text-white" />}
             color="bg-purple-500"
             format="currency"
@@ -1369,7 +1335,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.nextFilingDeadline")}
             value={vatMetrics.nextFilingDeadline}
             subtitle={t("billing.dueDateLabel")}
-            trend="neutral"
             icon={<FiCalendar className="w-6 h-6 text-white" />}
             color="bg-orange-500"
           />
@@ -1377,8 +1342,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.filedReturns")}
             value={vatMetrics.filedReturnsThisPeriod}
             subtitle={t("billing.thisPeriod")}
-            trend="up"
-            trendValue="+1"
             icon={<FiFileText className="w-6 h-6 text-white" />}
             color="bg-teal-500"
           />
@@ -1395,8 +1358,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.churnedMembersRevenueLoss")}
             value={riskMetrics.churnedMembersRevenueLoss}
             subtitle={t("billing.lostRevenue")}
-            trend="down"
-            trendValue="-8%"
             icon={<FiTrendingDown className="w-6 h-6 text-white" />}
             color="bg-red-500"
             format="currency"
@@ -1406,8 +1367,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.atRiskRevenue")}
             value={riskMetrics.atRiskRevenue}
             subtitle={t("billing.expiringSoon")}
-            trend="up"
-            trendValue="+5%"
             icon={<FiAlertTriangle className="w-6 h-6 text-white" />}
             color="bg-orange-500"
             format="currency"
@@ -1417,8 +1376,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.latePaymentRate")}
             value={riskMetrics.latePaymentRate}
             subtitle={t("billing.percentOfInvoices")}
-            trend="down"
-            trendValue="-2%"
             icon={<FiClock className="w-6 h-6 text-white" />}
             color="bg-yellow-500"
             format="percentage"
@@ -1427,8 +1384,6 @@ export default function FinancialInsightsDashboard({
             title={t("billing.unpaidHighValueInvoices")}
             value={riskMetrics.unpaidHighValueInvoices}
             subtitle={currencyCode ? `> ${currencyCode} 500` : "> 500"}
-            trend="down"
-            trendValue="-25%"
             icon={<FiX className="w-6 h-6 text-white" />}
             color="bg-red-500"
           />
