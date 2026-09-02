@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 import {
   FiUser,
   FiAlertTriangle,
@@ -103,6 +104,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Error assigning trainer:", error);
+      toast.error("Failed to assign trainer");
     } finally {
       setLoading(false);
     }

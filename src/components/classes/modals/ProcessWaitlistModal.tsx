@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 import {
   FiUsers,
   FiCheck,
@@ -169,21 +170,51 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
         .map((id) => getMemberById(id))
         .filter((m): m is WaitlistMember => !!m);
 
-      for (const entry of selectedWaitlistEntries) {
-        const booking = await bookClass(classId, entry.memberId);
-        if (!booking) continue;
+      let processedCount = 0;
+      let failedCount = 0;
 
-        const { error: removeError } = await supabase
-          .from("class_waitlist")
-          .delete()
-          .eq("id", entry.id);
-        if (removeError) throw removeError;
+      for (const entry of selectedWaitlistEntries) {
+        try {
+          const booking = await bookClass(classId, entry.memberId);
+          if (!booking) {
+            failedCount += 1;
+            continue;
+          }
+
+          const { error: removeError } = await supabase
+            .from("class_waitlist")
+            .delete()
+            .eq("id", entry.id);
+          if (removeError) throw removeError;
+          processedCount += 1;
+        } catch (entryError) {
+          console.error("Error processing waitlist entry:", entryError);
+          failedCount += 1;
+        }
       }
 
-      onSuccess?.();
-      onClose();
+      if (failedCount > 0) {
+        toast.error(
+          processedCount > 0
+            ? `Enrolled ${processedCount} member(s), but ${failedCount} failed`
+            : "Failed to process waitlist",
+        );
+      } else {
+        toast.success(`Enrolled ${processedCount} member(s) from waitlist`);
+      }
+
+      if (processedCount > 0) {
+        onSuccess?.();
+      }
+      if (failedCount === 0) {
+        onClose();
+      } else {
+        await loadWaitlistData();
+        setSelectedMembers([]);
+      }
     } catch (error) {
       console.error("Error processing waitlist:", error);
+      toast.error("Failed to process waitlist");
     } finally {
       setLoading(false);
     }

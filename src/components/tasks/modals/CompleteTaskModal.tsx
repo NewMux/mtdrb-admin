@@ -1,4 +1,5 @@
 import * as React from "react";
+import { toast } from "react-hot-toast";
 import {
   FiCheck,
   FiUpload,
@@ -78,6 +79,8 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         attachments = uploads;
       } catch (error) {
         console.error("Error uploading task attachments:", error);
+        toast.error("Failed to upload attachments - task was not completed");
+        return;
       } finally {
         setUploading(false);
       }
