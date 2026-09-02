@@ -323,7 +323,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     <div className="space-y-8">
       {loadError && (
         <div className="text-sm text-red-600 dark:text-red-400">
-          {t("dashboard.failedToLoadData") || "Failed to load dashboard data"}
+          {t("dashboard.failedToLoadData", "Failed to load dashboard data")}
         </div>
       )}
 

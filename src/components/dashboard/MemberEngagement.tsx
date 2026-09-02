@@ -160,7 +160,7 @@ const MemberEngagement: React.FC = () => {
       
       {loadError && (
         <div className="mb-4 text-sm text-red-600 dark:text-red-400">
-          {t("dashboard.failedToLoadData") || "Failed to load engagement data"}
+          {t("dashboard.failedToLoadData", "Failed to load engagement data")}
         </div>
       )}
 

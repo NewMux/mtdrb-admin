@@ -287,7 +287,7 @@ const BusinessOverview: React.FC = () => {
     </div>
     {loadError && (
       <div className="mb-4 text-sm text-red-600 dark:text-red-400">
-        {t("dashboard.failedToLoadData") || "Failed to load business overview data"}
+        {t("dashboard.failedToLoadData", "Failed to load business overview data")}
       </div>
     )}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
