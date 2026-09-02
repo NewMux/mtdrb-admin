@@ -101,11 +101,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     },
   ]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchStats = useCallback(async () => {
     if (!tenantId) return;
     try {
       setLoading(true);
+      setLoadError(false);
 
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -148,6 +150,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           .lte("created_at", formatDate(previousMonthEnd)),
       ]);
 
+      const invoiceOrMemberError =
+        currentInvoices.error ||
+        previousInvoices.error ||
+        currentMembers.error ||
+        previousMembers.error;
+      if (invoiceOrMemberError) throw invoiceOrMemberError;
+
       // Fetch class bookings for attendance
       const [currentBookings, previousBookings] = await Promise.all([
         supabase
@@ -162,6 +171,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           .gte("created_at", formatDate(previousMonthStart))
           .lte("created_at", formatDate(previousMonthEnd)),
       ]);
+
+      if (currentBookings.error || previousBookings.error) {
+        throw currentBookings.error || previousBookings.error;
+      }
 
       // Calculate revenue
       const currentRevenue = (currentInvoices.data || []).reduce(
@@ -289,6 +302,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       ]);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -307,6 +321,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className="space-y-8">
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData") || "Failed to load dashboard data"}
+        </div>
+      )}
+
       {/* Primary Stats - Enhanced 2x2 Grid with Progress Bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {primaryStats.map((stat, index) => {

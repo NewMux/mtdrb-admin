@@ -35,6 +35,7 @@ const MemberEngagement: React.FC = () => {
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const { isRTL } = useRTL();
+  const [loadError, setLoadError] = useState(false);
   const [engagementMetrics, setEngagementMetrics] = useState<
     EngagementMetric[]
   >([
@@ -59,6 +60,7 @@ const MemberEngagement: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!tenantId) return;
     try {
+      setLoadError(false);
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
       const lastMonth = new Date();
@@ -93,6 +95,13 @@ const MemberEngagement: React.FC = () => {
           .lte("created_at", formatDate(lastMonth)),
       ]);
 
+      const firstError =
+        currentMembers.error ||
+        previousMembers.error ||
+        newSignups.error ||
+        previousNewSignups.error;
+      if (firstError) throw firstError;
+
       const currentCount = (currentMembers.data || []).length;
       const previousCount = (previousMembers.data || []).length;
       const memberChange = currentCount - previousCount;
@@ -121,6 +130,7 @@ const MemberEngagement: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error fetching member engagement:", error);
+      setLoadError(true);
     }
   }, [tenantId, t]);
 
@@ -148,6 +158,12 @@ const MemberEngagement: React.FC = () => {
         </div>
       </div>
       
+      {loadError && (
+        <div className="mb-4 text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData") || "Failed to load engagement data"}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {engagementMetrics.map((metric, index) => (
           <div

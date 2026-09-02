@@ -93,10 +93,12 @@ const BusinessOverview: React.FC = () => {
       context: t("common.loading"),
     },
   ]);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!tenantId) return;
     try {
+      setLoadError(false);
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -149,6 +151,15 @@ const BusinessOverview: React.FC = () => {
           .lte("created_at", formatDate(previousMonthEnd)),
       ]);
 
+      const membersOrInvoicesError =
+        currentMembers.error ||
+        previousMembers.error ||
+        newMembers.error ||
+        allMembers.error;
+      if (membersOrInvoicesError || currentInvoices.error || previousInvoices.error) {
+        throw membersOrInvoicesError || currentInvoices.error || previousInvoices.error;
+      }
+
       const currentMemberCount = (currentMembers.data || []).length;
       const previousMemberCount = (previousMembers.data || []).length;
       const memberChange = currentMemberCount - previousMemberCount;
@@ -176,6 +187,7 @@ const BusinessOverview: React.FC = () => {
         .eq("tenant_id", tenantId)
         .gte("created_at", formatDate(new Date(thirtyDaysAgo.getTime() - 30 * 24 * 60 * 60 * 1000)))
         .lte("created_at", formatDate(thirtyDaysAgo));
+      if (previousNewSignups.error) throw previousNewSignups.error;
       const previousNewSignupsCount = (previousNewSignups.data || []).length;
       const signupsChange = newSignupsCount - previousNewSignupsCount;
 
@@ -246,6 +258,7 @@ const BusinessOverview: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error fetching business overview:", error);
+      setLoadError(true);
     }
   }, [tenantId, t]);
 
@@ -272,6 +285,11 @@ const BusinessOverview: React.FC = () => {
         <span>{t("dashboard.updated")}</span>
       </div>
     </div>
+    {loadError && (
+      <div className="mb-4 text-sm text-red-600 dark:text-red-400">
+        {t("dashboard.failedToLoadData") || "Failed to load business overview data"}
+      </div>
+    )}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {kpis.map((kpi, idx) => (
         <div key={idx} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-600 hover:shadow-sm dark:hover:shadow-gray-900/20 transition-all duration-200 text-start" dir={isRTL ? "rtl" : "ltr"}>
