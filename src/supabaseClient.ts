@@ -1,7 +1,22 @@
 import { createClient, User } from "@supabase/supabase-js";
 import { Database } from "./types/supabase";
-import { isLocalhost } from "./utils/isLocalhost";
 import { createMockSupabaseClient } from "./mocks/mockSupabaseClient";
+
+// Whether to use the credential-free in-memory mock backend instead of a
+// real Supabase connection. This MUST be a build-time constant derived from
+// import.meta.env.DEV, never a runtime check like the requesting hostname:
+// import.meta.env.DEV is statically false in every production build, which
+// makes the mock branch below provably dead code in production regardless
+// of what host the built bundle happens to be served from (a self-hosted
+// deployment on a private IP or a *.local domain included). A hostname
+// check does not have that property - it can flip to "true" for a real
+// production build simply because of how someone reaches it on the
+// network, silently swapping the real backend for a fake always-admin
+// session with no login. VITE_FORCE_REAL_CLIENT stays available so a
+// developer can opt out of the mock and exercise a real backend from
+// localhost.
+export const IS_MOCK_MODE =
+  import.meta.env.DEV && import.meta.env.VITE_FORCE_REAL_CLIENT !== "true";
 
 // Helper to clean environment variables (remove newlines, carriage returns, and trim)
 const cleanEnvVar = (value: string | undefined): string | undefined => {
@@ -77,13 +92,13 @@ ${missingVars.map((v) => `║    • ${v.padEnd(55)} ║`).join("\n")}
 // Validate environment variables before initializing client
 validateEnvironmentVariables();
 
-// On localhost, use hardcoded demo data instead of the real backend. This
+// In mock mode, use hardcoded demo data instead of the real backend. This
 // must stay lazy: constructing the real client eagerly (even when it's
 // about to be discarded in favor of the mock one) throws on missing env
 // vars and crashes the whole app before the mock-mode bypass ever runs -
 // defeating the point of having a credential-free local dev mode at all.
 export const supabase = (
-  isLocalhost()
+  IS_MOCK_MODE
     ? createMockSupabaseClient()
     : createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
         auth: {
@@ -102,9 +117,9 @@ export const supabase = (
       })
 ) as ReturnType<typeof createClient<Database>>;
 
-// Health check function (skipped in frontend-only localhost mode)
+// Health check function (skipped in frontend-only mock mode)
 export const checkSupabaseHealth = async (): Promise<boolean> => {
-  if (isLocalhost()) return true;
+  if (IS_MOCK_MODE) return true;
 
   try {
     const { error } = await supabase.from("tenants").select("id").limit(1);

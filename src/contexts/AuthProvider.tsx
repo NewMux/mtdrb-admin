@@ -3,9 +3,8 @@ import { User, AuthError } from "@supabase/supabase-js";
 import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { supabase, getCurrentUser } from "../supabaseClient";
+import { supabase, getCurrentUser, IS_MOCK_MODE } from "../supabaseClient";
 import { isValidRole } from "../types/roles";
-import { isLocalhost } from "../utils/isLocalhost";
 import { withTimeout } from "../utils/withTimeout";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import {
@@ -146,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
 
-      if (isLocalhost()) {
+      if (IS_MOCK_MODE) {
         let loggedIn = typeof window !== "undefined" ? sessionStorage.getItem("mock_logged_in") : null;
         
         if (loggedIn === null && typeof window !== "undefined") {
@@ -269,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     checkAuth();
 
-    if (isLocalhost()) {
+    if (IS_MOCK_MODE) {
       return;
     }
 
@@ -342,7 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    if (!tenantId || isLocalhost()) {
+    if (!tenantId || IS_MOCK_MODE) {
       setSessionTimeoutMinutes(null);
       setPasswordExpiryDays(null);
       return;
@@ -374,7 +373,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // feature), don't treat that as expired - only enforce once we actually
   // know when the password was last changed.
   useEffect(() => {
-    if (!passwordExpiryDays || !user || isLocalhost()) return;
+    if (!passwordExpiryDays || !user || IS_MOCK_MODE) return;
     if (location.pathname.startsWith("/dashboard/settings")) return;
 
     const changedAt = user.user_metadata?.password_changed_at as
@@ -446,7 +445,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-        if (isLocalhost()) {
+        if (IS_MOCK_MODE) {
           if (typeof window !== "undefined") {
             sessionStorage.setItem("mock_logged_in", "true");
           }
@@ -470,7 +469,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         setError(null);
-        if (isLocalhost()) {
+        if (IS_MOCK_MODE) {
           if (typeof window !== "undefined") {
             sessionStorage.setItem("mock_logged_in", "true");
           }
@@ -496,7 +495,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      if (isLocalhost()) {
+      if (IS_MOCK_MODE) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("mock_logged_in", "false");
         }

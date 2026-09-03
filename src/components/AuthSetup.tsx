@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
-import { isLocalhost } from "../utils/isLocalhost";
+import { supabase, IS_MOCK_MODE } from "../supabaseClient";
 
 interface AuthSetupProps {
   children: React.ReactNode;
@@ -21,7 +20,7 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
     };
 
     // Skip backend setup on localhost (frontend-only dev mode)
-    if (isLocalhost()) {
+    if (IS_MOCK_MODE) {
       finishSetup();
       return;
     }

@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../supabaseClient";
-import { isLocalhost } from "../utils/isLocalhost";
+import { supabase, IS_MOCK_MODE } from "../supabaseClient";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 interface Subscription {
@@ -60,7 +59,7 @@ export function SubscriptionProvider({
   };
 
   useEffect(() => {
-    if (isLocalhost()) {
+    if (IS_MOCK_MODE) {
       setIsPro(true);
       setSubscription({
         id: "localhost-subscription",

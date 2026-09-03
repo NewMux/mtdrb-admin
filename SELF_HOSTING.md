@@ -25,6 +25,12 @@ below runs on your Hetzner box (or wherever you manage DNS/Supabase Cloud).
   custom RPC, `get_lockout_threshold`), private Storage buckets accessed via
   signed URLs, and light Realtime usage in three components. No Edge
   Functions are part of this deployment.
+- The build never ships a mock backend: the app only ever uses one when
+  `npm run dev` is invoked (`import.meta.env.DEV`), never based on the
+  hostname or IP the built app is reached on. A production build (`npm run
+  build`) always talks to the real Supabase project configured via
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`, whether it's served from a
+  public domain, a bare IP, or a private/LAN address.
 
 ## Step 2 — Provision Hetzner + Coolify (staging)
 
