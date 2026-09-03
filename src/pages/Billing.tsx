@@ -26,6 +26,7 @@ import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
 import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
+import { normalizeInvoiceStatus } from "../utils/invoiceStatus";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import type { Invoice, Expense } from "../types";
 
@@ -747,22 +748,47 @@ const Billing: React.FC = () => {
                           {formatMoney(Number(invoice.total ?? invoice.amount ?? 0), 2)}
                         </td>
                         <td className="py-3 px-4 text-start">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              (invoice.status ?? "unpaid").toLowerCase() === "paid"
-                                ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                                : (invoice.status ?? "unpaid").toLowerCase() ===
-                                    "unpaid"
-                                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
-                                  : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                            }`}
-                          >
-                            {(invoice.status ?? "unpaid").toLowerCase() === "paid" 
-                              ? t("billing.paid")
-                              : (invoice.status ?? "unpaid").toLowerCase() === "unpaid"
-                                ? t("billing.unpaid")
-                                : t("billing.overdue")}
-                          </span>
+                          {(() => {
+                            const status = normalizeInvoiceStatus(invoice.status);
+                            const badge: Record<
+                              typeof status,
+                              { className: string; label: string }
+                            > = {
+                              paid: {
+                                className:
+                                  "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400",
+                                label: t("billing.paid"),
+                              },
+                              pending: {
+                                className:
+                                  "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400",
+                                label: t("billing.unpaid"),
+                              },
+                              overdue: {
+                                className:
+                                  "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400",
+                                label: t("billing.overdue"),
+                              },
+                              draft: {
+                                className:
+                                  "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300",
+                                label: t("billing.draft"),
+                              },
+                              cancelled: {
+                                className:
+                                  "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400",
+                                label: t("billing.cancelled"),
+                              },
+                            };
+                            const { className, label } = badge[status];
+                            return (
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${className}`}
+                              >
+                                {label}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300 text-start">
                           {invoice.due_date

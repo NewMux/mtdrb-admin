@@ -131,7 +131,7 @@ export function NewInvoiceModal({
   const [invoiceData, setInvoiceData] = useState({
     invoice_number: "",
     type: "Membership" as InvoiceType,
-    status: "Unpaid" as InvoiceStatus,
+    status: "pending" as InvoiceStatus,
     member_id: "",
     issue_date: dayjs().format("YYYY-MM-DD"),
     due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
@@ -205,7 +205,7 @@ export function NewInvoiceModal({
       setInvoiceData({
         invoice_number: editingInvoice.invoice_number || "",
         type: editingInvoice.type || "Membership",
-        status: editingInvoice.status || "Unpaid",
+        status: editingInvoice.status || "pending",
         member_id: editingInvoice.member?.id || "",
         issue_date: editingInvoice.issue_date || dayjs().format("YYYY-MM-DD"),
         due_date:
@@ -224,7 +224,7 @@ export function NewInvoiceModal({
       setInvoiceData({
         invoice_number: `INV-${Date.now()}`,
         type: "Membership" as InvoiceType,
-        status: "Unpaid" as InvoiceStatus,
+        status: "pending" as InvoiceStatus,
         member_id: "",
         issue_date: dayjs().format("YYYY-MM-DD"),
         due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
@@ -262,7 +262,7 @@ export function NewInvoiceModal({
         .from("invoices")
         .select("total, due_date")
         .eq("member_id", clientId)
-        .eq("status", "Unpaid");
+        .eq("status", "pending");
 
       const outstandingBalance =
         outstandingInvoices?.reduce((sum, inv) => sum + inv.total, 0) || 0;
@@ -372,7 +372,7 @@ export function NewInvoiceModal({
       const existingMetadata = (editingInvoice?.metadata as Record<string, unknown>) || {};
       const invoicePayload = {
         type: invoiceData.type,
-        status: saveAsDraft ? "Draft" : invoiceData.status,
+        status: saveAsDraft ? "draft" : invoiceData.status,
         member_id: selectedClient.id,
         issue_date: invoiceData.issue_date,
         due_date: invoiceData.due_date,
@@ -547,11 +547,11 @@ export function NewInvoiceModal({
                   }
                   required
                 >
-                  <option value="Unpaid">{t("billing.unpaid", "غير مدفوعة")}</option>
-                  <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
-                  <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
-                  <option value="Draft">{t("billing.draft", "مسودة")}</option>
-                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
+                  <option value="pending">{t("billing.unpaid", "غير مدفوعة")}</option>
+                  <option value="paid">{t("billing.paid", "مدفوعة")}</option>
+                  <option value="overdue">{t("billing.overdue", "متأخرة")}</option>
+                  <option value="draft">{t("billing.draft", "مسودة")}</option>
+                  <option value="cancelled">{t("billing.cancelled", "ملغاة")}</option>
                 </AppleSelect>
                 <AppleSelect
                   label={t("billing.type", "نوع الفاتورة")}

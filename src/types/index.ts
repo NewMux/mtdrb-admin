@@ -50,14 +50,10 @@ export type PaymentMethodType =
 
 export type InvoiceType = "Membership" | "PT" | "Class" | "Facility" | "Other";
 
-export type InvoiceStatus =
-  | "Paid"
-  | "Unpaid"
-  | "Partial"
-  | "Overdue"
-  | "Refunded"
-  | "Draft"
-  | "Cancelled";
+// Matches the live database's `invoices_status_check` CHECK constraint
+// exactly - see src/utils/invoiceStatus.ts. Any other casing (e.g.
+// "Paid", "Unpaid") is rejected by Postgres on write.
+export type InvoiceStatus = "draft" | "pending" | "paid" | "overdue" | "cancelled";
 
 export type ExpenseCategory =
   | "Salaries"

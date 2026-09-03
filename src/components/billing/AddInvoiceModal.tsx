@@ -135,7 +135,7 @@ export function AddInvoiceModal({
       payment_method: "card",
       member_id: "",
       description: "",
-      status: "Unpaid",
+      status: "pending",
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
@@ -180,7 +180,7 @@ export function AddInvoiceModal({
         payment_method: editingInvoice.payment_method || "card",
         member_id: editingInvoice.member?.id || "",
         description: editingInvoice.notes || "",
-        status: editingInvoice.status || "Unpaid",
+        status: editingInvoice.status || "pending",
         recurring: false,
         recurring_frequency: "monthly",
         vat_included: false,
@@ -621,11 +621,11 @@ export function AddInvoiceModal({
                   required
                 >
                   <option value="">{t("billing.selectStatus", "اختر الحالة")}</option>
-                  <option value="Unpaid">{t("billing.unpaid", "غير مدفوعة")}</option>
-                  <option value="Paid">{t("billing.paid", "مدفوعة")}</option>
-                  <option value="Overdue">{t("billing.overdue", "متأخرة")}</option>
-                  <option value="Draft">{t("billing.draft", "مسودة")}</option>
-                  <option value="Cancelled">{t("billing.cancelled", "ملغاة")}</option>
+                  <option value="pending">{t("billing.unpaid", "غير مدفوعة")}</option>
+                  <option value="paid">{t("billing.paid", "مدفوعة")}</option>
+                  <option value="overdue">{t("billing.overdue", "متأخرة")}</option>
+                  <option value="draft">{t("billing.draft", "مسودة")}</option>
+                  <option value="cancelled">{t("billing.cancelled", "ملغاة")}</option>
                 </AppleSelect>
                 <div className="flex items-center space-x-3 text-start">
                   <AppleToggle
