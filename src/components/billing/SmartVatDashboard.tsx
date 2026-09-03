@@ -256,6 +256,10 @@ export default function SmartVatDashboard({
 
       const currentPeriodVat =
         monthlyBreakdown[monthlyBreakdown.length - 1]?.vatCollected ?? 0;
+      const currentPeriodVatPaid =
+        monthlyBreakdown[monthlyBreakdown.length - 1]?.vatPaid ?? 0;
+      const currentPeriodNetVat =
+        monthlyBreakdown[monthlyBreakdown.length - 1]?.netVat ?? 0;
       const previousPeriodVat =
         monthlyBreakdown[monthlyBreakdown.length - 2]?.vatCollected ?? 0;
       const vatGrowthPercentage =
@@ -277,6 +281,8 @@ export default function SmartVatDashboard({
         netVatPayable,
         complianceScore,
         currentPeriodVat,
+        currentPeriodVatPaid,
+        currentPeriodNetVat,
         previousPeriodVat,
         vatGrowthPercentage,
         overdueReturns,
@@ -324,6 +330,8 @@ export default function SmartVatDashboard({
         netVatPayable: 0,
         complianceScore: 0,
         currentPeriodVat: 0,
+        currentPeriodVatPaid: 0,
+        currentPeriodNetVat: 0,
         previousPeriodVat: 0,
         vatGrowthPercentage: 0,
         overdueReturns: 0,
@@ -352,6 +360,9 @@ export default function SmartVatDashboard({
       const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       const filingDeadline = new Date(now.getFullYear(), now.getMonth() + 1, 28);
 
+      // File this month's VAT, not the tenant's all-time totals - a return
+      // for September must not claim every fil of VAT collected since the
+      // gym opened.
       const { error } = await supabase.from("vat_returns").insert([
         {
           tenant_id: tenantId,
@@ -359,9 +370,9 @@ export default function SmartVatDashboard({
           period_start: periodStart.toISOString().split("T")[0],
           period_end: periodEnd.toISOString().split("T")[0],
           status: "draft",
-          vat_collected: dashboardData.totalVatCollected,
-          vat_paid: dashboardData.totalVatPaid,
-          net_vat_payable: dashboardData.netVatPayable,
+          vat_collected: dashboardData.currentPeriodVat,
+          vat_paid: dashboardData.currentPeriodVatPaid,
+          net_vat_payable: dashboardData.currentPeriodNetVat,
           filing_deadline: filingDeadline.toISOString().split("T")[0],
         },
       ]);
@@ -377,6 +388,7 @@ export default function SmartVatDashboard({
   };
 
   const handleSubmitVatReturn = async (returnId: string) => {
+    if (!tenantId) return;
     try {
       const { error } = await supabase
         .from("vat_returns")
@@ -384,7 +396,8 @@ export default function SmartVatDashboard({
           status: "submitted",
           filed_date: new Date().toISOString().split("T")[0],
         })
-        .eq("id", returnId);
+        .eq("id", returnId)
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
 

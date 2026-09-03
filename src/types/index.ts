@@ -555,6 +555,8 @@ export interface VatDashboardData {
 
   // Period comparisons
   currentPeriodVat: number;
+  currentPeriodVatPaid: number;
+  currentPeriodNetVat: number;
   previousPeriodVat: number;
   vatGrowthPercentage: number;
 

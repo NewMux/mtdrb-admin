@@ -5,7 +5,6 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiUsers,
-  FiDollarSign,
   FiCalendar,
   FiActivity,
   FiFilter,
@@ -36,8 +35,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
 } from "recharts";
 
 interface TrainerPerformanceDashboardProps {
@@ -65,9 +62,6 @@ interface PerformanceMetrics {
   cancelledSessions: number;
   retentionRate: number;
   avgRating: number;
-  revenueGenerated: number;
-  avgRevenuePerSession: number;
-  revenuePerMember: number;
   upsells: number;
   uniqueMembersTrained: number;
   repeatClients: number;
@@ -85,7 +79,6 @@ interface PerformanceMetrics {
 
 interface ChartData {
   attendanceOverTime: Array<{ date: string; attendance: number }>;
-  revenueOverTime: Array<{ date: string; revenue: number }>;
   retentionCurve: Array<{ week: number; percentage: number }>;
   ratingTrend: Array<{ date: string; rating: number }>;
   topVsBottomTrainers: Array<{
@@ -126,9 +119,6 @@ const emptyPerformanceMetrics: PerformanceMetrics = {
   cancelledSessions: 0,
   retentionRate: 0,
   avgRating: 0,
-  revenueGenerated: 0,
-  avgRevenuePerSession: 0,
-  revenuePerMember: 0,
   upsells: 0,
   uniqueMembersTrained: 0,
   repeatClients: 0,
@@ -146,7 +136,6 @@ const emptyPerformanceMetrics: PerformanceMetrics = {
 
 const emptyChartData: ChartData = {
   attendanceOverTime: [],
-  revenueOverTime: [],
   retentionCurve: [],
   ratingTrend: [],
   topVsBottomTrainers: [],
@@ -157,9 +146,6 @@ interface CoreStats {
   avgAttendancePerClass: number;
   totalAttendance: number;
   cancelledSessions: number;
-  revenueGenerated: number;
-  avgRevenuePerSession: number;
-  revenuePerMember: number;
   uniqueMembersTrained: number;
   repeatClients: number;
   avgMemberSessionsPerMonth: number;
@@ -167,14 +153,17 @@ interface CoreStats {
   noShows: number;
 }
 
-type InvoiceRow = { amount?: number | string | null; total?: number | string | null };
-
 // Shared by the current and previous period so trend badges reflect a real
 // period-over-period comparison instead of a hardcoded literal.
+//
+// Deliberately does not compute a revenue figure: `invoices` has no
+// trainer_id or any link back to a specific trainer (only to a member),
+// so a per-trainer revenue total can only be the whole tenant's revenue
+// misattributed to whichever trainer happens to be selected. Showing that
+// as "Revenue Generated" is worse than showing nothing.
 function computeCoreStats(
   classes: ClassRow[],
   bookings: ClassBookingWithRelations[],
-  invoices: InvoiceRow[],
   periodDays: number,
 ): CoreStats {
   const completedClasses = classes.filter((c) => c.status === "completed");
@@ -185,12 +174,6 @@ function computeCoreStats(
   ).length;
   const avgAttendancePerClass = totalSessions > 0 ? totalAttendance / totalSessions : 0;
   const noShows = bookings.filter((b) => b.status === "no_show").length;
-
-  const revenueGenerated = invoices.reduce(
-    (sum, inv) => sum + parseFloat(String(inv.amount || inv.total || "0")),
-    0,
-  );
-  const avgRevenuePerSession = totalSessions > 0 ? revenueGenerated / totalSessions : 0;
 
   const uniqueMemberIds = new Set(bookings.map((b) => b.member_id).filter(Boolean));
   const uniqueMembersTrained = uniqueMemberIds.size;
@@ -211,9 +194,6 @@ function computeCoreStats(
     avgAttendancePerClass,
     totalAttendance,
     cancelledSessions: cancelledClasses.length,
-    revenueGenerated,
-    avgRevenuePerSession,
-    revenuePerMember: uniqueMembersTrained > 0 ? revenueGenerated / uniqueMembersTrained : 0,
     uniqueMembersTrained,
     repeatClients,
     avgMemberSessionsPerMonth:
@@ -514,39 +494,21 @@ export default function TrainerPerformanceDashboard({
         return (data || []) as ClassBookingWithRelations[];
       };
 
-      const fetchInvoices = async (from: Date, to?: Date) => {
-        let query = supabase
-          .from("invoices")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(from))
-          .in("status", ["paid", "completed"]);
-        if (to) query = query.lt("created_at", formatDate(to));
-        const { data, error } = await query;
-        if (error) throw error;
-        return data || [];
-      };
-
-      const [classes, bookings, invoices, prevClasses, prevBookings, prevInvoices] =
+      const [classes, bookings, prevClasses, prevBookings] =
         await Promise.all([
           fetchClasses(startDate),
           fetchBookings(startDate),
-          fetchInvoices(startDate),
           fetchClasses(prevStartDate, startDate),
           fetchBookings(prevStartDate, startDate),
-          fetchInvoices(prevStartDate, startDate),
         ]);
 
-      const currentStats = computeCoreStats(classes, bookings, invoices, days);
-      const prevStats = computeCoreStats(prevClasses, prevBookings, prevInvoices, days);
+      const currentStats = computeCoreStats(classes, bookings, days);
+      const prevStats = computeCoreStats(prevClasses, prevBookings, days);
       setMetricChanges({
         totalSessions: pctChange(currentStats.totalSessions, prevStats.totalSessions),
         avgAttendancePerClass: pctChange(currentStats.avgAttendancePerClass, prevStats.avgAttendancePerClass),
         totalAttendance: pctChange(currentStats.totalAttendance, prevStats.totalAttendance),
         cancelledSessions: pctChange(currentStats.cancelledSessions, prevStats.cancelledSessions),
-        revenueGenerated: pctChange(currentStats.revenueGenerated, prevStats.revenueGenerated),
-        avgRevenuePerSession: pctChange(currentStats.avgRevenuePerSession, prevStats.avgRevenuePerSession),
-        revenuePerMember: pctChange(currentStats.revenuePerMember, prevStats.revenuePerMember),
         uniqueMembersTrained: pctChange(currentStats.uniqueMembersTrained, prevStats.uniqueMembersTrained),
         repeatClients: pctChange(currentStats.repeatClients, prevStats.repeatClients),
         avgMemberSessionsPerMonth: pctChange(currentStats.avgMemberSessionsPerMonth, prevStats.avgMemberSessionsPerMonth),
@@ -563,12 +525,6 @@ export default function TrainerPerformanceDashboard({
       ).length;
       const avgAttendancePerClass = totalSessions > 0 ? totalAttendance / totalSessions : 0;
       const noShows = (bookings || []).filter(b => b.status === "no_show").length;
-
-      // Calculate revenue
-      const revenueGenerated = (invoices || []).reduce((sum, inv) =>
-        sum + parseFloat(String(inv.amount || inv.total || "0")), 0
-      );
-      const avgRevenuePerSession = totalSessions > 0 ? revenueGenerated / totalSessions : 0;
 
       // Unique members
       const uniqueMemberIds = new Set((bookings || []).map(b => b.member_id).filter(Boolean));
@@ -648,18 +604,6 @@ export default function TrainerPerformanceDashboard({
           return bookingMonth === monthKey && (b.status === "checked_in" || b.status === "completed");
         });
         return { date, attendance: monthBookings.length };
-      });
-
-      const revenueOverTime = months.map(({ date, monthKey }) => {
-        const monthInvoices = (invoices || []).filter((inv) => {
-          const invoiceDate = new Date(inv.created_at);
-          const invoiceMonth = `${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, '0')}`;
-          return invoiceMonth === monthKey;
-        });
-        const revenue = monthInvoices.reduce((sum, inv) =>
-          sum + parseFloat(String(inv.amount || inv.total || "0")), 0
-        );
-        return { date, revenue };
       });
 
       const ratingTrend = months.map(({ date }) => {
@@ -745,9 +689,6 @@ export default function TrainerPerformanceDashboard({
         cancelledSessions: cancelledClasses.length,
         retentionRate,
         avgRating,
-        revenueGenerated,
-        avgRevenuePerSession,
-        revenuePerMember: uniqueMembersTrained > 0 ? revenueGenerated / uniqueMembersTrained : 0,
         upsells: 0, // Would need upsell tracking
         uniqueMembersTrained,
         repeatClients,
@@ -765,7 +706,6 @@ export default function TrainerPerformanceDashboard({
 
       setChartData({
         attendanceOverTime,
-        revenueOverTime,
         retentionCurve: [], // Would need historical retention data
         ratingTrend,
         topVsBottomTrainers,
@@ -794,9 +734,6 @@ export default function TrainerPerformanceDashboard({
           cancelledSessions: metrics.cancelledSessions,
           retentionRate: metrics.retentionRate,
           avgRating: metrics.avgRating,
-          revenueGenerated: metrics.revenueGenerated,
-          avgRevenuePerSession: metrics.avgRevenuePerSession,
-          revenuePerMember: metrics.revenuePerMember,
           uniqueMembersTrained: metrics.uniqueMembersTrained,
           repeatClients: metrics.repeatClients,
           sessionFillRate: metrics.sessionFillRate,
@@ -880,36 +817,19 @@ export default function TrainerPerformanceDashboard({
         </div>
       </div>
 
-      {/* Revenue Impact */}
+      {/* Additional Metrics
+          Revenue Generated / Avg Revenue Per Session / Revenue Per Member
+          used to live here. They were removed: `invoices` has no
+          trainer_id or any link back to a specific trainer (only to a
+          member), so a per-trainer revenue figure could only ever be the
+          whole tenant's revenue misattributed to whichever trainer
+          happened to be selected. Showing that as real per-trainer
+          earnings was actively misleading, not just imprecise. */}
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          💰 {t("trainers.revenueImpact") || "Revenue Impact"}
+          📈 {t("trainers.additionalMetrics") || "Additional Metrics"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
-            title={t("trainers.revenueGenerated")}
-            value={`$${metrics.revenueGenerated.toLocaleString()}`}
-            subtitle={t("trainers.totalEarnings")}
-            {...trendFor("revenueGenerated")}
-            icon={<FiDollarSign className="w-6 h-6 text-white" />}
-            color="bg-green-500"
-          />
-          <MetricCard
-            title={t("trainers.avgRevenuePerSession")}
-            value={`$${metrics.avgRevenuePerSession}`}
-            subtitle={t("trainers.perClassEarnings")}
-            {...trendFor("avgRevenuePerSession")}
-            icon={<FiDollarSign className="w-6 h-6 text-white" />}
-            color="bg-blue-500"
-          />
-          <MetricCard
-            title={t("trainers.revenuePerMember")}
-            value={`$${metrics.revenuePerMember}`}
-            subtitle={t("trainers.perAttendee")}
-            {...trendFor("revenuePerMember")}
-            icon={<FiUser className="w-6 h-6 text-white" />}
-            color="bg-purple-500"
-          />
           <MetricCard
             title={t("trainers.upsells")}
             value={metrics.upsells}
@@ -1093,24 +1013,6 @@ export default function TrainerPerformanceDashboard({
                   strokeWidth={3}
                 />
               </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title={t("trainers.revenueOverTime") || "Revenue Over Time"}>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData.revenueOverTime}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, "Revenue"]} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#10B981"
-                  fill="#10B981"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
 

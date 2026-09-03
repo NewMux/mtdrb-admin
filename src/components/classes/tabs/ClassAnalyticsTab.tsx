@@ -69,14 +69,14 @@ interface TrainerPerformanceEntry {
   name: string;
   attendance: number;
   rating: number;
-  retention: number;
-  revenue: number;
 }
 
 interface TrainerPerformanceData {
   topTrainers: TrainerPerformanceEntry[];
   avgRating: number;
-  avgRetention: number;
+  // Tenant-wide revenue for the period (same figure shown in the Revenue
+  // section) - not attributed to a specific trainer, since invoices have
+  // no link back to a trainer or class.
   totalRevenue: number;
 }
 
@@ -225,7 +225,6 @@ const emptyClassAnalyticsData: ClassAnalyticsData = {
   trainerPerformance: {
     topTrainers: [],
     avgRating: 0,
-    avgRetention: 0,
     totalRevenue: 0,
   },
   classInsights: {
@@ -584,9 +583,6 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
               </div>
               <div className={isRTL ? "text-left" : "text-right"}>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  ${trainer.revenue.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {trainer.rating}★ {t("classes.rating")}
                 </p>
               </div>
@@ -606,12 +602,6 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
               {trainerPerformance.avgRating}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.avgRating")}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {trainerPerformance.avgRetention}%
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">{t("classes.avgRetention")}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -1438,24 +1428,22 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
           attendance: number;
           bookings: unknown[];
         }
+        // Revenue and retention are deliberately not computed per trainer:
+        // invoices have no trainer_id or class_id, so any "per-trainer
+        // revenue" here could only be the tenant's whole revenue divided
+        // by the trainer count - not this trainer's revenue at all. And
+        // there's no historical membership data to derive a real
+        // retention rate from. Showing fabricated numbers for either is
+        // worse than showing neither.
         const topTrainers = Array.from(trainerStats.entries())
           .map(([trainerId, stats]: [string, TrainerStats]) => {
             const trainer = (trainers || []).find(t => t.id === trainerId);
             if (!trainer) return null;
-            
-            // Calculate revenue from invoices for this trainer's classes
-            const trainerRevenue = (invoices || []).reduce((sum, inv) => {
-              // Check if invoice is related to trainer's classes
-              const invoiceAmount = parseFloat(inv.amount || inv.total || "0");
-              return sum + invoiceAmount;
-            }, 0) / (trainers?.length || 1); // Rough estimate - divide by trainer count
 
             return {
               name: `${trainer.first_name || ''} ${trainer.last_name || ''}`.trim() || trainer.email,
               attendance: stats.attendance,
               rating: parseFloat(trainer.rating || "0"),
-              retention: 85, // Would need historical data to calculate
-              revenue: trainerRevenue,
             };
           })
           .filter(
@@ -1667,7 +1655,6 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
           trainerPerformance: {
             topTrainers,
             avgRating,
-            avgRetention: 84.7, // Would need historical data
             totalRevenue,
           },
           classInsights: {
