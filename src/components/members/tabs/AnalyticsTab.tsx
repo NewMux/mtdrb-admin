@@ -1007,6 +1007,14 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           .eq("status", "paid"),
       ]);
 
+      const queryError =
+        allMembersResult.error ||
+        newMembersResult.error ||
+        bookingsResult.error ||
+        classesResult.error ||
+        invoicesResult.error;
+      if (queryError) throw queryError;
+
       const allMembers = allMembersResult.data || [];
       const newMembers = newMembersResult.data || [];
       const bookings = bookingsResult.data || [];

@@ -455,12 +455,14 @@ export default function TrainerPerformanceDashboard({
   const [metricChanges, setMetricChanges] = useState<MetricChanges>({});
   const [trainerOptions, setTrainerOptions] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchTrainerAnalyticsData = useCallback(async () => {
     if (!tenantId) return;
     
     try {
       setLoading(true);
+      setLoadError(false);
       const now = new Date();
       const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
       const days = daysMap[filters.dateRange] || 30;
@@ -631,10 +633,11 @@ export default function TrainerPerformanceDashboard({
         }
       });
 
-      const { data: allTrainers } = await supabase
+      const { data: allTrainers, error: allTrainersError } = await supabase
         .from("trainers")
         .select("*")
         .eq("tenant_id", tenantId);
+      if (allTrainersError) throw allTrainersError;
 
       setTrainerOptions(
         (allTrainers || []).map((tr) => ({
@@ -712,6 +715,7 @@ export default function TrainerPerformanceDashboard({
       });
     } catch (error) {
       console.error("Error fetching trainer analytics:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -775,6 +779,12 @@ export default function TrainerPerformanceDashboard({
         onReset={handleReset}
         onExport={handleExport}
       />
+
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
 
       {/* Performance Overview */}
       <div className="space-y-6">

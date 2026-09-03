@@ -100,11 +100,12 @@ export default function SmartVatDashboard({
     try {
       setLoading(true);
 
-      const { data: settingsData } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from("gym_settings")
         .select("currency, vat_rate")
         .eq("tenant_id", tenantId)
         .maybeSingle();
+      if (settingsError) throw settingsError;
       const configuredVatRate = Number(settingsData?.vat_rate ?? DEFAULT_VAT_RATE);
       setCurrency(settingsData?.currency || DEFAULT_CURRENCY);
 

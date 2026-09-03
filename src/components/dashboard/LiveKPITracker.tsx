@@ -56,11 +56,13 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
     },
   ]);
   const [, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchLiveData = useCallback(async () => {
     if (!tenantId) return;
     try {
       setLoading(true);
+      setLoadError(false);
 
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -72,13 +74,14 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       const formatDateTime = (date: Date) => date.toISOString();
 
       // Fetch members currently in gym (checked in today and not checked out)
-      const { data: todayCheckIns } = await supabase
+      const { data: todayCheckIns, error: todayCheckInsError } = await supabase
         .from("class_bookings")
         .select("id, member_id, check_in_time, check_out_time, status")
         .eq("tenant_id", tenantId)
         .gte("check_in_time", formatDateTime(todayStart))
         .lte("check_in_time", formatDateTime(todayEnd))
         .in("status", ["checked_in", "completed"]);
+      if (todayCheckInsError) throw todayCheckInsError;
 
       // Count unique members who checked in today and haven't checked out
       const membersInGym = new Set(
@@ -88,13 +91,14 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       ).size;
 
       // Get yesterday's count for comparison
-      const { data: yesterdayCheckIns } = await supabase
+      const { data: yesterdayCheckIns, error: yesterdayCheckInsError } = await supabase
         .from("class_bookings")
         .select("id, member_id, check_in_time, check_out_time, status")
         .eq("tenant_id", tenantId)
         .gte("check_in_time", formatDateTime(yesterdayStart))
         .lte("check_in_time", formatDateTime(yesterdayEnd))
         .in("status", ["checked_in", "completed"]);
+      if (yesterdayCheckInsError) throw yesterdayCheckInsError;
 
       const yesterdayMembersInGym = new Set(
         (yesterdayCheckIns || [])
@@ -105,22 +109,24 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       const membersChange = membersInGym - yesterdayMembersInGym;
 
       // Fetch classes currently running (in_progress status)
-      const { data: runningClasses } = await supabase
+      const { data: runningClasses, error: runningClassesError } = await supabase
         .from("classes")
         .select("id, status, start_time, end_time")
         .eq("tenant_id", tenantId)
         .eq("status", "in_progress")
         .gte("start_time", formatDateTime(todayStart))
         .lte("end_time", formatDateTime(todayEnd));
+      if (runningClassesError) throw runningClassesError;
 
       // Get yesterday's running classes count
-      const { data: yesterdayRunningClasses } = await supabase
+      const { data: yesterdayRunningClasses, error: yesterdayRunningClassesError } = await supabase
         .from("classes")
         .select("id, status")
         .eq("tenant_id", tenantId)
         .eq("status", "in_progress")
         .gte("start_time", formatDateTime(yesterdayStart))
         .lte("end_time", formatDateTime(yesterdayEnd));
+      if (yesterdayRunningClassesError) throw yesterdayRunningClassesError;
 
       const runningClassesCount = (runningClasses || []).length;
       const yesterdayRunningCount = (yesterdayRunningClasses || []).length;
@@ -146,6 +152,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       ]);
     } catch (error) {
       console.error("Error fetching live activity data:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -178,7 +185,13 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
           <span>{t("dashboard.live")}</span>
         </div>
       </div>
-      
+
+      {loadError && (
+        <div className="mb-4 text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {liveMetrics.map((metric, index) => (
           <div

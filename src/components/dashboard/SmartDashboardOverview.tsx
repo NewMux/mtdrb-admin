@@ -180,11 +180,13 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
   ]);
   const [smartInsights, setSmartInsights] = useState<unknown[]>([]);
   const [, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!tenantId) return;
     try {
       setLoading(true);
+      setLoadError(false);
 
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -245,6 +247,15 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .eq("tenant_id", tenantId),
       ]);
 
+      const queryError =
+        currentMembers.error ||
+        previousMembers.error ||
+        currentInvoices.error ||
+        previousInvoices.error ||
+        weekBookings.error ||
+        allMembers.error;
+      if (queryError) throw queryError;
+
       // Calculate metrics
       const currentMemberCount = (currentMembers.data || []).length;
       const previousMemberCount = (previousMembers.data || []).length;
@@ -284,11 +295,14 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       const retentionRate = totalOldMembers > 0 ? (retainedMembers / totalOldMembers) * 100 : 0;
 
       // Get currency
-      const { data: settings } = await supabase
+      const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
         .select("currency")
         .eq("tenant_id", tenantId)
         .single();
+      // PGRST116 = no row found, which is a legitimate "not configured
+      // yet" state here, not a failure worth surfacing.
+      if (settingsError && settingsError.code !== "PGRST116") throw settingsError;
 
       const currency = settings?.currency || DEFAULT_CURRENCY;
       const currencySymbol = currency || "";
@@ -296,11 +310,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // Find inactive members (haven't visited in 14+ days)
       const fourteenDaysAgo = new Date();
       fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-      const { data: recentBookings } = await supabase
+      const { data: recentBookings, error: recentBookingsError } = await supabase
         .from("class_bookings")
         .select("member_id")
         .eq("tenant_id", tenantId)
         .gte("created_at", formatDate(fourteenDaysAgo));
+      if (recentBookingsError) throw recentBookingsError;
 
       const activeMemberIds = new Set((recentBookings || []).map(b => b.member_id));
       const inactiveMembers = (currentMembers.data || []).filter(
@@ -374,6 +389,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       setSmartInsights(insights);
     } catch (error) {
       console.error("Error fetching dashboard overview:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -398,6 +414,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           </div>
         </div>
       </div>
+
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
 
       {/* KPI Cards - Enhanced 2x2 Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

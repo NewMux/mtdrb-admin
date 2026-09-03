@@ -292,22 +292,28 @@ export function NewInvoiceModal({
 
   const loadClientHistory = useCallback(async (clientId: string) => {
     try {
-      const { data: lastInvoice } = await supabase
+      const { data: lastInvoice, error: lastInvoiceError } = await supabase
         .from("invoices")
         .select("issue_date, payment_method")
         .eq("member_id", clientId)
         .order("issue_date", { ascending: false })
         .limit(1)
         .single();
+      // PGRST116 = no row found, expected for a client with no prior
+      // invoices - not a failure worth surfacing.
+      if (lastInvoiceError && lastInvoiceError.code !== "PGRST116") {
+        throw lastInvoiceError;
+      }
 
-      const { data: outstandingInvoices } = await supabase
+      const { data: outstandingInvoices, error: outstandingError } = await supabase
         .from("invoices")
         .select("total, due_date")
         .eq("member_id", clientId)
         .eq("status", "pending");
+      if (outstandingError) throw outstandingError;
 
       const outstandingBalance =
-        outstandingInvoices?.reduce((sum, inv) => sum + inv.total, 0) || 0;
+        outstandingInvoices?.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0) || 0;
       const overdueInvoices =
         outstandingInvoices?.filter((inv) =>
           dayjs(inv.due_date).isBefore(dayjs()),
@@ -335,6 +341,7 @@ export function NewInvoiceModal({
       }
     } catch (error) {
       console.error("Error loading client history:", error);
+      toast.error("Failed to load client billing history");
     }
   }, []);
 

@@ -206,11 +206,13 @@ const BusinessOverview: React.FC = () => {
       const churnRate = totalMembersAtStart > 0 ? (churnedMembers / totalMembersAtStart) * 100 : 0;
 
       // Get currency
-      const { data: settings } = await supabase
+      const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
         .select("currency")
         .eq("tenant_id", tenantId)
         .single();
+      // PGRST116 = no row found, a legitimate "not configured yet" state.
+      if (settingsError && settingsError.code !== "PGRST116") throw settingsError;
 
       const currency = settings?.currency || DEFAULT_CURRENCY;
       const currencySymbol = currency || "";

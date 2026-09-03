@@ -552,6 +552,7 @@ export default function FinancialInsightsDashboard({
     membershipTypeRevenue: [],
   });
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   /**
    * Fetch billing analytics data from Supabase and hydrate metrics.
@@ -560,6 +561,7 @@ export default function FinancialInsightsDashboard({
     if (!tenantId) return;
     try {
       setLoading(true);
+      setLoadError(false);
 
       const { start, end } = resolveDateRange(filters.dateRange);
       const startDate = toDateString(start);
@@ -993,6 +995,7 @@ export default function FinancialInsightsDashboard({
       });
     } catch (error) {
       console.error("Failed to fetch billing analytics data:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -1018,6 +1021,12 @@ export default function FinancialInsightsDashboard({
         options={filterOptions}
         onFilterChange={setFilters}
       />
+
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
 
       {/* Revenue Overview */}
       <div className="space-y-6">

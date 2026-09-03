@@ -1308,6 +1308,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
   const [analyticsData, setAnalyticsData] =
     useState<ClassAnalyticsData>(emptyClassAnalyticsData);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const fetchClassAnalytics = async () => {
@@ -1315,6 +1316,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       
       try {
         setLoading(true);
+        setLoadError(false);
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
@@ -1686,6 +1688,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         });
       } catch (error) {
         console.error("Error fetching class analytics:", error);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -1696,6 +1699,12 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
+
       {/* Filters */}
       <ClassAnalyticsFilters />
 

@@ -119,6 +119,7 @@ export default function SmartDashboardAnalytics({
     "week" | "month" | "quarter" | "year"
   >("month");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetric[]>([]);
   const [revenueData, setRevenueData] = useState({
     current: 0,
@@ -133,6 +134,7 @@ export default function SmartDashboardAnalytics({
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(false);
 
       const {
         data: { user },
@@ -364,6 +366,7 @@ export default function SmartDashboardAnalytics({
       setDashboardMetrics(metrics);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      setLoadError(true);
       // Set empty metrics on error instead of hardcoded fallback
       setDashboardMetrics([
         {
@@ -456,6 +459,12 @@ export default function SmartDashboardAnalytics({
         timeRange={selectedTimeRange}
         onTimeRangeChange={setSelectedTimeRange}
       />
+
+      {loadError && (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {t("dashboard.failedToLoadData", "Failed to load business overview data")}
+        </div>
+      )}
 
       {/* Enhanced Performance Metrics */}
       <PerformanceMetricsCard 
