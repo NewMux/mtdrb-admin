@@ -34,6 +34,7 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
+import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -244,8 +245,13 @@ export function AddInvoiceModal({
     e.preventDefault();
   };
 
-  // Calculate VAT amount
-  const calculateVatAmount = () => {
+  // Split the entered amount into net/vat/gross. When "VAT included" is
+  // checked, the entered amount is the gross (what the customer pays) and
+  // VAT is extracted from it; otherwise the entered amount is the net base
+  // and VAT is added on top. Either way, `amount` is stored as the net
+  // base, `vat_total` as the VAT component, and `total` as the gross -
+  // one consistent contract regardless of how the amount was entered.
+  const calculateVatSplit = () => {
     const amount =
       typeof watchedAmount === "number"
         ? watchedAmount
@@ -253,7 +259,7 @@ export function AddInvoiceModal({
           ? parseFloat(watchedAmount)
           : 0;
     const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
-    return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
+    return splitVat(amount, vatRate, watchedVatIncluded, DEFAULT_CURRENCY);
   };
 
   // Handle form submission
@@ -287,16 +293,23 @@ export function AddInvoiceModal({
         invoiceUrl = fileName;
       }
 
+      const { net, vat, gross } = calculateVatSplit();
+      const issueDate = new Date(data.date);
+      const dueDate = new Date(issueDate);
+      dueDate.setDate(dueDate.getDate() + 7);
+
       const invoicePayload = {
         member_id: data.member_id,
         issue_date: data.date,
-        amount: parseFloat(data.amount.toString()),
+        due_date: dueDate.toISOString().split("T")[0],
+        amount: net,
+        total: gross,
         type: data.category as InvoiceType,
         payment_method: data.payment_method,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
         currency: DEFAULT_CURRENCY,
-        vat_total: calculateVatAmount(),
+        vat_total: vat,
         metadata: {
           title: data.title,
           notes: data.description || null,
@@ -352,9 +365,8 @@ export function AddInvoiceModal({
     }
   };
 
-  const totalAmount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
-  const vatAmount = calculateVatAmount();
-  const finalAmount = totalAmount + vatAmount;
+  const { net: netAmount, vat: vatAmount, gross: finalAmount } = calculateVatSplit();
+  const currencyDecimals = getCurrencyDecimals(DEFAULT_CURRENCY);
 
   const footer = (
     <div className="flex items-center justify-end gap-3 w-full">
@@ -512,17 +524,15 @@ export function AddInvoiceModal({
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{totalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{netAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
                 </div>
-                {watchedVatIncluded && (
-                  <div className="flex justify-between text-sm">
-                    <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                    <span>{vatAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
-                  </div>
-                )}
+                <div className="flex justify-between text-sm">
+                  <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
+                  <span>{vatAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                </div>
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">

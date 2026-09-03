@@ -13,6 +13,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 
 // Color mappings for KPI cards
 const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
@@ -167,12 +168,14 @@ const BusinessOverview: React.FC = () => {
         ? ((currentMemberCount - previousMemberCount) / previousMemberCount) * 100
         : 0;
 
+      // `total` is already the gross (net + VAT) amount - do not add
+      // vat_total on top of it, that double-counts the tax component.
       const currentRevenue = (currentInvoices.data || []).reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0) + Number(inv.vat_total || 0),
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
       const previousRevenue = (previousInvoices.data || []).reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0) + Number(inv.vat_total || 0),
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
       const revenueChange = currentRevenue - previousRevenue;

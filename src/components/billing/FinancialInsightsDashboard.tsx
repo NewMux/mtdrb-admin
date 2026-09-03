@@ -42,6 +42,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import type { Branch, Expense, Invoice, Member, PaymentMethodType, InvoiceStatus } from "../../types";
+import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 
 interface FinancialInsightsDashboardProps {
   refreshKey: number;
@@ -170,18 +171,15 @@ const getInvoiceDate = (invoice: Pick<Invoice, "issue_date" | "created_at">) =>
   invoice.issue_date || invoice.created_at || "";
 
 /**
- * Resolve invoice amount for rollups.
+ * Resolve invoice amount for rollups. Prefers `total` (gross) over
+ * `amount` (net) without falsy-chaining - a legitimately-zero total must
+ * not fall through to a different field. Deliberately does not fall back
+ * to `paid_amount`: that's what has actually been collected, which is a
+ * different figure from what the invoice charges (revenue).
  */
 const getInvoiceAmount = (
-  invoice: Pick<Invoice, "total" | "amount" | "paid_amount">,
-) => {
-  return (
-    Number(invoice.total) ||
-    Number(invoice.amount) ||
-    Number(invoice.paid_amount) ||
-    0
-  );
-};
+  invoice: Pick<Invoice, "total" | "amount">,
+) => resolveInvoiceGrossAmount(invoice);
 
 /**
  * Resolve expense date for grouping.

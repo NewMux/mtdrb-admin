@@ -28,7 +28,15 @@ import { SmartModal } from "../ui/SmartModal";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
+import { computeLineTotals, computeInvoiceTotals, getCurrencyDecimals } from "../../utils/invoiceMath";
+
+const VALID_VAT_RATES: VatRate[] = [0, 5, 10, 15];
+const FALLBACK_VAT_RATE: VatRate = VALID_VAT_RATES.includes(
+  DEFAULT_VAT_RATE as VatRate,
+)
+  ? (DEFAULT_VAT_RATE as VatRate)
+  : 0;
 
 // Smart suggestions for line items
 const SMART_SUGGESTIONS: Record<
@@ -152,6 +160,31 @@ export function NewInvoiceModal({
     overdueInvoices: 0,
   });
 
+  // The tenant's configured VAT rate (gym_settings.vat_rate), used as the
+  // default for new line items instead of a hardcoded rate. Falls back to
+  // the app-wide DEFAULT_VAT_RATE until the fetch resolves.
+  const [defaultVatRate, setDefaultVatRate] = useState<VatRate>(FALLBACK_VAT_RATE);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    supabase
+      .from("gym_settings")
+      .select("vat_rate")
+      .eq("tenant_id", tenantId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const rate = Number(data?.vat_rate);
+        if (VALID_VAT_RATES.includes(rate as VatRate)) {
+          setDefaultVatRate(rate as VatRate);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId]);
+
   // Line Items State
   const [items, setItems] = useState<LineItem[]>(() => {
     const initialItem = {
@@ -159,7 +192,7 @@ export function NewInvoiceModal({
       description: "",
       quantity: 1,
       unit_price: 0,
-      vat_rate: 5 as VatRate,
+      vat_rate: FALLBACK_VAT_RATE,
       discount_percentage: 0,
       total: 0,
     };
@@ -172,33 +205,42 @@ export function NewInvoiceModal({
   const [activeSection, setActiveSection] =
     useState<InvoiceSection>("details");
 
-  // Calculate totals with smart logic
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.unit_price * item.quantity,
-    0,
-  );
-  const vat_total = items.reduce(
-    (sum, item) =>
-      sum + item.unit_price * item.quantity * (item.vat_rate / 100),
-    0,
-  );
+  // Calculate totals: discount is applied to each line's net (qty x price)
+  // before VAT is computed on the discounted net, so the header total
+  // always agrees with the sum of the line items it's built from. See
+  // src/utils/invoiceMath.ts for the shared contract every invoice writer
+  // and reader uses.
+  const currencyDecimals = getCurrencyDecimals(invoiceData.currency);
+  const invoiceLineInputs = items.map((item) => ({
+    quantity: item.quantity,
+    unitPrice: item.unit_price,
+    discountPercent: item.discount_percentage,
+    vatRatePercent: item.vat_rate,
+  }));
+  const { net: subtotal, vat: vat_total, gross: total } =
+    computeInvoiceTotals(invoiceLineInputs, invoiceData.currency);
   const discount_total = items.reduce(
     (sum, item) =>
       sum + item.unit_price * item.quantity * (item.discount_percentage / 100),
     0,
   );
-  const total = subtotal + vat_total - discount_total;
   const remaining_balance = total - invoiceData.paid_amount;
 
-  // Auto-calculate line item totals
-  const calculateItemTotal = useCallback((item: LineItem) => {
-    return (
-      item.quantity *
-      item.unit_price *
-      (1 + item.vat_rate / 100) *
-      (1 - item.discount_percentage / 100)
-    );
-  }, []);
+  // Auto-calculate a single line item's total (net + vat, after discount),
+  // consistent with the header totals above.
+  const calculateItemTotal = useCallback(
+    (item: LineItem) =>
+      computeLineTotals(
+        {
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          discountPercent: item.discount_percentage,
+          vatRatePercent: item.vat_rate,
+        },
+        invoiceData.currency,
+      ).gross,
+    [invoiceData.currency],
+  );
 
   useEffect(() => {
     if (editingInvoice) {
@@ -239,14 +281,14 @@ export function NewInvoiceModal({
         description: "",
         quantity: 1,
         unit_price: 0,
-        vat_rate: 5 as VatRate,
+        vat_rate: defaultVatRate,
         discount_percentage: 0,
         total: 0,
       };
       resetItem.total = calculateItemTotal(resetItem);
       setItems([resetItem]);
     }
-  }, [editingInvoice, calculateItemTotal]);
+  }, [editingInvoice, calculateItemTotal, defaultVatRate]);
 
   const loadClientHistory = useCallback(async (clientId: string) => {
     try {
@@ -331,7 +373,7 @@ export function NewInvoiceModal({
       description: "",
       quantity: 1,
       unit_price: 0,
-      vat_rate: 5 as VatRate,
+      vat_rate: defaultVatRate,
       discount_percentage: 0,
       total: 0,
     };
@@ -379,6 +421,7 @@ export function NewInvoiceModal({
         payment_method: invoiceData.payment_method,
         paid_amount: invoiceData.paid_amount,
         currency: invoiceData.currency,
+        amount: subtotal,
         vat_total,
         total,
         line_items: items,
@@ -883,7 +926,7 @@ export function NewInvoiceModal({
                             {t("billing.total", "الإجمالي")}
                           </label>
                           <div className="px-4 py-2.5 bg-green-50 dark:bg-green-900/20 rounded-xl text-gray-900 dark:text-white font-medium border border-green-200 dark:border-green-800">
-                            {item.total.toFixed(3)} {DEFAULT_CURRENCY}
+                            {item.total.toFixed(currencyDecimals)} {invoiceData.currency}
                           </div>
                         </div>
                         {items.length > 1 && (
@@ -921,19 +964,19 @@ export function NewInvoiceModal({
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.subtotal", "المجموع الفرعي:")}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {subtotal.toFixed(3)} {DEFAULT_CURRENCY}
+                      {subtotal.toFixed(currencyDecimals)} {invoiceData.currency}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.vatTotal", "إجمالي الضريبة:")}</span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {vat_total.toFixed(3)} {DEFAULT_CURRENCY}
+                      {vat_total.toFixed(currencyDecimals)} {invoiceData.currency}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.discountTotal", "الخصم:")}</span>
                     <span className="font-medium text-red-600 dark:text-red-400">
-                      -{discount_total.toFixed(3)} {DEFAULT_CURRENCY}
+                      -{discount_total.toFixed(currencyDecimals)} {invoiceData.currency}
                     </span>
                   </div>
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
@@ -942,7 +985,7 @@ export function NewInvoiceModal({
                         {t("billing.grandTotal", "المجموع الكلي:")}
                       </span>
                       <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                        {total.toFixed(3)} {DEFAULT_CURRENCY}
+                        {total.toFixed(currencyDecimals)} {invoiceData.currency}
                       </span>
                     </div>
                   </div>
