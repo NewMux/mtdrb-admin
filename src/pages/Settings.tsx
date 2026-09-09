@@ -155,48 +155,20 @@ const Settings: React.FC = () => {
           upsert: true,
         });
 
-      if (uploadError) {
-        // If bucket doesn't exist, try creating it or use a different bucket
-        console.error("Upload error:", uploadError);
-        
-        // Try alternative bucket name
-        const { error: altUploadError } = await supabase.storage
-          .from("attachments")
-          .upload(`profile-pictures/${tenantId}/${fileName}`, file, {
-            cacheControl: "3600",
-            upsert: true,
-          });
+      if (uploadError) throw uploadError;
 
-        if (altUploadError) {
-          throw altUploadError;
-        }
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("profile-pictures")
+        .getPublicUrl(filePath);
 
-        // Get public URL from alternative bucket
-        const { data: urlData } = supabase.storage
-          .from("attachments")
-          .getPublicUrl(`profile-pictures/${tenantId}/${fileName}`);
+      // Update settings with profile picture URL
+      handleInputChange("profile", "profilePicture", urlData.publicUrl);
 
-        // Update settings with profile picture URL
-        handleInputChange("profile", "profilePicture", urlData.publicUrl);
-        
-        // Save settings immediately
-        await handleSaveSection("profile");
-        
-        showSuccess(t("settings.profilePictureUpdated"), "");
-      } else {
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("profile-pictures")
-          .getPublicUrl(filePath);
+      // Save settings immediately
+      await handleSaveSection("profile");
 
-        // Update settings with profile picture URL
-        handleInputChange("profile", "profilePicture", urlData.publicUrl);
-        
-        // Save settings immediately
-        await handleSaveSection("profile");
-        
-        showSuccess(t("settings.profilePictureUpdated"), "");
-      }
+      showSuccess(t("settings.profilePictureUpdated"), "");
 
       // Reset file input
       if (fileInputRef.current) {

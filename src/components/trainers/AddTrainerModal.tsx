@@ -15,6 +15,7 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { supabase } from "../../supabaseClient";
+import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -133,6 +134,7 @@ const statusOptions = [
 ];
 
 export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
+  const { tenantId } = useAuth();
   const [formData, setFormData] = useState<TrainerFormData>(initialFormData);
   const [fileUploads, setFileUploads] = useState<FileUpload[]>([]);
   const [loading, setLoading] = useState(false);
@@ -219,9 +221,16 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
   };
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
+    if (!tenantId) throw new Error("No tenant found. Please try again.");
+    // Bucket policy requires the tenant id as the object path's 2nd
+    // segment (see storage_tenant_id() / the trainer-documents storage
+    // migration). The filename is sanitized rather than used as-is: an
+    // uploaded file's name is attacker-controlled and was previously
+    // interpolated directly into the storage path.
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120);
     const { data, error } = await supabase.storage
       .from("trainer-documents")
-      .upload(`${path}/${Date.now()}-${file.name}`, file);
+      .upload(`documents/${tenantId}/${path}/${Date.now()}-${safeFileName}`, file);
 
     if (error) throw error;
     return data.path;
