@@ -123,7 +123,9 @@ export default function ScheduleReportModal({
   const { loading, scheduleReport, alerts, clearAlerts } =
     useSmartAnalyticsModal();
 
-  const isProUser = isPro ?? true;
+  // Default to the safe (non-Pro) state when the caller doesn't pass a
+  // value, rather than unlocking Pro-only features by default.
+  const isProUser = isPro ?? false;
 
   const [selectedTemplate, setSelectedTemplate] = React.useState("");
   const [frequency, setFrequency] = React.useState<

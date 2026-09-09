@@ -69,7 +69,9 @@ export default function PrintReportModal({
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
   const { tenantId } = useAuth();
 
-  const isProUser = isPro ?? true;
+  // Default to the safe (non-Pro) state when the caller doesn't pass a
+  // value, rather than unlocking Pro-only features by default.
+  const isProUser = isPro ?? false;
 
   const [selectedLayout, setSelectedLayout] = React.useState("summary");
   const [selectedOrientation, setSelectedOrientation] =

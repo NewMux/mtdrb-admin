@@ -141,7 +141,9 @@ export default function ExportReportModal({
   const { tenantId } = useAuth();
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
-  const isProUser = isPro ?? true;
+  // Default to the safe (non-Pro) state when the caller doesn't pass a
+  // value, rather than unlocking Pro-only features by default.
+  const isProUser = isPro ?? false;
 
   const [selectedReport, setSelectedReport] = React.useState<string>("");
   const [exportFormat, setExportFormat] = React.useState("csv");

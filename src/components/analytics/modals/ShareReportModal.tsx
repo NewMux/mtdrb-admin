@@ -58,7 +58,9 @@ export default function ShareReportModal({
 }: ShareReportModalProps) {
   const { loading, alerts, clearAlerts } = useSmartAnalyticsModal();
 
-  const isProUser = isPro ?? true;
+  // Default to the safe (non-Pro) state when the caller doesn't pass a
+  // value, rather than unlocking Pro-only features by default.
+  const isProUser = isPro ?? false;
 
   // There's no public shared-report route or recipient-notification backend
   // built yet, so this links to the real Analytics page (requires login)
