@@ -7,6 +7,8 @@ import {
   FiTarget,
   FiCpu,
   FiArrowUpRight,
+  FiArrowDownRight,
+  FiMinus,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { supabase } from "../../supabaseClient";
@@ -15,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
 import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -34,11 +37,19 @@ const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
   change,
+  trend,
   icon,
   color,
   subtitle,
 }) => {
   const { isRTL } = useRTL();
+  const trendColor =
+    trend === "up"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : trend === "down"
+        ? "text-red-600 dark:text-red-400"
+        : "text-gray-500 dark:text-gray-400";
+  const TrendIcon = trend === "up" ? FiArrowUpRight : trend === "down" ? FiArrowDownRight : FiMinus;
   const getColorClasses = (color: string) => {
     switch (color) {
       case "blue":
@@ -64,8 +75,8 @@ const KPICard: React.FC<KPICardProps> = ({
         <div className={`p-3 rounded-xl border ${getColorClasses(color)} flex-shrink-0`}>
           {icon}
         </div>
-        <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-          <FiArrowUpRight className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
+        <div className={`flex items-center gap-1 text-sm font-medium ${trendColor}`}>
+          <TrendIcon className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
           <span>{change}</span>
         </div>
       </div>
@@ -202,27 +213,11 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       // Fetch data
       const [
-        currentMembers,
-        previousMembers,
         currentInvoices,
         previousInvoices,
         weekBookings,
         allMembers,
       ] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"]),
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
         supabase
           .from("invoices")
           .select("amount, total, status")
@@ -236,32 +231,42 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .eq("status", "paid")
           .gte("created_at", formatDate(previousMonthStart))
           .lte("created_at", formatDate(previousMonthEnd)),
+        // Filtered on the class's own start_time (via the inner join),
+        // not the booking's created_at - a booking made weeks ago for a
+        // class held this week is this week's attendance; a booking made
+        // today for a class next month is not.
         supabase
           .from("class_bookings")
-          .select("id, status, created_at")
+          .select("id, status, created_at, classes!inner(start_time)")
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(weekStart)),
+          .gte("classes.start_time", formatDate(weekStart)),
         supabase
           .from("members")
-          .select("id, created_at, join_date, status, membership_status")
+          .select("id, created_at, join_date, expiry_date, status, membership_status")
           .eq("tenant_id", tenantId),
       ]);
 
       const queryError =
-        currentMembers.error ||
-        previousMembers.error ||
         currentInvoices.error ||
         previousInvoices.error ||
         weekBookings.error ||
         allMembers.error;
       if (queryError) throw queryError;
 
-      // Calculate metrics
-      const currentMemberCount = (currentMembers.data || []).length;
-      const previousMemberCount = (previousMembers.data || []).length;
+      // Compare "active members today" against "members who would have
+      // counted as active as of the end of last month" (approximated from
+      // join_date/expiry_date), not against "members who signed up last
+      // month" - the latter is a different, much smaller population and
+      // produces meaningless swings when compared to the full active count.
+      const currentMembersData = (allMembers.data || []).filter(isMemberCurrentlyActive);
+      const currentMemberCount = currentMembersData.length;
+      const previousMemberCount = countMembersActiveAsOf(
+        allMembers.data || [],
+        previousMonthEnd,
+      );
       const memberChange = previousMemberCount > 0
         ? ((currentMemberCount - previousMemberCount) / previousMemberCount) * 100
-        : 0;
+        : null;
 
       const currentRevenue = (currentInvoices.data || []).reduce(
         (sum, inv) => sum + Number(inv.total || inv.amount || 0),
@@ -318,7 +323,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       if (recentBookingsError) throw recentBookingsError;
 
       const activeMemberIds = new Set((recentBookings || []).map(b => b.member_id));
-      const inactiveMembers = (currentMembers.data || []).filter(
+      const inactiveMembers = currentMembersData.filter(
         m => !activeMemberIds.has(m.id)
       ).length;
 
@@ -326,8 +331,13 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
         {
           title: t("dashboard.activeMembers"),
           value: currentMemberCount,
-          change: memberChange >= 0 ? `+${memberChange.toFixed(1)}%` : `${memberChange.toFixed(1)}%`,
-          trend: memberChange >= 0 ? "up" : "down",
+          change:
+            memberChange === null
+              ? t("dashboard.notEnoughData", "Not enough data")
+              : memberChange >= 0
+                ? `+${memberChange.toFixed(1)}%`
+                : `${memberChange.toFixed(1)}%`,
+          trend: memberChange === null ? "neutral" : memberChange >= 0 ? "up" : "down",
           icon: <FiUsers className="h-6 w-6 text-blue-600" />,
           color: "blue",
           subtitle: t("dashboard.vsLastMonth"),
@@ -342,22 +352,29 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
         },
         {
+          // This week's raw attendance rate, not a trend - there's no
+          // prior-week figure computed here to compare against, so the
+          // arrow used to always claim "up" regardless of the value.
           title: t("dashboard.classAttendance"),
           value: `${weekAttendanceRate.toFixed(1)}%`,
           change: t("dashboard.thisWeek"),
-          trend: "up",
+          trend: "neutral",
           icon: <FiCalendar className="h-6 w-6 text-purple-600" />,
           color: "purple",
           subtitle: t("dashboard.averageThisWeek"),
         },
         {
+          // Retention among members who joined 90+ days ago - not a
+          // 12-month average (there's no data spanning that far back
+          // here), and "trend" was really just an arbitrary >=85%
+          // threshold, not a real prior-period comparison.
           title: t("dashboard.memberRetention"),
           value: `${retentionRate.toFixed(1)}%`,
           change: t("dashboard.ninetyPlusDays"),
-          trend: retentionRate >= 85 ? "up" : "down",
+          trend: "neutral",
           icon: <FiTarget className="h-6 w-6 text-orange-600" />,
           color: "orange",
-          subtitle: t("dashboard.twelveMonthAverage"),
+          subtitle: t("dashboard.ninetyDayCohort", "90-day cohort"),
         },
       ]);
 

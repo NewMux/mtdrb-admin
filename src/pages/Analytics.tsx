@@ -995,13 +995,11 @@ export default function Analytics() {
   // modal-close completion hook.
   const handleExportReport = async () => {};
 
-  const handleScheduleReport = async () => {
-    try {
-      showToast("success", "Report scheduled successfully!");
-    } catch (error) {
-      showToast("error", "Failed to schedule report");
-    }
-  };
+  // ScheduleReportModal already surfaces its own honest result (including
+  // the "automatic delivery isn't set up yet" caveat) as an in-modal
+  // alert - a toast here claiming success would just restate it minus the
+  // caveat, or contradict it outright on failure.
+  const handleScheduleReport = async () => {};
 
   const handleShareReport = async () => {};
 

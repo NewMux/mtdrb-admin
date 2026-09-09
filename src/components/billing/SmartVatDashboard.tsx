@@ -374,7 +374,11 @@ export default function SmartVatDashboard({
           vat_collected: dashboardData.currentPeriodVat,
           vat_paid: dashboardData.currentPeriodVatPaid,
           net_vat_payable: dashboardData.currentPeriodNetVat,
-          filing_deadline: filingDeadline.toISOString().split("T")[0],
+          // Written as due_date, not filing_deadline: FinancialInsightsDashboard
+          // reads due_date to find "next filing deadline" (both columns
+          // exist on vat_returns, but only one was ever populated, so
+          // that card was always blank).
+          due_date: filingDeadline.toISOString().split("T")[0],
         },
       ]);
 
@@ -420,7 +424,7 @@ export default function SmartVatDashboard({
         "VAT Collected": vr.vat_collected,
         "VAT Paid": vr.vat_paid,
         "Net VAT Payable": vr.net_vat_payable,
-        "Filing Deadline": vr.filing_deadline,
+        "Filing Deadline": vr.due_date,
         "Filed Date": vr.filed_date,
       }));
       const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;

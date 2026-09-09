@@ -157,7 +157,11 @@ export default function ScheduleReportModal({
 
       if (result.success) {
         onSuccess?.();
-        onClose();
+        // Deliberately do not close here: scheduleReport() just set an
+        // in-modal info alert explaining that automatic delivery isn't
+        // actually wired up yet, and closing immediately would discard
+        // that alert before the user ever saw it. Let them close the
+        // modal themselves once they've read it.
       }
     } finally {
       setScheduling(false);

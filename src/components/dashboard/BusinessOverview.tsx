@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
+import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 
 // Color mappings for KPI cards
 const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
@@ -109,21 +110,7 @@ const BusinessOverview: React.FC = () => {
       const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
       // Fetch active members
-      const [currentMembers, previousMembers, newMembers, allMembers] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id, status, membership_status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"]),
-        supabase
-          .from("members")
-          .select("id, status, membership_status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
+      const [newMembers, allMembers] = await Promise.all([
         supabase
           .from("members")
           .select("id, created_at")
@@ -131,7 +118,7 @@ const BusinessOverview: React.FC = () => {
           .gte("created_at", formatDate(thirtyDaysAgo)),
         supabase
           .from("members")
-          .select("id, created_at, status, membership_status")
+          .select("id, created_at, join_date, expiry_date, status, membership_status")
           .eq("tenant_id", tenantId),
       ]);
 
@@ -153,20 +140,28 @@ const BusinessOverview: React.FC = () => {
       ]);
 
       const membersOrInvoicesError =
-        currentMembers.error ||
-        previousMembers.error ||
         newMembers.error ||
         allMembers.error;
       if (membersOrInvoicesError || currentInvoices.error || previousInvoices.error) {
         throw membersOrInvoicesError || currentInvoices.error || previousInvoices.error;
       }
 
-      const currentMemberCount = (currentMembers.data || []).length;
-      const previousMemberCount = (previousMembers.data || []).length;
+      // Compare "active members today" against "members who would have
+      // counted as active as of the end of last month" (approximated from
+      // join_date/expiry_date - see wasMemberActiveAsOf), not against
+      // "members who signed up last month". The latter is a different,
+      // much smaller population and produces meaningless swings like
+      // "+4900% vs last month" when compared to the full active count.
+      const activeMembers = (allMembers.data || []).filter(isMemberCurrentlyActive);
+      const currentMemberCount = activeMembers.length;
+      const previousMemberCount = countMembersActiveAsOf(
+        allMembers.data || [],
+        previousMonthEnd,
+      );
       const memberChange = currentMemberCount - previousMemberCount;
       const memberChangePercent = previousMemberCount > 0
         ? ((currentMemberCount - previousMemberCount) / previousMemberCount) * 100
-        : 0;
+        : null;
 
       // `total` is already the gross (net + VAT) amount - do not add
       // vat_total on top of it, that double-counts the tax component.
@@ -223,10 +218,17 @@ const BusinessOverview: React.FC = () => {
           value: currentMemberCount,
           icon: <FiUsers className="h-6 w-6" />,
           color: "blue",
-          trend: memberChange >= 0 ? "up" : "down",
-          trendValue: memberChange >= 0 ? `+${memberChange}` : `${memberChange}`,
           tooltip: t("dashboard.numberActiveMemberships"),
-          context: memberChangePercent >= 0 ? `+${memberChangePercent.toFixed(1)}% ${t("dashboard.vsLastMonth")}` : `${memberChangePercent.toFixed(1)}% ${t("dashboard.vsLastMonth")}`,
+          // No previous-period baseline (or it's zero) means there's
+          // nothing meaningful to compare against - show no trend badge
+          // rather than a wrong one.
+          ...(memberChangePercent === null
+            ? {}
+            : {
+                trend: (memberChange >= 0 ? "up" : "down") as "up" | "down",
+                trendValue: memberChange >= 0 ? `+${memberChange}` : `${memberChange}`,
+                context: `${memberChangePercent >= 0 ? "+" : ""}${memberChangePercent.toFixed(1)}% ${t("dashboard.vsLastMonth")}`,
+              }),
         },
         {
           label: t("dashboard.monthlyRevenueVat"),
@@ -251,14 +253,18 @@ const BusinessOverview: React.FC = () => {
             : t("dashboard.new"),
         },
         {
+          // Cumulative churn among members who joined before last month,
+          // not "churn that happened this month" - the schema has no
+          // cancellation date to bound it by when a member churned, only
+          // their current status. No trend badge: there's no prior-period
+          // churn figure to compare against, so a hardcoded arrow would
+          // just be a guess.
           label: t("dashboard.churnRate"),
           value: `${churnRate.toFixed(1)}%`,
           icon: <FiArrowDownRight className="h-6 w-6" />,
           color: "red",
-          trend: "down",
-          trendValue: `${churnRate.toFixed(1)}%`,
-          tooltip: t("dashboard.monthlyChurnRate"),
-          context: t("dashboard.thisMonth"),
+          tooltip: t("dashboard.overallChurnRateTooltip", "Share of longer-tenured members who are now inactive or expired"),
+          context: t("dashboard.allTime"),
         },
       ]);
     } catch (error) {

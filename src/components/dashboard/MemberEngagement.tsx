@@ -9,6 +9,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 
 // Color mappings for KPI cards
 const kpiColorMap = {
@@ -28,8 +29,8 @@ const MemberEngagement: React.FC = () => {
     value: string;
     icon: React.ReactNode;
     color: "blue" | "green";
-    change: number;
-    trend: "up" | "down";
+    change: number | null;
+    trend: "up" | "down" | "neutral";
   }
 
   const { tenantId } = useAuth();
@@ -68,20 +69,11 @@ const MemberEngagement: React.FC = () => {
       const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
       // Fetch active members
-      const [currentMembers, previousMembers, newSignups, previousNewSignups] = await Promise.all([
+      const [allMembers, newSignups, previousNewSignups] = await Promise.all([
         supabase
           .from("members")
-          .select("id, status, membership_status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"]),
-        supabase
-          .from("members")
-          .select("id, status, membership_status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(lastWeek)),
+          .select("id, created_at, join_date, expiry_date, status, membership_status")
+          .eq("tenant_id", tenantId),
         supabase
           .from("members")
           .select("id, created_at")
@@ -96,15 +88,18 @@ const MemberEngagement: React.FC = () => {
       ]);
 
       const firstError =
-        currentMembers.error ||
-        previousMembers.error ||
+        allMembers.error ||
         newSignups.error ||
         previousNewSignups.error;
       if (firstError) throw firstError;
 
-      const currentCount = (currentMembers.data || []).length;
-      const previousCount = (previousMembers.data || []).length;
-      const memberChange = currentCount - previousCount;
+      // Compare "active members today" against "members who would have
+      // counted as active a week ago" (approximated from join_date/
+      // expiry_date), not against "members who signed up in the last
+      // week" - the latter is a different, much smaller population.
+      const currentCount = (allMembers.data || []).filter(isMemberCurrentlyActive).length;
+      const previousCount = countMembersActiveAsOf(allMembers.data || [], lastWeek);
+      const memberChange = previousCount > 0 ? currentCount - previousCount : null;
 
       const newSignupsCount = (newSignups.data || []).length;
       const previousNewSignupsCount = (previousNewSignups.data || []).length;
@@ -117,7 +112,7 @@ const MemberEngagement: React.FC = () => {
           icon: <FiUsers className="h-5 w-5" />,
           color: "blue",
           change: memberChange,
-          trend: memberChange >= 0 ? "up" : "down",
+          trend: memberChange === null ? "neutral" : memberChange >= 0 ? "up" : "down",
         },
         {
           title: t("dashboard.newSignups"),
@@ -176,9 +171,27 @@ const MemberEngagement: React.FC = () => {
                 {metric.icon}
               </div>
               <div className="flex items-center gap-1 text-sm">
-                <FiArrowUpRight className={`h-4 w-4 text-green-600 dark:text-green-400 ${isRTL ? 'rtl-flip' : ''}`} />
-                <span className="text-green-600 dark:text-green-400 font-medium">
-                  {metric.change > 0 ? "+" : ""}{metric.change}
+                {metric.trend !== "neutral" && (
+                  <FiArrowUpRight
+                    className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''} ${
+                      metric.trend === "up"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400 rotate-90"
+                    }`}
+                  />
+                )}
+                <span
+                  className={`font-medium ${
+                    metric.trend === "up"
+                      ? "text-green-600 dark:text-green-400"
+                      : metric.trend === "down"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {metric.change === null
+                    ? t("dashboard.notEnoughData", "Not enough data")
+                    : `${metric.change > 0 ? "+" : ""}${metric.change}`}
                 </span>
               </div>
             </div>
@@ -186,7 +199,7 @@ const MemberEngagement: React.FC = () => {
             <div className="text-sm text-gray-600 dark:text-gray-400">{metric.title}</div>
             <div className="flex items-center gap-2 mt-2">
               <div className={`w-2 h-2 rounded-full ${
-                metric.trend === "up" ? "bg-green-500" : "bg-red-500"
+                metric.trend === "up" ? "bg-green-500" : metric.trend === "down" ? "bg-red-500" : "bg-gray-400"
               }`}></div>
               <span className="text-xs text-gray-500 dark:text-gray-500 capitalize">{metric.trend}</span>
             </div>

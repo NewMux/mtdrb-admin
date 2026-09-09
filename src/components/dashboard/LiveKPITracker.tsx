@@ -86,7 +86,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
       // Count unique members who checked in today and haven't checked out
       const membersInGym = new Set(
         (todayCheckIns || [])
-          .filter(booking => !booking.check_out_time || booking.status === "checked_in")
+          .filter(booking => booking.status === "checked_in" && !booking.check_out_time)
           .map(booking => booking.member_id)
       ).size;
 
@@ -102,7 +102,7 @@ export const LiveKPITracker: React.FC<LiveKPITrackerProps> = ({ refreshKey }) =>
 
       const yesterdayMembersInGym = new Set(
         (yesterdayCheckIns || [])
-          .filter(booking => !booking.check_out_time || booking.status === "checked_in")
+          .filter(booking => booking.status === "checked_in" && !booking.check_out_time)
           .map(booking => booking.member_id)
       ).size;
 
