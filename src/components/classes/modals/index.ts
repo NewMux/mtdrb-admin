@@ -11,7 +11,6 @@ export { default as ExportClassDataModal } from "./ExportClassDataModal";
 export { default as UpdateClassSettingsModal } from "./UpdateClassSettingsModal";
 
 // Base Components
-export { default as SmartModal } from "./SmartModal";
 export {
   FormField,
   SelectField,
