@@ -257,12 +257,12 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
-                    {isArabic ? "1. الفترة التجريبية المجانية" : "1. 14-Day Free Trial"}
+                    {isArabic ? "1. فوترة الاشتراك" : "1. Subscription Billing"}
                   </h2>
                   <p>
                     {isArabic
-                      ? "نحن نوفر فترة تجريبية مجانية لمدة 14 يومًا بدون الحاجة لإدخال تفاصيل بطاقة الائتمان. يمكنك تجربة كافة ميزات باقة Pro بشكل كامل وإلغاء الاشتراك في أي وقت خلال هذه الفترة دون أي التزامات مالية."
-                      : "We provide a 14-day free trial period for all new gym workspaces. No credit card details are required during this trial. You may explore all premium features and cancel anytime before the 14 days expire without incurring any charges."}
+                      ? "يبدأ الاشتراك المدفوع فور إتمام عملية الدفع. يتم تحصيل كامل قيمة الباقة التي اخترتها عند الاشتراك، ويبدأ الوصول إلى مساحة العمل وميزاتها على الفور."
+                      : "A paid subscription begins immediately when you complete checkout. Full payment for your selected plan is charged at signup, and access to your workspace and its features starts right away."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -288,8 +288,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "نظرًا لتوافر فترة تجريبية مجانية كاملة وإبقاء الوصول نشطًا حتى نهاية الدورة بعد الإلغاء، فإن جميع المبالغ المدفوعة للاشتراكات غير قابلة للاسترجاع. لا يتم رد مبالغ جزئية مقابل الأيام غير المستخدمة في منتصف الشهر."
-                      : "Because we offer a fully functional 14-day free trial and keep your account active through the end of the paid cycle upon cancellation, all subscription payments are non-refundable. No partial refunds are issued for mid-month cancellations."}
+                      ? "نظرًا لأن الوصول إلى حسابك يبقى نشطًا حتى نهاية دورة الفوترة المدفوعة بعد الإلغاء، فإن جميع المبالغ المدفوعة للاشتراكات غير قابلة للاسترجاع. لا يتم رد مبالغ جزئية مقابل الإلغاء في منتصف الدورة."
+                      : "Because your workspace access remains active through the end of the paid billing cycle upon cancellation, all subscription payments are non-refundable. No partial refunds are issued for mid-cycle cancellations."}
                   </p>
                 </div>
               </article>

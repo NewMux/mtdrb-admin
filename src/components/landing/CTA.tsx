@@ -53,7 +53,7 @@ const CTA: React.FC = () => {
                 whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                 transition={{ duration: 0.2 }}
                 className="inline-flex items-center justify-center px-8 sm:px-12 py-4 sm:py-6 bg-white text-mtdrb-600 rounded-full text-lg sm:text-xl font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 group focus:outline-none focus:ring-4 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-mtdrb-600 min-h-[56px] cursor-pointer"
-                aria-label="Start your free trial of MTDRB"
+                aria-label="Get started with MTDRB"
               >
                 <span>{cta.primary.text}</span>
                 <FiArrowRight

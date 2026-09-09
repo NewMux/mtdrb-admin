@@ -256,11 +256,11 @@ const PremiumLanding: React.FC = () => {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-normal text-apple-gray-400">
                 <span className="inline-flex items-center gap-1.5">
                   <FiCheckCircle className="h-3.5 w-3.5" />
-                  {t("landing.hero_free_trial")}
+                  {t("landing.hero_cancel_anytime")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <FiShield className="h-3.5 w-3.5" />
-                  {t("landing.hero_no_card")}
+                  {t("landing.hero_secure_checkout")}
                 </span>
               </div>
             </motion.div>

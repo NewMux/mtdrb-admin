@@ -3,9 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../supabaseClient";
 import { motion } from "framer-motion";
-import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers, FiStar } from "react-icons/fi";
-import type { User } from "@supabase/supabase-js";
-import { useAuth } from "../contexts/AuthContext";
+import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers } from "react-icons/fi";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
@@ -54,12 +52,10 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export default function Subscribe() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("starter");
   const [error, setError] = useState("");
-  const { tenantId: authTenantId } = useAuth();
   const {
     isLoading: subscriptionLoading,
     subscription,
@@ -88,7 +84,6 @@ export default function Subscribe() {
         }
 
         if (cancelled) return;
-        setUser(data.user);
         if (hasActiveSubscription) {
           navigate(getRedirectPath(location.state));
         }
@@ -147,10 +142,11 @@ export default function Subscribe() {
     });
   };
 
-  // An existing (trialing/past_due/cancelled/expired) subscription needs a
-  // real charge, not another free trial -- hand off to CrediMax instead of
-  // writing to platform_subscriptions directly (the self-service trigger
-  // would reject a client-set "active" status or nonzero amount anyway).
+  // Every subscription -- first one or a renewal -- goes through a real
+  // charge. There is no free-trial path: platform_subscriptions rows are
+  // only ever written by the service-role checkout/webhook flow now (see
+  // migration revoke_self_service_trial_creation.sql), so this is the only
+  // way for a client to end up with an entitled subscription.
   const handleRealCheckout = async (planId: string) => {
     const { data, error: invokeError } = await supabase.functions.invoke("credimax-checkout", {
       body: { planId },
@@ -173,72 +169,7 @@ export default function Subscribe() {
         throw new Error("Invalid subscription plan");
       }
 
-      if (subscription) {
-        await handleRealCheckout(planId);
-        return;
-      }
-
-      const currentUser = user ?? (await withTimeout(
-        supabase.auth.getUser(),
-        8000,
-        t("subscribe.authTimeout"),
-      )).data.user;
-      if (!currentUser) throw new Error(t("onboarding.userNotFound"));
-
-      // Prefer AuthProvider's membership-derived tenant, but resolve it
-      // directly when the provider has not finished hydrating yet.
-      let tenantId = authTenantId;
-      if (!tenantId) {
-        const { data: membership, error: membershipError } = await withTimeout(
-          Promise.resolve(
-            supabase
-              .from("memberships")
-              .select("tenant_id")
-              .eq("user_id", currentUser.id)
-              .order("created_at", { ascending: true })
-              .limit(1)
-              .maybeSingle(),
-          ),
-          8000,
-          "Organization setup is taking longer than expected. Please try again.",
-        );
-        if (membershipError) throw membershipError;
-        tenantId = membership?.tenant_id ?? null;
-      }
-      if (!tenantId) throw new Error("No organization membership found. Please restart signup.");
-
-      const now = new Date();
-      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      const { error: subTableError } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from("platform_subscriptions")
-            .upsert({
-              tenant_id: tenantId,
-              status: "trialing",
-              plan_tier: planId,
-              amount: 0,
-              currency: plan.currency,
-              trial_end: trialEnd,
-              current_period_end: trialEnd,
-              metadata: {
-                method: "self_serve_trial",
-                trial_days: 14,
-                intended_plan_price: plan.price,
-                started_at: now.toISOString(),
-              },
-              updated_at: now.toISOString(),
-            }, { onConflict: "tenant_id" }),
-        ),
-        15000,
-        "Subscription activation is taking longer than expected. Please try again.",
-      );
-
-      if (subTableError) throw subTableError;
-
-      // The tenant and subscription are ready. Enter the dashboard now; the
-      // remaining gym details can be completed later from Settings.
-      navigate("/dashboard", { replace: true });
+      await handleRealCheckout(planId);
     } catch (subscribeError) {
       setError(
         getErrorMessage(
@@ -414,11 +345,7 @@ export default function Subscribe() {
               </div>
               <div className="flex items-center">
                 <FiCreditCard className="h-4 w-4 mr-2" />
-                <span>{t("subscribe.noCreditCard")}</span>
-              </div>
-              <div className="flex items-center">
-                <FiStar className="h-4 w-4 mr-2" />
-                <span>{t("subscribe.trial14")}</span>
+                <span>{t("subscribe.secureCheckout")}</span>
               </div>
             </div>
 

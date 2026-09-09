@@ -243,7 +243,7 @@ export const LANDING_CONTENT = {
     headline: "Ready to transform your gym?",
     subtitle: "Join hundreds of gyms already using Idara",
     primary: {
-      text: "Start Free Trial",
+      text: "Get Started",
       href: "/signup",
     },
     secondary: {
