@@ -110,56 +110,78 @@ export default function Subscribe() {
 
   const plans = SUBSCRIPTION_PLANS;
 
-  // Loads MPGS's hosted checkout.js (once) and hands the browser off to
-  // CrediMax's payment page for the given session.
-  const redirectToCredimaxCheckout = (gatewayHost: string, sessionId: string) => {
-    return new Promise<void>((resolve, reject) => {
-      const existing = document.getElementById("credimax-checkout-js");
-      const onReady = () => {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const Checkout = (window as any).Checkout;
-          if (!Checkout) throw new Error("Checkout script did not load correctly.");
-          Checkout.configure({ session: { id: sessionId } });
-          Checkout.showPaymentPage();
-          resolve();
-        } catch (checkoutError) {
-          reject(checkoutError);
-        }
-      };
+  // Loads Paddle.js (once) and opens Paddle's hosted checkout overlay for
+  // the given plan. Unlike the CrediMax integration this replaces, there is
+  // no server round-trip to create a checkout session first -- Paddle
+  // Billing opens the overlay directly from a price ID, and its own
+  // webhook (supabase/functions/paddle-webhook) is the sole source of
+  // truth for activation, matching the self-service trigger's
+  // service-role-only write rule.
+  const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string | undefined;
+  const PADDLE_ENVIRONMENT = (import.meta.env.VITE_PADDLE_ENVIRONMENT as string | undefined) || "sandbox";
+  const PADDLE_PRICE_IDS: Record<string, string | undefined> = {
+    starter: import.meta.env.VITE_PADDLE_STARTER_PRICE_ID as string | undefined,
+    pro: import.meta.env.VITE_PADDLE_PRO_PRICE_ID as string | undefined,
+  };
 
+  const loadPaddleJs = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((window as any).Paddle) {
+        resolve();
+        return;
+      }
+
+      const existing = document.getElementById("paddle-js") as HTMLScriptElement | null;
       if (existing) {
-        onReady();
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error("Could not load the payment page. Please try again.")));
         return;
       }
 
       const script = document.createElement("script");
-      script.id = "credimax-checkout-js";
-      script.src = `https://${gatewayHost}/static/checkout/checkout.min.js`;
-      script.onload = onReady;
+      script.id = "paddle-js";
+      script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+      script.onload = () => resolve();
       script.onerror = () => reject(new Error("Could not load the payment page. Please try again."));
       document.body.appendChild(script);
     });
   };
 
-  // Every subscription -- first one or a renewal -- goes through a real
-  // charge. There is no free-trial path: platform_subscriptions rows are
-  // only ever written by the service-role checkout/webhook flow now (see
-  // migration revoke_self_service_trial_creation.sql), so this is the only
-  // way for a client to end up with an entitled subscription.
-  const handleRealCheckout = async (planId: string) => {
-    const { data, error: invokeError } = await supabase.functions.invoke("credimax-checkout", {
-      body: { planId },
-    });
-    if (invokeError) throw invokeError;
-    if (!data?.sessionId || !data?.gatewayHost) {
-      throw new Error("Could not start checkout. Please try again.");
+  const openPaddleCheckout = async (planId: string, tenantId: string, email: string | undefined) => {
+    if (!PADDLE_CLIENT_TOKEN) {
+      throw new Error("Payments are not configured yet. Please try again later.");
+    }
+    const priceId = PADDLE_PRICE_IDS[planId];
+    if (!priceId) {
+      throw new Error("This plan is not available yet. Please try again later.");
     }
 
-    await redirectToCredimaxCheckout(data.gatewayHost, data.sessionId);
+    await loadPaddleJs();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Paddle = (window as any).Paddle;
+    if (!Paddle) throw new Error("Checkout script did not load correctly.");
+
+    Paddle.Environment.set(PADDLE_ENVIRONMENT === "production" ? "production" : "sandbox");
+    Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+
+    Paddle.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customer: email ? { email } : undefined,
+      // Echoed back on every Paddle webhook event so paddle-webhook can
+      // resolve the tenant without trusting anything else in the payload.
+      customData: { tenant_id: tenantId },
+      settings: {
+        successUrl: `${window.location.origin}/subscribe/callback`,
+      },
+    });
   };
 
-  // Handle subscription
+  // Every subscription -- first one or a renewal -- goes through a real
+  // charge. There is no free-trial path: platform_subscriptions rows are
+  // only ever written by the service-role webhook flow now (see migration
+  // revoke_self_service_trial_creation.sql), so this is the only way for
+  // a client to end up with an entitled subscription.
   const handleSubscribe = async (planId: string) => {
     setSubscribing(true);
     setError("");
@@ -169,7 +191,38 @@ export default function Subscribe() {
         throw new Error("Invalid subscription plan");
       }
 
-      await handleRealCheckout(planId);
+      const currentUser = (
+        await withTimeout(supabase.auth.getUser(), 8000, t("subscribe.authTimeout"))
+      ).data.user;
+      if (!currentUser) throw new Error(t("onboarding.userNotFound"));
+
+      // Only a tenant admin may manage billing -- mirrors the "Tenant
+      // admins can insert/update platform subscriptions" RLS policies.
+      // Paddle's checkout opens directly from the client (no server
+      // checkpoint the way CrediMax's session-creation call was), so this
+      // is enforced here instead.
+      const { data: membership, error: membershipError } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from("memberships")
+            .select("tenant_id, role")
+            .eq("user_id", currentUser.id)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle(),
+        ),
+        8000,
+        "Organization setup is taking longer than expected. Please try again.",
+      );
+      if (membershipError) throw membershipError;
+      if (!membership?.tenant_id) {
+        throw new Error("No organization membership found. Please restart signup.");
+      }
+      if (membership.role !== "admin") {
+        throw new Error("Only a workspace admin can manage billing.");
+      }
+
+      await openPaddleCheckout(planId, membership.tenant_id, currentUser.email ?? undefined);
     } catch (subscribeError) {
       setError(
         getErrorMessage(

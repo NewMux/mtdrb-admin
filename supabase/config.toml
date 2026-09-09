@@ -3,19 +3,11 @@
 # the hosted project per DEPLOYMENT.md's bootstrap path) -- this file exists
 # only to document and enforce JWT verification per function.
 
-[functions.credimax-checkout]
-# Was true. The platform gateway's own JWT gate intercepts/answers CORS
-# preflight (OPTIONS) requests before the function's code runs when this
-# is true, so the Access-Control-Allow-Methods header the function
-# returns never reached the browser -- confirmed live: every checkout
-# attempt logged "OPTIONS | 200" and was never followed by a POST,
-# which is what supabase-js reports as "Failed to send a request to the
-# Edge Function". The function already re-validates the caller's JWT in
-# code (see its own auth.getUser() call), so this platform-level gate
-# was redundant, not a security requirement.
-verify_jwt = false
-
-[functions.credimax-webhook]
-# CrediMax calls this directly (not as a logged-in Supabase user) -- it
-# authenticates via HTTP Basic Auth instead (see the function's own code).
+[functions.paddle-webhook]
+# Paddle calls this directly (not as a logged-in Supabase user) -- it
+# authenticates via its own HMAC webhook signature instead (see the
+# function's own isValidSignature()). Also avoids the same gotcha that
+# broke the CrediMax checkout function this replaces: with verify_jwt
+# true, the platform's own JWT gate can intercept a request before the
+# function's code ever runs.
 verify_jwt = false

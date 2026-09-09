@@ -92,60 +92,69 @@ Optional:
 The MTDRB AI assistant, its browser integration, and its (separate, unrelated)
 Edge Function are not part of this deployment.
 
-## Payment gateway (CrediMax) and Edge Functions
+## Payment gateway (Paddle) and Edge Functions
 
 Platform subscription billing (gym owners paying MTDRB for Starter/Pro
-plans) goes through CrediMax (Mastercard Payment Gateway Services), via two
-Supabase Edge Functions in `supabase/functions/`:
+plans) goes through Paddle Billing, a merchant-of-record provider (Paddle
+is the seller of record and handles VAT/sales tax compliance itself). This
+replaced an earlier CrediMax integration whose CORS configuration could
+not be gotten working reliably; see git history for that attempt.
 
-- `credimax-checkout` — authenticated; creates a Hosted Checkout session for
-  the caller's tenant. JWT verification enabled.
-- `credimax-webhook` — public; receives CrediMax's payment notification, re-verifies
-  the order directly against the gateway (never trusts the notification
-  body alone), and is the only path allowed to set a subscription to
-  `active`/`past_due`/`failed` (see `enforce_platform_subscription_self_service()`
-  in `supabase/migrations/20260823120000_restrict_platform_subscription_self_service.sql`).
-  JWT verification disabled — authenticated via HTTP Basic Auth instead
-  (configure the same username/password in CrediMax's merchant-portal
-  webhook notification settings).
+- The checkout itself is entirely client-side: `Subscribe.tsx` loads
+  `https://cdn.paddle.com/paddle/v2/paddle.js` and calls
+  `Paddle.Checkout.open()` directly with a price ID — no Edge Function
+  round-trip to start a purchase, unlike the CrediMax flow this replaced.
+- `paddle-webhook` — public; receives Paddle's subscription event
+  notifications, verifies Paddle's HMAC webhook signature (`Paddle-Signature`
+  header), and is the only path allowed to write `platform_subscriptions`
+  besides a self-service cancellation (see
+  `enforce_platform_subscription_self_service()` in
+  `supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
+  JWT verification disabled (`supabase/config.toml`) — Paddle calls this
+  server-to-server, authenticated by its own signature, not a Supabase JWT.
 
-These must be deployed (`supabase functions deploy credimax-checkout
-credimax-webhook`, or via the Supabase dashboard) whenever this repo is
-deployed to a new environment — unlike the rest of this app, they run
-server-side, not as part of the frontend build.
+This must be deployed (`supabase functions deploy paddle-webhook`, or via
+the Supabase dashboard) whenever this repo is deployed to a new
+environment — unlike the rest of this app, it runs server-side, not as
+part of the frontend build.
 
-Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*` —
-those are baked into the browser bundle and would leak a payment gateway
-credential publicly):
+Required **client-side** vars (`VITE_*`, safe to expose — Paddle client
+tokens and price IDs are not secrets, the same way a Stripe publishable
+key isn't):
 
-- `CREDIMAX_MERCHANT_ID`, `CREDIMAX_API_PASSWORD` — from the CrediMax
-  merchant portal (`https://credimax.gateway.mastercard.com/merchant-portal`).
-- `CREDIMAX_GATEWAY_HOST` — defaults to `credimax.gateway.mastercard.com`.
-- `CREDIMAX_API_VERSION` — defaults to `100`.
-- `CREDIMAX_WEBHOOK_USERNAME`, `CREDIMAX_WEBHOOK_PASSWORD` — a pair you
-  choose; configure the same pair in CrediMax's merchant portal when setting
-  the webhook notification URL to `credimax-webhook`'s deployed URL.
-- `STARTER_PRICE`, `PRO_PRICE`, `PLATFORM_CURRENCY` — server-side pricing,
-  kept in sync with the equivalent `VITE_*` vars shown to users but not
-  trusted from the client for the actual charge.
-- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase
-  provides these automatically to every Edge Function; nothing to set.
-- `APP_URL` — used to build the Hosted Checkout return URL. Defaults to
-  `https://mtdrb.net`.
+- `VITE_PADDLE_CLIENT_TOKEN` — from Paddle's dashboard (Developer Tools →
+  Authentication). Use the sandbox token while testing, the live token
+  once approved for production.
+- `VITE_PADDLE_ENVIRONMENT` — `sandbox` or `production`. Defaults to
+  `sandbox` if unset — **set this explicitly for a real production
+  deployment**, or checkout will silently run against Paddle's sandbox.
+- `VITE_PADDLE_STARTER_PRICE_ID`, `VITE_PADDLE_PRO_PRICE_ID` — the price
+  IDs from your Paddle catalog for the Starter and Pro plans.
 
-**This CrediMax merchant account (`E20910951`) is LIVE production, not
-sandbox.** Per CrediMax's onboarding requirements: run at least one real
-Visa and one real Mastercard test transaction (100 fils each) to confirm
-the setup, and email `pg@credimax.com.bh` before the site is live for real
-customers.
+Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 
-The exact MPGS request/response field names in the two Edge Functions
-follow the standard v100 Hosted Checkout pattern but have not been verified
-against CrediMax's actual integration guide (network access to
-`credimax.gateway.mastercard.com` was unavailable when this was written) —
-confirm against
-`https://credimax.gateway.mastercard.com/api/documentation/integrationGuidelines/index.html`
-before relying on this for real customer traffic.
+- `PADDLE_WEBHOOK_SECRET` — the notification destination's signing secret
+  from Paddle's dashboard (Developer Tools → Notifications), used to
+  verify `Paddle-Signature`.
+- `PADDLE_STARTER_PRICE_ID`, `PADDLE_PRO_PRICE_ID` — the same price IDs as
+  the `VITE_*` versions above; the webhook maps an incoming subscription's
+  price ID back to a `plan_tier` with these, independently of the client.
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
+  automatically to every Edge Function; nothing to set.
+
+Set up in Paddle's dashboard before this can go live: create the Starter
+and Pro products/prices (sandbox first), point a webhook notification
+destination at `paddle-webhook`'s deployed URL subscribed to at least
+`subscription.created`, `subscription.updated`, `subscription.canceled`,
+and confirm no trial period is configured on either price (MTDRB
+intentionally has no free trial — see
+`supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
+
+The webhook's event field names follow Paddle's published Billing API v2
+documentation (`developer.paddle.com/webhooks`), which is public and
+stable — but still run at least one real sandbox subscription through the
+full flow (checkout → webhook → `platform_subscriptions` row → dashboard
+access) before relying on this for real customer traffic.
 
 ## Financial document migration
 

@@ -4,12 +4,15 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
 
-// Handles the browser's return from CrediMax's hosted checkout page. The
-// webhook (supabase/functions/credimax-webhook) is the actual source of
-// truth for activation -- this page only polls platform_subscriptions until
-// the webhook has caught up (or a reasonable timeout passes), since the
+// Handles the browser's return from Paddle's checkout overlay
+// (Checkout.open's settings.successUrl in Subscribe.tsx). The webhook
+// (supabase/functions/paddle-webhook) is the actual source of truth for
+// activation -- this page only polls platform_subscriptions until the
+// webhook has caught up (or a reasonable timeout passes), since the
 // customer's browser landing back on this URL doesn't by itself mean the
-// server-to-server notification has already been processed.
+// server-to-server notification has already been processed. No orderId
+// query param is expected from Paddle (unlike the CrediMax flow this
+// replaces); the poll below already treats it as optional.
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 60000;
