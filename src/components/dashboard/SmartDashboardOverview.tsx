@@ -16,8 +16,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
+import { monthBoundary, weekBoundary, daysWindow } from "../../utils/periodBoundaries";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -200,16 +201,15 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       setLoadError(false);
 
       const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
-
-      // Get current week dates
-      const dayOfWeek = now.getDay();
-      const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const weekStart = new Date(now.getFullYear(), now.getMonth(), diff);
-      weekStart.setHours(0, 0, 0, 0);
+      // Boundaries are full ISO instants in the gym's timezone with an
+      // exclusive upper bound - see periodBoundaries.ts. A bare date
+      // string compared against a timestamptz column truncates to
+      // midnight UTC, silently excluding same-day records and shifting
+      // month/week boundaries in positive-UTC-offset timezones.
+      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
+      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const previousMonthEnd = new Date(currentMonth.startISO);
+      const week = weekBoundary(now, DEFAULT_TIMEZONE);
 
       // Fetch data
       const [
@@ -223,14 +223,15 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .select("amount, total, status")
           .eq("tenant_id", tenantId)
           .eq("status", "paid")
-          .gte("created_at", formatDate(currentMonthStart)),
+          .gte("created_at", currentMonth.startISO)
+          .lt("created_at", currentMonth.endExclusiveISO),
         supabase
           .from("invoices")
           .select("amount, total, status")
           .eq("tenant_id", tenantId)
           .eq("status", "paid")
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
+          .gte("created_at", previousMonth.startISO)
+          .lt("created_at", previousMonth.endExclusiveISO),
         // Filtered on the class's own start_time (via the inner join),
         // not the booking's created_at - a booking made weeks ago for a
         // class held this week is this week's attendance; a booking made
@@ -239,7 +240,8 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .from("class_bookings")
           .select("id, status, created_at, classes!inner(start_time)")
           .eq("tenant_id", tenantId)
-          .gte("classes.start_time", formatDate(weekStart)),
+          .gte("classes.start_time", week.startISO)
+          .lt("classes.start_time", week.endExclusiveISO),
         supabase
           .from("members")
           .select("id, created_at, join_date, expiry_date, status, membership_status")
@@ -313,13 +315,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       const currencySymbol = currency || "";
 
       // Find inactive members (haven't visited in 14+ days)
-      const fourteenDaysAgo = new Date();
-      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
       const { data: recentBookings, error: recentBookingsError } = await supabase
         .from("class_bookings")
         .select("member_id")
         .eq("tenant_id", tenantId)
-        .gte("created_at", formatDate(fourteenDaysAgo));
+        .gte("created_at", last14Days.startISO);
       if (recentBookingsError) throw recentBookingsError;
 
       const activeMemberIds = new Set((recentBookings || []).map(b => b.member_id));

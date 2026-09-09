@@ -12,9 +12,10 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
+import { monthBoundary, dayBoundary, daysWindow } from "../../utils/periodBoundaries";
 
 // Color mappings for KPI cards
 const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
@@ -102,12 +103,19 @@ const BusinessOverview: React.FC = () => {
     try {
       setLoadError(false);
       const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      // Boundaries are computed as full ISO instants in the gym's
+      // timezone, with an exclusive upper bound - see periodBoundaries.ts
+      // for why: a bare date string compared against a timestamptz column
+      // truncates to midnight UTC, silently excluding same-day records
+      // and shifting month boundaries in positive-UTC-offset timezones.
+      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
+      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const currentMonthStart = new Date(currentMonth.startISO);
+      const previousMonthStart = new Date(previousMonth.startISO);
+      // previousMonth's exclusive end is exactly currentMonth's start.
+      const previousMonthEnd = currentMonthStart;
+      const last30Days = daysWindow(now, 30, DEFAULT_TIMEZONE);
+      const previous30DaysStart = dayBoundary(now, 59, DEFAULT_TIMEZONE).startISO;
 
       // Fetch active members
       const [newMembers, allMembers] = await Promise.all([
@@ -115,7 +123,8 @@ const BusinessOverview: React.FC = () => {
           .from("members")
           .select("id, created_at")
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(thirtyDaysAgo)),
+          .gte("created_at", last30Days.startISO)
+          .lt("created_at", last30Days.endExclusiveISO),
         supabase
           .from("members")
           .select("id, created_at, join_date, expiry_date, status, membership_status")
@@ -129,14 +138,15 @@ const BusinessOverview: React.FC = () => {
           .select("amount, total, vat_total, status")
           .eq("tenant_id", tenantId)
           .eq("status", "paid")
-          .gte("created_at", formatDate(currentMonthStart)),
+          .gte("created_at", currentMonth.startISO)
+          .lt("created_at", currentMonth.endExclusiveISO),
         supabase
           .from("invoices")
           .select("amount, total, vat_total, status")
           .eq("tenant_id", tenantId)
           .eq("status", "paid")
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
+          .gte("created_at", previousMonth.startISO)
+          .lt("created_at", previousMonth.endExclusiveISO),
       ]);
 
       const membersOrInvoicesError =
@@ -183,8 +193,8 @@ const BusinessOverview: React.FC = () => {
         .from("members")
         .select("id")
         .eq("tenant_id", tenantId)
-        .gte("created_at", formatDate(new Date(thirtyDaysAgo.getTime() - 30 * 24 * 60 * 60 * 1000)))
-        .lte("created_at", formatDate(thirtyDaysAgo));
+        .gte("created_at", previous30DaysStart)
+        .lt("created_at", last30Days.startISO);
       if (previousNewSignups.error) throw previousNewSignups.error;
       const previousNewSignupsCount = (previousNewSignups.data || []).length;
       const signupsChange = newSignupsCount - previousNewSignupsCount;

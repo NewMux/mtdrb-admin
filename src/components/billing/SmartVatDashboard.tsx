@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -110,14 +111,23 @@ export default function SmartVatDashboard({
       setCurrency(settingsData?.currency || DEFAULT_CURRENCY);
 
       // Fetch invoices to calculate VAT from the live invoice schema.
-      const { data: invoices, error: invoicesError } = await supabase
-        .from("invoices")
-        .select("amount, status, created_at, metadata, total, vat_total")
-        .eq("tenant_id", tenantId);
-
-      if (invoicesError) {
+      // Paged: PostgREST caps a single response at 1000 rows, and this
+      // feeds "all-time" VAT totals - a gym that crosses 1000 invoices
+      // must not have its VAT figures quietly stop growing.
+      let invoices: InvoiceSummary[];
+      try {
+        invoices = await fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, status, created_at, metadata, total, vat_total")
+            .eq("tenant_id", tenantId)
+            .range(from, to),
+        );
+      } catch (invoicesError) {
         console.error("Error fetching invoices:", invoicesError);
-        throw new Error(`Failed to fetch invoices: ${invoicesError.message || JSON.stringify(invoicesError)}`);
+        const message =
+          invoicesError instanceof Error ? invoicesError.message : JSON.stringify(invoicesError);
+        throw new Error(`Failed to fetch invoices: ${message}`);
       }
 
       // Fetch expenses to calculate VAT paid
