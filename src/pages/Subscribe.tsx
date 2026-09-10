@@ -117,6 +117,11 @@ export default function Subscribe() {
   // webhook (supabase/functions/paddle-webhook) is the sole source of
   // truth for activation, matching the self-service trigger's
   // service-role-only write rule.
+  // Checkout is closed by default: Paddle is still sandbox-only (no live
+  // business verification yet), so a completed "purchase" right now would
+  // grant full paid access for zero real revenue. Flip
+  // VITE_CHECKOUT_ENABLED=true once live payments are actually ready.
+  const CHECKOUT_ENABLED = (import.meta.env.VITE_CHECKOUT_ENABLED as string | undefined) === "true";
   const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string | undefined;
   const PADDLE_ENVIRONMENT = (import.meta.env.VITE_PADDLE_ENVIRONMENT as string | undefined) || "sandbox";
   const PADDLE_PRICE_IDS: Record<string, string | undefined> = {
@@ -183,6 +188,7 @@ export default function Subscribe() {
   // revoke_self_service_trial_creation.sql), so this is the only way for
   // a client to end up with an entitled subscription.
   const handleSubscribe = async (planId: string) => {
+    if (!CHECKOUT_ENABLED) return;
     setSubscribing(true);
     setError("");
     try {
@@ -309,6 +315,13 @@ export default function Subscribe() {
             </p>
           </div>
 
+          {!CHECKOUT_ENABLED && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
+              <p className="font-medium text-blue-900">{t("subscribe.checkoutClosedTitle")}</p>
+              <p className="text-sm text-blue-800 mt-1">{t("subscribe.checkoutClosedMessage")}</p>
+            </div>
+          )}
+
           {/* Plans Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             {plans.map((plan) => (
@@ -357,7 +370,9 @@ export default function Subscribe() {
 
                 <motion.button
                   className={`w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 ${
-                    selectedPlan === plan.id
+                    !CHECKOUT_ENABLED
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : selectedPlan === plan.id
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
@@ -365,9 +380,13 @@ export default function Subscribe() {
                     e.stopPropagation();
                     handleSubscribe(plan.id);
                   }}
-                  disabled={subscribing}
+                  disabled={subscribing || !CHECKOUT_ENABLED}
                 >
-                  {subscribing ? t("subscribe.processing") : t("subscribe.startFreeTrial")}
+                  {!CHECKOUT_ENABLED
+                    ? t("subscribe.checkoutClosedButton")
+                    : subscribing
+                    ? t("subscribe.processing")
+                    : t("subscribe.startFreeTrial")}
                 </motion.button>
               </motion.div>
             ))}
