@@ -136,7 +136,7 @@ export default function Login() {
         type: "login",
         title: "Signed in",
         description: `${user.email || "A user"} signed in`,
-        user_id: user.id,
+        user: user.email || user.id,
         status: "success",
       });
     } catch {
