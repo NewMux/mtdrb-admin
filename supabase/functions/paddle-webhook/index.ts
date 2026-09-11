@@ -58,6 +58,23 @@ Deno.serve(async (req) => {
     return new Response("Webhook not configured", { status: 500 });
   }
 
+  const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // Paddle's real traffic is a handful of events per subscription change --
+  // 60/min per source IP is generous headroom for legitimate retries while
+  // still capping abuse of this public, unauthenticated endpoint.
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const { data: withinLimit, error: rateLimitError } = await serviceClient.rpc("check_rate_limit", {
+    p_key: `paddle-webhook:${clientIp}`,
+    p_max_count: 60,
+    p_window_seconds: 60,
+  });
+  if (rateLimitError) {
+    console.error("paddle-webhook: rate limit check failed", rateLimitError);
+  } else if (withinLimit === false) {
+    return new Response("Too many requests", { status: 429 });
+  }
+
   const rawBody = await req.text();
   const signatureHeader = req.headers.get("Paddle-Signature");
   if (!signatureHeader || !(await isValidSignature(rawBody, signatureHeader, PADDLE_WEBHOOK_SECRET))) {
@@ -74,8 +91,6 @@ Deno.serve(async (req) => {
   if (!event.data) {
     return new Response("Missing event data", { status: 400 });
   }
-
-  const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     switch (event.event_type) {
