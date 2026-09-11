@@ -152,7 +152,7 @@ const Branches: React.FC = () => {
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="text-start">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {t("branches.branchManagement") || "Branch Management"}

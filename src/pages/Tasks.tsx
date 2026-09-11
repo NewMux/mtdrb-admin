@@ -157,7 +157,7 @@ const Tasks: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="text-start">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {t("tasks.title")}
@@ -220,12 +220,12 @@ const Tasks: React.FC = () => {
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                 activeTab === tab.id
                   ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"

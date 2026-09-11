@@ -321,7 +321,7 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="text-start">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t("settings.title")}
@@ -410,7 +410,7 @@ const Settings: React.FC = () => {
 
                 <div className="space-y-4">
                   {/* Gym Name */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="gym-name"
@@ -434,7 +434,7 @@ const Settings: React.FC = () => {
                             e.target.value,
                           )
                         }
-                        className={`form-input w-64 rounded-xl ${getFieldError("general", "gymName") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-sky-500 focus:ring-sky-500"}`}
+                        className={`form-input w-full sm:w-64 rounded-xl ${getFieldError("general", "gymName") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-sky-500 focus:ring-sky-500"}`}
                         placeholder={t("settings.gymNamePlaceholder")}
                         aria-describedby={
                           getFieldError("general", "gymName")
