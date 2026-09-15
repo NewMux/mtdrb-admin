@@ -13,6 +13,7 @@ import {
   FiUser,
   FiLogOut,
   FiMapPin,
+  FiPieChart,
 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -29,6 +30,7 @@ const getNavigation = (t: TFunction) => [
   { name: t("sidebar.trainers"), href: "/dashboard/trainers", icon: FiUser },
   { name: t("sidebar.billing"), href: "/dashboard/billing", icon: FiDollarSign },
   { name: t("sidebar.pos", "Point of Sale"), href: "/dashboard/pos", icon: FiShoppingCart },
+  { name: t("sidebar.finance"), href: "/dashboard/finance", icon: FiPieChart },
   { name: t("sidebar.analytics"), href: "/dashboard/analytics", icon: FiBarChart2 },
   { name: t("sidebar.attendance"), href: "/dashboard/attendance", icon: FiActivity },
   { name: t("sidebar.tasks"), href: "/dashboard/tasks", icon: FiCheckSquare },
@@ -42,6 +44,7 @@ function getActiveSidebarItem(pathname: string): string {
   if (pathname.startsWith("/dashboard/trainers")) return "/dashboard/trainers";
   if (pathname.startsWith("/dashboard/billing")) return "/dashboard/billing";
   if (pathname.startsWith("/dashboard/pos")) return "/dashboard/pos";
+  if (pathname.startsWith("/dashboard/finance")) return "/dashboard/finance";
   if (pathname.startsWith("/dashboard/analytics")) return "/dashboard/analytics";
   if (pathname.startsWith("/dashboard/attendance")) return "/dashboard/attendance";
   if (pathname.startsWith("/dashboard/tasks")) return "/dashboard/tasks";

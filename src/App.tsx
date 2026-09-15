@@ -39,6 +39,7 @@ const Attendance = lazy(() => import("./pages/Attendance"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
+const Finance = lazy(() => import("./pages/Finance"));
 const POS = lazy(() => import("./pages/POS"));
 const Plans = lazy(() => import("./pages/Plans"));
 const Tasks = lazy(() => import("./pages/Tasks"));
@@ -263,9 +264,18 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
+                        {/* Finance - requires admin or higher */}
+                        <Route
+                          path="finance"
+                          element={
+                            <PermissionGuard requiredRole="admin" fallbackPath="/dashboard">
+                              <Finance />
+                            </PermissionGuard>
+                          }
+                        />
                         {/* Plans - requires admin or higher */}
-                        <Route 
-                          path="plans" 
+                        <Route
+                          path="plans"
                           element={
                             <PermissionGuard requiredRole="admin" fallbackPath="/dashboard">
                               <Plans />
@@ -328,6 +338,10 @@ const App = () => {
                       <Route
                         path="/billing"
                         element={<Navigate to="/dashboard/billing" replace />}
+                      />
+                      <Route
+                        path="/finance"
+                        element={<Navigate to="/dashboard/finance" replace />}
                       />
                       <Route
                         path="/plans"
