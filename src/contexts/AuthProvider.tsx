@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const lastUserIdRef = useRef<string | null>(null);
 
   const handleAuthError = useCallback((error: unknown) => {
     const authError = error as AuthError;
@@ -276,6 +277,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const sessionUser = session?.user ?? null;
+
+      // Supabase's GoTrue client re-checks the session (and re-emits
+      // SIGNED_IN/TOKEN_REFRESHED) whenever the tab regains visibility,
+      // even though the session hasn't actually changed. Re-running the
+      // full membership/subscription lookup on every one of those would
+      // flash the app back through PermissionGuard's loading/unauthenticated
+      // states and wipe any unsaved work in progress. Skip that redundant
+      // round trip when it's the same already-known user; still refresh the
+      // token/session object itself so it stays current.
+      const isRedundantRecheck =
+        (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+        sessionUser?.id &&
+        sessionUser.id === lastUserIdRef.current;
+      if (isRedundantRecheck) {
+        setUser(sessionUser);
+        return;
+      }
+      lastUserIdRef.current = sessionUser?.id ?? null;
 
       setUser(sessionUser);
       const metadata = await handleUserMetadata(sessionUser);

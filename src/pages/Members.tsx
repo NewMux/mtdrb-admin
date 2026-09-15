@@ -369,9 +369,12 @@ const Members: React.FC = () => {
     
     // Apply search
     if (searchTerm) {
-      filtered = filtered.filter(m => 
-        (m.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+      const term = searchTerm.toLowerCase();
+      const digitsTerm = searchTerm.replace(/\D/g, "");
+      filtered = filtered.filter(m =>
+        (m.name || "").toLowerCase().includes(term) ||
+        (m.email || "").toLowerCase().includes(term) ||
+        (digitsTerm.length > 0 && (m.phone || "").replace(/\D/g, "").includes(digitsTerm))
       );
     }
     

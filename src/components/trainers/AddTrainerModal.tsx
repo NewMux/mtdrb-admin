@@ -283,7 +283,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
           ? formData.status
           : "inactive"; // "terminated" has no DB column equivalent
 
+      if (!tenantId) throw new Error("No tenant found. Please try again.");
+
       const trainerData = {
+        tenant_id: tenantId,
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,

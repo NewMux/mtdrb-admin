@@ -13,6 +13,8 @@ import {
   useSmartTaskModal,
   type SmartSuggestion,
 } from "./useSmartTaskModal";
+import { supabase } from "../../../supabaseClient";
+import { useAuth } from "../../../contexts/AuthContext";
 
 interface EditTaskModalProps {
   open: boolean;
@@ -50,6 +52,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 }) => {
   const { loading, task, smartSuggestions, updateTask, alerts, clearAlerts } =
     useSmartTaskModal({ taskId, isPro });
+  const { tenantId } = useAuth();
 
   const [formData, setFormData] = React.useState<TaskFormData>({
     title: "",
@@ -63,6 +66,32 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
   const [showHistory, setShowHistory] = React.useState(false);
   const [showAiSuggestions, setShowAiSuggestions] = React.useState(false);
+  const [staff, setStaff] = React.useState<{ id: string; name: string }[]>(
+    [],
+  );
+
+  React.useEffect(() => {
+    const fetchStaff = async () => {
+      if (!tenantId) return;
+      const { data, error } = await supabase
+        .from("trainers")
+        .select("id, first_name, last_name")
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .order("first_name", { ascending: true });
+      if (!error && data) {
+        setStaff(
+          data.map((trainer) => ({
+            id: trainer.id,
+            name: `${trainer.first_name || ""} ${trainer.last_name || ""}`.trim(),
+          })),
+        );
+      }
+    };
+    if (open) {
+      fetchStaff();
+    }
+  }, [open, tenantId]);
 
   // Update form when task loads
   React.useEffect(() => {
@@ -310,8 +339,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             </label>
             <div className="relative">
               <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="email"
+              <select
                 value={formData.assignedTo}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -319,9 +347,16 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                     assignedTo: e.target.value,
                   }))
                 }
+                aria-label="Assigned to"
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="email@mtdrb.net"
-              />
+              >
+                <option value="">Unassigned</option>
+                {staff.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

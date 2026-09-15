@@ -144,6 +144,11 @@ export interface PosSaleReceipt {
   vat_total: number;
   total: number;
   currency: string;
+  payment_method: PosPaymentMethod;
+  payment_reference: string | null;
+  created_at: string;
+  member?: { name: string; email: string } | null;
+  items: PosSaleItem[];
 }
 
 export interface PosReturnInputItem {

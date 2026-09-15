@@ -176,7 +176,8 @@ export const AppleInput = React.forwardRef<
 
 AppleInput.displayName = "AppleInput";
 
-export const AppleSelect: React.FC<
+export const AppleSelect = React.forwardRef<
+  HTMLSelectElement,
   {
     label: string;
     error?: string;
@@ -184,22 +185,20 @@ export const AppleSelect: React.FC<
     required?: boolean;
     children: React.ReactNode;
   } & React.SelectHTMLAttributes<HTMLSelectElement>
-> = ({
-  label,
-  error,
-  className = "",
-  required = false,
-  children,
-  ...props
-}) => {
-  return (
-    <div className="space-y-3 text-start">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
-        {label}
-        {required && <span className="text-red-500 mx-1">*</span>}
-      </label>
-      <select
-        className={`
+>(
+  (
+    { label, error, className = "", required = false, children, ...props },
+    ref,
+  ) => {
+    return (
+      <div className="space-y-3 text-start">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
+          {label}
+          {required && <span className="text-red-500 mx-1">*</span>}
+        </label>
+        <select
+          ref={ref}
+          className={`
           w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
           bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl
           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
@@ -207,14 +206,17 @@ export const AppleSelect: React.FC<
           ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
           ${className}
         `}
-        {...props}
-      >
-        {children}
-      </select>
-      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
-    </div>
-  );
-};
+          {...props}
+        >
+          {children}
+        </select>
+        {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
+      </div>
+    );
+  },
+);
+
+AppleSelect.displayName = "AppleSelect";
 
 export const AppleTextarea = React.forwardRef<
   HTMLTextAreaElement,

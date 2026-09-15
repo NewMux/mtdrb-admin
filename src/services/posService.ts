@@ -89,7 +89,7 @@ const normalizeSale = (row: PosRow): PosSale => ({
   discount_total: toNumber(row.discount_total),
   vat_total: toNumber(row.vat_total),
   total: toNumber(row.total),
-  currency: String(row.currency ?? "AED"),
+  currency: String(row.currency ?? "BHD"),
   payment_method: (row.payment_method ?? "cash") as PosPaymentMethod,
   payment_reference: row.payment_reference ? String(row.payment_reference) : null,
   notes: row.notes ? String(row.notes) : null,
@@ -232,6 +232,22 @@ export async function updatePosProduct(
   return normalizeProduct(data);
 }
 
+export async function deletePosProduct(
+  tenantId: string,
+  productId: string,
+): Promise<void> {
+  // Soft-delete: pos_sale_items/pos_return_items reference products and
+  // preserve their own product_name/sku snapshot, so hiding the product via
+  // is_active keeps historical sales/receipts intact instead of nulling out
+  // their product_id (hard delete) or cascading away stock movement history.
+  const { error } = await posClient
+    .from("pos_products")
+    .update({ is_active: false })
+    .eq("id", productId)
+    .eq("tenant_id", tenantId);
+  if (error) throw new Error(getErrorMessage(error, "Unable to delete the product."));
+}
+
 export async function adjustPosInventory(
   productId: string,
   quantityDelta: number,
@@ -279,15 +295,30 @@ export async function completePosSale(input: {
     p_currency: input.currency,
   });
   if (error) throw new Error(getErrorMessage(error, "Unable to complete the sale."));
-  const result = unwrapRpcResult<PosSaleReceipt>(data);
+  const result = unwrapRpcResult<{ sale_id: string }>(data);
+
+  const { data: saleRow, error: saleError } = await posClient
+    .from("pos_sales")
+    .select("*, member:members(first_name,last_name,email), items:pos_sale_items(*)")
+    .eq("id", result.sale_id)
+    .single();
+  if (saleError || !saleRow) {
+    throw new Error(getErrorMessage(saleError, "Sale completed, but the receipt could not be loaded."));
+  }
+  const sale = normalizeSale(saleRow);
   return {
-    sale_id: result.sale_id,
-    sale_number: result.sale_number,
-    subtotal: toNumber(result.subtotal),
-    discount_total: toNumber(result.discount_total),
-    vat_total: toNumber(result.vat_total),
-    total: toNumber(result.total),
-    currency: String(result.currency ?? input.currency),
+    sale_id: sale.id,
+    sale_number: sale.sale_number,
+    subtotal: sale.subtotal,
+    discount_total: sale.discount_total,
+    vat_total: sale.vat_total,
+    total: sale.total,
+    currency: sale.currency,
+    payment_method: sale.payment_method,
+    payment_reference: sale.payment_reference,
+    created_at: sale.created_at,
+    member: sale.member,
+    items: sale.items ?? [],
   };
 }
 

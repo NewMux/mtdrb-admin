@@ -191,7 +191,8 @@ export const useSmartTaskModal = (props: useSmartTaskModalProps = {}) => {
       if (updates.type !== undefined) payload.type = updates.type;
       if (updates.priority !== undefined) payload.priority = updates.priority;
       if (updates.status !== undefined) payload.status = updates.status;
-      if (updates.assignedTo !== undefined) payload.assigned_to = updates.assignedTo;
+      if (updates.assignedTo !== undefined)
+        payload.assigned_to = (updates.assignedTo || null) as string | undefined;
       if (updates.dueDate !== undefined) payload.due_date = updates.dueDate;
       if (updates.tags !== undefined) payload.tags = updates.tags;
 
