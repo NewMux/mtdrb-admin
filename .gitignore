@@ -103,3 +103,7 @@ temp/
 # Vercel
 .vercel 
 .vercel
+
+# /brag render output (skill writes plan, composition, and MP4 here)
+brag-output/
+brag-output-*/
