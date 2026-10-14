@@ -24,6 +24,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
+import { computePosCartTotals, getCurrencyDecimals, type PosCartTotals } from "../utils/invoiceMath";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
 import { useRTL } from "../hooks/useRTL";
@@ -103,12 +104,20 @@ const ModalShell = ({ open, title, description, onClose, children, wide = false 
 };
 
 const formatMoney = (value: number, currency: string) => {
+  const decimals = getCurrencyDecimals(currency);
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency, minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value);
   } catch {
-    return `${currency} ${value.toFixed(2)}`;
+    return `${currency} ${value.toFixed(decimals)}`;
   }
 };
+
+const posCartTotals = (cart: PosCartItem[], discount: number, currency: string): PosCartTotals =>
+  computePosCartTotals(
+    cart.map((item) => ({ quantity: item.quantity, unitPrice: item.product.price, vatRatePercent: item.product.vat_rate })),
+    discount,
+    currency,
+  );
 
 const formatDateTime = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 
@@ -307,10 +316,7 @@ function CheckoutModal({
   const [paymentReference, setPaymentReference] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [saving, setSaving] = React.useState(false);
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const discountTotal = Math.min(Math.max(discount, 0), subtotal);
-  const vatTotal = cart.reduce((sum, item) => sum + Math.max(0, (item.product.price * item.quantity - discountTotal * (item.product.price * item.quantity / Math.max(subtotal, 1))) * item.product.vat_rate / 100), 0);
-  const total = Math.max(0, subtotal - discountTotal + vatTotal);
+  const { subtotal, discount: discountTotal, gross: total } = posCartTotals(cart, discount, currency);
   const selectedMember = members.find((member) => member.id === memberId);
 
   React.useEffect(() => { if (open) { setPaymentMethod("cash"); setPaymentReference(""); setNotes(""); } }, [open]);
@@ -434,10 +440,7 @@ const POS = () => {
   const lowStock = products.filter((product) => product.track_inventory && product.stock_quantity <= product.reorder_level);
   const todaySales = sales.filter((sale) => new Date(sale.created_at).toDateString() === new Date().toDateString() && sale.status !== "voided");
   const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const cartDiscount = Math.min(Math.max(discount, 0), cartSubtotal);
-  const cartVat = cart.reduce((sum, item) => sum + Math.max(0, (item.product.price * item.quantity - cartDiscount * (item.product.price * item.quantity / Math.max(cartSubtotal, 1))) * item.product.vat_rate / 100), 0);
-  const cartTotal = Math.max(0, cartSubtotal - cartDiscount + cartVat);
+  const { subtotal: cartSubtotal, discount: cartDiscount, vat: cartVat, gross: cartTotal } = posCartTotals(cart, discount, currency);
 
   const addToCart = (product: PosProduct) => {
     setCart((current) => {

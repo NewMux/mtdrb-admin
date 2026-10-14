@@ -36,6 +36,20 @@ export function roundMoney(value: number, decimals: number): number {
   return Math.round((value + Number.EPSILON) * factor) / factor;
 }
 
+/**
+ * Round a computed money value to the currency's minor unit right before
+ * it's written to a NUMERIC column, so a float artifact like
+ * 10.450000000000001 (or an unrounded 1.2345 BHD VAT) never reaches the
+ * database. Use this at every persistence site that writes computed money.
+ */
+export function toPersistedMoney(
+  value: number | string | null | undefined,
+  currencyCode: string | null | undefined,
+): number {
+  const parsed = typeof value === "string" ? parseFloat(value) : value ?? 0;
+  return roundMoney(parsed, getCurrencyDecimals(currencyCode));
+}
+
 export interface VatSplit {
   net: number;
   vat: number;
@@ -161,4 +175,102 @@ export function resolveInvoiceGrossAmount(invoice: {
     if (Number.isFinite(parsed)) return parsed;
   }
   return 0;
+}
+
+export interface PosCartLineInput {
+  quantity: number;
+  unitPrice: number;
+  vatRatePercent: number;
+}
+
+export interface PosCartLineTotals {
+  // quantity x unit price, before the cart discount.
+  lineNet: number;
+  // This line's share of the cart-level discount.
+  discount: number;
+  // lineNet - discount: the base VAT is computed on.
+  discountedNet: number;
+  vat: number;
+  gross: number;
+}
+
+export interface PosCartTotals {
+  subtotal: number;
+  discount: number;
+  // subtotal - discount
+  net: number;
+  vat: number;
+  // net + vat, what the customer pays
+  gross: number;
+  lines: PosCartLineTotals[];
+}
+
+/**
+ * POS cart totals under the same money contract as invoices: the cart-level
+ * (absolute) discount is prorated across lines by each line's share of the
+ * subtotal, VAT is computed per line on its discounted net, and
+ * total = net + VAT.
+ *
+ * Proration is done in integer minor units with the largest-remainder
+ * method, so the line discounts always sum exactly to the cart discount and
+ * no line is ever discounted below zero - including when the subtotal is
+ * below 1.000 currency unit (the old `Math.max(subtotal, 1)` divisor
+ * under-allocated the discount there and overcharged VAT).
+ */
+export function computePosCartTotals(
+  lines: PosCartLineInput[],
+  discount: number,
+  currencyCode?: string | null,
+): PosCartTotals {
+  const decimals = getCurrencyDecimals(currencyCode);
+  const factor = 10 ** decimals;
+  const toMinor = (value: number) => Math.round(roundMoney(value, decimals) * factor);
+  const fromMinor = (minor: number) => roundMoney(minor / factor, decimals);
+
+  const lineNetMinor = lines.map((line) =>
+    Math.max(0, toMinor((line.quantity || 0) * (line.unitPrice || 0))),
+  );
+  const subtotalMinor = lineNetMinor.reduce((sum, value) => sum + value, 0);
+  const safeDiscount = Number.isFinite(discount) ? discount : 0;
+  const discountMinor = Math.min(Math.max(toMinor(safeDiscount), 0), subtotalMinor);
+
+  // Largest-remainder allocation of discountMinor across lines.
+  const allocations = lineNetMinor.map((netMinor, index) => {
+    const exact = subtotalMinor === 0 ? 0 : (discountMinor * netMinor) / subtotalMinor;
+    const floor = Math.floor(exact);
+    return { index, floor, remainder: exact - floor };
+  });
+  let leftover = discountMinor - allocations.reduce((sum, a) => sum + a.floor, 0);
+  const lineDiscountMinor = allocations.map((a) => a.floor);
+  [...allocations]
+    .sort((a, b) => b.remainder - a.remainder || a.index - b.index)
+    .forEach((a) => {
+      if (leftover > 0 && lineDiscountMinor[a.index] < lineNetMinor[a.index]) {
+        lineDiscountMinor[a.index] += 1;
+        leftover -= 1;
+      }
+    });
+
+  const lineTotals = lines.map((line, index) => {
+    const discountedNet = fromMinor(lineNetMinor[index] - lineDiscountMinor[index]);
+    const split = splitVat(discountedNet, line.vatRatePercent, false, currencyCode);
+    return {
+      lineNet: fromMinor(lineNetMinor[index]),
+      discount: fromMinor(lineDiscountMinor[index]),
+      discountedNet,
+      vat: split.vat,
+      gross: split.gross,
+    };
+  });
+
+  const vatMinor = lineTotals.reduce((sum, line) => sum + toMinor(line.vat), 0);
+  const netMinor = subtotalMinor - discountMinor;
+  return {
+    subtotal: fromMinor(subtotalMinor),
+    discount: fromMinor(discountMinor),
+    net: fromMinor(netMinor),
+    vat: fromMinor(vatMinor),
+    gross: fromMinor(netMinor + vatMinor),
+    lines: lineTotals,
+  };
 }
