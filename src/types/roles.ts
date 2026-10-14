@@ -38,9 +38,10 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
  * @returns true if current role meets or exceeds required role
  * 
  * @example
- * hasRole("admin", "manager") // true (admin > manager)
+ * hasRole("admin", "employee") // true (admin > employee)
  * hasRole("trainer", "admin") // false (trainer < admin)
- * hasRole("manager", "manager") // true (equal)
+ * hasRole("employee", "employee") // true (equal)
+ * hasRole("superadmin", "trainer") // false (unrecognized role fails closed)
  */
 export function hasRole(
   currentRole: UserRole | string | null | undefined,
@@ -48,16 +49,19 @@ export function hasRole(
 ): boolean {
   if (!currentRole) return false;
 
-  // Validate current role
-  if (!USER_ROLES.includes(currentRole as UserRole)) {
+  // Fail closed: an unrecognized role string (corrupted, mis-cased, or a
+  // role the client doesn't know about yet) grants no access at all, not
+  // even trainer-level. AuthProvider already rejects invalid membership
+  // roles before they reach here; this is defence in depth.
+  if (!isValidRole(currentRole)) {
     // Only warn in development to avoid leaking info in production
     if (import.meta.env.DEV) {
-      console.warn(`Invalid role detected: ${currentRole}. Defaulting to trainer.`);
+      console.warn(`Invalid role detected: ${currentRole}. Denying access.`);
     }
-    return requiredRole === "trainer";
+    return false;
   }
 
-  const currentLevel = ROLE_HIERARCHY[currentRole as UserRole];
+  const currentLevel = ROLE_HIERARCHY[currentRole];
   const requiredLevel = ROLE_HIERARCHY[requiredRole];
 
   return currentLevel >= requiredLevel;

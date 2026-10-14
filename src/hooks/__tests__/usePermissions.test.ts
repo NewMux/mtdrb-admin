@@ -70,6 +70,20 @@ describe("usePermissions", () => {
       // When membership context is null, all role access remains denied.
       expect(result.current.isTrainer).toBe(false);
     });
+
+    it("should fail closed (no tier at all) for an unrecognized role string", () => {
+      mockUseAuth.mockReturnValue({
+        userMetadata: { tenant_id: "tenant-a", role: "superadmin" as UserRole },
+        hasPermission: vi.fn(() => false),
+      });
+
+      const { result } = renderHook(() => usePermissions());
+
+      expect(result.current.isAdmin).toBe(false);
+      expect(result.current.isEmployee).toBe(false);
+      expect(result.current.isTrainer).toBe(false);
+      expect(result.current.hasRoleAccess("trainer")).toBe(false);
+    });
   });
 
   describe("Permission Checks", () => {
