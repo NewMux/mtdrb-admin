@@ -213,5 +213,26 @@ describe("PermissionGuard", () => {
       });
     });
   });
+
+  describe("Unrecognized Role (fail closed)", () => {
+    ["superadmin", "member", "Admin"].forEach((badRole) => {
+      it(`should deny trainer-level access for unrecognized role "${badRole}"`, () => {
+        renderWithProviders(
+          <PermissionGuard requiredRole="trainer">
+            <div>Protected Content</div>
+          </PermissionGuard>,
+          {
+            // A corrupted/unknown role string that somehow bypassed
+            // AuthProvider's validation must not fall back to trainer access.
+            userMetadata: { tenant_id: "tenant-a", role: badRole as UserRole },
+            isLoading: false,
+          }
+        );
+
+        expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+        expect(screen.getByText(/access denied/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
 
