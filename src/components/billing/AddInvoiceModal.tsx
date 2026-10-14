@@ -258,7 +258,10 @@ export function AddInvoiceModal({
         : typeof watchedAmount === "string"
           ? parseFloat(watchedAmount)
           : 0;
-    const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
+    // An explicit 0% is a valid rate; only fall back when the field is empty.
+    const rawVatRate = watch("vat_rate") as number | string | undefined;
+    const parsedVatRate = rawVatRate === "" || rawVatRate == null ? NaN : Number(rawVatRate);
+    const vatRate = Number.isFinite(parsedVatRate) ? parsedVatRate : DEFAULT_VAT_RATE;
     return splitVat(amount, vatRate, watchedVatIncluded, DEFAULT_CURRENCY);
   };
 
