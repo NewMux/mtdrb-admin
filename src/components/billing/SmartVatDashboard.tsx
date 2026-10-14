@@ -26,6 +26,7 @@ import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { toPersistedMoney } from "../../utils/invoiceMath";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -381,9 +382,9 @@ export default function SmartVatDashboard({
           period_start: periodStart.toISOString().split("T")[0],
           period_end: periodEnd.toISOString().split("T")[0],
           status: "draft",
-          vat_collected: dashboardData.currentPeriodVat,
-          vat_paid: dashboardData.currentPeriodVatPaid,
-          net_vat_payable: dashboardData.currentPeriodNetVat,
+          vat_collected: toPersistedMoney(dashboardData.currentPeriodVat, currency),
+          vat_paid: toPersistedMoney(dashboardData.currentPeriodVatPaid, currency),
+          net_vat_payable: toPersistedMoney(dashboardData.currentPeriodNetVat, currency),
           // Written as due_date, not filing_deadline: FinancialInsightsDashboard
           // reads due_date to find "next filing deadline" (both columns
           // exist on vat_returns, but only one was ever populated, so

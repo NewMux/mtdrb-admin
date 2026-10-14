@@ -29,7 +29,12 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
-import { computeLineTotals, computeInvoiceTotals, getCurrencyDecimals } from "../../utils/invoiceMath";
+import {
+  computeLineTotals,
+  computeInvoiceTotals,
+  getCurrencyDecimals,
+  toPersistedMoney,
+} from "../../utils/invoiceMath";
 
 const VALID_VAT_RATES: VatRate[] = [0, 5, 10, 15];
 const FALLBACK_VAT_RATE: VatRate = VALID_VAT_RATES.includes(
@@ -419,6 +424,9 @@ export function NewInvoiceModal({
     try {
       const action = editingInvoice ? "updated" : "created";
       const existingMetadata = (editingInvoice?.metadata as Record<string, unknown>) || {};
+      // Round every computed money value to the currency's minor unit at
+      // persistence time (NUMERIC columns must not receive float noise).
+      const money = (value: number) => toPersistedMoney(value, invoiceData.currency);
       const invoicePayload = {
         type: invoiceData.type,
         status: saveAsDraft ? "draft" : invoiceData.status,
@@ -428,17 +436,17 @@ export function NewInvoiceModal({
         payment_method: invoiceData.payment_method,
         paid_amount: invoiceData.paid_amount,
         currency: invoiceData.currency,
-        amount: subtotal,
-        vat_total,
-        total,
-        line_items: items,
+        amount: money(subtotal),
+        vat_total: money(vat_total),
+        total: money(total),
+        line_items: items.map((item) => ({ ...item, total: money(item.total) })),
         tenant_id: tenantId,
         metadata: {
           ...existingMetadata,
           invoice_number: invoiceData.invoice_number || `INV-${Date.now()}`,
           notes: invoiceData.notes,
-          subtotal,
-          discount_total,
+          subtotal: money(subtotal),
+          discount_total: money(discount_total),
         },
       };
 

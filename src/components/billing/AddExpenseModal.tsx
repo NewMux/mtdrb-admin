@@ -33,6 +33,7 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
+import { toPersistedMoney } from "../../utils/invoiceMath";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -298,7 +299,7 @@ export function AddExpenseModal({
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
         country_code: DEFAULT_COUNTRY_CODE || null,
-        vat_amount: calculateVatAmount(),
+        vat_amount: toPersistedMoney(calculateVatAmount(), DEFAULT_CURRENCY),
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
         ...(editingExpense

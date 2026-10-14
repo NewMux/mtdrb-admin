@@ -34,7 +34,7 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
-import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
+import { splitVat, getCurrencyDecimals, toPersistedMoney } from "../../utils/invoiceMath";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -302,14 +302,14 @@ export function AddInvoiceModal({
         member_id: data.member_id,
         issue_date: data.date,
         due_date: dueDate.toISOString().split("T")[0],
-        amount: net,
-        total: gross,
+        amount: toPersistedMoney(net, DEFAULT_CURRENCY),
+        total: toPersistedMoney(gross, DEFAULT_CURRENCY),
         type: data.category as InvoiceType,
         payment_method: data.payment_method,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
         currency: DEFAULT_CURRENCY,
-        vat_total: vat,
+        vat_total: toPersistedMoney(vat, DEFAULT_CURRENCY),
         metadata: {
           title: data.title,
           notes: data.description || null,
