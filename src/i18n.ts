@@ -365,6 +365,8 @@ const resources = {
         keyPerformanceIndicators: "Key performance indicators",
         targets: {
           setTargets: "Set Dashboard Targets",
+          notSet: "Not set",
+          noTargetHint: "No target set",
           subtitle: "Configure your KPI targets to track progress and measure success",
           configureTargets: "Configure Targets",
           configureDesc: "Set custom targets for each key performance indicator",
@@ -2681,6 +2683,8 @@ const resources = {
         keyPerformanceIndicators: "مؤشرات الأداء الرئيسية",
         targets: {
           setTargets: "تعيين أهداف لوحة التحكم",
+          notSet: "غير محدد",
+          noTargetHint: "لم يتم تحديد هدف",
           subtitle: "قم بتكوين أهداف مؤشرات الأداء الرئيسية لتتبع التقدم وقياس النجاح",
           configureTargets: "تكوين الأهداف",
           configureDesc: "قم بتعيين أهداف مخصصة لكل مؤشر أداء رئيسي",
