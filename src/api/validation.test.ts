@@ -5,8 +5,43 @@ import {
   validateUUID,
   validateInput,
   createInvoiceSchema,
+  createMemberSchema,
+  updateMemberSchema,
   paginationSchema,
 } from "./validation";
+
+describe("client-supplied tenant_id", () => {
+  it("is stripped from validated create payloads, never passed through", () => {
+    const result = validateInput(createInvoiceSchema, {
+      member_id: "123e4567-e89b-12d3-a456-426614174000",
+      amount: 10,
+      description: "Monthly membership",
+      due_date: "2024-12-31",
+      tenant_id: "attacker-tenant",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("tenant_id");
+    }
+  });
+
+  it("is stripped from member create and update payloads", () => {
+    const created = validateInput(createMemberSchema, {
+      name: "A Member",
+      email: "member@example.com",
+      tenant_id: "attacker-tenant",
+    });
+    expect(created.success).toBe(true);
+    if (created.success) expect(created.data).not.toHaveProperty("tenant_id");
+
+    const updated = validateInput(updateMemberSchema, {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      tenant_id: "attacker-tenant",
+    });
+    expect(updated.success).toBe(true);
+    if (updated.success) expect(updated.data).not.toHaveProperty("tenant_id");
+  });
+});
 
 describe("validateTenantAccess", () => {
   it("allows access when the tenant ids match", () => {

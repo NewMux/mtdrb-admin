@@ -8,6 +8,13 @@ export const phoneSchema = z
 export const nameSchema = z.string().min(1, "Name is required").max(100, "Name too long");
 export const uuidSchema = z.string().uuid("Invalid UUID format");
 
+// None of the create/update schemas below accept a `tenant_id`. The tenant
+// is never a client-supplied input: callers must take it from the
+// authenticated membership (AuthProvider's tenantId) and RLS re-derives it
+// server-side via get_user_tenant_id() anyway. z.object() strips unknown
+// keys, so a `tenant_id` passed in the payload is dropped from the
+// validated output rather than passed through.
+
 // Member schemas
 export const createMemberSchema = z.object({
   name: nameSchema,
@@ -21,7 +28,6 @@ export const createMemberSchema = z.object({
   join_date: z.string().default(() => new Date().toISOString()),
   status: z.enum(["active", "inactive", "suspended"]).default("active"),
   notes: z.string().optional(),
-  tenant_id: z.string().optional(),
 });
 
 export const updateMemberSchema = createMemberSchema.partial().extend({
@@ -41,7 +47,6 @@ export const createClassSchema = z.object({
   location: z.string().optional(),
   price: z.number().min(0, "Price cannot be negative"),
   status: z.enum(["scheduled", "cancelled", "completed"]).default("scheduled"),
-  tenant_id: z.string().optional(),
 });
 
 export const updateClassSchema = createClassSchema.partial().extend({
@@ -59,7 +64,6 @@ export const createTrainerSchema = z.object({
   status: z.enum(["active", "inactive", "busy", "available"]).default("active"),
   hourly_rate: z.number().min(0, "Hourly rate cannot be negative"),
   bio: z.string().optional(),
-  tenant_id: z.string().optional(),
 });
 
 export const updateTrainerSchema = createTrainerSchema.partial().extend({
@@ -73,7 +77,6 @@ export const createBookingSchema = z.object({
   booking_date: z.string(),
   status: z.enum(["confirmed", "cancelled", "no_show", "completed"]).default("confirmed"),
   notes: z.string().optional(),
-  tenant_id: z.string().optional(),
 });
 
 export const updateBookingSchema = createBookingSchema.partial().extend({
@@ -88,7 +91,6 @@ export const createInvoiceSchema = z.object({
   due_date: z.string(),
   status: z.enum(["pending", "paid", "overdue", "cancelled"]).default("pending"),
   payment_method: z.enum(["credit_card", "bank_transfer", "cash", "other"]).optional(),
-  tenant_id: z.string().optional(),
 });
 
 export const updateInvoiceSchema = createInvoiceSchema.partial().extend({
