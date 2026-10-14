@@ -20,6 +20,7 @@ import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { monthBoundary } from "../../utils/periodBoundaries";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
+import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
 const kpiColorMap = {
@@ -167,11 +168,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       // Calculate revenue
       const currentRevenue = currentInvoices.reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
       const previousRevenue = previousInvoices.reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
       const revenueChange = previousRevenue > 0
@@ -202,11 +203,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const attendanceChange = currentAttendanceRate - previousAttendanceRate;
 
       // Get currency and targets from settings
-      const { data: settings } = await supabase
+      // maybeSingle: a tenant with no settings row yet is not an error.
+      const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
         .select("currency, metadata")
         .eq("tenant_id", tenantId)
-        .single();
+        .maybeSingle();
+      if (settingsError) throw settingsError;
 
       const settingsCurrency = settings?.currency || DEFAULT_CURRENCY;
       setCurrency(settingsCurrency);
@@ -218,11 +221,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setSavedTargets(targets);
 
       // Calculate average trainer rating as proxy for member satisfaction
-      const { data: trainers } = await supabase
+      const { data: trainers, error: trainersError } = await supabase
         .from("trainers")
         .select("rating")
         .eq("tenant_id", tenantId)
         .not("rating", "is", null);
+      if (trainersError) throw trainersError;
 
       const avgRating = trainers && trainers.length > 0
         ? trainers.reduce((sum, t) => sum + Number(t.rating || 0), 0) / trainers.length
