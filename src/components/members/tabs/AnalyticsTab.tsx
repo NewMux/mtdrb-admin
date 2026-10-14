@@ -42,6 +42,9 @@ import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { DEFAULT_TIMEZONE } from "../../../config/runtimeConfig";
+import { daysWindow } from "../../../utils/periodBoundaries";
+import { fetchAllRows } from "../../../utils/fetchAllRows";
 
 // Register Chart.js components
 ChartJS.register(
@@ -963,63 +966,77 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         return;
       }
 
-      const formatDate = (date: Date) => date.toISOString().split("T")[0];
-      const now = dayjs();
-      const periodStart = now.subtract(30, "days").toDate();
-      const periodEnd = now.toDate();
+      // The last 30 days including today, as full ISO instants in the
+      // gym's timezone with an exclusive upper bound (see
+      // periodBoundaries.ts) - `.lte(created_at, "<today>")` on a bare
+      // date excluded everything created later today.
+      const nowDate = new Date();
+      const now = dayjs(nowDate);
+      const period = daysWindow(nowDate, 30, DEFAULT_TIMEZONE);
+      const periodStart = new Date(period.startISO);
+      const periodEnd = nowDate;
 
-      // Fetch all necessary data in parallel
+      // Fetch all necessary data in parallel. Every query is paged
+      // (fetchAllRows): PostgREST caps a response at 1000 rows and would
+      // silently truncate these totals.
       const [
-        allMembersResult,
-        newMembersResult,
-        bookingsResult,
-        classesResult,
-        invoicesResult,
+        allMembers,
+        newMembers,
+        bookings,
+        classes,
+        invoices,
       ] = await Promise.all([
         // All members
-        supabase
-          .from("members")
-          .select("id, status, created_at, join_date, expiry_date, membership_type, metadata")
-          .eq("tenant_id", tenantId),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, status, created_at, join_date, expiry_date, membership_type, metadata")
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
         // New members this period
-        supabase
-          .from("members")
-          .select("id, status, created_at, join_date")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(periodStart))
-          .lte("created_at", formatDate(periodEnd)),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, status, created_at, join_date")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", period.startISO)
+            .lt("created_at", period.endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        ),
         // Bookings
-        supabase
-          .from("class_bookings")
-          .select("id, class_id, member_id, created_at, status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["booked", "checked_in", "completed"]),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("id, class_id, member_id, created_at, status")
+            .eq("tenant_id", tenantId)
+            .in("status", ["booked", "checked_in", "completed"])
+            .order("id")
+            .range(from, to),
+        ),
         // Classes with names
-        supabase
-          .from("classes")
-          .select("id, name")
-          .eq("tenant_id", tenantId),
-        // Invoices for revenue
-        supabase
-          .from("invoices")
-          .select("amount, created_at, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid"),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("classes")
+            .select("id, name")
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
+        // Invoices for revenue. No `id` in the select, but ordering by it
+        // still gives the pages a stable order.
+        fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, created_at, status")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .order("id")
+            .range(from, to),
+        ),
       ]);
-
-      const queryError =
-        allMembersResult.error ||
-        newMembersResult.error ||
-        bookingsResult.error ||
-        classesResult.error ||
-        invoicesResult.error;
-      if (queryError) throw queryError;
-
-      const allMembers = allMembersResult.data || [];
-      const newMembers = newMembersResult.data || [];
-      const bookings = bookingsResult.data || [];
-      const classes = classesResult.data || [];
-      const invoices = invoicesResult.data || [];
 
       // Calculate overview metrics
       const activeMembers = allMembers.filter(

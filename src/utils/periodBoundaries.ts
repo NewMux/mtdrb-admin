@@ -196,6 +196,29 @@ export function toZonedDateString(instant: Date | string, timezone: string): str
 }
 
 /**
+ * The instant (UTC ISO) of local midnight, in `timezone`, at the start of
+ * the calendar date `dateString` (YYYY-MM-DD) shifted by `offsetDays` -
+ * for turning a date picked in the UI into a query boundary, e.g.
+ * `zonedDateStartISO(end, tz, 1)` is the exclusive end of an inclusive
+ * date range. Returns null for a malformed date string.
+ */
+export function zonedDateStartISO(
+  dateString: string,
+  timezone: string,
+  offsetDays = 0,
+): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return zonedMidnight(
+    Number(year),
+    Number(month) - 1,
+    Number(day) + offsetDays,
+    timezone,
+  ).toISOString();
+}
+
+/**
  * Whole days elapsed in the current month (counting today) and the total
  * days in it, in `timezone` - the inputs for a month-end run-rate
  * projection (`monthToDate / daysElapsed * daysInMonth`).

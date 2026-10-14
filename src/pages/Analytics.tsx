@@ -22,6 +22,14 @@ import { getSmartInsights as fetchSmartInsights } from "../api/automation";
 import type { Member, Invoice } from "../types";
 import type { SmartInsight } from "../api/automation";
 import { useRTL } from "../hooks/useRTL";
+import { DEFAULT_TIMEZONE } from "../config/runtimeConfig";
+import {
+  dayBoundary,
+  toZonedDateString,
+  yearBoundary,
+  zonedDateStartISO,
+} from "../utils/periodBoundaries";
+import { fetchAllRows } from "../utils/fetchAllRows";
 
 // Analytics Components
 import MemberAnalytics from "../components/analytics/MemberAnalytics";
@@ -33,72 +41,92 @@ type MemberAnalyticsData = React.ComponentProps<typeof MemberAnalytics>;
 type RevenueOverviewData = React.ComponentProps<typeof RevenueOverview>;
 
 /**
- * Format a date to YYYY-MM-DD.
+ * Today's date (YYYY-MM-DD) `daysAgo` days back, in the gym's timezone -
+ * for the custom-range date inputs' defaults.
  */
-const toDateString = (date: Date) => date.toISOString().split("T")[0];
+const localDateString = (daysAgo = 0) =>
+  toZonedDateString(
+    dayBoundary(new Date(), daysAgo, DEFAULT_TIMEZONE).startISO,
+    DEFAULT_TIMEZONE,
+  );
+
+interface ResolvedRange {
+  start: Date;
+  endExclusive: Date;
+  previousStart: Date;
+  previousEndExclusive: Date;
+}
 
 /**
- * Resolve current and previous ranges based on filter.
+ * Resolve current and previous ranges based on filter, as instants at
+ * local midnight in the gym's timezone with exclusive upper bounds (see
+ * periodBoundaries.ts). Replaces `toISOString().split("T")[0]`
+ * truncation, which shifted every boundary by a day in UTC+3 and, via
+ * `.lte(created_at, "<today>")`, excluded everything created later today.
  */
-const resolveDateRange = (rangeKey: string, customStart?: string, customEnd?: string) => {
+const resolveDateRange = (
+  rangeKey: string,
+  customStart?: string,
+  customEnd?: string,
+): ResolvedRange => {
   const now = new Date();
-  let start = new Date(now);
-  let end = new Date(now);
-  let previousStart = new Date(now);
-  let previousEnd = new Date(now);
+  const tz = DEFAULT_TIMEZONE;
+  const todayEndExclusive = new Date(dayBoundary(now, 0, tz).endExclusiveISO);
+
+  // The last `days` days including today, and the `days` days before that.
+  const lastNDays = (days: number): ResolvedRange => {
+    const start = new Date(dayBoundary(now, days - 1, tz).startISO);
+    return {
+      start,
+      endExclusive: todayEndExclusive,
+      previousStart: new Date(dayBoundary(now, 2 * days - 1, tz).startISO),
+      previousEndExclusive: start,
+    };
+  };
 
   switch (rangeKey) {
     case "custom": {
-      start = customStart ? new Date(customStart) : start;
-      end = customEnd ? new Date(customEnd) : end;
-      // Calculate length of the custom range in days
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-      
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - diffDays);
-      break;
+      // Inclusive picked dates -> [start of first day, start of day after last).
+      let startISO = customStart ? zonedDateStartISO(customStart, tz) : null;
+      let endExclusiveISO = customEnd ? zonedDateStartISO(customEnd, tz, 1) : null;
+      if (!startISO || !endExclusiveISO) return lastNDays(30);
+      if (new Date(endExclusiveISO) <= new Date(startISO)) {
+        // Dates picked in reverse order: swap them.
+        startISO = zonedDateStartISO(customEnd as string, tz);
+        endExclusiveISO = zonedDateStartISO(customStart as string, tz, 1);
+        if (!startISO || !endExclusiveISO) return lastNDays(30);
+      }
+      const lengthDays = Math.round(
+        (new Date(endExclusiveISO).getTime() - new Date(startISO).getTime()) / 86_400_000,
+      );
+      const firstDay = toZonedDateString(startISO, tz);
+      const previousStartISO = zonedDateStartISO(firstDay, tz, -lengthDays) as string;
+      return {
+        start: new Date(startISO),
+        endExclusive: new Date(endExclusiveISO),
+        previousStart: new Date(previousStartISO),
+        previousEndExclusive: new Date(startISO),
+      };
     }
-    case "last-7-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 6);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 6);
-      break;
-    }
-    case "last-90-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 89);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 89);
-      break;
-    }
+    case "last-7-days":
+      return lastNDays(7);
+    case "last-90-days":
+      return lastNDays(90);
     case "this-year": {
-      start = new Date(now.getFullYear(), 0, 1);
-      end = new Date(now);
-      previousStart = new Date(now.getFullYear() - 1, 0, 1);
-      previousEnd = new Date(now.getFullYear() - 1, 11, 31);
-      break;
+      // Year to date vs the whole of the previous year.
+      const thisYear = yearBoundary(now, tz);
+      const previousYear = yearBoundary(new Date(new Date(thisYear.startISO).getTime() - 1), tz);
+      return {
+        start: new Date(thisYear.startISO),
+        endExclusive: todayEndExclusive,
+        previousStart: new Date(previousYear.startISO),
+        previousEndExclusive: new Date(previousYear.endExclusiveISO),
+      };
     }
     case "last-30-days":
-    default: {
-      start = new Date(now);
-      start.setDate(now.getDate() - 29);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 29);
-      break;
-    }
+    default:
+      return lastNDays(30);
   }
-
-  return { start, end, previousStart, previousEnd };
 };
 
 /**
@@ -167,8 +195,8 @@ export default function Analytics() {
   const [insights, setInsights] = useState<SmartInsight[]>([]);
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
-    customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-    customEndDate: toDateString(new Date()),
+    customStartDate: localDateString(30),
+    customEndDate: localDateString(0),
     branch: "all",
     metricType: "all",
     minRevenue: "",
@@ -256,20 +284,41 @@ export default function Analytics() {
     try {
       setLoading(true);
 
-      const { start, end, previousStart, previousEnd } = resolveDateRange(
+      const { start, endExclusive, previousStart, previousEndExclusive } = resolveDateRange(
         filters.dateRange,
         filters.customStartDate,
         filters.customEndDate,
       );
-      const queryStart = toDateString(previousStart);
-      const queryEnd = toDateString(end);
+      // One fetch covers both the previous and the current range.
+      const queryStart = previousStart.toISOString();
+      const queryEndExclusive = endExclusive.toISOString();
+
+      // Members, invoices and bookings are paged (fetchAllRows): PostgREST
+      // caps a response at 1000 rows and would silently truncate. A paging
+      // error is rethrown with the same messages the per-table checks
+      // below used to produce.
+      const pagedOrThrow = async <T,>(
+        label: string,
+        page: Parameters<typeof fetchAllRows<T>>[0],
+      ): Promise<T[]> => {
+        try {
+          return await fetchAllRows(page);
+        } catch (error) {
+          console.error(`Error fetching ${label}:`, error);
+          const message =
+            error && typeof error === "object" && "message" in error
+              ? String((error as { message: unknown }).message)
+              : String(error);
+          throw new Error(`Failed to fetch ${label}: ${message}`);
+        }
+      };
 
       const [
         settingsResult,
         branchesResult,
-        membersResult,
-        invoicesResult,
-        bookingsResult,
+        membersRows,
+        invoicesRows,
+        bookingsRows,
       ] = await Promise.all([
         supabase
           .from("gym_settings")
@@ -282,26 +331,38 @@ export default function Analytics() {
           .eq("tenant_id", tenantId)
           .eq("is_active", true)
           .order("name"),
-        supabase
-          .from("members")
-          .select(
-            "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
-          )
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("invoices")
-          .select(
-            "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
-          )
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
-        supabase
-          .from("class_bookings")
-          .select("id, member_id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
+        pagedOrThrow("members", (from, to) =>
+          supabase
+            .from("members")
+            .select(
+              "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
+            )
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
+        pagedOrThrow("invoices", (from, to) =>
+          supabase
+            .from("invoices")
+            .select(
+              "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
+            )
+            .eq("tenant_id", tenantId)
+            .gte("created_at", queryStart)
+            .lt("created_at", queryEndExclusive)
+            .order("id")
+            .range(from, to),
+        ),
+        pagedOrThrow("class bookings", (from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("id, member_id, status, created_at")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", queryStart)
+            .lt("created_at", queryEndExclusive)
+            .order("id")
+            .range(from, to),
+        ),
       ]);
 
       // Handle errors with better messaging
@@ -319,37 +380,14 @@ export default function Analytics() {
         }
       }
       
-      if (membersResult.error) {
-        console.error("Error fetching members:", membersResult.error);
-        throw new Error(`Failed to fetch members: ${membersResult.error.message}`);
-      }
-      
-      if (invoicesResult.error) {
-        console.error("Error fetching invoices:", invoicesResult.error);
-        if (invoicesResult.error.code === "PGRST116") {
-          console.warn("invoices table does not exist, continuing without invoices");
-        } else {
-          throw new Error(`Failed to fetch invoices: ${invoicesResult.error.message}`);
-        }
-      }
-      
-      if (bookingsResult.error) {
-        console.error("Error fetching class_bookings:", bookingsResult.error);
-        if (bookingsResult.error.code === "PGRST116") {
-          console.warn("class_bookings table does not exist, continuing without bookings");
-        } else {
-          throw new Error(`Failed to fetch class bookings: ${bookingsResult.error.message}`);
-        }
-      }
-
       const branches = branchesResult.data || [];
-      const members = (membersResult.data || []).map((member) => ({
+      const members = membersRows.map((member) => ({
         ...member,
         name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
         full_name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
       })) as Member[];
-      const invoices = (invoicesResult.data || []) as Invoice[];
-      const bookings = bookingsResult.data || [];
+      const invoices = invoicesRows as Invoice[];
+      const bookings = bookingsRows;
 
       const invoiceCurrency =
         invoices.find((invoice) => invoice.currency)?.currency || "";
@@ -394,13 +432,13 @@ export default function Analytics() {
         const date = invoiceDate(invoice);
         if (!date) return false;
         const created = new Date(date);
-        return created >= start && created <= end && matchesRevenueFilter(invoice);
+        return created >= start && created < endExclusive && matchesRevenueFilter(invoice);
       });
       const invoicesPrevious = invoices.filter((invoice) => {
         const date = invoiceDate(invoice);
         if (!date) return false;
         const created = new Date(date);
-        return created >= previousStart && created <= previousEnd && matchesRevenueFilter(invoice);
+        return created >= previousStart && created < previousEndExclusive && matchesRevenueFilter(invoice);
       });
 
       const paidInvoices = invoicesInRange.filter(
@@ -421,12 +459,12 @@ export default function Analytics() {
 
       const currentBookings = bookings.filter((booking) => {
         const created = booking.created_at ? new Date(booking.created_at) : null;
-        return created ? created >= start && created <= end : false;
+        return created ? created >= start && created < endExclusive : false;
       });
       const previousBookings = bookings.filter((booking) => {
         const created = booking.created_at ? new Date(booking.created_at) : null;
         return created
-          ? created >= previousStart && created <= previousEnd
+          ? created >= previousStart && created < previousEndExclusive
           : false;
       });
 
@@ -457,7 +495,7 @@ export default function Analytics() {
         const created = member.join_date || member.created_at;
         if (!created) return false;
         const createdDate = new Date(created);
-        return createdDate >= start && createdDate <= end;
+        return createdDate >= start && createdDate < endExclusive;
       }).length;
 
       const revenueChange = calculateChange(currentRevenue, previousRevenue);
@@ -1453,8 +1491,8 @@ export default function Analytics() {
         onClear={() => {
           setFilters({
             dateRange: "last-30-days",
-            customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-            customEndDate: toDateString(new Date()),
+            customStartDate: localDateString(30),
+            customEndDate: localDateString(0),
             branch: "all",
             metricType: "all",
             minRevenue: "",

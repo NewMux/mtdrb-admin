@@ -36,6 +36,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { DEFAULT_TIMEZONE } from "../../../config/runtimeConfig";
+import { dayBoundary, daysWindow } from "../../../utils/periodBoundaries";
+import { fetchAllRows } from "../../../utils/fetchAllRows";
 
 // Register Chart.js components
 ChartJS.register(
@@ -1318,35 +1321,45 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         setLoading(true);
         setLoadError(false);
         const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        // Full ISO instants in the gym's timezone (see periodBoundaries.ts)
+        // rather than `toISOString().split("T")[0]`, which truncates to a
+        // UTC date and shifts the window by a day in UTC+3.
+        const last30Days = daysWindow(now, 30, DEFAULT_TIMEZONE);
+        const previous30DaysStart = dayBoundary(now, 59, DEFAULT_TIMEZONE).startISO;
 
-        // Fetch classes
-        const { data: allClasses, error: classesError } = await supabase
-          .from("classes")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("start_time", formatDate(thirtyDaysAgo));
+        // Row-heavy queries are paged (fetchAllRows): PostgREST caps a
+        // single response at 1000 rows and would silently truncate.
+        const allClasses = await fetchAllRows((from, to) =>
+          supabase
+            .from("classes")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .gte("start_time", last30Days.startISO)
+            .order("id")
+            .range(from, to),
+        );
 
-        if (classesError) throw classesError;
+        const allBookings = await fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("*, members(*), classes(*)")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", last30Days.startISO)
+            .order("id")
+            .range(from, to),
+        );
 
-        // Fetch class bookings
-        const { data: allBookings, error: bookingsError } = await supabase
-          .from("class_bookings")
-          .select("*, members(*), classes(*)")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(thirtyDaysAgo));
-
-        if (bookingsError) throw bookingsError;
-
-        // Fetch previous period data for trends
-        const { data: previousBookings } = await supabase
-          .from("class_bookings")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(sixtyDaysAgo))
-          .lt("created_at", formatDate(thirtyDaysAgo));
+        // Previous period data for trends
+        const previousBookings = await fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", previous30DaysStart)
+            .lt("created_at", last30Days.startISO)
+            .order("id")
+            .range(from, to),
+        );
 
         // Fetch trainers
         const { data: trainers, error: trainersError } = await supabase
@@ -1357,14 +1370,16 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         if (trainersError) throw trainersError;
 
         // Fetch invoices for revenue
-        const { data: invoices, error: invoicesError } = await supabase
-          .from("invoices")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(thirtyDaysAgo))
-          .in("status", ["paid", "completed"]);
-
-        if (invoicesError) throw invoicesError;
+        const invoices = await fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", last30Days.startISO)
+            .in("status", ["paid", "completed"])
+            .order("id")
+            .range(from, to),
+        );
 
         // Calculate performance metrics
         const completedClasses = (allClasses || []).filter(c => c.status === "completed");
