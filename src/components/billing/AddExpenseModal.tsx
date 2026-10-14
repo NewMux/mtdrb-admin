@@ -531,7 +531,7 @@ export function AddExpenseModal({
           </div>
               <div className="flex items-center space-x-4 text-start">
                 <AppleToggle
-                  label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة (10%)")}
+                  label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة")}
                   checked={watchedVatIncluded}
                   onChange={(checked) => {
                     setValue("vat_included", checked);
