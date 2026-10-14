@@ -83,6 +83,9 @@ describe("computePosCartTotals", () => {
       0.001,
       "BHD",
     );
+    // Equal remainders: the leftover unit goes to the earliest line, the
+    // same tie-break as the server-side complete_pos_sale.
+    expect(totals.lines.map((l) => l.discount)).toEqual([0.001, 0, 0]);
     const sum = totals.lines.reduce((s, l) => s + l.discount, 0);
     expect(toPersistedMoney(sum, "BHD")).toBe(0.001);
     expect(totals.lines.every((l) => l.discountedNet >= 0)).toBe(true);

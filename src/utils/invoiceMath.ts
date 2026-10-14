@@ -215,7 +215,9 @@ export interface PosCartTotals {
  * method, so the line discounts always sum exactly to the cart discount and
  * no line is ever discounted below zero - including when the subtotal is
  * below 1.000 currency unit (the old `Math.max(subtotal, 1)` divisor
- * under-allocated the discount there and overcharged VAT).
+ * under-allocated the discount there and overcharged VAT). The
+ * server-side complete_pos_sale (migration 20261014110000) applies the same
+ * rule, so the preview matches the stored sale.
  */
 export function computePosCartTotals(
   lines: PosCartLineInput[],
@@ -236,9 +238,12 @@ export function computePosCartTotals(
 
   // Largest-remainder allocation of discountMinor across lines.
   const allocations = lineNetMinor.map((netMinor, index) => {
-    const exact = subtotalMinor === 0 ? 0 : (discountMinor * netMinor) / subtotalMinor;
-    const floor = Math.floor(exact);
-    return { index, floor, remainder: exact - floor };
+    // Integer floor and remainder (not a float fraction), so ties break
+    // exactly like the server-side complete_pos_sale (div/mod on numeric).
+    if (subtotalMinor === 0) return { index, floor: 0, remainder: 0 };
+    const product = discountMinor * netMinor;
+    const remainder = product % subtotalMinor;
+    return { index, floor: (product - remainder) / subtotalMinor, remainder };
   });
   let leftover = discountMinor - allocations.reduce((sum, a) => sum + a.floor, 0);
   const lineDiscountMinor = allocations.map((a) => a.floor);
