@@ -26,6 +26,9 @@ import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { dayBoundary, toZonedDateString } from "../../utils/periodBoundaries";
+import { summarizeVatReturnDeadlines } from "../../utils/vatReturnDeadlines";
+import { DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -277,20 +280,27 @@ export default function SmartVatDashboard({
         previousPeriodVat > 0
           ? ((currentPeriodVat - previousPeriodVat) / previousPeriodVat) * 100
           : 0;
-      const overdueReturns = vatReturnsList.filter(
-        (item) => item.status === "rejected",
-      ).length;
-      const upcomingDeadlines = vatReturnsList.filter(
-        (item) => item.status === "draft",
-      ).length;
+      // Deadline status comes from each return's due date vs today (in
+      // the gym's timezone), not from its workflow status.
+      const UPCOMING_WINDOW_DAYS = 30;
+      const deadlineSummary = summarizeVatReturnDeadlines(
+        vatReturnsList,
+        toZonedDateString(now, DEFAULT_TIMEZONE),
+        toZonedDateString(
+          dayBoundary(now, -UPCOMING_WINDOW_DAYS, DEFAULT_TIMEZONE).startISO,
+          DEFAULT_TIMEZONE,
+        ),
+      );
+      const overdueReturns = deadlineSummary.overdue;
+      const upcomingDeadlines = deadlineSummary.upcoming;
       const criticalIssues = overdueReturns;
-      const complianceScore = Math.max(0, 100 - criticalIssues * 10);
+      const onTimeFilingRate = deadlineSummary.onTimeFilingRate;
 
       setDashboardData({
         totalVatCollected,
         totalVatPaid,
         netVatPayable,
-        complianceScore,
+        onTimeFilingRate,
         currentPeriodVat,
         currentPeriodVatPaid,
         currentPeriodNetVat,
@@ -339,7 +349,7 @@ export default function SmartVatDashboard({
         totalVatCollected: 0,
         totalVatPaid: 0,
         netVatPayable: 0,
-        complianceScore: 0,
+        onTimeFilingRate: null,
         currentPeriodVat: 0,
         currentPeriodVatPaid: 0,
         currentPeriodNetVat: 0,
@@ -484,7 +494,8 @@ export default function SmartVatDashboard({
     }
   };
 
-  const getComplianceColor = (score: number) => {
+  const getComplianceColor = (score: number | null) => {
+    if (score === null) return "text-gray-600 dark:text-gray-400";
     if (score >= 90) return "text-green-600 dark:text-green-400";
     if (score >= 70) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
@@ -497,7 +508,8 @@ export default function SmartVatDashboard({
     { id: "analytics", label: t("billing.analytics"), icon: FiTrendingUp },
   ];
 
-  const getComplianceIcon = (score: number) => {
+  const getComplianceIcon = (score: number | null) => {
+    if (score === null) return null;
     if (score >= 90) return <FiCheckCircle className="text-green-500 dark:text-green-400" />;
     if (score >= 70) return <FiAlertTriangle className="text-yellow-500 dark:text-yellow-400" />;
     return <FiAlertTriangle className="text-red-500 dark:text-red-400" />;
@@ -631,18 +643,25 @@ export default function SmartVatDashboard({
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {t("billing.complianceScore")}
+                    {t("billing.onTimeFilingRate")}
                   </p>
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     <p
-                      className={`text-2xl font-bold ${getComplianceColor(dashboardData.complianceScore)}`}
+                      className={`text-2xl font-bold ${getComplianceColor(dashboardData.onTimeFilingRate)}`}
                     >
-                      {dashboardData.complianceScore}%
+                      {dashboardData.onTimeFilingRate === null
+                        ? "—"
+                        : `${dashboardData.onTimeFilingRate}%`}
                     </p>
                     <span className={isRTL ? 'mr-2' : 'ml-2'}>
-                      {getComplianceIcon(dashboardData.complianceScore)}
+                      {getComplianceIcon(dashboardData.onTimeFilingRate)}
                     </span>
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {dashboardData.onTimeFilingRate === null
+                      ? t("billing.noReturnsDueYet")
+                      : t("billing.onTimeFilingRateHint")}
+                  </p>
                 </div>
                 <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
                   <FiShield className="text-gray-600 dark:text-gray-400" size={24} />
@@ -950,12 +969,19 @@ export default function SmartVatDashboard({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div
-                  className={`text-3xl font-bold ${getComplianceColor(dashboardData?.complianceScore ?? 0)}`}
+                  className={`text-3xl font-bold ${getComplianceColor(dashboardData?.onTimeFilingRate ?? null)}`}
                 >
-                  {dashboardData?.complianceScore ?? 0}%
+                  {dashboardData?.onTimeFilingRate == null
+                    ? "—"
+                    : `${dashboardData.onTimeFilingRate}%`}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("billing.complianceScore")}
+                  {t("billing.onTimeFilingRate")}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {dashboardData?.onTimeFilingRate == null
+                    ? t("billing.noReturnsDueYet")
+                    : t("billing.onTimeFilingRateHint")}
                 </p>
               </div>
               <div className="text-center">
@@ -1003,26 +1029,9 @@ export default function SmartVatDashboard({
                 </span>
               </div>
 
-              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {t("billing.vatPaymentsMadeOnTime")}
-                  </span>
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    (dashboardData?.overdueReturns ?? 0) === 0
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                  }`}
-                >
-                  {(dashboardData?.overdueReturns ?? 0) === 0
-                    ? t("billing.compliant")
-                    : `${dashboardData?.overdueReturns ?? 0} ${t("billing.overdue")}`}
-                </span>
-              </div>
-
+              {/* No "VAT payments made on time" row: there is no VAT
+                  payment record to measure it from (it used to repeat the
+                  overdue-returns count under a payments label). */}
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
