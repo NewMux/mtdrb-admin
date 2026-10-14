@@ -35,7 +35,8 @@ if (hasWindow && !("IntersectionObserver" in window)) {
     disconnect = () => {};
     takeRecords = () => [];
   }
-  window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+  (window as unknown as { IntersectionObserver: typeof IntersectionObserver }).IntersectionObserver =
+    MockIntersectionObserver as unknown as typeof IntersectionObserver;
 }
 
 // Runs a cleanup after each test case (e.g. clearing jsdom)

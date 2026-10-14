@@ -23,7 +23,7 @@ describe("fetchAllRows", () => {
       .mockResolvedValueOnce({ data: page1, error: null })
       .mockResolvedValueOnce({ data: page2, error: null });
 
-    const rows = await fetchAllRows(queryPage, 3);
+    const rows = await fetchAllRows<{ id: number }>(queryPage, 3);
     expect(rows).toHaveLength(7);
     expect(rows.map((r) => r.id)).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(queryPage).toHaveBeenCalledTimes(3);

@@ -1,0 +1,10 @@
+{
+  // Type-checks the test files that tsconfig.json leaves out of the app
+  // build. Run by `npm run typecheck`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src", "src/vite-env.d.ts"],
+  "exclude": []
+}

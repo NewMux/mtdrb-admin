@@ -107,26 +107,10 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
       }
       if (!result?.cancelled) throw new Error(result?.error || "Failed to cancel subscription");
 
-      // Log the cancellation event (if activities table exists)
-      try {
-        if (tenantId) {
-          await supabase.from("activities").insert({
-            tenant_id: tenantId,
-            type: "subscription",
-            title: "Subscription Cancelled",
-            description: `${currentPlan} subscription cancelled. Reason: ${selectedReason}`,
-            status: "success",
-            metadata: {
-              plan: currentPlan,
-              reason: selectedReason,
-              feedback: feedback,
-            },
-          });
-        }
-      } catch (logError) {
-        // Silently fail logging - subscription is still cancelled
-        console.error("Failed to log cancellation:", logError);
-      }
+      // The reason and feedback are recorded on the subscription row by the
+      // function. (This used to also insert an activities row of type
+      // "subscription", which the table's type CHECK rejects, so it never
+      // succeeded.)
 
       onSuccess();
       handleClose();
