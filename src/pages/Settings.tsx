@@ -230,6 +230,13 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Set when the profile picture fails to load, so the initials fallback
+  // renders through React instead of being written via innerHTML.
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [settings.profile.profilePicture]);
+
   const [showLoginHistoryModal, setShowLoginHistoryModal] = useState(false);
   const [loginHistory, setLoginHistory] = useState<
     { id: string; created_at: string; description: string }[]
@@ -606,21 +613,14 @@ const Settings: React.FC = () => {
                 <div className="space-y-6">
                   {/* Profile Picture */}
                   <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
-                    {settings.profile.profilePicture ? (
+                    {settings.profile.profilePicture && !avatarLoadFailed ? (
                       <div className="w-20 h-20 rounded-full ring-2 ring-white shadow-sm overflow-hidden">
                         <img
                           src={settings.profile.profilePicture}
                           alt="Profile"
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to initials if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<span class="text-white font-bold text-xl w-full h-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">${settings.profile.firstName?.[0]?.toUpperCase() || settings.profile.lastName?.[0]?.toUpperCase() || "A"}</span>`;
-                            }
-                          }}
+                          // Fall back to the initials avatar below if the image fails to load
+                          onError={() => setAvatarLoadFailed(true)}
                         />
                       </div>
                     ) : (

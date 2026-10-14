@@ -301,10 +301,11 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       }).length;
       const retentionRate = totalOldMembers > 0 ? (retainedMembers / totalOldMembers) * 100 : 0;
 
-      // Get currency
+      // Get currency and the admin's saved targets (set via
+      // SetTargetsModal, shown by DashboardOverview)
       const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .single();
       // PGRST116 = no row found, which is a legitimate "not configured
@@ -313,6 +314,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       const currency = settings?.currency || DEFAULT_CURRENCY;
       const currencySymbol = currency || "";
+      const savedTargets = (
+        settings?.metadata as { dashboardTargets?: { revenue?: number } } | null
+      )?.dashboardTargets;
+      const savedRevenueTarget =
+        typeof savedTargets?.revenue === "number" ? savedTargets.revenue
+          : null;
 
       // Find inactive members (haven't visited in 14+ days)
       const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
@@ -350,7 +357,13 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           trend: revenueChange >= 0 ? "up" : "down",
           icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
           color: "green",
-          subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+          // Only the admin's saved target - never an invented one (this
+          // used to show currentRevenue * 1.1, contradicting the saved
+          // target displayed just above it).
+          subtitle:
+            savedRevenueTarget !== null
+              ? `${t("dashboard.target")}: ${currencySymbol} ${(savedRevenueTarget / 1000).toFixed(1)}k`
+              : t("dashboard.vsLastMonth"),
         },
         {
           // This week's raw attendance rate, not a trend - there's no

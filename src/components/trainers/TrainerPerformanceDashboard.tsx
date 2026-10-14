@@ -22,6 +22,9 @@ import type { Database } from "../../types/supabase";
 import { exportCSV } from "../../utils/exportData";
 import { useRTL } from "../../hooks/useRTL";
 import { useTranslation } from "react-i18next";
+import { DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { dayBoundary, daysWindow } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 import {
   LineChart,
   Line,
@@ -466,34 +469,40 @@ export default function TrainerPerformanceDashboard({
       const now = new Date();
       const daysMap: Record<string, number> = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
       const days = daysMap[filters.dateRange] || 30;
-      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-      const prevStartDate = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      // Full ISO instants in the gym's timezone (see periodBoundaries.ts),
+      // not `toISOString().split("T")[0]`, which truncates to a UTC date
+      // and shifts the window by a day in UTC+3. The previous period is
+      // the `days` days immediately before the current window.
+      const startDate = daysWindow(now, days, DEFAULT_TIMEZONE).startISO;
+      const prevStartDate = dayBoundary(now, 2 * days - 1, DEFAULT_TIMEZONE).startISO;
 
-      const fetchClasses = async (from: Date, to?: Date) => {
-        let query = supabase
-          .from("classes")
-          .select("*, trainers(*)")
-          .eq("tenant_id", tenantId)
-          .gte("start_time", formatDate(from));
-        if (to) query = query.lt("start_time", formatDate(to));
-        if (filters.trainer) query = query.eq("trainer_id", filters.trainer);
-        if (filters.classType) query = query.eq("metadata->>type", filters.classType);
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data || []) as ClassWithTrainer[];
+      // Paged via fetchAllRows: PostgREST caps a response at 1000 rows.
+      const fetchClasses = async (fromISO: string, toISO?: string) => {
+        const rows = await fetchAllRows((rangeFrom, rangeTo) => {
+          let query = supabase
+            .from("classes")
+            .select("*, trainers(*)")
+            .eq("tenant_id", tenantId)
+            .gte("start_time", fromISO);
+          if (toISO) query = query.lt("start_time", toISO);
+          if (filters.trainer) query = query.eq("trainer_id", filters.trainer);
+          if (filters.classType) query = query.eq("metadata->>type", filters.classType);
+          return query.order("id").range(rangeFrom, rangeTo);
+        });
+        return rows as ClassWithTrainer[];
       };
 
-      const fetchBookings = async (from: Date, to?: Date) => {
-        let query = supabase
-          .from("class_bookings")
-          .select("*, members(*), classes(*)")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(from));
-        if (to) query = query.lt("created_at", formatDate(to));
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data || []) as ClassBookingWithRelations[];
+      const fetchBookings = async (fromISO: string, toISO?: string) => {
+        const rows = await fetchAllRows((rangeFrom, rangeTo) => {
+          let query = supabase
+            .from("class_bookings")
+            .select("*, members(*), classes(*)")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", fromISO);
+          if (toISO) query = query.lt("created_at", toISO);
+          return query.order("id").range(rangeFrom, rangeTo);
+        });
+        return rows as ClassBookingWithRelations[];
       };
 
       const [classes, bookings, prevClasses, prevBookings] =
