@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, weekBoundary, daysWindow } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -242,17 +243,22 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .eq("tenant_id", tenantId)
           .gte("classes.start_time", week.startISO)
           .lt("classes.start_time", week.endExclusiveISO),
-        supabase
-          .from("members")
-          .select("id, created_at, join_date, expiry_date, status, membership_status")
-          .eq("tenant_id", tenantId),
+        // Paged (fetchAllRows): PostgREST caps a response at 1000 rows, and
+        // every member count here would silently stop growing past that.
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, created_at, join_date, expiry_date, status, membership_status")
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
       ]);
 
       const queryError =
         currentInvoices.error ||
         previousInvoices.error ||
-        weekBookings.error ||
-        allMembers.error;
+        weekBookings.error;
       if (queryError) throw queryError;
 
       // Compare "active members today" against "members who would have
@@ -260,10 +266,10 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // join_date/expiry_date), not against "members who signed up last
       // month" - the latter is a different, much smaller population and
       // produces meaningless swings when compared to the full active count.
-      const currentMembersData = (allMembers.data || []).filter(isMemberCurrentlyActive);
+      const currentMembersData = allMembers.filter(isMemberCurrentlyActive);
       const currentMemberCount = currentMembersData.length;
       const previousMemberCount = countMembersActiveAsOf(
-        allMembers.data || [],
+        allMembers,
         previousMonthEnd,
       );
       const memberChange = previousMemberCount > 0
@@ -291,11 +297,11 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // Calculate retention (members who joined 90+ days ago and are still active)
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-      const retainedMembers = (allMembers.data || []).filter(m => {
+      const retainedMembers = allMembers.filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
         return joinDate <= ninetyDaysAgo && m.status === "active";
       }).length;
-      const totalOldMembers = (allMembers.data || []).filter(m => {
+      const totalOldMembers = allMembers.filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
         return joinDate <= ninetyDaysAgo;
       }).length;
