@@ -28,6 +28,7 @@ import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
 import { validatePassword } from "../utils/passwordPolicy";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 const Settings: React.FC = () => {
   usePageThemeContext();
@@ -83,7 +84,7 @@ const Settings: React.FC = () => {
     try {
       const { data: subData, error: subscriptionError } = await supabase
         .from("platform_subscriptions")
-        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, metadata")
+        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, payment_provider, metadata")
         .eq("tenant_id", tenantId)
         .maybeSingle();
 
@@ -92,7 +93,10 @@ const Settings: React.FC = () => {
       setSubscriptionInfo({
         tier: subData?.plan_tier || "Free",
         startDate: subData?.created_at,
-        isPaid: subData?.status === "active" || subData?.status === "trialing",
+        // Same rule as the server's is_tenant_entitled(): e.g. a cancelled
+        // subscription stays paid-for until its current_period_end, and an
+        // active Paddle row past its period end (plus grace) is not.
+        isPaid: isSubscriptionEntitled(subData),
         status: subData?.status,
         trialEnd: subData?.trial_end,
         currentPeriodEnd: subData?.current_period_end,
@@ -109,7 +113,9 @@ const Settings: React.FC = () => {
 
   // Handle subscription cancellation success
   const handleSubscriptionCancelled = () => {
-    setSubscriptionInfo({ tier: "Free", isPaid: false });
+    // Re-read rather than assume "Free": a cancelled subscription keeps
+    // access until the end of the period already paid for.
+    void fetchSubscriptionInfo();
     showSuccess(t("settings.subscriptionCancelled", "Subscription cancelled"), t("settings.subscriptionCancelledDesc", "Your subscription has been cancelled successfully."));
   };
 
@@ -247,17 +253,33 @@ const Settings: React.FC = () => {
     setShowLoginHistoryModal(true);
     setLoadingLoginHistory(true);
     try {
+      // activities has no user_id column: Login.tsx records the signed-in
+      // user in the "user" column as their email (or their id when there
+      // is no email), so match on either. The old .eq("user_id", ...)
+      // filter errored on the unknown column and the list was always empty.
+      const userKeys = Array.from(
+        new Set(
+          [user?.email, user?.email?.toLowerCase(), user?.id].filter(
+            (value): value is string => Boolean(value),
+          ),
+        ),
+      );
+      if (userKeys.length === 0) {
+        setLoginHistory([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("activities")
         .select("id, created_at, description")
         .eq("tenant_id", tenantId)
         .eq("type", "login")
-        .eq("user_id", user?.id)
+        .in("user", userKeys)
         .order("created_at", { ascending: false })
         .limit(10);
-      if (!error && data) {
-        setLoginHistory(data);
+      if (error) {
+        console.error("Failed to load login history:", error);
       }
+      setLoginHistory(data || []);
     } finally {
       setLoadingLoginHistory(false);
     }
@@ -1023,6 +1045,13 @@ const Settings: React.FC = () => {
                                 <span>{t("settings.memberSince", "Member since")} {new Date(subscriptionInfo.startDate).toLocaleDateString()}</span>
                               </p>
                             )}
+                            {subscriptionInfo.status === "cancelled" && subscriptionInfo.isPaid && subscriptionInfo.currentPeriodEnd && (
+                              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                                {t("settings.accessEndsOn", "Cancelled - access ends {{date}}", {
+                                  date: new Date(subscriptionInfo.currentPeriodEnd).toLocaleDateString(),
+                                })}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
@@ -1048,8 +1077,9 @@ const Settings: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Cancel Subscription Option - Only show if subscribed */}
-                    {subscriptionInfo.isPaid && (
+                    {/* Cancel Subscription Option - only for a subscription that is
+                        paid for and not already cancelled */}
+                    {subscriptionInfo.isPaid && subscriptionInfo.status !== "cancelled" && (
                       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30`}>
                         <div>
                           <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
@@ -1137,7 +1167,11 @@ const Settings: React.FC = () => {
                                   : t("billing.notSet", "Not set"),
                               })
                             : subscriptionInfo.status === "cancelled"
-                              ? t("settings.autoRenewalCancelled", "Cancelled, will not renew")
+                              ? subscriptionInfo.isPaid && subscriptionInfo.currentPeriodEnd
+                                ? t("settings.autoRenewalCancelledUntil", "Cancelled, will not renew - access until {{date}}", {
+                                    date: new Date(subscriptionInfo.currentPeriodEnd).toLocaleDateString(),
+                                  })
+                                : t("settings.autoRenewalCancelled", "Cancelled, will not renew")
                               : t("settings.autoRenewalNone", "No active subscription")}
                       </p>
                     </div>

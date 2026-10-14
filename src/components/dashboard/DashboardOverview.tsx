@@ -69,8 +69,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiDollarSign className="w-6 h-6" />,
       color: "green" as const,
-      target: "$0",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.activeMembers"),
@@ -78,8 +78,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiUsers className="w-6 h-6" />,
       color: "blue" as const,
-      target: "0",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.classAttendance"),
@@ -87,8 +87,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiCalendar className="w-6 h-6" />,
       color: "purple" as const,
-      target: "85%",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.memberSatisfaction"),
@@ -96,8 +96,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiStar className="w-6 h-6" />,
       color: "yellow" as const,
-      target: "4.8",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
   ]);
   const [loading, setLoading] = useState(true);
@@ -238,23 +238,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : t("dashboard.notAvailable");
       const satisfactionChange = avgRating > 0 ? t("dashboard.basedOnTrainerRatings") : t("dashboard.noRatingData");
 
-      // Calculate targets: use saved targets or fallback to calculated defaults
-      const revenueTarget = targets?.revenue ?? (currentRevenue * 1.1);
-      const membersTarget = targets?.activeMembers ?? (currentMemberCount * 1.05);
-      const attendanceTarget = targets?.classAttendance ?? 85;
-      const satisfactionTarget = targets?.memberSatisfaction ?? 4.8;
+      // Targets are only ever the admin's saved ones (SetTargetsModal).
+      // With none saved, the card shows no target and no progress bar -
+      // it used to invent one (revenue x1.1, members x1.05, 85%, 4.8).
+      const revenueTarget = targets?.revenue ?? null;
+      const membersTarget = targets?.activeMembers ?? null;
+      const attendanceTarget = targets?.classAttendance ?? null;
+      const satisfactionTarget = targets?.memberSatisfaction ?? null;
 
-      // Format targets for display
-      const revenueTargetDisplay = `${currencySymbol} ${revenueTarget.toLocaleString()}`;
-      const membersTargetDisplay = membersTarget.toLocaleString();
-      const attendanceTargetDisplay = `${attendanceTarget}%`;
-      const satisfactionTargetDisplay = satisfactionTarget.toFixed(1);
+      const revenueTargetDisplay =
+        revenueTarget === null ? null : `${currencySymbol} ${revenueTarget.toLocaleString()}`;
+      const membersTargetDisplay = membersTarget === null ? null : membersTarget.toLocaleString();
+      const attendanceTargetDisplay = attendanceTarget === null ? null : `${attendanceTarget}%`;
+      const satisfactionTargetDisplay =
+        satisfactionTarget === null ? null : satisfactionTarget.toFixed(1);
 
-      // Calculate progress percentages
-      const revenueProgress = revenueTarget > 0 ? Math.min(100, (currentRevenue / revenueTarget) * 100) : 0;
-      const membersProgress = membersTarget > 0 ? Math.min(100, (currentMemberCount / membersTarget) * 100) : 0;
-      const attendanceProgress = Math.min(100, (currentAttendanceRate / attendanceTarget) * 100);
-      const satisfactionProgress = avgRating > 0 ? Math.min(100, (avgRating / satisfactionTarget) * 100) : 0;
+      // Progress toward a saved target; null (no bar) when there is none.
+      const progressToward = (current: number, target: number | null) =>
+        target === null ? null : target > 0 ? Math.min(100, (current / target) * 100) : 0;
+      const revenueProgress = progressToward(currentRevenue, revenueTarget);
+      const membersProgress = progressToward(currentMemberCount, membersTarget);
+      const attendanceProgress = progressToward(currentAttendanceRate, attendanceTarget);
+      const satisfactionProgress = progressToward(avgRating, satisfactionTarget);
 
       setPrimaryStats([
         {
@@ -361,7 +366,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       <div className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("dashboard.target")}</div>
                       <FiEdit2 className="w-3 h-3 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">{stat.target}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">
+                      {stat.target ?? t("dashboard.targets.notSet")}
+                    </div>
                   </button>
                 </div>
                 
@@ -371,19 +378,25 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <div className="text-sm text-gray-600 dark:text-gray-400">{stat.name}</div>
                 </div>
                 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
+                {/* Progress Bar - only toward a target the admin actually saved */}
+                {stat.progress === null ? (
+                  <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                    {t("dashboard.targets.noTargetHint")}
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
-                      style={{ width: `${Math.min(stat.progress, 100)}%` }}
-                    ></div>
+                ) : (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm mb-2 gap-2">
+                      <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
+                        style={{ width: `${Math.min(stat.progress, 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
-                </div>
+                )}
                 
                 {/* Footer: Change message & Live indicator */}
                 <div className="flex items-center justify-between gap-2 text-sm">

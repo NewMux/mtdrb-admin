@@ -27,7 +27,7 @@ import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 import { getCurrencyDecimals, toPersistedMoney } from "../../utils/invoiceMath";
-import { dayBoundary, toZonedDateString } from "../../utils/periodBoundaries";
+import { dayBoundary, monthBoundary, toZonedDateString } from "../../utils/periodBoundaries";
 import { summarizeVatReturnDeadlines } from "../../utils/vatReturnDeadlines";
 import { DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 
@@ -210,37 +210,39 @@ export default function SmartVatDashboard({
       const monthlyBreakdown: MonthlyVatBreakdown[] = [];
       const now = new Date();
       for (let i = 5; i >= 0; i--) {
-        const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
-        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
+        // Calendar months in the gym's timezone (see periodBoundaries.ts),
+        // not the browser's: invoice created_at instants are compared to
+        // [start, endExclusive) instants, and expenses.date (a plain date
+        // column) to the matching gym-local YYYY-MM-DD dates.
+        const month = monthBoundary(now, i, DEFAULT_TIMEZONE);
+        const monthStart = new Date(month.startISO);
+        const monthEndExclusive = new Date(month.endExclusiveISO);
+        const monthStartDate = toZonedDateString(month.startISO, DEFAULT_TIMEZONE);
+        const nextMonthStartDate = toZonedDateString(month.endExclusiveISO, DEFAULT_TIMEZONE);
 
         const monthInvoices = invoiceList.filter(inv => {
           const invDate = new Date(inv.created_at);
-          return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
+          return invDate >= monthStart && invDate < monthEndExclusive && (inv.status === "paid" || inv.status === "completed");
         });
 
         const monthVat = monthInvoices.reduce(
           (sum, inv) => sum + invoiceVat(inv),
           0,
         );
-        
+
+        const monthVatPaid = expenseList
+          .filter(exp => {
+            if (exp.status === "cancelled") return false;
+            const expenseDate = (exp.date || "").slice(0, 10);
+            return expenseDate >= monthStartDate && expenseDate < nextMonthStartDate;
+          })
+          .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0);
+
         monthlyBreakdown.push({
-          month: month.toISOString().substring(0, 7),
+          month: monthStartDate.slice(0, 7),
           vatCollected: monthVat,
-          vatPaid: expenseList
-            .filter(exp => {
-              if (exp.status === "cancelled") return false;
-              const expenseDate = new Date(exp.date || "");
-              return expenseDate >= monthStart && expenseDate <= monthEnd;
-            })
-            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
-          netVat: monthVat - expenseList
-            .filter(exp => {
-              if (exp.status === "cancelled") return false;
-              const expenseDate = new Date(exp.date || "");
-              return expenseDate >= monthStart && expenseDate <= monthEnd;
-            })
-            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
+          vatPaid: monthVatPaid,
+          netVat: monthVat - monthVatPaid,
         });
       }
 
@@ -378,10 +380,21 @@ export default function SmartVatDashboard({
   const handleGenerateVatReturn = async () => {
     if (!tenantId || !dashboardData) return;
     try {
-      const now = new Date();
-      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const filingDeadline = new Date(now.getFullYear(), now.getMonth() + 1, 28);
+      // The current calendar month in the gym's timezone. Dates are written
+      // as gym-local YYYY-MM-DD (period_start/period_end/due_date are plain
+      // dates), not via toISOString(), which in UTC+3 put period_start on
+      // the last day of the previous month.
+      const month = monthBoundary(new Date(), 0, DEFAULT_TIMEZONE);
+      const periodStartDate = toZonedDateString(month.startISO, DEFAULT_TIMEZONE);
+      // Last day of the month = the local date one millisecond before the
+      // next month starts.
+      const periodEndDate = toZonedDateString(
+        new Date(new Date(month.endExclusiveISO).getTime() - 1),
+        DEFAULT_TIMEZONE,
+      );
+      // Filing deadline: the 28th of the following month.
+      const nextMonth = toZonedDateString(month.endExclusiveISO, DEFAULT_TIMEZONE).slice(0, 7);
+      const filingDeadlineDate = `${nextMonth}-28`;
 
       // File this month's VAT, not the tenant's all-time totals - a return
       // for September must not claim every fil of VAT collected since the
@@ -389,9 +402,9 @@ export default function SmartVatDashboard({
       const { error } = await supabase.from("vat_returns").insert([
         {
           tenant_id: tenantId,
-          period: periodStart.toISOString().substring(0, 7),
-          period_start: periodStart.toISOString().split("T")[0],
-          period_end: periodEnd.toISOString().split("T")[0],
+          period: periodStartDate.slice(0, 7),
+          period_start: periodStartDate,
+          period_end: periodEndDate,
           status: "draft",
           vat_collected: toPersistedMoney(dashboardData.currentPeriodVat, currency),
           vat_paid: toPersistedMoney(dashboardData.currentPeriodVatPaid, currency),
@@ -400,7 +413,7 @@ export default function SmartVatDashboard({
           // reads due_date to find "next filing deadline" (both columns
           // exist on vat_returns, but only one was ever populated, so
           // that card was always blank).
-          due_date: filingDeadline.toISOString().split("T")[0],
+          due_date: filingDeadlineDate,
         },
       ]);
 
@@ -421,7 +434,7 @@ export default function SmartVatDashboard({
         .from("vat_returns")
         .update({
           status: "submitted",
-          filed_date: new Date().toISOString().split("T")[0],
+          filed_date: toZonedDateString(new Date(), DEFAULT_TIMEZONE),
         })
         .eq("id", returnId)
         .eq("tenant_id", tenantId);
@@ -449,7 +462,7 @@ export default function SmartVatDashboard({
         "Filing Deadline": vr.due_date,
         "Filed Date": vr.filed_date,
       }));
-      const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;
+      const filename = `vat-returns-${toZonedDateString(new Date(), DEFAULT_TIMEZONE)}`;
 
       if (format === "csv") {
         exportCSV(rows, filename);

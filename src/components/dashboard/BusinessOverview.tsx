@@ -16,6 +16,7 @@ import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, dayBoundary, daysWindow } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 // Color mappings for KPI cards
 const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
@@ -119,16 +120,26 @@ const BusinessOverview: React.FC = () => {
 
       // Fetch active members
       const [newMembers, allMembers] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", last30Days.startISO)
-          .lt("created_at", last30Days.endExclusiveISO),
-        supabase
-          .from("members")
-          .select("id, created_at, join_date, expiry_date, status, membership_status")
-          .eq("tenant_id", tenantId),
+        // Paged (fetchAllRows): PostgREST caps a response at 1000 rows, and
+        // every member count here would silently stop growing past that.
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, created_at")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", last30Days.startISO)
+            .lt("created_at", last30Days.endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, created_at, join_date, expiry_date, status, membership_status")
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
       ]);
 
       // Fetch revenue
@@ -149,11 +160,8 @@ const BusinessOverview: React.FC = () => {
           .lt("created_at", previousMonth.endExclusiveISO),
       ]);
 
-      const membersOrInvoicesError =
-        newMembers.error ||
-        allMembers.error;
-      if (membersOrInvoicesError || currentInvoices.error || previousInvoices.error) {
-        throw membersOrInvoicesError || currentInvoices.error || previousInvoices.error;
+      if (currentInvoices.error || previousInvoices.error) {
+        throw currentInvoices.error || previousInvoices.error;
       }
 
       // Compare "active members today" against "members who would have
@@ -162,10 +170,10 @@ const BusinessOverview: React.FC = () => {
       // "members who signed up last month". The latter is a different,
       // much smaller population and produces meaningless swings like
       // "+4900% vs last month" when compared to the full active count.
-      const activeMembers = (allMembers.data || []).filter(isMemberCurrentlyActive);
+      const activeMembers = allMembers.filter(isMemberCurrentlyActive);
       const currentMemberCount = activeMembers.length;
       const previousMemberCount = countMembersActiveAsOf(
-        allMembers.data || [],
+        allMembers,
         previousMonthEnd,
       );
       const memberChange = currentMemberCount - previousMemberCount;
@@ -188,23 +196,26 @@ const BusinessOverview: React.FC = () => {
         ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
         : 0;
 
-      const newSignupsCount = (newMembers.data || []).length;
-      const previousNewSignups = await supabase
-        .from("members")
-        .select("id")
-        .eq("tenant_id", tenantId)
-        .gte("created_at", previous30DaysStart)
-        .lt("created_at", last30Days.startISO);
-      if (previousNewSignups.error) throw previousNewSignups.error;
-      const previousNewSignupsCount = (previousNewSignups.data || []).length;
+      const newSignupsCount = newMembers.length;
+      const previousNewSignups = await fetchAllRows((from, to) =>
+        supabase
+          .from("members")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .gte("created_at", previous30DaysStart)
+          .lt("created_at", last30Days.startISO)
+          .order("id")
+          .range(from, to),
+      );
+      const previousNewSignupsCount = previousNewSignups.length;
       const signupsChange = newSignupsCount - previousNewSignupsCount;
 
       // Calculate churn rate (members who left in last month)
-      const churnedMembers = (allMembers.data || []).filter(m => {
+      const churnedMembers = allMembers.filter(m => {
         const created = new Date(m.created_at);
         return created < previousMonthStart && (m.status === "inactive" || m.membership_status === "expired");
       }).length;
-      const totalMembersAtStart = (allMembers.data || []).filter(m => {
+      const totalMembersAtStart = allMembers.filter(m => {
         const created = new Date(m.created_at);
         return created < previousMonthStart;
       }).length;
