@@ -33,7 +33,22 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
-import { toPersistedMoney } from "../../utils/invoiceMath";
+import {
+  computeExpenseAmounts,
+  getCurrencyDecimals,
+  inferVatRatePercent,
+  toPersistedMoney,
+} from "../../utils/invoiceMath";
+
+// Rates offered in the VAT select. 0% records an expense with no input VAT.
+const EXPENSE_VAT_RATES = [0, 5, 10, 15];
+const CURRENCY_DECIMALS = getCurrencyDecimals(DEFAULT_CURRENCY);
+const AMOUNT_STEP = CURRENCY_DECIMALS > 0 ? (1 / 10 ** CURRENCY_DECIMALS).toFixed(CURRENCY_DECIMALS) : "1";
+
+const toNumberOr = (value: unknown, fallback: number): number => {
+  const parsed = typeof value === "number" ? value : parseFloat(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -134,7 +149,8 @@ export function AddExpenseModal({
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
-      vat_rate: DEFAULT_VAT_RATE,
+      // 0% by default: an untouched form records no input VAT, as before.
+      vat_rate: 0,
       internal_notes: "",
       public_notes: "",
     },
@@ -166,9 +182,15 @@ export function AddExpenseModal({
   // Load editing expense data
   useEffect(() => {
     if (editingExpense && isOpen) {
+      // expenses.amount is the gross (VAT included) and vat_amount the VAT
+      // inside it, so reload as an inclusive amount at the inferred rate -
+      // saving unchanged then writes back the same amount and VAT.
+      const storedAmount = toNumberOr(editingExpense.amount, 0);
+      const storedVat = toNumberOr(editingExpense.vat_amount, 0);
+      const hasVat = storedVat > 0;
       reset({
         title: editingExpense.title || "",
-        amount: typeof editingExpense.amount === 'number' ? editingExpense.amount : parseFloat(String(editingExpense.amount)) || 0,
+        amount: storedAmount,
         date: editingExpense.date || new Date().toISOString().split("T")[0],
         category: editingExpense.category || "Other",
         payment_method: editingExpense.payment_method || "card",
@@ -177,8 +199,8 @@ export function AddExpenseModal({
         status: editingExpense.status || "pending",
         recurring: editingExpense.recurring || false,
         recurring_frequency: editingExpense.recurring_frequency || "monthly",
-        vat_included: false,
-        vat_rate: DEFAULT_VAT_RATE,
+        vat_included: hasVat,
+        vat_rate: hasVat ? inferVatRatePercent(storedAmount, storedVat, EXPENSE_VAT_RATES) : 0,
         internal_notes: editingExpense.internal_notes || "",
         public_notes: editingExpense.public_notes || "",
       });
@@ -244,15 +266,21 @@ export function AddExpenseModal({
     setValue("vendor", value);
   };
 
-  // Calculate VAT amount
-  const calculateVatAmount = () => {
-    const amount =
-      typeof watchedAmount === "number"
-        ? watchedAmount
-        : parseFloat(String(watchedAmount)) || 0;
-    const vatRate = watch("vat_rate") || 15;
-    return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
-  };
+  // VAT-inclusive: the entered amount is the receipt total and VAT is
+  // extracted from it. VAT-exclusive: the entered amount is the pre-VAT
+  // price and VAT is added on top. Either way the stored amount is the
+  // gross. An explicit 0% rate stays 0% (it used to fall back to 15%).
+  const calculateExpenseAmounts = (
+    enteredAmount: unknown,
+    vatRate: unknown,
+    vatIncluded: boolean,
+  ) =>
+    computeExpenseAmounts(
+      toNumberOr(enteredAmount, 0),
+      toNumberOr(vatRate, DEFAULT_VAT_RATE),
+      vatIncluded,
+      DEFAULT_CURRENCY,
+    );
 
   // Handle form submission
   const onSubmit: SubmitHandler<ExpenseFormData> = async (data) => {
@@ -285,10 +313,15 @@ export function AddExpenseModal({
         receiptUrl = fileName;
       }
 
+      const { amount: grossAmount, vat: vatAmount } = calculateExpenseAmounts(
+        data.amount,
+        data.vat_rate,
+        Boolean(data.vat_included),
+      );
       const expensePayload = {
         title: data.title,
         date: data.date,
-        amount: parseFloat(data.amount.toString()),
+        amount: toPersistedMoney(grossAmount, DEFAULT_CURRENCY),
         category: data.category,
         payment_method: data.payment_method,
         vendor: data.vendor || null,
@@ -299,7 +332,7 @@ export function AddExpenseModal({
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
         country_code: DEFAULT_COUNTRY_CODE || null,
-        vat_amount: toPersistedMoney(calculateVatAmount(), DEFAULT_CURRENCY),
+        vat_amount: toPersistedMoney(vatAmount, DEFAULT_CURRENCY),
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
         ...(editingExpense
@@ -354,9 +387,11 @@ export function AddExpenseModal({
     }
   };
 
-  const totalAmount = typeof watchedAmount === 'number' ? watchedAmount : parseFloat(String(watchedAmount)) || 0;
-  const vatAmount = calculateVatAmount();
-  const finalAmount = totalAmount + vatAmount;
+  const {
+    net: totalAmount,
+    vat: vatAmount,
+    amount: finalAmount,
+  } = calculateExpenseAmounts(watchedAmount, watch("vat_rate"), watchedVatIncluded);
 
   const footer = (
     <div className="flex items-center justify-end gap-3 w-full">
@@ -416,11 +451,11 @@ export function AddExpenseModal({
                 <AppleInput
                   label={t("billing.amount", "المبلغ الإجمالي")}
                   type="number"
-                  step="0.01"
+                  step={AMOUNT_STEP}
                   {...register("amount")}
                   error={errors.amount?.message}
                   required
-                  placeholder="0.00"
+                  placeholder={(0).toFixed(CURRENCY_DECIMALS)}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
@@ -498,35 +533,39 @@ export function AddExpenseModal({
                 <AppleToggle
                   label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة (10%)")}
                   checked={watchedVatIncluded}
-                  onChange={(checked) => setValue("vat_included", checked)}
+                  onChange={(checked) => {
+                    setValue("vat_included", checked);
+                    // Turning on "VAT included" with no rate picked yet
+                    // starts from the configured default rate.
+                    if (checked && toNumberOr(watch("vat_rate"), 0) === 0 && DEFAULT_VAT_RATE > 0) {
+                      setValue("vat_rate", DEFAULT_VAT_RATE);
+                    }
+                  }}
                 />
-                {watchedVatIncluded && (
-                  <AppleSelect
-                    label={t("billing.vatRate", "نسبة الضريبة")}
-                    {...register("vat_rate")}
-                    error={errors.vat_rate?.message}
-                  >
-                    <option value={0}>0%</option>
-                    <option value={5}>5%</option>
-                    <option value={10}>10%</option>
-                    <option value={15}>15%</option>
-                  </AppleSelect>
-                )}
+                <AppleSelect
+                  label={t("billing.vatRate", "نسبة الضريبة")}
+                  {...register("vat_rate")}
+                  error={errors.vat_rate?.message}
+                >
+                  {EXPENSE_VAT_RATES.map((rate) => (
+                    <option key={rate} value={rate}>{rate}%</option>
+                  ))}
+                </AppleSelect>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{totalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{totalAmount.toFixed(CURRENCY_DECIMALS)} {DEFAULT_CURRENCY}</span>
                 </div>
-                {watchedVatIncluded && (
+                {vatAmount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                    <span>{vatAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                    <span>{vatAmount.toFixed(CURRENCY_DECIMALS)} {DEFAULT_CURRENCY}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(CURRENCY_DECIMALS)} {DEFAULT_CURRENCY}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">

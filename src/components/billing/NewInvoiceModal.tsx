@@ -434,7 +434,7 @@ export function NewInvoiceModal({
         issue_date: invoiceData.issue_date,
         due_date: invoiceData.due_date,
         payment_method: invoiceData.payment_method,
-        paid_amount: invoiceData.paid_amount,
+        paid_amount: money(invoiceData.paid_amount),
         currency: invoiceData.currency,
         amount: money(subtotal),
         vat_total: money(vat_total),

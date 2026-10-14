@@ -279,3 +279,50 @@ export function computePosCartTotals(
     lines: lineTotals,
   };
 }
+
+export interface ExpenseAmounts {
+  // What is stored in expenses.amount: the gross amount actually paid,
+  // VAT included. Readers sum `amount` as total spend and derive the
+  // pre-VAT subtotal as amount - vat_amount.
+  amount: number;
+  net: number;
+  // What is stored in expenses.vat_amount: the input VAT inside `amount`.
+  vat: number;
+}
+
+/**
+ * Expense money under the invoice contract. The entered amount is either
+ * VAT-inclusive (the receipt total: VAT is extracted from it) or
+ * VAT-exclusive (the pre-VAT price: VAT is added on top). Either way the
+ * stored `amount` is the gross and `vat` is the VAT within it, so
+ * amount = net + vat.
+ */
+export function computeExpenseAmounts(
+  enteredAmount: number,
+  vatRatePercent: number,
+  isInclusive: boolean,
+  currencyCode?: string | null,
+): ExpenseAmounts {
+  const { net, vat, gross } = splitVat(enteredAmount, vatRatePercent, isInclusive, currencyCode);
+  return { amount: gross, net, vat };
+}
+
+/**
+ * Recover the VAT rate of a stored expense (gross `amount` plus
+ * `vat_amount`) when editing it, snapped to the nearest selectable rate.
+ * The snap also maps rows saved by the old modal, which stored the net as
+ * `amount` and added VAT on top (so vat / (amount - vat) reads slightly
+ * high), back to the rate the user picked.
+ */
+export function inferVatRatePercent(
+  grossAmount: number,
+  vatAmount: number,
+  selectableRates: number[],
+): number {
+  const net = grossAmount - vatAmount;
+  if (!(vatAmount > 0) || !(net > 0) || selectableRates.length === 0) return 0;
+  const exact = (vatAmount / net) * 100;
+  return selectableRates.reduce((best, rate) =>
+    Math.abs(rate - exact) < Math.abs(best - exact) ? rate : best,
+  );
+}

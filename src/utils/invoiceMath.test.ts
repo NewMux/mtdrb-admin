@@ -6,6 +6,8 @@ import {
   getCurrencyDecimals,
   roundMoney,
   resolveInvoiceGrossAmount,
+  computeExpenseAmounts,
+  inferVatRatePercent,
 } from "./invoiceMath";
 
 describe("getCurrencyDecimals", () => {
@@ -165,5 +167,49 @@ describe("roundMoney", () => {
   it("returns 0 for non-finite input", () => {
     expect(roundMoney(NaN, 2)).toBe(0);
     expect(roundMoney(Infinity, 2)).toBe(0);
+  });
+});
+
+describe("computeExpenseAmounts", () => {
+  it("extracts VAT from a VAT-inclusive amount and stores the gross", () => {
+    // 11.000 BHD receipt at 10% inclusive: net 10.000, VAT 1.000
+    expect(computeExpenseAmounts(11, 10, true, "BHD")).toEqual({ amount: 11, net: 10, vat: 1 });
+  });
+
+  it("adds VAT on top of a VAT-exclusive amount and stores the gross", () => {
+    expect(computeExpenseAmounts(10, 10, false, "BHD")).toEqual({ amount: 11, net: 10, vat: 1 });
+  });
+
+  it("keeps an explicit 0% rate at 0 (no 15% fallback)", () => {
+    expect(computeExpenseAmounts(10, 0, true, "BHD")).toEqual({ amount: 10, net: 10, vat: 0 });
+    expect(computeExpenseAmounts(10, 0, false, "BHD")).toEqual({ amount: 10, net: 10, vat: 0 });
+  });
+
+  it("rounds to 3 decimals for BHD and keeps amount = net + vat", () => {
+    const { amount, net, vat } = computeExpenseAmounts(1.234, 5, true, "BHD");
+    expect(vat).toBe(0.059);
+    expect(net).toBe(1.175);
+    expect(amount).toBe(1.234);
+    expect(roundMoney(net + vat, 3)).toBe(amount);
+  });
+});
+
+describe("inferVatRatePercent", () => {
+  const rates = [0, 5, 10, 15];
+
+  it("recovers the rate from a stored gross amount and VAT", () => {
+    expect(inferVatRatePercent(11, 1, rates)).toBe(10);
+    expect(inferVatRatePercent(10.5, 0.5, rates)).toBe(5);
+  });
+
+  it("snaps rows saved by the old modal (net stored, VAT on top) to the picked rate", () => {
+    // Old modal: amount 100 stored as-is, VAT 15 added on top -> 15/85 = 17.6%
+    expect(inferVatRatePercent(100, 15, rates)).toBe(15);
+    expect(inferVatRatePercent(100, 10, rates)).toBe(10);
+  });
+
+  it("returns 0 when there is no VAT", () => {
+    expect(inferVatRatePercent(100, 0, rates)).toBe(0);
+    expect(inferVatRatePercent(0, 0, rates)).toBe(0);
   });
 });
