@@ -295,6 +295,8 @@ export function NewInvoiceModal({
       const { data: lastInvoice, error: lastInvoiceError } = await supabase
         .from("invoices")
         .select("issue_date, payment_method")
+        // Explicit tenant scope as defence in depth (RLS already enforces it).
+        .eq("tenant_id", tenantId)
         .eq("member_id", clientId)
         .order("issue_date", { ascending: false })
         .limit(1)
@@ -308,6 +310,7 @@ export function NewInvoiceModal({
       const { data: outstandingInvoices, error: outstandingError } = await supabase
         .from("invoices")
         .select("total, due_date")
+        .eq("tenant_id", tenantId)
         .eq("member_id", clientId)
         .eq("status", "pending");
       if (outstandingError) throw outstandingError;
@@ -343,7 +346,7 @@ export function NewInvoiceModal({
       console.error("Error loading client history:", error);
       toast.error("Failed to load client billing history");
     }
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     if (selectedClient?.id) {
@@ -447,7 +450,8 @@ export function NewInvoiceModal({
         const { data, error } = await supabase
           .from("invoices")
           .update(invoicePayload)
-          .eq("id", editingInvoice.id);
+          .eq("id", editingInvoice.id)
+          .eq("tenant_id", tenantId);
         result = { data, error };
       } else {
         const { data, error } = await supabase

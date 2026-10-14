@@ -14,10 +14,8 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiAlertCircle,
-  FiZap,
   FiAward,
   FiEye,
-  FiPause,
   FiArrowUp,
   FiArrowDown,
 } from "react-icons/fi";
@@ -181,9 +179,7 @@ const emptyTaskAnalyticsData = {
   },
   riskIndicators: {
     stuckTasks: { count: 15, percentage: 5.3 },
-    tasksReassignedOften: { count: 8, percentage: 2.8 },
     highPriorityOverdue: { count: 12, percentage: 4.2 },
-    weekendsWithNoProgress: { count: 3, percentage: 1.1 },
   },
 };
 
@@ -905,6 +901,11 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
   const { isRTL } = useRTL();
   const { riskIndicators } = data;
 
+  // Only indicators computed from real task data are shown. "Tasks
+  // reassigned often" and "weekends with no progress" used to render as
+  // hardcoded zeros (the schema keeps no reassignment history), and every
+  // card carried a hardcoded trend percentage - both looked like measured
+  // findings and were removed rather than faked.
   const risks = [
     {
       title: t("tasks.stuckTasks"),
@@ -913,16 +914,6 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
       description: t("tasks.noActivity"),
       icon: FiAlertCircle,
       color: "red",
-      trend: { value: 12.8, isPositive: false },
-    },
-    {
-      title: t("tasks.tasksReassignedOften"),
-      value: riskIndicators.tasksReassignedOften.count,
-      subtitle: `${riskIndicators.tasksReassignedOften.percentage}% ${t("tasks.ofTotal")}`,
-      description: t("tasks.reassignmentCount"),
-      icon: FiZap,
-      color: "orange",
-      trend: { value: 5.3, isPositive: false },
     },
     {
       title: t("tasks.highPriorityOverdue"),
@@ -931,21 +922,11 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
       description: t("tasks.highPriorityAndOverdue"),
       icon: FiAlertTriangle,
       color: "red",
-      trend: { value: 18.2, isPositive: false },
-    },
-    {
-      title: t("tasks.weekendsWithNoProgress"),
-      value: riskIndicators.weekendsWithNoProgress.count,
-      subtitle: `${riskIndicators.weekendsWithNoProgress.percentage}% ${t("tasks.ofTotal")}`,
-      description: t("tasks.gapsInCompletion"),
-      icon: FiPause,
-      color: "yellow",
-      trend: { value: 2.1, isPositive: false },
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {risks.map((risk, index) => (
         <motion.div
           key={risk.title}
@@ -959,20 +940,6 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
               className={`w-12 h-12 rounded-2xl bg-${risk.color}-50 flex items-center justify-center`}
             >
               <risk.icon className={`w-6 h-6 text-${risk.color}-600`} />
-            </div>
-            <div
-              className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
-                risk.trend.isPositive
-                  ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                  : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-              }`}
-            >
-              {risk.trend.isPositive ? (
-                <FiArrowUp className="w-3 h-3" />
-              ) : (
-                <FiArrowDown className="w-3 h-3" />
-              )}
-              {Math.abs(risk.trend.value)}%
             </div>
           </div>
 
@@ -1006,14 +973,16 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
       setLoading(true);
       try {
-        // Fetch all tasks for the tenant
+        // Fetch all tasks for the tenant. Assignee names are resolved
+        // separately below in one batched, tenant-scoped lookup; embedding
+        // `profiles` here (it was never read) would fail this whole query
+        // if that table is unavailable.
         const { data: tasks, error } = await supabase
           .from("member_tasks")
           .select(
             `
             *,
-            member:members(id, first_name, last_name),
-            assignee:profiles(id, first_name, last_name)
+            member:members(id, first_name, last_name)
           `,
           )
           .eq("tenant_id", tenantId)
@@ -1193,39 +1162,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           }
         });
 
-        // Fetch assignee names
-        const assigneeIds = Object.keys(staffProductivityMap);
-        const staffProductivity = await Promise.all(
-          assigneeIds.map(async (assigneeId) => {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("first_name, last_name")
-              .eq("id", assigneeId)
-              .single();
-
-            const stats = staffProductivityMap[assigneeId];
-            const avgTime =
-              stats.count > 0 ? stats.totalTime / stats.count : 0;
-
-            return {
-              staff:
-                profile
-                  ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-                  : "Unknown",
-              completed: stats.completed,
-              avgTime: avgTime,
-            };
-          }),
-        );
-
-        // Team Insights
-        const mostEfficientStaff =
-          staffProductivity.length > 0
-            ? staffProductivity.reduce((prev, current) =>
-                prev.avgTime < current.avgTime ? prev : current,
-              )
-            : { staff: "N/A", avgTime: 0 };
-
         const overdueByAssignee: Record<string, number> = {};
         tasksData
           .filter((t) => {
@@ -1246,17 +1182,68 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
               )
             : ["", 0];
 
-        const mostOverdueName = mostOverdueTasksBy[0]
-          ? await supabase
+        // Resolve every assignee name we need in one batched lookup
+        // (previously one `profiles` round-trip per assignee, plus another
+        // for the most-overdue assignee).
+        const assigneeIds = Object.keys(staffProductivityMap);
+        const idsToResolve = Array.from(
+          new Set(
+            [...assigneeIds, mostOverdueTasksBy[0] as string].filter(Boolean),
+          ),
+        );
+        const assigneeNames = new Map<string, string>();
+        if (idsToResolve.length > 0) {
+          // Defence in depth on top of RLS: only resolve names for users
+          // who are members of this tenant. `profiles` has no tenant_id
+          // column to filter on, so scope through `memberships`.
+          const { data: tenantUsers, error: tenantUsersError } = await supabase
+            .from("memberships")
+            .select("user_id")
+            .eq("tenant_id", tenantId)
+            .in("user_id", idsToResolve);
+          if (tenantUsersError) {
+            console.warn("Could not scope assignees to tenant:", tenantUsersError);
+          }
+          const tenantUserIds = (tenantUsers || []).map((row) => row.user_id as string);
+
+          if (tenantUserIds.length > 0) {
+            const { data: profiles, error: profilesError } = await supabase
               .from("profiles")
-              .select("first_name, last_name")
-              .eq("id", mostOverdueTasksBy[0])
-              .single()
-              .then(({ data }) =>
-                data
-                  ? `${data.first_name || ""} ${data.last_name || ""}`.trim()
-                  : "Unknown",
+              .select("id, first_name, last_name")
+              .in("id", tenantUserIds);
+            // Names are cosmetic: a failed lookup (e.g. no `profiles`
+            // table) degrades to "Unknown" rather than failing the
+            // whole dashboard.
+            if (profilesError) {
+              console.warn("Could not resolve assignee names:", profilesError);
+            }
+            (profiles || []).forEach((profile) => {
+              const name = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+              if (name) assigneeNames.set(profile.id as string, name);
+            });
+          }
+        }
+
+        const staffProductivity = assigneeIds.map((assigneeId) => {
+          const stats = staffProductivityMap[assigneeId];
+          const avgTime = stats.count > 0 ? stats.totalTime / stats.count : 0;
+          return {
+            staff: assigneeNames.get(assigneeId) || "Unknown",
+            completed: stats.completed,
+            avgTime: avgTime,
+          };
+        });
+
+        // Team Insights
+        const mostEfficientStaff =
+          staffProductivity.length > 0
+            ? staffProductivity.reduce((prev, current) =>
+                prev.avgTime < current.avgTime ? prev : current,
               )
+            : { staff: "N/A", avgTime: 0 };
+
+        const mostOverdueName = mostOverdueTasksBy[0]
+          ? assigneeNames.get(mostOverdueTasksBy[0] as string) || "Unknown"
           : "N/A";
 
         const mostTasksCompleted =
@@ -1359,10 +1346,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
                   ? parseFloat(((stuckTasks / totalTasksCreated) * 100).toFixed(1))
                   : 0,
             },
-            tasksReassignedOften: {
-              count: 0, // Would need to track reassignments
-              percentage: 0,
-            },
             highPriorityOverdue: {
               count: highPriorityOverdue,
               percentage:
@@ -1371,10 +1354,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
                       ((highPriorityOverdue / totalTasksCreated) * 100).toFixed(1),
                     )
                   : 0,
-            },
-            weekendsWithNoProgress: {
-              count: 0, // Would need more complex calculation
-              percentage: 0,
             },
           },
         };
@@ -1410,9 +1389,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           },
           riskIndicators: {
             stuckTasks: { count: 0, percentage: 0 },
-            tasksReassignedOften: { count: 0, percentage: 0 },
             highPriorityOverdue: { count: 0, percentage: 0 },
-            weekendsWithNoProgress: { count: 0, percentage: 0 },
           },
         });
       } finally {
