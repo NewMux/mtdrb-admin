@@ -26,7 +26,7 @@ import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
-import { toPersistedMoney } from "../../utils/invoiceMath";
+import { getCurrencyDecimals, toPersistedMoney } from "../../utils/invoiceMath";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -320,7 +320,8 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || DEFAULT_CURRENCY} payable`);
+        const alertCurrency = settingsData?.currency || DEFAULT_CURRENCY;
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(getCurrencyDecimals(alertCurrency))} ${alertCurrency} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -474,14 +475,16 @@ export default function SmartVatDashboard({
 
   const formatCurrency = (amount: number) => {
     const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    const decimals = getCurrencyDecimals(code);
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
         currency: code,
-        minimumFractionDigits: 2,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
       }).format(amount);
     } catch {
-      return `${code} ${amount.toFixed(2)}`;
+      return `${code} ${amount.toFixed(decimals)}`;
     }
   };
 
