@@ -5,8 +5,13 @@ import { cleanup } from "@testing-library/react";
 // Note: @testing-library/jest-dom automatically extends expect
 // No need to manually extend if using the import above
 
+// Browser shims below only apply under jsdom; a few suites (e.g. the
+// Edge Function helpers in supabase/functions/_shared) opt into the plain
+// node environment, where there is no window.
+const hasWindow = typeof window !== "undefined";
+
 // jsdom doesn't implement matchMedia; gsap's ScrollTrigger requires it.
-if (!window.matchMedia) {
+if (hasWindow && !window.matchMedia) {
   window.matchMedia = (query: string) => ({
     matches: false,
     media: query,
@@ -20,7 +25,7 @@ if (!window.matchMedia) {
 }
 
 // jsdom doesn't implement IntersectionObserver; framer-motion's viewport features require it.
-if (!("IntersectionObserver" in window)) {
+if (hasWindow && !("IntersectionObserver" in window)) {
   class MockIntersectionObserver implements IntersectionObserver {
     readonly root: Element | Document | null = null;
     readonly rootMargin: string = "";

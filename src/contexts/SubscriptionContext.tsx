@@ -11,6 +11,9 @@ interface Subscription {
   created_at: string;
   expires_at?: string;
   trial_end?: string;
+  // Same fields isSubscriptionEntitled() reads, under their column names.
+  current_period_end?: string;
+  payment_provider?: string;
 };
 
 interface User {
@@ -145,6 +148,8 @@ export function SubscriptionProvider({
           created_at: subData.created_at,
           expires_at: subData.current_period_end,
           trial_end: subData.trial_end,
+          current_period_end: subData.current_period_end,
+          payment_provider: subData.payment_provider,
         });
       } else {
         // No platform_subscriptions row for this tenant: not entitled. Never

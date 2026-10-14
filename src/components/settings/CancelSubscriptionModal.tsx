@@ -87,22 +87,25 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
     try {
       if (!tenantId) throw new Error("No organization membership found");
 
-      // Update the platform subscription row. RLS requires an admin membership
-      // and keeps entitlement state in the database rather than user metadata.
-      const { error: updateError } = await supabase
-        .from("platform_subscriptions")
-        .update({
-          status: "cancelled",
-          metadata: {
-            cancellation_reason: selectedReason,
-            cancellation_feedback: feedback,
-            subscription_cancelled_at: new Date().toISOString(),
-          },
-          updated_at: new Date().toISOString(),
-        })
-        .eq("tenant_id", tenantId);
+      // Cancellation goes through the server so Paddle stops billing too;
+      // a direct table update never reached Paddle (and the database now
+      // rejects client writes to platform_subscriptions). Access continues
+      // until the end of the period already paid for.
+      const { data: result, error: cancelError } = await supabase.functions.invoke<{
+        cancelled?: boolean;
+        error?: string;
+      }>("paddle-cancel-subscription", {
+        body: { reason: selectedReason, feedback },
+      });
 
-      if (updateError) throw updateError;
+      if (cancelError) {
+        // Surface the function's own message (e.g. "Only a workspace admin
+        // can manage billing") rather than the generic non-2xx error.
+        const context = (cancelError as { context?: Response }).context;
+        const detail = context ? await context.json().catch(() => null) : null;
+        throw new Error(detail?.error || cancelError.message);
+      }
+      if (!result?.cancelled) throw new Error(result?.error || "Failed to cancel subscription");
 
       // Log the cancellation event (if activities table exists)
       try {

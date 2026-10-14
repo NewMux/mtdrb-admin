@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../supabaseClient";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
@@ -34,12 +35,11 @@ export default function Signup() {
 
       const { data: subscription } = await supabase
         .from("platform_subscriptions")
-        .select("status")
+        .select("status, trial_end, current_period_end, payment_provider")
         .eq("tenant_id", membership.tenant_id)
         .maybeSingle();
 
-      const hasActiveSubscription =
-        subscription?.status === "active" || subscription?.status === "trialing";
+      const hasActiveSubscription = isSubscriptionEntitled(subscription);
       navigate(hasActiveSubscription ? "/dashboard" : "/subscribe", {
         replace: true,
       });
