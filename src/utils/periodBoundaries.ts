@@ -158,3 +158,62 @@ export function daysWindow(
   const windowStart = dayBoundary(reference, days - 1, timezone);
   return { startISO: windowStart.startISO, endExclusiveISO: todayEnd.endExclusiveISO };
 }
+
+/**
+ * [Jan 1, Jan 1 of the following year) for the year containing
+ * `reference`, as seen in `timezone`.
+ */
+export function yearBoundary(reference: Date, timezone: string): PeriodBoundary {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+  }).formatToParts(reference);
+  const year = Number(parts.find((p) => p.type === "year")?.value);
+  const start = zonedMidnight(year, 0, 1, timezone);
+  const endExclusive = zonedMidnight(year + 1, 0, 1, timezone);
+  return { startISO: start.toISOString(), endExclusiveISO: endExclusive.toISOString() };
+}
+
+/**
+ * The calendar date (YYYY-MM-DD) that `instant` falls on in `timezone`.
+ *
+ * For filtering plain `date` columns (e.g. `expenses.date`), which hold a
+ * wall-clock date, not an instant: passing a boundary's `startISO`
+ * straight to a `date` column makes Postgres cast it via UTC, which in
+ * UTC+3 lands on the previous day. Pair it with an exclusive upper bound:
+ * `.gte(col, toZonedDateString(startISO, tz)).lt(col, toZonedDateString(endExclusiveISO, tz))`.
+ */
+export function toZonedDateString(instant: Date | string, timezone: string): string {
+  const date = typeof instant === "string" ? new Date(instant) : instant;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+/**
+ * Whole days elapsed in the current month (counting today) and the total
+ * days in it, in `timezone` - the inputs for a month-end run-rate
+ * projection (`monthToDate / daysElapsed * daysInMonth`).
+ */
+export function monthProgress(
+  reference: Date,
+  timezone: string,
+): { daysElapsed: number; daysInMonth: number } {
+  const month = monthBoundary(reference, 0, timezone);
+  const today = dayBoundary(reference, 0, timezone);
+  const DAY_MS = 86_400_000;
+  const monthStart = new Date(month.startISO).getTime();
+  // Math.round absorbs a DST hour in timezones that observe it.
+  const daysElapsed = Math.round(
+    (new Date(today.endExclusiveISO).getTime() - monthStart) / DAY_MS,
+  );
+  const daysInMonth = Math.round(
+    (new Date(month.endExclusiveISO).getTime() - monthStart) / DAY_MS,
+  );
+  return { daysElapsed, daysInMonth };
+}

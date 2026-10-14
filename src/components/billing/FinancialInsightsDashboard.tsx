@@ -43,6 +43,14 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import type { Branch, Expense, Invoice, Member, PaymentMethodType, InvoiceStatus } from "../../types";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
+import { DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import {
+  monthBoundary,
+  monthProgress,
+  toZonedDateString,
+  yearBoundary,
+} from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 interface FinancialInsightsDashboardProps {
   refreshKey: number;
@@ -59,10 +67,16 @@ interface FilterState {
 
 interface RevenueMetrics {
   totalRevenue: number;
-  mrr: number;
+  /** Paid revenue ÷ calendar months in the selected range - an average, not MRR. */
+  avgMonthlyRevenue: number;
   avgRevenuePerMember: number;
   newRevenue: number;
-  projectedRevenue: number;
+  /**
+   * Run-rate projection for the current month: this month's paid revenue
+   * so far ÷ days elapsed × days in month. null when the selected range
+   * doesn't include the current month.
+   */
+  projectedRevenue: number | null;
   revenueFromAddons: number;
 }
 
@@ -128,41 +142,53 @@ const normalizeStatus = (status?: string | null) =>
   (status || "").trim().toLowerCase();
 
 /**
- * Resolve a date range from the filter key.
+ * Resolve a date range from the filter key, as [startISO, endExclusiveISO)
+ * instants in the gym's timezone (see periodBoundaries.ts for why a
+ * truncated `toISOString().split("T")[0]` date is wrong here).
+ *
+ * `monthsCovered` counts calendar months touched by the range (the current
+ * month counts as one even though it is partial) and
+ * `includesCurrentMonth` says whether a month-end run-rate projection
+ * makes sense for it.
  */
-const resolveDateRange = (rangeKey: string) => {
-  const now = new Date();
-  const end = new Date(now);
-  let start = new Date(now);
-
+const resolveDateRange = (rangeKey: string, now: Date) => {
+  const thisMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
   switch (rangeKey) {
-    case "last-month": {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      end.setFullYear(now.getFullYear(), now.getMonth(), 0);
-      break;
-    }
-    case "last-3-months": {
-      start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-      break;
-    }
+    case "last-month":
+      return {
+        ...monthBoundary(now, 1, DEFAULT_TIMEZONE),
+        monthsCovered: 1,
+        includesCurrentMonth: false,
+      };
+    case "last-3-months":
+      return {
+        startISO: monthBoundary(now, 2, DEFAULT_TIMEZONE).startISO,
+        endExclusiveISO: thisMonth.endExclusiveISO,
+        monthsCovered: 3,
+        includesCurrentMonth: true,
+      };
     case "this-year": {
-      start = new Date(now.getFullYear(), 0, 1);
-      break;
+      const year = yearBoundary(now, DEFAULT_TIMEZONE);
+      // Months from Jan 1 through the current month, inclusive - i.e. the
+      // current month number as seen in the gym's timezone.
+      const monthsCovered = Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: DEFAULT_TIMEZONE,
+          month: "numeric",
+        }).format(now),
+      );
+      return {
+        startISO: year.startISO,
+        endExclusiveISO: thisMonth.endExclusiveISO,
+        monthsCovered,
+        includesCurrentMonth: true,
+      };
     }
     case "this-month":
-    default: {
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
-    }
+    default:
+      return { ...thisMonth, monthsCovered: 1, includesCurrentMonth: true };
   }
-
-  return { start, end };
 };
-
-/**
- * Format a date to YYYY-MM-DD for Supabase filters.
- */
-const toDateString = (date: Date) => date.toISOString().split("T")[0];
 
 /**
  * Resolve invoice date for grouping.
@@ -511,10 +537,10 @@ export default function FinancialInsightsDashboard({
   });
   const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetrics>({
     totalRevenue: 0,
-    mrr: 0,
+    avgMonthlyRevenue: 0,
     avgRevenuePerMember: 0,
     newRevenue: 0,
-    projectedRevenue: 0,
+    projectedRevenue: null,
     revenueFromAddons: 0,
   });
   const [invoiceMetrics, setInvoiceMetrics] = useState<InvoiceMetrics>({
@@ -563,16 +589,24 @@ export default function FinancialInsightsDashboard({
       setLoading(true);
       setLoadError(false);
 
-      const { start, end } = resolveDateRange(filters.dateRange);
-      const startDate = toDateString(start);
-      const endDate = toDateString(end);
+      const now = new Date();
+      const range = resolveDateRange(filters.dateRange, now);
+      const start = new Date(range.startISO);
+      const endExclusive = new Date(range.endExclusiveISO);
+      // expenses.date is a plain `date` column - compare it against the
+      // gym-local calendar dates, not UTC instants.
+      const startDate = toZonedDateString(range.startISO, DEFAULT_TIMEZONE);
+      const endExclusiveDate = toZonedDateString(range.endExclusiveISO, DEFAULT_TIMEZONE);
 
+      // Members, invoices and expenses are paged (fetchAllRows): PostgREST
+      // caps a single response at 1000 rows, which would silently
+      // truncate every total below once a gym crosses that.
       const [
         settingsResult,
         branchesResult,
-        membersResult,
-        invoicesResult,
-        expensesResult,
+        membersRows,
+        invoicesRows,
+        expensesRows,
         vatReturnsResult,
       ] = await Promise.all([
         supabase
@@ -586,26 +620,38 @@ export default function FinancialInsightsDashboard({
           .eq("tenant_id", tenantId)
           .eq("is_active", true)
           .order("name"),
-        supabase
-          .from("members")
-          .select(
-            "id, status, membership_type, created_at, join_date, expiry_date, assigned_branch_id",
-          )
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("invoices")
-          .select(
-            "id, member_id, type, status, issue_date, created_at, due_date, payment_method, total, amount, paid_amount, vat_total, currency",
-          )
-          .eq("tenant_id", tenantId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("expenses")
-          .select("amount, category, date, created_at, status, vat_amount")
-          .eq("tenant_id", tenantId)
-          .gte("date", startDate)
-          .lte("date", endDate),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select(
+              "id, status, membership_type, created_at, join_date, expiry_date, assigned_branch_id",
+            )
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select(
+              "id, member_id, type, status, issue_date, created_at, due_date, payment_method, total, amount, paid_amount, vat_total, currency",
+            )
+            .eq("tenant_id", tenantId)
+            .gte("created_at", range.startISO)
+            .lt("created_at", range.endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("expenses")
+            .select("amount, category, date, created_at, status, vat_amount")
+            .eq("tenant_id", tenantId)
+            .gte("date", startDate)
+            .lt("date", endExclusiveDate)
+            .order("id")
+            .range(from, to),
+        ),
         supabase
           .from("vat_returns")
           .select("status, due_date, filed_date, period_start, period_end")
@@ -616,19 +662,17 @@ export default function FinancialInsightsDashboard({
         throw settingsResult.error;
       }
       if (branchesResult.error) throw branchesResult.error;
-      if (membersResult.error) throw membersResult.error;
-      if (invoicesResult.error) throw invoicesResult.error;
-      if (expensesResult.error) throw expensesResult.error;
       if (vatReturnsResult.error) throw vatReturnsResult.error;
 
+      const members = membersRows as Member[];
+      const invoices = invoicesRows as Invoice[];
+      const expenses = expensesRows as Expense[];
+
       const invoiceCurrency =
-        invoicesResult.data?.find((invoice) => invoice.currency)?.currency || "";
+        invoices.find((invoice) => invoice.currency)?.currency || "";
       setCurrencyCode(settingsResult.data?.currency || invoiceCurrency || "");
 
       const branches = branchesResult.data || [];
-      const members = (membersResult.data || []) as Member[];
-      const invoices = (invoicesResult.data || []) as Invoice[];
-      const expenses = (expensesResult.data || []) as Expense[];
       const vatReturns =
         (vatReturnsResult.data || []) as Array<{
           status: string | null;
@@ -748,20 +792,30 @@ export default function FinancialInsightsDashboard({
         return status === "active" || status === "trial";
       }).length;
 
-      const monthsCovered =
-        Math.max(
-          1,
-          (end.getFullYear() - start.getFullYear()) * 12 +
-            (end.getMonth() - start.getMonth()) +
-            1,
-        );
-      const mrr = monthsCovered > 0 ? totalRevenue / monthsCovered : totalRevenue;
+      // This is an average of invoiced-and-paid revenue per calendar month
+      // in the range, not MRR: the schema has no recurring-billing record
+      // (price + billing interval per active membership) to compute true
+      // MRR from, so the card is labelled as what it actually is.
+      const avgMonthlyRevenue = totalRevenue / Math.max(1, range.monthsCovered);
+
+      // Run-rate projection for the current month: paid revenue so far this
+      // month, extrapolated linearly over the month's remaining days.
+      let projectedRevenue: number | null = null;
+      if (range.includesCurrentMonth) {
+        const currentMonthStart = new Date(monthBoundary(now, 0, DEFAULT_TIMEZONE).startISO);
+        const monthToDateRevenue = paidInvoices
+          .filter((invoice) => new Date(invoice.created_at || 0) >= currentMonthStart)
+          .reduce((sum, invoice) => sum + getInvoiceAmount(invoice), 0);
+        const { daysElapsed, daysInMonth } = monthProgress(now, DEFAULT_TIMEZONE);
+        projectedRevenue =
+          daysElapsed > 0 ? (monthToDateRevenue / daysElapsed) * daysInMonth : 0;
+      }
 
       const newMembers = filteredMembers.filter((member) => {
         const created = member.join_date || member.created_at;
         if (!created) return false;
         const createdDate = new Date(created);
-        return createdDate >= start && createdDate <= end;
+        return createdDate >= start && createdDate < endExclusive;
       });
       const newMemberIds = new Set(newMembers.map((member) => member.id).filter(Boolean));
       const newRevenue = paidInvoices
@@ -836,7 +890,7 @@ export default function FinancialInsightsDashboard({
       const filedReturnsThisPeriod = vatReturnsFiltered.filter((vatReturn) => {
         if (!vatReturn.filed_date) return false;
         const filedDate = new Date(vatReturn.filed_date);
-        return filedDate >= start && filedDate <= end;
+        return filedDate >= start && filedDate < endExclusive;
       }).length;
 
       const churnedMemberIds = new Set(
@@ -954,10 +1008,10 @@ export default function FinancialInsightsDashboard({
 
       setRevenueMetrics({
         totalRevenue,
-        mrr,
+        avgMonthlyRevenue,
         avgRevenuePerMember: activeMembers > 0 ? totalRevenue / activeMembers : 0,
         newRevenue,
-        projectedRevenue: mrr,
+        projectedRevenue,
         revenueFromAddons: nonMembershipRevenue,
       });
       setInvoiceMetrics({
@@ -1044,9 +1098,9 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title={t("billing.mrr")}
-            value={revenueMetrics.mrr}
-            subtitle={t("billing.monthlyRecurringRevenue")}
+            title={t("billing.avgMonthlyRevenue")}
+            value={revenueMetrics.avgMonthlyRevenue}
+            subtitle={t("billing.avgMonthlyRevenueHint")}
             icon={<FiTrendingUp className="w-6 h-6 text-white" />}
             color="bg-blue-500"
             format="currency"
@@ -1071,12 +1125,16 @@ export default function FinancialInsightsDashboard({
             currency={currencyCode}
           />
           <MetricCard
-            title={t("billing.projectedRevenue")}
-            value={revenueMetrics.projectedRevenue}
-            subtitle={t("billing.nextMonth")}
+            title={t("billing.projectedRevenueThisMonth")}
+            value={revenueMetrics.projectedRevenue ?? "—"}
+            subtitle={
+              revenueMetrics.projectedRevenue === null
+                ? t("billing.projectionNeedsCurrentMonth")
+                : t("billing.runRateProjectionHint")
+            }
             icon={<FiTarget className="w-6 h-6 text-white" />}
             color="bg-indigo-500"
-            format="currency"
+            format={revenueMetrics.projectedRevenue === null ? "number" : "currency"}
             currency={currencyCode}
           />
           <MetricCard
