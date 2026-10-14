@@ -16,7 +16,10 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { monthBoundary } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
+import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
 const kpiColorMap = {
@@ -110,78 +113,64 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setLoadError(false);
 
       const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      // Month boundaries are full ISO instants in the gym's timezone with an
+      // exclusive upper bound (see periodBoundaries.ts) - not
+      // toISOString().split("T")[0], which shifts the month start by a day
+      // in UTC+3 and, via .lte(<bare date>), drops everything created on
+      // the last day of the previous month after midnight UTC.
+      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
+      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      // previousMonth's exclusive end is exactly currentMonth's start.
+      const previousMonthEnd = new Date(currentMonth.startISO);
 
-      // Fetch invoices for revenue
-      const [currentInvoices, previousInvoices] = await Promise.all([
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
+      // Every query is paged (fetchAllRows): PostgREST caps a response at
+      // 1000 rows and these totals would silently stop growing past that.
+      const paidInvoicesBetween = (startISO: string, endExclusiveISO: string) =>
+        fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, total, status")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .gte("created_at", startISO)
+            .lt("created_at", endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        );
+      const bookingsBetween = (startISO: string, endExclusiveISO: string) =>
+        fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("id, status")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", startISO)
+            .lt("created_at", endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        );
 
-      // Fetch members
-      const [currentMembers, previousMembers] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"]),
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
-
-      const invoiceOrMemberError =
-        currentInvoices.error ||
-        previousInvoices.error ||
-        currentMembers.error ||
-        previousMembers.error;
-      if (invoiceOrMemberError) throw invoiceOrMemberError;
-
-      // Fetch class bookings for attendance
-      const [currentBookings, previousBookings] = await Promise.all([
-        supabase
-          .from("class_bookings")
-          .select("id, status")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("class_bookings")
-          .select("id, status")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
-
-      if (currentBookings.error || previousBookings.error) {
-        throw currentBookings.error || previousBookings.error;
-      }
+      const [currentInvoices, previousInvoices, allMembers, currentBookings, previousBookings] =
+        await Promise.all([
+          paidInvoicesBetween(currentMonth.startISO, currentMonth.endExclusiveISO),
+          paidInvoicesBetween(previousMonth.startISO, previousMonth.endExclusiveISO),
+          fetchAllRows((from, to) =>
+            supabase
+              .from("members")
+              .select("id, created_at, join_date, expiry_date, status, membership_status")
+              .eq("tenant_id", tenantId)
+              .order("id")
+              .range(from, to),
+          ),
+          bookingsBetween(currentMonth.startISO, currentMonth.endExclusiveISO),
+          bookingsBetween(previousMonth.startISO, previousMonth.endExclusiveISO),
+        ]);
 
       // Calculate revenue
-      const currentRevenue = (currentInvoices.data || []).reduce(
+      const currentRevenue = currentInvoices.reduce(
         (sum, inv) => sum + Number(inv.total || inv.amount || 0),
         0
       );
-      const previousRevenue = (previousInvoices.data || []).reduce(
+      const previousRevenue = previousInvoices.reduce(
         (sum, inv) => sum + Number(inv.total || inv.amount || 0),
         0
       );
@@ -189,22 +178,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
         : 0;
 
-      // Calculate members
-      const currentMemberCount = (currentMembers.data || []).length;
-      const previousMemberCount = (previousMembers.data || []).length;
+      // Compare "active members now" against "members who would have
+      // counted as active at the end of last month" (approximated from
+      // join_date/expiry_date - see memberActivity.ts), not against
+      // "active members who signed up last month": that is a different,
+      // much smaller population and made the change meaningless (C8).
+      const currentMemberCount = allMembers.filter(isMemberCurrentlyActive).length;
+      const previousMemberCount = countMembersActiveAsOf(allMembers, previousMonthEnd);
       const memberChange = currentMemberCount - previousMemberCount;
 
       // Calculate attendance
-      const currentAttended = (currentBookings.data || []).filter(
+      const currentAttended = currentBookings.filter(
         b => b.status === "checked_in" || b.status === "completed"
       ).length;
-      const currentTotal = (currentBookings.data || []).length;
+      const currentTotal = currentBookings.length;
       const currentAttendanceRate = currentTotal > 0 ? (currentAttended / currentTotal) * 100 : 0;
 
-      const previousAttended = (previousBookings.data || []).filter(
+      const previousAttended = previousBookings.filter(
         b => b.status === "checked_in" || b.status === "completed"
       ).length;
-      const previousTotal = (previousBookings.data || []).length;
+      const previousTotal = previousBookings.length;
       const previousAttendanceRate = previousTotal > 0 ? (previousAttended / previousTotal) * 100 : 0;
       const attendanceChange = currentAttendanceRate - previousAttendanceRate;
 
