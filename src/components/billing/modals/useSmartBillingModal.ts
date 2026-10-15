@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../supabaseClient";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../../config/runtimeConfig";
+import { getCurrencyDecimals } from "../../../utils/invoiceMath";
 
 interface BillingData {
   memberId?: string;
@@ -161,7 +162,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
             id: "overdue-invoices",
             type: "escalation",
             title: "Overdue Invoices",
-            description: `${overdueCount} invoice(s) totaling ${totalOverdue.toFixed(2)} are overdue. Recommend payment plan.`,
+            description: `${overdueCount} invoice(s) totaling ${totalOverdue.toFixed(getCurrencyDecimals(DEFAULT_CURRENCY))} ${DEFAULT_CURRENCY} are overdue. Recommend payment plan.`,
             confidence: 0.95,
             impact: totalOverdue > 1000 ? "high" : "medium",
             action: "Setup payment plan",

@@ -24,6 +24,7 @@ import AddExpenseModal from "../components/billing/AddExpenseModal";
 import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
+import { usePermissions } from "../hooks/usePermissions";
 import { supabase } from "../supabaseClient";
 import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
 import { normalizeInvoiceStatus } from "../utils/invoiceStatus";
@@ -96,6 +97,11 @@ const toExpenseProp = (row: ExpenseRow): Expense =>
 const Billing: React.FC = () => {
   usePageThemeContext();
   const { tenantId } = useAuth();
+  // Billing settings live in gym_settings, which RLS lets only admins write
+  // (gym_settings_insert_admin / gym_settings_update_admin). The /billing
+  // route itself is open to employees, so the toggles must be read-only for
+  // them rather than optimistically flipping and then failing at the DB.
+  const { isAdmin: canEditBillingSettings } = usePermissions();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
 
@@ -476,6 +482,7 @@ const Billing: React.FC = () => {
   };
 
   const handleSettingsChange = async (setting: keyof typeof settings) => {
+    if (!canEditBillingSettings) return;
     if (!tenantId) {
       toast.error(t("billing.failedToSave", "Unable to save billing settings"));
       return;
@@ -931,6 +938,11 @@ const Billing: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                 {t("billing.billingSettings")}
               </h2>
+              {!canEditBillingSettings && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 -mt-4 mb-6">
+                  {t("billing.billingSettingsAdminOnly", "Only administrators can change billing settings.")}
+                </p>
+              )}
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -944,7 +956,9 @@ const Billing: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleSettingsChange("autoInvoicing")}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    disabled={!canEditBillingSettings}
+                    aria-pressed={settings.autoInvoicing}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                       settings.autoInvoicing
                         ? "bg-blue-600"
                         : "bg-gray-200"
@@ -971,7 +985,9 @@ const Billing: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleSettingsChange("paymentReminders")}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    disabled={!canEditBillingSettings}
+                    aria-pressed={settings.paymentReminders}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                       settings.paymentReminders
                         ? "bg-blue-600"
                         : "bg-gray-200"
@@ -998,7 +1014,9 @@ const Billing: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleSettingsChange("vatEnabled")}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    disabled={!canEditBillingSettings}
+                    aria-pressed={settings.vatEnabled}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                       settings.vatEnabled
                         ? "bg-blue-600"
                         : "bg-gray-200"

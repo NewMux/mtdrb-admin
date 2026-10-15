@@ -373,7 +373,7 @@ class TransactionService {
       const results = [];
       const errors = [];
 
-      for (const memberData of members) {
+      for (const [row, memberData] of members.entries()) {
         try {
           const { data: member, error } = await supabase
             .from("members")
@@ -384,18 +384,26 @@ class TransactionService {
           if (error) throw error;
           results.push(member);
         } catch (error) {
-          errors.push({ memberData, error: error instanceof Error ? error.message : String(error) });
+          errors.push({ row, memberData, error: error instanceof Error ? error.message : String(error) });
         }
       }
 
-      // Log batch operation
+      // Log batch operation. activities rows are readable by every staff
+      // member in the tenant, so log only counts and per-row error messages
+      // - never the failed rows' raw member payloads (name, email, phone,
+      // address, emergency contact...). The caller still gets the full
+      // `failed` list in the return value below.
       await this.logActivity(
         tenantId,
         "member",
         "Batch Member Import",
         `Imported ${results.length} members, ${errors.length} failed`,
         errors.length === 0 ? "success" : "failed",
-        { successful: results.length, failed: errors.length, errors },
+        {
+          successful: results.length,
+          failed: errors.length,
+          errors: errors.map(({ row, error }) => ({ row, error })),
+        },
       );
 
       return {

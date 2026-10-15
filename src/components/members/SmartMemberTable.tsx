@@ -222,18 +222,17 @@ export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({
 };
 
 // Document Checklist Component
+//
+// There is deliberately no "Resend" action here: it used to show a
+// "Document reminder sent" success toast without sending anything (there
+// is no document-reminder delivery backend).
 export const DocumentChecklist: React.FC<{
   formsSubmitted: string[];
-  memberId: string;
-}> = ({ formsSubmitted, memberId }) => {
+}> = ({ formsSubmitted }) => {
   const requiredDocs = ["waiver", "id_document", "emergency_contact"];
   const safeFormsSubmitted = formsSubmitted || [];
   const completedDocs = safeFormsSubmitted.length;
   const totalDocs = requiredDocs.length;
-
-  const handleResendDocs = () => {
-    toast.success(`Document reminder sent to member ${memberId}`);
-  };
 
   return (
     <div className="flex items-center space-x-2">
@@ -243,14 +242,6 @@ export const DocumentChecklist: React.FC<{
           {completedDocs}/{totalDocs}
         </span>
       </div>
-      {completedDocs < totalDocs && (
-        <button
-          onClick={handleResendDocs}
-          className="text-xs text-blue-600 hover:text-blue-700"
-        >
-          Resend
-        </button>
-      )}
     </div>
   );
 };

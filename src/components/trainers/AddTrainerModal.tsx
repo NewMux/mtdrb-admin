@@ -332,7 +332,11 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
             },
           ]);
 
-        if (docError) throw docError;
+        // The trainer row (with metadata.national_id_url) is already saved,
+        // and trainer_documents isn't defined in any migration, so it may
+        // not exist. Failing here reported "Failed to add trainer" for a
+        // trainer that was in fact created, inviting duplicate retries.
+        if (docError) console.warn("Could not record trainer document:", docError.message);
       }
 
       toast.success("Trainer added successfully!");

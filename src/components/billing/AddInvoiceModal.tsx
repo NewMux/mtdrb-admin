@@ -34,7 +34,7 @@ import {
   DEFAULT_CURRENCY,
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
-import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
+import { splitVat, getCurrencyDecimals, toPersistedMoney } from "../../utils/invoiceMath";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -258,7 +258,10 @@ export function AddInvoiceModal({
         : typeof watchedAmount === "string"
           ? parseFloat(watchedAmount)
           : 0;
-    const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
+    // An explicit 0% is a valid rate; only fall back when the field is empty.
+    const rawVatRate = watch("vat_rate") as number | string | undefined;
+    const parsedVatRate = rawVatRate === "" || rawVatRate == null ? NaN : Number(rawVatRate);
+    const vatRate = Number.isFinite(parsedVatRate) ? parsedVatRate : DEFAULT_VAT_RATE;
     return splitVat(amount, vatRate, watchedVatIncluded, DEFAULT_CURRENCY);
   };
 
@@ -302,14 +305,14 @@ export function AddInvoiceModal({
         member_id: data.member_id,
         issue_date: data.date,
         due_date: dueDate.toISOString().split("T")[0],
-        amount: net,
-        total: gross,
+        amount: toPersistedMoney(net, DEFAULT_CURRENCY),
+        total: toPersistedMoney(gross, DEFAULT_CURRENCY),
         type: data.category as InvoiceType,
         payment_method: data.payment_method,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
         currency: DEFAULT_CURRENCY,
-        vat_total: vat,
+        vat_total: toPersistedMoney(vat, DEFAULT_CURRENCY),
         metadata: {
           title: data.title,
           notes: data.description || null,
@@ -504,7 +507,7 @@ export function AddInvoiceModal({
           </div>
               <div className="flex items-center space-x-4 text-start">
                 <AppleToggle
-                  label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة (10%)")}
+                  label={t("billing.vatIncluded", "شامل ضريبة القيمة المضافة")}
                   checked={watchedVatIncluded}
                   onChange={(checked) => setValue("vat_included", checked)}
                 />

@@ -103,3 +103,6 @@ temp/
 # Vercel
 .vercel 
 .vercel
+
+# Claude Code worktrees
+.claude/worktrees/

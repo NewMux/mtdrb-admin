@@ -551,7 +551,11 @@ export interface VatDashboardData {
   totalVatCollected: number;
   totalVatPaid: number;
   netVatPayable: number;
-  complianceScore: number;
+  /**
+   * % of VAT returns past their due date that were filed on or before it
+   * (see utils/vatReturnDeadlines.ts); null when none are due yet.
+   */
+  onTimeFilingRate: number | null;
 
   // Period comparisons
   currentPeriodVat: number;

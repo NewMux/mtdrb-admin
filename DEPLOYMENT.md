@@ -106,17 +106,27 @@ not be gotten working reliably; see git history for that attempt.
   round-trip to start a purchase, unlike the CrediMax flow this replaced.
 - `paddle-webhook` — public; receives Paddle's subscription event
   notifications, verifies Paddle's HMAC webhook signature (`Paddle-Signature`
-  header), and is the only path allowed to write `platform_subscriptions`
-  besides a self-service cancellation (see
+  header, rejecting signatures older than 5 minutes), and writes
+  `platform_subscriptions` through `record_paddle_subscription_event()`,
+  which ignores out-of-order or repeated events and won't let a different
+  Paddle subscription cancel the one on record. JWT verification disabled
+  (`supabase/config.toml`) — Paddle calls this server-to-server,
+  authenticated by its own signature, not a Supabase JWT.
+- `paddle-cancel-subscription` — called from Settings → Cancel
+  subscription. Verifies the caller is a workspace admin, then asks Paddle
+  to cancel at the end of the paid period (`POST /subscriptions/{id}/cancel`,
+  `effective_from: next_billing_period`). The tenant keeps access until
+  then. Clients can't write `platform_subscriptions` at all (see
   `enforce_platform_subscription_self_service()` in
-  `supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
-  JWT verification disabled (`supabase/config.toml`) — Paddle calls this
-  server-to-server, authenticated by its own signature, not a Supabase JWT.
+  `supabase/migrations/20261014100000_paddle_subscription_sync_hardening.sql`).
+  JWT verification is off at the platform level so the browser's CORS
+  preflight gets through; the function checks the JWT itself.
 
-This must be deployed (`supabase functions deploy paddle-webhook`, or via
-the Supabase dashboard) whenever this repo is deployed to a new
-environment — unlike the rest of this app, it runs server-side, not as
-part of the frontend build.
+Both must be deployed (`supabase functions deploy paddle-webhook` and
+`supabase functions deploy paddle-cancel-subscription`, or via the
+Supabase dashboard) whenever this repo is deployed to a new environment —
+unlike the rest of this app, they run server-side, not as part of the
+frontend build. CI type-checks them with `deno check`.
 
 Required **client-side** vars (`VITE_*`, safe to expose — Paddle client
 tokens and price IDs are not secrets, the same way a Stripe publishable
@@ -139,14 +149,26 @@ Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 - `PADDLE_STARTER_PRICE_ID`, `PADDLE_PRO_PRICE_ID` — the same price IDs as
   the `VITE_*` versions above; the webhook maps an incoming subscription's
   price ID back to a `plan_tier` with these, independently of the client.
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
-  automatically to every Edge Function; nothing to set.
+- `PADDLE_API_KEY` — a server-side API key (Developer Tools →
+  Authentication) with permission to write subscriptions, used by
+  `paddle-cancel-subscription`. Sandbox keys contain `_sdbx`.
+- `PADDLE_ENVIRONMENT` — `sandbox` (default) or `production`. The cancel
+  function refuses to run if this doesn't match the kind of key in
+  `PADDLE_API_KEY`.
+- `ALLOWED_ORIGINS` — optional, comma-separated app origins (e.g.
+  `https://app.example.com`) allowed to call `paddle-cancel-subscription`
+  from a browser. Unset allows any origin; every call still needs a valid
+  user JWT.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` —
+  Supabase provides these automatically to every Edge Function; nothing to
+  set.
 
 Set up in Paddle's dashboard before this can go live: create the Starter
 and Pro products/prices (sandbox first), point a webhook notification
-destination at `paddle-webhook`'s deployed URL subscribed to at least
-`subscription.created`, `subscription.updated`, `subscription.canceled`,
-and confirm no trial period is configured on either price (MTDRB
+destination at `paddle-webhook`'s deployed URL subscribed to
+`subscription.created`, `subscription.updated`, `subscription.activated`,
+`subscription.canceled`, `subscription.past_due`, `subscription.paused`
+and `subscription.resumed`, and confirm no trial period is configured on either price (MTDRB
 intentionally has no free trial — see
 `supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
 
@@ -154,7 +176,16 @@ The webhook's event field names follow Paddle's published Billing API v2
 documentation (`developer.paddle.com/webhooks`), which is public and
 stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
-access) before relying on this for real customer traffic.
+access → cancel from Settings → access until period end) before relying
+on this for real customer traffic.
+
+Access rules (`is_tenant_entitled()` in the database and
+`src/utils/subscriptionEntitlement.ts` in the app, kept identical):
+`active` until `current_period_end` plus two days' grace for the renewal
+webhook to arrive; `cancelled` until the already-paid
+`current_period_end`; `past_due` and `paused` lose access. An `active` row
+with no end date only counts for manual grants (`payment_provider` other
+than `paddle`), e.g. invite-only testers.
 
 ## Financial document migration
 

@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, weekBoundary, daysWindow } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 interface SmartDashboardOverviewProps {
   refreshKey: number;
@@ -242,17 +243,22 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           .eq("tenant_id", tenantId)
           .gte("classes.start_time", week.startISO)
           .lt("classes.start_time", week.endExclusiveISO),
-        supabase
-          .from("members")
-          .select("id, created_at, join_date, expiry_date, status, membership_status")
-          .eq("tenant_id", tenantId),
+        // Paged (fetchAllRows): PostgREST caps a response at 1000 rows, and
+        // every member count here would silently stop growing past that.
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, created_at, join_date, expiry_date, status, membership_status")
+            .eq("tenant_id", tenantId)
+            .order("id")
+            .range(from, to),
+        ),
       ]);
 
       const queryError =
         currentInvoices.error ||
         previousInvoices.error ||
-        weekBookings.error ||
-        allMembers.error;
+        weekBookings.error;
       if (queryError) throw queryError;
 
       // Compare "active members today" against "members who would have
@@ -260,10 +266,10 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // join_date/expiry_date), not against "members who signed up last
       // month" - the latter is a different, much smaller population and
       // produces meaningless swings when compared to the full active count.
-      const currentMembersData = (allMembers.data || []).filter(isMemberCurrentlyActive);
+      const currentMembersData = allMembers.filter(isMemberCurrentlyActive);
       const currentMemberCount = currentMembersData.length;
       const previousMemberCount = countMembersActiveAsOf(
-        allMembers.data || [],
+        allMembers,
         previousMonthEnd,
       );
       const memberChange = previousMemberCount > 0
@@ -291,20 +297,21 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // Calculate retention (members who joined 90+ days ago and are still active)
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-      const retainedMembers = (allMembers.data || []).filter(m => {
+      const retainedMembers = allMembers.filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
         return joinDate <= ninetyDaysAgo && m.status === "active";
       }).length;
-      const totalOldMembers = (allMembers.data || []).filter(m => {
+      const totalOldMembers = allMembers.filter(m => {
         const joinDate = new Date(m.join_date || m.created_at);
         return joinDate <= ninetyDaysAgo;
       }).length;
       const retentionRate = totalOldMembers > 0 ? (retainedMembers / totalOldMembers) * 100 : 0;
 
-      // Get currency
+      // Get currency and the admin's saved targets (set via
+      // SetTargetsModal, shown by DashboardOverview)
       const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .single();
       // PGRST116 = no row found, which is a legitimate "not configured
@@ -313,6 +320,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       const currency = settings?.currency || DEFAULT_CURRENCY;
       const currencySymbol = currency || "";
+      const savedTargets = (
+        settings?.metadata as { dashboardTargets?: { revenue?: number } } | null
+      )?.dashboardTargets;
+      const savedRevenueTarget =
+        typeof savedTargets?.revenue === "number" ? savedTargets.revenue
+          : null;
 
       // Find inactive members (haven't visited in 14+ days)
       const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
@@ -350,7 +363,13 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           trend: revenueChange >= 0 ? "up" : "down",
           icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
           color: "green",
-          subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+          // Only the admin's saved target - never an invented one (this
+          // used to show currentRevenue * 1.1, contradicting the saved
+          // target displayed just above it).
+          subtitle:
+            savedRevenueTarget !== null
+              ? `${t("dashboard.target")}: ${currencySymbol} ${(savedRevenueTarget / 1000).toFixed(1)}k`
+              : t("dashboard.vsLastMonth"),
         },
         {
           // This week's raw attendance rate, not a trend - there's no

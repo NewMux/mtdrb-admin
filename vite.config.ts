@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { configDefaults } from 'vitest/config'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -40,6 +41,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // Claude Code worktrees hold full copies of the repo; don't run their tests twice.
+    exclude: [...configDefaults.exclude, '.claude/**'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [

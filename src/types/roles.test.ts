@@ -35,17 +35,31 @@ describe("hasRole", () => {
     expect(hasRole("", "trainer")).toBe(false);
   });
 
-  it("falls back an unrecognized role string to trainer-level access only", () => {
-    // An invalid/corrupted role string should never silently grant elevated
-    // access - it should only satisfy the lowest-tier requirement.
-    expect(hasRole("superadmin", "trainer")).toBe(true);
+  it("fails closed for an unrecognized role string (no access at any tier)", () => {
+    // An invalid/corrupted role string must never grant access - not even
+    // the lowest tier. Least privilege: unknown means denied.
+    expect(hasRole("superadmin", "trainer")).toBe(false);
     expect(hasRole("superadmin", "employee")).toBe(false);
     expect(hasRole("superadmin", "admin")).toBe(false);
+    expect(hasRole("member", "trainer")).toBe(false);
+    expect(hasRole("owner", "admin")).toBe(false);
+  });
+
+  it("does not treat prototype keys as roles", () => {
+    expect(hasRole("toString", "trainer")).toBe(false);
+    expect(hasRole("__proto__", "trainer")).toBe(false);
+    expect(hasRole("constructor", "trainer")).toBe(false);
   });
 
   it("is case-sensitive and treats a mismatched case as an invalid role", () => {
     expect(hasRole("Admin", "admin")).toBe(false);
-    expect(hasRole("Admin", "trainer")).toBe(true);
+    expect(hasRole("Admin", "trainer")).toBe(false);
+    expect(hasRole("TRAINER", "trainer")).toBe(false);
+  });
+
+  it("does not trim whitespace around a role string", () => {
+    expect(hasRole(" admin", "trainer")).toBe(false);
+    expect(hasRole("admin ", "admin")).toBe(false);
   });
 
   it("matches the documented hierarchy ordering (admin > employee > trainer)", () => {

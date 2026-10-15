@@ -1,5 +1,64 @@
 import { describe, it, expect } from "vitest";
-import { monthBoundary, weekBoundary, dayBoundary, daysWindow } from "./periodBoundaries";
+import {
+  monthBoundary,
+  weekBoundary,
+  dayBoundary,
+  daysWindow,
+  yearBoundary,
+  toZonedDateString,
+  monthProgress,
+  zonedDateStartISO,
+} from "./periodBoundaries";
+
+describe("yearBoundary", () => {
+  it("spans local Jan 1 to the next local Jan 1", () => {
+    const { startISO, endExclusiveISO } = yearBoundary(new Date("2026-06-10T07:00:00Z"), "Asia/Bahrain");
+    expect(startISO).toBe("2025-12-31T21:00:00.000Z");
+    expect(endExclusiveISO).toBe("2026-12-31T21:00:00.000Z");
+  });
+
+  it("uses the timezone's year, not UTC's, around New Year", () => {
+    // 22:00 UTC on Dec 31 is already Jan 1 in Bahrain.
+    const { startISO } = yearBoundary(new Date("2026-12-31T22:00:00Z"), "Asia/Bahrain");
+    expect(startISO).toBe("2026-12-31T21:00:00.000Z");
+  });
+});
+
+describe("toZonedDateString", () => {
+  it("returns the local calendar date of a boundary instant, not the UTC date", () => {
+    // Local midnight Sept 1 in Bahrain is Aug 31 in UTC.
+    expect(toZonedDateString("2026-08-31T21:00:00.000Z", "Asia/Bahrain")).toBe("2026-09-01");
+  });
+});
+
+describe("zonedDateStartISO", () => {
+  it("returns local midnight of a picked date, and handles month rollover via offset", () => {
+    expect(zonedDateStartISO("2026-09-01", "Asia/Bahrain")).toBe("2026-08-31T21:00:00.000Z");
+    // Exclusive end of a range ending Sept 30 is Oct 1 local midnight.
+    expect(zonedDateStartISO("2026-09-30", "Asia/Bahrain", 1)).toBe("2026-09-30T21:00:00.000Z");
+  });
+
+  it("returns null for malformed input", () => {
+    expect(zonedDateStartISO("", "Asia/Bahrain")).toBeNull();
+    expect(zonedDateStartISO("2026-9-1", "Asia/Bahrain")).toBeNull();
+  });
+});
+
+describe("monthProgress", () => {
+  it("counts today as elapsed and knows the month length", () => {
+    expect(monthProgress(new Date("2026-09-15T07:00:00Z"), "Asia/Bahrain")).toEqual({
+      daysElapsed: 15,
+      daysInMonth: 30,
+    });
+  });
+
+  it("is 1 on the first local day of the month even while UTC is still in the prior month", () => {
+    expect(monthProgress(new Date("2026-09-30T22:00:00Z"), "Asia/Bahrain")).toEqual({
+      daysElapsed: 1,
+      daysInMonth: 31,
+    });
+  });
+});
 
 // Bahrain / Gulf time: UTC+3, no DST - a fixed, unambiguous offset that
 // makes the historical bug reproducible: local midnight on the 1st is

@@ -11,3 +11,10 @@
 # true, the platform's own JWT gate can intercept a request before the
 # function's code ever runs.
 verify_jwt = false
+
+[functions.paddle-cancel-subscription]
+# Called from the browser. With verify_jwt on, the platform's JWT gate
+# rejects the CORS preflight (which carries no Authorization header) before
+# the function runs -- the same failure the old CrediMax checkout function
+# hit. The function verifies the caller's JWT itself instead.
+verify_jwt = false

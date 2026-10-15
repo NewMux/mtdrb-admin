@@ -16,7 +16,11 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { monthBoundary } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
+import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
+import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
 const kpiColorMap = {
@@ -69,8 +73,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiDollarSign className="w-6 h-6" />,
       color: "green" as const,
-      target: "$0",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.activeMembers"),
@@ -78,8 +82,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiUsers className="w-6 h-6" />,
       color: "blue" as const,
-      target: "0",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.classAttendance"),
@@ -87,8 +91,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiCalendar className="w-6 h-6" />,
       color: "purple" as const,
-      target: "85%",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
     {
       name: t("dashboard.memberSatisfaction"),
@@ -96,8 +100,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiStar className="w-6 h-6" />,
       color: "yellow" as const,
-      target: "4.8",
-      progress: 0,
+      target: null as string | null,
+      progress: null as number | null,
     },
   ]);
   const [loading, setLoading] = useState(true);
@@ -110,110 +114,102 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setLoadError(false);
 
       const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      // Month boundaries are full ISO instants in the gym's timezone with an
+      // exclusive upper bound (see periodBoundaries.ts) - not
+      // toISOString().split("T")[0], which shifts the month start by a day
+      // in UTC+3 and, via .lte(<bare date>), drops everything created on
+      // the last day of the previous month after midnight UTC.
+      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
+      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      // previousMonth's exclusive end is exactly currentMonth's start.
+      const previousMonthEnd = new Date(currentMonth.startISO);
 
-      // Fetch invoices for revenue
-      const [currentInvoices, previousInvoices] = await Promise.all([
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
+      // Every query is paged (fetchAllRows): PostgREST caps a response at
+      // 1000 rows and these totals would silently stop growing past that.
+      const paidInvoicesBetween = (startISO: string, endExclusiveISO: string) =>
+        fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, total, status")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .gte("created_at", startISO)
+            .lt("created_at", endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        );
+      const bookingsBetween = (startISO: string, endExclusiveISO: string) =>
+        fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("id, status")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", startISO)
+            .lt("created_at", endExclusiveISO)
+            .order("id")
+            .range(from, to),
+        );
 
-      // Fetch members
-      const [currentMembers, previousMembers] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"]),
-        supabase
-          .from("members")
-          .select("id, status, membership_status, created_at")
-          .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
-
-      const invoiceOrMemberError =
-        currentInvoices.error ||
-        previousInvoices.error ||
-        currentMembers.error ||
-        previousMembers.error;
-      if (invoiceOrMemberError) throw invoiceOrMemberError;
-
-      // Fetch class bookings for attendance
-      const [currentBookings, previousBookings] = await Promise.all([
-        supabase
-          .from("class_bookings")
-          .select("id, status")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("class_bookings")
-          .select("id, status")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
-
-      if (currentBookings.error || previousBookings.error) {
-        throw currentBookings.error || previousBookings.error;
-      }
+      const [currentInvoices, previousInvoices, allMembers, currentBookings, previousBookings] =
+        await Promise.all([
+          paidInvoicesBetween(currentMonth.startISO, currentMonth.endExclusiveISO),
+          paidInvoicesBetween(previousMonth.startISO, previousMonth.endExclusiveISO),
+          fetchAllRows((from, to) =>
+            supabase
+              .from("members")
+              .select("id, created_at, join_date, expiry_date, status, membership_status")
+              .eq("tenant_id", tenantId)
+              .order("id")
+              .range(from, to),
+          ),
+          bookingsBetween(currentMonth.startISO, currentMonth.endExclusiveISO),
+          bookingsBetween(previousMonth.startISO, previousMonth.endExclusiveISO),
+        ]);
 
       // Calculate revenue
-      const currentRevenue = (currentInvoices.data || []).reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+      const currentRevenue = currentInvoices.reduce(
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
-      const previousRevenue = (previousInvoices.data || []).reduce(
-        (sum, inv) => sum + Number(inv.total || inv.amount || 0),
+      const previousRevenue = previousInvoices.reduce(
+        (sum, inv) => sum + resolveInvoiceGrossAmount(inv),
         0
       );
       const revenueChange = previousRevenue > 0
         ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
         : 0;
 
-      // Calculate members
-      const currentMemberCount = (currentMembers.data || []).length;
-      const previousMemberCount = (previousMembers.data || []).length;
+      // Compare "active members now" against "members who would have
+      // counted as active at the end of last month" (approximated from
+      // join_date/expiry_date - see memberActivity.ts), not against
+      // "active members who signed up last month": that is a different,
+      // much smaller population and made the change meaningless (C8).
+      const currentMemberCount = allMembers.filter(isMemberCurrentlyActive).length;
+      const previousMemberCount = countMembersActiveAsOf(allMembers, previousMonthEnd);
       const memberChange = currentMemberCount - previousMemberCount;
 
       // Calculate attendance
-      const currentAttended = (currentBookings.data || []).filter(
+      const currentAttended = currentBookings.filter(
         b => b.status === "checked_in" || b.status === "completed"
       ).length;
-      const currentTotal = (currentBookings.data || []).length;
+      const currentTotal = currentBookings.length;
       const currentAttendanceRate = currentTotal > 0 ? (currentAttended / currentTotal) * 100 : 0;
 
-      const previousAttended = (previousBookings.data || []).filter(
+      const previousAttended = previousBookings.filter(
         b => b.status === "checked_in" || b.status === "completed"
       ).length;
-      const previousTotal = (previousBookings.data || []).length;
+      const previousTotal = previousBookings.length;
       const previousAttendanceRate = previousTotal > 0 ? (previousAttended / previousTotal) * 100 : 0;
       const attendanceChange = currentAttendanceRate - previousAttendanceRate;
 
       // Get currency and targets from settings
-      const { data: settings } = await supabase
+      // maybeSingle: a tenant with no settings row yet is not an error.
+      const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
         .select("currency, metadata")
         .eq("tenant_id", tenantId)
-        .single();
+        .maybeSingle();
+      if (settingsError) throw settingsError;
 
       const settingsCurrency = settings?.currency || DEFAULT_CURRENCY;
       setCurrency(settingsCurrency);
@@ -225,11 +221,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setSavedTargets(targets);
 
       // Calculate average trainer rating as proxy for member satisfaction
-      const { data: trainers } = await supabase
+      const { data: trainers, error: trainersError } = await supabase
         .from("trainers")
         .select("rating")
         .eq("tenant_id", tenantId)
         .not("rating", "is", null);
+      if (trainersError) throw trainersError;
 
       const avgRating = trainers && trainers.length > 0
         ? trainers.reduce((sum, t) => sum + Number(t.rating || 0), 0) / trainers.length
@@ -238,23 +235,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : t("dashboard.notAvailable");
       const satisfactionChange = avgRating > 0 ? t("dashboard.basedOnTrainerRatings") : t("dashboard.noRatingData");
 
-      // Calculate targets: use saved targets or fallback to calculated defaults
-      const revenueTarget = targets?.revenue ?? (currentRevenue * 1.1);
-      const membersTarget = targets?.activeMembers ?? (currentMemberCount * 1.05);
-      const attendanceTarget = targets?.classAttendance ?? 85;
-      const satisfactionTarget = targets?.memberSatisfaction ?? 4.8;
+      // Targets are only ever the admin's saved ones (SetTargetsModal).
+      // With none saved, the card shows no target and no progress bar -
+      // it used to invent one (revenue x1.1, members x1.05, 85%, 4.8).
+      const revenueTarget = targets?.revenue ?? null;
+      const membersTarget = targets?.activeMembers ?? null;
+      const attendanceTarget = targets?.classAttendance ?? null;
+      const satisfactionTarget = targets?.memberSatisfaction ?? null;
 
-      // Format targets for display
-      const revenueTargetDisplay = `${currencySymbol} ${revenueTarget.toLocaleString()}`;
-      const membersTargetDisplay = membersTarget.toLocaleString();
-      const attendanceTargetDisplay = `${attendanceTarget}%`;
-      const satisfactionTargetDisplay = satisfactionTarget.toFixed(1);
+      const revenueTargetDisplay =
+        revenueTarget === null ? null : `${currencySymbol} ${revenueTarget.toLocaleString()}`;
+      const membersTargetDisplay = membersTarget === null ? null : membersTarget.toLocaleString();
+      const attendanceTargetDisplay = attendanceTarget === null ? null : `${attendanceTarget}%`;
+      const satisfactionTargetDisplay =
+        satisfactionTarget === null ? null : satisfactionTarget.toFixed(1);
 
-      // Calculate progress percentages
-      const revenueProgress = revenueTarget > 0 ? Math.min(100, (currentRevenue / revenueTarget) * 100) : 0;
-      const membersProgress = membersTarget > 0 ? Math.min(100, (currentMemberCount / membersTarget) * 100) : 0;
-      const attendanceProgress = Math.min(100, (currentAttendanceRate / attendanceTarget) * 100);
-      const satisfactionProgress = avgRating > 0 ? Math.min(100, (avgRating / satisfactionTarget) * 100) : 0;
+      // Progress toward a saved target; null (no bar) when there is none.
+      const progressToward = (current: number, target: number | null) =>
+        target === null ? null : target > 0 ? Math.min(100, (current / target) * 100) : 0;
+      const revenueProgress = progressToward(currentRevenue, revenueTarget);
+      const membersProgress = progressToward(currentMemberCount, membersTarget);
+      const attendanceProgress = progressToward(currentAttendanceRate, attendanceTarget);
+      const satisfactionProgress = progressToward(avgRating, satisfactionTarget);
 
       setPrimaryStats([
         {
@@ -361,7 +363,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       <div className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("dashboard.target")}</div>
                       <FiEdit2 className="w-3 h-3 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">{stat.target}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">
+                      {stat.target ?? t("dashboard.targets.notSet")}
+                    </div>
                   </button>
                 </div>
                 
@@ -371,19 +375,25 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <div className="text-sm text-gray-600 dark:text-gray-400">{stat.name}</div>
                 </div>
                 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
+                {/* Progress Bar - only toward a target the admin actually saved */}
+                {stat.progress === null ? (
+                  <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                    {t("dashboard.targets.noTargetHint")}
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
-                      style={{ width: `${Math.min(stat.progress, 100)}%` }}
-                    ></div>
+                ) : (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm mb-2 gap-2">
+                      <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
+                        style={{ width: `${Math.min(stat.progress, 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
-                </div>
+                )}
                 
                 {/* Footer: Change message & Live indicator */}
                 <div className="flex items-center justify-between gap-2 text-sm">

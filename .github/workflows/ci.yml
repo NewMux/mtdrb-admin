@@ -17,3 +17,13 @@ jobs:
       - run: npm ci
       - run: npm run validate
       - run: npm run build
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # Type-checks the Supabase Edge Functions (Deno, not part of `tsc`).
+      - run: deno check supabase/functions/*/index.ts

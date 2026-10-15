@@ -26,6 +26,10 @@ import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { getCurrencyDecimals, toPersistedMoney } from "../../utils/invoiceMath";
+import { dayBoundary, monthBoundary, toZonedDateString } from "../../utils/periodBoundaries";
+import { summarizeVatReturnDeadlines } from "../../utils/vatReturnDeadlines";
+import { DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -206,37 +210,39 @@ export default function SmartVatDashboard({
       const monthlyBreakdown: MonthlyVatBreakdown[] = [];
       const now = new Date();
       for (let i = 5; i >= 0; i--) {
-        const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
-        const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
+        // Calendar months in the gym's timezone (see periodBoundaries.ts),
+        // not the browser's: invoice created_at instants are compared to
+        // [start, endExclusive) instants, and expenses.date (a plain date
+        // column) to the matching gym-local YYYY-MM-DD dates.
+        const month = monthBoundary(now, i, DEFAULT_TIMEZONE);
+        const monthStart = new Date(month.startISO);
+        const monthEndExclusive = new Date(month.endExclusiveISO);
+        const monthStartDate = toZonedDateString(month.startISO, DEFAULT_TIMEZONE);
+        const nextMonthStartDate = toZonedDateString(month.endExclusiveISO, DEFAULT_TIMEZONE);
 
         const monthInvoices = invoiceList.filter(inv => {
           const invDate = new Date(inv.created_at);
-          return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
+          return invDate >= monthStart && invDate < monthEndExclusive && (inv.status === "paid" || inv.status === "completed");
         });
 
         const monthVat = monthInvoices.reduce(
           (sum, inv) => sum + invoiceVat(inv),
           0,
         );
-        
+
+        const monthVatPaid = expenseList
+          .filter(exp => {
+            if (exp.status === "cancelled") return false;
+            const expenseDate = (exp.date || "").slice(0, 10);
+            return expenseDate >= monthStartDate && expenseDate < nextMonthStartDate;
+          })
+          .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0);
+
         monthlyBreakdown.push({
-          month: month.toISOString().substring(0, 7),
+          month: monthStartDate.slice(0, 7),
           vatCollected: monthVat,
-          vatPaid: expenseList
-            .filter(exp => {
-              if (exp.status === "cancelled") return false;
-              const expenseDate = new Date(exp.date || "");
-              return expenseDate >= monthStart && expenseDate <= monthEnd;
-            })
-            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
-          netVat: monthVat - expenseList
-            .filter(exp => {
-              if (exp.status === "cancelled") return false;
-              const expenseDate = new Date(exp.date || "");
-              return expenseDate >= monthStart && expenseDate <= monthEnd;
-            })
-            .reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0),
+          vatPaid: monthVatPaid,
+          netVat: monthVat - monthVatPaid,
         });
       }
 
@@ -277,20 +283,27 @@ export default function SmartVatDashboard({
         previousPeriodVat > 0
           ? ((currentPeriodVat - previousPeriodVat) / previousPeriodVat) * 100
           : 0;
-      const overdueReturns = vatReturnsList.filter(
-        (item) => item.status === "rejected",
-      ).length;
-      const upcomingDeadlines = vatReturnsList.filter(
-        (item) => item.status === "draft",
-      ).length;
+      // Deadline status comes from each return's due date vs today (in
+      // the gym's timezone), not from its workflow status.
+      const UPCOMING_WINDOW_DAYS = 30;
+      const deadlineSummary = summarizeVatReturnDeadlines(
+        vatReturnsList,
+        toZonedDateString(now, DEFAULT_TIMEZONE),
+        toZonedDateString(
+          dayBoundary(now, -UPCOMING_WINDOW_DAYS, DEFAULT_TIMEZONE).startISO,
+          DEFAULT_TIMEZONE,
+        ),
+      );
+      const overdueReturns = deadlineSummary.overdue;
+      const upcomingDeadlines = deadlineSummary.upcoming;
       const criticalIssues = overdueReturns;
-      const complianceScore = Math.max(0, 100 - criticalIssues * 10);
+      const onTimeFilingRate = deadlineSummary.onTimeFilingRate;
 
       setDashboardData({
         totalVatCollected,
         totalVatPaid,
         netVatPayable,
-        complianceScore,
+        onTimeFilingRate,
         currentPeriodVat,
         currentPeriodVatPaid,
         currentPeriodNetVat,
@@ -319,7 +332,8 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || DEFAULT_CURRENCY} payable`);
+        const alertCurrency = settingsData?.currency || DEFAULT_CURRENCY;
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(getCurrencyDecimals(alertCurrency))} ${alertCurrency} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -339,7 +353,7 @@ export default function SmartVatDashboard({
         totalVatCollected: 0,
         totalVatPaid: 0,
         netVatPayable: 0,
-        complianceScore: 0,
+        onTimeFilingRate: null,
         currentPeriodVat: 0,
         currentPeriodVatPaid: 0,
         currentPeriodNetVat: 0,
@@ -366,10 +380,21 @@ export default function SmartVatDashboard({
   const handleGenerateVatReturn = async () => {
     if (!tenantId || !dashboardData) return;
     try {
-      const now = new Date();
-      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const filingDeadline = new Date(now.getFullYear(), now.getMonth() + 1, 28);
+      // The current calendar month in the gym's timezone. Dates are written
+      // as gym-local YYYY-MM-DD (period_start/period_end/due_date are plain
+      // dates), not via toISOString(), which in UTC+3 put period_start on
+      // the last day of the previous month.
+      const month = monthBoundary(new Date(), 0, DEFAULT_TIMEZONE);
+      const periodStartDate = toZonedDateString(month.startISO, DEFAULT_TIMEZONE);
+      // Last day of the month = the local date one millisecond before the
+      // next month starts.
+      const periodEndDate = toZonedDateString(
+        new Date(new Date(month.endExclusiveISO).getTime() - 1),
+        DEFAULT_TIMEZONE,
+      );
+      // Filing deadline: the 28th of the following month.
+      const nextMonth = toZonedDateString(month.endExclusiveISO, DEFAULT_TIMEZONE).slice(0, 7);
+      const filingDeadlineDate = `${nextMonth}-28`;
 
       // File this month's VAT, not the tenant's all-time totals - a return
       // for September must not claim every fil of VAT collected since the
@@ -377,18 +402,18 @@ export default function SmartVatDashboard({
       const { error } = await supabase.from("vat_returns").insert([
         {
           tenant_id: tenantId,
-          period: periodStart.toISOString().substring(0, 7),
-          period_start: periodStart.toISOString().split("T")[0],
-          period_end: periodEnd.toISOString().split("T")[0],
+          period: periodStartDate.slice(0, 7),
+          period_start: periodStartDate,
+          period_end: periodEndDate,
           status: "draft",
-          vat_collected: dashboardData.currentPeriodVat,
-          vat_paid: dashboardData.currentPeriodVatPaid,
-          net_vat_payable: dashboardData.currentPeriodNetVat,
+          vat_collected: toPersistedMoney(dashboardData.currentPeriodVat, currency),
+          vat_paid: toPersistedMoney(dashboardData.currentPeriodVatPaid, currency),
+          net_vat_payable: toPersistedMoney(dashboardData.currentPeriodNetVat, currency),
           // Written as due_date, not filing_deadline: FinancialInsightsDashboard
           // reads due_date to find "next filing deadline" (both columns
           // exist on vat_returns, but only one was ever populated, so
           // that card was always blank).
-          due_date: filingDeadline.toISOString().split("T")[0],
+          due_date: filingDeadlineDate,
         },
       ]);
 
@@ -409,7 +434,7 @@ export default function SmartVatDashboard({
         .from("vat_returns")
         .update({
           status: "submitted",
-          filed_date: new Date().toISOString().split("T")[0],
+          filed_date: toZonedDateString(new Date(), DEFAULT_TIMEZONE),
         })
         .eq("id", returnId)
         .eq("tenant_id", tenantId);
@@ -437,7 +462,7 @@ export default function SmartVatDashboard({
         "Filing Deadline": vr.due_date,
         "Filed Date": vr.filed_date,
       }));
-      const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;
+      const filename = `vat-returns-${toZonedDateString(new Date(), DEFAULT_TIMEZONE)}`;
 
       if (format === "csv") {
         exportCSV(rows, filename);
@@ -473,18 +498,21 @@ export default function SmartVatDashboard({
 
   const formatCurrency = (amount: number) => {
     const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    const decimals = getCurrencyDecimals(code);
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
         currency: code,
-        minimumFractionDigits: 2,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
       }).format(amount);
     } catch {
-      return `${code} ${amount.toFixed(2)}`;
+      return `${code} ${amount.toFixed(decimals)}`;
     }
   };
 
-  const getComplianceColor = (score: number) => {
+  const getComplianceColor = (score: number | null) => {
+    if (score === null) return "text-gray-600 dark:text-gray-400";
     if (score >= 90) return "text-green-600 dark:text-green-400";
     if (score >= 70) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
@@ -497,7 +525,8 @@ export default function SmartVatDashboard({
     { id: "analytics", label: t("billing.analytics"), icon: FiTrendingUp },
   ];
 
-  const getComplianceIcon = (score: number) => {
+  const getComplianceIcon = (score: number | null) => {
+    if (score === null) return null;
     if (score >= 90) return <FiCheckCircle className="text-green-500 dark:text-green-400" />;
     if (score >= 70) return <FiAlertTriangle className="text-yellow-500 dark:text-yellow-400" />;
     return <FiAlertTriangle className="text-red-500 dark:text-red-400" />;
@@ -631,18 +660,25 @@ export default function SmartVatDashboard({
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {t("billing.complianceScore")}
+                    {t("billing.onTimeFilingRate")}
                   </p>
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                     <p
-                      className={`text-2xl font-bold ${getComplianceColor(dashboardData.complianceScore)}`}
+                      className={`text-2xl font-bold ${getComplianceColor(dashboardData.onTimeFilingRate)}`}
                     >
-                      {dashboardData.complianceScore}%
+                      {dashboardData.onTimeFilingRate === null
+                        ? "—"
+                        : `${dashboardData.onTimeFilingRate}%`}
                     </p>
                     <span className={isRTL ? 'mr-2' : 'ml-2'}>
-                      {getComplianceIcon(dashboardData.complianceScore)}
+                      {getComplianceIcon(dashboardData.onTimeFilingRate)}
                     </span>
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {dashboardData.onTimeFilingRate === null
+                      ? t("billing.noReturnsDueYet")
+                      : t("billing.onTimeFilingRateHint")}
+                  </p>
                 </div>
                 <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
                   <FiShield className="text-gray-600 dark:text-gray-400" size={24} />
@@ -950,12 +986,19 @@ export default function SmartVatDashboard({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div
-                  className={`text-3xl font-bold ${getComplianceColor(dashboardData?.complianceScore ?? 0)}`}
+                  className={`text-3xl font-bold ${getComplianceColor(dashboardData?.onTimeFilingRate ?? null)}`}
                 >
-                  {dashboardData?.complianceScore ?? 0}%
+                  {dashboardData?.onTimeFilingRate == null
+                    ? "—"
+                    : `${dashboardData.onTimeFilingRate}%`}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("billing.complianceScore")}
+                  {t("billing.onTimeFilingRate")}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {dashboardData?.onTimeFilingRate == null
+                    ? t("billing.noReturnsDueYet")
+                    : t("billing.onTimeFilingRateHint")}
                 </p>
               </div>
               <div className="text-center">
@@ -1003,26 +1046,9 @@ export default function SmartVatDashboard({
                 </span>
               </div>
 
-              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {t("billing.vatPaymentsMadeOnTime")}
-                  </span>
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    (dashboardData?.overdueReturns ?? 0) === 0
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
-                  }`}
-                >
-                  {(dashboardData?.overdueReturns ?? 0) === 0
-                    ? t("billing.compliant")
-                    : `${dashboardData?.overdueReturns ?? 0} ${t("billing.overdue")}`}
-                </span>
-              </div>
-
+              {/* No "VAT payments made on time" row: there is no VAT
+                  payment record to measure it from (it used to repeat the
+                  overdue-returns count under a payments label). */}
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />

@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useTheme } from "../../contexts/ThemeContext";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 import {
   FiTrendingUp,
   FiClock,
@@ -14,12 +15,8 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiAlertCircle,
-  FiZap,
   FiAward,
   FiEye,
-  FiPause,
-  FiArrowUp,
-  FiArrowDown,
 } from "react-icons/fi";
 import {
   Chart as ChartJS,
@@ -57,133 +54,66 @@ interface SmartTaskAnalyticsProps {
   refreshKey: number;
 }
 
-// This initial value is only ever visible while `loading` is true (the
-// render below gates on it), so it never reaches the user - it just seeds
-// useState before fetchTaskAnalytics()'s real Supabase-computed data lands.
-const emptyTaskAnalyticsData = {
-  filters: {
-    dateRanges: [
-      { id: "last-7-days", name: "Last 7 Days", selected: false },
-      { id: "last-30-days", name: "Last 30 Days", selected: true },
-      { id: "last-90-days", name: "Last 90 Days", selected: false },
-      { id: "this-year", name: "This Year", selected: false },
-    ],
-    statuses: [
-      { id: "open", name: "Open", selected: true },
-      { id: "in-progress", name: "In Progress", selected: true },
-      { id: "done", name: "Done", selected: true },
-      { id: "overdue", name: "Overdue", selected: true },
-    ],
-    priorities: [
-      { id: "low", name: "Low", selected: true },
-      { id: "medium", name: "Medium", selected: true },
-      { id: "high", name: "High", selected: true },
-    ],
-  },
+interface TaskAnalyticsData {
   performanceSummary: {
-    totalTasksCreated: 342,
-    tasksCompleted: 287,
-    completionRate: 83.9,
-    avgTimeToComplete: 2.4,
-    overdueTasks: 23,
-    avgTasksPerDay: 11.4,
+    totalTasksCreated: number;
+    tasksCompleted: number;
+    completionRate: number;
+    avgTimeToComplete: number;
+    overdueTasks: number;
+    avgTasksPerDay: number;
+  };
+  charts: {
+    tasksOverTime: Array<{ date: string; created: number; completed: number }>;
+    completionTrend: Array<{ date: string; completed: number }>;
+    statusBreakdown: Array<{ status: string; count: number; percentage: number; color: string }>;
+    priorityDistribution: Array<{ priority: string; count: number; percentage: number; color: string }>;
+    staffProductivity: Array<{ staff: string; completed: number; avgTime: number }>;
+  };
+  teamInsights: {
+    mostEfficientStaff: { name: string; avgTime: number };
+    mostOverdueTasksBy: { name: string; count: number };
+    mostTasksCompleted: { name: string; count: number };
+    longestPendingTasks: { count: number; avgDays: number };
+    tasksWithNoUpdates: { count: number; percentage: number };
+  };
+  riskIndicators: {
+    stuckTasks: { count: number; percentage: number };
+    highPriorityOverdue: { count: number; percentage: number };
+  };
+}
+
+// A genuinely empty state - zeros and "N/A", never sample figures. It is
+// what renders before data loads, when there is no tenant yet, and after a
+// failed load. (It used to be hardcoded demo data with made-up staff names
+// like "Sarah Johnson", which rendered for real whenever tenantId was
+// missing.)
+const emptyTaskAnalyticsData: TaskAnalyticsData = {
+  performanceSummary: {
+    totalTasksCreated: 0,
+    tasksCompleted: 0,
+    completionRate: 0,
+    avgTimeToComplete: 0,
+    overdueTasks: 0,
+    avgTasksPerDay: 0,
   },
   charts: {
-    tasksOverTime: [
-      { date: "2024-01-01", created: 8, completed: 6 },
-      { date: "2024-01-02", created: 12, completed: 9 },
-      { date: "2024-01-03", created: 15, completed: 13 },
-      { date: "2024-01-04", created: 10, completed: 11 },
-      { date: "2024-01-05", created: 14, completed: 12 },
-      { date: "2024-01-06", created: 9, completed: 8 },
-      { date: "2024-01-07", created: 11, completed: 10 },
-      { date: "2024-01-08", created: 13, completed: 14 },
-      { date: "2024-01-09", created: 16, completed: 15 },
-      { date: "2024-01-10", created: 12, completed: 11 },
-      { date: "2024-01-11", created: 14, completed: 13 },
-      { date: "2024-01-12", created: 10, completed: 9 },
-      { date: "2024-01-13", created: 8, completed: 7 },
-      { date: "2024-01-14", created: 11, completed: 10 },
-      { date: "2024-01-15", created: 13, completed: 12 },
-      { date: "2024-01-16", created: 15, completed: 14 },
-      { date: "2024-01-17", created: 12, completed: 11 },
-      { date: "2024-01-18", created: 9, completed: 8 },
-      { date: "2024-01-19", created: 11, completed: 10 },
-      { date: "2024-01-20", created: 14, completed: 13 },
-      { date: "2024-01-21", created: 16, completed: 15 },
-      { date: "2024-01-22", created: 13, completed: 12 },
-      { date: "2024-01-23", created: 10, completed: 9 },
-      { date: "2024-01-24", created: 12, completed: 11 },
-      { date: "2024-01-25", created: 15, completed: 14 },
-      { date: "2024-01-26", created: 11, completed: 10 },
-      { date: "2024-01-27", created: 9, completed: 8 },
-      { date: "2024-01-28", created: 13, completed: 12 },
-      { date: "2024-01-29", created: 14, completed: 13 },
-      { date: "2024-01-30", created: 12, completed: 11 },
-    ],
-    completionTrend: [
-      { date: "2024-01-01", completed: 6 },
-      { date: "2024-01-02", completed: 9 },
-      { date: "2024-01-03", completed: 13 },
-      { date: "2024-01-04", completed: 11 },
-      { date: "2024-01-05", completed: 12 },
-      { date: "2024-01-06", completed: 8 },
-      { date: "2024-01-07", completed: 10 },
-      { date: "2024-01-08", completed: 14 },
-      { date: "2024-01-09", completed: 15 },
-      { date: "2024-01-10", completed: 11 },
-      { date: "2024-01-11", completed: 13 },
-      { date: "2024-01-12", completed: 9 },
-      { date: "2024-01-13", completed: 7 },
-      { date: "2024-01-14", completed: 10 },
-      { date: "2024-01-15", completed: 12 },
-      { date: "2024-01-16", completed: 14 },
-      { date: "2024-01-17", completed: 11 },
-      { date: "2024-01-18", completed: 8 },
-      { date: "2024-01-19", completed: 10 },
-      { date: "2024-01-20", completed: 13 },
-      { date: "2024-01-21", completed: 15 },
-      { date: "2024-01-22", completed: 12 },
-      { date: "2024-01-23", completed: 9 },
-      { date: "2024-01-24", completed: 11 },
-      { date: "2024-01-25", completed: 14 },
-      { date: "2024-01-26", completed: 10 },
-      { date: "2024-01-27", completed: 8 },
-      { date: "2024-01-28", completed: 12 },
-      { date: "2024-01-29", completed: 13 },
-      { date: "2024-01-30", completed: 11 },
-    ],
-    statusBreakdown: [
-      { status: "Open", count: 45, percentage: 15.8, color: "#3B82F6" },
-      { status: "In Progress", count: 67, percentage: 23.5, color: "#F59E0B" },
-      { status: "Done", count: 287, percentage: 50.7, color: "#10B981" },
-      { status: "Overdue", count: 23, percentage: 8.1, color: "#EF4444" },
-    ],
-    priorityDistribution: [
-      { priority: "Low", count: 89, percentage: 31.2, color: "#6B7280" },
-      { priority: "Medium", count: 156, percentage: 54.7, color: "#F59E0B" },
-      { priority: "High", count: 40, percentage: 14.1, color: "#EF4444" },
-    ],
-    staffProductivity: [
-      { staff: "Sarah Johnson", completed: 45, avgTime: 1.8 },
-      { staff: "Mike Chen", completed: 38, avgTime: 2.1 },
-      { staff: "Emma Davis", completed: 32, avgTime: 2.5 },
-      { staff: "Alex Rodriguez", completed: 28, avgTime: 2.8 },
-      { staff: "Lisa Thompson", completed: 25, avgTime: 3.2 },
-    ],
+    tasksOverTime: [],
+    completionTrend: [],
+    statusBreakdown: [],
+    priorityDistribution: [],
+    staffProductivity: [],
   },
   teamInsights: {
-    mostEfficientStaff: { name: "Sarah Johnson", avgTime: 1.8 },
-    mostOverdueTasksBy: { name: "Lisa Thompson", count: 8 },
-    mostTasksCompleted: { name: "Sarah Johnson", count: 45 },
-    longestPendingTasks: { count: 12, avgDays: 15.3 },
-    tasksWithNoUpdates: { count: 18, percentage: 6.3 },
+    mostEfficientStaff: { name: "N/A", avgTime: 0 },
+    mostOverdueTasksBy: { name: "N/A", count: 0 },
+    mostTasksCompleted: { name: "N/A", count: 0 },
+    longestPendingTasks: { count: 0, avgDays: 0 },
+    tasksWithNoUpdates: { count: 0, percentage: 0 },
   },
   riskIndicators: {
-    stuckTasks: { count: 15, percentage: 5.3 },
-    tasksReassignedOften: { count: 8, percentage: 2.8 },
-    highPriorityOverdue: { count: 12, percentage: 4.2 },
-    weekendsWithNoProgress: { count: 3, percentage: 1.1 },
+    stuckTasks: { count: 0, percentage: 0 },
+    highPriorityOverdue: { count: 0, percentage: 0 },
   },
 };
 
@@ -382,7 +312,7 @@ const kpiColorMap = {
 };
 
 // Performance Summary Cards - Updated to match other analytics tabs
-const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data }) => {
+const PerformanceSummaryCards: React.FC<{ data: TaskAnalyticsData }> = ({ data }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
   const { performanceSummary } = data;
@@ -394,7 +324,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.tasksCreatedInPeriod"),
       icon: FiTarget,
       color: "blue" as const,
-      trend: { value: 12.3, isPositive: true },
     },
     {
       title: t("tasks.tasksCompleted"),
@@ -402,7 +331,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.tasksCompletedInPeriod"),
       icon: FiCheckCircle,
       color: "green" as const,
-      trend: { value: 8.7, isPositive: true },
     },
     {
       title: t("tasks.completionRate"),
@@ -410,7 +338,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.averageCompletionRate"),
       icon: FiTrendingUp,
       color: "purple" as const,
-      trend: { value: 2.1, isPositive: true },
     },
     {
       title: t("tasks.avgTimeToComplete"),
@@ -418,7 +345,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.averageCompletionTime"),
       icon: FiClock,
       color: "orange" as const,
-      trend: { value: 5.2, isPositive: false },
     },
     {
       title: t("tasks.overdueTasks"),
@@ -426,7 +352,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.tasksPastDueDate"),
       icon: FiAlertTriangle,
       color: "red" as const,
-      trend: { value: 15.4, isPositive: false },
     },
     {
       title: t("tasks.avgTasksPerDay"),
@@ -434,7 +359,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
       subtitle: t("tasks.dailyTaskAverage"),
       icon: FiActivity,
       color: "indigo" as const,
-      trend: { value: 3.8, isPositive: true },
     },
   ];
 
@@ -456,20 +380,6 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
               >
                 <card.icon className={`w-6 h-6 ${colors.text}`} />
               </div>
-              <div
-                className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
-                  card.trend.isPositive
-                    ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                    : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-                }`}
-              >
-                {card.trend.isPositive ? (
-                  <FiArrowUp className="w-3 h-3" />
-                ) : (
-                  <FiArrowDown className="w-3 h-3" />
-                )}
-                {Math.abs(card.trend.value)}%
-              </div>
             </div>
 
             <div>
@@ -485,7 +395,7 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
 };
 
 // Chart Components
-const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
+const TasksOverTimeChart: React.FC<{ data: TaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
   const data = analyticsData.charts.tasksOverTime;
 
@@ -576,7 +486,7 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
   );
 };
 
-const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
+const CompletionTrendChart: React.FC<{ data: TaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
   const data = analyticsData.charts.completionTrend;
 
@@ -640,7 +550,7 @@ const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   );
 };
 
-const StatusBreakdownChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
+const StatusBreakdownChart: React.FC<{ data: TaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
   const data = analyticsData.charts.statusBreakdown;
 
@@ -694,7 +604,7 @@ const StatusBreakdownChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   );
 };
 
-const PriorityDistributionChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
+const PriorityDistributionChart: React.FC<{ data: TaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
   const data = analyticsData.charts.priorityDistribution;
 
@@ -748,7 +658,7 @@ const PriorityDistributionChart: React.FC<{ data: typeof emptyTaskAnalyticsData 
   );
 };
 
-const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data: analyticsData }) => {
+const StaffProductivityChart: React.FC<{ data: TaskAnalyticsData }> = ({ data: analyticsData }) => {
   const { isDark } = useTheme();
   const data = analyticsData.charts.staffProductivity;
 
@@ -808,7 +718,7 @@ const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> 
 };
 
 // Team & Individual Insights - Updated to match other analytics tabs
-const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data }) => {
+const TeamInsightsCards: React.FC<{ data: TaskAnalyticsData }> = ({ data }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
   const { teamInsights } = data;
@@ -820,7 +730,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
       subtitle: `${teamInsights.mostEfficientStaff.avgTime} ${t("tasks.daysAvg")}`,
       icon: FiAward,
       color: "green",
-      trend: { value: 12.5, isPositive: true },
     },
     {
       title: t("tasks.mostOverdueTasksBy"),
@@ -828,7 +737,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
       subtitle: `${teamInsights.mostOverdueTasksBy.count} ${t("tasks.overdueTasks")}`,
       icon: FiAlertTriangle,
       color: "red",
-      trend: { value: 8.3, isPositive: false },
     },
     {
       title: t("tasks.mostTasksCompleted"),
@@ -836,7 +744,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
       subtitle: `${teamInsights.mostTasksCompleted.count} ${t("tasks.tasksCompleted")}`,
       icon: FiCheckCircle,
       color: "blue",
-      trend: { value: 15.2, isPositive: true },
     },
     {
       title: t("tasks.longestPendingTasks"),
@@ -844,7 +751,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
       subtitle: `${teamInsights.longestPendingTasks.avgDays} ${t("tasks.daysAverage")}`,
       icon: FiClock,
       color: "orange",
-      trend: { value: 5.7, isPositive: false },
     },
     {
       title: t("tasks.tasksWithNoUpdates"),
@@ -852,7 +758,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
       subtitle: `${teamInsights.tasksWithNoUpdates.percentage}% ${t("tasks.ofTotal")}`,
       icon: FiEye,
       color: "purple",
-      trend: { value: 3.2, isPositive: false },
     },
   ];
 
@@ -872,20 +777,6 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
             >
               <insight.icon className={`w-6 h-6 text-${insight.color}-600`} />
             </div>
-            <div
-              className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
-                insight.trend.isPositive
-                  ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                  : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-              }`}
-            >
-              {insight.trend.isPositive ? (
-                <FiArrowUp className="w-3 h-3" />
-              ) : (
-                <FiArrowDown className="w-3 h-3" />
-              )}
-              {Math.abs(insight.trend.value)}%
-            </div>
           </div>
 
           <div>
@@ -900,11 +791,16 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
 };
 
 // Risk & Bottleneck Indicators - Updated to match other analytics tabs
-const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data }) => {
+const RiskIndicatorsCards: React.FC<{ data: TaskAnalyticsData }> = ({ data }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
   const { riskIndicators } = data;
 
+  // Only indicators computed from real task data are shown. "Tasks
+  // reassigned often" and "weekends with no progress" used to render as
+  // hardcoded zeros (the schema keeps no reassignment history), and every
+  // card carried a hardcoded trend percentage - both looked like measured
+  // findings and were removed rather than faked.
   const risks = [
     {
       title: t("tasks.stuckTasks"),
@@ -913,16 +809,6 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
       description: t("tasks.noActivity"),
       icon: FiAlertCircle,
       color: "red",
-      trend: { value: 12.8, isPositive: false },
-    },
-    {
-      title: t("tasks.tasksReassignedOften"),
-      value: riskIndicators.tasksReassignedOften.count,
-      subtitle: `${riskIndicators.tasksReassignedOften.percentage}% ${t("tasks.ofTotal")}`,
-      description: t("tasks.reassignmentCount"),
-      icon: FiZap,
-      color: "orange",
-      trend: { value: 5.3, isPositive: false },
     },
     {
       title: t("tasks.highPriorityOverdue"),
@@ -931,21 +817,11 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
       description: t("tasks.highPriorityAndOverdue"),
       icon: FiAlertTriangle,
       color: "red",
-      trend: { value: 18.2, isPositive: false },
-    },
-    {
-      title: t("tasks.weekendsWithNoProgress"),
-      value: riskIndicators.weekendsWithNoProgress.count,
-      subtitle: `${riskIndicators.weekendsWithNoProgress.percentage}% ${t("tasks.ofTotal")}`,
-      description: t("tasks.gapsInCompletion"),
-      icon: FiPause,
-      color: "yellow",
-      trend: { value: 2.1, isPositive: false },
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {risks.map((risk, index) => (
         <motion.div
           key={risk.title}
@@ -959,20 +835,6 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
               className={`w-12 h-12 rounded-2xl bg-${risk.color}-50 flex items-center justify-center`}
             >
               <risk.icon className={`w-6 h-6 text-${risk.color}-600`} />
-            </div>
-            <div
-              className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
-                risk.trend.isPositive
-                  ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                  : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
-              }`}
-            >
-              {risk.trend.isPositive ? (
-                <FiArrowUp className="w-3 h-3" />
-              ) : (
-                <FiArrowDown className="w-3 h-3" />
-              )}
-              {Math.abs(risk.trend.value)}%
             </div>
           </div>
 
@@ -1006,22 +868,27 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
       setLoading(true);
       try {
-        // Fetch all tasks for the tenant
-        const { data: tasks, error } = await supabase
-          .from("member_tasks")
-          .select(
-            `
+        // Fetch all tasks for the tenant. Assignee names are resolved
+        // separately below in one batched, tenant-scoped lookup; embedding
+        // `profiles` here (it was never read) would fail this whole query
+        // if that table is unavailable.
+        // Paged (fetchAllRows): PostgREST caps a response at 1000 rows, which
+        // would silently cap every count below. `id` breaks created_at ties
+        // so pages don't overlap or skip rows.
+        const tasksData = await fetchAllRows((from, to) =>
+          supabase
+            .from("member_tasks")
+            .select(
+              `
             *,
-            member:members(id, first_name, last_name),
-            assignee:profiles(id, first_name, last_name)
+            member:members(id, first_name, last_name)
           `,
-          )
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        const tasksData = tasks || [];
+            )
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: false })
+            .order("id")
+            .range(from, to),
+        );
 
         // Calculate date range (last 30 days by default)
         const now = new Date();
@@ -1193,39 +1060,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           }
         });
 
-        // Fetch assignee names
-        const assigneeIds = Object.keys(staffProductivityMap);
-        const staffProductivity = await Promise.all(
-          assigneeIds.map(async (assigneeId) => {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("first_name, last_name")
-              .eq("id", assigneeId)
-              .single();
-
-            const stats = staffProductivityMap[assigneeId];
-            const avgTime =
-              stats.count > 0 ? stats.totalTime / stats.count : 0;
-
-            return {
-              staff:
-                profile
-                  ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim()
-                  : "Unknown",
-              completed: stats.completed,
-              avgTime: avgTime,
-            };
-          }),
-        );
-
-        // Team Insights
-        const mostEfficientStaff =
-          staffProductivity.length > 0
-            ? staffProductivity.reduce((prev, current) =>
-                prev.avgTime < current.avgTime ? prev : current,
-              )
-            : { staff: "N/A", avgTime: 0 };
-
         const overdueByAssignee: Record<string, number> = {};
         tasksData
           .filter((t) => {
@@ -1246,17 +1080,68 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
               )
             : ["", 0];
 
-        const mostOverdueName = mostOverdueTasksBy[0]
-          ? await supabase
+        // Resolve every assignee name we need in one batched lookup
+        // (previously one `profiles` round-trip per assignee, plus another
+        // for the most-overdue assignee).
+        const assigneeIds = Object.keys(staffProductivityMap);
+        const idsToResolve = Array.from(
+          new Set(
+            [...assigneeIds, mostOverdueTasksBy[0] as string].filter(Boolean),
+          ),
+        );
+        const assigneeNames = new Map<string, string>();
+        if (idsToResolve.length > 0) {
+          // Defence in depth on top of RLS: only resolve names for users
+          // who are members of this tenant. `profiles` has no tenant_id
+          // column to filter on, so scope through `memberships`.
+          const { data: tenantUsers, error: tenantUsersError } = await supabase
+            .from("memberships")
+            .select("user_id")
+            .eq("tenant_id", tenantId)
+            .in("user_id", idsToResolve);
+          if (tenantUsersError) {
+            console.warn("Could not scope assignees to tenant:", tenantUsersError);
+          }
+          const tenantUserIds = (tenantUsers || []).map((row) => row.user_id as string);
+
+          if (tenantUserIds.length > 0) {
+            const { data: profiles, error: profilesError } = await supabase
               .from("profiles")
-              .select("first_name, last_name")
-              .eq("id", mostOverdueTasksBy[0])
-              .single()
-              .then(({ data }) =>
-                data
-                  ? `${data.first_name || ""} ${data.last_name || ""}`.trim()
-                  : "Unknown",
+              .select("id, first_name, last_name")
+              .in("id", tenantUserIds);
+            // Names are cosmetic: a failed lookup (e.g. no `profiles`
+            // table) degrades to "Unknown" rather than failing the
+            // whole dashboard.
+            if (profilesError) {
+              console.warn("Could not resolve assignee names:", profilesError);
+            }
+            (profiles || []).forEach((profile) => {
+              const name = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+              if (name) assigneeNames.set(profile.id as string, name);
+            });
+          }
+        }
+
+        const staffProductivity = assigneeIds.map((assigneeId) => {
+          const stats = staffProductivityMap[assigneeId];
+          const avgTime = stats.count > 0 ? stats.totalTime / stats.count : 0;
+          return {
+            staff: assigneeNames.get(assigneeId) || "Unknown",
+            completed: stats.completed,
+            avgTime: avgTime,
+          };
+        });
+
+        // Team Insights
+        const mostEfficientStaff =
+          staffProductivity.length > 0
+            ? staffProductivity.reduce((prev, current) =>
+                prev.avgTime < current.avgTime ? prev : current,
               )
+            : { staff: "N/A", avgTime: 0 };
+
+        const mostOverdueName = mostOverdueTasksBy[0]
+          ? assigneeNames.get(mostOverdueTasksBy[0] as string) || "Unknown"
           : "N/A";
 
         const mostTasksCompleted =
@@ -1307,8 +1192,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
         ).length;
 
         // Build analytics data
-        const calculatedData = {
-          filters: emptyTaskAnalyticsData.filters,
+        const calculatedData: TaskAnalyticsData = {
           performanceSummary: {
             totalTasksCreated,
             tasksCompleted,
@@ -1359,10 +1243,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
                   ? parseFloat(((stuckTasks / totalTasksCreated) * 100).toFixed(1))
                   : 0,
             },
-            tasksReassignedOften: {
-              count: 0, // Would need to track reassignments
-              percentage: 0,
-            },
             highPriorityOverdue: {
               count: highPriorityOverdue,
               percentage:
@@ -1372,10 +1252,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
                     )
                   : 0,
             },
-            weekendsWithNoProgress: {
-              count: 0, // Would need more complex calculation
-              percentage: 0,
-            },
           },
         };
 
@@ -1383,38 +1259,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
         console.log("Task analytics data loaded:", calculatedData.performanceSummary);
       } catch (error) {
         console.error("Error fetching task analytics:", error);
-        // Set empty/zero data on error instead of hardcoded values
-        setAnalyticsData({
-          ...emptyTaskAnalyticsData,
-          performanceSummary: {
-            totalTasksCreated: 0,
-            tasksCompleted: 0,
-            completionRate: 0,
-            avgTimeToComplete: 0,
-            overdueTasks: 0,
-            avgTasksPerDay: 0,
-          },
-          charts: {
-            tasksOverTime: [],
-            completionTrend: [],
-            statusBreakdown: [],
-            priorityDistribution: [],
-            staffProductivity: [],
-          },
-          teamInsights: {
-            mostEfficientStaff: { name: "N/A", avgTime: 0 },
-            mostOverdueTasksBy: { name: "N/A", count: 0 },
-            mostTasksCompleted: { name: "N/A", count: 0 },
-            longestPendingTasks: { count: 0, avgDays: 0 },
-            tasksWithNoUpdates: { count: 0, percentage: 0 },
-          },
-          riskIndicators: {
-            stuckTasks: { count: 0, percentage: 0 },
-            tasksReassignedOften: { count: 0, percentage: 0 },
-            highPriorityOverdue: { count: 0, percentage: 0 },
-            weekendsWithNoProgress: { count: 0, percentage: 0 },
-          },
-        });
+        setAnalyticsData(emptyTaskAnalyticsData);
       } finally {
         setLoading(false);
       }
