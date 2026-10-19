@@ -327,6 +327,39 @@ ORDER BY idx_scan DESC;
 
 ---
 
+## Platform owner console (`20261019090000_create_platform_admin_console.sql`)
+
+Run after applying the migration (see `DEPLOYMENT.md` → "Platform owner console").
+
+```sql
+-- 1. The definer functions read auth internals; both must be true.
+select has_table_privilege('postgres', 'auth.sessions', 'select')    as sessions_readable,
+       has_table_privilege('postgres', 'auth.mfa_factors', 'select') as factors_readable;
+
+-- 2. Nothing platform-related is callable by anon; only the 8 client RPCs by authenticated.
+select p.proname,
+       has_function_privilege('anon', p.oid, 'execute')          as anon,
+       has_function_privilege('authenticated', p.oid, 'execute') as authenticated
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and (p.proname like 'platform\_%' or p.proname = 'require_platform_admin')
+order by 1;
+
+-- 3. The trigger function still carries the audited-RPC early return.
+select pg_get_functiondef('public.enforce_platform_subscription_self_service'::regproc);
+```
+
+Manual pass: sign in as the owner → enrol TOTP → console loads; sign in as an
+ordinary gym admin and open `/superadmin` → normal 404 page; activate a test
+gym and confirm it appears under *Recent changes* and the gym can enter the app.
+If the console shows "Could not check your access", re-run query 1.
+
+Expected `get_advisors` output: `authenticated_security_definer_function_executable`
+on the `platform_*` RPCs and "RLS enabled, no policy" on `platform_admins` and
+`platform_audit_log` are **intentional** (the functions gate themselves; the tables
+are reachable only through them).
+
+---
+
 ## 🎉 Success Criteria
 
 Your deployment is successful when:
