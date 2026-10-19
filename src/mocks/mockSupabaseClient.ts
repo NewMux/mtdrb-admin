@@ -5,6 +5,7 @@
 
 import type { User, UserAttributes } from "@supabase/supabase-js";
 import { DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
+import { mockPlatformRpc } from "./platformAdminMock";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -430,7 +431,8 @@ export function createMockSupabaseClient() {
 
   return {
     from: (table: string) => new MockQueryBuilder(table),
-    rpc: (name: string) => Promise.resolve(mockRpc(name)),
+    rpc: (name: string, args?: Record<string, unknown>) =>
+      Promise.resolve(mockPlatformRpc(name, args) ?? mockRpc(name)),
     channel: () => ({
       on: () => ({ subscribe: () => noopSub }),
       subscribe: () => noopSub,

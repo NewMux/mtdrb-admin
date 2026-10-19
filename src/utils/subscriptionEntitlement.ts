@@ -31,3 +31,28 @@ export const isSubscriptionEntitled = (
 
   return false;
 };
+
+/**
+ * SubscriptionContext exposes the subscription with its own field names (the
+ * period end is `expires_at`, not `current_period_end`). Feeding that object to
+ * isSubscriptionEntitled() directly drops the period end, so an `active`
+ * subscription whose period has ended looks entitled and /subscribe redirects
+ * to /dashboard while AuthProvider (which reads the raw row) redirects back.
+ */
+export const contextSubscriptionToEntitlement = (
+  subscription:
+    | {
+        status?: string | null;
+        trial_end?: string | null;
+        expires_at?: string | null;
+      }
+    | null
+    | undefined,
+): SubscriptionEntitlement | null => {
+  if (!subscription) return null;
+  return {
+    status: subscription.status,
+    trial_end: subscription.trial_end,
+    current_period_end: subscription.expires_at,
+  };
+};
