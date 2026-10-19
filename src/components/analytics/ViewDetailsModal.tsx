@@ -83,7 +83,7 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
       <div className="space-y-6">
         {/* Section Header */}
         <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <Icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
@@ -104,7 +104,7 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
 
           {section === "revenue" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
                   45,280 BHD
                 </div>
@@ -112,19 +112,19 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
                   Total Revenue
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">+12.5%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Growth Rate
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">1,247</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Active Members
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">89</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   New Signups
@@ -135,25 +135,25 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
 
           {section === "members" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">1,247</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Total Members
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">+8.2%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Growth Rate
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-red-600">3.2%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Churn Rate
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-yellow-600">18</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   At-Risk Members
@@ -164,25 +164,25 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
 
           {section === "classes" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">156</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Classes This Month
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">85%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Average Attendance
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-yellow-600">4.8</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Average Rating
                 </div>
               </div>
-              <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">12</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Active Trainers
@@ -198,7 +198,7 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
             Detailed Analysis
           </h4>
 
-          <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="p-6 bg-white dark:bg-white/[0.04] rounded-lg">
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
                 <FiBarChart className="w-12 h-12 text-gray-400 mx-auto mb-2" />

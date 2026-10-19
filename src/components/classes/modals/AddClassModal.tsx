@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  FiCalendar,
-  FiClock,
-  FiUsers,
-  FiUser,
-  FiSettings,
   FiAlertTriangle,
   FiCheck,
   FiZap,
@@ -260,7 +255,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
           onClick={handleSave}
           loading={loading}
           disabled={!isFormValid || loading || !isTimeValid()}
-          className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           {loading ? t("classes.creatingClass", "جاري الإنشاء...") : t("classes.createClass", "إنشاء الحصة")}
         </SmartButton>
@@ -320,9 +315,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Class Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
-              <FiSettings className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.classDetails")}
             </h3>
@@ -370,9 +362,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Trainer & Location Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600">
-              <FiUser className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.trainerLocation")}
             </h3>
@@ -425,14 +414,14 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                     value={newRoomName}
                     onChange={(e) => setNewRoomName(e.target.value)}
                     placeholder={t("classes.roomName", "Room name")}
-                    className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <input
                     type="number"
                     min={0}
                     value={newRoomCapacity}
                     onChange={(e) => setNewRoomCapacity(parseInt(e.target.value) || 0)}
-                    className="w-16 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-16 px-2 py-1.5 text-sm rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <SmartButton
                     variant="secondary"
@@ -452,9 +441,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Date & Time Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
-              <FiClock className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.dateTime") || "Date & Time"}
             </h3>
@@ -544,9 +530,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Recurrence Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600">
-              <FiCalendar className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.recurrence")}
             </h3>
@@ -570,9 +553,6 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Capacity Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-teal-500 to-teal-600">
-              <FiUsers className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.capacity")}
             </h3>

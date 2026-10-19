@@ -202,7 +202,7 @@ export const AppleSelect: React.FC<
       </label>
       <select
         className={`
-          w-full px-2.5 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
+          w-full ps-2.5 pe-9 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
           bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md shadow-sm
           focus:ring-0 focus:border-blue-600 focus:shadow-focus
           transition-shadow

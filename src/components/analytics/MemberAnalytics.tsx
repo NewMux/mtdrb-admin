@@ -67,9 +67,9 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
   // Add null/undefined check
   if (!funnel || !Array.isArray(funnel)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-          <div className="p-2 bg-blue-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiBarChart className="w-6 h-6 text-blue-600" />
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -82,7 +82,6 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
             <p className="text-gray-400 dark:text-gray-500 text-xs">Loading funnel data...</p>
           </div>
@@ -92,9 +91,9 @@ const FunnelChart = ({ funnel }: { funnel: MemberFunnel[] }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-        <div className="p-2 bg-blue-100 rounded-lg">
+        <div className=" [&_svg]:w-4 [&_svg]:h-4">
           <FiBarChart className="w-6 h-6 text-blue-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -148,9 +147,9 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
   // Add null/undefined check
   if (!memberStatus || !Array.isArray(memberStatus)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-          <div className="p-2 bg-green-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiPieChart className="w-6 h-6 text-green-600" />
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -165,7 +164,6 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📊</div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
             <p className="text-gray-400 dark:text-gray-500 text-xs">Loading member status...</p>
           </div>
@@ -175,9 +173,9 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-        <div className="p-2 bg-green-100 rounded-lg">
+        <div className=" [&_svg]:w-4 [&_svg]:h-4">
           <FiPieChart className="w-6 h-6 text-green-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -241,8 +239,6 @@ const StatusPieChart = ({ memberStatus }: { memberStatus: MemberStatus[] }) => {
 const MembersTable = ({
   title,
   members,
-  icon,
-  iconColor,
 }: {
   title: string;
   members: TopMember[];
@@ -253,9 +249,8 @@ const MembersTable = ({
   // Add null/undefined check
   if (!members || !Array.isArray(members)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-          <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Top performing members</p>
@@ -264,7 +259,6 @@ const MembersTable = ({
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">👥</div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
             <p className="text-gray-400 dark:text-gray-500 text-xs">Loading member data...</p>
           </div>
@@ -274,9 +268,8 @@ const MembersTable = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-        <div className={`p-2 rounded-lg ${iconColor}`}>{icon}</div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">Top performing members</p>
@@ -346,9 +339,9 @@ const NoShowsTable = ({
   // Add null/undefined check
   if (!noShows || !Array.isArray(noShows)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-          <div className="p-2 bg-red-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiUserX className="w-6 h-6 text-red-600" />
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -361,7 +354,6 @@ const NoShowsTable = ({
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">👥</div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
             <p className="text-gray-400 dark:text-gray-500 text-xs">Loading no-show data...</p>
           </div>
@@ -371,9 +363,9 @@ const NoShowsTable = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-        <div className="p-2 bg-red-100 rounded-lg">
+        <div className=" [&_svg]:w-4 [&_svg]:h-4">
           <FiUserX className="w-6 h-6 text-red-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -428,9 +420,9 @@ const LTVTrendChart = ({
   // Add null/undefined check
   if (!ltvTrend || !Array.isArray(ltvTrend)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-          <div className="p-2 bg-purple-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiDollarSign className="w-6 h-6 text-purple-600" />
           </div>
           <div className={isRTL ? 'text-right' : 'text-left'}>
@@ -445,7 +437,6 @@ const LTVTrendChart = ({
 
         <div className="h-48 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">📈</div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
             <p className="text-gray-400 dark:text-gray-500 text-xs">Loading LTV data...</p>
           </div>
@@ -455,9 +446,9 @@ const LTVTrendChart = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-3 mb-6`}>
-        <div className="p-2 bg-purple-100 rounded-lg">
+        <div className=" [&_svg]:w-4 [&_svg]:h-4">
           <FiDollarSign className="w-6 h-6 text-purple-600" />
         </div>
         <div className={isRTL ? 'text-right' : 'text-left'}>

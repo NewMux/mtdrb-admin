@@ -111,7 +111,7 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       <div className="flex items-start space-x-5">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center shadow-lg ring-4 ring-blue-50">
+          <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center shadow-lg ring-4 ring-blue-50">
             {member.profile_picture_url ? (
               <img
                 src={member.profile_picture_url}
@@ -487,7 +487,7 @@ export const GoalsProgressCard: React.FC<GoalsProgressCardProps> = ({
       </div>
 
       {/* Progress Chart Placeholder */}
-      <div className="h-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
+      <div className="h-16 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-200">
         <div className="flex items-center space-x-2 text-gray-500">
           <FiActivity className="w-4 h-4" />
           <span className="text-xs font-medium">Progress trend chart</span>

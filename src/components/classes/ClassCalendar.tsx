@@ -359,7 +359,7 @@ const ClassCalendar: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-6 py-3 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium"
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium"
               >
                 {t('classes.addYourFirstClass')}
               </button>

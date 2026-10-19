@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiAlertTriangle,
   FiX,
-  FiCreditCard,
   FiCalendar,
   FiCheck,
   FiArrowRight,
@@ -139,9 +138,6 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
       {/* Current Plan Info */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800">
         <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-4`}>
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
-            <FiCreditCard className="w-6 h-6 text-white" />
-          </div>
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
               {currentPlan} {t("settings.plan", "Plan")}

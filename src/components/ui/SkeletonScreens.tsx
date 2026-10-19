@@ -8,7 +8,7 @@ export const DashboardSkeleton: React.FC = () => (
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className="animate-pulse">
             <div className="flex items-center justify-between mb-4">
@@ -24,13 +24,13 @@ export const DashboardSkeleton: React.FC = () => (
 
     {/* Chart Section Skeleton */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="animate-pulse">
           <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="animate-pulse">
           <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
           <div className="space-y-3">
@@ -53,7 +53,7 @@ export const DashboardSkeleton: React.FC = () => (
 
 // Members list skeleton
 export const MembersListSkeleton: React.FC = () => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl">
     {/* Header Skeleton */}
     <div className="p-6 border-b border-gray-100 dark:border-gray-700">
       <div className="animate-pulse">
@@ -105,7 +105,7 @@ export const MembersListSkeleton: React.FC = () => (
 export const ClassesScheduleSkeleton: React.FC = () => (
   <div className="space-y-6">
     {/* Calendar Header Skeleton */}
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="animate-pulse">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
@@ -151,7 +151,7 @@ export const ClassesScheduleSkeleton: React.FC = () => (
     </div>
 
     {/* Today's Classes Skeleton */}
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="animate-pulse">
         <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
         <div className="space-y-4">
@@ -182,7 +182,7 @@ export const ClassesScheduleSkeleton: React.FC = () => (
 export const ReportsSkeleton: React.FC = () => (
   <div className="space-y-6">
     {/* Report Controls Skeleton */}
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="animate-pulse">
         <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -195,7 +195,7 @@ export const ReportsSkeleton: React.FC = () => (
     </div>
 
     {/* Report Results Skeleton */}
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="animate-pulse">
         {/* Chart Skeleton */}
         <div className="w-full h-80 bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
@@ -227,7 +227,7 @@ export const TrainersSkeleton: React.FC = () => (
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <div
           key={i}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className="animate-pulse">
             <div className="flex items-center space-x-4 mb-4">
@@ -264,7 +264,7 @@ export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => (
     {Array.from({ length: count }).map((_, i) => (
       <div
         key={i}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
       >
         <div className="animate-pulse">
           <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
@@ -284,7 +284,7 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
   rows = 6,
   columns = 5,
 }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
     <div className="animate-pulse">
       {/* Table Header */}
       <div
@@ -316,7 +316,7 @@ export const TableSkeleton: React.FC<{ rows?: number; columns?: number }> = ({
 
 // Form skeleton
 export const FormSkeleton: React.FC = () => (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
     <div className="animate-pulse space-y-6">
       <div className="w-48 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
 
@@ -343,7 +343,7 @@ export const ListSkeleton: React.FC<{ items?: number }> = ({ items = 5 }) => (
     {Array.from({ length: items }).map((_, i) => (
       <div
         key={i}
-        className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+        className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4"
       >
         <div className="animate-pulse flex items-center space-x-4">
           <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>

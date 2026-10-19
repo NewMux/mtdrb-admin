@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FiUsers,
+  FiZap,
   FiBarChart2,
   FiTrendingUp,
   FiTrendingDown,
@@ -88,7 +89,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
     <div>
       <div className="flex items-center justify-between">
         <h3 className="text-gray-500 font-semibold">{title}</h3>
-        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">{icon}</div>
+        <div className="text-blue-600 [&_svg]:w-4 [&_svg]:h-4">{icon}</div>
       </div>
       <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
@@ -522,7 +523,7 @@ export default function Insights() {
 
         <AiSuggestionCard
           title={t("insightsPage.recommendations")}
-          icon="🧠"
+          icon={<FiZap className="w-4 h-4" />}
           suggestions={aiSuggestions}
         />
 

@@ -203,10 +203,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 p-8 mb-6"
+              className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 mb-6"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
+                <div className="flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
                   <FiUser className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="text-start">
@@ -275,7 +275,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                     render={({ field }) => (
                       <select
                         {...field}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-start"
+                        className="w-full ps-4 pe-9 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-start"
                         dir={isRTL ? "rtl" : "ltr"}
                       >
                         <option value="">{t("members.selectGender", "اختر الجنس")}</option>
@@ -342,10 +342,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 p-8 mb-6"
+              className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 mb-6"
             >
               <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <div className=" [&_svg]:w-4 [&_svg]:h-4">
                   <FiTarget className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
@@ -431,10 +431,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 p-8 mb-6"
+              className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 mb-6"
             >
               <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <div className=" [&_svg]:w-4 [&_svg]:h-4">
                   <FiActivity className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
@@ -488,10 +488,10 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 p-8"
+              className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8"
             >
               <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                <div className=" [&_svg]:w-4 [&_svg]:h-4">
                   <FiUpload className="h-5 w-5 text-orange-600" />
                 </div>
                 <div>

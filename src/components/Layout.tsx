@@ -28,7 +28,7 @@ const Layout: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
+      className="min-h-screen bg-white dark:bg-gray-900"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <PageThemeDetector />
@@ -72,7 +72,7 @@ const Layout: React.FC = () => {
           <TopBar onMenuClick={() => setSidebarOpen(true)} />
           {/* Page Content. A plain fade on navigation, like switching
               panes in a Mac app; no slide. */}
-          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
             <div
               key={location.pathname}
               className="px-4 py-5 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-window-in"

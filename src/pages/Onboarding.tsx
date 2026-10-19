@@ -538,9 +538,9 @@ export default function Onboarding() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
           {/* Step Header */}
-          <div className="bg-gradient-to-b from-blue-600 to-blue-700 px-8 py-6 text-white">
+          <div className="bg-blue-600 px-8 py-6 text-white">
             <div className="flex items-center space-x-4">
               {steps[currentStep].icon}
               <div>
@@ -1016,7 +1016,7 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
           </label>
           {formData.logo && (
             <p className="text-sm text-green-600 mt-2">
-              ✓ {formData.logo.name} {t("onboarding.logoSelected")}
+              {formData.logo.name} {t("onboarding.logoSelected")}
             </p>
           )}
         </div>

@@ -50,7 +50,7 @@ export const usePageTheme = (pageName: string) => {
     variant: "default" | "accent" | "hover" = "default",
   ) => {
     const baseClasses =
-      "rounded-2xl p-6 bg-white dark:bg-gray-800 border transition-all duration-300";
+      "rounded-xl p-6 bg-gray-50 dark:bg-gray-800 transition-all duration-300";
 
     switch (variant) {
       case "default":

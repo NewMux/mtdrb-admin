@@ -1,10 +1,5 @@
 import * as React from "react";
 import {
-  FiUser,
-  FiTarget,
-  FiHeart,
-  FiFileText,
-  FiAlertCircle,
 } from "react-icons/fi";
 import { UnifiedModal } from "../../ui/UnifiedModal";
 import { SmartButton } from "../../ui/DesignSystem";
@@ -400,7 +395,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         {loading ? t("members.addingMember") : t("members.addMember")}
       </SmartButton>
@@ -421,9 +416,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Basic Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
-              <FiUser className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.basicInformation")}
             </h3>
@@ -533,9 +525,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Health & Fitness Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-pink-500 to-pink-600">
-              <FiHeart className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.healthFitness")}
             </h3>
@@ -615,9 +604,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Goals & Preferences Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-yellow-500 to-yellow-600">
-              <FiTarget className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.goalsPreferences")}
             </h3>
@@ -645,9 +631,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Health Conditions Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-red-500 to-red-600">
-              <FiHeart className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.healthConditions")}
             </h3>
@@ -680,9 +663,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Medical Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
-              <FiAlertCircle className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.medicalInformation")}
             </h3>
@@ -761,9 +741,6 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         {/* Additional Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600">
-              <FiFileText className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("members.additionalNotes")}
             </h3>

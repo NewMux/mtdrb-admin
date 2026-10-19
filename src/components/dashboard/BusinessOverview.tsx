@@ -10,39 +10,12 @@ import { type SmartKpiCardProps } from "../ui/SmartKpiCard";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, dayBoundary, daysWindow } from "../../utils/periodBoundaries";
-
-// Color mappings for KPI cards
-const kpiColorMap: Record<string, { iconBg: string; iconText: string }> = {
-  blue: {
-    iconBg: "bg-blue-50 dark:bg-blue-900/30",
-    iconText: "text-blue-600 dark:text-blue-400",
-  },
-  green: {
-    iconBg: "bg-green-50 dark:bg-green-900/30",
-    iconText: "text-green-600 dark:text-green-400",
-  },
-  purple: {
-    iconBg: "bg-purple-50 dark:bg-purple-900/30",
-    iconText: "text-purple-600 dark:text-purple-400",
-  },
-  yellow: {
-    iconBg: "bg-yellow-50 dark:bg-yellow-900/30",
-    iconText: "text-yellow-600 dark:text-yellow-400",
-  },
-  red: {
-    iconBg: "bg-red-50 dark:bg-red-900/30",
-    iconText: "text-red-600 dark:text-red-400",
-  },
-  orange: {
-    iconBg: "bg-orange-50 dark:bg-orange-900/30",
-    iconText: "text-orange-600 dark:text-orange-400",
-  },
-};
 
 /**
  * BusinessOverview displays key gym KPIs in Apple-style cards.
@@ -287,50 +260,35 @@ const BusinessOverview: React.FC = () => {
   }, [fetchData]);
 
   return (
-  <section className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-6 transition-colors duration-300">
-    <div className="flex items-center justify-between gap-4 mb-6">
-      <div className="flex items-center gap-3">
-        <div className="text-start">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-            {t("dashboard.businessOverview")}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.keyPerformanceIndicators")}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-        <span>{t("dashboard.updated")}</span>
-      </div>
+  <section className="space-y-3" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="text-start">
+      <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+        {t("dashboard.businessOverview")}
+      </h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400">{t("dashboard.keyPerformanceIndicators")}</p>
     </div>
     {loadError && (
-      <div className="mb-4 text-sm text-red-600 dark:text-red-400">
+      <div className="text-sm text-red-600 dark:text-red-400">
         {t("dashboard.failedToLoadData", "Failed to load business overview data")}
       </div>
     )}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {kpis.map((kpi, idx) => (
-        <div key={idx} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-600 hover:shadow-sm transition-all duration-200 text-start" dir={isRTL ? "rtl" : "ltr"}>
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className={`p-2 rounded-lg ${kpiColorMap[kpi.color]?.iconBg || kpiColorMap.blue.iconBg} ${kpiColorMap[kpi.color]?.iconText || kpiColorMap.blue.iconText}`}>
-              {kpi.icon}
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              {kpi.trend === "up" ? (
-                <FiArrowUpRight className={`h-4 w-4 text-green-600 dark:text-green-400 ${isRTL ? 'rtl-flip' : ''}`} />
-              ) : (
-                <FiArrowDownRight className={`h-4 w-4 text-red-600 dark:text-red-400 ${isRTL ? 'rtl-flip' : ''}`} />
-              )}
-              <span className={kpi.trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                {kpi.trendValue}
-              </span>
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{kpi.value}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{kpi.label}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">{kpi.context}</div>
-        </div>
-      ))}
-    </div>
+    <StatStrip
+      items={kpis.map((kpi) => {
+        const up = kpi.trend === "up";
+        const TrendIcon = up ? FiArrowUpRight : FiArrowDownRight;
+        return {
+          label: kpi.label,
+          value: kpi.value,
+          accessory: (
+            <span className={`inline-flex items-center gap-0.5 text-xs ${up ? "text-green-600 dark:text-green-500" : "text-red-500"}`}>
+              <TrendIcon className={`h-3 w-3 ${isRTL ? "rtl-flip" : ""}`} />
+              {kpi.trendValue}
+            </span>
+          ),
+          detail: kpi.context,
+        };
+      })}
+    />
   </section>
   );
 };

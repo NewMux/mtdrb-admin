@@ -215,7 +215,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-medium text-sm">
                         {currentTrainer.avatar}
                       </span>
@@ -266,7 +266,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                     } ${!isAvailable(trainer) ? "opacity-50" : ""}`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
                           {trainer.avatar}
                         </span>
@@ -344,7 +344,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center">
                     <span className="text-white font-medium text-sm">
                       {member.avatar}
                     </span>

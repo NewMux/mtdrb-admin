@@ -125,9 +125,11 @@ html[dir="rtl"] .landing-page h3 {
     @apply px-2.5 py-1.5 text-sm rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-600 focus:ring-0 focus:shadow-focus transition-shadow;
   }
 
-  /* Grouped content box, as in System Settings. */
+  /* Grouped section, as in System Settings: a quiet fill on the content
+     surface, no border or shadow. Only floating things (sheets, menus,
+     popovers) get elevation. */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl border border-black/5 dark:border-white/10 shadow-sm;
+    @apply bg-gray-50 dark:bg-gray-800 rounded-xl;
   }
 
   /* Push buttons. */
@@ -286,7 +288,7 @@ html[dir="rtl"] .landing-page h3 {
 
   /* Unified title bar / toolbar. */
   .mac-toolbar {
-    @apply bg-white/80 dark:bg-[#232325]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-black/10 dark:border-black/60;
+    @apply bg-white/80 dark:bg-[#1D1D1F]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-black/10 dark:border-black/60;
   }
 
   /* Toolbar icon button (borderless, fills on hover). */

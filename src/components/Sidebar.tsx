@@ -179,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       {/* Account */}
       <div className="px-2.5 py-2.5 border-t border-black/5 dark:border-white/5">
         <div className="flex items-center gap-2 px-2 h-9">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 dark:from-gray-500 dark:to-gray-600 flex items-center justify-center text-[10px] font-semibold text-white shrink-0">
+          <div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-gray-500 flex items-center justify-center text-[10px] font-semibold text-white shrink-0">
             {initials || <FiUser className="w-3 h-3" />}
           </div>
           <p className="flex-1 min-w-0 truncate text-sm text-gray-800 dark:text-gray-200 text-start">

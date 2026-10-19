@@ -35,6 +35,7 @@ import {
   ExportTrainerDataModal,
 } from "../components/trainers/modals";
 import { PageHeader } from "../components/ui/PageHeader";
+import { StatStrip } from "../components/ui/StatStrip";
 
 interface Trainer {
   id: string;
@@ -244,28 +245,28 @@ const Trainers: React.FC = () => {
       value: String(safeTrainers.length),
       change: `${activeTrainersCount} ${t("trainers.active")}`,
       icon: FiUsers,
-      color: "from-blue-500 to-blue-600",
+      color: "bg-blue-500",
     },
     {
       name: t("trainers.averageRating"),
       value: averageRating.toFixed(1),
       change: `${safeTrainers.length} ${t("trainers.trainerList")}`,
       icon: FiStar,
-      color: "from-yellow-500 to-orange-500",
+      color: "bg-yellow-500",
     },
     {
       name: t("trainers.classesThisWeek"),
       value: String(classesThisWeek),
       change: "This week",
       icon: FiClock,
-      color: "from-green-500 to-green-600",
+      color: "bg-green-500",
     },
     {
       name: t("trainers.availableHours"),
       value: `${activePercentage}%`,
       change: `${activeTrainersCount}/${safeTrainers.length} ${t("trainers.available")}`,
       icon: FiTrendingUp,
-      color: "from-purple-500 to-purple-600",
+      color: "bg-purple-500",
     },
   ];
 
@@ -274,40 +275,13 @@ const Trainers: React.FC = () => {
       case "dashboard":
         return (
           <div className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trainerStats.map((stat, index) => (
-                <motion.div
-                  key={stat.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="text-start">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {stat.name}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {stat.value}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                        {stat.change}
-                      </p>
-                    </div>
-                    <div
-                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center flex-shrink-0`}
-                    >
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            {/* Summary */}
+            <StatStrip
+              items={trainerStats.map((stat) => ({ label: stat.name, value: stat.value, detail: stat.change }))}
+            />
 
             {/* All Trainers Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white text-start">
                   {t("trainers.allTrainers")}
@@ -342,7 +316,7 @@ const Trainers: React.FC = () => {
       case "list":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="text-start">
                   <h2 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -355,21 +329,21 @@ const Trainers: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                    className="btn btn-secondary"
                   >
                     <FiDownload className="w-4 h-4" />
                     <span>{t("trainers.export")}</span>
                   </button>
                   <button
                     onClick={handleAddTrainer}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    className="btn btn-primary"
                   >
                     <FiPlus className="w-4 h-4" />
                     <span>{t("trainers.addTrainer")}</span>
                   </button>
                   <button
                     onClick={handleRefresh}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                    className="btn btn-secondary"
                   >
                     <FiRefreshCw className="w-4 h-4" />
                     <span>{t("trainers.refresh")}</span>
@@ -407,14 +381,14 @@ const Trainers: React.FC = () => {
           <>
             <button
               onClick={() => handleTabChange("list")}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+              className="btn btn-secondary"
             >
               <FiTarget className="w-4 h-4" />
               <span>{t("trainers.viewSchedule")}</span>
             </button>
             <button
               onClick={handleAddTrainer}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="btn btn-primary"
             >
               <FiPlus className="w-4 h-4" />
               <span>{t("trainers.addTrainer")}</span>
@@ -424,7 +398,7 @@ const Trainers: React.FC = () => {
       />
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div>
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -434,7 +408,7 @@ const Trainers: React.FC = () => {
               placeholder={t("trainers.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4 text-left'} py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+              className={`w-full ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4 text-left'} py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
               dir={isRTL ? "rtl" : "ltr"}
             />
           </div>
@@ -444,7 +418,7 @@ const Trainers: React.FC = () => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               dir={isRTL ? "rtl" : "ltr"}
             >
               {filters.map((filter) => (
@@ -572,7 +546,7 @@ const Trainers: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("trainers.specialty")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allSpecialties")}</option>
             <option value="strength">Strength Training</option>
             <option value="cardio">Cardio</option>
@@ -591,7 +565,7 @@ const Trainers: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("trainers.experienceLevel")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allLevels")}</option>
             <option value="beginner">Beginner (0-2 years)</option>
             <option value="intermediate">Intermediate (2-5 years)</option>
@@ -605,7 +579,7 @@ const Trainers: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("trainers.minimumRating")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.anyRating")}</option>
             <option value="4.5">4.5+ Stars</option>
             <option value="4.0">4.0+ Stars</option>
@@ -619,7 +593,7 @@ const Trainers: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("trainers.status")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("trainers.allStatuses")}</option>
             <option value="active">{t("trainers.active")}</option>
             <option value="inactive">Inactive</option>

@@ -240,7 +240,7 @@ const AnalyticsFilters: React.FC = () => {
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <button
           onClick={toggleFilters}
-          className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors`}
+          className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} btn btn-secondary`}
         >
           <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -261,7 +261,7 @@ const AnalyticsFilters: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-4">
               {/* Branch */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                 value={filters.branch}
                 onChange={(e) =>
                   setFilters({ ...filters, branch: e.target.value })
@@ -278,7 +278,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Assigned To */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                 value={filters.assignedTo}
                 onChange={(e) =>
                   setFilters({ ...filters, assignedTo: e.target.value })
@@ -295,7 +295,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Date Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                 value={filters.dateRange}
                 onChange={(e) =>
                   setFilters({ ...filters, dateRange: e.target.value })
@@ -311,7 +311,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Status */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                 value={filters.status}
                 onChange={(e) =>
                   setFilters({ ...filters, status: e.target.value })
@@ -327,7 +327,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Priority */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                 value={filters.priority}
                 onChange={(e) =>
                   setFilters({ ...filters, priority: e.target.value })
@@ -348,38 +348,6 @@ const AnalyticsFilters: React.FC = () => {
 };
 
 // Color mappings for KPI cards
-const kpiColorMap = {
-  blue: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    iconBg: "bg-blue-100 dark:bg-blue-900/40",
-    text: "text-blue-600 dark:text-blue-400",
-  },
-  green: {
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
-    text: "text-emerald-600 dark:text-emerald-400",
-  },
-  purple: {
-    bg: "bg-purple-50 dark:bg-purple-900/20",
-    iconBg: "bg-purple-100 dark:bg-purple-900/40",
-    text: "text-purple-600 dark:text-purple-400",
-  },
-  orange: {
-    bg: "bg-orange-50 dark:bg-orange-900/20",
-    iconBg: "bg-orange-100 dark:bg-orange-900/40",
-    text: "text-orange-600 dark:text-orange-400",
-  },
-  red: {
-    bg: "bg-red-50 dark:bg-red-900/20",
-    iconBg: "bg-red-100 dark:bg-red-900/40",
-    text: "text-red-600 dark:text-red-400",
-  },
-  indigo: {
-    bg: "bg-indigo-50 dark:bg-indigo-900/20",
-    iconBg: "bg-indigo-100 dark:bg-indigo-900/40",
-    text: "text-indigo-600 dark:text-indigo-400",
-  },
-};
 
 // Performance Summary Cards - Updated to match other analytics tabs
 const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ data }) => {
@@ -441,21 +409,15 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {cards.map((card, index) => {
-        const colors = kpiColorMap[card.color];
         return (
           <motion.div
             key={card.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
           >
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-              <div
-                className={`w-12 h-12 rounded-2xl ${colors.iconBg} flex items-center justify-center`}
-              >
-                <card.icon className={`w-6 h-6 ${colors.text}`} />
-              </div>
               <div
                 className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
                   card.trend.isPositive
@@ -565,9 +527,9 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
   const { t } = useTranslation();
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-        📈 {t("tasks.tasksOverTime")}
+        {t("tasks.tasksOverTime")}
       </h3>
       <div className="h-80">
         <Line data={chartData} options={options} />
@@ -629,9 +591,9 @@ const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   const { t } = useTranslation();
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-        📊 {t("tasks.completionTrend")}
+        {t("tasks.completionTrend")}
       </h3>
       <div className="h-80">
         <Bar data={chartData} options={options} />
@@ -683,9 +645,9 @@ const StatusBreakdownChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   const { t } = useTranslation();
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-        🥧 {t("tasks.statusBreakdown")}
+        {t("tasks.statusBreakdown")}
       </h3>
       <div className="h-80">
         <Doughnut data={chartData} options={options} />
@@ -737,9 +699,9 @@ const PriorityDistributionChart: React.FC<{ data: typeof emptyTaskAnalyticsData 
   const { t } = useTranslation();
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-        🎯 {t("tasks.priorityDistribution")}
+        {t("tasks.priorityDistribution")}
       </h3>
       <div className="h-80">
         <Doughnut data={chartData} options={options} />
@@ -796,9 +758,9 @@ const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> 
   const { t } = useTranslation();
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
-        👥 {t("tasks.staffProductivity")}
+        {t("tasks.staffProductivity")}
       </h3>
       <div className="h-80">
         <Bar data={chartData} options={options} />
@@ -864,14 +826,9 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-            <div
-              className={`w-12 h-12 rounded-2xl bg-${insight.color}-50 flex items-center justify-center`}
-            >
-              <insight.icon className={`w-6 h-6 text-${insight.color}-600`} />
-            </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
                 insight.trend.isPositive
@@ -952,14 +909,9 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-            <div
-              className={`w-12 h-12 rounded-2xl bg-${risk.color}-50 flex items-center justify-center`}
-            >
-              <risk.icon className={`w-6 h-6 text-${risk.color}-600`} />
-            </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-1 ${
                 risk.trend.isPositive
@@ -1437,7 +1389,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           {/* Performance Summary */}
           <div className="space-y-6">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              📊 {t("tasks.performanceSummary")}
+              {t("tasks.performanceSummary")}
             </h2>
             <PerformanceSummaryCards data={analyticsData} />
           </div>
@@ -1445,7 +1397,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           {/* Visualizations */}
           <div className="space-y-6">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              📈 {t("tasks.visualizations")}
+              {t("tasks.visualizations")}
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TasksOverTimeChart data={analyticsData} />
@@ -1459,7 +1411,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           {/* Team & Individual Insights */}
           <div className="space-y-6">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              🔍 {t("tasks.teamInsights")}
+              {t("tasks.teamInsights")}
             </h2>
             <TeamInsightsCards data={analyticsData} />
           </div>
@@ -1467,7 +1419,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
           {/* Risk & Bottleneck Indicators */}
           <div className="space-y-6">
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-              ⚠️ {t("tasks.riskIndicators")}
+              {t("tasks.riskIndicators")}
             </h2>
             <RiskIndicatorsCards data={analyticsData} />
           </div>

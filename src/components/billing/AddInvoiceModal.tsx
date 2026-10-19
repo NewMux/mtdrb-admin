@@ -4,12 +4,9 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  FiDollarSign,
   FiFileText,
   FiUpload,
   FiAlertCircle,
-  FiShield,
-  FiBarChart2,
 } from "react-icons/fi";
 import { supabase } from "../../supabaseClient";
 import toast from "react-hot-toast";
@@ -378,7 +375,7 @@ export function AddInvoiceModal({
         onClick={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={!isValid || isSubmitting}
-        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         {isSubmitting
           ? t("billing.saving", "جاري الحفظ...")
@@ -408,9 +405,6 @@ export function AddInvoiceModal({
         {/* Invoice Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 flex-shrink-0">
-              <FiDollarSign className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.invoiceDetails", "تفاصيل الفاتورة")}
             </h3>
@@ -495,9 +489,6 @@ export function AddInvoiceModal({
         {/* VAT & File Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600 flex-shrink-0">
-              <FiBarChart2 className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.vatAndFile", "الضريبة والمستندات")}
             </h3>
@@ -521,7 +512,7 @@ export function AddInvoiceModal({
                   </AppleSelect>
                 )}
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700 text-start">
+              <div className="bg-white dark:bg-white/[0.04] rounded-lg p-4 space-y-2 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
                   <span>{netAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
@@ -616,9 +607,6 @@ export function AddInvoiceModal({
         {/* Settings & Notes Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600 flex-shrink-0">
-              <FiShield className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.settingsAndNotes", "الإعدادات والملاحظات")}
             </h3>

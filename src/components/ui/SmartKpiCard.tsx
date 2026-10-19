@@ -39,7 +39,6 @@ const colorText = {
 const SmartKpiCard: React.FC<SmartKpiCardProps> = ({
   label,
   value,
-  icon,
   color,
   trend,
   trendValue,
@@ -48,7 +47,6 @@ const SmartKpiCard: React.FC<SmartKpiCardProps> = ({
   const isRTL = i18n.language === "ar";
   const bgColor = colorBg[color];
   const textColor = colorText[color];
-  const iconBg = colorBg[color];
   const subtext =
     trendValue && trend
       ? `${trendValue} ${trend === "up" ? "↗" : "↘"}`
@@ -57,12 +55,9 @@ const SmartKpiCard: React.FC<SmartKpiCardProps> = ({
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className={`p-6 rounded-2xl shadow-sm gap-2 flex flex-col items-start bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 ${bgColor} ${textColor} transition-colors duration-300 ease-in-out`}
+      className={`p-6 rounded-xl gap-2 flex flex-col items-start bg-gray-50 dark:bg-gray-800 transition-colors duration-300 ease-in-out ${bgColor} ${textColor} `}
     >
       <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-lg ${iconBg} flex-shrink-0`}>
-          {icon}
-        </div>
         <span className="text-sm font-medium opacity-80 dark:opacity-90 text-start text-gray-700 dark:text-gray-300">{label}</span>
       </div>
       <div className="text-2xl font-bold text-start text-gray-900 dark:text-gray-100">{value}</div>

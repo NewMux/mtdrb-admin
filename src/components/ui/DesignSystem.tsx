@@ -129,7 +129,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
       {...rest}
       dir={isRTL ? "rtl" : "ltr"}
       className={`
-        bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 p-4
+        bg-gray-50 dark:bg-gray-800 rounded-xl p-4    
         ${clickable ? "cursor-pointer" : ""}
         ${className}
       `}
@@ -287,7 +287,7 @@ export const SmartTable: React.FC<SmartTableProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 overflow-hidden ${className}`}
+    className={`bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden ${className}`}
   >
     {children}
   </div>
@@ -304,7 +304,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 p-3 ${className}`}
+    className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-3 ${className}`}
   >
     {children}
   </div>

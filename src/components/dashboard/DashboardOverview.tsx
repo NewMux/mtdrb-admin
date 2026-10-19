@@ -11,10 +11,10 @@ import { LiveKPITracker } from "./LiveKPITracker";
 import MemberEngagement from "./MemberEngagement";
 import BusinessOverview from "./BusinessOverview";
 import { SetTargetsModal } from "./SetTargetsModal";
+import { StatStrip } from "../ui/StatStrip";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
@@ -57,7 +57,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 }) => {
   const { tenantId } = useAuth();
   const { t } = useTranslation();
-  const { isRTL } = useRTL();
   const [showTargetsModal, setShowTargetsModal] = useState(false);
   const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
@@ -327,71 +326,32 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       )}
 
       {/* Primary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {primaryStats.map((stat) => {
-          const colors = kpiColorMap[stat.color];
-          return (
-            <div
-              key={stat.name}
-              dir={isRTL ? "rtl" : "ltr"}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-black/5 dark:border-white/10 text-start"
+      <StatStrip
+        items={primaryStats.map((stat) => ({
+          label: stat.name,
+          value: stat.value,
+          meter: stat.progress,
+          meterClass: kpiColorMap[stat.color].progressBar,
+          detail: stat.change,
+          accessory: (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowTargetsModal(true);
+              }}
+              className="group inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex-shrink-0"
+              title={t("dashboard.targets.setTargets")}
+              type="button"
             >
-              {/* Label row: glyph + name, target on the trailing edge */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={`${colors.iconText} flex-shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5`}>
-                    {stat.icon}
-                  </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{stat.name}</span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowTargetsModal(true);
-                  }}
-                  className="group inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded px-1 -mx-1 flex-shrink-0"
-                  title={t("dashboard.targets.setTargets")}
-                  type="button"
-                >
-                  <span>
-                    {t("dashboard.target")} {stat.target}
-                  </span>
-                  <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              </div>
-
-              {/* Value */}
-              <div className="mt-2 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-                {stat.value}
-              </div>
-
-              {/* Meter */}
-              <div className="mt-3 flex items-center gap-2">
-                <div
-                  className="flex-1 bg-black/[0.07] dark:bg-white/10 rounded-full h-1 overflow-hidden"
-                  role="progressbar"
-                  aria-valuenow={Math.round(stat.progress)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={t("dashboard.progress")}
-                >
-                  <div
-                    className={`h-1 rounded-full ${colors.progressBar} transition-all duration-300`}
-                    style={{ width: `${Math.min(stat.progress, 100)}%` }}
-                  ></div>
-                </div>
-                <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
-                  {Math.round(stat.progress)}%
-                </span>
-              </div>
-
-              {/* Change vs last period */}
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">{stat.change}</div>
-            </div>
-          );
-        })}
-      </div>
+              <span className="whitespace-nowrap">
+                {t("dashboard.target")} {stat.target}
+              </span>
+              <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ),
+        }))}
+      />
 
       {/* Main Content - Enhanced Single Column Layout */}
       <div className="space-y-6">

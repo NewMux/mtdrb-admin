@@ -65,24 +65,6 @@ export default function PerformanceMetricsCard({
     }
   };
 
-  const getColorClasses = (color?: string) => {
-    switch (color) {
-      case "green":
-        return "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800";
-      case "blue":
-        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800";
-      case "purple":
-        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800";
-      case "yellow":
-        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800";
-      case "red":
-        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800";
-      case "indigo":
-        return "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800";
-      default:
-        return "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600";
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -109,16 +91,11 @@ export default function PerformanceMetricsCard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-300"
+            className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 transition-all duration-300"
             dir={isRTL ? "rtl" : "ltr"}
           >
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
-                {metric.icon && (
-                  <div className={`p-2 rounded-lg border ${getColorClasses(metric.color)}`}>
-                    {metric.icon}
-                  </div>
-                )}
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">{metric.name}</h3>
               </div>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1 ${getTrendColor(metric.trend)}`}>

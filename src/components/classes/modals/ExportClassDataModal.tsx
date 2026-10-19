@@ -430,15 +430,6 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                   }
                 >
                   <div className="flex items-start space-x-3">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        isSelected
-                          ? "bg-brand-100 dark:bg-brand-900/40"
-                          : "bg-light-100 dark:bg-dark-600"
-                      }`}
-                    >
-                      {option.icon}
-                    </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <h4 className="text-sm font-semibold text-dark-900 dark:text-white">

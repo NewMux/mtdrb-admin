@@ -77,10 +77,10 @@ const ChartPlaceholder = ({
 }) => {
   if (!data || !Array.isArray(data)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
+            <div className=" [&_svg]:w-4 [&_svg]:h-4">{icon}</div>
             <div>
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Loading data...</p>
@@ -90,11 +90,6 @@ const ChartPlaceholder = ({
 
         <div className="h-64 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl text-gray-300 dark:text-gray-600 mb-2">
-              {type === "line" && "📈"}
-              {type === "bar" && "📊"}
-              {type === "pie" && "🥧"}
-            </div>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               {type === "line" && "Line Chart"}
               {type === "bar" && "Bar Chart"}
@@ -114,10 +109,10 @@ const ChartPlaceholder = ({
   }));
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">{icon}</div>
           <div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{data.length} data points</p>
@@ -214,9 +209,9 @@ const VATSummaryCard = ({
   };
   if (!vatSummary || typeof vatSummary !== "object") {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-green-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiPieChart className="w-6 h-6 text-green-600" />
           </div>
           <div>
@@ -261,9 +256,9 @@ const VATSummaryCard = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-green-100 rounded-lg">
+        <div className=" [&_svg]:w-4 [&_svg]:h-4">
           <FiPieChart className="w-6 h-6 text-green-600" />
         </div>
         <div>
@@ -324,10 +319,10 @@ const TopProductsTable = ({
   };
   if (!products || !Array.isArray(products)) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
+            <div className=" [&_svg]:w-4 [&_svg]:h-4">
               <FiPieChart className="w-6 h-6 text-purple-600" />
             </div>
             <div>
@@ -367,10 +362,10 @@ const TopProductsTable = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
+          <div className=" [&_svg]:w-4 [&_svg]:h-4">
             <FiPieChart className="w-6 h-6 text-purple-600" />
           </div>
           <div>

@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import {
-  FiUser,
-  FiTarget,
-  FiFileText,
-  FiUpload,
   FiX,
-  FiClock,
   FiAlertCircle,
   FiImage,
   FiFile,
@@ -369,7 +364,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         {loading ? "Adding Trainer..." : "Add Trainer"}
       </SmartButton>
@@ -390,9 +385,6 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Basic Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
-              <FiUser className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Basic Information
             </h3>
@@ -477,9 +469,6 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Professional Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600">
-              <FiTarget className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Professional Information
             </h3>
@@ -562,9 +551,6 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Availability Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600">
-              <FiClock className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Availability
             </h3>
@@ -622,9 +608,6 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* File Uploads Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
-              <FiUpload className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Documents & Files
             </h3>
@@ -646,7 +629,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="profile-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiImage className="h-4 w-4 mr-2" />
                   Upload Image
@@ -691,7 +674,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="certifications-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiFile className="h-4 w-4 mr-2" />
                   Upload Certifications
@@ -735,7 +718,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                 />
                 <label
                   htmlFor="national-id-upload"
-                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <FiShield className="h-4 w-4 mr-2" />
                   Upload National ID
@@ -769,9 +752,6 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Additional Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600">
-              <FiFileText className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Additional Information
             </h3>

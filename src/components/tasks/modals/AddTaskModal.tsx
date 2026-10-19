@@ -2,15 +2,11 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
-  FiCalendar,
-  FiUser,
   FiZap,
   FiInfo,
   FiCheck,
   FiAlertTriangle,
   FiStar,
-  FiTrendingUp,
-  FiSettings,
 } from "react-icons/fi";
 import { UnifiedModal } from "../../ui/UnifiedModal";
 import { AppleInput, AppleSelect, AppleTextarea } from "../../AppleStyleModal";
@@ -265,7 +261,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           onClick={handleSave}
           loading={loading}
           disabled={!isFormValid || loading}
-          className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           {loading ? "Creating Task..." : "Create Task"}
         </SmartButton>
@@ -330,9 +326,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Task Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
-              <FiSettings className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Task Details
             </h3>
@@ -381,9 +374,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Priority & Assignment Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600">
-              <FiUser className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Priority & Assignment
             </h3>
@@ -440,9 +430,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Schedule & Organization Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
-              <FiCalendar className="h-5 w-5 text-white" />
-            </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Schedule & Organization
             </h3>
@@ -485,9 +472,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {recentTasks.length > 0 && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-b from-teal-500 to-teal-600">
-                <FiTrendingUp className="h-5 w-5 text-white" />
-              </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Recent Similar Tasks
             </h3>

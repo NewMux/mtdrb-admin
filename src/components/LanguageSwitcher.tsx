@@ -27,7 +27,7 @@ export default function LanguageSwitcher() {
   const orderedLangs = isRTL ? [...langs].reverse() : langs;
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-white dark:bg-gray-800 rounded-full flex-shrink-0 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="flex items-center gap-1 p-1 bg-gray-50 dark:bg-gray-800 rounded-full flex-shrink-0">
       {orderedLangs.map((lang) => {
         const isActive = current === lang.code;
         return (

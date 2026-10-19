@@ -96,7 +96,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
           <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
             {/* Header with Avatar and Basic Info */}
             <div className="flex items-start gap-5 pb-6 border-b border-gray-100 dark:border-gray-700">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center shadow-lg ring-4 ring-sky-100 flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-gray-400 flex items-center justify-center shadow-lg ring-4 ring-sky-100 flex-shrink-0">
                 <span className="text-white font-semibold text-xl">
                   {avatarInitials}
                 </span>
@@ -135,8 +135,8 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <div className="p-2 bg-white dark:bg-gray-700 rounded-lg flex-shrink-0">
+                <div className="flex items-center gap-3 p-4 bg-white dark:bg-white/[0.04] rounded-xl">
+                  <div className="flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
                     <FiMail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div className="text-start">
@@ -147,8 +147,8 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <div className="p-2 bg-white dark:bg-gray-700 rounded-lg flex-shrink-0">
+                <div className="flex items-center gap-3 p-4 bg-white dark:bg-white/[0.04] rounded-xl">
+                  <div className="flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
                     <FiPhone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div className="text-start">
@@ -161,7 +161,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
                 {member.address && (
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors md:col-span-2">
-                    <div className="p-2 bg-white rounded-lg">
+                    <div className=" [&_svg]:w-4 [&_svg]:h-4">
                       <FiMapPin className="w-4 h-4 text-gray-500" />
                     </div>
                     <div className="flex-1">
@@ -175,7 +175,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
                 {member.emergency_contact && (
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                    <div className="p-2 bg-white rounded-lg">
+                    <div className=" [&_svg]:w-4 [&_svg]:h-4">
                       <FiPhone className="w-4 h-4 text-gray-500" />
                     </div>
                     <div>
@@ -198,7 +198,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 bg-white rounded-lg">
+                  <div className=" [&_svg]:w-4 [&_svg]:h-4">
                     <FiCalendar className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
@@ -212,7 +212,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 bg-white rounded-lg">
+                  <div className=" [&_svg]:w-4 [&_svg]:h-4">
                     <FiActivity className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
@@ -226,7 +226,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 bg-white rounded-lg">
+                  <div className=" [&_svg]:w-4 [&_svg]:h-4">
                     <FiTrendingUp className="w-4 h-4 text-gray-500" />
                   </div>
                   <div>
@@ -305,7 +305,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center">
                       <span className="text-white font-medium text-sm">PT</span>
                     </div>
                     <div>

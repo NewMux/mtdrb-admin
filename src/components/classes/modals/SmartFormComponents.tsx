@@ -53,7 +53,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             } ${
               error
                 ? "border-red-300 bg-red-50"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-gray-900 bg-white`}
@@ -71,7 +71,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             } ${
               error
                 ? "border-red-300 bg-red-50"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-gray-900 bg-white`}

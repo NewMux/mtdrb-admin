@@ -569,7 +569,7 @@ export default function SmartVatDashboard({
         <div className="space-y-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -597,7 +597,7 @@ export default function SmartVatDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("billing.vatPaid")}</p>
@@ -611,7 +611,7 @@ export default function SmartVatDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -627,7 +627,7 @@ export default function SmartVatDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -653,7 +653,7 @@ export default function SmartVatDashboard({
 
           {/* Compliance Alerts */}
           {(dashboardData?.complianceAlerts || []).length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
               <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t("billing.complianceAlerts")}
               </h3>
@@ -701,7 +701,7 @@ export default function SmartVatDashboard({
           {/* Smart Insights */}
           {insights && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t("billing.smartInsights")}
                 </h3>
@@ -715,7 +715,7 @@ export default function SmartVatDashboard({
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700" dir={isRTL ? "rtl" : "ltr"}>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6" dir={isRTL ? "rtl" : "ltr"}>
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t("billing.recommendations")}
                 </h3>
@@ -732,7 +732,7 @@ export default function SmartVatDashboard({
           )}
 
           {/* Recent Transactions */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
             <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t("billing.recentVatTransactions")}
             </h3>
@@ -808,7 +808,7 @@ export default function SmartVatDashboard({
       {/* VAT Returns Tab */}
       {selectedTab === "returns" && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6`}>
               <h3 className={`text-lg font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t("billing.vatReturns")}
@@ -943,7 +943,7 @@ export default function SmartVatDashboard({
       {/* Compliance Tab */}
       {selectedTab === "compliance" && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
             <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t("billing.complianceOverview")}
             </h3>
@@ -978,7 +978,7 @@ export default function SmartVatDashboard({
           </div>
 
           {/* Compliance Checklist */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
             <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t("billing.complianceChecklist")}
             </h3>
@@ -1050,7 +1050,7 @@ export default function SmartVatDashboard({
       {/* Analytics Tab */}
       {selectedTab === "analytics" && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
             <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t("billing.vatAnalytics")}
             </h3>

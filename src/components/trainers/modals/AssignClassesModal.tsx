@@ -190,7 +190,7 @@ export default function AssignClassesModal({
       <div className="space-y-6">
         {/* Trainer Info */}
         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center">
             <span className="text-white font-medium text-sm">
               {trainer.avatar}
             </span>

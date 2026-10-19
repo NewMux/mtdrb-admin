@@ -480,7 +480,7 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
             <div>
@@ -548,7 +548,7 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
             <div>
