@@ -323,7 +323,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
               <select
                 value={selectedReason}
                 onChange={(e) => setSelectedReason(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full ps-4 pe-9 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
                 <option value="">{t("members.selectReason", "Select a reason...")}</option>
                 {CANCELLATION_REASONS.map((reason) => (

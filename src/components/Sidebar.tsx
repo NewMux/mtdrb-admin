@@ -15,6 +15,7 @@ import {
   FiMapPin,
 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
+import { BrandMark } from "./BrandMark";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
@@ -134,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     >
       {/* Header: sits in the title-bar row, same height as the toolbar. */}
       <div className="flex items-center h-[52px] px-4 shrink-0">
-        <img src="/mtdrb-logo.svg" alt="MTDRB" className="h-5 w-auto" />
+        <BrandMark className="text-[15px] text-gray-900 dark:text-white" />
       </div>
 
       {/* Source list */}

@@ -503,7 +503,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       dateRange: e.target.value as ExportFilter["dateRange"],
                     }))
                   }
-                  className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
+                  className="w-full ps-4 pe-9 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
                 >
                   <option value="all">All Time</option>
                   <option value="this-week">This Week</option>

@@ -305,7 +305,7 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   classType: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                className="ps-3 pe-9 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('classes.allTypes')}</option>
                 <option value="hiit">HIIT</option>
@@ -322,7 +322,7 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   trainer: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                className="ps-3 pe-9 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('classes.allTrainers')}</option>
                 <option value="ahmed">Ahmed</option>

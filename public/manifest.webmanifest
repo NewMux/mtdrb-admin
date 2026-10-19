@@ -1,12 +1,12 @@
 {
-  "name": "MTDRB / إدارة",
+  "name": "MTDRB",
   "short_name": "MTDRB",
   "description": "The bilingual gym operating system for GCC and MENAT operators.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
+  "theme_color": "#FFFFFF",
   "orientation": "portrait-primary",
   "icons": [
     {

@@ -264,7 +264,7 @@ const Attendance: React.FC = () => {
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value as AttendanceMethod)}
-                className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-white ps-4 pe-9 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
               >
                 {methodOptions.map((option, index) => (
                   <option key={`${option.value}-${index}`} value={option.value}>{option.label} — {option.description}</option>

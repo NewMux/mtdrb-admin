@@ -345,7 +345,7 @@ const Tasks: React.FC = () => {
           <select
             value={selectedFilter}
             onChange={(e) => setSelectedFilter(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+            className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
             dir={isRTL ? "rtl" : "ltr"}
           >
             <option value="all">{t("tasks.allStatuses")}</option>

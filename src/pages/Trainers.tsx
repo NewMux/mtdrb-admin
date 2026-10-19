@@ -418,7 +418,7 @@ const Trainers: React.FC = () => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               dir={isRTL ? "rtl" : "ltr"}
             >
               {filters.map((filter) => (

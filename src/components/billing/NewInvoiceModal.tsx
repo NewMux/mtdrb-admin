@@ -912,7 +912,7 @@ export function NewInvoiceModal({
                               Number(e.target.value) as VatRate,
                             )
                           }
-                          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                          className="w-full ps-4 pe-9 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                         >
                           {VAT_RATES.map((rate) => (
                             <option

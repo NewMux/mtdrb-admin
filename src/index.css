@@ -483,6 +483,13 @@ html[dir="rtl"] .landing-page h3 {
   text-align: right;
 }
 
+/* @tailwindcss/forms draws the select chevron at the right edge; in RTL the
+   text starts there, so move the chevron to the left (where the logical
+   end padding already leaves room for it). */
+[dir="rtl"] select {
+  background-position: left 0.5rem center;
+}
+
 /* RTL Table Alignment */
 [dir="rtl"] table th,
 [dir="rtl"] table td {

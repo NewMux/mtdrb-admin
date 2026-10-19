@@ -264,7 +264,7 @@ export default function EditTrainerModal({
                 onChange={(e) =>
                   handleInputChange("status", e.target.value as Trainer["status"])
                 }
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
+                className="w-full ps-4 pe-9 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="active">{t("trainers.active", "نشط")}</option>

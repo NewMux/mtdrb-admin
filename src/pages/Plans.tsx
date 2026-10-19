@@ -371,7 +371,7 @@ export default function Plans() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="ps-4 pe-9 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="all">{t("plans.allStatus")}</option>
           <option value="active">{t("plans.active")}</option>
@@ -431,7 +431,7 @@ export default function Plans() {
               <select
                 value={durationFilter}
                 onChange={(e) => setDurationFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-full ps-3 pe-9 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
                 <option value="all">{t("plans.allDurations")}</option>
                 <option value="monthly">{t("plans.monthly")}</option>
