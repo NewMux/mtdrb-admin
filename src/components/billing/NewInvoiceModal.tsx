@@ -567,7 +567,7 @@ export function NewInvoiceModal({
           >
             {/* Client & Invoice Info */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiUser className="text-blue-500 flex-shrink-0" />
                 <span>{t("billing.clientInvoiceInfo", "بيانات العميل والفاتورة")}</span>
               </h3>
@@ -720,7 +720,7 @@ export function NewInvoiceModal({
 
             {/* Dates Section */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiCalendar className="text-green-500 flex-shrink-0" />
                 <span>{t("billing.invoiceDates", "تواريخ الفاتورة")}</span>
               </h3>
@@ -757,7 +757,7 @@ export function NewInvoiceModal({
 
             {/* Payment Info */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiCreditCard className="text-purple-500 flex-shrink-0" />
                 <span>{t("billing.paymentInformation", "معلومات الدفع")}</span>
               </h3>
@@ -807,7 +807,7 @@ export function NewInvoiceModal({
           >
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <FiDollarSign className="text-green-500 flex-shrink-0" />
                   <span>{t("billing.lineItems", "بنود الفاتورة")}</span>
                 </h3>
@@ -962,7 +962,7 @@ export function NewInvoiceModal({
           >
             {/* Invoice Summary */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiBarChart className="text-purple-500 flex-shrink-0" />
                 <span>{t("billing.invoiceSummaryTitle", "ملخص الفاتورة والحسابات")}</span>
               </h3>
@@ -1040,7 +1040,7 @@ export function NewInvoiceModal({
 
             {/* Notes Section */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiFileText className="text-orange-500 flex-shrink-0" />
                 <span>{t("billing.notes", "الملاحظات")}</span>
               </h3>

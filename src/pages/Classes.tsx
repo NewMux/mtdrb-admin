@@ -52,6 +52,7 @@ import {
 
 import ClassAnalyticsTab from "../components/classes/tabs/ClassAnalyticsTab";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
 
 type ModalType =
   | "add"
@@ -491,7 +492,7 @@ export default function SmartClassManagement() {
             {/* Critical Alerts */}
             {smartInsights.criticalAlerts.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                   🚨 {t("classes.criticalAlerts")}
                 </h3>
                 <div className="space-y-3">
@@ -518,7 +519,7 @@ export default function SmartClassManagement() {
             {/* Recent Classes */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between gap-4 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white text-start">
                   {t("classes.recentClasses")}
                 </h2>
                 <button
@@ -560,7 +561,7 @@ export default function SmartClassManagement() {
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="text-start">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("classes.classManagement")}
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -619,18 +620,11 @@ export default function SmartClassManagement() {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-start">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              📅 {t("classes.smartClassManagement")}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t("classes.intelligentScheduling")}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title={t("classes.smartClassManagement")}
+        subtitle={t("classes.intelligentScheduling")}
+        actions={
+          <>
             <button
               onClick={handleRefresh}
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
@@ -645,9 +639,9 @@ export default function SmartClassManagement() {
               <FiPlus className="w-4 h-4" />
               <span>{t("classes.addClass")}</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -696,33 +690,32 @@ export default function SmartClassManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                activeView === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
+      <div role="tablist" className="mac-segmented max-w-full overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeView === tab.id}
+            onClick={() => setActiveView(tab.id)}
+            className={`mac-segment whitespace-nowrap ${
+              activeView === tab.id ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {renderActiveView()}
         </motion.div>

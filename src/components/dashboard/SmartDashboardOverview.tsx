@@ -5,7 +5,6 @@ import {
   FiCreditCard,
   FiCalendar,
   FiTarget,
-  FiCpu,
   FiArrowUpRight,
   FiArrowDownRight,
   FiMinus,
@@ -71,7 +70,7 @@ const KPICard: React.FC<KPICardProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 ease-in-out text-start" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg transition-all duration-300 ease-in-out text-start" dir={isRTL ? "rtl" : "ltr"}>
       <div className="flex items-center justify-between mb-4 gap-2">
         <div className={`p-3 rounded-xl border ${getColorClasses(color)} flex-shrink-0`}>
           {icon}
@@ -118,7 +117,7 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
 
   return (
     <div
-      className={`p-6 rounded-2xl border ${priorityColors[priority]} hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 text-start`}
+      className={`p-6 rounded-2xl border ${priorityColors[priority]} hover:shadow-md dark:hover:shadow-lg transition-all duration-300 text-start`}
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="flex items-start gap-4">
@@ -423,12 +422,9 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       {/* Section Header */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
-          <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex-shrink-0">
-            <FiCpu className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
           <div style={{ textAlign: isRTL ? 'right' : 'left' }} dir={isRTL ? "rtl" : "ltr"}>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard.smartDashboard")}</h2>
-            <p className="text-gray-600 dark:text-gray-400">{t("dashboard.smartPoweredInsights")}</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("dashboard.smartDashboard")}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("dashboard.smartPoweredInsights")}</p>
           </div>
         </div>
       </div>

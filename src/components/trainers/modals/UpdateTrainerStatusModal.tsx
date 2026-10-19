@@ -65,7 +65,7 @@ export default function UpdateTrainerStatusModal({
         </>
       }
     >
-      <h2 className="text-xl font-semibold mb-4">Update Trainer Status</h2>
+      <h2 className="text-base font-semibold mb-4">Update Trainer Status</h2>
       {/* Alerts */}
       {alerts.map((a, i) => (
         <div

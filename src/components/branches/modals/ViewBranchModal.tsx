@@ -47,7 +47,7 @@ export default function ViewBranchModal({
         <SmartButton
           variant="primary"
           onClick={handleEdit}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+          className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
           {t("common.edit") || "Edit"}
         </SmartButton>
@@ -76,7 +76,7 @@ export default function ViewBranchModal({
                 <FiXCircle className="h-5 w-5 text-white" />
               )}
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.status") || "Status"}
             </h3>
           </div>
@@ -99,10 +99,10 @@ export default function ViewBranchModal({
         {/* Branch Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
               <FiMapPin className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.branchInformation") || "Branch Information"}
             </h3>
           </div>
@@ -171,10 +171,10 @@ export default function ViewBranchModal({
         {branch.business_hours && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-emerald-500 to-emerald-600">
                 <FiClock className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("branches.businessHours") || "Business Hours"}
               </h3>
             </div>
@@ -210,10 +210,10 @@ export default function ViewBranchModal({
         {branch.booking_policies && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600">
                 <FiCalendar className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("branches.bookingPolicies") || "Booking Policies"}
               </h3>
             </div>

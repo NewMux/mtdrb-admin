@@ -94,7 +94,7 @@ export default function DeleteTrainerModal({
         {/* Trainer Information */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-2 ring-sky-100 flex-shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center shadow-lg ring-2 ring-sky-100 flex-shrink-0">
               <span className="text-white font-semibold text-base">
                 {trainer.avatar}
               </span>

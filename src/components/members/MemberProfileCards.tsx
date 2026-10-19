@@ -111,7 +111,7 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       <div className="flex items-start space-x-5">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center shadow-lg ring-4 ring-blue-50">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center shadow-lg ring-4 ring-blue-50">
             {member.profile_picture_url ? (
               <img
                 src={member.profile_picture_url}
@@ -127,7 +127,7 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
         {/* Member Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-3 mb-3">
-            <h2 className="text-2xl font-bold text-gray-900 truncate">
+            <h2 className="text-lg font-semibold text-gray-900 truncate">
               {member.name}
             </h2>
             <span
@@ -231,7 +231,7 @@ export const EngagementCard: React.FC<EngagementCardProps> = ({
         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
           <FiTrendingUp className="w-5 h-5 text-blue-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-gray-900">
           Engagement Overview
         </h3>
       </div>
@@ -356,7 +356,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
           <FiDollarSign className="w-5 h-5 text-blue-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Billing Summary</h3>
+        <h3 className="text-base font-semibold text-gray-900">Billing Summary</h3>
       </div>
 
       {/* Lifetime Value */}
@@ -397,7 +397,7 @@ export const BillingCard: React.FC<BillingCardProps> = ({
       {/* Action Button */}
       <button
         onClick={onViewInvoices}
-        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-medium transition-all duration-200 active:scale-95 border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         aria-label="View all invoices"
       >
         <FiFileText className="w-4 h-4" />
@@ -449,7 +449,7 @@ export const GoalsProgressCard: React.FC<GoalsProgressCardProps> = ({
         <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
           <FiCheckCircle className="w-5 h-5 text-emerald-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-gray-900">
           Goals & Progress
         </h3>
       </div>
@@ -544,7 +544,7 @@ export const RiskAlertsCard: React.FC<RiskAlertsCardProps> = ({
         <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
           <FiAlertTriangle className="w-5 h-5 text-red-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Risk & Alerts</h3>
+        <h3 className="text-base font-semibold text-gray-900">Risk & Alerts</h3>
       </div>
 
       {/* Churn Risk */}
@@ -617,7 +617,7 @@ export const RiskAlertsCard: React.FC<RiskAlertsCardProps> = ({
       {/* Action Button */}
       <button
         onClick={onSendMessage}
-        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl font-medium transition-all duration-200 active:scale-95 border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
         aria-label="Send re-engagement message"
       >
         <FiSend className="w-4 h-4" />

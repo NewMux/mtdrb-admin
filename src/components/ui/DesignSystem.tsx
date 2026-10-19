@@ -3,6 +3,7 @@ import React from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { FiLoader } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
+import { PageHeader } from "./PageHeader";
 
 // ===== DESIGN SYSTEM CONSTANTS =====
 export const DESIGN_SYSTEM = {
@@ -49,9 +50,11 @@ export const animationVariants = {
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -10 },
   },
+  // Mac content doesn't grow under the pointer; kept as a no-op so existing
+  // variant names still resolve.
   cardHover: {
     rest: { scale: 1 },
-    hover: { scale: 1.01, transition: { duration: 0.2 } },
+    hover: { scale: 1 },
   },
   buttonPress: {
     rest: { scale: 1 },
@@ -87,27 +90,13 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
     initial="initial"
     animate="animate"
     exit="exit"
-    className={`min-h-screen bg-white dark:bg-gray-900 ${className}`}
+    className={`min-h-screen ${className}`}
   >
     {/* Page Header */}
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-lunaNavy dark:text-gray-100">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-lunaNavy/70 dark:text-gray-400 mt-2">{subtitle}</p>
-          )}
-        </div>
-        {actions && (
-          <div className="flex items-center space-x-4">{actions}</div>
-        )}
-      </div>
-    </div>
+    <PageHeader title={title} subtitle={subtitle} actions={actions} />
 
     {/* Page Content */}
-    <div className="p-6">{children}</div>
+    <div className="pt-5">{children}</div>
   </motion.div>
 );
 
@@ -140,7 +129,7 @@ export const SmartCard: React.FC<SmartCardProps> = ({
       {...rest}
       dir={isRTL ? "rtl" : "ltr"}
       className={`
-        bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4
+        bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 p-4
         ${clickable ? "cursor-pointer" : ""}
         ${className}
       `}
@@ -184,24 +173,23 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
   ...rest
 }) => {
   const baseClasses =
-    "inline-flex items-center justify-center font-medium rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-1.5 font-medium rounded-md transition-colors duration-100 focus:outline-none focus-visible:shadow-focus disabled:opacity-40 disabled:cursor-default select-none";
 
   const variantClasses = {
-    primary: "bg-sky-600 hover:bg-sky-700 text-white focus:ring-sky-500",
+    primary: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm",
     secondary:
-      "bg-sky-50 dark:bg-sky-900/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 text-sky-700 dark:text-sky-300 focus:ring-sky-500",
-    success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500",
-    warning:
-      "bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500",
-    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
+      "bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/15 border border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-100 shadow-sm",
+    success: "bg-green-500 hover:bg-green-600 text-white shadow-sm",
+    warning: "bg-orange-500 hover:bg-orange-600 text-white shadow-sm",
+    danger: "bg-red-500 hover:bg-red-600 text-white shadow-sm",
     ghost:
-      "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-gray-500",
+      "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300",
   };
 
   const sizeClasses = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: "px-2.5 py-1 text-sm",
+    md: "px-3 py-1.5 text-sm",
+    lg: "px-4 py-2 text-base",
   };
 
   const widthClass = fullWidth ? "w-full" : "";
@@ -217,14 +205,10 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
       type={type}
       {...rest}
     >
-      {loading && <FiLoader className="animate-spin mr-2 w-4 h-4" />}
-      {!loading && icon && iconPosition === "left" && (
-        <span className={`${children ? "mr-2" : ""}`}>{icon}</span>
-      )}
+      {loading && <FiLoader className="animate-spin w-3.5 h-3.5" />}
+      {!loading && icon && iconPosition === "left" && icon}
       {children}
-      {!loading && icon && iconPosition === "right" && (
-        <span className={`${children ? "ml-2" : ""}`}>{icon}</span>
-      )}
+      {!loading && icon && iconPosition === "right" && icon}
     </motion.button>
   );
 };
@@ -251,27 +235,27 @@ export const KPICard: React.FC<KPICardProps> = ({
   color = "blue",
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
-    green: "bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400",
-    yellow: "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
-    red: "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400",
-    purple: "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
+    blue: "text-blue-600 dark:text-blue-500",
+    green: "text-green-600 dark:text-green-500",
+    yellow: "text-orange-500",
+    red: "text-red-500",
+    purple: "text-purple-500",
   };
 
   const trendColors = {
-    up: "text-green-600 dark:text-green-400",
-    down: "text-red-600 dark:text-red-400",
-    neutral: "text-gray-600 dark:text-gray-400",
+    up: "text-green-600 dark:text-green-500",
+    down: "text-red-500",
+    neutral: "text-gray-500 dark:text-gray-400",
   };
 
   return (
     <SmartCard className="relative overflow-hidden">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex-1 text-start">
-          <p className="text-sm font-medium text-lunaNavy/70 dark:text-gray-400 mb-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {title}
           </p>
-          <p className="text-xl font-bold text-lunaNavy dark:text-gray-100">
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">
             {value}
           </p>
           {change && (
@@ -283,7 +267,7 @@ export const KPICard: React.FC<KPICardProps> = ({
           )}
         </div>
         <div
-          className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center flex-shrink-0`}
+          className={`${colorClasses[color]} flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4`}
         >
           {icon}
         </div>
@@ -303,7 +287,7 @@ export const SmartTable: React.FC<SmartTableProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}
+    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 overflow-hidden ${className}`}
   >
     {children}
   </div>
@@ -320,7 +304,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   className = "",
 }) => (
   <div
-    className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 ${className}`}
+    className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 p-3 ${className}`}
   >
     {children}
   </div>
@@ -371,14 +355,14 @@ export const Section: React.FC<SectionProps> = ({
   <div className={`space-y-4 ${className}`}>
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-lunaNavy dark:text-gray-100">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-lunaNavy/70 dark:text-gray-400 mt-1">{subtitle}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
         )}
       </div>
-      {actions && <div className="flex items-center space-x-3">{actions}</div>}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
     {children}
   </div>
@@ -390,7 +374,7 @@ export const SmartLoading: React.FC<{ message?: string }> = ({
 }) => (
   <div className="flex items-center justify-center p-6">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-3"></div>
+      <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300 mx-auto mb-2"></div>
       <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
     </div>
   </div>
@@ -411,13 +395,11 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => (
   <div className="text-center py-8">
-    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-3">
-      <div className="text-lunaNavy/60 dark:text-gray-400 text-xl">{icon}</div>
-    </div>
-    <h3 className="text-lg font-semibold text-lunaNavy dark:text-gray-100 mb-2">
+    <div className="text-gray-400 dark:text-gray-500 text-3xl flex justify-center mb-3">{icon}</div>
+    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
       {title}
     </h3>
-    <p className="text-lunaNavy/70 dark:text-gray-400 mb-4 max-w-md mx-auto">
+    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-md mx-auto">
       {description}
     </p>
     {action && <div className="flex justify-center">{action}</div>}

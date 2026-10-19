@@ -265,7 +265,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           onClick={handleSave}
           loading={loading}
           disabled={!isFormValid || loading}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+          className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
           {loading ? "Creating Task..." : "Create Task"}
         </SmartButton>
@@ -295,11 +295,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4"
+            className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4"
           >
             <div className="flex items-center space-x-2 mb-3">
               <FiZap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Smart Recommendations
               </h3>
               <div className="flex items-center space-x-1 bg-purple-100 px-2 py-1 rounded-full">
@@ -330,10 +330,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Task Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
               <FiSettings className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Task Details
             </h3>
           </div>
@@ -381,10 +381,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Priority & Assignment Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600">
               <FiUser className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Priority & Assignment
             </h3>
           </div>
@@ -440,10 +440,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {/* Schedule & Organization Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
               <FiCalendar className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Schedule & Organization
             </h3>
           </div>
@@ -485,10 +485,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         {recentTasks.length > 0 && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-teal-500 to-teal-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-teal-500 to-teal-600">
                 <FiTrendingUp className="h-5 w-5 text-white" />
               </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Recent Similar Tasks
             </h3>
             </div>

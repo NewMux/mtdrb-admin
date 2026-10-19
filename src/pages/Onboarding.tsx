@@ -540,7 +540,7 @@ export default function Onboarding() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Step Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
+          <div className="bg-gradient-to-b from-blue-600 to-blue-700 px-8 py-6 text-white">
             <div className="flex items-center space-x-4">
               {steps[currentStep].icon}
               <div>

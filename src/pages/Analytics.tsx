@@ -127,6 +127,7 @@ import {
 } from "../components/analytics/modals";
 import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
 
 type AnalyticsView =
   | "overview"
@@ -1250,18 +1251,11 @@ export default function Analytics() {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-start">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              📊 Smart Analytics Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Smart-powered insights • Real-time data • Actionable reports
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title={t("analytics.title")}
+        subtitle={t("analytics.pageSubtitle")}
+        actions={
+          <>
             <button
               onClick={() =>
                 setModalState((prev) => ({ ...prev, export: true }))
@@ -1271,9 +1265,9 @@ export default function Analytics() {
               <FiDownload className="w-4 h-4" />
               <span>{t("analytics.export")}</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -1362,33 +1356,32 @@ export default function Analytics() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                activeView === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
+      <div role="tablist" className="mac-segmented max-w-full overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeView === tab.id}
+            onClick={() => setActiveView(tab.id)}
+            className={`mac-segment whitespace-nowrap ${
+              activeView === tab.id ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {renderActiveView()}
         </motion.div>

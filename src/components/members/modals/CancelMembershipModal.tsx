@@ -213,7 +213,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
             {/* Member Info Card */}
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-600">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-lg">
                     {memberName
                       .split(" ")

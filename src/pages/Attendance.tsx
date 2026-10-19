@@ -25,6 +25,7 @@ import {
   type AttendanceMethod,
   type AttendanceSnapshot,
 } from "../api/attendance";
+import { PageHeader } from "../components/ui/PageHeader";
 
 const methodOptions: Array<{
   value: AttendanceMethod;
@@ -196,31 +197,24 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-10" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
-            {t("attendance.eyebrow", "Operations")}
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {t("attendance.title", "Attendance")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-gray-600 dark:text-gray-400">
-            {t(
-              "attendance.subtitle",
-              "Run a device-agnostic check-in desk today, then connect vendor terminals when your gym needs them.",
-            )}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void loadSnapshot(false)}
-          disabled={refreshing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-sky-500 dark:hover:text-sky-300"
-        >
-          <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
-          {t("attendance.refresh", "Refresh")}
-        </button>
-      </div>
+      <PageHeader
+        title={t("attendance.title", "Attendance")}
+        subtitle={t(
+          "attendance.subtitle",
+          "Run a device-agnostic check-in desk today, then connect vendor terminals when your gym needs them.",
+        )}
+        actions={
+          <button
+            type="button"
+            onClick={() => void loadSnapshot(false)}
+            disabled={refreshing}
+            className="btn btn-secondary"
+          >
+            <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {t("attendance.refresh", "Refresh")}
+          </button>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -245,7 +239,7 @@ const Attendance: React.FC = () => {
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("attendance.kioskTitle", "Check in a member")}
               </h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -343,7 +337,7 @@ const Attendance: React.FC = () => {
               {selectedMember ? (
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-300">{t("attendance.selectedMember", "Selected member")}</p>
+                    <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">{t("attendance.selectedMember", "Selected member")}</p>
                     <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{buildMemberName(selectedMember)}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{selectedMember.email || selectedMember.phone}</p>
                   </div>
@@ -379,24 +373,24 @@ const Attendance: React.FC = () => {
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.integrationTitle", "Integration readiness")}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.integrationTitle", "Integration readiness")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("attendance.integrationDescription", "Start with universal methods. Add vendor connectors when your gym needs them.")}</p>
               </div>
               <FiWifi className="h-6 w-6 text-sky-500" />
             </div>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.devices", "Check-in points")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.devices", "Check-in points")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{snapshot?.devices.length ?? 0}</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.devicesDescription", "Kiosks and terminals")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.connectors", "Connectors")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.connectors", "Connectors")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{connectorState}</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.connectorsDescription", "Vendor-ready foundation")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.fallback", "Fallback")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.fallback", "Fallback")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">QR + PIN</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.fallbackDescription", "Works without hardware")}</p>
               </div>
@@ -406,7 +400,7 @@ const Attendance: React.FC = () => {
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{selectedMember ? buildMemberName(selectedMember) : t("attendance.memberHistoryHint", "Select a member to view recent activity")}</p>
               </div>
               <FiClock className="h-5 w-5 text-gray-400" />
@@ -431,7 +425,7 @@ const Attendance: React.FC = () => {
       <section className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.recentActivity", "Recent attendance activity")}</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.recentActivity", "Recent attendance activity")}</h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("attendance.recentActivityDescription", "Every source is normalized into one tenant-scoped event stream.")}</p>
           </div>
           <span className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
@@ -444,7 +438,7 @@ const Attendance: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-800/70">
               <tr>
                 {[t("attendance.member", "Member"), t("attendance.branch", "Branch"), t("attendance.method", "Method"), t("attendance.direction", "Direction"), t("attendance.time", "Time")].map((heading, index) => (
-                  <th key={`${heading}-${index}`} className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{heading}</th>
+                  <th key={`${heading}-${index}`} className="px-6 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">{heading}</th>
                 ))}
               </tr>
             </thead>

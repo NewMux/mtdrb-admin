@@ -473,7 +473,7 @@ const PerformanceSummaryCards: React.FC<{ data: typeof emptyTaskAnalyticsData }>
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{card.subtitle}</p>
             </div>
@@ -566,7 +566,7 @@ const TasksOverTimeChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         📈 {t("tasks.tasksOverTime")}
       </h3>
       <div className="h-80">
@@ -630,7 +630,7 @@ const CompletionTrendChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         📊 {t("tasks.completionTrend")}
       </h3>
       <div className="h-80">
@@ -684,7 +684,7 @@ const StatusBreakdownChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> = 
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         🥧 {t("tasks.statusBreakdown")}
       </h3>
       <div className="h-80">
@@ -738,7 +738,7 @@ const PriorityDistributionChart: React.FC<{ data: typeof emptyTaskAnalyticsData 
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         🎯 {t("tasks.priorityDistribution")}
       </h3>
       <div className="h-80">
@@ -797,7 +797,7 @@ const StaffProductivityChart: React.FC<{ data: typeof emptyTaskAnalyticsData }> 
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         👥 {t("tasks.staffProductivity")}
       </h3>
       <div className="h-80">
@@ -889,7 +889,7 @@ const TeamInsightsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = ({ 
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{insight.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{insight.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{insight.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{insight.subtitle}</p>
           </div>
@@ -977,7 +977,7 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{risk.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{risk.value}</h3>
             <p className="text-sm font-semibold text-gray-900 dark:text-white">{risk.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{risk.subtitle}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{risk.description}</p>
@@ -1436,7 +1436,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
         <>
           {/* Performance Summary */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               📊 {t("tasks.performanceSummary")}
             </h2>
             <PerformanceSummaryCards data={analyticsData} />
@@ -1444,7 +1444,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
           {/* Visualizations */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               📈 {t("tasks.visualizations")}
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1458,7 +1458,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
           {/* Team & Individual Insights */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               🔍 {t("tasks.teamInsights")}
             </h2>
             <TeamInsightsCards data={analyticsData} />
@@ -1466,7 +1466,7 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
           {/* Risk & Bottleneck Indicators */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               ⚠️ {t("tasks.riskIndicators")}
             </h2>
             <RiskIndicatorsCards data={analyticsData} />

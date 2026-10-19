@@ -20,6 +20,7 @@ import {
 import { api } from "../api/client";
 import { Branch } from "../types";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
 
 type ModalType = "add" | "edit" | "delete" | "view" | null;
 
@@ -151,18 +152,11 @@ const Branches: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-start">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t("branches.branchManagement") || "Branch Management"}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t("branches.manageBranchesDesc") || "Manage your gym branches and locations"}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title={t("branches.branchManagement") || "Branch Management"}
+        subtitle={t("branches.manageBranchesDesc") || "Manage your gym branches and locations"}
+        actions={
+          <>
             <button
               onClick={handleRefresh}
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
@@ -177,9 +171,9 @@ const Branches: React.FC = () => {
               <FiPlus className="w-4 h-4" />
               <span>{t("branches.addBranch") || "Add Branch"}</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -263,7 +257,7 @@ const Branches: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="text-start">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.allBranches") || "All Branches"}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

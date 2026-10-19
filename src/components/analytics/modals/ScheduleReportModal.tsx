@@ -182,7 +182,7 @@ export default function ScheduleReportModal({
   }) {
     return (
       <section className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
           {title}
         </h3>
         <div className="space-y-4">{children}</div>

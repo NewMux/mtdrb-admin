@@ -222,7 +222,7 @@ export default function EditBranchModal({
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
       >
         {loading ? (t("branches.updating") || "Updating...") : (t("branches.updateBranch") || "Update Branch")}
       </SmartButton>
@@ -284,10 +284,10 @@ export default function EditBranchModal({
         {activeSection === 'info' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
                 <FiMapPin className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("branches.branchInformation") || "Branch Information"}
               </h3>
             </div>
@@ -369,11 +369,11 @@ export default function EditBranchModal({
         {activeSection === 'hours' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-emerald-500 to-emerald-600">
                 <FiClock className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   {t("branches.businessHours") || "Business Hours"}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -436,11 +436,11 @@ export default function EditBranchModal({
         {activeSection === 'policies' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
+              <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600">
                 <FiCalendar className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   {t("branches.bookingPolicies") || "Booking Policies"}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

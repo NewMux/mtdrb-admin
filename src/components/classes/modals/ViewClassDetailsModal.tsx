@@ -324,7 +324,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
     >
       <div className="space-y-6">
         {/* Class Header */}
-        <div className="p-6 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl text-white relative overflow-hidden shadow-lg">
+        <div className="p-6 bg-gradient-to-b from-blue-600 to-blue-700 rounded-xl text-white relative overflow-hidden shadow-lg">
           <div className="absolute inset-0 bg-black/5"></div>
           <div className="relative flex items-center justify-between">
             <div>
@@ -332,7 +332,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 <div className="p-2 bg-white/25 rounded-lg backdrop-blur-sm">
                   <FiCalendar className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-white drop-shadow-sm">{classData.name}</h2>
+                <h2 className="text-base font-semibold text-white drop-shadow-sm">{classData.name}</h2>
               </div>
               <p className="text-blue-100 mt-1 font-medium">
                 {new Date(classData.date).toLocaleDateString("en-US", {

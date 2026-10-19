@@ -208,14 +208,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             {/* Current Assignment */}
             {currentTrainer && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <FiUser className="w-5 h-5 text-blue-600" />
                   <span>{t("members.currentTrainer", "المدرب الحالي")}</span>
                 </h3>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-purple-400 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-medium text-sm">
                         {currentTrainer.avatar}
                       </span>
@@ -250,7 +250,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
             {/* Available Trainers */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <FiUsers className="w-5 h-5 text-blue-600" />
                 <span>{t("members.availableTrainers", "المدربون المتاحون")}</span>
               </h3>
@@ -266,7 +266,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                     } ${!isAvailable(trainer) ? "opacity-50" : ""}`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
                           {trainer.avatar}
                         </span>
@@ -337,14 +337,14 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
 
             {/* Member Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center">
                 <FiTarget className="w-5 h-5 mr-2" />
                 Member Information
               </h3>
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
                     <span className="text-white font-medium text-sm">
                       {member.avatar}
                     </span>

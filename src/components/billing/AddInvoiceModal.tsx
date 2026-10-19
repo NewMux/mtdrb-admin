@@ -378,7 +378,7 @@ export function AddInvoiceModal({
         onClick={handleSubmit(onSubmit)}
         loading={isSubmitting}
         disabled={!isValid || isSubmitting}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
       >
         {isSubmitting
           ? t("billing.saving", "جاري الحفظ...")
@@ -408,10 +408,10 @@ export function AddInvoiceModal({
         {/* Invoice Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 flex-shrink-0">
               <FiDollarSign className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.invoiceDetails", "تفاصيل الفاتورة")}
             </h3>
           </div>
@@ -495,10 +495,10 @@ export function AddInvoiceModal({
         {/* VAT & File Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 flex-shrink-0">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600 flex-shrink-0">
               <FiBarChart2 className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.vatAndFile", "الضريبة والمستندات")}
             </h3>
           </div>
@@ -616,10 +616,10 @@ export function AddInvoiceModal({
         {/* Settings & Notes Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex-shrink-0">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600 flex-shrink-0">
               <FiShield className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
               {t("billing.settingsAndNotes", "الإعدادات والملاحظات")}
             </h3>
           </div>

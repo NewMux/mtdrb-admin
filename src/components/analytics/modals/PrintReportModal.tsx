@@ -234,7 +234,7 @@ export default function PrintReportModal({
   }) {
     return (
       <section className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
           {title}
         </h3>
         <div className="space-y-4">{children}</div>
@@ -434,7 +434,7 @@ export default function PrintReportModal({
             >
               <div className="bg-white border rounded-lg p-6 shadow-sm">
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     {reportName}
                   </h3>
                   <p className="text-sm text-gray-600">

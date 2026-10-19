@@ -432,7 +432,7 @@ const ChartCard: React.FC<{
       className={`bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
         {title}
       </h3>
       {children}
@@ -788,7 +788,7 @@ export default function TrainerPerformanceDashboard({
 
       {/* Performance Overview */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           🎯 {t("trainers.performanceOverview") || "Performance Overview"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -836,7 +836,7 @@ export default function TrainerPerformanceDashboard({
           happened to be selected. Showing that as real per-trainer
           earnings was actively misleading, not just imprecise. */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           📈 {t("trainers.additionalMetrics") || "Additional Metrics"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -852,7 +852,7 @@ export default function TrainerPerformanceDashboard({
 
       {/* Engagement Metrics */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           📊 {t("trainers.engagementMetrics") || "Engagement Metrics"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -892,7 +892,7 @@ export default function TrainerPerformanceDashboard({
 
       {/* Class & Session Types */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           🏋️‍♂️ {t("trainers.classSessionTypes") || "Class & Session Types"}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -967,7 +967,7 @@ export default function TrainerPerformanceDashboard({
 
       {/* Risk & Quality Signals */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           ⚠️ {t("trainers.riskQualitySignals") || "Risk & Quality Signals"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1005,7 +1005,7 @@ export default function TrainerPerformanceDashboard({
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
           📈 {t("trainers.chartsTrends") || "Charts & Trends"}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

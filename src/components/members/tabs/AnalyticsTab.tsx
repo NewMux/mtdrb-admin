@@ -291,7 +291,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ overview }) => {
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -516,7 +516,7 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gender Split */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.genderSplit", "توزيع الجنسين")}
         </h3>
         <div className="h-64">
@@ -526,7 +526,7 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
 
       {/* Age Distribution */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.ageDistribution", "التوزيع العمري")}
         </h3>
         <div className="h-64">
@@ -536,7 +536,7 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
 
       {/* Membership Type Split */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.membershipTypes", "أنواع العضويات")}
         </h3>
         <div className="h-64">
@@ -627,7 +627,7 @@ const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportu
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -832,7 +832,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
     <div className="space-y-6">
       {/* Member Growth Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.memberGrowth", "نمو الأعضاء")}
         </h3>
         <div className="h-80">
@@ -842,7 +842,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
 
       {/* Revenue Trend Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.revenueTrend", "اتجاه الإيرادات")}
         </h3>
         <div className="h-80">
@@ -852,7 +852,7 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
 
       {/* Churn Trend Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.churnTrend", "اتجاه المغادرة")}
         </h3>
         <div className="h-80">
@@ -1283,7 +1283,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Overview Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>🎯</span>
           <span>{t("dashboard.overview", "نظرة عامة")}</span>
         </h2>
@@ -1292,7 +1292,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Engagement Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>📊</span>
           <span>{t("members.memberEngagement", "تفاعل الأعضاء")}</span>
         </h2>
@@ -1301,7 +1301,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Demographic Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>👥</span>
           <span>{t("members.demographics", "البيانات الديموغرافية")}</span>
         </h2>
@@ -1310,7 +1310,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Risk & Opportunity Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>⚠️</span>
           <span>{t("members.riskOpportunity", "المخاطر والفرص")}</span>
         </h2>
@@ -1319,7 +1319,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Revenue Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>💰</span>
           <span>{t("members.revenue", "الإيرادات")}</span>
         </h2>
@@ -1328,7 +1328,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>📈</span>
           <span>{t("analytics.charts", "الرسوم البيانية")}</span>
         </h2>

@@ -137,7 +137,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
   const renderStep1 = () => (
     <div className="space-y-6">
       {/* Current Plan Info */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800">
         <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-4`}>
           <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
             <FiCreditCard className="w-6 h-6 text-white" />
@@ -205,7 +205,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
   const renderStep2 = () => (
     <div className="space-y-6">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
           {t("settings.helpUsImprove", "Help us improve")}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -273,7 +273,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
       </div>
 
       <div className="text-center space-y-2">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
           {t("settings.confirmCancellation", "Confirm Cancellation")}
         </h3>
         <p className="text-gray-500 dark:text-gray-400">

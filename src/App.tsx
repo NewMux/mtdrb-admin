@@ -114,13 +114,11 @@ const App = () => {
                 <SubscriptionProvider>
                   <UIProvider>
                     <Toaster
-                      position="bottom-center"
+                      position="top-right"
+                      containerStyle={{ top: 56, right: 12 }}
                       toastOptions={{
                         duration: 4000,
-                        style: {
-                          background: "#363636",
-                          color: "#fff",
-                        },
+                        className: "mac-toast",
                       }}
                     />
                     <Suspense

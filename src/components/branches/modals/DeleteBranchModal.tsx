@@ -64,7 +64,7 @@ export default function DeleteBranchModal({
         variant="danger"
         onClick={handleDelete}
         loading={loading}
-        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+        className="bg-gradient-to-b from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
       >
         {loading ? (t("branches.deleting") || "Deleting...") : (t("branches.deleteBranch") || "Delete Branch")}
       </SmartButton>
@@ -85,10 +85,10 @@ export default function DeleteBranchModal({
         {/* Warning Message Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-red-500 to-red-600">
               <FiAlertTriangle className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.confirmDelete") || "Confirm Deletion"}
             </h3>
           </div>
@@ -114,10 +114,10 @@ export default function DeleteBranchModal({
         {/* Branch Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
               <FiMapPin className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.branchInformation") || "Branch Information"}
             </h3>
           </div>

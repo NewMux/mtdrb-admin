@@ -508,7 +508,7 @@ export default function SmartVatDashboard({
       {/* Header with Smart Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="text-start">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {t("billing.smartVatDashboard", "لوحة تحكم القيمة المضافة الذكية")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -740,19 +740,19 @@ export default function SmartVatDashboard({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" dir={isRTL ? "rtl" : "ltr"}>
                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
-                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                       {t("billing.date")}
                     </th>
-                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                       {t("billing.status")}
                     </th>
-                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                       {t("billing.reference")}
                     </th>
-                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                       {t("billing.vatAmount")}
                     </th>
-                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                       {t("billing.status")}
                     </th>
                   </tr>
@@ -839,22 +839,22 @@ export default function SmartVatDashboard({
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" dir={isRTL ? "rtl" : "ltr"}>
                   <thead className="bg-gray-50 dark:bg-gray-800/50">
                     <tr>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.period")}
                       </th>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.country")}
                       </th>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.netVat")}
                       </th>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.dueDate")}
                       </th>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.status")}
                       </th>
-                      <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-right'} text-xs font-medium text-gray-500 dark:text-gray-400 uppercase`}>
+                      <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-right'} text-xs font-medium text-gray-500 dark:text-gray-400`}>
                         {t("billing.actions")}
                       </th>
                     </tr>

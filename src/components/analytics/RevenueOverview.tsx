@@ -82,7 +82,7 @@ const ChartPlaceholder = ({
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Loading data...</p>
             </div>
           </div>
@@ -119,7 +119,7 @@ const ChartPlaceholder = ({
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">{data.length} data points</p>
           </div>
         </div>
@@ -220,7 +220,7 @@ const VATSummaryCard = ({
             <FiPieChart className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Tax breakdown for the period
             </p>
@@ -267,7 +267,7 @@ const VATSummaryCard = ({
           <FiPieChart className="w-6 h-6 text-green-600" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">Tax breakdown for the period</p>
         </div>
       </div>
@@ -331,7 +331,7 @@ const TopProductsTable = ({
               <FiPieChart className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Top Products
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Best performing packages</p>
@@ -374,7 +374,7 @@ const TopProductsTable = ({
             <FiPieChart className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Top Products
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Best performing packages</p>
@@ -454,7 +454,7 @@ export default function RevenueOverview({
       {/* Header */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <div className={isRTL ? 'text-right' : 'text-left'}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Revenue Overview</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Revenue Overview</h2>
           <p className="text-gray-600 dark:text-gray-400">
             Track your financial performance across all channels
           </p>

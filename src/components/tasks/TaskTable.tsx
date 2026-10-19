@@ -371,7 +371,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
             >
               <td className="px-6 py-4">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}

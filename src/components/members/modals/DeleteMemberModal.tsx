@@ -86,13 +86,13 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
 
             {/* Member Information */}
             <div className="text-center space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("members.confirmDeleteQuestion", "هل أنت تأكد من رغبتك في حذف هذا العضو؟")}
               </h3>
 
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-b from-gray-400 to-gray-500 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-sm">
                       {(member.name ?? "M")
                         .split(" ")

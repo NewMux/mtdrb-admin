@@ -94,7 +94,7 @@ export default function PerformanceMetricsCard({
           transition={{ duration: 0.3 }}
         >
           {title && (
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {title}
             </h3>
           )}

@@ -332,7 +332,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
             {importedData.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("members.previewMembers", "معاينة ({{count}} عضو)", { count: importedData.length })}
                   </h3>
                   <SmartButton
@@ -347,18 +347,18 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
                 {previewMode && (
                   <div className="max-h-64 overflow-y-auto border border-gray-200border-gray-700 rounded-lg">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50bg-gray-800">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                             Name
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                             Email
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                             Status
                           </th>
-                          <th className="px-4 py-2 text-left text-gray-700text-gray-300">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                             Type
                           </th>
                         </tr>

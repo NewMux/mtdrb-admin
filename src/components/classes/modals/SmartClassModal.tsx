@@ -73,7 +73,7 @@ export const SmartClassModal: React.FC<SmartClassModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     {title && (
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                         {title}
                       </h2>
                     )}

@@ -522,7 +522,7 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -746,7 +746,7 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
 
       {/* Overbooked Classes */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           📈 {t("classes.overbookedClasses")}
         </h3>
         <div className="space-y-3">
@@ -1253,7 +1253,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
     <div className="space-y-6">
       {/* Attendance Trend Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           📈 {t("classes.classAttendanceTrend")}
         </h3>
         <div className="h-80">
@@ -1263,7 +1263,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
 
       {/* Class Type Popularity Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           🏆 {t("classes.classTypePopularity")}
         </h3>
         <div className="h-80">
@@ -1273,7 +1273,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
 
       {/* Trainer Impact Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           👨‍🏫 {t("classes.trainerImpactTrend")}
         </h3>
         <div className="h-80">
@@ -1283,7 +1283,7 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
 
       {/* No-Show Trend Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
           ❌ {t("classes.noShowTrend")}
         </h3>
         <div className="h-80">

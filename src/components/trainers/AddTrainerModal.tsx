@@ -369,7 +369,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
       >
         {loading ? "Adding Trainer..." : "Add Trainer"}
       </SmartButton>
@@ -390,10 +390,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Basic Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-blue-500 to-blue-600">
               <FiUser className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Basic Information
             </h3>
           </div>
@@ -477,10 +477,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Professional Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-green-500 to-green-600">
               <FiTarget className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Professional Information
             </h3>
           </div>
@@ -562,10 +562,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Availability Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-purple-500 to-purple-600">
               <FiClock className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Availability
             </h3>
           </div>
@@ -622,10 +622,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* File Uploads Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-orange-500 to-orange-600">
               <FiUpload className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Documents & Files
             </h3>
           </div>
@@ -769,10 +769,10 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         {/* Additional Information Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-indigo-600">
+            <div className="p-2 rounded-lg bg-gradient-to-b from-indigo-500 to-indigo-600">
               <FiFileText className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Additional Information
             </h3>
           </div>

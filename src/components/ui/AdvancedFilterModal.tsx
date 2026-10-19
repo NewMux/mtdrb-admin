@@ -110,7 +110,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
               <div
                 className={`flex items-center ${isRTL ? "flex-row-reverse" : ""} justify-between`}
               >
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h3>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
                 <button
                   onClick={onClose}
                   className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

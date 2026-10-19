@@ -19,6 +19,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { supabase } from "../supabaseClient";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
 
 const Tasks: React.FC = () => {
   usePageThemeContext();
@@ -157,20 +158,11 @@ const Tasks: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="text-start">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t("tasks.title")}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t("tasks.subtitle")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <AddButton label={t("tasks.addTask")} onClick={handleAddTask} />
-        </div>
-      </div>
+      <PageHeader
+        title={t("tasks.title")}
+        subtitle={t("tasks.subtitle")}
+        actions={<AddButton label={t("tasks.addTask")} onClick={handleAddTask} />}
+      />
 
       {/* Search and Filters */}
       <div className="card p-4">
@@ -219,33 +211,32 @@ const Tasks: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                activeTab === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
+      <div role="tablist" className="mac-segmented max-w-full overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`mac-segment whitespace-nowrap ${
+              activeTab === tab.id ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {activeTab === "overview" && (
             <div className="space-y-6">
@@ -319,7 +310,7 @@ const Tasks: React.FC = () => {
               {/* Task Table */}
               <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-start">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
                     {t("tasks.recentTasks")}
                   </h3>
                   <button className="text-sm text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-medium transition-colors">

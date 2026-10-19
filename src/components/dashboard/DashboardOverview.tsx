@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import {
   FiUsers,
   FiDollarSign,
@@ -314,93 +313,88 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-gray-600 dark:border-gray-600 dark:border-t-gray-300"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {loadError && (
         <div className="text-sm text-red-600 dark:text-red-400">
           {t("dashboard.failedToLoadData", "Failed to load dashboard data")}
         </div>
       )}
 
-      {/* Primary Stats - Enhanced 2x2 Grid with Progress Bars */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {primaryStats.map((stat, index) => {
+      {/* Primary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {primaryStats.map((stat) => {
           const colors = kpiColorMap[stat.color];
           return (
-            <motion.div
+            <div
               key={stat.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
+              dir={isRTL ? "rtl" : "ltr"}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-black/5 dark:border-white/10 text-start"
             >
-              <div 
-                dir={isRTL ? "rtl" : "ltr"}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 text-start"
-              >
-                {/* Header: Icon on start side, Target button on end side */}
-                <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className={`p-3 rounded-xl ${colors.iconBg} ${colors.iconText} flex-shrink-0`}>
+              {/* Label row: glyph + name, target on the trailing edge */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className={`${colors.iconText} flex-shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5`}>
                     {stat.icon}
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowTargetsModal(true);
-                    }}
-                    className="group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-2.5 py-1 transition-all text-start"
-                    title={t("dashboard.targets.setTargets")}
-                    type="button"
-                  >
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("dashboard.target")}</div>
-                      <FiEdit2 className="w-3 h-3 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-end">{stat.target}</div>
-                  </button>
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{stat.name}</span>
                 </div>
-                
-                {/* Value & Name */}
-                <div className="mb-4 text-start">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{stat.name}</div>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2 gap-2">
-                    <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{Math.round(stat.progress)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${colors.progressBar} transition-all duration-300`}
-                      style={{ width: `${Math.min(stat.progress, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-                
-                {/* Footer: Change message & Live indicator */}
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">{stat.change}</span>
-                  <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 flex-shrink-0">
-                    <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
-                    <span className="text-xs font-medium">{t("dashboard.live")}</span>
-                  </div>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowTargetsModal(true);
+                  }}
+                  className="group inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded px-1 -mx-1 flex-shrink-0"
+                  title={t("dashboard.targets.setTargets")}
+                  type="button"
+                >
+                  <span>
+                    {t("dashboard.target")} {stat.target}
+                  </span>
+                  <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
               </div>
-            </motion.div>
+
+              {/* Value */}
+              <div className="mt-2 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
+                {stat.value}
+              </div>
+
+              {/* Meter */}
+              <div className="mt-3 flex items-center gap-2">
+                <div
+                  className="flex-1 bg-black/[0.07] dark:bg-white/10 rounded-full h-1 overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={Math.round(stat.progress)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={t("dashboard.progress")}
+                >
+                  <div
+                    className={`h-1 rounded-full ${colors.progressBar} transition-all duration-300`}
+                    style={{ width: `${Math.min(stat.progress, 100)}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                  {Math.round(stat.progress)}%
+                </span>
+              </div>
+
+              {/* Change vs last period */}
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">{stat.change}</div>
+            </div>
           );
         })}
       </div>
 
       {/* Main Content - Enhanced Single Column Layout */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         <SmartDashboardOverview refreshKey={refreshKey} />
         <BusinessOverview />
         <LiveKPITracker />

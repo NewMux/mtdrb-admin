@@ -40,7 +40,7 @@ const FormSection: React.FC<FormSectionProps> = ({
 }) => (
   <div className="space-y-4">
     <div>
-      <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+      <h3 className="text-base font-semibold text-dark-900 dark:text-white">
         {title}
       </h3>
       {subtitle && (

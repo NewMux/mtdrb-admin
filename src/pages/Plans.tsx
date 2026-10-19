@@ -476,7 +476,7 @@ export default function Plans() {
                   {/* Plan Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">
                         {plan.name}
                       </h3>
                       <p className="text-gray-600 text-sm">
@@ -565,7 +565,7 @@ export default function Plans() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t("plans.popularPlans")}
               </h3>
               <div className="space-y-4">
@@ -610,7 +610,7 @@ export default function Plans() {
 
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t("plans.pricingRecommendations")}
               </h3>
               <div className="space-y-4">

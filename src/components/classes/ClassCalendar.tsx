@@ -351,7 +351,7 @@ const ClassCalendar: React.FC = () => {
           ) : filteredEvents.length === 0 ? (
             <div className="p-12 text-center">
               <FiCalendar className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
                 {t('classes.noClassesScheduled')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -359,7 +359,7 @@ const ClassCalendar: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium"
+                className="px-6 py-3 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium"
               >
                 {t('classes.addYourFirstClass')}
               </button>

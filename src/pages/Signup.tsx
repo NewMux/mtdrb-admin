@@ -202,7 +202,7 @@ export default function Signup() {
   return (
     <div className="min-h-screen w-full flex">
       {/* ===== LEFT COLUMN - BRAND VISUALS ===== */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-b from-blue-600 to-blue-800 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>

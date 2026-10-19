@@ -111,7 +111,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, children }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
-    <h3 className="text-lg font-bold mb-4 tracking-tight">{title}</h3>
+    <h3 className="text-base font-semibold mb-4">{title}</h3>
     <div style={{ height: "300px" }}>{children}</div>
   </div>
 );
@@ -122,7 +122,7 @@ const AiSuggestionCard: React.FC<AiSuggestionCardProps> = ({
   suggestions,
 }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 ease-in-out">
-    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
+    <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
       {icon} {title}
     </h3>
     <ul className="space-y-3">
@@ -148,23 +148,23 @@ const TrainerPerformanceCard: React.FC<TrainerPerformanceCardProps> = ({
   const { t } = useTranslation();
   return (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-    <h3 className="text-lg font-bold mb-4 text-gray-900">
+    <h3 className="text-base font-semibold mb-4 text-gray-900">
       {t("insightsPage.trainerPerformance")}
     </h3>
     <div className="overflow-x-auto">
       <table className="w-full text-sm text-left text-gray-500">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <thead className="text-xs text-gray-700 bg-gray-50">
           <tr>
-            <th scope="col" className="px-6 py-3">
+            <th scope="col" className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("insightsPage.trainer")}
             </th>
-            <th scope="col" className="px-6 py-3">
+            <th scope="col" className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("insightsPage.classes")}
             </th>
-            <th scope="col" className="px-6 py-3">
+            <th scope="col" className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("insightsPage.totalAttendance")}
             </th>
-            <th scope="col" className="px-6 py-3">
+            <th scope="col" className="px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("insightsPage.averageAttendance")}
             </th>
           </tr>
@@ -177,7 +177,7 @@ const TrainerPerformanceCard: React.FC<TrainerPerformanceCardProps> = ({
             >
               <th
                 scope="row"
-                className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                className="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-500 dark:text-gray-400"
               >
                 {trainer.name}
               </th>
@@ -221,7 +221,7 @@ const HeatmapChart: React.FC<{ data: HeatmapData }> = ({ data }) => {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h3 className="text-lg font-bold mb-4">{t("insightsPage.peakTimes")}</h3>
+      <h3 className="text-base font-semibold mb-4">{t("insightsPage.peakTimes")}</h3>
       <div className="flex gap-4">
         <div className="flex flex-col text-xs text-gray-500">
           {hours.map((hour) => (
@@ -482,7 +482,7 @@ export default function Insights() {
 
   return (
     <div className="p-8 bg-gray-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
-      <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">
+      <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">
         {t("insightsPage.title")}
       </h1>
 

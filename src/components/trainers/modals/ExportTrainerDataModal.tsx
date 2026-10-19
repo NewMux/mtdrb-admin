@@ -363,7 +363,7 @@ export default function ExportTrainerDataModal({
       <div className="space-y-6">
         {/* Date Range Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">
             Date Range
           </h3>
           <select
@@ -382,7 +382,7 @@ export default function ExportTrainerDataModal({
         {/* Export Options */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-gray-900">
               Export Options
             </h3>
             <div className="flex items-center gap-2">

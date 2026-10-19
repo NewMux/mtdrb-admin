@@ -144,7 +144,7 @@ export default function EditTrainerModal({
       <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Personal Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
             <FiUser className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <span>{t("trainers.personalInfo", "البيانات الشخصية")}</span>
           </h3>
@@ -231,7 +231,7 @@ export default function EditTrainerModal({
 
         {/* Professional Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <FiTarget className="text-green-500 flex-shrink-0" />
             <span>{t("trainers.professionalInfo", "البيانات المهنية")}</span>
           </h3>
