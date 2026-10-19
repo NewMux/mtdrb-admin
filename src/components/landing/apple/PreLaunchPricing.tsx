@@ -16,13 +16,13 @@ const PreLaunchPricing: React.FC = () => {
   const plans = [
     {
       name: "Starter",
-      monthlyPrice: 80,
-      yearlyPrice: 65,
+      monthlyPrice: 20,
+      yearlyPrice: 17,
       description: "Perfect for single-location gyms",
       features: [
         "All core features",
         "Single location",
-        "+$20 USD/month per extra location",
+        "+20 BHD/month per extra location",
         "Basic analytics",
         "Email support",
       ],
@@ -30,12 +30,12 @@ const PreLaunchPricing: React.FC = () => {
     },
     {
       name: "Pro",
-      monthlyPrice: 130,
-      yearlyPrice: 105,
+      monthlyPrice: 35,
+      yearlyPrice: 29,
       description: "For growing gym chains",
       features: [
         "Everything in Starter",
-        "$10 USD/month per extra location",
+        "10 BHD/month per extra location",
         "Unlimited members",
         "Advanced analytics",
         "Priority support",
@@ -209,7 +209,7 @@ const PreLaunchPricing: React.FC = () => {
 
                 <div className="mb-4 sm:mb-6">
                   <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-lunaNavy">
-                    ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                    BHD {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
                   <span className="text-lunaNavy/50 ml-2 text-lg sm:text-xl">
                     /month

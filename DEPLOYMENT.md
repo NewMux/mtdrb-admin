@@ -142,6 +142,18 @@ Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
   automatically to every Edge Function; nothing to set.
 
+**Pricing and currency.** Platform plans are BHD 20/month (Starter) and
+BHD 35/month (Pro). The in-app/landing prices come from `VITE_STARTER_PRICE`,
+`VITE_PRO_PRICE` and `VITE_PLATFORM_CURRENCY` (defaults 20 / 35 / BHD) — if you
+set those in Vercel, update them there too or the old values keep showing.
+BHD has **3 decimals**, so Paddle amounts are in fils (BHD 20 = `"20000"`); the
+seed script and `paddle-webhook` both account for this. **Unverified:** whether
+your Paddle account accepts BHD as a price currency and how it reports the
+amount — confirm in the sandbox (`PADDLE_BASE_CURRENCY=USD` is the fallback for
+the seed script) before opening checkout. Existing Paddle prices must be
+recreated or replaced (Paddle prices are immutable in amount) and the
+`*_PRICE_ID` vars updated.
+
 Set up in Paddle's dashboard before this can go live: create the Starter
 and Pro products/prices (sandbox first), point a webhook notification
 destination at `paddle-webhook`'s deployed URL subscribed to at least

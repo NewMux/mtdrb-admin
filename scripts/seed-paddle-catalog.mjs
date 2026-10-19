@@ -1,6 +1,12 @@
 // One-time setup script: creates MTDRB's Starter/Pro products and prices
-// (monthly + annual, USD, 7-day trial, with GB/IE/AU price overrides) in a
+// (monthly + annual, BHD by default, 7-day trial, no country overrides) in a
 // Paddle Billing account via its REST API.
+//
+// UNVERIFIED: whether Paddle accepts BHD (a 3-decimal currency) as a catalog
+// currency, and what "smallest unit" means for it, could not be checked from
+// the session that wrote this (no paddle-docs access). Run it against sandbox
+// first; if Paddle rejects the currency the API error is printed and nothing
+// is silently mis-priced. Override with PADDLE_BASE_CURRENCY=USD etc.
 //
 // This session's network egress is policy-blocked from reaching Paddle's
 // API directly (confirmed: the proxy itself returns 403 on the CONNECT,
@@ -38,29 +44,38 @@ if (ENVIRONMENT === "sandbox" && !PADDLE_API_KEY.includes("_sdbx")) {
   );
 }
 
-// Country overrides are starting points -- adjust after reviewing them in
-// the Paddle dashboard. Annual override amounts follow the same ~10x
-// (two-months-free) ratio as the USD base prices below.
-const COUNTRY_OVERRIDES = {
-  GB: { currency: "GBP", monthly: { starter: "7000", pro: "11500" }, annual: { starter: "70000", pro: "115000" } },
-  IE: { currency: "EUR", monthly: { starter: "7500", pro: "12000" }, annual: { starter: "75000", pro: "120000" } },
-  AU: { currency: "AUD", monthly: { starter: "12000", pro: "19000" }, annual: { starter: "120000", pro: "190000" } },
-};
+const BASE_CURRENCY = (process.env.PADDLE_BASE_CURRENCY || "BHD").toUpperCase();
 
+// Decimal places per currency (ISO 4217). Paddle amounts are strings in the
+// currency's smallest unit, so BHD 20.000 is "20000", not "2000".
+const THREE_DECIMAL = new Set(["BHD", "KWD", "OMR", "JOD", "TND"]);
+const ZERO_DECIMAL = new Set(["JPY", "KRW", "VND", "CLP", "ISK"]);
+
+function toMinorUnits(amount, currency) {
+  const decimals = ZERO_DECIMAL.has(currency) ? 0 : THREE_DECIMAL.has(currency) ? 3 : 2;
+  return String(Math.round(amount * 10 ** decimals));
+}
+
+// Country price overrides were removed: they were USD-era starting points
+// (GBP 70, EUR 75, AUD 120 for Starter) that make no sense next to BHD 20.
+// Add overrides in the Paddle dashboard once you've decided regional pricing.
+const COUNTRY_OVERRIDES = {};
+
+// Annual = 10x monthly (two months free), the same ratio as before.
 const PLANS = [
   {
     id: "starter",
     name: "Starter",
     description: "Perfect for single-location gyms",
-    monthlyAmount: "8000", // USD 80.00
-    annualAmount: "80000", // USD 800.00 (2 months free)
+    monthly: 20, // BHD 20 / month
+    annual: 200,
   },
   {
     id: "pro",
     name: "Pro",
     description: "Everything in Starter & scale your gym",
-    monthlyAmount: "13000", // USD 130.00
-    annualAmount: "130000", // USD 1,300.00 (2 months free)
+    monthly: 35, // BHD 35 / month
+    annual: 350,
   },
 ];
 
@@ -96,7 +111,7 @@ function buildOverrides(period, planId) {
 
 async function createPrice(productId, plan, period) {
   const isMonthly = period === "monthly";
-  const amount = isMonthly ? plan.monthlyAmount : plan.annualAmount;
+  const amount = toMinorUnits(isMonthly ? plan.monthly : plan.annual, BASE_CURRENCY);
 
   const price = await paddleFetch("/prices", {
     product_id: productId,
@@ -104,7 +119,7 @@ async function createPrice(productId, plan, period) {
     billing_cycle: { interval: isMonthly ? "month" : "year", frequency: 1 },
     trial_period: TRIAL_PERIOD,
     tax_mode: "account_setting",
-    unit_price: { amount, currency_code: "USD" },
+    unit_price: { amount, currency_code: BASE_CURRENCY },
     unit_price_overrides: buildOverrides(period, plan.id),
   });
 

@@ -156,7 +156,7 @@ const Pricing: React.FC = () => {
 
                 <div className="mb-4 sm:mb-6">
                   <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900">
-                    ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
+                    BHD {isYearly ? plan.yearlyPrice : plan.monthlyPrice}
                   </span>
                   <span className="text-gray-500 ml-2 text-lg sm:text-xl">
                     /month

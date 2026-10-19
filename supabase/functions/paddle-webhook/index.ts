@@ -48,6 +48,14 @@ function mapStatus(paddleStatus: string): string {
   return "cancelled";
 }
 
+// Decimal places of a currency's smallest unit (ISO 4217).
+function currencyDecimals(currency: string | undefined): number {
+  const code = (currency ?? "").toUpperCase();
+  if (["BHD", "KWD", "OMR", "JOD", "TND"].includes(code)) return 3;
+  if (["JPY", "KRW", "VND", "CLP", "ISK"].includes(code)) return 0;
+  return 2;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -135,11 +143,16 @@ async function syncSubscription(
   const status = mapStatus(paddleStatus);
   const nextBilledAt = typeof data.next_billed_at === "string" ? data.next_billed_at : null;
 
-  // Paddle returns unit_price.amount as a string in the smallest currency
-  // unit (e.g. "8000" = 80.00 for a 2-decimal currency like BHD/USD).
+  // Paddle returns unit_price.amount as a string in the currency's smallest
+  // unit. Most currencies have 2 decimals, but BHD/KWD/OMR/JOD/TND have 3 and
+  // JPY/KRW have 0, so dividing by a fixed 100 would store BHD 20.000 as 200.
+  // UNVERIFIED against live Paddle BHD deliveries - confirm with a sandbox
+  // subscription before relying on the stored amount.
   const unitPrice = price?.unit_price as Record<string, unknown> | undefined;
-  const amount = typeof unitPrice?.amount === "string" ? Number(unitPrice.amount) / 100 : null;
   const currencyCode = typeof unitPrice?.currency_code === "string" ? unitPrice.currency_code : undefined;
+  const amount = typeof unitPrice?.amount === "string"
+    ? Number(unitPrice.amount) / 10 ** currencyDecimals(currencyCode)
+    : null;
 
   const { error } = await serviceClient
     .from("platform_subscriptions")

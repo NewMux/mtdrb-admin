@@ -23,7 +23,7 @@ export const DEFAULT_CURRENCY = readEnv("VITE_DEFAULT_CURRENCY") || "USD";
 export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
-  readEnv("VITE_PLATFORM_CURRENCY") || DEFAULT_CURRENCY || "USD";
+  readEnv("VITE_PLATFORM_CURRENCY") || "BHD";
 export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 20);
 export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 10);
 
@@ -43,7 +43,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "starter",
     name: readEnv("VITE_STARTER_PLAN_NAME") || "Starter",
-    price: readNumber("VITE_STARTER_PRICE", 80),
+    price: readNumber("VITE_STARTER_PRICE", 20),
     period: "month",
     currency: PLATFORM_CURRENCY,
     description: "Perfect for single-location gyms",
@@ -60,7 +60,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "pro",
     name: readEnv("VITE_PRO_PLAN_NAME") || "Pro",
-    price: readNumber("VITE_PRO_PRICE", 130),
+    price: readNumber("VITE_PRO_PRICE", 35),
     period: "month",
     currency: PLATFORM_CURRENCY,
     description: "Everything in Starter & scale your gym",
