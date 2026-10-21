@@ -337,7 +337,7 @@ select has_table_privilege('postgres', 'auth.sessions', 'select')    as sessions
        has_table_privilege('postgres', 'auth.mfa_factors', 'select') as factors_readable;
 
 -- 2. Nothing platform-related is callable by anon; only the client RPCs by authenticated
---    (8 from the console migration + 8 from the gym/user controls migration = 16).
+--    (8 from the console migration + 8 from the gym/user controls migration + 1 from the provisioning migration = 17).
 select p.proname,
        has_function_privilege('anon', p.oid, 'execute')          as anon,
        has_function_privilege('authenticated', p.oid, 'execute') as authenticated
@@ -357,12 +357,13 @@ If the console shows "Could not check your access", re-run query 1.
 ### Gym and user controls (`20261021150000_platform_admin_gym_and_user_controls.sql`)
 
 Run after applying it. Query 2 above should now show `authenticated = true` for
-exactly these 16 functions: `platform_admin_status`, `platform_overview`,
+exactly these 17 functions (the 17th, `platform_provision_gym`, comes from
+`20261021170000_platform_admin_provision_gym.sql`): `platform_admin_status`, `platform_overview`,
 `platform_list_tenants`, `platform_tenant_detail`, `platform_list_audit_log`,
 `platform_grant_access`, `platform_revoke_access`, `platform_add_note`,
 `platform_suspend_gym`, `platform_unsuspend_gym`, `platform_delete_gym`,
 `platform_ban_user`, `platform_unban_user`, `platform_reset_user_mfa`,
-`platform_change_user_role`, `platform_delete_user`. Everything else
+`platform_change_user_role`, `platform_delete_user`, `platform_provision_gym`. Everything else
 (`platform_assert_manageable_user`, `platform_user_single_tenant`, the other
 helpers) must be `false` for both `anon` and `authenticated`.
 
@@ -381,6 +382,15 @@ select has_table_privilege('postgres', 'auth.users', 'update')     as can_ban,
 -- the audit log accepts the new actions
 select pg_get_constraintdef(oid) from pg_constraint where conname = 'platform_audit_log_action_check';
 ```
+
+Invite flow (after deploying `platform-invite-gym` and setting its secrets; see
+`DEPLOYMENT.md`, "Create a gym and invite its admin"): from *Gyms → Invite a gym*,
+invite a mailbox you control. You should be taken to the new gym's page showing
+*Complimentary* access; the email arrives; its link opens `/reset-password`; after
+setting a password you reach the dashboard. *Recent changes* shows both
+"Granted … access" and "Created gym and invited …". Inviting the same email again
+must be refused with "already has an account", and a non-owner calling the
+function (or the RPC) must get a generic "You do not have access to this."
 
 Manual pass on a throwaway gym: suspend it (its staff can no longer sign in),
 unsuspend it, ban and unban one staff member, change a role, then delete the

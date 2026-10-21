@@ -50,7 +50,8 @@ CREATE TABLE auth.users (
   raw_user_meta_data jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now(),
   last_sign_in_at timestamptz,
-  banned_until timestamptz
+  banned_until timestamptz,
+  invited_at timestamptz
 );
 
 CREATE TABLE auth.sessions (

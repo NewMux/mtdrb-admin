@@ -234,7 +234,9 @@ DECLARE
     -- 20261021150000_platform_admin_gym_and_user_controls.sql
     'platform_suspend_gym', 'platform_unsuspend_gym', 'platform_delete_gym',
     'platform_ban_user', 'platform_unban_user', 'platform_reset_user_mfa',
-    'platform_change_user_role', 'platform_delete_user'
+    'platform_change_user_role', 'platform_delete_user',
+    -- 20261021170000_platform_admin_provision_gym.sql
+    'platform_provision_gym'
   ];
   seen integer := 0;
 BEGIN
