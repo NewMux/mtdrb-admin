@@ -187,8 +187,8 @@ async function main() {
   console.log("- Neither price has a trial period (MTDRB has no free trial).");
   console.log("- Nothing was created twice if you re-run this script (it does not");
   console.log("  check for existing products first -- re-running will duplicate them).");
-  console.log("- The paddle-webhook function divides unit_price.amount by 100; that is");
-  console.log("  wrong for a 3-decimal currency like BHD (see its amount handling).");
+  console.log("- After a sandbox checkout, platform_subscriptions.amount shows 20 / 35");
+  console.log("  (paddle-webhook converts by the currency's decimals; see money.ts).");
 }
 
 main().catch((error) => {
