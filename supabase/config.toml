@@ -11,3 +11,10 @@
 # true, the platform's own JWT gate can intercept a request before the
 # function's code ever runs.
 verify_jwt = false
+
+[functions.platform-invite-gym]
+# Called from the browser by a signed-in platform owner. verify_jwt stays off
+# so the CORS preflight (which carries no Authorization header) reaches the
+# function; the function verifies the caller's JWT itself and requires a fully
+# verified platform admin (allowlist + MFA) before it does anything.
+verify_jwt = false

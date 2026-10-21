@@ -326,6 +326,11 @@ export function describeAuditEntry(entry: PlatformAuditEntry): {
         detail: details.reason ?? null,
       };
     }
+    case "create_gym":
+      return {
+        title: `Created gym and invited ${details.admin_email ?? "an admin"}`,
+        detail: details.reason ?? null,
+      };
     case "ban_user":
       return { title: `Banned ${details.email ?? "a user"}`, detail: details.reason ?? null };
     case "unban_user":

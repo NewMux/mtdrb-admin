@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 const listTenants = vi.fn();
-vi.mock("../../../api/platformAdmin", () => ({ listTenants: (...a: unknown[]) => listTenants(...a) }));
+const inviteGym = vi.fn();
+vi.mock("../../../api/platformAdmin", () => ({
+  listTenants: (...a: unknown[]) => listTenants(...a),
+  inviteGym: (...a: unknown[]) => inviteGym(...a),
+}));
+vi.mock("react-hot-toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 import Tenants from "../Tenants";
 
@@ -73,5 +78,23 @@ describe("Tenants", () => {
     listTenants.mockRejectedValue(new Error("boom"));
     renderAt("/");
     expect(await screen.findByRole("alert")).toHaveTextContent("boom");
+  });
+
+  it("invites a gym from the list and lands on the new gym's page", async () => {
+    inviteGym.mockResolvedValue({ tenantId: "t77", userId: "u77", email: "sara@iron.dev" });
+    render(
+      <MemoryRouter initialEntries={["/superadmin/tenants"]}>
+        <Routes>
+          <Route path="/superadmin/tenants" element={<Tenants />} />
+          <Route path="/superadmin/tenants/:id" element={<p>NEW GYM PAGE</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Invite a gym" }));
+    fireEvent.change(screen.getByLabelText("Gym name"), { target: { value: "Iron Temple" } });
+    fireEvent.change(screen.getByLabelText("Admin email"), { target: { value: "sara@iron.dev" } });
+    fireEvent.change(screen.getByLabelText(/reason/i), { target: { value: "Founding customer" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    expect(await screen.findByText("NEW GYM PAGE")).toBeInTheDocument();
   });
 });

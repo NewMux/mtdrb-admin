@@ -10,6 +10,7 @@ import {
   FiSlash,
   FiTrash2,
   FiUserCheck,
+  FiUserPlus,
   FiUserX,
 } from "react-icons/fi";
 import type { PlatformAuditEntry } from "../../types/platformAdmin";
@@ -27,6 +28,7 @@ const ICON = {
   reset_mfa: FiShield,
   change_role: FiRepeat,
   delete_user: FiLock,
+  create_gym: FiUserPlus,
 } as const;
 
 interface AuditListProps {

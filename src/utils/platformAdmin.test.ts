@@ -273,6 +273,13 @@ describe("describeAuditEntry", () => {
     expect(describeAuditEntry({ ...base, action: "delete_user", details: { email: "sam@x.dev", reassigned: {} } }).detail).toBeNull();
   });
 
+  it("summarises a created gym", () => {
+    expect(describeAuditEntry({ ...base, action: "create_gym", details: { admin_email: "sara@x.dev", reason: "Founding" } })).toEqual({
+      title: "Created gym and invited sara@x.dev",
+      detail: "Founding",
+    });
+  });
+
   it("never throws on an action it does not know", () => {
     expect(describeAuditEntry({ ...base, action: "future_thing" as never, details: {} })).toEqual({ title: "future_thing", detail: null });
   });

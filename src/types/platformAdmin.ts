@@ -90,6 +90,10 @@ export interface PlatformAuditEntry {
     kept_users?: number;
     /** reset_mfa */
     factors_removed?: number;
+    /** create_gym */
+    admin_email?: string;
+    plan_tier?: string;
+    until?: string | null;
   };
 }
 
@@ -104,7 +108,8 @@ export type PlatformAuditAction =
   | "unban_user"
   | "reset_mfa"
   | "change_role"
-  | "delete_user";
+  | "delete_user"
+  | "create_gym";
 
 /** The only roles a gym membership can hold (memberships.role CHECK). */
 export type GymRole = "admin" | "employee" | "trainer";
@@ -185,4 +190,19 @@ export interface GrantAccessParams {
   /** ISO timestamp, or null for no expiry. */
   until: string | null;
   reason: string;
+}
+
+export interface InviteGymParams {
+  gymName: string;
+  adminEmail: string;
+  planTier: PlanTier;
+  /** ISO timestamp, or null for no expiry. */
+  until: string | null;
+  reason: string;
+}
+
+export interface InviteGymResult {
+  tenantId: string;
+  userId: string;
+  email: string;
 }
