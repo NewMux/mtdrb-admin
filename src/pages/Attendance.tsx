@@ -1,13 +1,10 @@
 import React from "react";
 import {
-  FiActivity,
-  FiCheckCircle,
   FiClock,
   FiMapPin,
   FiRefreshCw,
   FiSearch,
   FiShield,
-  FiUsers,
   FiWifi,
   FiX,
 } from "react-icons/fi";
@@ -25,6 +22,8 @@ import {
   type AttendanceMethod,
   type AttendanceSnapshot,
 } from "../api/attendance";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatStrip } from "../components/ui/StatStrip";
 
 const methodOptions: Array<{
   value: AttendanceMethod;
@@ -196,63 +195,49 @@ const Attendance: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-10" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
-            {t("attendance.eyebrow", "Operations")}
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {t("attendance.title", "Attendance")}
-          </h1>
-          <p className="mt-2 max-w-2xl text-gray-600 dark:text-gray-400">
-            {t(
-              "attendance.subtitle",
-              "Run a device-agnostic check-in desk today, then connect vendor terminals when your gym needs them.",
-            )}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void loadSnapshot(false)}
-          disabled={refreshing}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-sky-300 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-sky-500 dark:hover:text-sky-300"
-        >
-          <FiRefreshCw className={refreshing ? "animate-spin" : ""} />
-          {t("attendance.refresh", "Refresh")}
-        </button>
-      </div>
+      <PageHeader
+        title={t("attendance.title", "Attendance")}
+        subtitle={t(
+          "attendance.subtitle",
+          "Run a device-agnostic check-in desk today, then connect vendor terminals when your gym needs them.",
+        )}
+        actions={
+          <button
+            type="button"
+            onClick={() => void loadSnapshot(false)}
+            disabled={refreshing}
+            className="btn btn-secondary"
+          >
+            <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {t("attendance.refresh", "Refresh")}
+          </button>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { label: t("attendance.eventsToday", "Events today"), value: metrics.eventsToday, icon: FiActivity, accent: "text-sky-600 bg-sky-50 dark:bg-sky-900/20" },
-          { label: t("attendance.uniqueMembers", "Members checked in"), value: metrics.uniqueMembersToday, icon: FiUsers, accent: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" },
-          { label: t("attendance.currentlyInGym", "Currently in gym"), value: metrics.currentlyInGym, icon: FiCheckCircle, accent: "text-violet-600 bg-violet-50 dark:bg-violet-900/20" },
-          { label: t("attendance.activeDevices", "Active check-in points"), value: snapshot?.devices.filter((device) => device.status === "active").length ?? 0, icon: FiWifi, accent: "text-amber-600 bg-amber-50 dark:bg-amber-900/20" },
-        ].map((card, index) => (
-          <div key={`${card.label}-${index}`} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div className="flex items-center justify-between">
-              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.accent}`}>
-                <card.icon className="h-5 w-5" />
-              </span>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">{card.value}</span>
-            </div>
-            <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</p>
-          </div>
-        ))}
-      </div>
+      <StatStrip
+        items={[
+          { label: t("attendance.eventsToday", "Events today"), value: metrics.eventsToday },
+          { label: t("attendance.uniqueMembers", "Members checked in"), value: metrics.uniqueMembersToday },
+          { label: t("attendance.currentlyInGym", "Currently in gym"), value: metrics.currentlyInGym },
+          {
+            label: t("attendance.activeDevices", "Active check-in points"),
+            value: snapshot?.devices.filter((device) => device.status === "active").length ?? 0,
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.4fr)]">
-        <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("attendance.kioskTitle", "Check in a member")}
               </h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {t("attendance.kioskDescription", "Use this desk for QR, PIN, passkey, or staff-assisted attendance.")}
               </p>
             </div>
-            <div className="rounded-xl bg-sky-50 p-3 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300">
+            <div className="text-sky-600 dark:text-sky-300">
               <FiShield className="h-5 w-5" />
             </div>
           </div>
@@ -265,7 +250,7 @@ const Attendance: React.FC = () => {
                 <select
                   value={selectedBranchId}
                   onChange={(event) => setSelectedBranchId(event.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-10 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
+                  className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-10 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
                 >
                   {(snapshot?.branches ?? []).map((branch, index) => (
                     <option key={`${branch.id}-${index}`} value={branch.id}>{branch.name}</option>
@@ -279,7 +264,7 @@ const Attendance: React.FC = () => {
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value as AttendanceMethod)}
-                className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-white ps-4 pe-9 py-3 text-sm text-gray-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
               >
                 {methodOptions.map((option, index) => (
                   <option key={`${option.value}-${index}`} value={option.value}>{option.label} — {option.description}</option>
@@ -308,7 +293,7 @@ const Attendance: React.FC = () => {
                     setSelectedMemberId("");
                   }}
                   placeholder={t("attendance.searchPlaceholder", "Search name, email, phone, or member ID")}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-10 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-10 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-sky-900/30"
                 />
               </div>
             </label>
@@ -343,7 +328,7 @@ const Attendance: React.FC = () => {
               {selectedMember ? (
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-300">{t("attendance.selectedMember", "Selected member")}</p>
+                    <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">{t("attendance.selectedMember", "Selected member")}</p>
                     <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{buildMemberName(selectedMember)}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{selectedMember.email || selectedMember.phone}</p>
                   </div>
@@ -376,37 +361,37 @@ const Attendance: React.FC = () => {
         </section>
 
         <section className="space-y-6">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.integrationTitle", "Integration readiness")}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.integrationTitle", "Integration readiness")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("attendance.integrationDescription", "Start with universal methods. Add vendor connectors when your gym needs them.")}</p>
               </div>
               <FiWifi className="h-6 w-6 text-sky-500" />
             </div>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.devices", "Check-in points")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.devices", "Check-in points")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{snapshot?.devices.length ?? 0}</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.devicesDescription", "Kiosks and terminals")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.connectors", "Connectors")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.connectors", "Connectors")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{connectorState}</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.connectorsDescription", "Vendor-ready foundation")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("attendance.fallback", "Fallback")}</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t("attendance.fallback", "Fallback")}</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">QR + PIN</p>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("attendance.fallbackDescription", "Works without hardware")}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{selectedMember ? buildMemberName(selectedMember) : t("attendance.memberHistoryHint", "Select a member to view recent activity")}</p>
               </div>
               <FiClock className="h-5 w-5 text-gray-400" />
@@ -428,10 +413,10 @@ const Attendance: React.FC = () => {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <section className="rounded-xl bg-gray-50 dark:bg-gray-800">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("attendance.recentActivity", "Recent attendance activity")}</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.recentActivity", "Recent attendance activity")}</h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("attendance.recentActivityDescription", "Every source is normalized into one tenant-scoped event stream.")}</p>
           </div>
           <span className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
@@ -444,7 +429,7 @@ const Attendance: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-800/70">
               <tr>
                 {[t("attendance.member", "Member"), t("attendance.branch", "Branch"), t("attendance.method", "Method"), t("attendance.direction", "Direction"), t("attendance.time", "Time")].map((heading, index) => (
-                  <th key={`${heading}-${index}`} className="px-6 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">{heading}</th>
+                  <th key={`${heading}-${index}`} className="px-6 py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400">{heading}</th>
                 ))}
               </tr>
             </thead>

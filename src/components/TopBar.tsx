@@ -58,8 +58,11 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     if (path.includes("/classes")) return t("classes.title");
     if (path.includes("/trainers")) return t("trainers.title");
     if (path.includes("/billing")) return t("billing.title");
-    if (path.includes("/analytics")) return t("analytics.title");
+    if (path.includes("/pos")) return t("sidebar.pos");
+    if (path.includes("/analytics") || path.includes("/reports")) return t("analytics.title");
+    if (path.includes("/attendance")) return t("sidebar.attendance");
     if (path.includes("/tasks")) return t("tasks.title");
+    if (path.includes("/branches")) return t("sidebar.branches");
     if (path.includes("/settings")) return t("settings.title");
     if (path.includes("/profile")) return t("settings.profile");
     return t("dashboard.title");
@@ -177,63 +180,57 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors duration-200">
-        <div className="flex items-center justify-between gap-4">
+      <header className="mac-toolbar sticky top-0 z-30 h-[52px] shrink-0 px-3 sm:px-5 flex items-center">
+        <div className="flex flex-1 items-center justify-between gap-3 min-w-0">
           {/* Start Section (Title & Mobile Menu) */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              className="lg:hidden mac-toolbar-button"
               aria-label={t("topbar.toggleMenu")}
             >
-                <FiMenu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <FiMenu className="w-4 h-4" />
             </button>
 
-            {/* Page Title */}
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            {/* Window title (chrome; each page renders its own h1) */}
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
               {pageTitle}
-            </h1>
+            </span>
           </div>
 
-          {/* Center Section - Search */}
-          <div className="flex-1 max-w-md mx-8 hidden md:block">
-            <div className="relative">
-              <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+          {/* End Section (Search, Theme & Notifications) */}
+          <div className="flex items-center gap-1">
+            <div className="relative w-56 me-2 hidden md:block">
+              <FiSearch className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5 pointer-events-none`} />
               <input
-                type="text"
+                type="search"
                 placeholder={t("topbar.searchPlaceholder")}
-                className={`w-full ${isRTL ? 'pr-10 pl-4 text-right' : 'pl-10 pr-4 text-left'} py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                className={`mac-search ${isRTL ? 'pr-7 pl-2 text-right' : 'pl-7 pr-2 text-left'}`}
                 dir={isRTL ? "rtl" : "ltr"}
               />
             </div>
-          </div>
 
-          {/* End Section (Theme & Notifications) */}
-          <div className="flex items-center gap-3">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="mac-toolbar-button"
               aria-label={isDark ? t("topbar.switchToLight") : t("topbar.switchToDark")}
               title={isDark ? t("topbar.switchToLight") : t("topbar.switchToDark")}
             >
-              {isDark ? (
-                <FiSun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <FiMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              )}
+              {isDark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
             </button>
-            
+
             {/* Notifications */}
             <div className="relative notification-container">
               <button
                 onClick={handleNotificationClick}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 relative"
+                className="mac-toolbar-button relative"
                 aria-label={t("topbar.notifications")}
+                title={t("topbar.notifications")}
               >
-                <FiBell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <FiBell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className={`absolute -top-1 ${isRTL ? '-left-1' : '-right-1'} min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-medium px-1`}>
+                  <span className={`absolute top-0.5 ${isRTL ? 'left-0.5' : 'right-0.5'} min-w-[14px] h-[14px] bg-red-500 rounded-full flex items-center justify-center text-white text-[9px] font-semibold px-1`}>
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -243,13 +240,13 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
               <AnimatePresence>
                 {showNotifications && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className={`absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-hidden flex flex-col`}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className={`absolute ${isRTL ? 'left-0 origin-top-left' : 'right-0 origin-top-right'} mt-1.5 w-80 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl backdrop-saturate-150 rounded-xl shadow-xl z-50 max-h-96 overflow-hidden flex flex-col`}
                   >
-                    <div className={`px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
+                    <div className={`px-3 py-2 border-b border-black/5 dark:border-white/10 flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                       <h3 className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${isRTL ? 'text-left' : 'text-left'}`}>
                         {t("topbar.notifications")}
                       </h3>
@@ -286,7 +283,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                               fetchNotifications();
                             }
                           }}
-                          className="text-xs text-blue-600 hover:text-blue-700"
+                          className="text-xs text-blue-600 dark:text-blue-500 hover:underline"
                         >
                           {t("topbar.markAllRead") || "Mark all read"}
                         </button>
@@ -295,18 +292,18 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
                     <div className="overflow-y-auto flex-1">
                       {notifications.length === 0 ? (
-                        <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                        <div className="px-3 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                           {t("topbar.noNotifications") || "No notifications"}
                         </div>
                       ) : (
-                        <div className="py-2">
+                        <div className="p-1">
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 cursor-pointer ${
+                              className={`px-2.5 py-2 rounded-md hover:bg-black/5 dark:hover:bg-white/10 cursor-default ${
                                 ((notification.read_at === null || notification.read_at === undefined) && 
                                  notification.is_read !== true)
-                                  ? "bg-blue-50 dark:bg-blue-900/20"
+                                  ? "font-medium"
                                   : ""
                               }`}
                               onClick={async () => {

@@ -480,14 +480,11 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
-            <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl">
-              <FiTrendingUp className="text-green-600 dark:text-green-400 text-xl" />
-            </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t("dashboard.revenueTrends")}</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t("dashboard.revenueTrends")}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedTimeRange === "week"
                   ? t("dashboard.weekly")
@@ -551,14 +548,11 @@ export default function SmartDashboardAnalytics({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 mb-6`}>
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-              <FiUsers className="text-blue-600 dark:text-blue-400 text-xl" />
-            </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t("dashboard.memberInsights")}</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">{t("dashboard.memberInsights")}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.memberEngagementMetrics")}</p>
             </div>
           </div>

@@ -288,7 +288,7 @@ const ClassAnalyticsFilters: React.FC = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          className="flex items-center btn btn-secondary"
         >
           <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -309,7 +309,7 @@ const ClassAnalyticsFilters: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mt-4">
               {/* Branch */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.branch}
                 onChange={(e) =>
                   setFilters({ ...filters, branch: e.target.value })
@@ -323,7 +323,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Class Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.classType}
                 onChange={(e) =>
                   setFilters({ ...filters, classType: e.target.value })
@@ -339,7 +339,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Trainer */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.trainer}
                 onChange={(e) =>
                   setFilters({ ...filters, trainer: e.target.value })
@@ -354,7 +354,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Date Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.dateRange}
                 onChange={(e) =>
                   setFilters({ ...filters, dateRange: e.target.value })
@@ -369,7 +369,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Time of Day */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.timeOfDay}
                 onChange={(e) =>
                   setFilters({ ...filters, timeOfDay: e.target.value })
@@ -383,7 +383,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Member Gender */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.memberGender}
                 onChange={(e) =>
                   setFilters({ ...filters, memberGender: e.target.value })
@@ -397,7 +397,7 @@ const ClassAnalyticsFilters: React.FC = () => {
 
               {/* Membership Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.membershipType}
                 onChange={(e) =>
                   setFilters({ ...filters, membershipType: e.target.value })
@@ -497,14 +497,9 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-3">
-            <div
-              className={`w-10 h-10 rounded-xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
-            >
-              <card.icon className={`w-5 h-5 text-${card.color}-600 dark:text-${card.color}-400`} />
-            </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
                 card.trend.isPositive
@@ -522,7 +517,7 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -558,9 +553,9 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Top Trainers */}
-      <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="lg:col-span-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          🏆 {t("classes.topTrainersByAttendance")}
+          {t("classes.topTrainersByAttendance")}
         </h3>
         <div className="space-y-4">
           {trainerPerformance.topTrainers.map((trainer, index) => (
@@ -592,9 +587,9 @@ const TrainerPerformanceCards: React.FC<TrainerPerformanceCardsProps> = ({ train
       </div>
 
       {/* Trainer Stats */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          📊 {t("classes.trainerStats")}
+          {t("classes.trainerStats")}
         </h3>
         <div className="space-y-4">
           <div className="text-center">
@@ -640,9 +635,9 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Most Popular Classes */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          🔥 {t("classes.mostPopularClasses")}
+          {t("classes.mostPopularClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.mostPopular.map((classItem, index) => (
@@ -675,9 +670,9 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Least Attended Classes */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          ⚠️ {t("classes.leastAttendedClasses")}
+          {t("classes.leastAttendedClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.leastAttended.map((classItem, index) => (
@@ -710,9 +705,9 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Most Cancelled Classes */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          ❌ {t("classes.mostCancelledClasses")}
+          {t("classes.mostCancelledClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.mostCancelled.map((classItem, index) => (
@@ -745,9 +740,9 @@ const ClassInsightsCards: React.FC<ClassInsightsCardsProps> = ({ classInsights, 
       </div>
 
       {/* Overbooked Classes */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          📈 {t("classes.overbookedClasses")}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+          {t("classes.overbookedClasses")}
         </h3>
         <div className="space-y-3">
           {classInsights.overbooked.map((classItem, index) => (
@@ -931,9 +926,9 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gender Split */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          👥 {t("classes.genderAttendanceSplit")}
+          {t("classes.genderAttendanceSplit")}
         </h3>
         <div className="h-64">
           <Doughnut data={genderChartData} options={chartOptions} />
@@ -941,7 +936,7 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
       </div>
 
       {/* Time of Day */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
           ⏰ {t("classes.timeOfDayBreakdown")}
         </h3>
@@ -951,9 +946,9 @@ const MemberBehaviorCards: React.FC<MemberBehaviorCardsProps> = ({ memberBehavio
       </div>
 
       {/* Membership Types */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-          💳 {t("classes.attendanceByMembership")}
+          {t("classes.attendanceByMembership")}
         </h3>
         <div className="h-64">
           <Doughnut data={membershipChartData} options={chartOptions} />
@@ -988,9 +983,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Total Revenue */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
             <FiDollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div className="text-start flex-1">
@@ -1009,9 +1004,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Avg Revenue per Class */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
             <FiCreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="text-start flex-1">
@@ -1030,9 +1025,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Cost per Class */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
             <FiMinus className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div className="text-start flex-1">
@@ -1051,9 +1046,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue, loading = false })
       </div>
 
       {/* Profit per Class */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
             <FiTrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="text-start flex-1">
@@ -1252,9 +1247,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
   return (
     <div className="space-y-6">
       {/* Attendance Trend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          📈 {t("classes.classAttendanceTrend")}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+          {t("classes.classAttendanceTrend")}
         </h3>
         <div className="h-80">
           <Line data={attendanceTrendData} options={lineChartOptions} />
@@ -1262,9 +1257,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* Class Type Popularity Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          🏆 {t("classes.classTypePopularity")}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+          {t("classes.classTypePopularity")}
         </h3>
         <div className="h-80">
           <Bar data={classTypePopularityData} options={barChartOptions} />
@@ -1272,9 +1267,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* Trainer Impact Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          👨‍🏫 {t("classes.trainerImpactTrend")}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+          {t("classes.trainerImpactTrend")}
         </h3>
         <div className="h-80">
           <Line data={trainerImpactData} options={lineChartOptions} />
@@ -1282,9 +1277,9 @@ const ClassAnalyticsCharts: React.FC<ClassAnalyticsChartsProps> = ({ charts, loa
       </div>
 
       {/* No-Show Trend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          ❌ {t("classes.noShowTrend")}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+          {t("classes.noShowTrend")}
         </h3>
         <div className="h-80">
           <Line data={noShowTrendData} options={lineChartOptions} />
@@ -1711,7 +1706,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Performance Overview Cards */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          📊 {t("classes.performanceOverview") || "Performance Overview"}
+          {t("classes.performanceOverview") || "Performance Overview"}
         </h2>
         <PerformanceOverviewCards performance={analyticsData.performance} loading={loading} />
       </div>
@@ -1719,7 +1714,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Trainer Performance Cards */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          ⚙️ {t("classes.trainerPerformance") || "Trainer Performance"}
+          {t("classes.trainerPerformance") || "Trainer Performance"}
         </h2>
         <TrainerPerformanceCards trainerPerformance={analyticsData.trainerPerformance} loading={loading} />
       </div>
@@ -1727,7 +1722,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Class Insights Cards */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          📈 {t("classes.classInsights")}
+          {t("classes.classInsights")}
         </h2>
         <ClassInsightsCards classInsights={analyticsData.classInsights} loading={loading} />
       </div>
@@ -1735,7 +1730,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Member Behavior Cards */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          🧩 {t("classes.memberBehaviorPatterns") || "Member Behavior Patterns"}
+          {t("classes.memberBehaviorPatterns") || "Member Behavior Patterns"}
         </h2>
         <MemberBehaviorCards memberBehavior={analyticsData.memberBehavior} loading={loading} />
       </div>
@@ -1743,7 +1738,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Revenue Cards */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          💰 {t("classes.classRevenueEfficiency") || "Class Revenue & Efficiency"}
+          {t("classes.classRevenueEfficiency") || "Class Revenue & Efficiency"}
         </h2>
         <RevenueCards revenue={analyticsData.revenue} loading={loading} />
       </div>
@@ -1751,7 +1746,7 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
       {/* Charts */}
       <div className="space-y-6">
         <h2 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-right' : 'text-left'}`}>
-          📈 {t("classes.chartsVisuals")}
+          {t("classes.chartsVisuals")}
         </h2>
         <ClassAnalyticsCharts charts={analyticsData.charts} loading={loading} />
       </div>

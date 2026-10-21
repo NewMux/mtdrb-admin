@@ -538,9 +538,9 @@ export default function Onboarding() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
           {/* Step Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
+          <div className="bg-blue-600 px-8 py-6 text-white">
             <div className="flex items-center space-x-4">
               {steps[currentStep].icon}
               <div>
@@ -672,7 +672,7 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
           <select
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {countries.map(([value, key]) => (
               <option key={value} value={value}>{t(`onboarding.countries.${key}`)}</option>
@@ -687,7 +687,7 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
           <select
             value={formData.language}
             onChange={(e) => { const language = e.target.value; setFormData({ ...formData, language }); void i18n.changeLanguage(language); }}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="en">{t("onboarding.english")}</option>
             <option value="ar">{t("onboarding.arabic")}</option>
@@ -701,7 +701,7 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
           <select
             value={formData.currency}
             onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {currencies.map(currency => (
               <option key={currency.code} value={currency.code}>
@@ -941,7 +941,7 @@ function StaffSetupStep({ formData, setFormData }: { formData: OnboardingFormDat
             <select
               value={formData.trainerSpecialization}
               onChange={(e) => setFormData({ ...formData, trainerSpecialization: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {specializations.map(([value, key]) => (
                 <option key={value} value={value}>{t(`onboarding.specializations.${key}`)}</option>
@@ -1016,7 +1016,7 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
           </label>
           {formData.logo && (
             <p className="text-sm text-green-600 mt-2">
-              ✓ {formData.logo.name} {t("onboarding.logoSelected")}
+              {formData.logo.name} {t("onboarding.logoSelected")}
             </p>
           )}
         </div>

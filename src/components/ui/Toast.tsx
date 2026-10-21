@@ -29,75 +29,44 @@ const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
     }
   };
 
-  const getColors = () => {
-    switch (toast.type) {
-      case "success":
-        return {
-          bg: "bg-green-50",
-          border: "border-green-200",
-          icon: "text-green-600",
-          title: "text-green-800",
-          message: "text-green-700",
-        };
-      case "error":
-        return {
-          bg: "bg-red-50",
-          border: "border-red-200",
-          icon: "text-red-600",
-          title: "text-red-800",
-          message: "text-red-700",
-        };
-      case "warning":
-        return {
-          bg: "bg-yellow-50",
-          border: "border-yellow-200",
-          icon: "text-yellow-600",
-          title: "text-yellow-800",
-          message: "text-yellow-700",
-        };
-      case "info":
-        return {
-          bg: "bg-blue-50",
-          border: "border-blue-200",
-          icon: "text-blue-600",
-          title: "text-blue-800",
-          message: "text-blue-700",
-        };
-      default:
-        return {
-          bg: "bg-gray-50",
-          border: "border-gray-200",
-          icon: "text-gray-600",
-          title: "text-gray-800",
-          message: "text-gray-700",
-        };
-    }
+  // Notification Center banner: neutral translucent material, with the
+  // status carried by a small tinted glyph rather than a colored box.
+  const glyphColors: Record<string, string> = {
+    success: "bg-green-500",
+    error: "bg-red-500",
+    warning: "bg-orange-500",
+    info: "bg-blue-600",
   };
-
-  const colors = getColors();
+  const glyph = glyphColors[toast.type] ?? "bg-gray-500";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.3 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-      className={`${colors.bg} ${colors.border} border rounded-lg p-4 shadow-lg max-w-sm w-full`}
+      layout
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 24, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+      className="group relative w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl p-3 bg-white/85 dark:bg-gray-800/85 backdrop-blur-xl backdrop-saturate-150 shadow-xl dark:ring-1 dark:ring-white/10"
+      role="status"
     >
-      <div className="flex items-start space-x-3">
-        <div className={`${colors.icon} flex-shrink-0 mt-0.5`}>{getIcon()}</div>
-        <div className="flex-1 min-w-0">
-          <h4 className={`text-sm font-medium ${colors.title}`}>
+      <div className="flex items-start gap-2.5">
+        <div className={`${glyph} text-white w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4`}>
+          {getIcon()}
+        </div>
+        <div className="flex-1 min-w-0 text-start">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             {toast.title}
           </h4>
           {toast.message && (
-            <p className={`text-sm mt-1 ${colors.message}`}>{toast.message}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-snug">{toast.message}</p>
           )}
         </div>
         <button
           onClick={() => onRemove(toast.id)}
-          className={`${colors.icon} hover:opacity-70 transition-opacity flex-shrink-0`}
+          aria-label="Dismiss"
+          className="absolute -top-1.5 -start-1.5 w-5 h-5 rounded-full bg-white dark:bg-gray-700 shadow ring-1 ring-black/10 text-gray-500 dark:text-gray-300 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
         >
-          <FiX className="w-4 h-4" />
+          <FiX className="w-3 h-3" />
         </button>
       </div>
     </motion.div>
@@ -114,7 +83,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
   onRemove,
 }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-14 right-3 z-[60] space-y-2">
       <AnimatePresence>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onRemove={onRemove} />

@@ -103,7 +103,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           className={`
-            w-full px-3 py-2 border rounded-lg appearance-none transition-colors duration-200
+            w-full ps-3 pe-9 py-2 border rounded-lg appearance-none transition-colors duration-200
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             ${
               error
@@ -244,7 +244,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
         {subtitle && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>}
       </div>
       <div className="space-y-4">{children}</div>

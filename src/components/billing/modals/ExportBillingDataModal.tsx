@@ -405,7 +405,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
                 <select
                   value={selectedMember}
                   onChange={(e) => setSelectedMember(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full ps-3 pe-9 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   dir={isRTL ? "rtl" : "ltr"}
                 >
                   <option value="">{t("billing.allMembers", "جميع الأعضاء")}</option>

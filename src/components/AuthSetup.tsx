@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase, IS_MOCK_MODE } from "../supabaseClient";
+import { FiAlertTriangle } from "react-icons/fi";
 
 interface AuthSetupProps {
   children: React.ReactNode;
@@ -260,7 +261,7 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white to-blue-50">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-blue-600">Setting up your account...</p>
@@ -275,9 +276,9 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
                           error.toLowerCase().includes("expired");
     
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white to-blue-50">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white">
         <div className="text-center max-w-md p-8 bg-white rounded-3xl shadow-lg">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <FiAlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-3" />
           <h1 className="text-xl font-bold text-red-600 mb-4">
             {isSessionError ? "Authentication Error" : "Connection Error"}
           </h1>

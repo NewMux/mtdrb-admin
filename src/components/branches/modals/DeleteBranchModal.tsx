@@ -64,7 +64,7 @@ export default function DeleteBranchModal({
         variant="danger"
         onClick={handleDelete}
         loading={loading}
-        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+        className="bg-red-600 hover:bg-red-700"
       >
         {loading ? (t("branches.deleting") || "Deleting...") : (t("branches.deleteBranch") || "Delete Branch")}
       </SmartButton>
@@ -85,17 +85,14 @@ export default function DeleteBranchModal({
         {/* Warning Message Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600">
-              <FiAlertTriangle className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.confirmDelete") || "Confirm Deletion"}
             </h3>
           </div>
 
           <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5">
             <div className={`flex items-start ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-4`}>
-              <div className="p-2 bg-red-100 rounded-lg">
+              <div className=" [&_svg]:w-4 [&_svg]:h-4">
                 <FiAlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
               </div>
               <div>
@@ -114,17 +111,14 @@ export default function DeleteBranchModal({
         {/* Branch Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-              <FiMapPin className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("branches.branchInformation") || "Branch Information"}
             </h3>
           </div>
 
           <div className="bg-gray-50 rounded-xl p-5">
             <div className={`flex items-start ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-4`}>
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className=" [&_svg]:w-4 [&_svg]:h-4">
                 <FiMapPin className="w-5 h-5 text-blue-600 flex-shrink-0" />
               </div>
               <div className="flex-1">

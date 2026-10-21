@@ -20,26 +20,25 @@ const AddButton: React.FC<AddButtonProps> = ({
   disabled = false,
 }) => {
   const baseClasses =
-    "inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-1.5 font-medium rounded-md transition-colors duration-100 focus:outline-none focus-visible:shadow-focus disabled:opacity-40 disabled:cursor-default select-none";
 
   const variantClasses = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
+    primary: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm",
     secondary:
-      "bg-gray-100 hover:bg-gray-200 text-lunaNavy focus:ring-gray-500",
-    floating:
-      "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 shadow-lg hover:shadow-xl",
+      "bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/15 border border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-100 shadow-sm",
+    floating: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-lg",
   };
 
   const sizeClasses = {
-    sm: "px-3 py-2 text-sm",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: "px-2.5 py-1 text-sm",
+    md: "px-3 py-1.5 text-sm",
+    lg: "px-4 py-2 text-base",
   };
 
   const iconSizes = {
-    sm: "w-4 h-4",
-    md: "w-4 h-4",
-    lg: "w-5 h-5",
+    sm: "w-3.5 h-3.5",
+    md: "w-3.5 h-3.5",
+    lg: "w-4 h-4",
   };
 
   const floatingClasses =
@@ -51,7 +50,7 @@ const AddButton: React.FC<AddButtonProps> = ({
     <motion.button
       variants={{
         rest: { scale: 1 },
-        hover: { scale: 1.02 },
+        hover: { scale: 1 },
         pressed: { scale: 0.98 },
       }}
       initial="rest"
@@ -67,7 +66,7 @@ const AddButton: React.FC<AddButtonProps> = ({
         ${className}
       `}
     >
-      <FiPlus className={`${iconSizes[size]} ${label ? "mr-2" : ""}`} />
+      <FiPlus className={iconSizes[size]} />
       {label && <span>{label}</span>}
     </motion.button>
   );

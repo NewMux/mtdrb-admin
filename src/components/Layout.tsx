@@ -18,9 +18,17 @@ const Layout: React.FC = () => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  // Opt the signed-in shell into desktop (AppKit-like) type density; see
+  // html.mac-app in index.css. Removed on unmount so marketing pages keep
+  // their own scale.
+  React.useEffect(() => {
+    document.documentElement.classList.add("mac-app");
+    return () => document.documentElement.classList.remove("mac-app");
+  }, []);
+
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      className="min-h-screen bg-white dark:bg-gray-900"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <PageThemeDetector />
@@ -36,7 +44,7 @@ const Layout: React.FC = () => {
             <>
               <motion.div
                 key="sidebar-backdrop"
-                className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                className="fixed inset-0 bg-black/30 z-40 lg:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -46,11 +54,11 @@ const Layout: React.FC = () => {
               />
               <motion.div
                 key="sidebar-drawer"
-                className={`fixed inset-y-0 ${isRTL ? "right-0" : "left-0"} z-50 lg:hidden`}
+                className={`fixed inset-y-0 ${isRTL ? "right-0" : "left-0"} z-50 lg:hidden bg-gray-100 dark:bg-gray-800 shadow-2xl`}
                 initial={{ x: isRTL ? "100%" : "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: isRTL ? "100%" : "-100%" }}
-                transition={{ type: "tween", duration: 0.25 }}
+                transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.3 }}
               >
                 <Sidebar onClose={() => setSidebarOpen(false)} />
               </motion.div>
@@ -59,23 +67,17 @@ const Layout: React.FC = () => {
         </AnimatePresence>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top Bar */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {/* Unified toolbar */}
           <TopBar onMenuClick={() => setSidebarOpen(true)} />
-          {/* Page Content */}
-          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-            <div className="p-6 max-w-6xl mx-auto">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={window.location.pathname}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Outlet />
-                </motion.div>
-              </AnimatePresence>
+          {/* Page Content. A plain fade on navigation, like switching
+              panes in a Mac app; no slide. */}
+          <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+            <div
+              key={location.pathname}
+              className="px-4 py-5 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-window-in"
+            >
+              <Outlet />
             </div>
           </main>
         </div>

@@ -9,35 +9,25 @@
   }
 
   html {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Segoe UI", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01";
   }
 
   body {
     background-color: #ffffff;
-    color: #111827;
-    line-height: 1.6;
+    color: #1d1d1f;
+    line-height: 1.5;
     margin: 0;
     padding: 0;
-    scroll-behavior: smooth;
-    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   .dark body {
-    background-color: #111827;
-    color: #f9fafb;
-  }
-
-  /* Dark mode selection */
-  .dark ::selection {
-    background-color: #1e40af;
-    color: #dbeafe;
-  }
-
-  /* Dark mode focus styles */
-  .dark *:focus {
-    outline-color: #60a5fa;
+    background-color: #1d1d1f;
+    color: #f5f5f7;
+    color-scheme: dark;
   }
 
   /* Smooth scrolling for the entire page */
@@ -59,20 +49,54 @@
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     line-height: 1.2;
+    letter-spacing: -0.01em;
   }
 
-  /* Focus styles */
+  /* Focus: AppKit draws a soft accent halo around the focused control
+     rather than an offset outline, and only for keyboard focus. */
   *:focus {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
+    outline: none;
   }
 
-  /* Selection */
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.4);
+  }
+
+  .dark *:focus-visible {
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.5);
+  }
+
+  /* Selection uses the accent at low alpha, like NSTextView. */
   ::selection {
-    background-color: #dbeafe;
-    color: #1e40af;
+    background-color: rgba(0, 122, 255, 0.22);
   }
 
+  .dark ::selection {
+    background-color: rgba(10, 132, 255, 0.4);
+  }
+
+  /* Native controls (checkboxes, radios, range, date pickers) follow the
+     accent instead of the browser default. */
+  :root {
+    accent-color: #007aff;
+  }
+
+  /* Desktop density: AppKit body text is 13pt, so the signed-in app shell
+     scales rem down a notch at laptop widths and up. Scoped to the app
+     shell (Layout adds the class) so the marketing pages keep their size. */
+  @media (min-width: 1024px) {
+    html.mac-app {
+      font-size: 15px;
+    }
+  }
+
+  /* iOS zooms into inputs smaller than 16px; keep them at 16px on phones. */
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* Native Arabic reading rhythm for RTL screens. */
@@ -92,62 +116,63 @@ html[dir="rtl"] .landing-page h3 {
 
 /* ===== COMPONENT STYLES ===== */
 @layer components {
-  /* Form inputs */
+  /* Text fields: 1px hairline border, 6px radius, accent halo on focus. */
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-lunaNavy dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-lunaCyan focus:border-lunaCyan transition-colors;
+    @apply w-full px-2.5 py-1.5 text-sm rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-sm focus:border-blue-600 focus:ring-0 focus:shadow-focus transition-shadow;
   }
 
-  /* Form selects */
   .form-select {
-    @apply px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-lunaNavy dark:text-gray-100 focus:ring-2 focus:ring-lunaCyan focus:border-lunaCyan transition-colors;
+    @apply px-2.5 py-1.5 text-sm rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-600 focus:ring-0 focus:shadow-focus transition-shadow;
   }
 
-  /* Cards */
+  /* Grouped section, as in System Settings: a quiet fill on the content
+     surface, no border or shadow. Only floating things (sheets, menus,
+     popovers) get elevation. */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+    @apply bg-gray-50 dark:bg-gray-800 rounded-xl;
   }
 
-  /* Buttons */
+  /* Push buttons. */
   .btn {
-    @apply inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-100 focus:outline-none focus-visible:shadow-focus disabled:opacity-40 disabled:cursor-default select-none;
   }
 
   .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500;
+    @apply bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-lunaNavy dark:text-gray-100 focus:ring-gray-500;
+    @apply bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/15 active:bg-gray-100 text-gray-900 dark:text-gray-100 border border-black/10 dark:border-white/10 shadow-sm;
   }
 
   /* Badges */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-success {
-    @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400;
+    @apply bg-green-500/15 text-green-700 dark:text-green-500;
   }
 
   .badge-warning {
-    @apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400;
+    @apply bg-orange-500/15 text-orange-600 dark:text-orange-500;
   }
 
   .badge-danger {
-    @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400;
+    @apply bg-red-500/15 text-red-600 dark:text-red-500;
   }
 
-  /* Tables */
+  /* Tables: Finder list-view rhythm. */
   .table {
     @apply w-full border-collapse;
   }
 
   .table th {
-    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700;
+    @apply px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-black/5 dark:border-white/10;
   }
 
   .table td {
-    @apply px-4 py-3 text-sm text-lunaNavy dark:text-gray-300 border-b border-gray-200 dark:border-gray-700;
+    @apply px-3 py-2 text-sm text-gray-900 dark:text-gray-200 border-b border-black/5 dark:border-white/5;
   }
 
   /* Modals */
@@ -156,37 +181,37 @@ html[dir="rtl"] .landing-page h3 {
   }
 
   .modal-backdrop {
-    @apply absolute inset-0 bg-black/50 backdrop-blur-sm;
+    @apply absolute inset-0 bg-black/25 dark:bg-black/50;
   }
 
   .modal-content {
-    @apply relative bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700;
+    @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl;
   }
 
   /* Navigation */
   .nav-item {
-    @apply flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200;
+    @apply flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors duration-100;
   }
 
   .nav-item-active {
-    @apply bg-lunaLight/30 text-lunaCyan;
+    @apply bg-black/10 dark:bg-white/10 text-gray-900 dark:text-white;
   }
 
   .nav-item-inactive {
-    @apply text-lunaNavy/70 hover:bg-gray-50 hover:text-lunaNavy;
+    @apply text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5;
   }
 
   /* Input groups */
   .input-group {
-    @apply flex rounded-lg shadow-sm;
+    @apply flex rounded-md shadow-sm;
   }
 
   .input-group > *:first-child {
-    @apply rounded-l-lg rounded-r-none;
+    @apply rounded-l-md rounded-r-none;
   }
 
   .input-group > *:last-child {
-    @apply rounded-r-lg rounded-l-none;
+    @apply rounded-r-md rounded-l-none;
   }
 
   .input-group > *:not(:first-child):not(:last-child) {
@@ -210,116 +235,138 @@ html[dir="rtl"] .landing-page h3 {
     @apply bg-red-500;
   }
 
-  /* Progress bars */
+  /* Progress bars: thin NSProgressIndicator track. */
   .progress-bar {
-    @apply w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2;
+    @apply w-full bg-black/10 dark:bg-white/10 rounded-full h-1.5;
   }
 
   .progress-bar-fill {
-    @apply h-2 bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-300;
+    @apply h-1.5 bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-300;
   }
 
   /* Tooltips */
   .tooltip {
-    @apply absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg;
+    @apply absolute z-10 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 bg-white/95 dark:bg-gray-800/95 backdrop-blur rounded-md shadow-lg;
   }
 
-  /* Dropdowns */
+  /* Menus: translucent popover with inset rounded highlight. */
   .dropdown {
-    @apply absolute z-10 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1;
+    @apply absolute z-10 mt-1 w-48 p-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-lg shadow-xl;
   }
 
   .dropdown-item {
-    @apply block w-full px-4 py-2 text-sm text-lunaNavy dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+    @apply block w-full px-2 py-1 rounded text-sm text-start text-gray-900 dark:text-gray-100 hover:bg-blue-600 hover:text-white;
   }
 
   /* Alerts */
   .alert {
-    @apply p-4 rounded-lg border;
+    @apply p-3 rounded-lg text-sm;
   }
 
   .alert-success {
-    @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-800 dark:text-green-400;
+    @apply bg-green-500/10 text-green-700 dark:text-green-500;
   }
 
   .alert-warning {
-    @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-400;
+    @apply bg-orange-500/10 text-orange-600 dark:text-orange-500;
   }
 
   .alert-danger {
-    @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-800 dark:text-red-400;
+    @apply bg-red-500/10 text-red-600 dark:text-red-500;
   }
 
   .alert-info {
-    @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-400;
+    @apply bg-blue-500/10 text-blue-700 dark:text-blue-400;
+  }
+
+  /* ---- macOS app shell ---- */
+
+  /* Sidebar "source list" with behind-window vibrancy. */
+  .mac-sidebar {
+    @apply bg-[#E8E8E8]/80 dark:bg-[#2A2A2C]/80 backdrop-blur-2xl backdrop-saturate-150;
+  }
+
+  /* Unified title bar / toolbar. */
+  .mac-toolbar {
+    @apply bg-white/80 dark:bg-[#1D1D1F]/80 backdrop-blur-xl backdrop-saturate-150 border-b border-black/10 dark:border-black/60;
+  }
+
+  /* Toolbar icon button (borderless, fills on hover). */
+  .mac-toolbar-button {
+    @apply inline-flex items-center justify-center h-7 min-w-[28px] px-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 active:bg-black/10 dark:active:bg-white/15 transition-colors duration-100;
+  }
+
+  /* Rounded search field. */
+  .mac-search {
+    @apply w-full h-7 text-sm rounded-md bg-black/5 dark:bg-white/10 border-0 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:ring-0 focus:bg-white dark:focus:bg-white/10 focus:shadow-focus transition-colors;
+  }
+
+  /* react-hot-toast, styled as a Notification Center banner. */
+  .mac-toast {
+    @apply !rounded-2xl !px-3 !py-2.5 !text-sm !text-gray-900 dark:!text-gray-100 !bg-white/85 dark:!bg-gray-800/85 backdrop-blur-xl backdrop-saturate-150 !shadow-xl dark:ring-1 dark:ring-white/10;
+  }
+
+  /* Segmented control. */
+  .mac-segmented {
+    @apply inline-flex items-center p-0.5 gap-0.5 rounded-lg bg-black/5 dark:bg-white/10;
+  }
+
+  .mac-segment {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-md text-gray-700 dark:text-gray-300 transition-colors duration-100;
+  }
+
+  .mac-segment-active {
+    @apply bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm;
   }
 }
 
 /* ===== UTILITY STYLES ===== */
 @layer utilities {
-  /* Custom scrollbar */
+  /* Overlay-style scrollbars: thin rounded thumb, no track. */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #d1d5db transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
   }
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
+  .dark .scrollbar-thin {
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
   }
 
-  .scrollbar-thin::-webkit-scrollbar-track {
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border-radius: 3px;
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.22);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af;
-  }
-
-  /* Dark mode scrollbar */
-  .dark .scrollbar-thin {
-    scrollbar-color: #4b5563 transparent;
-  }
-
-  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-  }
-
-  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #6b7280;
-  }
-
-  /* Dark mode global scrollbar */
-  .dark ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .dark ::-webkit-scrollbar-track {
-    background: #1f2937;
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
   }
 
   .dark ::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-    border-radius: 4px;
-    border: 2px solid #1f2937;
+    background-color: rgba(255, 255, 255, 0.22);
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background-color: #6b7280;
+    background-color: rgba(255, 255, 255, 0.4);
   }
 
   /* Glass effect */
   .glass {
-    @apply bg-white/80 backdrop-blur-xl;
+    @apply bg-white/80 backdrop-blur-xl backdrop-saturate-150;
   }
 
   .dark .glass {
-    @apply bg-gray-800/80 backdrop-blur-xl;
+    @apply bg-gray-800/80 backdrop-blur-xl backdrop-saturate-150;
   }
 
   /* Animation durations */
@@ -339,14 +386,7 @@ html[dir="rtl"] .landing-page h3 {
   @keyframes bounceIn {
     0% {
       opacity: 0;
-      transform: scale(0.3);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-    70% {
-      transform: scale(0.9);
+      transform: scale(0.97);
     }
     100% {
       opacity: 1;
@@ -355,7 +395,7 @@ html[dir="rtl"] .landing-page h3 {
   }
 
   .animate-bounce-in {
-    animation: bounceIn 0.6s ease-out;
+    animation: bounceIn 0.2s ease-out;
   }
 
   /* Blob animations for landing page */
@@ -404,7 +444,7 @@ html[dir="rtl"] .landing-page h3 {
 [dir="rtl"] {
   direction: rtl;
   text-align: right;
-  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: "SF Arabic", "Geeza Pro", 'Cairo', system-ui, -apple-system, sans-serif !important;
 }
 
 /* Tailwind Space-X utilities in RTL mode */
@@ -441,6 +481,13 @@ html[dir="rtl"] .landing-page h3 {
 
 [dir="rtl"] label {
   text-align: right;
+}
+
+/* @tailwindcss/forms draws the select chevron at the right edge; in RTL the
+   text starts there, so move the chevron to the left (where the logical
+   end padding already leaves room for it). */
+[dir="rtl"] select {
+  background-position: left 0.5rem center;
 }
 
 /* RTL Table Alignment */

@@ -81,7 +81,7 @@ const AnalyticsFilters: React.FC = () => {
       <div className="flex items-center justify-between">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          className="flex items-center btn btn-secondary"
         >
           <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -102,7 +102,7 @@ const AnalyticsFilters: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mt-4">
               {/* Branch */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.branch}
                 onChange={(e) =>
                   setFilters({ ...filters, branch: e.target.value })
@@ -116,7 +116,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Membership Type */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.membershipType}
                 onChange={(e) =>
                   setFilters({ ...filters, membershipType: e.target.value })
@@ -131,7 +131,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Join Date Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.joinDateRange}
                 onChange={(e) =>
                   setFilters({ ...filters, joinDateRange: e.target.value })
@@ -146,7 +146,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Gender */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.gender}
                 onChange={(e) =>
                   setFilters({ ...filters, gender: e.target.value })
@@ -160,7 +160,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Age Range */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.ageRange}
                 onChange={(e) =>
                   setFilters({ ...filters, ageRange: e.target.value })
@@ -176,7 +176,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Activity Status */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.activityStatus}
                 onChange={(e) =>
                   setFilters({ ...filters, activityStatus: e.target.value })
@@ -190,7 +190,7 @@ const AnalyticsFilters: React.FC = () => {
 
               {/* Trainer */}
               <select
-                className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 value={filters.trainer}
                 onChange={(e) =>
                   setFilters({ ...filters, trainer: e.target.value })
@@ -266,14 +266,9 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ overview }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <div
-              className={`w-12 h-12 rounded-2xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
-            >
-              <card.icon className={`w-6 h-6 text-${card.color}-600 dark:text-${card.color}-400`} />
-            </div>
             <div
               className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
                 card.trend.isPositive
@@ -291,7 +286,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ overview }) => {
           </div>
 
           <div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -318,9 +313,9 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Sessions Booked */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiCalendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -339,9 +334,9 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement }) => {
       </div>
 
       {/* Avg Sessions per Member */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiActivity className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -362,9 +357,9 @@ const EngagementCards: React.FC<EngagementCardsProps> = ({ engagement }) => {
       </div>
 
       {/* Top Classes */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiStar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -515,8 +510,8 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Gender Split */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.genderSplit", "توزيع الجنسين")}
         </h3>
         <div className="h-64">
@@ -525,8 +520,8 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
       </div>
 
       {/* Age Distribution */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.ageDistribution", "التوزيع العمري")}
         </h3>
         <div className="h-64">
@@ -535,8 +530,8 @@ const DemographicCards: React.FC<DemographicCardsProps> = ({ demographics }) => 
       </div>
 
       {/* Membership Type Split */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.membershipTypes", "أنواع العضويات")}
         </h3>
         <div className="h-64">
@@ -613,21 +608,16 @@ const RiskOpportunityCards: React.FC<RiskOpportunityCardsProps> = ({ riskOpportu
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-3">
-            <div
-              className={`w-10 h-10 rounded-xl bg-${card.color}-50 dark:bg-${card.color}-900/30 flex items-center justify-center`}
-            >
-              <card.icon className={`w-5 h-5 text-${card.color}-600 dark:text-${card.color}-400`} />
-            </div>
             <button className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
               {card.action}
             </button>
           </div>
 
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
           </div>
@@ -654,9 +644,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Total Revenue */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiDollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -675,9 +665,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue }) => {
       </div>
 
       {/* Avg Revenue per Member */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiCreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -696,9 +686,9 @@ const RevenueCards: React.FC<RevenueCardsProps> = ({ revenue }) => {
       </div>
 
       {/* Estimated LTV */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-4`}>
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+          <div className="flex items-center justify-center [&_svg]:w-4 [&_svg]:h-4">
             <FiTrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div className={isRTL ? "text-left" : "text-right"}>
@@ -831,8 +821,8 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
   return (
     <div className="space-y-6">
       {/* Member Growth Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.memberGrowth", "نمو الأعضاء")}
         </h3>
         <div className="h-80">
@@ -841,8 +831,8 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
       </div>
 
       {/* Revenue Trend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.revenueTrend", "اتجاه الإيرادات")}
         </h3>
         <div className="h-80">
@@ -851,8 +841,8 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ charts }) => {
       </div>
 
       {/* Churn Trend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 text-start">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
           {t("members.churnTrend", "اتجاه المغادرة")}
         </h3>
         <div className="h-80">
@@ -1283,8 +1273,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Overview Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>🎯</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("dashboard.overview", "نظرة عامة")}</span>
         </h2>
         <OverviewCards overview={analyticsData.overview} loading={loading} />
@@ -1292,8 +1281,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Engagement Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>📊</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("members.memberEngagement", "تفاعل الأعضاء")}</span>
         </h2>
         <EngagementCards engagement={analyticsData.engagement} loading={loading} />
@@ -1301,8 +1289,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Demographic Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>👥</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("members.demographics", "البيانات الديموغرافية")}</span>
         </h2>
         <DemographicCards demographics={analyticsData.demographics} loading={loading} />
@@ -1310,8 +1297,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Risk & Opportunity Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>⚠️</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("members.riskOpportunity", "المخاطر والفرص")}</span>
         </h2>
         <RiskOpportunityCards riskOpportunity={analyticsData.riskOpportunity} loading={loading} />
@@ -1319,8 +1305,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Revenue Cards */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>💰</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("members.revenue", "الإيرادات")}</span>
         </h2>
         <RevenueCards revenue={analyticsData.revenue} loading={loading} />
@@ -1328,8 +1313,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
       {/* Charts */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
-          <span>📈</span>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-start">
           <span>{t("analytics.charts", "الرسوم البيانية")}</span>
         </h2>
         <AnalyticsCharts charts={analyticsData.charts} loading={loading} />

@@ -339,7 +339,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
               <div className="flex-1 overflow-y-auto p-6">
                 {activeTab === "details" && (
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
                       {classData.name}
                       {/* Status badge */}
                       {(() => {
@@ -377,7 +377,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                   <div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base font-semibold text-gray-900">
                           Bookings
                         </h3>
                         <span className="text-xs text-gray-500">
@@ -434,7 +434,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                   <div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base font-semibold text-gray-900">
                           Waitlist
                         </h3>
                         <span className="text-xs text-gray-500">

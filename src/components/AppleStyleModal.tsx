@@ -63,19 +63,19 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
         onClose={closeOnBackdropClick ? onClose : () => {}}
         dir={isRTL ? "rtl" : "ltr"}
       >
-        <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="flex min-h-screen items-center justify-center p-4">
           {/* Backdrop with frosted glass effect */}
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
+            enter="ease-out duration-150"
             enterFrom="opacity-0"
             enterTo="opacity-100"
-            leave="ease-in duration-200"
+            leave="ease-in duration-100"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
             <div
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/20 dark:bg-black/50"
               aria-hidden="true"
             />
           </Transition.Child>
@@ -83,18 +83,18 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
           {/* Modal content */}
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
+            enter="ease-out duration-150"
+            enterFrom="opacity-0 scale-[0.97]"
             enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
+            leave="ease-in duration-100"
             leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
+            leaveTo="opacity-0 scale-[0.98]"
           >
             <Dialog.Panel
-              className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-start ${className}`}
+              className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:ring-1 dark:ring-white/10 text-start overflow-hidden ${className}`}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-8 py-6 border-b border-gray-200 dark:border-gray-700 gap-4">
+              <div className="flex items-start justify-between px-5 py-3.5 border-b border-black/5 dark:border-white/10 gap-4">
                 <div className="flex items-center gap-3">
                   {isProFeature && (
                     <div className="flex items-center gap-2">
@@ -105,30 +105,32 @@ export const AppleStyleModal: React.FC<AppleStyleModalProps> = ({
                     </div>
                   )}
                   <div className="text-start">
-                    <Dialog.Title className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
+                    <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">
                       {title}
                     </Dialog.Title>
                     {subtitle && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
                     )}
                   </div>
                 </div>
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+                    type="button"
+                    aria-label="Close"
+                    className="mac-toolbar-button -me-1.5 flex-shrink-0"
                   >
-                    <FiX className="h-5 w-5" />
+                    <FiX className="h-4 w-4" />
                   </button>
                 )}
               </div>
 
               {/* Content */}
-              <div className="px-8 py-6 text-start">{children}</div>
+              <div className="px-5 py-4 text-start">{children}</div>
 
               {/* Footer */}
               {footer && (
-                <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="px-5 py-3 bg-gray-50/80 dark:bg-white/[0.03] border-t border-black/5 dark:border-white/10">
                   {footer}
                 </div>
               )}
@@ -151,25 +153,25 @@ export const AppleInput = React.forwardRef<
   } & React.InputHTMLAttributes<HTMLInputElement>
 >(({ label, error, className = "", required = false, ...props }, ref) => {
   return (
-    <div className="space-y-3 text-start">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
+    <div className="space-y-1.5 text-start">
+      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <input
         ref={ref}
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
-          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl
-          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
-          transition-all duration-300 ease-in-out
+          w-full px-2.5 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md shadow-sm
+          focus:ring-0 focus:border-blue-600 focus:shadow-focus
+          transition-shadow
           placeholder:text-gray-400 dark:placeholder:text-gray-500
-          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
+          ${error ? "border-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       />
-      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
+      {error && <p className="text-xs text-red-500 text-start">{error}</p>}
     </div>
   );
 });
@@ -193,25 +195,25 @@ export const AppleSelect: React.FC<
   ...props
 }) => {
   return (
-    <div className="space-y-3 text-start">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
+    <div className="space-y-1.5 text-start">
+      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <select
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
-          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl
-          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
-          transition-all duration-300 ease-in-out
-          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
+          w-full ps-2.5 pe-9 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md shadow-sm
+          focus:ring-0 focus:border-blue-600 focus:shadow-focus
+          transition-shadow
+          ${error ? "border-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       >
         {children}
       </select>
-      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
+      {error && <p className="text-xs text-red-500 text-start">{error}</p>}
     </div>
   );
 };
@@ -226,25 +228,25 @@ export const AppleTextarea = React.forwardRef<
   } & React.TextareaHTMLAttributes<HTMLTextAreaElement>
 >(({ label, error, className = "", required = false, ...props }, ref) => {
   return (
-    <div className="space-y-3 text-start">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-start">
+    <div className="space-y-1.5 text-start">
+      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <textarea
         ref={ref}
         className={`
-          w-full px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 text-start
-          bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl resize-y
-          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-md
-          transition-all duration-300 ease-in-out
+          w-full px-2.5 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
+          bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md shadow-sm resize-y
+          focus:ring-0 focus:border-blue-600 focus:shadow-focus
+          transition-shadow
           placeholder:text-gray-400 dark:placeholder:text-gray-500
-          ${error ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
+          ${error ? "border-red-500 focus:border-red-500" : ""}
           ${className}
         `}
         {...props}
       />
-      {error && <p className="text-sm text-red-500 dark:text-red-400 font-medium text-start">{error}</p>}
+      {error && <p className="text-xs text-red-500 text-start">{error}</p>}
     </div>
   );
 });
@@ -264,14 +266,14 @@ export const AppleToggle: React.FC<{
         type="button"
         onClick={() => onChange(!checked)}
         className={`
-          relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800
-          ${checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
+          relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full transition-colors duration-150 focus:outline-none focus-visible:shadow-focus
+          ${checked ? "bg-blue-600" : "bg-black/10 dark:bg-white/20"}
         `}
       >
         <span
           className={`
-            inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ease-in-out
-            ${checked ? "translate-x-6" : "translate-x-1"}
+            inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition-transform duration-150
+            ${checked ? "translate-x-[18px] rtl:-translate-x-[18px]" : "translate-x-[2px] rtl:-translate-x-[2px]"}
           `}
         />
       </button>
@@ -306,24 +308,22 @@ export const AppleButton: React.FC<
   ...props
 }) => {
   const baseClasses =
-    "font-semibold rounded-xl transition-all duration-300 ease-in-out flex items-center justify-center min-h-[44px] focus:ring-4 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+    "font-medium rounded-md transition-colors duration-100 inline-flex items-center justify-center gap-1.5 focus:outline-none focus-visible:shadow-focus disabled:opacity-40 disabled:cursor-default select-none";
 
   const variantClasses = {
-    primary:
-      "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md",
-    secondary: "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700",
-    ghost: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2",
-    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow-md",
-    success:
-      "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md",
-    warning:
-      "bg-orange-600 hover:bg-orange-700 text-white shadow-sm hover:shadow-md",
+    primary: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm",
+    secondary:
+      "bg-white dark:bg-white/10 border border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/15 shadow-sm",
+    ghost: "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10",
+    danger: "bg-red-500 hover:bg-red-600 text-white shadow-sm",
+    success: "bg-green-500 hover:bg-green-600 text-white shadow-sm",
+    warning: "bg-orange-500 hover:bg-orange-600 text-white shadow-sm",
   };
 
   const sizeClasses = {
-    sm: "px-4 py-2.5 text-sm",
-    md: "px-5 py-2.5 text-base",
-    lg: "px-6 py-3 text-lg",
+    sm: "px-2.5 py-1 text-sm",
+    md: "px-3 py-1.5 text-sm",
+    lg: "px-4 py-2 text-base",
   };
 
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
@@ -358,5 +358,5 @@ export const AppleButtonGroup: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = "" }) => {
-  return <div className={`flex space-x-3 ${className}`}>{children}</div>;
+  return <div className={`flex gap-2 ${className}`}>{children}</div>;
 };

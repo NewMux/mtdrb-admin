@@ -19,7 +19,7 @@ export default function Profile() {
   if (isLoading || !user) return null;
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center font-sans antialiased text-blue-900 bg-gradient-to-br from-white to-blue-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center font-sans antialiased text-blue-900 bg-white" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
       <motion.div
         className="w-full max-w-md bg-white/90 rounded-2xl shadow-2xl border border-blue-100 px-12 py-14 flex flex-col items-center"
         initial={{ opacity: 0, y: 40 }}

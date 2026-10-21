@@ -77,7 +77,7 @@ export default function DeleteTrainerModal({
         {/* Warning Message */}
         <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-5">
           <div className="flex items-start gap-4">
-            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg flex-shrink-0">
+            <div className="flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
               <FiAlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
             </div>
             <div className="text-start">
@@ -92,9 +92,9 @@ export default function DeleteTrainerModal({
         </div>
 
         {/* Trainer Information */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-white/[0.04] rounded-xl p-5">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center shadow-lg ring-2 ring-sky-100 flex-shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-gray-400 flex items-center justify-center shadow-lg ring-2 ring-sky-100 flex-shrink-0">
               <span className="text-white font-semibold text-base">
                 {trainer.avatar}
               </span>

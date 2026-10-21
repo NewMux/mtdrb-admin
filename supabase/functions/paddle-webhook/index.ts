@@ -18,6 +18,7 @@
 // event payload details can still differ in ways docs don't fully cover.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { paddleAmountToMajor } from "./money.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -135,11 +136,11 @@ async function syncSubscription(
   const status = mapStatus(paddleStatus);
   const nextBilledAt = typeof data.next_billed_at === "string" ? data.next_billed_at : null;
 
-  // Paddle returns unit_price.amount as a string in the smallest currency
-  // unit (e.g. "8000" = 80.00 for a 2-decimal currency like BHD/USD).
+  // Paddle returns unit_price.amount as a string in the currency's smallest
+  // unit; the number of decimals depends on the currency (see money.ts).
   const unitPrice = price?.unit_price as Record<string, unknown> | undefined;
-  const amount = typeof unitPrice?.amount === "string" ? Number(unitPrice.amount) / 100 : null;
   const currencyCode = typeof unitPrice?.currency_code === "string" ? unitPrice.currency_code : undefined;
+  const amount = paddleAmountToMajor(unitPrice?.amount, currencyCode);
 
   const { error } = await serviceClient
     .from("platform_subscriptions")

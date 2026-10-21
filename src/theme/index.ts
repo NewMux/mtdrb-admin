@@ -67,7 +67,7 @@ export const pageThemes = {
       900: "#0c4a6e",
     },
     accent: "#0ea5e9", // Sky blue
-    gradient: "from-sky-400 to-blue-500",
+    gradient: "bg-sky-400",
     icon: "text-sky-600",
     button: "bg-sky-500 hover:bg-sky-600",
     card: "border-sky-200 bg-sky-50/30",
@@ -91,7 +91,7 @@ export const pageThemes = {
       900: "#064e3b",
     },
     accent: "#10b981", // Emerald green
-    gradient: "from-emerald-400 to-green-500",
+    gradient: "bg-emerald-400",
     icon: "text-emerald-600",
     button: "bg-emerald-500 hover:bg-emerald-600",
     card: "border-emerald-200 bg-emerald-50/30",
@@ -115,7 +115,7 @@ export const pageThemes = {
       900: "#451a03",
     },
     accent: "#f59e0b", // Amber orange
-    gradient: "from-amber-400 to-orange-500",
+    gradient: "bg-amber-400",
     icon: "text-amber-600",
     button: "bg-amber-500 hover:bg-amber-600",
     card: "border-amber-200 bg-amber-50/30",
@@ -139,7 +139,7 @@ export const pageThemes = {
       900: "#701a75",
     },
     accent: "#d946ef", // Fuchsia pink
-    gradient: "from-fuchsia-400 to-pink-500",
+    gradient: "bg-fuchsia-400",
     icon: "text-fuchsia-600",
     button: "bg-fuchsia-500 hover:bg-fuchsia-600",
     card: "border-fuchsia-200 bg-fuchsia-50/30",
@@ -163,7 +163,7 @@ export const pageThemes = {
       900: "#14532d",
     },
     accent: "#22c55e", // Green
-    gradient: "from-green-400 to-emerald-500",
+    gradient: "bg-green-400",
     icon: "text-green-600",
     button: "bg-green-500 hover:bg-green-600",
     card: "border-green-200 bg-green-50/30",
@@ -187,7 +187,7 @@ export const pageThemes = {
       900: "#1e3a8a",
     },
     accent: "#3b82f6", // Blue
-    gradient: "from-blue-400 to-indigo-500",
+    gradient: "bg-blue-400",
     icon: "text-blue-600",
     button: "bg-blue-500 hover:bg-blue-600",
     card: "border-blue-200 bg-blue-50/30",
@@ -211,7 +211,7 @@ export const pageThemes = {
       900: "#581c87",
     },
     accent: "#a855f7", // Purple
-    gradient: "from-purple-400 to-violet-500",
+    gradient: "bg-purple-400",
     icon: "text-purple-600",
     button: "bg-purple-500 hover:bg-purple-600",
     card: "border-purple-200 bg-purple-50/30",
@@ -235,7 +235,7 @@ export const pageThemes = {
       900: "#0f172a",
     },
     accent: "#64748b", // Slate gray
-    gradient: "from-slate-400 to-gray-500",
+    gradient: "bg-slate-400",
     icon: "text-slate-600",
     button: "bg-slate-500 hover:bg-slate-600",
     card: "border-slate-200 bg-slate-50/30",
@@ -259,7 +259,7 @@ export const pageThemes = {
       900: "#7c2d12",
     },
     accent: "#f97316", // Orange
-    gradient: "from-orange-400 to-red-500",
+    gradient: "bg-orange-400",
     icon: "text-orange-600",
     button: "bg-orange-500 hover:bg-orange-600",
     card: "border-orange-200 bg-orange-50/30",
@@ -283,7 +283,7 @@ export const pageThemes = {
       900: "#111827",
     },
     accent: "#6b7280", // Gray
-    gradient: "from-gray-400 to-slate-500",
+    gradient: "bg-gray-400",
     icon: "text-gray-600",
     button: "bg-gray-500 hover:bg-gray-600",
     card: "border-gray-200 bg-gray-50/30",
@@ -307,7 +307,7 @@ export const pageThemes = {
       900: "#0c4a6e",
     },
     accent: "#0ea5e9", // Sky blue
-    gradient: "from-sky-400 to-cyan-500",
+    gradient: "bg-sky-400",
     icon: "text-sky-600",
     button: "bg-sky-500 hover:bg-sky-600",
     card: "border-sky-200 bg-sky-50/30",
@@ -365,8 +365,8 @@ export const theme = {
     info: "#3B82F6",
 
     // Gradients
-    gradient: "bg-gradient-to-tr from-sky-400 to-rose-400",
-    gradientHover: "bg-gradient-to-tr from-sky-500 to-rose-500",
+    gradient: "bg-sky-400",
+    gradientHover: "bg-sky-500",
   },
 
   dark: {
@@ -443,7 +443,7 @@ export const theme = {
 export const designTokens = {
   // Card styles
   card: {
-    base: "rounded-2xl p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700",
+    base: "rounded-xl p-6 bg-gray-50 dark:bg-gray-800",
     hover:
       "hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-300",
     interactive: "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
@@ -530,7 +530,7 @@ export const tailwindConfig = {
       "text-gray-500 hover:text-gray-700 bg-transparent px-4 py-2 rounded-xl transition-all duration-300 ease-in-out min-h-[44px] dark:text-gray-400 dark:hover:text-white",
   },
   card: {
-    base: "bg-white p-6 rounded-2xl shadow-sm gap-2 dark:bg-gray-800 dark:shadow-lg dark:border-gray-700",
+    base: "bg-gray-50 p-6 rounded-xl gap-2 dark:bg-gray-800 dark:shadow-lg",
     success:
       "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
     alert:

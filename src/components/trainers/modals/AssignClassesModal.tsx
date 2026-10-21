@@ -190,7 +190,7 @@ export default function AssignClassesModal({
       <div className="space-y-6">
         {/* Trainer Info */}
         <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center">
             <span className="text-white font-medium text-sm">
               {trainer.avatar}
             </span>
@@ -207,7 +207,7 @@ export default function AssignClassesModal({
 
         {/* Available Classes */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <FiCalendar className="text-blue-500" />
             Available Classes
           </h3>
