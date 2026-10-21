@@ -7,7 +7,10 @@ import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers } from "react-icons/fi"
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
-import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+import {
+  contextSubscriptionToEntitlement,
+  isSubscriptionEntitled,
+} from "../utils/subscriptionEntitlement";
 
 // Extract the intended post-login redirect path from router location state,
 // which react-router types as `unknown`.
@@ -60,7 +63,9 @@ export default function Subscribe() {
     isLoading: subscriptionLoading,
     subscription,
   } = useSubscription();
-  const hasActiveSubscription = isSubscriptionEntitled(subscription);
+  const hasActiveSubscription = isSubscriptionEntitled(
+    contextSubscriptionToEntitlement(subscription),
+  );
   const navigate = useNavigate();
   const location = useLocation();
 

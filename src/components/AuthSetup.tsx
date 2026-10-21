@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase, IS_MOCK_MODE } from "../supabaseClient";
 import { FiAlertTriangle } from "react-icons/fi";
+import { fetchPlatformAdminStatus } from "../api/platformAdmin";
 
 interface AuthSetupProps {
   children: React.ReactNode;
@@ -10,6 +12,10 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Held in a ref so the run-once setup effect below keeps its [] dependencies.
+  const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     let cancelled = false;
@@ -169,6 +175,25 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
           finishSetup();
           clearTimeout(timeoutId);
           return;
+        }
+
+        // The platform owner has no gym on purpose. Sending them down the
+        // tenant-creation path below would silently create a stray "My Gym"
+        // that then pollutes tenant lists and KPIs, so route them to the
+        // console instead. This is routing only, not a security boundary (the
+        // database gates every platform_* RPC), so a failed check falls
+        // through to the normal behaviour.
+        try {
+          const platformStatus = await fetchPlatformAdminStatus();
+          if (platformStatus !== "not_admin") {
+            clearTimeout(timeoutId);
+            if (!cancelled) {
+              navigateRef.current("/superadmin", { replace: true });
+            }
+            return;
+          }
+        } catch (platformError) {
+          console.warn("AuthSetup: platform admin check failed", platformError);
         }
 
         // A user without a membership may create only a new organization for
