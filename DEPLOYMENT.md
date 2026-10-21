@@ -200,6 +200,39 @@ name, admin emails, access state, usage counts) — never member records.
 6. Run the checks in `supabase/POST_DEPLOYMENT_CHECKLIST.md` ("Platform owner
    console").
 
+**Gym and user controls** (`supabase/migrations/20261021150000_platform_admin_gym_and_user_controls.sql`)
+
+Apply this after the console migration above (same way: `supabase db push`, or
+paste it in the SQL editor and then record it in the migrations history). It
+adds, on a gym's page in the console:
+
+- **Suspend / unsuspend a gym.** Everyone who belongs *only* to that gym is
+  banned and signed out; people who also belong to another gym are not touched,
+  and unsuspending lifts only the bans the suspension placed. Limit: a ban
+  stops sign-in and refresh at once, but an access token already issued stays
+  valid until it expires (Supabase default: 1 hour).
+- **Delete a gym.** Permanent; you type the gym's exact name. Optionally also
+  deletes the accounts of people who belong only to that gym. Refused while a
+  Paddle subscription is live (cancel it in Paddle first) and for any gym that
+  contains a platform admin. **Files in Storage (receipts, invoice files,
+  logos) are not removed.**
+- **Ban / unban, reset MFA, change role, delete a user.** Deleting needs the
+  user's email typed, and hands their POS records, tasks and stock movements to
+  the gym's longest-standing *other* admin (those columns would otherwise block
+  the delete). It refuses to delete a gym's only admin (promote someone first,
+  or delete the gym), and to demote a gym's last admin.
+
+Rules the database enforces (not just the UI): every action needs a reason of
+3 to 500 characters and is written to the append-only audit log; nobody can act
+on their own account or on a platform admin; role changes only accept
+`admin`, `employee` or `trainer`. These controls show account-level data only;
+the audit log records counts and account emails, never member records.
+
+Check it landed with the "Gym and user controls" queries in
+`supabase/POST_DEPLOYMENT_CHECKLIST.md`, and run
+`supabase/tests/platform_admin_controls.test.sql` on a Supabase branch or a
+local stack before applying it to production.
+
 **Operations**
 
 - Add/remove admins in SQL (`insert into` / `delete from public.platform_admins`).

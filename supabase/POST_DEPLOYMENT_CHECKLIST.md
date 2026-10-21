@@ -336,7 +336,8 @@ Run after applying the migration (see `DEPLOYMENT.md` → "Platform owner consol
 select has_table_privilege('postgres', 'auth.sessions', 'select')    as sessions_readable,
        has_table_privilege('postgres', 'auth.mfa_factors', 'select') as factors_readable;
 
--- 2. Nothing platform-related is callable by anon; only the 8 client RPCs by authenticated.
+-- 2. Nothing platform-related is callable by anon; only the client RPCs by authenticated
+--    (8 from the console migration + 8 from the gym/user controls migration = 16).
 select p.proname,
        has_function_privilege('anon', p.oid, 'execute')          as anon,
        has_function_privilege('authenticated', p.oid, 'execute') as authenticated
@@ -352,6 +353,38 @@ Manual pass: sign in as the owner → enrol TOTP → console loads; sign in as a
 ordinary gym admin and open `/superadmin` → normal 404 page; activate a test
 gym and confirm it appears under *Recent changes* and the gym can enter the app.
 If the console shows "Could not check your access", re-run query 1.
+
+### Gym and user controls (`20261021150000_platform_admin_gym_and_user_controls.sql`)
+
+Run after applying it. Query 2 above should now show `authenticated = true` for
+exactly these 16 functions: `platform_admin_status`, `platform_overview`,
+`platform_list_tenants`, `platform_tenant_detail`, `platform_list_audit_log`,
+`platform_grant_access`, `platform_revoke_access`, `platform_add_note`,
+`platform_suspend_gym`, `platform_unsuspend_gym`, `platform_delete_gym`,
+`platform_ban_user`, `platform_unban_user`, `platform_reset_user_mfa`,
+`platform_change_user_role`, `platform_delete_user`. Everything else
+(`platform_assert_manageable_user`, `platform_user_single_tenant`, the other
+helpers) must be `false` for both `anon` and `authenticated`.
+
+```sql
+-- the new table exists, has RLS on, and no client privileges
+select to_regclass('public.platform_suspensions') as suspensions,
+       (select relrowsecurity from pg_class where oid = 'public.platform_suspensions'::regclass) as rls_on,
+       has_table_privilege('authenticated', 'public.platform_suspensions', 'select') as client_can_read;   -- expect: name, true, false
+
+-- the definer functions can write the auth tables they ban/delete through
+select has_table_privilege('postgres', 'auth.users', 'update')     as can_ban,
+       has_table_privilege('postgres', 'auth.users', 'delete')     as can_delete_user,
+       has_table_privilege('postgres', 'auth.sessions', 'delete')  as can_end_sessions,
+       has_table_privilege('postgres', 'auth.mfa_factors', 'delete') as can_reset_mfa;                    -- expect: all true
+
+-- the audit log accepts the new actions
+select pg_get_constraintdef(oid) from pg_constraint where conname = 'platform_audit_log_action_check';
+```
+
+Manual pass on a throwaway gym: suspend it (its staff can no longer sign in),
+unsuspend it, ban and unban one staff member, change a role, then delete the
+user and the gym; each step should appear under *Recent changes*.
 
 Expected `get_advisors` output: `authenticated_security_definer_function_executable`
 on the `platform_*` RPCs and "RLS enabled, no policy" on `platform_admins` and

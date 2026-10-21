@@ -59,6 +59,7 @@ export const TENANT_FILTERS: Array<{ value: TenantFilter; label: string }> = [
   { value: "trialing", label: "Trial" },
   { value: "inactive", label: "No access" },
   { value: "ending_soon", label: "Ending soon" },
+  { value: "suspended", label: "Suspended" },
 ];
 
 export const TENANT_SORTS: Array<{ value: TenantSort; label: string }> = [
@@ -308,6 +309,44 @@ export function describeAuditEntry(entry: PlatformAuditEntry): {
       return { title: "Revoked manual access", detail: details.reason ?? null };
     case "note":
       return { title: "Note", detail: details.note ?? null };
+    case "suspend_gym":
+      return {
+        title: `Suspended gym (${details.banned_users ?? 0} sign-in${details.banned_users === 1 ? "" : "s"} blocked)`,
+        detail: details.reason ?? null,
+      };
+    case "unsuspend_gym":
+      return {
+        title: `Lifted suspension (${details.unbanned_users ?? 0} sign-in${details.unbanned_users === 1 ? "" : "s"} restored)`,
+        detail: details.reason ?? null,
+      };
+    case "delete_gym": {
+      const deleted = details.deleted_users?.length ?? 0;
+      return {
+        title: deleted > 0 ? `Deleted gym and ${deleted} account${deleted === 1 ? "" : "s"}` : "Deleted gym",
+        detail: details.reason ?? null,
+      };
+    }
+    case "ban_user":
+      return { title: `Banned ${details.email ?? "a user"}`, detail: details.reason ?? null };
+    case "unban_user":
+      return { title: `Unbanned ${details.email ?? "a user"}`, detail: details.reason ?? null };
+    case "reset_mfa":
+      return { title: `Reset MFA for ${details.email ?? "a user"}`, detail: details.reason ?? null };
+    case "change_role":
+      return {
+        title: `Changed ${details.email ?? "a user"} from ${details.from ?? "?"} to ${details.to ?? "?"}`,
+        detail: details.reason ?? null,
+      };
+    case "delete_user": {
+      const moved = Object.values(details.reassigned ?? {}).reduce((a, b) => a + b, 0);
+      return {
+        title: `Deleted ${details.email ?? "a user"}`,
+        detail:
+          moved > 0 && details.reassigned_to
+            ? `${details.reason ?? ""}${details.reason ? "\n" : ""}${moved} record${moved === 1 ? "" : "s"} handed to ${details.reassigned_to}`
+            : (details.reason ?? null),
+      };
+    }
     default:
       return { title: String(entry.action), detail: null };
   }

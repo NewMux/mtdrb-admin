@@ -230,7 +230,11 @@ DECLARE
   client_rpcs text[] := ARRAY[
     'platform_admin_status', 'platform_overview', 'platform_list_tenants',
     'platform_tenant_detail', 'platform_list_audit_log', 'platform_grant_access',
-    'platform_revoke_access', 'platform_add_note'
+    'platform_revoke_access', 'platform_add_note',
+    -- 20261021150000_platform_admin_gym_and_user_controls.sql
+    'platform_suspend_gym', 'platform_unsuspend_gym', 'platform_delete_gym',
+    'platform_ban_user', 'platform_unban_user', 'platform_reset_user_mfa',
+    'platform_change_user_role', 'platform_delete_user'
   ];
   seen integer := 0;
 BEGIN
@@ -250,7 +254,7 @@ BEGIN
   PERFORM test.ok(NOT has_function_privilege('authenticated', 'public.enforce_platform_subscription_self_service()'::regprocedure, 'EXECUTE'),
                   'trigger function: authenticated cannot execute');
 
-  FOR f IN SELECT unnest(ARRAY['platform_admins', 'platform_audit_log']) AS t LOOP
+  FOR f IN SELECT unnest(ARRAY['platform_admins', 'platform_audit_log', 'platform_suspensions']) AS t LOOP
     PERFORM test.ok(NOT has_table_privilege('anon', 'public.' || f.t, 'SELECT,INSERT,UPDATE,DELETE'), f.t || ': anon has no table privileges');
     PERFORM test.ok(NOT has_table_privilege('authenticated', 'public.' || f.t, 'SELECT'), f.t || ': authenticated cannot SELECT');
     PERFORM test.ok(NOT has_table_privilege('authenticated', 'public.' || f.t, 'INSERT'), f.t || ': authenticated cannot INSERT');
