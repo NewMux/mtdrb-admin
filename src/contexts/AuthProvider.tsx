@@ -7,6 +7,7 @@ import { supabase, getCurrentUser, IS_MOCK_MODE } from "../supabaseClient";
 import { isValidRole } from "../types/roles";
 import { withTimeout } from "../utils/withTimeout";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+import { isPlatformAdminPath } from "../utils/platformAdmin";
 import {
   AuthContext,
   type AuthErrorState,
@@ -229,6 +230,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // The platform-owner console is authorised by PlatformAdminGuard and the
+      // database, not by the signed-in user's own gym subscription - an owner
+      // whose gym is unpaid must not be bounced out of it.
+      if (isPlatformAdminPath(location.pathname)) {
+        return;
+      }
+
       // metadata.paid already reflects isSubscriptionEntitled() computed from
       // the RLS-protected platform_subscriptions row in handleUserMetadata.
       // Do not re-derive entitlement here from user_metadata.trial_end: it is
@@ -293,6 +301,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             location.pathname === "/privacy" ||
             location.pathname === "/refund"
           ) {
+            break;
+          }
+
+          // SIGNED_IN also re-fires on tab refocus and after an MFA verify, so
+          // it must leave the platform console alone. Read the live location:
+          // the closed-over pathname can be stale between re-subscriptions.
+          if (isPlatformAdminPath(window.location.pathname)) {
             break;
           }
 

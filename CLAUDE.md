@@ -41,3 +41,24 @@ When writing or modifying Paddle-related code:
   `DEPLOYMENT.md` and `.env.template` for the full list of `VITE_PADDLE_*`
   (client-safe) and `PADDLE_*` (server secret) vars this integration
   needs.
+
+## Platform owner console
+
+The owner-only `/superadmin` console is documented in `DEPLOYMENT.md`
+("Platform owner console"). When touching it or anything near it:
+
+- Never add `'superadmin'` (or any platform role) to `UserRole`,
+  `memberships.role` or `has_tenant_role()` — the platform owner is a separate
+  concept (`platform_admins` allowlist), and `roles.test.ts` asserts an unknown
+  role string degrades to trainer.
+- Never store platform/owner state in `platform_subscriptions.metadata`: the
+  Paddle webhook replaces that object on every event. Manual grants use
+  `payment_provider = 'manual'`.
+- Cross-tenant access goes only through the `platform_*` SECURITY DEFINER RPCs
+  (each starts with `require_platform_admin()`); never add a broad RLS bypass,
+  because most client code omits tenant filters and relies on RLS.
+- New `public` functions/tables must be explicitly revoked from `anon` and
+  `authenticated` (Supabase default privileges grant to them directly), and
+  `supabase/tests/platform_admin_console.test.sql` loops over `platform_%`
+  functions to catch a miss.
+

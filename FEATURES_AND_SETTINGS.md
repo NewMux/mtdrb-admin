@@ -94,8 +94,8 @@ Gym selects an MTDRB SaaS plan before using the app.
 
 | Plan | Price | Key limits |
 |------|-------|------------|
-| **Starter** | $99/month | Up to 100 members, basic management, scheduling, payments, email support |
-| **Pro** | $199/month | Unlimited members, advanced analytics, automation, PT tools, VAT reporting, priority support, custom branding, API access |
+| **Starter** | BHD 20/month | Up to 100 members, basic management, scheduling, payments, email support |
+| **Pro** | BHD 35/month | Unlimited members, advanced analytics, automation, PT tools, VAT reporting, priority support, custom branding, API access |
 
 Sets `paid`, `subscription_tier`, and `subscription_start` in user metadata.  
 If onboarding is incomplete → `/onboarding`; otherwise → `/dashboard`.

@@ -45,11 +45,17 @@ const Tasks = lazy(() => import("./pages/Tasks"));
 const Branches = lazy(() => import("./pages/Branches"));
 const Insights = lazy(() => import("./pages/Insights"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
+const SuperAdminOverview = lazy(() => import("./pages/superadmin/Overview"));
+const SuperAdminTenants = lazy(() => import("./pages/superadmin/Tenants"));
+const SuperAdminTenantDetail = lazy(() => import("./pages/superadmin/TenantDetail"));
 
 // Components
 import Layout from "./components/Layout";
 import AuthSetup from "./components/AuthSetup";
 import PermissionGuard from "./components/auth/PermissionGuard";
+import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
+import { PlatformAdminProvider } from "./contexts/PlatformAdminProvider";
 
 const App = () => {
   // Global async error handling
@@ -288,6 +294,25 @@ const App = () => {
                             </PermissionGuard>
                           } 
                         />
+                      </Route>
+
+                      {/* Platform-owner console. Deliberately outside AuthSetup/Layout
+                          (which auto-create a gym and need one). The guard is UX only;
+                          every platform_* RPC is enforced by the database. */}
+                      <Route
+                        path="/superadmin"
+                        element={
+                          <PlatformAdminProvider>
+                            <PlatformAdminGuard>
+                              <SuperAdminLayout />
+                            </PlatformAdminGuard>
+                          </PlatformAdminProvider>
+                        }
+                      >
+                        <Route index element={<SuperAdminOverview />} />
+                        <Route path="tenants" element={<SuperAdminTenants />} />
+                        <Route path="tenants/:tenantId" element={<SuperAdminTenantDetail />} />
+                        <Route path="*" element={<Navigate to="/superadmin" replace />} />
                       </Route>
 
                       {/* Redirect root dashboard to /dashboard */}

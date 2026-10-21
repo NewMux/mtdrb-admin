@@ -142,6 +142,18 @@ Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
   automatically to every Edge Function; nothing to set.
 
+**Pricing and currency.** Platform plans are BHD 20/month (Starter) and
+BHD 35/month (Pro). The in-app/landing prices come from `VITE_STARTER_PRICE`,
+`VITE_PRO_PRICE` and `VITE_PLATFORM_CURRENCY` (defaults 20 / 35 / BHD) — if you
+set those in Vercel, update them there too or the old values keep showing.
+BHD has **3 decimals**, so Paddle amounts are in fils (BHD 20 = `"20000"`); the
+seed script and `paddle-webhook` both account for this. **Unverified:** whether
+your Paddle account accepts BHD as a price currency and how it reports the
+amount — confirm in the sandbox (`PADDLE_BASE_CURRENCY=USD` is the fallback for
+the seed script) before opening checkout. Existing Paddle prices must be
+recreated or replaced (Paddle prices are immutable in amount) and the
+`*_PRICE_ID` vars updated.
+
 Set up in Paddle's dashboard before this can go live: create the Starter
 and Pro products/prices (sandbox first), point a webhook notification
 destination at `paddle-webhook`'s deployed URL subscribed to at least
@@ -155,6 +167,66 @@ documentation (`developer.paddle.com/webhooks`), which is public and
 stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
 access) before relying on this for real customer traffic.
+
+## Platform owner console (`/superadmin`)
+
+The owner-only console for seeing every gym and activating / comping /
+revoking access. It is **authorised in Postgres, not in the UI**: every
+`platform_*` RPC (`supabase/migrations/20261019090000_create_platform_admin_console.sql`)
+requires an allowlist row in `platform_admins` **and** a live MFA (aal2)
+session with a verified TOTP factor. It shows account-level data only (gym
+name, admin emails, access state, usage counts) — never member records.
+
+**One-time setup**
+
+1. Apply the migration with `supabase db push` so the recorded version matches
+   the filename. First compare the live trigger function with the repo:
+   `select pg_get_functiondef('public.enforce_platform_subscription_self_service'::regproc);`
+   against `20260909162346_revoke_self_service_trial_creation.sql` — the
+   migration replaces it (adding one early return for the audited RPCs).
+2. Supabase → Authentication → Multi-Factor: make sure **TOTP** is enabled.
+3. Create the owner login in Supabase → Authentication → Users → *Add user*
+   (auto-confirm). Do **not** use `/signup`: that creates a gym. A dedicated
+   owner account with no gym is cleanest; if the owner also runs a gym, either
+   comp that gym from the console or bookmark `/superadmin`.
+4. Allowlist it (SQL editor):
+   ```sql
+   insert into public.platform_admins (user_id, note)
+   select id, 'owner' from auth.users where email = '<owner-email>';
+   ```
+5. Sign in at `/login`; you land on the console and are asked to enrol an
+   authenticator app. **Enrol a second device, or store the secret shown under
+   the QR code somewhere safe.**
+6. Run the checks in `supabase/POST_DEPLOYMENT_CHECKLIST.md` ("Platform owner
+   console").
+
+**Operations**
+
+- Add/remove admins in SQL (`insert into` / `delete from public.platform_admins`).
+  Removal takes effect on the next request.
+- Lost authenticator: `delete from auth.mfa_factors where user_id = '<uuid>';`
+  then sign in and enrol again.
+- Every grant/revoke/note is written to `platform_audit_log` (append-only) with
+  the actor, reason and before/after. Refused attempts roll back and leave no row.
+- Consider a shorter JWT expiry (Auth settings) — the live-session check makes
+  sign-out effective immediately, but a stolen token otherwise lives until expiry.
+- Break-glass: the SQL editor / service role can still write
+  `platform_subscriptions` directly, as before.
+
+**How manual access interacts with Paddle**
+
+A grant writes `platform_subscriptions` with `payment_provider = 'manual'`,
+`amount = 0`. Gyms billed through Paddle (active/trialing) are read-only in the
+console — change or cancel those in Paddle. If a gym *ever* had a Paddle
+subscription, cancel it in Paddle before granting: the webhook upserts on every
+event, so a late or retried event can overwrite a manual grant (and a real new
+Paddle subscription replaces it, by design). Superadmin state is deliberately
+never stored in `platform_subscriptions.metadata`, which the webhook overwrites.
+Grants use `payment_provider = 'manual'`; only `pro`/`enterprise` unlock Pro
+features, and "no expiry" is entitled forever until revoked.
+
+**Tests**: `supabase/tests/` holds a Supabase shim and a SQL suite that runs on a
+plain Postgres 16 (see the header of `platform_admin_console.test.sql`).
 
 ## Financial document migration
 
