@@ -127,6 +127,8 @@ import {
 } from "../components/analytics/modals";
 import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatStrip } from "../components/ui/StatStrip";
 
 type AnalyticsView =
   | "overview"
@@ -483,14 +485,14 @@ export default function Analytics() {
             1,
           )}% vs previous period`,
           icon: FiDollarSign,
-          color: "from-green-500 to-green-600",
+          color: "bg-green-500",
         },
         {
           name: "Active Members",
           value: activeMembers.toLocaleString(),
           change: `${newMembersThisPeriod} new this period`,
           icon: FiUsers,
-          color: "from-blue-500 to-blue-600",
+          color: "bg-blue-500",
         },
         {
           name: "Class Attendance",
@@ -499,7 +501,7 @@ export default function Analytics() {
             1,
           )}% vs previous period`,
           icon: FiCalendar,
-          color: "from-purple-500 to-purple-600",
+          color: "bg-purple-500",
         },
         {
           name: "Collection Rate",
@@ -508,7 +510,7 @@ export default function Analytics() {
             1,
           )}% vs previous period`,
           icon: FiCheckCircle,
-          color: "from-yellow-500 to-orange-500",
+          color: "bg-yellow-500",
         },
       ]);
 
@@ -1026,7 +1028,7 @@ export default function Analytics() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 animate-pulse"
+                    className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 animate-pulse"
                   >
                     <div className="flex items-center justify-between">
                       <div className="space-y-3 flex-1">
@@ -1040,7 +1042,7 @@ export default function Analytics() {
                 ))}
               </div>
             ) : analyticsStats.length === 0 ? (
-              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+              <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
                 <FiBarChart2 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
@@ -1056,36 +1058,9 @@ export default function Analytics() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {analyticsStats.map((stat, index) => (
-                  <motion.div
-                    key={stat.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          {stat.name}
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                          {stat.value}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                          {stat.change}
-                        </p>
-                      </div>
-                      <div
-                        className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}
-                      >
-                        <stat.icon className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <StatStrip
+                items={analyticsStats.map((stat) => ({ label: stat.name, value: stat.value, detail: stat.change }))}
+              />
             )}
 
 
@@ -1096,7 +1071,7 @@ export default function Analytics() {
         return (
           <div className="space-y-6">
             {loading ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
                   <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>{t("analytics.loadingMemberAnalytics")}</p>
@@ -1105,7 +1080,7 @@ export default function Analytics() {
             ) : memberAnalyticsData ? (
               <MemberAnalytics {...memberAnalyticsData} />
             ) : (
-              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+              <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
                 <FiUsers className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
@@ -1128,7 +1103,7 @@ export default function Analytics() {
         return (
           <div className="space-y-6">
             {loading ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
                   <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>{t("analytics.loadingRevenueAnalytics")}</p>
@@ -1137,7 +1112,7 @@ export default function Analytics() {
             ) : revenueOverviewData ? (
               <RevenueOverview {...revenueOverviewData} />
             ) : (
-              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+              <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
                 <FiDollarSign className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
@@ -1160,14 +1135,14 @@ export default function Analytics() {
         return (
           <div className="space-y-6">
             {loading ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
                   <p className={`ml-3 text-gray-600 dark:text-gray-400 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading class analytics...</p>
                 </div>
               </div>
             ) : (
-              <div className={`bg-white dark:bg-gray-800 rounded-xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+              <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
                 <FiCalendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.classAnalytics")}
@@ -1189,7 +1164,7 @@ export default function Analytics() {
       case "insights":
         return (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
               <h2 className={`text-xl font-semibold text-gray-900 dark:text-white mb-6 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {t("analytics.smartInsights")}
               </h2>
@@ -1250,33 +1225,26 @@ export default function Analytics() {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="text-start">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              📊 Smart Analytics Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Smart-powered insights • Real-time data • Actionable reports
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
+      <PageHeader
+        title={t("analytics.title")}
+        subtitle={t("analytics.pageSubtitle")}
+        actions={
+          <>
             <button
               onClick={() =>
                 setModalState((prev) => ({ ...prev, export: true }))
               }
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+              className="btn btn-secondary"
             >
               <FiDownload className="w-4 h-4" />
               <span>{t("analytics.export")}</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div>
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Date Range Filter */}
           <div className="flex-1">
@@ -1285,7 +1253,7 @@ export default function Analytics() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
               }
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               dir={isRTL ? "rtl" : "ltr"}
             >
               {dateFilters.map((filter) => (
@@ -1303,7 +1271,7 @@ export default function Analytics() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, branch: e.target.value }))
               }
-              className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               dir={isRTL ? "rtl" : "ltr"}
             >
               <option value="all">All Branches</option>
@@ -1341,7 +1309,7 @@ export default function Analytics() {
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, customStartDate: e.target.value }))
                 }
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
             <div>
@@ -1354,7 +1322,7 @@ export default function Analytics() {
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, customEndDate: e.target.value }))
                 }
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
           </div>
@@ -1362,33 +1330,32 @@ export default function Analytics() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                activeView === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
+      <div role="tablist" className="mac-segmented max-w-full overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeView === tab.id}
+            onClick={() => setActiveView(tab.id)}
+            className={`mac-segment whitespace-nowrap ${
+              activeView === tab.id ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {renderActiveView()}
         </motion.div>
@@ -1475,7 +1442,7 @@ export default function Analytics() {
                 metricType: e.target.value,
               }))
             }
-            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+            className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
             dir={isRTL ? "rtl" : "ltr"}
           >
             <option value="all">{t("analytics.allMetrics")}</option>
@@ -1492,7 +1459,7 @@ export default function Analytics() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("analytics.memberType")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("analytics.allMemberTypes")}</option>
             <option value="active">{t("members.active")}</option>
             <option value="inactive">{t("members.inactive")}</option>
@@ -1507,7 +1474,7 @@ export default function Analytics() {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("analytics.classType")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("analytics.allClassTypes")}</option>
             <option value="group">{t("classes.groupClasses")}</option>
             <option value="personal">{t("classes.personalTraining")}</option>

@@ -1,13 +1,9 @@
 import React from "react";
-import PremiumLanding from "../components/landing/PremiumLanding";
+import Home from "../components/landing/Home";
 
-/**
- * Landing Page Component - Premium Version
- * High-converting, premium landing page for MTDRB/Idara
- * Built specifically for the GCC region with bilingual support
- */
+/** Public marketing page: MTDRB, powered by NewMux. */
 const LandingPage: React.FC = () => {
-  return <PremiumLanding />;
+  return <Home />;
 };
 
 export default LandingPage;

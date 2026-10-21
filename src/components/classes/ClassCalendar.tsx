@@ -305,7 +305,7 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   classType: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                className="ps-3 pe-9 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('classes.allTypes')}</option>
                 <option value="hiit">HIIT</option>
@@ -322,7 +322,7 @@ const ClassCalendar: React.FC = () => {
                   ...prev, 
                   trainer: e.target.value ? e.target.value.split(',') : [] 
                 }))}
-                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                className="ps-3 pe-9 py-1 text-sm bg-gray-100 dark:bg-gray-700 border-0 rounded text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">{t('classes.allTrainers')}</option>
                 <option value="ahmed">Ahmed</option>
@@ -351,7 +351,7 @@ const ClassCalendar: React.FC = () => {
           ) : filteredEvents.length === 0 ? (
             <div className="p-12 text-center">
               <FiCalendar className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
                 {t('classes.noClassesScheduled')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -359,7 +359,7 @@ const ClassCalendar: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium"
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all font-medium"
               >
                 {t('classes.addYourFirstClass')}
               </button>

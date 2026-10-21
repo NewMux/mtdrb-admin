@@ -271,9 +271,9 @@ export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
   if (suggestions.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 mb-6">
+    <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-gray-900">
           Smart Suggestions
         </h3>
         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">

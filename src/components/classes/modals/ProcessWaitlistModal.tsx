@@ -40,7 +40,7 @@ const FormSection: React.FC<FormSectionProps> = ({
 }) => (
   <div className="space-y-4">
     <div>
-      <h3 className="text-lg font-semibold text-dark-900 dark:text-white">
+      <h3 className="text-base font-semibold text-dark-900 dark:text-white">
         {title}
       </h3>
       {subtitle && (
@@ -313,7 +313,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
               <select
                 value={assignmentLogic}
                 onChange={(e) => setAssignmentLogic(e.target.value as "first-come" | "engagement" | "manual")}
-                className="w-full px-4 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
+                className="w-full ps-4 pe-9 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
               >
                 <option value="first-come">First Come, First Served</option>
                 <option value="engagement">Engagement Score</option>

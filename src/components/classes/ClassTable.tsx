@@ -157,7 +157,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         <div className="p-8 text-center">
           <div className="text-red-600 dark:text-red-400 mb-4">
             <FiEye className="h-8 w-8 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold">Error Loading Classes</h3>
+            <h3 className="text-base font-semibold">Error Loading Classes</h3>
             <p className="text-sm mt-2">{error}</p>
           </div>
         </div>
@@ -212,7 +212,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
   return (
     <div className="space-y-4">
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full" dir={isRTL ? "rtl" : "ltr"}>
             <thead>
@@ -304,9 +304,6 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0">
-                        <FiUsers className="w-5 h-5 text-white" />
-                      </div>
                       <div className="text-start">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {classItem.name}
@@ -491,7 +488,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <div className="text-sm text-gray-700 dark:text-gray-300 text-start">
             {t("classes.showing")} {(currentPage - 1) * itemsPerPage + 1} {t("common.to")} {" "}
             {Math.min(currentPage * itemsPerPage, sortedClasses.length)} {t("classes.of")} {" "}

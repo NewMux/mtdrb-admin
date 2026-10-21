@@ -53,7 +53,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             } ${
               error
                 ? "border-red-300 bg-red-50"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-gray-900 bg-white`}
@@ -71,7 +71,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             } ${
               error
                 ? "border-red-300 bg-red-50"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             } ${
               disabled ? "opacity-50 cursor-not-allowed" : ""
             } text-gray-900 bg-white`}
@@ -123,7 +123,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
+        className={`w-full ps-4 pe-9 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 ${
           error
             ? "border-red-300 bg-red-50"
             : "border-gray-200 bg-white"

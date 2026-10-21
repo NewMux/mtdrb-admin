@@ -121,22 +121,22 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
       <table className="w-full" dir={isRTL ? "rtl" : "ltr"}>
         <thead className="bg-gray-50 dark:bg-gray-800/50">
           <tr>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("trainers.trainerName", "اسم المدرب")}
             </th>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("trainers.contact", "معلومات الاتصال")}
             </th>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("trainers.specialties", "التخصصات")}
             </th>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("trainers.rating", "التقييم")}
             </th>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("trainers.status", "الحالة")}
             </th>
-            <th className="px-6 py-4 text-start text-sm font-medium text-gray-700 dark:text-gray-300">
+            <th className="px-6 py-4 text-start text-xs font-medium text-gray-500 dark:text-gray-400">
               {t("common.actions", "الإجراءات")}
             </th>
           </tr>
@@ -155,7 +155,7 @@ const TrainerTable: React.FC<TrainerTableProps> = ({
             >
               <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-sm">
                       {trainer.avatar}
                     </span>

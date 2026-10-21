@@ -371,7 +371,7 @@ export default function Plans() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="ps-4 pe-9 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="all">{t("plans.allStatus")}</option>
           <option value="active">{t("plans.active")}</option>
@@ -431,7 +431,7 @@ export default function Plans() {
               <select
                 value={durationFilter}
                 onChange={(e) => setDurationFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-full ps-3 pe-9 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
                 <option value="all">{t("plans.allDurations")}</option>
                 <option value="monthly">{t("plans.monthly")}</option>
@@ -476,7 +476,7 @@ export default function Plans() {
                   {/* Plan Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">
                         {plan.name}
                       </h3>
                       <p className="text-gray-600 text-sm">
@@ -565,7 +565,7 @@ export default function Plans() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t("plans.popularPlans")}
               </h3>
               <div className="space-y-4">
@@ -610,7 +610,7 @@ export default function Plans() {
 
           <SmartCard>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t("plans.pricingRecommendations")}
               </h3>
               <div className="space-y-4">

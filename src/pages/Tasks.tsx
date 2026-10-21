@@ -4,7 +4,6 @@ import {
   FiSearch,
   FiFilter,
   FiCheckSquare,
-  FiClock,
   FiBarChart2,
 } from "react-icons/fi";
 import { useRTL } from "../hooks/useRTL";
@@ -19,6 +18,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { supabase } from "../supabaseClient";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatStrip } from "../components/ui/StatStrip";
 
 const Tasks: React.FC = () => {
   usePageThemeContext();
@@ -157,23 +158,14 @@ const Tasks: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="text-start">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t("tasks.title")}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t("tasks.subtitle")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <AddButton label={t("tasks.addTask")} onClick={handleAddTask} />
-        </div>
-      </div>
+      <PageHeader
+        title={t("tasks.title")}
+        subtitle={t("tasks.subtitle")}
+        actions={<AddButton label={t("tasks.addTask")} onClick={handleAddTask} />}
+      />
 
       {/* Search and Filters */}
-      <div className="card p-4">
+      <div>
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -219,107 +211,49 @@ const Tasks: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                activeTab === tab.id
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
-        </div>
+      <div role="tablist" className="mac-segmented max-w-full overflow-x-auto">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`mac-segment whitespace-nowrap ${
+              activeTab === tab.id ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Task Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 overflow-hidden text-start">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {t("tasks.totalTasks")}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {isLoading ? "..." : taskStats.total}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center flex-shrink-0">
-                      <FiCheckSquare className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 overflow-hidden text-start">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {t("tasks.pending")}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {isLoading ? "..." : taskStats.pending}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-gold-500 flex items-center justify-center flex-shrink-0">
-                      <FiClock className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 overflow-hidden text-start">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {t("tasks.inProgress")}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {isLoading ? "..." : taskStats.inProgress}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center flex-shrink-0">
-                      <FiBarChart2 className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 overflow-hidden text-start">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {t("tasks.completed")}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                        {isLoading ? "..." : taskStats.completed}
-                      </p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                      <FiCheckSquare className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <StatStrip
+                items={[
+                  { label: t("tasks.totalTasks"), value: isLoading ? "..." : taskStats.total },
+                  { label: t("tasks.pending"), value: isLoading ? "..." : taskStats.pending },
+                  { label: t("tasks.inProgress"), value: isLoading ? "..." : taskStats.inProgress },
+                  { label: t("tasks.completed"), value: isLoading ? "..." : taskStats.completed },
+                ]}
+              />
 
               {/* Task Table */}
-              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-start">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
                     {t("tasks.recentTasks")}
                   </h3>
                   <button className="text-sm text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-medium transition-colors">
@@ -359,7 +293,7 @@ const Tasks: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("tasks.priority")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("tasks.allPriorities")}</option>
             <option value="low">{t("tasks.low")}</option>
             <option value="medium">{t("tasks.medium")}</option>
@@ -373,7 +307,7 @@ const Tasks: React.FC = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("tasks.assignee")}
           </label>
-          <select className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
+          <select className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all" dir={isRTL ? "rtl" : "ltr"}>
             <option value="">{t("tasks.allAssignees")}</option>
             <option value="unassigned">{t("tasks.unassigned")}</option>
             <option value="me">{t("tasks.assignedToMe")}</option>
@@ -411,7 +345,7 @@ const Tasks: React.FC = () => {
           <select
             value={selectedFilter}
             onChange={(e) => setSelectedFilter(e.target.value)}
-            className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
+            className="w-full ps-4 pe-9 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-gray-100 transition-all"
             dir={isRTL ? "rtl" : "ltr"}
           >
             <option value="all">{t("tasks.allStatuses")}</option>

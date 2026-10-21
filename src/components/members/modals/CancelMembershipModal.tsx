@@ -211,9 +211,9 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
             )}
 
             {/* Member Info Card */}
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-600">
+            <div className="bg-white dark:bg-white/[0.04] rounded-lg p-5">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-lg">
                     {memberName
                       .split(" ")
@@ -323,7 +323,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
               <select
                 value={selectedReason}
                 onChange={(e) => setSelectedReason(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full ps-4 pe-9 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
                 <option value="">{t("members.selectReason", "Select a reason...")}</option>
                 {CANCELLATION_REASONS.map((reason) => (
@@ -377,7 +377,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
             </div>
 
             {/* Confirmation Checkbox */}
-            <div className={`flex items-start ${isRTL ? 'space-x-reverse' : ''} space-x-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600`}>
+            <div className={`flex items-start ${isRTL ? 'space-x-reverse' : ''} space-x-3 p-4 bg-white dark:bg-white/[0.04] rounded-xl `}>
               <input
                 type="checkbox"
                 id="confirm-cancellation"

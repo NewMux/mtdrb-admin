@@ -5,15 +5,14 @@ import {
   FiCreditCard,
   FiCalendar,
   FiTarget,
-  FiCpu,
   FiArrowUpRight,
   FiArrowDownRight,
   FiMinus,
 } from "react-icons/fi";
-import { motion } from "framer-motion";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
@@ -33,62 +32,6 @@ interface KPICardProps {
   color: string;
   subtitle?: string;
 }
-
-const KPICard: React.FC<KPICardProps> = ({
-  title,
-  value,
-  change,
-  trend,
-  icon,
-  color,
-  subtitle,
-}) => {
-  const { isRTL } = useRTL();
-  const trendColor =
-    trend === "up"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : trend === "down"
-        ? "text-red-600 dark:text-red-400"
-        : "text-gray-500 dark:text-gray-400";
-  const TrendIcon = trend === "up" ? FiArrowUpRight : trend === "down" ? FiArrowDownRight : FiMinus;
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case "blue":
-        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700";
-      case "green":
-        return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700";
-      case "yellow":
-        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-700";
-      case "red":
-        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-700";
-      case "purple":
-        return "bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-700";
-      case "orange":
-        return "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-700";
-      default:
-        return "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600";
-    }
-  };
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 ease-in-out text-start" dir={isRTL ? "rtl" : "ltr"}>
-      <div className="flex items-center justify-between mb-4 gap-2">
-        <div className={`p-3 rounded-xl border ${getColorClasses(color)} flex-shrink-0`}>
-          {icon}
-        </div>
-        <div className={`flex items-center gap-1 text-sm font-medium ${trendColor}`}>
-          <TrendIcon className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
-          <span>{change}</span>
-        </div>
-      </div>
-      <div className="text-start">
-        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{title}</h3>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-        {subtitle && <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{subtitle}</p>}
-      </div>
-    </div>
-  );
-};
 
 interface SmartInsightProps {
   icon: React.ReactNode;
@@ -110,38 +53,30 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
   onClick,
 }) => {
   const { isRTL } = useRTL();
-  const priorityColors = {
-    high: "border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20",
-    medium: "border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20",
-    low: "border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20",
+  // Priority is carried by the glyph's tint, not by a colored box.
+  const priorityTint = {
+    high: "text-red-500",
+    medium: "text-orange-500",
+    low: "text-blue-600 dark:text-blue-500",
   };
 
   return (
-    <div
-      className={`p-6 rounded-2xl border ${priorityColors[priority]} hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 text-start`}
-      dir={isRTL ? "rtl" : "ltr"}
-    >
-      <div className="flex items-start gap-4">
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex-shrink-0">{icon}</div>
-        <div className="flex-1 text-start">
-          <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h4>
-            {value && (
-              <span className="px-3 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
-                {value}
-              </span>
-            )}
-          </div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">{description}</p>
-          <button 
-            onClick={onClick}
-            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
-          >
-            <span>{action}</span>
-            <FiArrowUpRight className={`h-4 w-4 ${isRTL ? 'rtl-flip' : ''}`} />
-          </button>
+    <div className="flex items-start gap-3 px-4 py-3 text-start" dir={isRTL ? "rtl" : "ltr"}>
+      <div className={`mt-0.5 flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4 ${priorityTint[priority]}`}>{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h4>
+          {value && (
+            <span className="px-1.5 py-px bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded text-xs tabular-nums">
+              {value}
+            </span>
+          )}
         </div>
+        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
       </div>
+      <button onClick={onClick} className="btn btn-secondary flex-shrink-0 self-center">
+        {action}
+      </button>
     </div>
   );
 };
@@ -423,12 +358,9 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       {/* Section Header */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
         <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-3`}>
-          <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex-shrink-0">
-            <FiCpu className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-          </div>
           <div style={{ textAlign: isRTL ? 'right' : 'left' }} dir={isRTL ? "rtl" : "ltr"}>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t("dashboard.smartDashboard")}</h2>
-            <p className="text-gray-600 dark:text-gray-400">{t("dashboard.smartPoweredInsights")}</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("dashboard.smartDashboard")}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("dashboard.smartPoweredInsights")}</p>
           </div>
         </div>
       </div>
@@ -439,40 +371,42 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
         </div>
       )}
 
-      {/* KPI Cards - Enhanced 2x2 Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {kpis.map((kpi, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.3 }}
-          >
-            <KPICard {...kpi} />
-          </motion.div>
-        ))}
-      </div>
+      {/* KPIs */}
+      <StatStrip
+        items={kpis.map((kpi) => {
+          const TrendIcon =
+            kpi.trend === "up" ? FiArrowUpRight : kpi.trend === "down" ? FiArrowDownRight : FiMinus;
+          const trendColor =
+            kpi.trend === "up"
+              ? "text-green-600 dark:text-green-500"
+              : kpi.trend === "down"
+                ? "text-red-500"
+                : "text-gray-500 dark:text-gray-400";
+          return {
+            label: kpi.title,
+            value: kpi.value,
+            detail: (
+              <span className="inline-flex items-center gap-1">
+                <span className={`inline-flex items-center gap-0.5 ${trendColor}`}>
+                  <TrendIcon className={`h-3 w-3 ${isRTL ? "rtl-flip" : ""}`} />
+                  {kpi.change}
+                </span>
+                {kpi.subtitle && <span>· {kpi.subtitle}</span>}
+              </span>
+            ),
+          };
+        })}
+      />
 
       {/* Smart Insights - Enhanced Single Column */}
       {smartInsights.length > 0 && (
-        <div className="space-y-6">
-          <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
-            <h3 className={`text-xl font-semibold text-gray-900 dark:text-white ${isRTL ? 'text-left' : 'text-left'}`}>{t("dashboard.keyInsights")}</h3>
-            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm text-gray-500 dark:text-gray-400`}>
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>{t("dashboard.liveUpdates")}</span>
-            </div>
-          </div>
-          <div className="space-y-4">
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">{t("dashboard.keyInsights")}</h3>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl divide-y divide-black/5 dark:divide-white/10">
             {smartInsights.map((insight, index) => {
               const typedInsight = insight as SmartInsightProps;
               return (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.2, duration: 0.3 }}
-            >
+            <div key={index}>
               <SmartInsight 
                 {...typedInsight} 
                 onClick={() => {
@@ -483,7 +417,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
                   }
                 }}
               />
-            </motion.div>
+            </div>
               );
             })}
           </div>

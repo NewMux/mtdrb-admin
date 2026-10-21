@@ -9,7 +9,7 @@ export default function NotFound() {
   const { t, i18n } = useTranslation();
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white to-blue-50 p-6" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white p-6" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-blue-100 p-8">
         <div className="flex flex-col items-center text-center">
           <FiAlertCircle className="text-6xl text-blue-500 mb-4" />

@@ -28,6 +28,7 @@ import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
 import { validatePassword } from "../utils/passwordPolicy";
+import { PageHeader } from "../components/ui/PageHeader";
 
 const Settings: React.FC = () => {
   usePageThemeContext();
@@ -296,16 +297,7 @@ const Settings: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t("settings.title")}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t("settings.subtitle")}
-            </p>
-          </div>
-        </div>
+        <PageHeader title={t("settings.title")} subtitle={t("settings.subtitle")} />
         <div className="card">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
@@ -321,16 +313,7 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="text-start">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t("settings.title")}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-base">
-            {t("settings.subtitle")}
-          </p>
-        </div>
-      </div>
+      <PageHeader title={t("settings.title")} subtitle={t("settings.subtitle")} />
 
       {/* Unsaved Changes Warning - Section Specific */}
       {(() => {
@@ -371,16 +354,16 @@ const Settings: React.FC = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {activeTab === "general" && (
             <div className="space-y-6">
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm p-6">
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-start">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white text-start">
                     {t("settings.generalSettings")}
                   </h3>
                   <div className="flex items-center gap-3">
@@ -410,7 +393,7 @@ const Settings: React.FC = () => {
 
                 <div className="space-y-4">
                   {/* Gym Name */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="gym-name"
@@ -454,7 +437,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Timezone */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="timezone"
@@ -489,7 +472,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Currency */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="currency"
@@ -524,7 +507,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Language */}
-                  <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                  <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="language"
@@ -542,7 +525,7 @@ const Settings: React.FC = () => {
                   </div>
 
                   {/* Dark Mode Toggle */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
                       <label
                         htmlFor="dark-mode"
@@ -574,7 +557,7 @@ const Settings: React.FC = () => {
             <div className="space-y-6">
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("settings.profileSettings")}
                   </h3>
                   <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
@@ -618,13 +601,13 @@ const Settings: React.FC = () => {
                             target.style.display = "none";
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<span class="text-white font-bold text-xl w-full h-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center">${settings.profile.firstName?.[0]?.toUpperCase() || settings.profile.lastName?.[0]?.toUpperCase() || "A"}</span>`;
+                              parent.innerHTML = `<span class="text-white font-bold text-xl w-full h-full bg-gray-400 flex items-center justify-center"> </span> ${settings.profile.firstName?.[0]?.toUpperCase() || settings.profile.lastName?.[0]?.toUpperCase() || "A"}`;
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-sky-400 to-rose-400 flex items-center justify-center ring-2 ring-white shadow-sm">
+                      <div className="w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center ring-2 ring-white shadow-sm">
                         <span className="text-white font-bold text-xl">
                           {settings.profile.firstName?.[0]?.toUpperCase() || settings.profile.lastName?.[0]?.toUpperCase() || "A"}
                         </span>
@@ -792,7 +775,7 @@ const Settings: React.FC = () => {
             <div className="space-y-6">
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("settings.securitySettings")}
                   </h3>
                   <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
@@ -992,19 +975,16 @@ const Settings: React.FC = () => {
               {/* Subscription Management Card */}
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("settings.subscriptionManagement", "Subscription Management")}
                   </h3>
                 </div>
                 <div className="p-6 pt-4">
                   <div className="space-y-4">
                     {/* Current Subscription Status */}
-                    <div className={`rounded-2xl p-5 ${subscriptionInfo.isPaid ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-100 dark:border-blue-800' : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'}`}>
+                    <div className={`rounded-2xl p-5 ${subscriptionInfo.isPaid ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'}`}>
                       <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
                         <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-4`}>
-                          <div className={`w-12 h-12 rounded-xl ${subscriptionInfo.isPaid ? 'bg-blue-600' : 'bg-gray-400'} flex items-center justify-center`}>
-                            <FiCreditCard className="w-6 h-6 text-white" />
-                          </div>
                           <div>
                             <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
                               <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -1075,7 +1055,7 @@ const Settings: React.FC = () => {
               {/* Billing Information Card */}
               <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                     {t("settings.billingInformation")}
                   </h3>
                 </div>

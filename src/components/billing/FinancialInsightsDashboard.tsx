@@ -214,11 +214,11 @@ const FilterBar: React.FC<{
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 rounded-3xl shadow-sm" dir={isRTL ? "rtl" : "ltr"}>
+    <div  dir={isRTL ? "rtl" : "ltr"}>
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={toggleFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+          className="flex items-center btn btn-secondary"
         >
           <FiFilter className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -256,7 +256,7 @@ const FilterBar: React.FC<{
                   {t("billing.branch")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.branches[0] || ""}
                   onChange={(e) => updateFilter("branches", [e.target.value])}
                   dir={isRTL ? "rtl" : "ltr"}
@@ -276,7 +276,7 @@ const FilterBar: React.FC<{
                   {t("billing.dateRange")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.dateRange}
                   onChange={(e) => updateFilter("dateRange", e.target.value)}
                   dir={isRTL ? "rtl" : "ltr"}
@@ -294,7 +294,7 @@ const FilterBar: React.FC<{
                   {t("billing.membership")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.membershipType}
                   onChange={(e) =>
                     updateFilter("membershipType", e.target.value)
@@ -316,7 +316,7 @@ const FilterBar: React.FC<{
                   {t("billing.paymentMethod")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.paymentMethod}
                   onChange={(e) =>
                     updateFilter("paymentMethod", e.target.value)
@@ -338,7 +338,7 @@ const FilterBar: React.FC<{
                   {t("billing.invoiceStatus")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.invoiceStatus}
                   onChange={(e) =>
                     updateFilter("invoiceStatus", e.target.value)
@@ -360,7 +360,7 @@ const FilterBar: React.FC<{
                   {t("billing.vatStatus")}
                 </label>
                 <select
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full ps-3 pe-9 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                   value={filters.vatFilingStatus}
                   onChange={(e) =>
                     updateFilter("vatFilingStatus", e.target.value)
@@ -399,8 +399,6 @@ const MetricCard: React.FC<{
   subtitle,
   trend,
   trendValue,
-  icon,
-  color,
   format = "number",
   currency,
 }) => {
@@ -436,15 +434,10 @@ const MetricCard: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+      className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6"
       dir={isRTL ? "rtl" : "ltr"}
     >
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div
-          className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}
-        >
-          {icon}
-        </div>
         {trend && (
           <div className={`flex items-center gap-1 text-sm ${getTrendColor()}`}>
             {getTrendIcon()}
@@ -477,9 +470,9 @@ const ChartCard: React.FC<{
 }> = ({ title, children, className = "" }) => {
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}
+      className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-6 ${className}`}
     >
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-start">
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-start">
         {title}
       </h3>
       {children}

@@ -336,7 +336,6 @@ export function NewInvoiceModal({
       if (overdueInvoices > 0) {
         toast.error(`Client has ${overdueInvoices} overdue invoice(s)!`, {
           duration: 4000,
-          icon: "⚠️",
         });
       }
     } catch (error) {
@@ -537,7 +536,7 @@ export function NewInvoiceModal({
       }
     >
       {/* Navigation Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-xl mb-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="border-b bg-white dark:bg-white/[0.04] rounded-xl mb-6" dir={isRTL ? "rtl" : "ltr"}>
         <div className="flex gap-4 sm:gap-8 px-4">
           {sections.map(({ key, label, icon: Icon }) => (
             <button
@@ -566,8 +565,8 @@ export function NewInvoiceModal({
             className="space-y-6"
           >
             {/* Client & Invoice Info */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiUser className="text-blue-500 flex-shrink-0" />
                 <span>{t("billing.clientInvoiceInfo", "بيانات العميل والفاتورة")}</span>
               </h3>
@@ -719,8 +718,8 @@ export function NewInvoiceModal({
             </div>
 
             {/* Dates Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiCalendar className="text-green-500 flex-shrink-0" />
                 <span>{t("billing.invoiceDates", "تواريخ الفاتورة")}</span>
               </h3>
@@ -756,8 +755,8 @@ export function NewInvoiceModal({
             </div>
 
             {/* Payment Info */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiCreditCard className="text-purple-500 flex-shrink-0" />
                 <span>{t("billing.paymentInformation", "معلومات الدفع")}</span>
               </h3>
@@ -805,9 +804,9 @@ export function NewInvoiceModal({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <FiDollarSign className="text-green-500 flex-shrink-0" />
                   <span>{t("billing.lineItems", "بنود الفاتورة")}</span>
                 </h3>
@@ -827,7 +826,7 @@ export function NewInvoiceModal({
                     key={item.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-200 dark:border-gray-600"
+                    className="bg-white dark:bg-white/[0.04] rounded-xl p-4"
                   >
                     <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
                       {/* Description */}
@@ -913,7 +912,7 @@ export function NewInvoiceModal({
                               Number(e.target.value) as VatRate,
                             )
                           }
-                          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                          className="w-full ps-4 pe-9 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                         >
                           {VAT_RATES.map((rate) => (
                             <option
@@ -961,8 +960,8 @@ export function NewInvoiceModal({
             className="space-y-6"
           >
             {/* Invoice Summary */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiBarChart className="text-purple-500 flex-shrink-0" />
                 <span>{t("billing.invoiceSummaryTitle", "ملخص الفاتورة والحسابات")}</span>
               </h3>
@@ -1039,8 +1038,8 @@ export function NewInvoiceModal({
             </div>
 
             {/* Notes Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 text-start">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-start">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FiFileText className="text-orange-500 flex-shrink-0" />
                 <span>{t("billing.notes", "الملاحظات")}</span>
               </h3>

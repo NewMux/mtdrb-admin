@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiTarget, FiSave } from "react-icons/fi";
+import { FiSave } from "react-icons/fi";
 import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { AppleInput } from "../AppleStyleModal";
@@ -143,7 +143,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         <FiSave className="w-4 h-4 mr-2" />
         {t("common.save")}
@@ -165,10 +165,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
         {/* Targets Configuration Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-              <FiTarget className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("dashboard.targets.configureTargets")}
             </h3>
           </div>

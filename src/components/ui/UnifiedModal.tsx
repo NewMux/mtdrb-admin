@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiLock } from "react-icons/fi";
 import { useRTL } from "../../hooks/useRTL";
 
-interface UnifiedModalProps {
+interface MacSheetProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -13,12 +13,18 @@ interface UnifiedModalProps {
   showCloseButton?: boolean;
   closeOnBackdropClick?: boolean;
   isProFeature?: boolean;
-  slideFrom?: "right" | "center";
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
+  /** Tailwind max-width class for the panel, e.g. "max-w-lg". */
+  widthClass: string;
   className?: string;
+  panelRef?: React.RefObject<HTMLDivElement>;
 }
 
-export const UnifiedModal: React.FC<UnifiedModalProps> = ({
+/**
+ * A macOS-style sheet: a centered, compact window with a hairline-divided
+ * title bar and a trailing button row. Shared by UnifiedModal and SmartModal
+ * so every dialog in the app looks and behaves the same.
+ */
+export const MacSheet: React.FC<MacSheetProps> = ({
   isOpen,
   onClose,
   title,
@@ -28,9 +34,9 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
   showCloseButton = true,
   closeOnBackdropClick = true,
   isProFeature = false,
-  slideFrom = "right",
-  maxWidth = "4xl",
+  widthClass,
   className = "",
+  panelRef,
 }) => {
   const { isRTL } = useRTL();
 
@@ -54,32 +60,15 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  const maxWidthClasses = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-xl",
-    "2xl": "max-w-2xl",
-    "3xl": "max-w-3xl",
-    "4xl": "max-w-4xl",
-    "5xl": "max-w-5xl",
-    "6xl": "max-w-6xl",
-    "7xl": "max-w-7xl",
-  };
-
-  const slideInitial = slideFrom === "right" 
-    ? (isRTL ? "-100%" : "100%") 
-    : 0;
-
   return (
     <AnimatePresence>
       {isOpen && (
         <div
-          className={`fixed inset-0 z-50 flex ${slideFrom === "right" ? (isRTL ? "justify-start" : "justify-end") : "justify-center items-center p-4"}`}
+          className="fixed inset-0 z-50 flex justify-center items-center p-4"
           aria-modal="true"
           role="dialog"
           aria-labelledby="modal-title"
-          aria-describedby="modal-subtitle"
+          aria-describedby={subtitle ? "modal-subtitle" : undefined}
           dir={isRTL ? "rtl" : "ltr"}
         >
           {/* Overlay */}
@@ -87,43 +76,42 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={closeOnBackdropClick ? onClose : () => {}}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/20 dark:bg-black/50"
+            onClick={closeOnBackdropClick ? onClose : undefined}
           />
 
           {/* Panel */}
           <motion.div
-            initial={slideFrom === "right" ? { x: slideInitial, opacity: 0 } : { scale: 0.95, opacity: 0 }}
-            animate={slideFrom === "right" ? { x: 0, opacity: 1 } : { scale: 1, opacity: 1 }}
-            exit={slideFrom === "right" ? { x: slideInitial, opacity: 0 } : { scale: 0.95, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className={`relative h-full w-full ${maxWidthClasses[maxWidth]} bg-white dark:bg-gray-800 shadow-2xl ${slideFrom === "right" ? (isRTL ? "rounded-r-3xl" : "rounded-l-3xl") : "rounded-3xl max-h-[90vh]"} flex flex-col transition-colors duration-200 ${className}`}
+            ref={panelRef}
+            initial={{ opacity: 0, scale: 0.97, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+            className={`relative w-full ${widthClass} max-h-[88vh] bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:ring-1 dark:ring-white/10 flex flex-col overflow-hidden text-start ${className}`}
             role="document"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 px-8 py-6 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-1">
+            {/* Title bar */}
+            <div className="shrink-0 px-5 py-3.5 border-b border-black/5 dark:border-white/10 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
                 {isProFeature && (
-                  <div className="flex items-center gap-2">
-                    <FiLock className="w-4 h-4 text-yellow-500" />
-                    <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-1 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      PRO
-                    </span>
-                  </div>
+                  <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-orange-600 dark:text-orange-500 bg-orange-500/15 px-1.5 py-0.5 rounded">
+                    <FiLock className="w-3 h-3" />
+                    PRO
+                  </span>
                 )}
-                <div className="flex-1 text-start">
+                <div className="flex-1 min-w-0">
                   <h2
                     id="modal-title"
-                    className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight"
+                    className="text-base font-semibold text-gray-900 dark:text-gray-100"
                   >
                     {title}
                   </h2>
                   {subtitle && (
                     <p
                       id="modal-subtitle"
-                      className="text-sm text-gray-500 dark:text-gray-400 mt-1.5"
+                      className="text-sm text-gray-500 dark:text-gray-400 mt-0.5"
                     >
                       {subtitle}
                     </p>
@@ -132,28 +120,25 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
               </div>
               {showCloseButton && (
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  aria-label="Close modal"
+                  className="mac-toolbar-button -me-1.5"
+                  aria-label="Close"
                 >
-                  <FiX className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <FiX className="w-4 h-4" />
                 </button>
               )}
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-8 py-6">
-              <div className="space-y-6">
-                {children}
-              </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="space-y-5">{children}</div>
             </div>
 
-            {/* Footer */}
+            {/* Button row */}
             {footer && (
-              <div className="sticky bottom-0 px-8 py-5 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-                <div className="flex justify-end gap-3">
-                  {footer}
-                </div>
+              <div className="shrink-0 px-5 py-3 bg-gray-50/80 dark:bg-white/[0.03] border-t border-black/5 dark:border-white/10">
+                <div className="flex justify-end gap-2">{footer}</div>
               </div>
             )}
           </motion.div>
@@ -163,4 +148,36 @@ export const UnifiedModal: React.FC<UnifiedModalProps> = ({
   );
 };
 
+interface UnifiedModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  showCloseButton?: boolean;
+  closeOnBackdropClick?: boolean;
+  isProFeature?: boolean;
+  /** Accepted for API compatibility; every modal now opens as a centered sheet. */
+  slideFrom?: "right" | "center";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
+  className?: string;
+}
 
+const maxWidthClasses = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
+  "5xl": "max-w-5xl",
+  "6xl": "max-w-6xl",
+  "7xl": "max-w-7xl",
+};
+
+export const UnifiedModal: React.FC<UnifiedModalProps> = ({
+  maxWidth = "4xl",
+  ...props
+}) => <MacSheet widthClass={maxWidthClasses[maxWidth]} {...props} />;

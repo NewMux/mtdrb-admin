@@ -1,13 +1,17 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
 
 const langs = [
   { code: "en", label: "EN" },
   { code: "ar", label: "العربية" },
 ];
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  /** Render light-mode styling regardless of the app theme (marketing pages). */
+  forceLight?: boolean;
+}
+
+export default function LanguageSwitcher({ forceLight = false }: LanguageSwitcherProps = {}) {
   const { i18n } = useTranslation();
   const current = i18n.language;
 
@@ -27,32 +31,36 @@ export default function LanguageSwitcher() {
   const orderedLangs = isRTL ? [...langs].reverse() : langs;
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-white dark:bg-gray-800 rounded-full flex-shrink-0 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div
+      className={
+        forceLight
+          ? "inline-flex items-center p-0.5 gap-0.5 rounded-lg bg-black/5 flex-shrink-0"
+          : "mac-segmented flex-shrink-0"
+      }
+      role="group"
+      aria-label="Language"
+    >
       {orderedLangs.map((lang) => {
         const isActive = current === lang.code;
         return (
-          <motion.button
+          <button
             type="button"
             key={lang.code}
             onClick={() => setLang(lang.code)}
             aria-label={lang.code === "ar" ? "العربية" : "English"}
             aria-pressed={isActive}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`
-              relative px-4 py-2 rounded-full text-sm font-semibold 
-              transition-all duration-300 ease-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-              whitespace-nowrap min-w-[44px] flex items-center justify-center
-              ${
-                isActive
-                  ? "bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                  : "bg-transparent text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              }
-            `}
+            className={
+              forceLight
+                ? `inline-flex items-center rounded-md px-2.5 py-0.5 text-xs whitespace-nowrap transition-colors ${
+                    isActive ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                  }`
+                : `mac-segment px-2.5 py-0.5 text-xs whitespace-nowrap ${
+                    isActive ? "mac-segment-active" : "hover:text-gray-900 dark:hover:text-white"
+                  }`
+            }
           >
             {lang.label}
-          </motion.button>
+          </button>
         );
       })}
     </div>

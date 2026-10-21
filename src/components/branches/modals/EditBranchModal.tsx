@@ -222,7 +222,7 @@ export default function EditBranchModal({
         variant="primary"
         onClick={handleSubmit}
         loading={loading}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         {loading ? (t("branches.updating") || "Updating...") : (t("branches.updateBranch") || "Update Branch")}
       </SmartButton>
@@ -284,10 +284,7 @@ export default function EditBranchModal({
         {activeSection === 'info' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-                <FiMapPin className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("branches.branchInformation") || "Branch Information"}
               </h3>
             </div>
@@ -369,11 +366,8 @@ export default function EditBranchModal({
         {activeSection === 'hours' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600">
-                <FiClock className="h-5 w-5 text-white" />
-              </div>
               <div>
-                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   {t("branches.businessHours") || "Business Hours"}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -386,7 +380,7 @@ export default function EditBranchModal({
               {DAYS_OF_WEEK.map((day) => (
                 <div
                   key={day}
-                  className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600`}
+                  className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} gap-4 p-4 rounded-xl bg-white dark:bg-white/[0.04] `}
                 >
                   <div className="w-28 flex-shrink-0">
                     <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
@@ -436,11 +430,8 @@ export default function EditBranchModal({
         {activeSection === 'policies' && (
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
-                <FiCalendar className="h-5 w-5 text-white" />
-              </div>
               <div>
-                <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   {t("branches.bookingPolicies") || "Booking Policies"}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -452,7 +443,7 @@ export default function EditBranchModal({
             <div className="space-y-4">
               {/* Booking Time Rules */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     {t("branches.minBookingHours") || "Minimum booking notice (hours)"}
                   </label>
@@ -469,7 +460,7 @@ export default function EditBranchModal({
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     {t("branches.maxAdvanceBookingDays") || "Max advance booking (days)"}
                   </label>
@@ -486,7 +477,7 @@ export default function EditBranchModal({
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     {t("branches.cancellationHours") || "Cancellation window (hours)"}
                   </label>
@@ -503,7 +494,7 @@ export default function EditBranchModal({
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+                <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     {t("branches.maxBookingsPerDay") || "Max bookings per member per day"}
                   </label>
@@ -519,7 +510,7 @@ export default function EditBranchModal({
               </div>
 
               {/* Waitlist Settings */}
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600 space-y-4">
+              <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04] space-y-4">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                   {t("branches.waitlistSettings") || "Waitlist Settings"}
                 </h4>
@@ -590,7 +581,7 @@ export default function EditBranchModal({
 
               {/* Additional Policies */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-white dark:bg-white/[0.04] `}>
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t("branches.allowSameDayBooking") || "Allow same-day booking"}
@@ -607,7 +598,7 @@ export default function EditBranchModal({
                   </button>
                 </div>
 
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600`}>
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-white dark:bg-white/[0.04] `}>
                   <div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {t("branches.requirePaymentOnBooking") || "Require payment on booking"}
@@ -626,7 +617,7 @@ export default function EditBranchModal({
               </div>
 
               {/* No-show Penalty */}
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600">
+              <div className="p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                 <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                   {t("branches.noShowPenaltyDays") || "No-show penalty (days)"}
                 </label>

@@ -24,7 +24,6 @@ const Dashboard: React.FC = () => {
       notificationShownRef.current = true;
       toast.success(location.state.message, {
         duration: 5000,
-        icon: '🎉',
       });
       // Clear the state to prevent showing again on re-renders
       navigate(location.pathname, { replace: true, state: {} });
@@ -58,10 +57,10 @@ const Dashboard: React.FC = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
           {renderActiveTab()}
         </motion.div>

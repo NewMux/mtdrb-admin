@@ -144,7 +144,7 @@ export default function EditTrainerModal({
       <div className="space-y-8 text-start" dir={isRTL ? "rtl" : "ltr"}>
         {/* Personal Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
             <FiUser className="w-5 h-5 text-blue-500 flex-shrink-0" />
             <span>{t("trainers.personalInfo", "البيانات الشخصية")}</span>
           </h3>
@@ -231,7 +231,7 @@ export default function EditTrainerModal({
 
         {/* Professional Information */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <FiTarget className="text-green-500 flex-shrink-0" />
             <span>{t("trainers.professionalInfo", "البيانات المهنية")}</span>
           </h3>
@@ -264,7 +264,7 @@ export default function EditTrainerModal({
                 onChange={(e) =>
                   handleInputChange("status", e.target.value as Trainer["status"])
                 }
-                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
+                className="w-full ps-4 pe-9 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                 dir={isRTL ? "rtl" : "ltr"}
               >
                 <option value="active">{t("trainers.active", "نشط")}</option>

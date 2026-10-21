@@ -363,13 +363,13 @@ export default function ExportTrainerDataModal({
       <div className="space-y-6">
         {/* Date Range Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">
             Date Range
           </h3>
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full ps-3 pe-9 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="last-7-days">Last 7 days</option>
             <option value="last-30-days">Last 30 days</option>
@@ -382,7 +382,7 @@ export default function ExportTrainerDataModal({
         {/* Export Options */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-gray-900">
               Export Options
             </h3>
             <div className="flex items-center gap-2">

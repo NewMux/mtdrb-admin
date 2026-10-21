@@ -104,11 +104,10 @@ export default function SmartInsightCards({
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200"
+        className="bg-blue-50 rounded-2xl p-6 border border-blue-200"
       >
         <div className="text-center">
-          <div className="text-4xl mb-4">🧠</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-base font-semibold text-gray-900 mb-2">
             Smart Insights
           </h3>
           <p className="text-gray-600 mb-4">
@@ -130,8 +129,7 @@ export default function SmartInsightCards({
       className="space-y-4"
     >
       <div className="flex items-center gap-2 mb-6">
-        <div className="text-2xl">🧠</div>
-        <h3 className="text-xl font-semibold text-gray-900">Smart Insights</h3>
+        <h3 className="text-base font-semibold text-gray-900">Smart Insights</h3>
         <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           Smart Insights: ON

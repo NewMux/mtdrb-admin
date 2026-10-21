@@ -410,7 +410,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   {smartSuggestions.map((suggestion: SmartSuggestion) => (
                     <div
                       key={suggestion.id}
-                      className="p-3 rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                      className="p-3 rounded-lg bg-white dark:bg-white/[0.04]"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

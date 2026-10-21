@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  FiCalendar,
-  FiClock,
-  FiUsers,
-  FiUser,
-  FiSettings,
   FiAlertTriangle,
   FiCheck,
   FiZap,
@@ -260,7 +255,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
           onClick={handleSave}
           loading={loading}
           disabled={!isFormValid || loading || !isTimeValid()}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           {loading ? t("classes.creatingClass", "جاري الإنشاء...") : t("classes.createClass", "إنشاء الحصة")}
         </SmartButton>
@@ -291,11 +286,11 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4"
+            className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4"
           >
             <div className="flex items-center space-x-2 mb-3">
               <FiZap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 {t("classes.smartRecommendations")}
               </h3>
               <div className="flex items-center space-x-1 bg-purple-100 px-2 py-1 rounded-full">
@@ -320,10 +315,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Class Details Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-              <FiSettings className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.classDetails")}
             </h3>
           </div>
@@ -370,10 +362,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Trainer & Location Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600">
-              <FiUser className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.trainerLocation")}
             </h3>
           </div>
@@ -425,14 +414,14 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                     value={newRoomName}
                     onChange={(e) => setNewRoomName(e.target.value)}
                     placeholder={t("classes.roomName", "Room name")}
-                    className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="flex-1 min-w-0 px-3 py-1.5 text-sm rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <input
                     type="number"
                     min={0}
                     value={newRoomCapacity}
                     onChange={(e) => setNewRoomCapacity(parseInt(e.target.value) || 0)}
-                    className="w-16 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-16 px-2 py-1.5 text-sm rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   />
                   <SmartButton
                     variant="secondary"
@@ -452,10 +441,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Date & Time Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
-              <FiClock className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.dateTime") || "Date & Time"}
             </h3>
           </div>
@@ -512,7 +498,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+              className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
             >
               <div className="flex items-center space-x-2 mb-3">
                 <FiTrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -544,10 +530,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Recurrence Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
-              <FiCalendar className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.recurrence")}
             </h3>
           </div>
@@ -570,10 +553,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
         {/* Capacity Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-teal-500 to-teal-600">
-              <FiUsers className="h-5 w-5 text-white" />
-            </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               {t("classes.capacity")}
             </h3>
           </div>

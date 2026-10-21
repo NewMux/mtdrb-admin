@@ -135,7 +135,7 @@ export default function ShareReportModal({
   }) {
     return (
       <section className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
           {title}
         </h3>
         <div className="space-y-4">{children}</div>
@@ -210,7 +210,7 @@ export default function ShareReportModal({
                 <FiLock /> Permission Level
               </label>
               <select
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
+                className="w-full ps-4 pe-9 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200"
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
               >
