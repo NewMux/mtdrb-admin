@@ -3,6 +3,7 @@ import { parsePlatformAdminStatus } from "../utils/platformAdmin";
 import type {
   GrantAccessParams,
   ListTenantsParams,
+  GymRole,
   PlatformAdminStatus,
   PlatformAuditList,
   PlatformOverview,
@@ -132,4 +133,68 @@ export async function revokeAccess(tenantId: string, reason: string): Promise<vo
 
 export async function addNote(tenantId: string, note: string): Promise<void> {
   await call("platform_add_note", { p_tenant_id: tenantId, p_note: note.trim() });
+}
+
+// --- Gym and user controls (20261021150000_platform_admin_gym_and_user_controls.sql)
+// Every call needs a reason; the destructive ones also need the typed
+// confirmation (gym name / user email), which the database re-checks.
+
+export async function suspendGym(tenantId: string, reason: string): Promise<void> {
+  await call("platform_suspend_gym", { p_tenant_id: tenantId, p_reason: reason.trim() });
+}
+
+export async function unsuspendGym(tenantId: string, reason: string): Promise<void> {
+  await call("platform_unsuspend_gym", { p_tenant_id: tenantId, p_reason: reason.trim() });
+}
+
+export async function deleteGym(params: {
+  tenantId: string;
+  confirmName: string;
+  reason: string;
+  deleteUsers: boolean;
+}): Promise<void> {
+  await call("platform_delete_gym", {
+    p_tenant_id: params.tenantId,
+    p_confirm_name: params.confirmName.trim(),
+    p_reason: params.reason.trim(),
+    p_delete_users: params.deleteUsers,
+  });
+}
+
+export async function banUser(userId: string, reason: string): Promise<void> {
+  await call("platform_ban_user", { p_user_id: userId, p_reason: reason.trim() });
+}
+
+export async function unbanUser(userId: string, reason: string): Promise<void> {
+  await call("platform_unban_user", { p_user_id: userId, p_reason: reason.trim() });
+}
+
+export async function resetUserMfa(userId: string, reason: string): Promise<void> {
+  await call("platform_reset_user_mfa", { p_user_id: userId, p_reason: reason.trim() });
+}
+
+export async function changeUserRole(params: {
+  tenantId: string;
+  userId: string;
+  role: GymRole;
+  reason: string;
+}): Promise<void> {
+  await call("platform_change_user_role", {
+    p_tenant_id: params.tenantId,
+    p_user_id: params.userId,
+    p_role: params.role,
+    p_reason: params.reason.trim(),
+  });
+}
+
+export async function deleteUser(params: {
+  userId: string;
+  confirmEmail: string;
+  reason: string;
+}): Promise<void> {
+  await call("platform_delete_user", {
+    p_user_id: params.userId,
+    p_confirm_email: params.confirmEmail.trim(),
+    p_reason: params.reason.trim(),
+  });
 }

@@ -36,7 +36,7 @@ interface MockAudit {
   id: number;
   created_at: string;
   actor_email: string;
-  action: "grant_access" | "revoke_access" | "note";
+  action: string;
   tenant_id: string;
   tenant_name: string;
   details: Record<string, unknown>;
@@ -98,6 +98,51 @@ const tenants: MockTenant[] = [
 const audit: MockAudit[] = [];
 let auditId = 1;
 
+// Gym/user controls state (suspensions, bans, roles, deletions).
+interface MockUserFlags {
+  banned?: boolean;
+  role?: string;
+  mfa?: boolean;
+}
+const suspensions = new Map<string, { suspended_at: string; reason: string }>();
+const userFlags = new Map<string, MockUserFlags>();
+const deletedUsers = new Set<string>();
+
+function staffOf(t: MockTenant) {
+  const domain = t.admin_email.split("@")[1];
+  const base = [
+    { user_id: `${t.id}:u1`, email: t.admin_email, role: "admin", joined_at: t.created_at, last_sign_in_at: t.admin_last_sign_in },
+    { user_id: `${t.id}:u2`, email: `frontdesk@${domain}`, role: "employee", joined_at: t.created_at, last_sign_in_at: ago(2) },
+  ];
+  const suspended = suspensions.has(t.id);
+  return base
+    .filter((u) => !deletedUsers.has(u.user_id))
+    .map((u) => {
+      const flags = userFlags.get(u.user_id) ?? {};
+      return { ...u, role: flags.role ?? u.role, banned: suspended || !!flags.banned, is_platform_admin: false };
+    });
+}
+
+function findUser(userId: unknown) {
+  for (const t of tenants) {
+    const u = staffOf(t).find((x) => x.user_id === userId);
+    if (u) return { tenant: t, user: u };
+  }
+  return null;
+}
+
+function logAudit(action: string, t: MockTenant | null, details: Record<string, unknown>) {
+  audit.push({
+    id: auditId++, created_at: new Date().toISOString(), actor_email: "owner@mtdrb.example",
+    action, tenant_id: t?.id ?? "", tenant_name: t?.name ?? "", details,
+  });
+}
+
+function badReason(args: Record<string, unknown>): MockResult | null {
+  const reason = String(args.p_reason ?? "").trim();
+  return reason.length < 3 || reason.length > 500 ? fail("A reason of 3 to 500 characters is required") : null;
+}
+
 function accessState(sub: MockSubscription | null): string {
   if (!sub) return "awaiting_activation";
   const now = Date.now();
@@ -145,6 +190,7 @@ function rowOf(t: MockTenant) {
     admin_email: t.admin_email,
     admin_last_sign_in: t.admin_last_sign_in,
     access_state: accessState(t.sub),
+    suspended: suspensions.has(t.id),
     subscription: summary(t.sub),
     members: t.members,
     trainers: t.trainers,
@@ -219,7 +265,11 @@ export function mockPlatformRpc(name: string, args: Record<string, unknown> = {}
         (t) =>
           (!search || t.name.toLowerCase().includes(search) || t.admin_email.toLowerCase().includes(search)) &&
           (filter === "all" ||
-            (filter === "ending_soon" ? endingSoon(t) : accessState(t.sub) === filter)),
+            (filter === "suspended"
+              ? suspensions.has(t.id)
+              : filter === "ending_soon"
+                ? endingSoon(t)
+                : accessState(t.sub) === filter)),
       );
       const byCreated = (a: MockTenant, b: MockTenant) => Date.parse(a.created_at) - Date.parse(b.created_at);
       rows = [...rows].sort((a, b) => {
@@ -243,11 +293,9 @@ export function mockPlatformRpc(name: string, args: Record<string, unknown> = {}
         data: {
           tenant: { id: t.id, name: t.name, created_at: t.created_at },
           access_state: accessState(t.sub),
+          suspension: suspensions.get(t.id) ?? null,
           subscription: summary(t.sub, true),
-          staff: [
-            { email: t.admin_email, role: "admin", joined_at: t.created_at, last_sign_in_at: t.admin_last_sign_in },
-            { email: `frontdesk@${t.admin_email.split("@")[1]}`, role: "employee", joined_at: t.created_at, last_sign_in_at: ago(2) },
-          ],
+          staff: staffOf(t),
           usage: {
             members: t.members,
             active_members: Math.round(t.members * 0.85),
@@ -322,6 +370,121 @@ export function mockPlatformRpc(name: string, args: Record<string, unknown> = {}
         action: "note", tenant_id: t.id, tenant_name: t.name, details: { note: String(args.p_note ?? "") },
       });
       return { error: null, data: { tenant_id: t.id } };
+    }
+
+    case "platform_suspend_gym": {
+      const t = tenants.find((x) => x.id === args.p_tenant_id);
+      const bad = badReason(args);
+      if (bad) return bad;
+      if (!t) return fail("Tenant not found", "P0002");
+      if (suspensions.has(t.id)) return fail("This gym is already suspended", "55000");
+      suspensions.set(t.id, { suspended_at: new Date().toISOString(), reason: String(args.p_reason).trim() });
+      const banned = staffOf(t).length;
+      logAudit("suspend_gym", t, { reason: String(args.p_reason).trim(), staff: banned, banned_users: banned });
+      return { error: null, data: { tenant_id: t.id, suspended: true, banned_users: banned } };
+    }
+
+    case "platform_unsuspend_gym": {
+      const t = tenants.find((x) => x.id === args.p_tenant_id);
+      const bad = badReason(args);
+      if (bad) return bad;
+      if (!t) return fail("Tenant not found", "P0002");
+      if (!suspensions.has(t.id)) return fail("This gym is not suspended", "55000");
+      suspensions.delete(t.id);
+      logAudit("unsuspend_gym", t, { reason: String(args.p_reason).trim(), unbanned_users: staffOf(t).length });
+      return { error: null, data: { tenant_id: t.id, suspended: false } };
+    }
+
+    case "platform_delete_gym": {
+      const t = tenants.find((x) => x.id === args.p_tenant_id);
+      const bad = badReason(args);
+      if (bad) return bad;
+      if (!t) return fail("Tenant not found", "P0002");
+      if (String(args.p_confirm_name ?? "").trim() !== t.name) {
+        return fail("The confirmation name does not match this gym");
+      }
+      if (t.sub?.payment_provider === "paddle" && ["active", "trialing", "past_due"].includes(t.sub.status)) {
+        return fail("Cancel this gym's Paddle subscription before deleting it", "55000");
+      }
+      const emails = staffOf(t).map((u) => u.email);
+      const deleted = args.p_delete_users ? emails : [];
+      logAudit("delete_gym", t, {
+        reason: String(args.p_reason).trim(),
+        usage: { staff: emails.length, members: t.members, trainers: t.trainers, branches: t.branches, classes: t.classes },
+        deleted_users: deleted,
+        kept_users: emails.length - deleted.length,
+      });
+      suspensions.delete(t.id);
+      tenants.splice(tenants.indexOf(t), 1);
+      return { error: null, data: { tenant_id: t.id, deleted: true, deleted_users: deleted.length } };
+    }
+
+    case "platform_ban_user":
+    case "platform_unban_user":
+    case "platform_reset_user_mfa": {
+      const bad = badReason(args);
+      if (bad) return bad;
+      const found = findUser(args.p_user_id);
+      if (!found) return fail("User not found", "P0002");
+      const flags = userFlags.get(found.user.user_id) ?? {};
+      const email = found.user.email;
+      const reason = String(args.p_reason).trim();
+      if (name === "platform_ban_user") {
+        if (found.user.banned) return fail("This user is already banned", "55000");
+        userFlags.set(found.user.user_id, { ...flags, banned: true });
+        logAudit("ban_user", found.tenant, { reason, email });
+        return { error: null, data: { user_id: found.user.user_id, banned: true } };
+      }
+      if (name === "platform_unban_user") {
+        if (suspensions.has(found.tenant.id)) {
+          return fail("This user's gym is suspended; unsuspend the gym instead", "55000");
+        }
+        if (!found.user.banned) return fail("This user is not banned", "55000");
+        userFlags.set(found.user.user_id, { ...flags, banned: false });
+        logAudit("unban_user", found.tenant, { reason, email });
+        return { error: null, data: { user_id: found.user.user_id, banned: false } };
+      }
+      if (flags.mfa === false) return fail("This user has no MFA factors to reset", "55000");
+      userFlags.set(found.user.user_id, { ...flags, mfa: false });
+      logAudit("reset_mfa", found.tenant, { reason, email, factors_removed: 1 });
+      return { error: null, data: { user_id: found.user.user_id, factors_removed: 1 } };
+    }
+
+    case "platform_change_user_role": {
+      const bad = badReason(args);
+      if (bad) return bad;
+      const role = String(args.p_role ?? "");
+      if (!["admin", "employee", "trainer"].includes(role)) return fail("Unknown role");
+      const found = findUser(args.p_user_id);
+      if (!found || found.tenant.id !== args.p_tenant_id) return fail("This user is not on this gym's staff", "P0002");
+      if (found.user.role === role) return fail("This user already has that role", "55000");
+      const otherAdmin = staffOf(found.tenant).some((u) => u.role === "admin" && u.user_id !== found.user.user_id);
+      if (found.user.role === "admin" && !otherAdmin) return fail("Cannot demote the last admin of a gym", "55000");
+      userFlags.set(found.user.user_id, { ...(userFlags.get(found.user.user_id) ?? {}), role });
+      logAudit("change_role", found.tenant, {
+        reason: String(args.p_reason).trim(), email: found.user.email, from: found.user.role, to: role,
+      });
+      return { error: null, data: { user_id: found.user.user_id, tenant_id: found.tenant.id, role } };
+    }
+
+    case "platform_delete_user": {
+      const bad = badReason(args);
+      if (bad) return bad;
+      const found = findUser(args.p_user_id);
+      if (!found) return fail("User not found", "P0002");
+      if (String(args.p_confirm_email ?? "").trim().toLowerCase() !== found.user.email.toLowerCase()) {
+        return fail("The confirmation email does not match this user");
+      }
+      const others = staffOf(found.tenant).filter((u) => u.user_id !== found.user.user_id && u.role === "admin");
+      if (found.user.role === "admin" && others.length === 0) {
+        return fail("This user is the only admin of a gym. Promote another user first, or delete the gym", "55000");
+      }
+      deletedUsers.add(found.user.user_id);
+      logAudit("delete_user", found.tenant, {
+        reason: String(args.p_reason).trim(), email: found.user.email,
+        reassigned_to: others[0]?.email ?? null, reassigned: {},
+      });
+      return { error: null, data: { user_id: found.user.user_id, deleted: true, reassigned: 0 } };
     }
 
     default:

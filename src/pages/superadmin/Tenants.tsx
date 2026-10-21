@@ -177,7 +177,14 @@ export default function Tenants() {
                         {row.admin_email ?? "no admin email"}
                       </span>
                     </td>
-                    <td className="px-4 py-3"><AccessStateBadge state={row.access_state} /></td>
+                    <td className="px-4 py-3">
+                      <AccessStateBadge state={row.access_state} />
+                      {row.suspended && (
+                        <span className="ms-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                          Suspended
+                        </span>
+                      )}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-700 dark:text-gray-300">{planAndSource(row)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-gray-700 dark:text-gray-300">{accessEnds(row)}</td>
                     <td className="px-4 py-3 text-end tabular-nums text-gray-700 dark:text-gray-300">{row.members}</td>
@@ -196,7 +203,14 @@ export default function Tenants() {
                   <Link to={`/superadmin/tenants/${row.id}`} className="min-w-0 truncate font-medium text-gray-900 dark:text-gray-100">
                     {row.name}
                   </Link>
-                  <AccessStateBadge state={row.access_state} />
+                  <span className="flex flex-shrink-0 items-center">
+                    <AccessStateBadge state={row.access_state} />
+                    {row.suspended && (
+                      <span className="ms-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                          Suspended
+                        </span>
+                    )}
+                  </span>
                 </div>
                 <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{row.admin_email ?? "no admin email"}</p>
                 <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">

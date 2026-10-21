@@ -10,6 +10,7 @@ import {
   parsePlatformAdminStatus,
   parseTenantListQuery,
   serializeTenantListQuery,
+  TENANT_FILTERS,
   validateGrantInput,
   type GrantInput,
 } from "./platformAdmin";
@@ -230,5 +231,56 @@ describe("describeAuditEntry", () => {
       title: "Note",
       detail: "Called them",
     });
+  });
+  it("summarises gym actions", () => {
+    expect(describeAuditEntry({ ...base, action: "suspend_gym", details: { reason: "Chargeback", banned_users: 2 } })).toEqual({
+      title: "Suspended gym (2 sign-ins blocked)",
+      detail: "Chargeback",
+    });
+    expect(describeAuditEntry({ ...base, action: "suspend_gym", details: { banned_users: 1 } }).title).toBe(
+      "Suspended gym (1 sign-in blocked)",
+    );
+    expect(describeAuditEntry({ ...base, action: "unsuspend_gym", details: { unbanned_users: 2, reason: "Paid" } })).toEqual({
+      title: "Lifted suspension (2 sign-ins restored)",
+      detail: "Paid",
+    });
+    expect(describeAuditEntry({ ...base, action: "delete_gym", details: { deleted_users: ["a@x.dev", "b@x.dev"], reason: "Closing" } })).toEqual({
+      title: "Deleted gym and 2 accounts",
+      detail: "Closing",
+    });
+    expect(describeAuditEntry({ ...base, action: "delete_gym", details: { deleted_users: [] } }).title).toBe("Deleted gym");
+  });
+
+  it("summarises user actions", () => {
+    const d = { email: "sam@x.dev", reason: "Because" };
+    expect(describeAuditEntry({ ...base, action: "ban_user", details: d }).title).toBe("Banned sam@x.dev");
+    expect(describeAuditEntry({ ...base, action: "unban_user", details: d }).title).toBe("Unbanned sam@x.dev");
+    expect(describeAuditEntry({ ...base, action: "reset_mfa", details: d }).title).toBe("Reset MFA for sam@x.dev");
+    expect(describeAuditEntry({ ...base, action: "change_role", details: { ...d, from: "employee", to: "admin" } }).title).toBe(
+      "Changed sam@x.dev from employee to admin",
+    );
+  });
+
+  it("says who took over a deleted user's records", () => {
+    const entry = describeAuditEntry({
+      ...base,
+      action: "delete_user",
+      details: { email: "sam@x.dev", reason: "Left", reassigned_to: "boss@x.dev", reassigned: { pos_sales: 2, member_tasks: 3 } },
+    });
+    expect(entry.title).toBe("Deleted sam@x.dev");
+    expect(entry.detail).toContain("5 records handed to boss@x.dev");
+    expect(entry.detail).toContain("Left");
+    expect(describeAuditEntry({ ...base, action: "delete_user", details: { email: "sam@x.dev", reassigned: {} } }).detail).toBeNull();
+  });
+
+  it("never throws on an action it does not know", () => {
+    expect(describeAuditEntry({ ...base, action: "future_thing" as never, details: {} })).toEqual({ title: "future_thing", detail: null });
+  });
+});
+
+describe("suspended filter", () => {
+  it("is offered and survives a URL round trip", () => {
+    expect(TENANT_FILTERS.map((f) => f.value)).toContain("suspended");
+    expect(parseTenantListQuery(new URLSearchParams("filter=suspended")).filter).toBe("suspended");
   });
 });

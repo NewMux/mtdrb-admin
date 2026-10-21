@@ -1,5 +1,17 @@
 import React from "react";
-import { FiEdit3, FiKey, FiSlash } from "react-icons/fi";
+import {
+  FiEdit3,
+  FiKey,
+  FiLock,
+  FiPause,
+  FiPlay,
+  FiRepeat,
+  FiShield,
+  FiSlash,
+  FiTrash2,
+  FiUserCheck,
+  FiUserX,
+} from "react-icons/fi";
 import type { PlatformAuditEntry } from "../../types/platformAdmin";
 import { describeAuditEntry, formatDateTime } from "../../utils/platformAdmin";
 
@@ -7,6 +19,14 @@ const ICON = {
   grant_access: FiKey,
   revoke_access: FiSlash,
   note: FiEdit3,
+  suspend_gym: FiPause,
+  unsuspend_gym: FiPlay,
+  delete_gym: FiTrash2,
+  ban_user: FiUserX,
+  unban_user: FiUserCheck,
+  reset_mfa: FiShield,
+  change_role: FiRepeat,
+  delete_user: FiLock,
 } as const;
 
 interface AuditListProps {

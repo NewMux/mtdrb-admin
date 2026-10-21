@@ -20,7 +20,7 @@ export type AccessState =
 
 export type PlanTier = "starter" | "pro" | "enterprise" | "demo";
 
-export type TenantFilter = "all" | AccessState | "ending_soon";
+export type TenantFilter = "all" | AccessState | "ending_soon" | "suspended";
 
 export type TenantSort =
   | "created_desc"
@@ -47,6 +47,8 @@ export interface PlatformTenantRow {
   admin_email: string | null;
   admin_last_sign_in: string | null;
   access_state: AccessState;
+  /** True while the gym is suspended (its staff cannot sign in). */
+  suspended: boolean;
   subscription: SubscriptionSummary | null;
   members: number;
   trainers: number;
@@ -63,7 +65,7 @@ export interface PlatformAuditEntry {
   id: number;
   created_at: string;
   actor_email: string | null;
-  action: "grant_access" | "revoke_access" | "note";
+  action: PlatformAuditAction;
   tenant_id: string | null;
   tenant_name: string | null;
   details: {
@@ -71,7 +73,52 @@ export interface PlatformAuditEntry {
     note?: string;
     before?: Partial<SubscriptionSummary> | null;
     after?: Partial<SubscriptionSummary> | null;
+    /** User actions: the account acted on. */
+    email?: string;
+    /** change_role */
+    from?: string;
+    to?: string;
+    /** suspend_gym / unsuspend_gym */
+    banned_users?: number;
+    unbanned_users?: number;
+    /** delete_user */
+    reassigned_to?: string | null;
+    reassigned?: Record<string, number>;
+    /** delete_gym: counts and account emails only, never member records. */
+    usage?: Record<string, number>;
+    deleted_users?: string[];
+    kept_users?: number;
+    /** reset_mfa */
+    factors_removed?: number;
   };
+}
+
+export type PlatformAuditAction =
+  | "grant_access"
+  | "revoke_access"
+  | "note"
+  | "suspend_gym"
+  | "unsuspend_gym"
+  | "delete_gym"
+  | "ban_user"
+  | "unban_user"
+  | "reset_mfa"
+  | "change_role"
+  | "delete_user";
+
+/** The only roles a gym membership can hold (memberships.role CHECK). */
+export type GymRole = "admin" | "employee" | "trainer";
+
+export interface PlatformStaffMember {
+  user_id: string;
+  email: string;
+  role: GymRole | string;
+  joined_at: string;
+  last_sign_in_at: string | null;
+  /** Signed-in access is blocked (banned or the gym is suspended). */
+  banned: boolean;
+  /** Platform admins can never be changed through the console. */
+  is_platform_admin: boolean;
 }
 
 export interface PlatformAuditList {
@@ -109,13 +156,10 @@ export interface PlatformOverview {
 export interface PlatformTenantDetail {
   tenant: { id: string; name: string; created_at: string };
   access_state: AccessState;
+  /** Null unless the gym is suspended. */
+  suspension: { suspended_at: string; reason: string } | null;
   subscription: SubscriptionSummary | null;
-  staff: Array<{
-    email: string;
-    role: string;
-    joined_at: string;
-    last_sign_in_at: string | null;
-  }>;
+  staff: PlatformStaffMember[];
   usage: {
     members: number;
     active_members: number;
