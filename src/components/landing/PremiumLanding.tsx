@@ -489,7 +489,6 @@ const PremiumLanding: React.FC = () => {
                 {t("landing.simpleTransparentPricing")}
               </h2>
               <p className="mt-5 text-base leading-7 text-apple-gray-400">{t("landing.pricingDesc")}</p>
-              <p className="mt-2 text-sm font-medium text-appleBlue-500">{t("landing.pricing_note")}</p>
             </div>
 
             <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
