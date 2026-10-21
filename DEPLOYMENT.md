@@ -233,6 +233,54 @@ Check it landed with the "Gym and user controls" queries in
 `supabase/tests/platform_admin_controls.test.sql` on a Supabase branch or a
 local stack before applying it to production.
 
+**Create a gym and invite its admin** (`supabase/migrations/20261021170000_platform_admin_provision_gym.sql` + the `platform-invite-gym` Edge Function)
+
+*Gyms → Invite a gym* creates a gym, emails its admin an invitation, and gives
+the gym free (complimentary) access for the plan and length you choose (14 days
+to 1 year; "no expiry" stays on the gym's own *Grant access* dialog). The
+invited person clicks the link, sets a password on the existing
+`/reset-password` page, and lands in their gym.
+
+How it is built, and why: the invitation email can only be sent with the Auth
+admin API, so a small Edge Function sends it. Everything that matters is
+decided in Postgres: the function first checks the caller is a fully verified
+platform admin (allowlist + MFA), and then calls `platform_provision_gym` *with
+the caller's own token*, so the audit log shows who did it. That function
+refuses any account that is not a pending, never-signed-in invitation, so it can
+never be pointed at someone's existing account. If provisioning fails, the
+function deletes the account the invitation created, so a failure leaves nothing
+behind.
+
+One-time setup:
+
+1. Apply `20261021170000_platform_admin_provision_gym.sql` (after the two earlier
+   console migrations).
+2. Deploy the function: `supabase functions deploy platform-invite-gym`
+   (`supabase/config.toml` already sets `verify_jwt = false`; the function verifies
+   the caller itself, because the browser's CORS preflight carries no token).
+3. Set its two secrets (`SUPABASE_*` ones are provided automatically):
+   ```
+   supabase secrets set PLATFORM_APP_URL=https://<your app domain>
+   supabase secrets set PLATFORM_ALLOWED_ORIGINS=https://<your app domain>
+   ```
+   `PLATFORM_ALLOWED_ORIGINS` is a comma-separated list; add
+   `http://localhost:3000` only for local testing against a real project.
+4. Supabase → Authentication → URL Configuration: add
+   `https://<your app domain>/reset-password` to **Redirect URLs**. If it is missing,
+   the invitation link lands on the Site URL instead and the person cannot set a
+   password.
+5. Supabase → Authentication → Email Templates → **Invite user**: replace the
+   default wording (it says "create a user") with your own. The gym's name is
+   available as `{{ .Data.gym_name }}`. Supabase's built-in email sender is limited
+   to a handful of messages per hour; configure custom SMTP before inviting more
+   than a few gyms.
+
+Behaviour to know: an email that already has an account is refused with a clear
+message (nothing is created); the function allows 10 invitations per owner per
+hour; an invited person who never accepts leaves an unconfirmed account and a
+gym, which you can delete from the gym's page. The set-password page still
+says "reset password" for an invited admin.
+
 **Operations**
 
 - Add/remove admins in SQL (`insert into` / `delete from public.platform_admins`).

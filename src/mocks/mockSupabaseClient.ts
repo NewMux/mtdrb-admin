@@ -5,7 +5,7 @@
 
 import type { User, UserAttributes } from "@supabase/supabase-js";
 import { DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
-import { mockPlatformRpc } from "./platformAdminMock";
+import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -438,6 +438,12 @@ export function createMockSupabaseClient() {
       subscribe: () => noopSub,
     }),
     removeChannel: () => {},
+    functions: {
+      invoke: async (name: string, options?: { body?: unknown }) =>
+        name === "platform-invite-gym"
+          ? mockInviteGym(options?.body)
+          : { data: null, error: new Error(`Mock backend has no function ${name}`) },
+    },
     auth: {
       getUser: async () => ({ data: { user: getMockUser() }, error: null }),
       getSession: async () => {

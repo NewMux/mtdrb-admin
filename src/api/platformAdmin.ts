@@ -4,6 +4,8 @@ import type {
   GrantAccessParams,
   ListTenantsParams,
   GymRole,
+  InviteGymParams,
+  InviteGymResult,
   PlatformAdminStatus,
   PlatformAuditList,
   PlatformOverview,
@@ -197,4 +199,49 @@ export async function deleteUser(params: {
     p_confirm_email: params.confirmEmail.trim(),
     p_reason: params.reason.trim(),
   });
+}
+
+// --- Create a gym and invite its admin (supabase/functions/platform-invite-gym)
+// An Edge Function, not an RPC: sending the invitation email needs the Auth
+// admin API. It verifies the caller is a platform admin itself, then provisions
+// the gym through platform_provision_gym with the caller's own JWT.
+
+type FunctionsClient = {
+  functions: {
+    invoke: (
+      name: string,
+      options: { body: unknown },
+    ) => Promise<{ data: unknown; error: unknown }>;
+  };
+};
+
+async function functionErrorMessage(error: unknown): Promise<string> {
+  const ctx = (error as { context?: { status?: number; json?: () => Promise<unknown> } } | null)?.context;
+  if (ctx?.json) {
+    try {
+      const body = await ctx.json();
+      if (isObject(body) && typeof body.error === "string") return body.error;
+    } catch {
+      // fall through to the generic messages
+    }
+  }
+  if (ctx?.status === 404) return "The invite service isn't deployed yet.";
+  return "Could not reach the invite service. Try again.";
+}
+
+export async function inviteGym(params: InviteGymParams): Promise<InviteGymResult> {
+  const { data, error } = await (supabase as unknown as FunctionsClient).functions.invoke(
+    "platform-invite-gym",
+    {
+      body: {
+        gymName: params.gymName.trim(),
+        adminEmail: params.adminEmail.trim(),
+        planTier: params.planTier,
+        until: params.until,
+        reason: params.reason.trim(),
+      },
+    },
+  );
+  if (error) throw new PlatformAdminError(await functionErrorMessage(error));
+  return expectObject<InviteGymResult>(data, "invitation", ["tenantId", "userId", "email"]);
 }

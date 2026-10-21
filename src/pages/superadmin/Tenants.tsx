@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiSearch, FiUsers } from "react-icons/fi";
 import { EmptyState, SmartButton, SmartLoading } from "../../components/ui";
 import AccessStateBadge from "../../components/superadmin/AccessStateBadge";
+import InviteGymModal from "../../components/superadmin/InviteGymModal";
 import { listTenants } from "../../api/platformAdmin";
 import { useRemoteData } from "../../hooks/useRemoteData";
 import type { PlatformTenantRow } from "../../types/platformAdmin";
@@ -35,6 +36,8 @@ export default function Tenants() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = useMemo(() => parseTenantListQuery(searchParams), [searchParams]);
   const [searchInput, setSearchInput] = useState(query.q);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const navigate = useNavigate();
 
   const update = useCallback(
     (patch: Partial<TenantListQuery>) => {
@@ -70,9 +73,14 @@ export default function Tenants() {
 
   return (
     <div className="space-y-5">
-      <div className="text-start">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gyms</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Every gym on the platform and its access.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="text-start">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gyms</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Every gym on the platform and its access.</p>
+        </div>
+        <SmartButton size="sm" onClick={() => setInviteOpen(true)}>
+          Invite a gym
+        </SmartButton>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -235,6 +243,15 @@ export default function Tenants() {
           </div>
         </div>
       )}
+
+      <InviteGymModal
+        isOpen={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onDone={(result) => {
+          setInviteOpen(false);
+          navigate(`/superadmin/tenants/${result.tenantId}`);
+        }}
+      />
     </div>
   );
 }

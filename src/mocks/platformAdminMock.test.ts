@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mockPlatformRpc } from "./platformAdminMock";
+import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 
 const rpc = (name: string, args: Record<string, unknown> = {}) => {
   const res = mockPlatformRpc(name, args);
@@ -75,5 +75,33 @@ describe("mock platform controls mirror the database rules", () => {
 
   it("still fails closed on an unknown platform call", () => {
     expect(rpc("platform_make_me_god").error?.code).toBe("MOCK");
+  });
+});
+
+describe("mock invite (platform-invite-gym)", () => {
+  const body = { gymName: "Fresh Gym", adminEmail: "New.Admin@Fresh.example", planTier: "pro", until: "2099-01-01T00:00:00.000Z", reason: "Founding" };
+
+  it("creates a gym with complimentary access and both audit rows", () => {
+    const r = mockInviteGym(body) as { data: { tenantId: string; email: string } | null; error: unknown };
+    expect(r.error).toBeNull();
+    expect(r.data?.email).toBe("new.admin@fresh.example");
+    const d = rpc("platform_tenant_detail", { p_tenant_id: r.data?.tenantId }).data as {
+      access_state: string; tenant: { name: string }; audit: Array<{ action: string }>;
+    };
+    expect(d.tenant.name).toBe("Fresh Gym");
+    expect(d.access_state).toBe("complimentary");
+    expect(d.audit.map((a) => a.action)).toEqual(expect.arrayContaining(["create_gym", "grant_access"]));
+  });
+
+  it("refuses an email that already has an account, with the service's message", async () => {
+    const r = mockInviteGym({ ...body, adminEmail: "NEW.ADMIN@fresh.example" }) as { error: { context: { status: number; json: () => Promise<{ error: string }> } } };
+    expect(r.error.context.status).toBe(409);
+    expect((await r.error.context.json()).error).toMatch(/already has an account/);
+  });
+
+  it("validates input", () => {
+    for (const patch of [{ gymName: " " }, { adminEmail: "nope" }, { planTier: "gold" }, { reason: "ab" }]) {
+      expect((mockInviteGym({ ...body, ...patch }) as { error: unknown }).error).not.toBeNull();
+    }
   });
 });

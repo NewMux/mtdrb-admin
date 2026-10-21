@@ -209,6 +209,44 @@ function fail(message: string, code = "22023"): MockResult {
   return { data: null, error: { message, code } };
 }
 
+/**
+ * Dev stand-in for the platform-invite-gym Edge Function. Mirrors its rules:
+ * validated input, a clear refusal when the email already has an account, a
+ * new gym with complimentary access, and both audit rows.
+ */
+export function mockInviteGym(body: unknown): { data: unknown; error: unknown } {
+  const b = (typeof body === "object" && body !== null ? body : {}) as Record<string, unknown>;
+  const refuse = (status: number, message: string) => ({
+    data: null,
+    error: Object.assign(new Error(message), { context: { status, json: async () => ({ error: message }) } }),
+  });
+
+  const gymName = String(b.gymName ?? "").trim();
+  const email = String(b.adminEmail ?? "").trim().toLowerCase();
+  const reason = String(b.reason ?? "").trim();
+  if (!gymName || gymName.length > 160) return refuse(400, "Enter a gym name of 1 to 160 characters.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return refuse(400, "Enter a valid email address.");
+  if (!["starter", "pro", "enterprise", "demo"].includes(String(b.planTier))) return refuse(400, "Choose a plan.");
+  if (reason.length < 3 || reason.length > 500) return refuse(400, "Enter a reason of 3 to 500 characters.");
+  if (tenants.some((t) => t.admin_email.toLowerCase() === email)) {
+    return refuse(409, "That email already has an account. Ask them to sign in, or use a different email.");
+  }
+
+  const until = typeof b.until === "string" ? b.until : null;
+  const tenant: MockTenant = {
+    id: `demo-t-new-${auditId}`, name: gymName, created_at: new Date().toISOString(), admin_email: email,
+    admin_last_sign_in: null, members: 0, trainers: 0, branches: 0, classes: 0, last_activity_at: null,
+    sub: {
+      status: "active", plan_tier: String(b.planTier), payment_provider: "manual", payment_reference: null,
+      amount: 0, currency: "BHD", trial_end: null, current_period_end: until,
+    },
+  };
+  tenants.push(tenant);
+  logAudit("grant_access", tenant, { reason, before: null, after: snapshot(tenant.sub) });
+  logAudit("create_gym", tenant, { reason, admin_email: email, plan_tier: String(b.planTier), until });
+  return { data: { tenantId: tenant.id, userId: `${tenant.id}:u1`, email }, error: null };
+}
+
 export function mockPlatformRpc(name: string, args: Record<string, unknown> = {}): MockResult | null {
   if (!name.startsWith("platform_")) return null;
 
