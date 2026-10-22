@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "./useToast";
 import {
+  fetchGymSettings,
   getGymSettings,
   saveGymSettingsWithValidation,
   GymSettings,
@@ -174,16 +175,21 @@ export const useSettings = () => {
       localData: SettingsData,
       existingMetadata: Record<string, unknown> = {},
     ): Partial<GymSettings> => {
+      // Currency, tax, country and timezone belong to the gym configuration
+      // (config/gymConfig.ts, saved from Settings > Business & tax). They are
+      // deliberately NOT written from here: this hook's copy can be stale, and
+      // writing it back would silently undo a change made there.
+      const existingGeneral =
+        existingMetadata.general && typeof existingMetadata.general === "object"
+          ? (existingMetadata.general as Record<string, unknown>)
+          : {};
       return {
         tenant_id: tenantId || "",
-        currency: localData.general.currency,
-        vat_enabled: localData.gymOperations.vatEnabled,
-        vat_rate: localData.gymOperations.vatRate,
         metadata: {
           ...existingMetadata,
           general: {
+            ...existingGeneral,
             gym_name: localData.general.gymName,
-            timezone: localData.general.timezone,
             language: localData.general.language,
             dark_mode: localData.general.darkMode,
           },
@@ -347,7 +353,13 @@ export const useSettings = () => {
           }
         }
 
-        const apiData = localToApiFormat(settingsToSave, rawMetadataRef.current);
+        // Merge into what is stored now: Business & tax (or another tab) may
+        // have written other namespaces since this page loaded.
+        const { data: latest } = await fetchGymSettings(tenantId || "");
+        const apiData = localToApiFormat(
+          settingsToSave,
+          latest?.metadata ?? rawMetadataRef.current,
+        );
         const { success, error, data } =
           await saveGymSettingsWithValidation(apiData);
 

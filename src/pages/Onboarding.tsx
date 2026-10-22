@@ -14,12 +14,18 @@ import {
   FiArrowRight, 
   FiArrowLeft,
 } from "react-icons/fi";
+import { DEFAULT_LANGUAGE } from "../config/runtimeConfig";
 import {
-  DEFAULT_CURRENCY,
-  DEFAULT_LANGUAGE,
-  DEFAULT_TIMEZONE,
-  DEFAULT_VAT_RATE,
-} from "../config/runtimeConfig";
+  buildSettingsWrite,
+  configToInput,
+  resolveGymConfig,
+  validateGymConfig,
+  type ConfigErrors,
+  type GymConfigInput,
+} from "../config/gymConfig";
+import { PLATFORM_CONFIG_DEFAULTS, useGymConfig } from "../contexts/gym-config-context";
+import { fetchGymSettings } from "../api/settings";
+import GymConfigForm from "../components/settings/GymConfigForm";
 
 // Pull a human-readable message out of an unknown thrown value, checking the
 // common shapes Supabase errors can take (message, nested error.message, code).
@@ -44,12 +50,9 @@ function extractErrorMessage(err: unknown): string | undefined {
 interface OnboardingFormData {
   // Step 1: Gym Info
   gymName: string;
-  country: string;
   language: string;
-  vatEnabled: boolean;
-  vatNumber: string;
-  currency: string;
-  timezone: string;
+  /** Region, currency, tax and business details (see config/gymConfig.ts) */
+  config: GymConfigInput;
 
   // Step 2: Branch Setup
   branchName: string;
@@ -80,21 +83,19 @@ type SetOnboardingFormData = React.Dispatch<React.SetStateAction<OnboardingFormD
 export default function Onboarding() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { refresh: refreshGymConfig } = useGymConfig();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [configErrors, setConfigErrors] = useState<ConfigErrors>({});
   const [user, setUser] = useState<User | null>(null);
 
   // Form data
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OnboardingFormData>({
     // Step 1: Gym Info
     gymName: "",
-    country: "",
     language: DEFAULT_LANGUAGE,
-    vatEnabled: DEFAULT_VAT_RATE > 0,
-    vatNumber: "",
-    currency: DEFAULT_CURRENCY,
-    timezone: DEFAULT_TIMEZONE,
+    config: configToInput(resolveGymConfig(null, PLATFORM_CONFIG_DEFAULTS)),
     
     // Step 2: Branch Setup
     branchName: "",
@@ -154,7 +155,7 @@ export default function Onboarding() {
       title: t("onboarding.gymInformation"),
       subtitle: t("onboarding.gymInformationDesc"),
       icon: <FiHome className="h-6 w-6" />,
-      component: <GymInfoStep formData={formData} setFormData={setFormData} />
+      component: <GymInfoStep formData={formData} setFormData={setFormData} configErrors={configErrors} />
     },
     {
       id: 1,
@@ -181,6 +182,11 @@ export default function Onboarding() {
 
   // Navigation functions
   const nextStep = () => {
+    if (currentStep === 0) {
+      const errors = validateGymConfig(formData.config);
+      setConfigErrors(errors);
+      if (Object.keys(errors).length > 0) return;
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
       setError("");
@@ -231,12 +237,12 @@ export default function Onboarding() {
             p_tenant_name: formData.gymName || "My Gym",
             p_user_role: 'admin',
             p_tenant_metadata: {
-              country: formData.country,
+              country: formData.config.country,
               language: formData.language,
-              vat_enabled: formData.vatEnabled,
-              vat_number: formData.vatNumber,
-              currency: formData.currency,
-              timezone: formData.timezone,
+              vat_enabled: formData.config.tax.enabled,
+              vat_number: formData.config.tax.number,
+              currency: formData.config.currency,
+              timezone: formData.config.timezone,
               onboarding_completed: true
             }
           });
@@ -260,12 +266,12 @@ export default function Onboarding() {
           .update({
             name: formData.gymName,
             metadata: {
-              country: formData.country,
+              country: formData.config.country,
               language: formData.language,
-              vat_enabled: formData.vatEnabled,
-              vat_number: formData.vatNumber,
-              currency: formData.currency,
-              timezone: formData.timezone,
+              vat_enabled: formData.config.tax.enabled,
+              vat_number: formData.config.tax.number,
+              currency: formData.config.currency,
+              timezone: formData.config.timezone,
               onboarding_completed: true
             }
           })
@@ -296,20 +302,25 @@ export default function Onboarding() {
         }
       }
 
-      // Create or update gym settings for the tenant
+      // Create or update gym settings for the tenant: region, currency, tax and
+      // business details exactly as entered (merged into anything already there).
       try {
+        const { data: existingSettings } = await fetchGymSettings(tenantId);
+        const write = buildSettingsWrite(formData.config, existingSettings?.metadata, new Date());
+        const general = (write.metadata.general ?? {}) as Record<string, unknown>;
         const { error: settingsError } = await supabase
           .from("gym_settings")
           .upsert({
             tenant_id: tenantId,
-            currency: formData.currency || DEFAULT_CURRENCY,
-            vat_enabled: formData.vatEnabled,
-            vat_rate: formData.vatEnabled ? DEFAULT_VAT_RATE : 0.0,
+            currency: write.currency,
+            vat_enabled: write.vat_enabled,
+            vat_rate: write.vat_rate,
             metadata: {
+              ...write.metadata,
               general: {
-                country: formData.country,
+                ...general,
+                gym_name: formData.gymName,
                 language: formData.language,
-                timezone: formData.timezone,
                 ...(logoUrl && { logo_url: logoUrl }),
               },
             },
@@ -318,11 +329,11 @@ export default function Onboarding() {
             onConflict: "tenant_id"
           });
 
-        if (settingsError) {
-          console.error("Error creating/updating gym settings:", settingsError);
-        }
+        if (settingsError) throw settingsError;
+        await refreshGymConfig();
       } catch (err) {
         console.error("Failed to save gym settings:", err);
+        toast.error(t("gymConfig.saveFailed"));
       }
 
       // Create branch if branch name is provided
@@ -634,23 +645,19 @@ export default function Onboarding() {
 
 // ===== STEP COMPONENTS =====
 
-function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; setFormData: SetOnboardingFormData }) {
+function GymInfoStep({
+  formData,
+  setFormData,
+  configErrors,
+}: {
+  formData: OnboardingFormData;
+  setFormData: SetOnboardingFormData;
+  configErrors: ConfigErrors;
+}) {
   const { t, i18n } = useTranslation();
-  const countries = [
-    ["Saudi Arabia", "saudiArabia"], ["UAE", "uae"], ["Bahrain", "bahrain"], ["Kuwait", "kuwait"], ["Oman", "oman"], ["Qatar", "qatar"], ["Egypt", "egypt"], ["Jordan", "jordan"], ["Lebanon", "lebanon"]
-  ] as const;
-
-  const currencies = [
-    { code: "SAR", key: "sar" },
-    { code: "AED", key: "aed" },
-    { code: "BHD", key: "bhd" },
-    { code: "KWD", key: "kwd" },
-    { code: "OMR", key: "omr" },
-    { code: "QAR", key: "qar" }
-  ] as const;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -667,21 +674,6 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t("onboarding.country")} *
-          </label>
-          <select
-            value={formData.country}
-            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {countries.map(([value, key]) => (
-              <option key={value} value={value}>{t(`onboarding.countries.${key}`)}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
             {t("onboarding.language")}
           </label>
           <select
@@ -693,54 +685,13 @@ function GymInfoStep({ formData, setFormData }: { formData: OnboardingFormData; 
             <option value="ar">{t("onboarding.arabic")}</option>
           </select>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t("onboarding.currency")}
-          </label>
-          <select
-            value={formData.currency}
-            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-            className="w-full ps-4 pe-9 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {currencies.map(currency => (
-              <option key={currency.code} value={currency.code}>
-                {currency.code} - {t(`onboarding.currencies.${currency.key}`)}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
-      <div className="border-t pt-6">
-        <div className="flex items-center space-x-3 mb-4">
-          <input
-            type="checkbox"
-            id="vatEnabled"
-            checked={formData.vatEnabled}
-            onChange={(e) => setFormData({ ...formData, vatEnabled: e.target.checked })}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="vatEnabled" className="text-sm font-medium text-gray-700">
-            {t("onboarding.vatEnabled")}
-          </label>
-        </div>
-
-        {formData.vatEnabled && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t("onboarding.vatNumber")}
-            </label>
-            <input
-              type="text"
-              value={formData.vatNumber}
-              onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={t("onboarding.vatNumberPlaceholder")}
-            />
-          </div>
-        )}
-      </div>
+      <GymConfigForm
+        value={formData.config}
+        onChange={(config) => setFormData({ ...formData, config })}
+        errors={configErrors}
+      />
     </div>
   );
 }

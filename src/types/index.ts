@@ -73,7 +73,9 @@ export type ExpenseStatus = "pending" | "paid" | "approved" | "rejected";
 
 export type RecurringFrequency = "weekly" | "monthly" | "quarterly" | "yearly";
 
-export type VatRate = 0 | 5 | 10 | 15;
+// A tax rate in percent. Gyms configure their own (config/gymConfig.ts), so this
+// is not limited to a fixed list.
+export type VatRate = number;
 
 export interface LineItem {
   id: string;

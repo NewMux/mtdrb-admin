@@ -14,7 +14,7 @@ import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 import { getDateRange } from "../../utils/dashboardRange";
 import { getCurrencyDecimals, resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
@@ -55,6 +55,8 @@ const formatCurrency = (value: number, currency: string) => {
 export default function SmartDashboardAnalytics({
   refreshKey,
 }: SmartDashboardAnalyticsProps) {
+  const { config: gymConfig } = useGymConfig();
+
   const { t } = useTranslation();
   const { isRTL } = useRTL();
   const [selectedTimeRange, setSelectedTimeRange] = useState<
@@ -63,7 +65,7 @@ export default function SmartDashboardAnalytics({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetric[]>([]);
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const [currency, setCurrency] = useState(gymConfig.currency);
   // The KPI targets this gym saved with "Set Targets" on the dashboard.
   const [targets, setTargets] = useState<{
     revenue?: number;
@@ -118,7 +120,7 @@ export default function SmartDashboardAnalytics({
         .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .maybeSingle();
-      setCurrency(settingsRow?.currency || DEFAULT_CURRENCY);
+      setCurrency(settingsRow?.currency || gymConfig.currency);
       const savedTargets =
         (settingsRow?.metadata as { dashboardTargets?: NonNullable<typeof targets> } | null)?.dashboardTargets ?? null;
       setTargets(savedTargets);
@@ -337,7 +339,7 @@ export default function SmartDashboardAnalytics({
     } finally {
       setLoading(false);
     }
-  }, [selectedTimeRange, t]);
+  }, [selectedTimeRange, t, gymConfig.currency]);
 
   useEffect(() => {
     fetchDashboardData();

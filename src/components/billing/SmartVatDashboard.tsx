@@ -23,7 +23,8 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 import { toLocalDateString } from "../../utils/analyticsRange";
@@ -88,7 +89,9 @@ export default function SmartVatDashboard({
     alerts: string[];
   } | null>(null);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const configuredVatRate = taxRateToApply(gymConfig);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
@@ -101,15 +104,6 @@ export default function SmartVatDashboard({
     
     try {
       setLoading(true);
-
-      const { data: settingsData, error: settingsError } = await supabase
-        .from("gym_settings")
-        .select("currency, vat_rate")
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (settingsError) throw settingsError;
-      const configuredVatRate = Number(settingsData?.vat_rate ?? DEFAULT_VAT_RATE);
-      setCurrency(settingsData?.currency || DEFAULT_CURRENCY);
 
       // Fetch invoices to calculate VAT from the live invoice schema.
       // Paged: PostgREST caps a single response at 1000 rows, and this
@@ -184,7 +178,7 @@ export default function SmartVatDashboard({
       const expenseList: ExpenseSummary[] = expenses ?? [];
       const vatReturnsList: VatReturn[] = (vatReturnsData ?? []) as VatReturn[];
 
-      // Calculate VAT collected (5% of paid invoices)
+      // Calculate VAT collected: the stored amount, or the gym's configured rate for older invoices without one
       const invoiceVat = (invoice: InvoiceSummary) => {
         const storedVat = invoice.vat_total == null ? Number.NaN : Number(invoice.vat_total);
         if (Number.isFinite(storedVat)) return storedVat;
@@ -320,7 +314,7 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || DEFAULT_CURRENCY} payable`);
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${currency} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -358,7 +352,7 @@ export default function SmartVatDashboard({
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, configuredVatRate, currency]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -477,7 +471,7 @@ export default function SmartVatDashboard({
   }
 
   const formatCurrency = (amount: number) => {
-    const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    const code = /^[A-Z]{3}$/.test(currency) ? currency : "USD";
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",

@@ -28,15 +28,9 @@ import { SmartModal } from "../ui/SmartModal";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
 import { computeLineTotals, computeInvoiceTotals, getCurrencyDecimals } from "../../utils/invoiceMath";
-
-const VALID_VAT_RATES: VatRate[] = [0, 5, 10, 15];
-const FALLBACK_VAT_RATE: VatRate = VALID_VAT_RATES.includes(
-  DEFAULT_VAT_RATE as VatRate,
-)
-  ? (DEFAULT_VAT_RATE as VatRate)
-  : 0;
 
 // Smart suggestions for line items
 const SMART_SUGGESTIONS: Record<
@@ -45,61 +39,53 @@ const SMART_SUGGESTIONS: Record<
     description: string;
     type: InvoiceType;
     unitPrice: number;
-    vatRate: VatRate;
-    currency: string;
   }
 > = {
   PT: {
     description: "Personal Training Session",
     type: "PT",
     unitPrice: 50,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
   MEMBERSHIP: {
     description: "Monthly Membership",
     type: "Membership",
     unitPrice: 100,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
   CLASS: {
     description: "Group Fitness Class",
     type: "Class",
     unitPrice: 25,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
   EQUIPMENT: {
     description: "Equipment Rental",
     type: "Facility",
     unitPrice: 15,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
   CONSULTATION: {
     description: "Fitness Consultation",
     type: "PT",
     unitPrice: 75,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
   SUPPLEMENTS: {
     description: "Nutrition Supplements",
     type: "Other",
     unitPrice: 45,
-    vatRate: 5,
-    currency: DEFAULT_CURRENCY,
   },
 };
 
-// VAT Rate options
-const VAT_RATES: { value: VatRate; label: string }[] = [
-  { value: 0, label: "0% - Exempt" },
-  { value: 5, label: "5% - Standard" },
-  { value: 10, label: "10% - Reduced" },
-  { value: 15, label: "15% - Premium" },
-];
+// The rates a line item can take: exempt, the gym's own rate, and whatever
+// rate the line already carries (e.g. on an invoice created before the gym
+// changed its rate).
+function vatRateOptions(
+  gymRate: VatRate,
+  taxName: string,
+  current: VatRate,
+): { value: VatRate; label: string }[] {
+  const options: { value: VatRate; label: string }[] = [{ value: 0, label: "0% - Exempt" }];
+  if (gymRate > 0) options.push({ value: gymRate, label: `${gymRate}% - ${taxName}` });
+  if (current !== 0 && current !== gymRate) options.push({ value: current, label: `${current}%` });
+  return options;
+}
 
 interface ClientHistory {
   lastInvoiceDate: string | null;
@@ -135,6 +121,11 @@ export function NewInvoiceModal({
   const { t } = useTranslation();
   const { isRTL } = useRTL();
 
+  // The gym's own tax and currency settings (Settings > Business & tax).
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const defaultVatRate: VatRate = taxRateToApply(gymConfig);
+
   // Invoice Details State
   const [invoiceData, setInvoiceData] = useState({
     invoice_number: "",
@@ -145,7 +136,7 @@ export function NewInvoiceModal({
     due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
     payment_method: "card" as PaymentMethodType,
     paid_amount: 0,
-    currency: DEFAULT_CURRENCY,
+    currency: currency,
     notes: "",
   });
 
@@ -160,31 +151,6 @@ export function NewInvoiceModal({
     overdueInvoices: 0,
   });
 
-  // The tenant's configured VAT rate (gym_settings.vat_rate), used as the
-  // default for new line items instead of a hardcoded rate. Falls back to
-  // the app-wide DEFAULT_VAT_RATE until the fetch resolves.
-  const [defaultVatRate, setDefaultVatRate] = useState<VatRate>(FALLBACK_VAT_RATE);
-
-  useEffect(() => {
-    if (!tenantId) return;
-    let cancelled = false;
-    supabase
-      .from("gym_settings")
-      .select("vat_rate")
-      .eq("tenant_id", tenantId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        const rate = Number(data?.vat_rate);
-        if (VALID_VAT_RATES.includes(rate as VatRate)) {
-          setDefaultVatRate(rate as VatRate);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [tenantId]);
-
   // Line Items State
   const [items, setItems] = useState<LineItem[]>(() => {
     const initialItem = {
@@ -192,7 +158,7 @@ export function NewInvoiceModal({
       description: "",
       quantity: 1,
       unit_price: 0,
-      vat_rate: FALLBACK_VAT_RATE,
+      vat_rate: defaultVatRate,
       discount_percentage: 0,
       total: 0,
     };
@@ -254,7 +220,7 @@ export function NewInvoiceModal({
           editingInvoice.due_date || dayjs().add(7, "day").format("YYYY-MM-DD"),
         payment_method: editingInvoice.payment_method || "card",
         paid_amount: editingInvoice.paid_amount || 0,
-        currency: editingInvoice.currency || DEFAULT_CURRENCY,
+        currency: editingInvoice.currency || currency,
         notes: editingInvoice.notes || "",
       });
       setSelectedClient(editingInvoice.member || null);
@@ -272,7 +238,7 @@ export function NewInvoiceModal({
         due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
         payment_method: "card" as PaymentMethodType,
         paid_amount: 0,
-        currency: DEFAULT_CURRENCY,
+        currency: currency,
         notes: "",
       });
       setSelectedClient(null);
@@ -288,7 +254,7 @@ export function NewInvoiceModal({
       resetItem.total = calculateItemTotal(resetItem);
       setItems([resetItem]);
     }
-  }, [editingInvoice, calculateItemTotal, defaultVatRate]);
+  }, [editingInvoice, calculateItemTotal, defaultVatRate, currency]);
 
   const loadClientHistory = useCallback(async (clientId: string) => {
     try {
@@ -399,7 +365,6 @@ export function NewInvoiceModal({
     if (suggestion) {
       handleItemChange(index, "description", suggestion.description);
       handleItemChange(index, "unit_price", suggestion.unitPrice);
-      handleItemChange(index, "vat_rate", suggestion.vatRate);
     }
   };
 
@@ -684,9 +649,9 @@ export function NewInvoiceModal({
                         }
                       >
                         {clientHistory.outstandingBalance.toFixed(
-                          3,
+                          currencyDecimals,
                         )}{" "}
-                        {DEFAULT_CURRENCY}
+                        {currency}
                       </span>
                     </div>
                     <div>
@@ -914,7 +879,7 @@ export function NewInvoiceModal({
                           }
                           className="w-full ps-4 pe-9 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
                         >
-                          {VAT_RATES.map((rate) => (
+                          {vatRateOptions(defaultVatRate, gymConfig.tax.name, item.vat_rate).map((rate) => (
                             <option
                               key={rate.value}
                               value={rate.value}
@@ -1000,7 +965,7 @@ export function NewInvoiceModal({
                       {t("billing.paidAmountLabel", "المبلغ المدفوع:")}
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {invoiceData.paid_amount.toFixed(3)} {DEFAULT_CURRENCY}
+                      {invoiceData.paid_amount.toFixed(currencyDecimals)} {currency}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -1014,7 +979,7 @@ export function NewInvoiceModal({
                           : "font-medium text-green-600 dark:text-green-400"
                       }
                     >
-                      {remaining_balance.toFixed(3)} {DEFAULT_CURRENCY}
+                      {remaining_balance.toFixed(currencyDecimals)} {currency}
                     </span>
                   </div>
                 </div>

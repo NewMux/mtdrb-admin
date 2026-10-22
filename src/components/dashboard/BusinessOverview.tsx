@@ -12,7 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, dayBoundary, daysWindow } from "../../utils/periodBoundaries";
@@ -23,6 +23,9 @@ import { monthBoundary, dayBoundary, daysWindow } from "../../utils/periodBounda
  * @returns {JSX.Element}
  */
 const BusinessOverview: React.FC = () => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
+
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const { isRTL } = useRTL();
@@ -80,14 +83,14 @@ const BusinessOverview: React.FC = () => {
       // for why: a bare date string compared against a timestamptz column
       // truncates to midnight UTC, silently excluding same-day records
       // and shifting month boundaries in positive-UTC-offset timezones.
-      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
-      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const currentMonth = monthBoundary(now, 0, timezone);
+      const previousMonth = monthBoundary(now, 1, timezone);
       const currentMonthStart = new Date(currentMonth.startISO);
       const previousMonthStart = new Date(previousMonth.startISO);
       // previousMonth's exclusive end is exactly currentMonth's start.
       const previousMonthEnd = currentMonthStart;
-      const last30Days = daysWindow(now, 30, DEFAULT_TIMEZONE);
-      const previous30DaysStart = dayBoundary(now, 59, DEFAULT_TIMEZONE).startISO;
+      const last30Days = daysWindow(now, 30, timezone);
+      const previous30DaysStart = dayBoundary(now, 59, timezone).startISO;
 
       // Fetch active members
       const [newMembers, allMembers] = await Promise.all([
@@ -191,7 +194,7 @@ const BusinessOverview: React.FC = () => {
       // PGRST116 = no row found, a legitimate "not configured yet" state.
       if (settingsError && settingsError.code !== "PGRST116") throw settingsError;
 
-      const currency = settings?.currency || DEFAULT_CURRENCY;
+      const currency = settings?.currency || gymConfig.currency;
       const currencySymbol = currency || "";
 
       setKpis([
@@ -253,7 +256,7 @@ const BusinessOverview: React.FC = () => {
       console.error("Error fetching business overview:", error);
       setLoadError(true);
     }
-  }, [tenantId, t]);
+  }, [tenantId, t, timezone, gymConfig.currency]);
 
   useEffect(() => {
     fetchData();

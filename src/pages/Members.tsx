@@ -49,7 +49,7 @@ import { fetchAllRows } from "../utils/fetchAllRows";
 import { monthBoundary } from "../utils/periodBoundaries";
 import { toLocalDateString } from "../utils/analyticsRange";
 import { countMembersActiveAsOf } from "../utils/memberActivity";
-import { DEFAULT_TIMEZONE } from "../config/runtimeConfig";
+import { useGymConfig } from "../contexts/gym-config-context";
 
 // Raw "members" table row as returned by Supabase (select("*"))
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -119,6 +119,8 @@ interface StatCard {
 // Removed mock member conversion - using real data from Supabase
 
 const Members: React.FC = () => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
   usePageThemeContext();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
@@ -250,8 +252,8 @@ const Members: React.FC = () => {
         // bound (see periodBoundaries.ts); a bare date string would drop the last
         // day of every range.
         const now = new Date();
-        const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
-        const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+        const currentMonth = monthBoundary(now, 0, timezone);
+        const previousMonth = monthBoundary(now, 1, timezone);
         const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
         const totalCount = convertedMembers.length;
@@ -360,7 +362,7 @@ const Members: React.FC = () => {
     };
 
     fetchMembers();
-  }, [refreshKey, itemsPerPage, tenantId, t]);
+  }, [refreshKey, itemsPerPage, tenantId, t, timezone]);
 
   // Filter and sort members
   const convertedMembers = React.useMemo(() => {

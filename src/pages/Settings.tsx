@@ -12,6 +12,7 @@ import {
   FiX,
   FiCalendar,
   FiCheckCircle,
+  FiBriefcase,
 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
 import TabsNav from "../components/ui/TabsNav";
@@ -27,6 +28,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
+import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
 import { resumeSubscription } from "../api/billing";
 import { validatePassword } from "../utils/passwordPolicy";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -310,25 +312,10 @@ const Settings: React.FC = () => {
   // Tab configuration
   const tabs = [
     { id: "general", name: t("settings.general"), icon: FiSettings },
+    { id: "business", name: t("gymConfig.title"), icon: FiBriefcase },
     { id: "profile", name: t("settings.profile"), icon: FiUser },
     { id: "security", name: t("settings.security"), icon: FiShield },
     { id: "billing", name: t("settings.billing"), icon: FiCreditCard },
-  ];
-
-  // Options for select fields
-  const timezoneOptions = [
-    { value: "Asia/Riyadh", label: "Riyadh (GMT+3)" },
-    { value: "Asia/Dubai", label: "Dubai (GMT+4)" },
-    { value: "America/New_York", label: "Eastern Time (GMT-5)" },
-    { value: "Europe/London", label: "London (GMT+0)" },
-    { value: "Asia/Tokyo", label: "Tokyo (GMT+9)" },
-  ];
-
-  const currencyOptions = [
-    { value: "SAR", label: "Saudi Riyal (SAR)" },
-    { value: "USD", label: "US Dollar (USD)" },
-    { value: "EUR", label: "Euro (EUR)" },
-    { value: "GBP", label: "British Pound (GBP)" },
   ];
 
   // Render loading state
@@ -474,76 +461,6 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Timezone */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
-                    <div className="flex-1 text-start">
-                      <label
-                        htmlFor="timezone"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {t("settings.timezone")}
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.timezoneDesc")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <select
-                        id="timezone"
-                        value={settings.general.timezone}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "general",
-                            "timezone",
-                            e.target.value,
-                          )
-                        }
-                        className="form-select w-48"
-                      >
-                        {timezoneOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Currency */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
-                    <div className="flex-1 text-start">
-                      <label
-                        htmlFor="currency"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {t("settings.currency")}
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.currencyDesc")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <select
-                        id="currency"
-                        value={settings.general.currency}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "general",
-                            "currency",
-                            e.target.value,
-                          )
-                        }
-                        className="form-select w-48"
-                      >
-                        {currencyOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
                   {/* Language */}
                   <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
@@ -590,6 +507,8 @@ const Settings: React.FC = () => {
               </div>
             </div>
           )}
+
+          {activeTab === "business" && <BusinessSettingsTab />}
 
           {activeTab === "profile" && (
             <div className="space-y-6">

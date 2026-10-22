@@ -26,11 +26,9 @@ import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { toLocalDateString } from "../../utils/analyticsRange";
-import {
-  DEFAULT_COUNTRY_CODE,
-  DEFAULT_CURRENCY,
-  DEFAULT_VAT_RATE,
-} from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
+import { getCurrencyDecimals } from "../../utils/invoiceMath";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -104,6 +102,10 @@ export function AddExpenseModal({
   const { isRTL } = useRTL();
   const { user } = useAuth();
   const { tenantId: authTenantId } = useAuth();
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const currencyDecimals = getCurrencyDecimals(currency);
+  const defaultVatRate = taxRateToApply(gymConfig);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export function AddExpenseModal({
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
-      vat_rate: DEFAULT_VAT_RATE,
+      vat_rate: defaultVatRate,
       internal_notes: "",
       public_notes: "",
     },
@@ -175,12 +177,20 @@ export function AddExpenseModal({
         recurring: editingExpense.recurring || false,
         recurring_frequency: editingExpense.recurring_frequency || "monthly",
         vat_included: false,
-        vat_rate: DEFAULT_VAT_RATE,
+        vat_rate: defaultVatRate,
         internal_notes: editingExpense.internal_notes || "",
         public_notes: editingExpense.public_notes || "",
       });
     }
-  }, [editingExpense, isOpen, reset]);
+  }, [editingExpense, isOpen, reset, defaultVatRate]);
+
+  // A new expense starts from the gym's own tax settings, which may finish
+  // loading after the modal first renders.
+  useEffect(() => {
+    if (isOpen && !editingExpense) {
+      setValue("vat_rate", defaultVatRate);
+    }
+  }, [isOpen, editingExpense, defaultVatRate, setValue]);
 
   // Handle file upload with preview
   const handleFileSelection = (files: FileList | null) => {
@@ -247,7 +257,8 @@ export function AddExpenseModal({
       typeof watchedAmount === "number"
         ? watchedAmount
         : parseFloat(String(watchedAmount)) || 0;
-    const vatRate = watch("vat_rate") || 15;
+    const enteredRate = Number(watch("vat_rate"));
+    const vatRate = Number.isFinite(enteredRate) ? enteredRate : defaultVatRate;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
@@ -295,7 +306,7 @@ export function AddExpenseModal({
         recurring: data.recurring,
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
-        country_code: DEFAULT_COUNTRY_CODE || null,
+        country_code: gymConfig.country || null,
         vat_amount: calculateVatAmount(),
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
@@ -507,17 +518,17 @@ export function AddExpenseModal({
               <div className="bg-white dark:bg-white/[0.04] rounded-lg p-4 space-y-2 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{totalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{totalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
                 {watchedVatIncluded && (
                   <div className="flex justify-between text-sm">
-                    <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                    <span>{vatAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                    <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
+                    <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">

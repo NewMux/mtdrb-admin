@@ -15,7 +15,7 @@ import { StatStrip } from "../ui/StatStrip";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 import { monthBoundary, toZonedDateString } from "../../utils/periodBoundaries";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 
@@ -68,11 +68,14 @@ interface PrimaryStat {
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ 
   refreshKey 
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
+
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const [showTargetsModal, setShowTargetsModal] = useState(false);
   const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const [currency, setCurrency] = useState(gymConfig.currency);
   const [primaryStats, setPrimaryStats] = useState<PrimaryStat[]>([
     {
       name: t("dashboard.totalRevenue"),
@@ -125,8 +128,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       // bare date to a timestamptz column, which silently dropped the whole last
       // day of every range and shifted the month start by a day in UTC+3.
       const now = new Date();
-      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
-      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const currentMonth = monthBoundary(now, 0, timezone);
+      const previousMonth = monthBoundary(now, 1, timezone);
 
       // Fetch invoices for revenue. Paged: a money total must not stop growing
       // at PostgREST's 1000-row cap.
@@ -152,7 +155,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       // The previous figure is where the gym stood at the END of last month
       // (joined by then, not yet expired) - the same rule as memberActivity.ts -
       // not "members who joined last month", a much smaller group.
-      const previousMonthLastDay = toZonedDateString(new Date(Date.parse(previousMonth.endExclusiveISO) - 1), DEFAULT_TIMEZONE);
+      const previousMonthLastDay = toZonedDateString(new Date(Date.parse(previousMonth.endExclusiveISO) - 1), timezone);
       const [currentMembers, previousMembers] = await Promise.all([
         supabase
           .from("members")
@@ -232,7 +235,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         .eq("tenant_id", tenantId)
         .single();
 
-      const settingsCurrency = settings?.currency || DEFAULT_CURRENCY;
+      const settingsCurrency = settings?.currency || gymConfig.currency;
       setCurrency(settingsCurrency);
       const currencySymbol = settingsCurrency || "";
 
@@ -326,7 +329,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId, t]);
+  }, [tenantId, t, timezone, gymConfig.currency]);
 
   useEffect(() => {
     fetchStats();

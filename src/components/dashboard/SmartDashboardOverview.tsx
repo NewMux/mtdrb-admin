@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, weekBoundary, daysWindow } from "../../utils/periodBoundaries";
 
@@ -84,6 +84,9 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
 export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
   refreshKey,
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
+
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -141,10 +144,10 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // string compared against a timestamptz column truncates to
       // midnight UTC, silently excluding same-day records and shifting
       // month/week boundaries in positive-UTC-offset timezones.
-      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
-      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const currentMonth = monthBoundary(now, 0, timezone);
+      const previousMonth = monthBoundary(now, 1, timezone);
       const previousMonthEnd = new Date(currentMonth.startISO);
-      const week = weekBoundary(now, DEFAULT_TIMEZONE);
+      const week = weekBoundary(now, timezone);
 
       // Fetch data
       const [
@@ -246,7 +249,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // yet" state here, not a failure worth surfacing.
       if (settingsError && settingsError.code !== "PGRST116") throw settingsError;
 
-      const currency = settings?.currency || DEFAULT_CURRENCY;
+      const currency = settings?.currency || gymConfig.currency;
       const currencySymbol = currency || "";
       // The revenue target is the one the gym set (Set Targets on the dashboard).
       // This card used to show "110% of this month's revenue" as a target, which is
@@ -256,7 +259,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       );
 
       // Find inactive members (haven't visited in 14+ days)
-      const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
+      const last14Days = daysWindow(now, 14, timezone);
       const { data: recentBookings, error: recentBookingsError } = await supabase
         .from("class_bookings")
         .select("member_id")
@@ -355,7 +358,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId, t]);
+  }, [tenantId, t, timezone, gymConfig.currency]);
 
   useEffect(() => {
     fetchData();

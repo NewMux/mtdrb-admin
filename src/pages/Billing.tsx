@@ -25,8 +25,9 @@ import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
-import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
+import { useGymConfig } from "../contexts/gym-config-context";
 import { normalizeInvoiceStatus } from "../utils/invoiceStatus";
+import { getCurrencyDecimals } from "../utils/invoiceMath";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import type { Invoice, Expense } from "../types";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -149,11 +150,12 @@ const Billing: React.FC = () => {
     paymentReminders: true,
     vatEnabled: false,
   });
-  const [currency, setCurrency] = React.useState(DEFAULT_CURRENCY);
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
 
   const formatMoney = React.useCallback(
-    (value: number, maximumFractionDigits = 2) => {
-      const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    (value: number, maximumFractionDigits = getCurrencyDecimals(currency)) => {
+      const code = /^[A-Z]{3}$/.test(currency) ? currency : "USD";
       try {
         return new Intl.NumberFormat(undefined, {
           style: "currency",
@@ -270,7 +272,6 @@ const Billing: React.FC = () => {
       }
 
       const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
-      setCurrency(data?.currency || DEFAULT_CURRENCY);
       const saved = metadata.billing_settings as Partial<typeof settings> | undefined;
       if (saved) {
         setSettings((previous) => ({ ...previous, ...saved }));

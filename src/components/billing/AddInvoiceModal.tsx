@@ -26,11 +26,8 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import {
-  DEFAULT_COUNTRY_CODE,
-  DEFAULT_CURRENCY,
-  DEFAULT_VAT_RATE,
-} from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
 import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
 import { toLocalDateString } from "../../utils/analyticsRange";
 
@@ -94,6 +91,9 @@ export function AddInvoiceModal({
   const { isRTL } = useRTL();
   const { user } = useAuth();
   const { tenantId: authTenantId } = useAuth();
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const defaultVatRate = taxRateToApply(gymConfig);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -137,8 +137,8 @@ export function AddInvoiceModal({
       status: "pending",
       recurring: false,
       recurring_frequency: "monthly",
-      vat_included: false,
-      vat_rate: DEFAULT_VAT_RATE,
+      vat_included: gymConfig.tax.pricesIncludeTax,
+      vat_rate: defaultVatRate,
       internal_notes: "",
       public_notes: "",
     },
@@ -183,12 +183,21 @@ export function AddInvoiceModal({
         recurring: false,
         recurring_frequency: "monthly",
         vat_included: false,
-        vat_rate: DEFAULT_VAT_RATE,
+        vat_rate: defaultVatRate,
         internal_notes: "",
         public_notes: "",
       });
     }
-  }, [editingInvoice, isOpen, reset]);
+  }, [editingInvoice, isOpen, reset, defaultVatRate]);
+
+  // A new invoice starts from the gym's own tax settings, which may finish
+  // loading after the modal first renders.
+  useEffect(() => {
+    if (isOpen && !editingInvoice) {
+      setValue("vat_rate", defaultVatRate);
+      setValue("vat_included", gymConfig.tax.pricesIncludeTax);
+    }
+  }, [isOpen, editingInvoice, defaultVatRate, gymConfig.tax.pricesIncludeTax, setValue]);
 
   // Handle file upload with preview
   const handleFileSelection = (files: FileList | null) => {
@@ -256,8 +265,9 @@ export function AddInvoiceModal({
         : typeof watchedAmount === "string"
           ? parseFloat(watchedAmount)
           : 0;
-    const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
-    return splitVat(amount, vatRate, watchedVatIncluded, DEFAULT_CURRENCY);
+    const enteredRate = Number(watch("vat_rate"));
+    const vatRate = Number.isFinite(enteredRate) ? enteredRate : defaultVatRate;
+    return splitVat(amount, vatRate, watchedVatIncluded, currency);
   };
 
   // Handle form submission
@@ -306,14 +316,14 @@ export function AddInvoiceModal({
         payment_method: data.payment_method,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
-        currency: DEFAULT_CURRENCY,
+        currency: currency,
         vat_total: vat,
         metadata: {
           title: data.title,
           notes: data.description || null,
           invoice_url: invoiceUrl,
           created_by: user?.id,
-          country_code: DEFAULT_COUNTRY_CODE || null,
+          country_code: gymConfig.country || null,
           internal_notes: data.internal_notes || null,
           public_notes: data.public_notes || null,
         },
@@ -364,7 +374,7 @@ export function AddInvoiceModal({
   };
 
   const { net: netAmount, vat: vatAmount, gross: finalAmount } = calculateVatSplit();
-  const currencyDecimals = getCurrencyDecimals(DEFAULT_CURRENCY);
+  const currencyDecimals = getCurrencyDecimals(currency);
 
   const footer = (
     <div className="flex items-center justify-end gap-3 w-full">
@@ -516,15 +526,15 @@ export function AddInvoiceModal({
               <div className="bg-white dark:bg-white/[0.04] rounded-lg p-4 space-y-2 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{netAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                  <span>{netAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                  <span>{vatAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                  <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
+                  <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">

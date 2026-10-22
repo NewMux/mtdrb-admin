@@ -10,6 +10,7 @@ import { ThemeProvider as MuiThemeProvider } from "@mui/material";
 import { theme } from "./theme";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { GymConfigProvider } from "./contexts/GymConfigProvider";
 import { UIProvider } from "./contexts/UIContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { PageThemeProvider } from "./contexts/PageThemeContext";
@@ -119,6 +120,7 @@ const App = () => {
             <Router>
               <AuthProvider>
                 <SubscriptionProvider>
+                  <GymConfigProvider>
                   <UIProvider>
                     <Toaster
                       position="top-right"
@@ -380,6 +382,7 @@ const App = () => {
                       </Routes>
                     </Suspense>
                   </UIProvider>
+                  </GymConfigProvider>
                 </SubscriptionProvider>
               </AuthProvider>
             </Router>

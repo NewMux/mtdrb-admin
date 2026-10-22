@@ -8,7 +8,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { createPrivateStorageUrl } from "../../../utils/storage";
 import toast from "react-hot-toast";
 import { FiDownload, FiEdit2, FiSave, FiX } from "react-icons/fi";
-import { DEFAULT_CURRENCY } from "../../../config/runtimeConfig";
+import { useGymConfig } from "../../../contexts/gym-config-context";
 
 interface ViewExpenseModalProps {
   isOpen: boolean;
@@ -29,6 +29,8 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
   mode = "view",
   onSuccess,
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const expenseCurrency = gymConfig.currency;
   const { tenantId } = useAuth();
   const [isEditing, setIsEditing] = useState(mode === "edit");
   const [loading, setLoading] = useState(false);
@@ -112,7 +114,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
 
   const formatCurrency = (amount: number | undefined) => {
     if (amount === undefined) return "N/A";
-    if (!DEFAULT_CURRENCY) {
+    if (!expenseCurrency) {
       return amount.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -120,7 +122,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
     }
     return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: DEFAULT_CURRENCY,
+      currency: expenseCurrency,
     }).format(amount);
   };
 

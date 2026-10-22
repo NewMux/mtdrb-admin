@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../supabaseClient";
-import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../../config/runtimeConfig";
+import { useGymConfig } from "../../../contexts/gym-config-context";
+import { taxRateToApply } from "../../../config/gymConfig";
 import { toLocalDateString } from "../../../utils/analyticsRange";
 
 interface BillingData {
@@ -31,6 +32,9 @@ interface SmartSuggestion {
 }
 
 export const useSmartBillingModal = (initialData?: BillingData) => {
+  const { config: gymConfig } = useGymConfig();
+  const defaultVatRate = taxRateToApply(gymConfig);
+  const defaultCurrency = gymConfig.currency;
   const [data, setData] = useState<BillingData>(initialData || {});
   const [loading, setLoading] = useState(false);
   const [validation, setValidation] = useState<ValidationResult>({
@@ -66,7 +70,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   }, []);
 
   // VAT calculation
-  const calculateVAT = (amount: number, vatRate: number = DEFAULT_VAT_RATE) => {
+  const calculateVAT = (amount: number, vatRate: number = defaultVatRate) => {
     return (amount * vatRate) / 100;
   };
 
@@ -172,8 +176,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
       }
 
       // VAT rate suggestion uses configured tenant/runtime settings.
-      const vatDescription = DEFAULT_VAT_RATE > 0
-        ? `VAT rate should be ${DEFAULT_VAT_RATE}% for this service type.`
+      const vatDescription = defaultVatRate > 0
+        ? `VAT rate should be ${defaultVatRate}% for this service type.`
         : "Configure the VAT rate for this service type.";
       if (context.includes("vat") || context.includes("tax")) {
         realSuggestions.push({
@@ -214,7 +218,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   };
 
   // Auto-calculate totals
-  const calculateTotals = (subtotal: number, vatRate: number = DEFAULT_VAT_RATE) => {
+  const calculateTotals = (subtotal: number, vatRate: number = defaultVatRate) => {
     const vat = calculateVAT(subtotal, vatRate);
     const total = subtotal + vat;
 
@@ -230,8 +234,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
   const getSmartDefaults = async (memberId?: string) => {
     if (!memberId) {
       return {
-        vatRate: DEFAULT_VAT_RATE,
-        currency: DEFAULT_CURRENCY,
+        vatRate: defaultVatRate,
+        currency: defaultCurrency,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0], // 30 days from now
@@ -260,8 +264,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
         .single();
 
       return {
-        vatRate: DEFAULT_VAT_RATE,
-        currency: DEFAULT_CURRENCY,
+        vatRate: defaultVatRate,
+        currency: defaultCurrency,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
@@ -271,8 +275,8 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
     } catch (error) {
       console.error("Error fetching member defaults:", error);
       return {
-        vatRate: DEFAULT_VAT_RATE,
-        currency: DEFAULT_CURRENCY,
+        vatRate: defaultVatRate,
+        currency: defaultCurrency,
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
