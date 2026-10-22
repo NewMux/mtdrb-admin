@@ -279,8 +279,38 @@ before that date. When the date arrives Paddle sends `subscription.canceled`,
   still `active`, (3) "Keep subscription" clears both, (4) when the date
   passes (use Paddle's sandbox to advance the clock, or cancel with a short
   period) the row becomes `cancelled` and access ends.
-- **Not done yet:** a failed renewal payment (`past_due`) still maps to
-  `cancelled` immediately, with no grace period.
+
+## Failed renewal payments (grace period)
+
+When a renewal charge fails Paddle emails the customer and retries for a while
+(subscription status `past_due`). The gym keeps access for **7 days** from the
+first failure instead of being locked out at once:
+
+- `paddle-webhook` stores `past_due` and sets
+  `platform_subscriptions.grace_until` (now + `PAST_DUE_GRACE_DAYS`, in
+  `supabase/functions/_shared/paddle-subscription.ts`) when the subscription
+  *first* goes past due. Paddle's later retry events keep the original date, so
+  retries cannot extend the grace; a recovered payment returns the row to
+  `active` and clears it.
+- Access follows `grace_until` in both `is_tenant_entitled()` (database) and
+  `isSubscriptionEntitled()` (app): `past_due` with no future grace date means
+  no access. When the date passes, or Paddle gives up and sends
+  `subscription.canceled`, access ends.
+- A banner in the app shell tells the gym to update its payment method before
+  the date; Settings shows "Payment failed" and still offers Cancel. Migration:
+  `supabase/migrations/20261022150000_past_due_grace.sql` (apply before
+  deploying the webhook and frontend).
+- Choose the grace length with Paddle's own retry schedule in mind (Dashboard →
+  Billing → Retries): if Paddle stops retrying sooner than 7 days it cancels the
+  subscription and access ends then.
+- The owner console still labels a gym inside its grace period "inactive"
+  (`platform_access_state()` does not know about `grace_until`), although it has
+  access.
+- **Unverified against a live Paddle account:** that a failed renewal arrives as
+  `subscription.past_due` / `subscription.updated` with `status: "past_due"`.
+  In the sandbox, use a card that fails on renewal and check the row goes
+  `past_due` with a `grace_until` 7 days out, then `active` with it cleared when
+  a retry succeeds.
 
 ## Platform owner console (`/superadmin`)
 

@@ -42,3 +42,39 @@ export function readSubscriptionDates(data: Record<string, unknown>, paddleStatu
 
   return { cancelAt, periodEnd: null };
 }
+
+// --- Status mapping and the failed-payment grace period ---------------------
+
+/** Days a gym keeps access after a renewal payment first fails. */
+export const PAST_DUE_GRACE_DAYS = 7;
+
+export type StoredStatus = "active" | "trialing" | "past_due" | "cancelled";
+
+/**
+ * Paddle: active | trialing | past_due | paused | canceled.
+ * Ours:   active | trialing | past_due | cancelled.
+ * past_due is kept (not collapsed into "cancelled") so the gym gets a grace
+ * period while Paddle retries the payment; see 20261022150000_past_due_grace.sql.
+ * paused has no equivalent (the app never pauses), so it counts as no access.
+ */
+export function mapPaddleStatus(paddleStatus: string): StoredStatus {
+  if (paddleStatus === "active" || paddleStatus === "trialing" || paddleStatus === "past_due") return paddleStatus;
+  return "cancelled";
+}
+
+/**
+ * The grace_until to store for this event. A new failure starts a fresh
+ * window; further past_due events (Paddle sends several while it retries) keep
+ * the original date, otherwise every retry would extend the grace for ever.
+ * Any other status clears it.
+ */
+export function nextGraceUntil(
+  paddleStatus: string,
+  existing: { status?: string | null; grace_until?: string | null } | null | undefined,
+  now: Date = new Date(),
+): string | null {
+  if (paddleStatus !== "past_due") return null;
+  const kept = existing?.status === "past_due" ? asIso(existing.grace_until) : null;
+  if (kept) return kept;
+  return new Date(now.getTime() + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+}

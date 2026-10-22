@@ -136,6 +136,13 @@ describe("which subscriptions can be cancelled here", () => {
     expect(deps.scheduleCancel).not.toHaveBeenCalled();
   });
 
+  it("a gym whose payment failed (past_due) can still cancel to stop the retries", async () => {
+    deps = makeDeps({ loadSubscription: vi.fn().mockResolvedValue({ ...sub, status: "past_due" }) });
+    const r = await handleCancelSubscription(req(), deps);
+    expect(r.status).toBe(200);
+    expect(deps.scheduleCancel).toHaveBeenCalledWith("sub_1");
+  });
+
   it("500 when the subscription cannot be loaded", async () => {
     deps = makeDeps({ loadSubscription: vi.fn().mockRejectedValue(new Error("db")) });
     expect((await handleCancelSubscription(req(), deps)).status).toBe(500);

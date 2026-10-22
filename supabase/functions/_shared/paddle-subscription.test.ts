@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readSubscriptionDates } from "./paddle-subscription";
+import { PAST_DUE_GRACE_DAYS, mapPaddleStatus, nextGraceUntil, readSubscriptionDates } from "./paddle-subscription";
 
 const END = "2026-11-20T10:00:00Z";
 const END_ISO = "2026-11-20T10:00:00.000Z";
@@ -65,5 +65,58 @@ describe("readSubscriptionDates", () => {
       cancelAt: null,
       periodEnd: null,
     });
+  });
+});
+
+describe("mapPaddleStatus", () => {
+  it("keeps the statuses that have an equivalent, including past_due", () => {
+    expect(mapPaddleStatus("active")).toBe("active");
+    expect(mapPaddleStatus("trialing")).toBe("trialing");
+    expect(mapPaddleStatus("past_due")).toBe("past_due");
+  });
+
+  it("everything else means no access", () => {
+    for (const status of ["canceled", "paused", "", "something_new"]) {
+      expect(mapPaddleStatus(status)).toBe("cancelled");
+    }
+  });
+});
+
+describe("nextGraceUntil", () => {
+  const now = new Date("2026-11-01T12:00:00.000Z");
+  const day = 24 * 60 * 60 * 1000;
+
+  it("a first failure opens a fresh window", () => {
+    const out = nextGraceUntil("past_due", { status: "active", grace_until: null }, now);
+    expect(out).toBe(new Date(now.getTime() + PAST_DUE_GRACE_DAYS * day).toISOString());
+    expect(nextGraceUntil("past_due", null, now)).toBe(out);
+  });
+
+  it("Paddle's retry events do not extend the window", () => {
+    const first = nextGraceUntil("past_due", null, now);
+    const later = new Date(now.getTime() + 3 * day);
+    expect(nextGraceUntil("past_due", { status: "past_due", grace_until: first }, later)).toBe(first);
+  });
+
+  it("a second failure after a recovery starts a new window", () => {
+    const old = "2026-09-01T00:00:00.000Z";
+    // Recovered (stored status active, grace cleared) then failed again.
+    expect(nextGraceUntil("past_due", { status: "active", grace_until: null }, now)).not.toBe(old);
+    // Even a stale grace_until on a non-past_due row is ignored.
+    expect(nextGraceUntil("past_due", { status: "active", grace_until: old }, now)).toBe(
+      new Date(now.getTime() + PAST_DUE_GRACE_DAYS * day).toISOString(),
+    );
+  });
+
+  it("a past_due row with an unreadable stored date gets a fresh window rather than none", () => {
+    expect(nextGraceUntil("past_due", { status: "past_due", grace_until: "garbage" }, now)).toBe(
+      new Date(now.getTime() + PAST_DUE_GRACE_DAYS * day).toISOString(),
+    );
+  });
+
+  it("any other status clears it", () => {
+    for (const status of ["active", "trialing", "canceled", "paused"]) {
+      expect(nextGraceUntil(status, { status: "past_due", grace_until: "2026-11-05T00:00:00.000Z" }, now)).toBeNull();
+    }
   });
 });

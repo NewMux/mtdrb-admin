@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           Promise.resolve(
             supabase
               .from("platform_subscriptions")
-              .select("status, plan_tier, trial_end, current_period_end")
+              .select("status, plan_tier, trial_end, current_period_end, grace_until")
               .eq("tenant_id", tId)
               .maybeSingle(),
           ),

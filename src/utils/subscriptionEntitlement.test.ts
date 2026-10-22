@@ -49,9 +49,34 @@ describe("isSubscriptionEntitled", () => {
   });
 
   it("rejects cancelled, failed, expired, and unknown statuses", () => {
-    for (const status of ["cancelled", "failed", "expired", "past_due", "unknown"]) {
+    for (const status of ["cancelled", "failed", "expired", "unknown"]) {
       expect(isSubscriptionEntitled({ status }, now)).toBe(false);
     }
+  });
+
+  describe("past_due (a failed renewal payment)", () => {
+    it("keeps access inside the grace window", () => {
+      expect(isSubscriptionEntitled({ status: "past_due", grace_until: "2026-08-25T00:00:00.000Z" }, now)).toBe(true);
+    });
+
+    it("loses access once the grace window has passed", () => {
+      expect(isSubscriptionEntitled({ status: "past_due", grace_until: "2026-08-19T23:59:59.000Z" }, now)).toBe(false);
+      expect(isSubscriptionEntitled({ status: "past_due", grace_until: "2026-08-20T00:00:00.000Z" }, now)).toBe(false);
+    });
+
+    it("never grants access without a grace date, and ignores the period end", () => {
+      expect(isSubscriptionEntitled({ status: "past_due" }, now)).toBe(false);
+      expect(isSubscriptionEntitled({ status: "past_due", grace_until: null }, now)).toBe(false);
+      expect(
+        isSubscriptionEntitled({ status: "past_due", current_period_end: "2027-01-01T00:00:00.000Z" }, now),
+      ).toBe(false);
+    });
+
+    it("carries the grace date through the subscription context's field names", () => {
+      const inGrace = { status: "past_due", expires_at: "2026-08-10T00:00:00.000Z", grace_until: "2026-08-25T00:00:00.000Z" };
+      expect(isSubscriptionEntitled(contextSubscriptionToEntitlement(inGrace), now)).toBe(true);
+      expect(isSubscriptionEntitled(contextSubscriptionToEntitlement({ ...inGrace, grace_until: undefined }), now)).toBe(false);
+    });
   });
 });
 

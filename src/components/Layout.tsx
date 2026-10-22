@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { PaymentFailedBanner } from "./PaymentFailedBanner";
 import PageThemeDetector from "./PageThemeDetector";
 import { useRTL } from "../hooks/useRTL";
 
@@ -70,6 +71,7 @@ const Layout: React.FC = () => {
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Unified toolbar */}
           <TopBar onMenuClick={() => setSidebarOpen(true)} />
+          <PaymentFailedBanner />
           {/* Page Content. A plain fade on navigation, like switching
               panes in a Mac app; no slide. */}
           <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">

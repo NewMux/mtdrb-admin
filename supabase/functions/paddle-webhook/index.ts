@@ -19,7 +19,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { breakdownItems, readPriceConfig } from "../_shared/paddle-items.ts";
-import { readSubscriptionDates } from "../_shared/paddle-subscription.ts";
+import { mapPaddleStatus, nextGraceUntil, readSubscriptionDates } from "../_shared/paddle-subscription.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -28,21 +28,6 @@ const PADDLE_WEBHOOK_SECRET = Deno.env.get("PADDLE_WEBHOOK_SECRET");
 // Price IDs from your Paddle catalog (see scripts/seed-paddle-catalog.mjs):
 // the base Starter / Pro prices and the per-plan extra-location add-on prices.
 const priceConfig = () => readPriceConfig((key) => Deno.env.get(key));
-
-// Paddle subscription statuses -> our platform_subscriptions.status.
-// Paddle: active | trialing | past_due | paused | canceled
-// Ours:   active | trialing | cancelled
-// No Paddle price should have a trial period configured -- the free
-// trial was intentionally removed (see
-// 20260909162346_revoke_self_service_trial_creation.sql) -- but if one
-// ever is, "trialing" still maps correctly rather than silently
-// mismatching. past_due/paused have no equivalent in our schema; treat
-// them as not-entitled (cancelled) rather than leaving a stale "active"
-// row a lapsed payment shouldn't keep granting.
-function mapStatus(paddleStatus: string): string {
-  if (paddleStatus === "active" || paddleStatus === "trialing") return paddleStatus;
-  return "cancelled";
-}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -127,10 +112,24 @@ async function syncSubscription(
   const { planTier, extraLocations, amount, currencyCode } = breakdownItems(data.items, priceConfig());
 
   const paddleStatus = typeof data.status === "string" ? data.status : "canceled";
-  const status = mapStatus(paddleStatus);
+  const status = mapPaddleStatus(paddleStatus);
   // A cancellation scheduled for the end of the period leaves the status
   // "active" (access continues) and shows up as scheduled_change.
   const { cancelAt, periodEnd } = readSubscriptionDates(data, paddleStatus);
+
+  // A failed renewal keeps access for a grace period (see
+  // 20261022150000_past_due_grace.sql). The window starts when the
+  // subscription FIRST goes past_due, so read what is stored before deciding.
+  let graceUntil: string | null = null;
+  if (paddleStatus === "past_due") {
+    const { data: existing, error: existingError } = await serviceClient
+      .from("platform_subscriptions")
+      .select("status, grace_until")
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    graceUntil = nextGraceUntil(paddleStatus, existing);
+  }
 
   const { error } = await serviceClient
     .from("platform_subscriptions")
@@ -146,6 +145,7 @@ async function syncSubscription(
         ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
         current_period_end: periodEnd,
         cancel_at: cancelAt,
+        grace_until: graceUntil,
         payment_provider: "paddle",
         payment_reference: typeof data.id === "string" ? data.id : null,
         metadata: {

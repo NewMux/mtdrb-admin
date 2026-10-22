@@ -133,7 +133,9 @@ export async function handleCancelSubscription(req: CancelRequest, deps: CancelD
       error: "Your plan is not billed through a subscription, so it cannot be cancelled here. Contact support to change it.",
     });
   }
-  if (sub.status !== "active") {
+  // past_due still has a live Paddle subscription (it is retrying the payment);
+  // a gym with a failed card must be able to cancel to stop the retries.
+  if (sub.status !== "active" && sub.status !== "past_due") {
     return reply(409, cors, { error: "Your subscription has already ended. Subscribe again to continue." });
   }
 

@@ -11,6 +11,8 @@ interface Subscription {
   created_at: string;
   expires_at?: string;
   trial_end?: string;
+  /** While status is "past_due": access continues until this time. */
+  grace_until?: string;
 };
 
 interface User {
@@ -145,6 +147,7 @@ export function SubscriptionProvider({
           created_at: subData.created_at,
           expires_at: subData.current_period_end,
           trial_end: subData.trial_end,
+          grace_until: subData.grace_until ?? undefined,
         });
       } else {
         // No platform_subscriptions row for this tenant: not entitled. Never

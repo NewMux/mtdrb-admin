@@ -99,7 +99,9 @@ const Settings: React.FC = () => {
       setSubscriptionInfo({
         tier: subData?.plan_tier || "Free",
         startDate: subData?.created_at,
-        isPaid: subData?.status === "active" || subData?.status === "trialing",
+        // past_due is a live subscription whose renewal payment failed: still
+        // the gym's plan (it can fix the card or cancel), shown as "Payment failed".
+        isPaid: subData?.status === "active" || subData?.status === "trialing" || subData?.status === "past_due",
         status: subData?.status,
         trialEnd: subData?.trial_end,
         currentPeriodEnd: subData?.current_period_end,
@@ -1029,13 +1031,15 @@ const Settings: React.FC = () => {
                               {subscriptionInfo.isPaid && (
                                 <span
                                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    subscriptionInfo.cancelAt
+                                    subscriptionInfo.cancelAt || subscriptionInfo.status === "past_due"
                                       ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
                                       : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
                                   }`}
                                 >
                                   <FiCheckCircle className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {subscriptionInfo.cancelAt
+                                  {subscriptionInfo.status === "past_due"
+                                    ? t("settings.paymentFailed", "Payment failed")
+                                    : subscriptionInfo.cancelAt
                                     ? t("settings.subscriptionEnding", "Ends {{date}}", {
                                         date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
                                       })
