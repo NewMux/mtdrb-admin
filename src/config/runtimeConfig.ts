@@ -66,7 +66,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     description: "Everything in Starter & scale your gym",
     features: [
       "Everything in Starter",
-      `${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15)} ${PLATFORM_CURRENCY}/month per extra location`,
+      `+${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15)} ${PLATFORM_CURRENCY}/month per extra location`,
       "Unlimited members",
       "Advanced analytics",
       "Priority support",

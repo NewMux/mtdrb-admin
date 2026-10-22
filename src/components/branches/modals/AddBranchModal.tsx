@@ -12,12 +12,15 @@ import { SmartButton } from "../../ui/DesignSystem";
 import { AppleInput } from "../../AppleStyleModal";
 import { api } from "../../../api/client";
 import { supabase } from "../../../supabaseClient";
+import { isLocationLimitError } from "../../../api/locations";
 import { Branch, BusinessHours, BookingPolicies, DayBusinessHours } from "../../../types";
 
 interface AddBranchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /** The database refused the branch because the plan's location limit is reached. */
+  onLimitReached?: () => void;
 }
 
 const defaultDayHours: DayBusinessHours = {
@@ -72,6 +75,7 @@ export default function AddBranchModal({
   isOpen,
   onClose,
   onSuccess,
+  onLimitReached,
 }: AddBranchModalProps) {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
@@ -191,6 +195,13 @@ export default function AddBranchModal({
       onClose();
     } catch (error) {
       console.error("Error adding branch:", error);
+      if (isLocationLimitError(error)) {
+        // The page's numbers were stale: hand over to the purchase prompt.
+        toast.error(t("branches.locations.limitReached"));
+        setLoading(false);
+        onLimitReached?.();
+        return;
+      }
       toast.error(
         (error instanceof Error ? error.message : undefined) ||
           t("branches.errors.failedToAddBranch") ||

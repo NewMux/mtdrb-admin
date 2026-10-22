@@ -168,6 +168,69 @@ stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
 access) before relying on this for real customer traffic.
 
+## Extra locations (paid add-on)
+
+Every plan includes **one** location. Each additional branch is a paid
+add-on: a second line item on the tenant's Paddle subscription whose quantity
+is the number of extra locations (Starter +10 BHD/month, Pro +15 BHD/month by
+default). Three pieces make it real, and all three must be in place:
+
+- **Database** (`supabase/migrations/20261022090000_add_extra_locations.sql`):
+  `platform_subscriptions.extra_locations`, and a `BEFORE INSERT` trigger on
+  `branches` that refuses a branch beyond `1 + extra_locations` with SQLSTATE
+  `LC001` (`location_limit_reached`). The limit lives in Postgres, so a direct
+  REST insert cannot bypass the UI. `extra_locations` is service-role-only: a
+  tenant admin cannot raise it, even in the same update that cancels.
+  **Never limited:** gyms with no subscription row (the existing, untracked
+  tenants), manual grants from `/superadmin` (`payment_provider = 'manual'`),
+  and `enterprise`/`demo` tiers. Existing branches are never removed — a gym
+  already over its limit just cannot add more.
+- **Edge Function `paddle-manage-locations`**: a tenant admin (checked in
+  Postgres from their own JWT) sets the absolute number of extra locations. It
+  reads the subscription's current items from Paddle, replaces only the
+  add-on item, and PATCHes with `proration_billing_mode`
+  `prorated_immediately` when adding (the saved payment method is charged
+  the prorated amount straight away) or `prorated_next_billing_period` when
+  removing (credit from the next renewal). Deploy it with
+  `supabase functions deploy paddle-manage-locations`. Redeploy
+  `paddle-webhook` too: it now reads the add-on quantity and stores the
+  **total** recurring amount (base + extras) in `amount`.
+- **Paddle catalog**: one add-on product/price per plan.
+  `PADDLE_API_KEY=... node scripts/seed-paddle-catalog.mjs --addons-only`
+  creates them (add `--dry-run` first to inspect the request bodies; use
+  `--addons-only` if Starter/Pro already exist so they are not duplicated).
+
+Edge Function secrets (in addition to the Paddle ones above):
+
+- `PADDLE_API_KEY` — a **server-side** Paddle API key (sandbox keys contain
+  `_sdbx`). Never put it in a `VITE_*` variable.
+- `PADDLE_ENVIRONMENT` — `sandbox` (default) or `production`.
+- `PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID`,
+  `PADDLE_PRO_EXTRA_LOCATION_PRICE_ID` — the add-ons' **monthly** price IDs.
+  Both functions read these; without them the webhook leaves
+  `extra_locations` untouched and the manage function answers 503.
+- `APP_ALLOWED_ORIGINS` — comma-separated app origins allowed to call the
+  function from a browser (falls back to `PLATFORM_ALLOWED_ORIGINS`).
+
+The price shown in the app (`VITE_STARTER_EXTRA_LOCATION_PRICE`,
+`VITE_PRO_EXTRA_LOCATION_PRICE`) is display only, like the base plan prices:
+what is charged is the Paddle add-on price, so change both together (Paddle
+prices are immutable, so a new amount means a new price and a new ID).
+
+**Unverified against a live Paddle account** (the `paddle-docs` MCP server was
+not connected when this was written): the `PATCH /subscriptions/{id}` request
+body, that an add-on price's `quantity` range is honoured per subscription
+item, and the webhook's `items[]` shape for a two-item subscription. Before
+real customers: in the sandbox, subscribe, add an extra location in the app,
+and confirm (1) Paddle shows two items — plan ×1, extra location ×N — and
+charged the prorated amount, (2) `platform_subscriptions.extra_locations` = N
+and `amount` = base + N × add-on, (3) a branch beyond the limit is refused by
+the database, (4) removing unused extras lowers the quantity at renewal.
+
+Known gap: webhook events are applied in arrival order. If Paddle delivered
+an older `subscription.updated` after a newer one, `extra_locations` would
+briefly show the older quantity until the next event.
+
 ## Platform owner console (`/superadmin`)
 
 The owner-only console for seeing every gym and activating / comping /

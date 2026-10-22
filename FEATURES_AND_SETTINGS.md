@@ -97,6 +97,8 @@ Gym selects an MTDRB SaaS plan before using the app.
 | **Starter** | BHD 20/month | Up to 100 members, basic management, scheduling, payments, email support |
 | **Pro** | BHD 35/month | Unlimited members, advanced analytics, automation, PT tools, VAT reporting, priority support, custom branding, API access |
 
+Each plan includes **one location**. Extra branches are a paid add-on billed with the subscription (Starter +BHD 10/month, Pro +BHD 15/month per extra location); the database refuses a branch beyond the paid number. See `DEPLOYMENT.md` → "Extra locations".
+
 Sets `paid`, `subscription_tier`, and `subscription_start` in user metadata.  
 If onboarding is incomplete → `/onboarding`; otherwise → `/dashboard`.
 

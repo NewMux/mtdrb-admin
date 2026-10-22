@@ -1,6 +1,9 @@
 // One-time setup script: creates MTDRB's Starter/Pro products and prices
 // (monthly + annual, BHD, no trial period) in a Paddle Billing account via
-// its REST API.
+// its REST API, plus one "extra location" add-on product/price per plan.
+// The add-on is a second line item on a subscription whose quantity is the
+// number of extra locations the gym pays for (supabase/functions/
+// paddle-manage-locations); the plan itself includes one location.
 //
 // This session's network egress is policy-blocked from reaching Paddle's
 // API directly (confirmed: the proxy itself returns 403 on the CONNECT,
@@ -27,11 +30,15 @@
 //   node scripts/seed-paddle-catalog.mjs --dry-run
 //     (prints the request bodies it would send; makes no network calls and
 //     needs no API key)
+//   PADDLE_API_KEY=... node scripts/seed-paddle-catalog.mjs --addons-only
+//     (creates only the extra-location add-ons. Use this if the Starter/Pro
+//     products already exist in your account, so they are not duplicated.)
 //
 // Never commit a real API key. Pass it as an environment variable, not a
 // script argument (arguments can end up in shell history).
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const ADDONS_ONLY = process.argv.includes("--addons-only");
 const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
 if (!PADDLE_API_KEY && !DRY_RUN) {
   console.error("Missing PADDLE_API_KEY. Usage: PADDLE_API_KEY=your_sandbox_key node scripts/seed-paddle-catalog.mjs");
@@ -72,6 +79,9 @@ const PLANS = [
     description: "Perfect for single-location gyms",
     monthlyPrice: 20, // BHD 20.00
     annualPrice: 200, // BHD 200.00 (2 months free)
+    // Per extra location. Keep in step with VITE_STARTER_EXTRA_LOCATION_PRICE:
+    // that is only the displayed price, this is what is charged.
+    extraLocation: { monthlyPrice: 10, annualPrice: 100 },
   },
   {
     id: "pro",
@@ -79,6 +89,8 @@ const PLANS = [
     description: "Everything in Starter & scale your gym",
     monthlyPrice: 35, // BHD 35.00
     annualPrice: 350, // BHD 350.00 (2 months free)
+    // Keep in step with VITE_PRO_EXTRA_LOCATION_PRICE (see above).
+    extraLocation: { monthlyPrice: 15, annualPrice: 150 },
   },
 ];
 
@@ -112,55 +124,99 @@ async function paddleFetch(path, body) {
   return json.data;
 }
 
-async function createPrice(productId, plan, period) {
+// Highest quantity of the add-on one subscription may hold. Keep in step with
+// MAX_EXTRA_LOCATIONS in supabase/functions/paddle-manage-locations/index.ts
+// and the CHECK on platform_subscriptions.extra_locations.
+const MAX_EXTRA_LOCATIONS = 50;
+
+async function createPrice(productId, description, majorAmount, period, quantityLimits) {
   const isMonthly = period === "monthly";
-  const majorAmount = isMonthly ? plan.monthlyPrice : plan.annualPrice;
 
   const price = await paddleFetch("/prices", {
     product_id: productId,
-    description: `${plan.name} ${isMonthly ? "Monthly" : "Annual"}`,
+    description,
     billing_cycle: { interval: isMonthly ? "month" : "year", frequency: 1 },
     tax_mode: "account_setting",
     unit_price: { amount: toMinorUnits(majorAmount), currency_code: BASE_CURRENCY },
+    ...(quantityLimits ? { quantity: quantityLimits } : {}),
   });
 
   return price;
 }
 
 async function main() {
-  console.log(`Seeding Paddle catalog in ${ENVIRONMENT} (${BASE_URL})${DRY_RUN ? " [dry run]" : ""}...\n`);
+  console.log(
+    `Seeding Paddle catalog in ${ENVIRONMENT} (${BASE_URL})${DRY_RUN ? " [dry run]" : ""}` +
+      `${ADDONS_ONLY ? " [add-ons only]" : ""}...\n`,
+  );
 
   const results = [];
+  const addons = [];
 
   try {
+    if (!ADDONS_ONLY) {
+      for (const plan of PLANS) {
+        console.log(`Creating product: ${plan.name}...`);
+        const product = await paddleFetch("/products", {
+          name: `MTDRB ${plan.name}`,
+          description: plan.description,
+          tax_category: "saas",
+        });
+        console.log(`  Product created: ${product.id}`);
+        results.push({ plan: plan.name, productId: product.id });
+
+        const monthlyPrice = await createPrice(product.id, `${plan.name} Monthly`, plan.monthlyPrice, "monthly");
+        console.log(`  Monthly price created: ${monthlyPrice.id}`);
+        results[results.length - 1].monthlyPriceId = monthlyPrice.id;
+
+        const annualPrice = await createPrice(product.id, `${plan.name} Annual`, plan.annualPrice, "annual");
+        console.log(`  Annual price created: ${annualPrice.id}`);
+        results[results.length - 1].annualPriceId = annualPrice.id;
+
+        console.log("");
+      }
+    }
+
+    // One add-on per plan, so Starter and Pro can be priced independently.
+    // Quantity is limited to 1..MAX_EXTRA_LOCATIONS: a price's quantity range is
+    // what Paddle enforces for one subscription's line item.
     for (const plan of PLANS) {
-      console.log(`Creating product: ${plan.name}...`);
+      console.log(`Creating add-on product: Extra Location (${plan.name})...`);
       const product = await paddleFetch("/products", {
-        name: `MTDRB ${plan.name}`,
-        description: plan.description,
+        name: `MTDRB Extra Location (${plan.name})`,
+        description: `One additional gym location on the ${plan.name} plan`,
         tax_category: "saas",
       });
       console.log(`  Product created: ${product.id}`);
-      results.push({ plan: plan.name, productId: product.id });
+      addons.push({ plan: plan.name, productId: product.id });
 
-      const monthlyPrice = await createPrice(product.id, plan, "monthly");
+      const quantity = { minimum: 1, maximum: MAX_EXTRA_LOCATIONS };
+      const monthlyPrice = await createPrice(
+        product.id, `Extra Location (${plan.name}) Monthly`, plan.extraLocation.monthlyPrice, "monthly", quantity,
+      );
       console.log(`  Monthly price created: ${monthlyPrice.id}`);
-      results[results.length - 1].monthlyPriceId = monthlyPrice.id;
+      addons[addons.length - 1].monthlyPriceId = monthlyPrice.id;
 
-      const annualPrice = await createPrice(product.id, plan, "annual");
+      const annualPrice = await createPrice(
+        product.id, `Extra Location (${plan.name}) Annual`, plan.extraLocation.annualPrice, "annual", quantity,
+      );
       console.log(`  Annual price created: ${annualPrice.id}`);
-      results[results.length - 1].annualPriceId = annualPrice.id;
+      addons[addons.length - 1].annualPriceId = annualPrice.id;
 
       console.log("");
     }
   } catch (error) {
     // Products already created are NOT rolled back. Report them so a re-run
     // can be done without leaving duplicates behind (archive them in the
-    // Paddle dashboard first).
-    if (results.length > 0) {
+    // Paddle dashboard first, or use --addons-only if only add-ons failed).
+    const created = [
+      ...results.map((r) => ({ ...r, label: r.plan })),
+      ...addons.map((r) => ({ ...r, label: `Extra Location (${r.plan})` })),
+    ];
+    if (created.length > 0) {
       console.error("\nCreated before the failure (archive these in Paddle before re-running):");
-      for (const result of results) {
-        console.error(`  ${result.plan}: product ${result.productId}` +
+      for (const result of created) {
+        console.error(`  ${result.label}: product ${result.productId}` +
           `${result.monthlyPriceId ? `, monthly ${result.monthlyPriceId}` : ""}` +
           `${result.annualPriceId ? `, annual ${result.annualPriceId}` : ""}`);
       }
@@ -177,18 +233,33 @@ async function main() {
     console.log(`  Annual price:    ${result.annualPriceId}  (created for future use, not wired into checkout yet)`);
     console.log("");
   }
-  console.log("Set these as VITE_PADDLE_STARTER_PRICE_ID / VITE_PADDLE_PRO_PRICE_ID");
-  console.log("(Vercel) and PADDLE_STARTER_PRICE_ID / PADDLE_PRO_PRICE_ID (Supabase");
-  console.log("Edge Function secrets) using each plan's MONTHLY price ID above.");
+  for (const result of addons) {
+    console.log(`Extra Location (${result.plan}):`);
+    console.log(`  Product ID:      ${result.productId}`);
+    console.log(`  Monthly price:   ${result.monthlyPriceId}  <- used by paddle-manage-locations`);
+    console.log(`  Annual price:    ${result.annualPriceId}  (created for future use, not wired in yet)`);
+    console.log("");
+  }
+  if (!ADDONS_ONLY) {
+    console.log("Set these as VITE_PADDLE_STARTER_PRICE_ID / VITE_PADDLE_PRO_PRICE_ID");
+    console.log("(Vercel) and PADDLE_STARTER_PRICE_ID / PADDLE_PRO_PRICE_ID (Supabase");
+    console.log("Edge Function secrets) using each plan's MONTHLY price ID above.");
+  }
+  console.log("Set the add-ons' MONTHLY price IDs as the Supabase Edge Function secrets");
+  console.log("PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID / PADDLE_PRO_EXTRA_LOCATION_PRICE_ID");
+  console.log("(server-side only; the browser never needs them).");
   console.log("=".repeat(70));
 
   console.log("\nVerify in the Paddle dashboard before trusting this output:");
   console.log(`- Each price shows ${BASE_CURRENCY} 20.00 / 35.00 monthly (200.00 / 350.00 annual), not a units error.`);
-  console.log("- Neither price has a trial period (MTDRB has no free trial).");
+  console.log(`- Each add-on price shows ${BASE_CURRENCY} 10.00 (Starter) / 15.00 (Pro) monthly, with a quantity range of 1-${MAX_EXTRA_LOCATIONS}.`);
+  console.log("- No price has a trial period (MTDRB has no free trial).");
   console.log("- Nothing was created twice if you re-run this script (it does not");
   console.log("  check for existing products first -- re-running will duplicate them).");
   console.log("- After a sandbox checkout, platform_subscriptions.amount shows 20 / 35");
-  console.log("  (paddle-webhook converts by the currency's decimals; see money.ts).");
+  console.log("  (paddle-webhook converts by the currency's decimals; see _shared/money.ts).");
+  console.log("- After adding an extra location in the app, the Paddle subscription shows two");
+  console.log("  items (plan x1, extra location xN) and platform_subscriptions.extra_locations = N.");
 }
 
 main().catch((error) => {
