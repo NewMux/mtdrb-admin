@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useGymConfig } from "../../../contexts/gym-config-context";
-import { listActivePlans, type ActivePlan } from "../../../api/membershipPlans";
+import { listActivePlans, PLAN_PAYMENT_METHODS, type ActivePlan, type PaymentMethod } from "../../../api/membershipPlans";
 import { getCurrencyDecimals } from "../../../utils/invoiceMath";
 
 interface AddMemberModalProps {
@@ -104,6 +104,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const [plans, setPlans] = React.useState<ActivePlan[]>([]);
   const [planId, setPlanId] = React.useState("");
   const [planPrice, setPlanPrice] = React.useState("");
+  const [planInvoice, setPlanInvoice] = React.useState(true);
+  const [planPaymentMethod, setPlanPaymentMethod] = React.useState<PaymentMethod>("cash");
   React.useEffect(() => {
     if (!isOpen || !tenantId) return;
     let cancelled = false;
@@ -299,6 +301,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         ...payload,
         plan_id: selectedPlan ? selectedPlan.id : null,
         plan_price: selectedPlan && planPrice.trim() !== "" && Number.isFinite(planPriceNumber) ? planPriceNumber : null,
+        plan_invoice: planInvoice,
+        plan_payment_method: planPaymentMethod,
       });
       resetForm();
     } catch (error) {
@@ -309,6 +313,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   const resetForm = () => {
     setPlanId("");
     setPlanPrice("");
+    setPlanInvoice(true);
+    setPlanPaymentMethod("cash");
     setFormData({
       name: "",
       email: "",
@@ -594,6 +600,33 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
               <p className="text-xs text-gray-500 dark:text-gray-400 text-start">
                 {t("membershipPlans.daysOfAccess", { count: selectedPlan.duration })} · {t("membershipPlans.startsToday")}
               </p>
+            )}
+            {selectedPlan && Number(planPrice) > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 text-start">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={planInvoice}
+                    onChange={(e) => setPlanInvoice(e.target.checked)}
+                  />
+                  <span>{t("membershipPlans.recordSale")}</span>
+                </label>
+                {planInvoice && (
+                  <AppleSelect
+                    label={t("membershipPlans.paymentMethod")}
+                    aria-label={t("membershipPlans.paymentMethod")}
+                    value={planPaymentMethod}
+                    onChange={(e) => setPlanPaymentMethod(e.target.value as PaymentMethod)}
+                  >
+                    {PLAN_PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {t(`membershipPlans.methods.${m}`)}
+                      </option>
+                    ))}
+                  </AppleSelect>
+                )}
+              </div>
             )}
           </section>
         )}

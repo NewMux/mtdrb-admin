@@ -4,7 +4,7 @@
  */
 
 import type { User, UserAttributes } from "@supabase/supabase-js";
-import { DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
+import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 
 type Filter =
@@ -423,6 +423,44 @@ function mockRpc(name: string): { data: unknown; error: null } {
   return { data: rpcMap[name] ?? overview, error: null };
 }
 
+const isoDay = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+/**
+ * Membership plans in the demo: enough to click through assigning a plan. Nothing
+ * is stored - the real rules (dates in the gym's calendar, invoices) live in the
+ * database function assign_member_plan().
+ */
+function mockMembershipRpc(
+  name: string,
+  args: Record<string, unknown> = {},
+): { data: unknown; error: { message: string; code?: string } | null } | undefined {
+  if (name === "plan_member_counts") {
+    return { data: DEMO_PLANS.map((p) => ({ plan_id: p.id, members: p.members_count })), error: null };
+  }
+  if (name !== "assign_member_plan") return undefined;
+
+  const plan = DEMO_PLANS.find((p) => p.id === args.p_plan_id);
+  if (!plan) return { data: null, error: { message: "Plan not found", code: "P0002" } };
+  const start = typeof args.p_start === "string" ? new Date(`${args.p_start}T00:00:00`) : new Date();
+  const end = new Date(start);
+  end.setDate(end.getDate() + plan.duration - 1);
+  const price = typeof args.p_price === "number" ? args.p_price : plan.price;
+  return {
+    data: {
+      invoice_id: args.p_invoice !== false && price > 0 ? "demo-invoice" : null,
+      member_id: args.p_member_id,
+      plan_id: plan.id,
+      plan_name: plan.name,
+      start_date: isoDay(start),
+      expiry_date: isoDay(end),
+      price,
+      renewed: args.p_renew === true,
+    },
+    error: null,
+  };
+}
+
 /**
  * Creates a mock Supabase client that returns hardcoded demo data.
  */
@@ -432,7 +470,7 @@ export function createMockSupabaseClient() {
   return {
     from: (table: string) => new MockQueryBuilder(table),
     rpc: (name: string, args?: Record<string, unknown>) =>
-      Promise.resolve(mockPlatformRpc(name, args) ?? mockRpc(name)),
+      Promise.resolve(mockPlatformRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockRpc(name)),
     channel: () => ({
       on: () => ({ subscribe: () => noopSub }),
       subscribe: () => noopSub,

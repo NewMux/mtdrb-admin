@@ -6,6 +6,7 @@ const assignMemberPlan = vi.fn();
 vi.mock("../../../../api/membershipPlans", () => ({
   listActivePlans: (...a: unknown[]) => listActivePlans(...a),
   assignMemberPlan: (...a: unknown[]) => assignMemberPlan(...a),
+  PLAN_PAYMENT_METHODS: ["cash", "card", "bank_transfer", "online", "other"],
 }));
 vi.mock("../../../../contexts/AuthContext", () => ({ useAuth: () => ({ tenantId: "t1" }) }));
 vi.mock("../../../../contexts/gym-config-context", () => ({ useGymConfig: () => ({ config: { currency: "BHD" } }) }));
@@ -47,7 +48,7 @@ describe("MemberPlanModal", () => {
     fireEvent.change(select, { target: { value: "p1" } });
     expect(screen.getByDisplayValue("20.500")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
-    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p1", { renew: true, price: 20.5 }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p1", { renew: true, price: 20.5, invoice: true, paymentMethod: "cash" }));
     await waitFor(() => expect(onDone).toHaveBeenCalledWith(result));
   });
 
@@ -55,19 +56,19 @@ describe("MemberPlanModal", () => {
     open(future);
     await screen.findByRole("option", { name: "Yearly" });
     fireEvent.change(screen.getByLabelText("membershipPlans.selectPlan"), { target: { value: "p2" } });
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByLabelText("membershipPlans.continueFromEnd"));
     fireEvent.change(screen.getByDisplayValue("200.000"), { target: { value: "150" } });
     fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
-    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p2", { renew: false, price: 150 }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p2", { renew: false, price: 150, invoice: true, paymentMethod: "cash" }));
   });
 
   it("never offers to continue from an end date that has already passed", async () => {
     open("2020-01-01");
     await screen.findByRole("option", { name: "Monthly" });
     fireEvent.change(screen.getByLabelText("membershipPlans.selectPlan"), { target: { value: "p1" } });
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("membershipPlans.continueFromEnd")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
-    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p1", { renew: false, price: 20.5 }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenCalledWith("m1", "p1", { renew: false, price: 20.5, invoice: true, paymentMethod: "cash" }));
   });
 
   it("shows the database's error and does not close", async () => {
@@ -84,5 +85,29 @@ describe("MemberPlanModal", () => {
     listActivePlans.mockResolvedValue([]);
     open(null);
     expect(await screen.findByText("membershipPlans.noPlansHint")).toBeInTheDocument();
+  });
+
+  it("can skip the invoice and records how it was paid otherwise", async () => {
+    open(null);
+    await screen.findByRole("option", { name: "Monthly" });
+    fireEvent.change(screen.getByLabelText("membershipPlans.selectPlan"), { target: { value: "p1" } });
+    fireEvent.change(screen.getByLabelText("membershipPlans.paymentMethod"), { target: { value: "card" } });
+    fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenLastCalledWith("m1", "p1", { renew: false, price: 20.5, invoice: true, paymentMethod: "card" }));
+
+    fireEvent.click(screen.getByLabelText("membershipPlans.recordSale"));
+    expect(screen.queryByLabelText("membershipPlans.paymentMethod")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenLastCalledWith("m1", "p1", expect.objectContaining({ invoice: false })));
+  });
+
+  it("never offers an invoice for a free plan", async () => {
+    open(null);
+    await screen.findByRole("option", { name: "Monthly" });
+    fireEvent.change(screen.getByLabelText("membershipPlans.selectPlan"), { target: { value: "p1" } });
+    fireEvent.change(screen.getByDisplayValue("20.500"), { target: { value: "0" } });
+    expect(screen.getByText("membershipPlans.freeNoInvoice")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "membershipPlans.save" }));
+    await waitFor(() => expect(assignMemberPlan).toHaveBeenLastCalledWith("m1", "p1", expect.objectContaining({ price: 0, invoice: false })));
   });
 });

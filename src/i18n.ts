@@ -2464,6 +2464,10 @@ const resources = {
         failed: "Could not apply the plan",
         loadFailed: "Could not load your plans",
         planAddedFailed: "The member was added, but the plan could not be applied: {{message}}",
+        recordSale: "Record the payment (creates a paid invoice)",
+        paymentMethod: "Paid by",
+        methods: { cash: "Cash", card: "Card", bank_transfer: "Bank transfer", online: "Online", other: "Other" },
+        freeNoInvoice: "A free plan does not create an invoice.",
       },
       expenseCategories: {
         title: "Expense categories",
@@ -5111,6 +5115,10 @@ const resources = {
         failed: "تعذّر تطبيق الخطة",
         loadFailed: "تعذّر تحميل خططك",
         planAddedFailed: "تمت إضافة العضو، لكن تعذّر تطبيق الخطة: {{message}}",
+        recordSale: "تسجيل الدفعة (إنشاء فاتورة مدفوعة)",
+        paymentMethod: "طريقة الدفع",
+        methods: { cash: "نقداً", card: "بطاقة", bank_transfer: "تحويل بنكي", online: "عبر الإنترنت", other: "أخرى" },
+        freeNoInvoice: "الخطة المجانية لا تُنشئ فاتورة.",
       },
       expenseCategories: {
         title: "فئات المصروفات",

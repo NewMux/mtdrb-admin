@@ -11,6 +11,8 @@ import {
   listActivePlans,
   type ActivePlan,
   type PlanAssignment,
+  type PaymentMethod,
+  PLAN_PAYMENT_METHODS,
 } from "../../../api/membershipPlans";
 import { getCurrencyDecimals } from "../../../utils/invoiceMath";
 
@@ -38,6 +40,8 @@ export default function MemberPlanModal({ isOpen, onClose, member, onDone }: Mem
   const [planId, setPlanId] = React.useState("");
   const [price, setPrice] = React.useState("");
   const [saving, setSaving] = React.useState(false);
+  const [recordSale, setRecordSale] = React.useState(true);
+  const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>("cash");
   const [error, setError] = React.useState<string | null>(null);
   const [loadFailed, setLoadFailed] = React.useState(false);
 
@@ -81,6 +85,8 @@ export default function MemberPlanModal({ isOpen, onClose, member, onDone }: Mem
       const result = await assignMemberPlan(member.id, selected.id, {
         renew: stillPaid && continueFromEnd,
         price: amount,
+        invoice: recordSale && amount > 0,
+        paymentMethod,
       });
       toast.success(
         t("membershipPlans.applied", { name: member.name, plan: result.planName, date: result.expiryDate }),
@@ -154,6 +160,37 @@ export default function MemberPlanModal({ isOpen, onClose, member, onDone }: Mem
                   onChange={(e) => setPrice(e.target.value)}
                   disabled={saving}
                 />
+                {Number(price) > 0 ? (
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 text-start">
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={recordSale}
+                        onChange={(e) => setRecordSale(e.target.checked)}
+                        disabled={saving}
+                      />
+                      <span>{t("membershipPlans.recordSale")}</span>
+                    </label>
+                    {recordSale && (
+                      <AppleSelect
+                        label={t("membershipPlans.paymentMethod")}
+                        aria-label={t("membershipPlans.paymentMethod")}
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                        disabled={saving}
+                      >
+                        {PLAN_PAYMENT_METHODS.map((m) => (
+                          <option key={m} value={m}>
+                            {t(`membershipPlans.methods.${m}`)}
+                          </option>
+                        ))}
+                      </AppleSelect>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-start">{t("membershipPlans.freeNoInvoice")}</p>
+                )}
                 {stillPaid ? (
                   <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 text-start">
                     <input

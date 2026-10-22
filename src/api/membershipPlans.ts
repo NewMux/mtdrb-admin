@@ -6,6 +6,10 @@ import { supabase } from "../supabaseClient";
 
 export class MembershipPlanError extends Error {}
 
+/** The methods an invoice can be paid with (invoices.payment_method). */
+export const PLAN_PAYMENT_METHODS = ["cash", "card", "bank_transfer", "online", "other"] as const;
+export type PaymentMethod = (typeof PLAN_PAYMENT_METHODS)[number];
+
 const errorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -30,6 +34,8 @@ export interface PlanAssignment {
   expiryDate: string;
   price: number;
   renewed: boolean;
+  /** The paid invoice recorded with the plan, if any. */
+  invoiceId: string | null;
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -55,6 +61,7 @@ export function parsePlanAssignment(data: unknown): PlanAssignment {
     expiryDate: data.expiry_date,
     price: Number.isFinite(price) ? price : 0,
     renewed: data.renewed === true,
+    invoiceId: typeof data.invoice_id === "string" ? data.invoice_id : null,
   };
 }
 
@@ -82,6 +89,9 @@ export interface AssignOptions {
   startDate?: string | null;
   /** Overrides the plan's price (a discount, or free). */
   price?: number | null;
+  /** Record the sale as a paid invoice (default true; a free plan never makes one). */
+  invoice?: boolean;
+  paymentMethod?: PaymentMethod;
 }
 
 export async function assignMemberPlan(
@@ -95,6 +105,8 @@ export async function assignMemberPlan(
     p_renew: options.renew ?? false,
     p_start: options.startDate || null,
     p_price: options.price ?? null,
+    p_invoice: options.invoice ?? true,
+    p_payment_method: options.paymentMethod ?? "cash",
   } as never);
   if (error) throw new MembershipPlanError(errorMessage(error));
   return parsePlanAssignment(data);

@@ -605,9 +605,23 @@ duration in days. Members are now actually put on them:
 - The Plans page's "members on this plan" now comes from `plan_member_counts()`
   (active/trial members whose expiry has not passed); the old stored
   `plans.members_count` column is no longer used.
-- **Not included:** assigning a plan does not create an invoice or take a
-  payment - record that in Billing as before. **Apply the migration BEFORE
-  deploying the frontend** (the dialog calls the new function).
+- **The sale is recorded with it.** Unless "Record the payment" is unticked (or
+  the price is 0), applying a plan also creates a **paid membership invoice**,
+  in the same transaction as the plan change: net, tax and total follow the gym's
+  tax settings (price inclusive of tax, or tax added on top, split per tax in
+  `tax_breakdown`), dated in the gym's calendar, with the payment method chosen
+  in the dialog. So revenue and the VAT dashboard include every renewal. It does
+  not talk to a card terminal or Paddle - it records money the gym has taken.
+  Migrations (apply in this order, all BEFORE deploying the frontend):
+  `20261025090000_membership_plans.sql`, `20261025100000_money_columns_three_decimals.sql`,
+  `20261025110000_plan_invoice.sql`.
+
+**Three-decimal currencies (BHD, KWD, OMR, JOD, TND).** Invoices, expenses,
+plan and class prices, trainer rates, VAT returns and subscriptions were stored
+with two decimals, so a Bahraini invoice of 20.505 BHD was saved as 20.51 and its
+VAT drifted from the line items. `20261025100000_money_columns_three_decimals.sql`
+widens them to three decimals (nothing is lost; existing values are kept as they
+are). Only gyms in those currencies see a difference.
 
 **Expense categories.** Settings > Business & tax has an "Expense categories"
 editor: owners add categories of their own (up to 30, 40 characters each) next

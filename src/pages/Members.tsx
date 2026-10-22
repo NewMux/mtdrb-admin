@@ -753,7 +753,11 @@ const Members: React.FC = () => {
         let planError: string | null = null;
         if (memberData.plan_id && data?.id) {
           try {
-            await assignMemberPlan(data.id, memberData.plan_id, { price: memberData.plan_price ?? null });
+            await assignMemberPlan(data.id, memberData.plan_id, {
+              price: memberData.plan_price ?? null,
+              invoice: memberData.plan_invoice ?? true,
+              paymentMethod: memberData.plan_payment_method ?? "cash",
+            });
           } catch (planFailure) {
             planError = planFailure instanceof Error ? planFailure.message : "unknown error";
           }

@@ -113,6 +113,14 @@ SELECT test.ok((SELECT (r->>'start_date')::date = test.today() AND (r->>'expiry_
 SELECT test.ok((SELECT m.plan_id = 'b0000000-0000-0000-0000-000000000001' AND m.membership_type = 'Monthly' AND m.expiry_date = test.today() + 29 FROM public.members m WHERE m.id = '11111111-0000-0000-0000-000000000001'), 'the member row carries plan, type name and expiry');
 SELECT test.ok((SELECT (m.metadata->>'membership_price')::numeric = 20.500 FROM public.members m WHERE m.id = '11111111-0000-0000-0000-000000000001'), 'the plan price is recorded (BHD keeps fils)');
 
+-- The sale is recorded with it: the gym charges 5% on top, BHD keeps its fils.
+SELECT test.ok((SELECT count(*) FROM public.invoices WHERE member_id = '11111111-0000-0000-0000-000000000001') = 1, 'one invoice was recorded for the plan');
+SELECT test.ok((SELECT i.amount = 20.500 AND i.vat_total = 1.025 AND i.total = 21.525 AND i.paid_amount = 21.525 AND i.status = 'paid' AND i.type = 'membership' AND i.payment_method = 'cash' AND i.currency = 'BHD' FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000001'), 'invoice: net 20.500 + VAT 1.025 = 21.525, paid in cash, in the gym''s currency, to the fil');
+SELECT test.ok((SELECT i.issue_date = test.today() AND i.paid_date = test.today() FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000001'), 'invoice: dated in the gym''s calendar');
+SELECT test.ok((SELECT i.metadata->>'plan_name' = 'Monthly' AND i.metadata->>'source' = 'membership_plan' AND i.metadata->>'invoice_number' LIKE 'INV-%' FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000001'), 'invoice: carries the plan and a number');
+SELECT test.ok((SELECT coalesce(sum((l->>'amount')::numeric), 0) = 1.025 FROM public.invoices i, jsonb_array_elements(i.tax_breakdown) l WHERE i.member_id = '11111111-0000-0000-0000-000000000001'), 'invoice: the per-tax split adds up to the VAT');
+SELECT test.ok((SELECT (i.line_items->0->>'total')::numeric = i.total FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000001'), 'invoice: the line matches the total');
+
 SELECT test.become('00000000-0000-0000-0000-0000000000a2');
 SELECT test.ok((public.assign_member_plan('11111111-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', false, test.today() + 5, 150.5555) ->> 'price')::numeric = 150.556, 'a custom price is rounded to the currency''s decimals');
 SELECT test.ok((SELECT (r->>'expiry_date')::date = test.today() + 5 + 364 FROM (SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', false, test.today() + 5, 0) AS r) x), 'an explicit start date is honoured; a free price (0) is allowed');
@@ -164,10 +172,40 @@ DELETE FROM public.plans WHERE id = 'b0000000-0000-0000-0000-000000000002';
 SELECT test.ok((SELECT plan_id IS NULL AND membership_type = 'Yearly' FROM public.members WHERE id = '11111111-0000-0000-0000-000000000001'), 'deleting a plan unlinks its members but keeps the type name');
 
 -- --------------------------------------------------------------------------
--- 6. Privileges
+-- 6. Invoice options
 -- --------------------------------------------------------------------------
-SELECT test.ok(has_function_privilege('authenticated', 'public.assign_member_plan(uuid, uuid, boolean, date, numeric)', 'EXECUTE')
-           AND NOT has_function_privilege('anon', 'public.assign_member_plan(uuid, uuid, boolean, date, numeric)', 'EXECUTE'), 'assign_member_plan: authenticated only');
+RESET ROLE;
+CREATE TEMP TABLE inv_before AS SELECT count(*) AS n FROM public.invoices;
+SELECT test.become('00000000-0000-0000-0000-0000000000a2');
+SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', false, NULL, NULL, false);
+SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', false, NULL, 0);
+RESET ROLE;
+SELECT test.ok((SELECT count(*) FROM public.invoices) = (SELECT n FROM inv_before), 'no invoice when it is switched off or the price is 0');
+SELECT test.become('00000000-0000-0000-0000-0000000000a2');
+SELECT test.expect_err($q$SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', false, NULL, NULL, true, 'bitcoin')$q$, '22023', 'payment method', 'an unknown payment method is refused');
+RESET ROLE;
+SELECT test.ok((SELECT count(*) FROM public.invoices) = (SELECT n FROM inv_before), 'and a refused call changed nothing');
+
+-- Prices that already include tax: the price is what the member pays.
+UPDATE public.gym_settings SET metadata = metadata || '{"tax":{"prices_include_tax":true}}' WHERE tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+SELECT test.become('00000000-0000-0000-0000-0000000000a2');
+SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000001', false, NULL, 22, true, 'card');
+RESET ROLE;
+SELECT test.ok(EXISTS (SELECT 1 FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000004' AND i.total = 22.000 AND i.amount = 20.952 AND i.vat_total = 1.048 AND i.payment_method = 'card'), 'tax-inclusive price: 22.000 = 20.952 + 1.048 VAT');
+-- Tax switched off: no VAT line at all.
+UPDATE public.gym_settings SET vat_enabled = false WHERE tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+SELECT test.become('00000000-0000-0000-0000-0000000000a2');
+SELECT public.assign_member_plan('11111111-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001');
+RESET ROLE;
+SELECT test.ok(EXISTS (SELECT 1 FROM public.invoices i WHERE i.member_id = '11111111-0000-0000-0000-000000000003' AND i.total = 20.500 AND i.vat_total = 0 AND i.tax_breakdown IS NULL), 'tax off: no VAT and no breakdown');
+-- The invoices are the gym's own.
+SELECT test.ok(NOT EXISTS (SELECT 1 FROM public.invoices WHERE tenant_id <> 'aaaaaaaa-0000-0000-0000-000000000001'), 'no invoice leaked into another gym');
+
+-- --------------------------------------------------------------------------
+-- 7. Privileges
+-- --------------------------------------------------------------------------
+SELECT test.ok(has_function_privilege('authenticated', 'public.assign_member_plan(uuid, uuid, boolean, date, numeric, boolean, text)', 'EXECUTE')
+           AND NOT has_function_privilege('anon', 'public.assign_member_plan(uuid, uuid, boolean, date, numeric, boolean, text)', 'EXECUTE'), 'assign_member_plan: authenticated only');
 SELECT test.ok(has_function_privilege('authenticated', 'public.plan_member_counts()', 'EXECUTE')
            AND NOT has_function_privilege('anon', 'public.plan_member_counts()', 'EXECUTE'), 'plan_member_counts: authenticated only');
 SELECT test.ok(NOT has_function_privilege('authenticated', 'public.members_plan_same_tenant()', 'EXECUTE')

@@ -7,7 +7,7 @@ import { assignMemberPlan, fetchPlanMemberCounts, parsePlanAssignment, Membershi
 
 const good = {
   member_id: "m1", plan_id: "p1", plan_name: "Monthly",
-  start_date: "2026-10-25", expiry_date: "2026-11-23", price: "20.500", renewed: true,
+  start_date: "2026-10-25", expiry_date: "2026-11-23", price: "20.500", renewed: true, invoice_id: "inv1",
 };
 
 beforeEach(() => rpc.mockReset());
@@ -16,7 +16,7 @@ describe("parsePlanAssignment", () => {
   it("reads a valid answer", () => {
     expect(parsePlanAssignment(good)).toEqual({
       memberId: "m1", planId: "p1", planName: "Monthly",
-      startDate: "2026-10-25", expiryDate: "2026-11-23", price: 20.5, renewed: true,
+      startDate: "2026-10-25", expiryDate: "2026-11-23", price: 20.5, renewed: true, invoiceId: "inv1",
     });
   });
 
@@ -27,7 +27,7 @@ describe("parsePlanAssignment", () => {
   });
 
   it("treats a missing price as zero", () => {
-    expect(parsePlanAssignment({ ...good, price: undefined, renewed: undefined })).toMatchObject({ price: 0, renewed: false });
+    expect(parsePlanAssignment({ ...good, price: undefined, renewed: undefined, invoice_id: undefined })).toMatchObject({ price: 0, renewed: false, invoiceId: null });
   });
 });
 
@@ -37,13 +37,16 @@ describe("assignMemberPlan", () => {
     await assignMemberPlan("m1", "p1", { renew: true, price: 0 });
     expect(rpc).toHaveBeenCalledWith("assign_member_plan", {
       p_member_id: "m1", p_plan_id: "p1", p_renew: true, p_start: null, p_price: 0,
+      p_invoice: true, p_payment_method: "cash",
     });
   });
 
   it("defaults to a plain assignment from today at the plan's price", async () => {
     rpc.mockResolvedValue({ data: good, error: null });
     await assignMemberPlan("m1", "p1");
-    expect(rpc.mock.calls[0][1]).toMatchObject({ p_renew: false, p_start: null, p_price: null });
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_renew: false, p_start: null, p_price: null, p_invoice: true, p_payment_method: "cash" });
+    await assignMemberPlan("m1", "p1", { invoice: false, paymentMethod: "card" });
+    expect(rpc.mock.calls[1][1]).toMatchObject({ p_invoice: false, p_payment_method: "card" });
   });
 
   it("surfaces the database's message", async () => {
