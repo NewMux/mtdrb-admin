@@ -560,11 +560,19 @@ point, not tax advice, and the owner can change every value).
   BEFORE deploying the frontend - invoice creation writes `tax_breakdown`, which
   fails against a database without the column.
 - **Not covered**: the interface is English/Arabic only; no tax-authority
-  e-invoicing (e.g. ZATCA, FTA); POS returns do not record a per-tax refund (the
-  sale's snapshot is unchanged); the VAT dashboard counts invoices, not POS sales;
-  expenses record one VAT amount, not a per-tax split. Zakat is an annual levy on
+  e-invoicing (e.g. ZATCA, FTA); POS returns do not record a per-tax refund on the
+  return itself (the sale's snapshot is unchanged; the VAT dashboard works the
+  refund out from the returned quantities, see below); expenses record one VAT amount, not a per-tax split. Zakat is an annual levy on
   the business, not a tax added to each sale, so it is deliberately not modelled
   here.
+- **Shop (POS) tax in the VAT dashboard**: "VAT collected" (total, monthly and
+  per tax) = paid invoices + completed POS sales - tax refunded on POS returns.
+  Voided sales and cancelled returns are ignored. A return's tax is each
+  returned line's tax pro rata to the quantity handed back, rounded to the
+  currency's decimals and split between the taxes in the sale's proportions; it
+  counts in the month the return was made. Logic and tests:
+  `src/utils/posVat.ts`. This is a working figure for the gym, not a filed
+  return - check it with the gym's accountant.
 
 **Setup checklist.** A gym that has not finished the basics sees a "Get your gym
 set up" card on its dashboard (configure region and tax, create a plan, add a

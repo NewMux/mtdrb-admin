@@ -28,6 +28,7 @@ import { taxRateToApply } from "../../config/gymConfig";
 import { aggregateTaxBreakdowns, parseTaxBreakdown, type TaxTotalLine } from "../../utils/taxMath";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { posVatDocuments, type PosReturnTaxRow, type PosSaleTaxRow } from "../../utils/posVat";
 import { toLocalDateString } from "../../utils/analyticsRange";
 
 interface SmartVatDashboardProps {
@@ -128,6 +129,32 @@ export default function SmartVatDashboard({
         throw new Error(`Failed to fetch invoices: ${message}`);
       }
 
+      // Shop (POS) sales charge tax too, and refunds give some back. Both are
+      // part of what the gym owes, so a failure here is an error, not a zero.
+      let posSales: PosSaleTaxRow[];
+      let posReturns: PosReturnTaxRow[];
+      try {
+        posSales = await fetchAllRows((from, to) =>
+          supabase
+            .from("pos_sales")
+            .select("status, created_at, vat_total, tax_breakdown")
+            .eq("tenant_id", tenantId)
+            .range(from, to),
+        );
+        posReturns = (await fetchAllRows((from, to) =>
+          supabase
+            .from("pos_returns")
+            .select(
+              "status, created_at, pos_sales(vat_total, tax_breakdown), pos_return_items(quantity, pos_sale_items(line_vat, quantity))",
+            )
+            .eq("tenant_id", tenantId)
+            .range(from, to),
+        )) as unknown as PosReturnTaxRow[];
+      } catch (posError) {
+        const message = posError instanceof Error ? posError.message : JSON.stringify(posError);
+        throw new Error(`Failed to fetch shop sales: ${message}`);
+      }
+
       // Fetch expenses to calculate VAT paid
       let expenses = null;
       let expensesError = null;
@@ -192,16 +219,22 @@ export default function SmartVatDashboard({
       const collectedInvoices = invoiceList.filter(
         (inv) => inv.status === "paid" || inv.status === "completed",
       );
-      const totalVatCollected = collectedInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0);
+      const posDocs = posVatDocuments(posSales, posReturns, currency);
+      const totalVatCollected =
+        collectedInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0) +
+        posDocs.reduce((sum, doc) => sum + doc.taxTotal, 0);
 
       // The same tax split by tax (service charge, VAT...). An invoice made before
       // the gym had several taxes counts under the gym's tax name.
       setTaxTotals(
         aggregateTaxBreakdowns(
-          collectedInvoices.map((inv) => ({
-            breakdown: parseTaxBreakdown(inv.tax_breakdown),
-            taxTotal: invoiceVat(inv),
-          })),
+          [
+            ...collectedInvoices.map((inv) => ({
+              breakdown: parseTaxBreakdown(inv.tax_breakdown),
+              taxTotal: invoiceVat(inv),
+            })),
+            ...posDocs,
+          ],
           gymConfig.tax.name,
           currency,
         ),
@@ -227,10 +260,14 @@ export default function SmartVatDashboard({
           return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
         });
 
-        const monthVat = monthInvoices.reduce(
-          (sum, inv) => sum + invoiceVat(inv),
-          0,
-        );
+        const monthVat =
+          monthInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0) +
+          posDocs
+            .filter((doc) => {
+              const docDate = new Date(doc.date);
+              return docDate >= monthStart && docDate <= monthEnd;
+            })
+            .reduce((sum, doc) => sum + doc.taxTotal, 0);
         
         monthlyBreakdown.push({
           month: toLocalDateString(month).slice(0, 7), // local month: toISOString() labels it one month early in UTC+3
