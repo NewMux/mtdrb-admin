@@ -152,6 +152,13 @@ SELECT test.add_branch('bbbbbbbb-0000-0000-0000-000000000002', 'Third');
 SELECT test.expect_err($q$SELECT test.add_branch('bbbbbbbb-0000-0000-0000-000000000002', 'Fourth')$q$,
                        'LC001', 'location_limit_reached', 'fourth branch is refused with two extras');
 
+-- An outsider learns nothing about this gym's plan: inserting into another gym
+-- gets the plain RLS refusal, not "location_limit_reached".
+SELECT test.become('00000000-0000-0000-0000-0000000000a6');  -- admin of the OTHER paid gym
+SELECT test.expect_err($q$INSERT INTO public.branches (tenant_id, name) VALUES ('bbbbbbbb-0000-0000-0000-000000000002', 'Intruder')$q$,
+                       '42501', NULL, 'an outsider is refused by RLS, not told the gym is at its limit');
+RESET ROLE;
+
 -- Another paid tenant's branches do not count against this one.
 SELECT test.add_branch('bbbbbbbb-0000-0000-0000-000000000005', 'Other main');
 SELECT test.ok((SELECT count(*) FROM public.branches WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000005') = 1, 'limits are per tenant');

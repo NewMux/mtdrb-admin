@@ -133,6 +133,15 @@ DECLARE
   v_limit integer;
   v_used integer;
 BEGIN
+  -- Say nothing about a gym that is not the caller's. BEFORE triggers run before
+  -- row level security checks the new row, so without this an outsider inserting
+  -- into another gym would get "location_limit_reached" - telling them that gym
+  -- is on a paid plan and full - instead of the plain RLS refusal. The server
+  -- (service role, no auth.uid()) is still always checked.
+  IF auth.uid() IS NOT NULL AND NEW.tenant_id IS DISTINCT FROM public.get_user_tenant_id() THEN
+    RETURN NEW;
+  END IF;
+
   v_limit := public.tenant_location_limit(NEW.tenant_id);
   IF v_limit IS NULL THEN
     RETURN NEW;

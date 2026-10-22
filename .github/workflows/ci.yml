@@ -17,3 +17,30 @@ jobs:
       - run: npm ci
       - run: npm run validate
       - run: npm run build
+
+  # The database rules - row level security, billing and subscription guards,
+  # POS money, the platform console - are tested in SQL, not in the unit tests
+  # above. This builds the schema + every migration on a throwaway Postgres 16
+  # and runs supabase/tests/*.test.sql (see scripts/run-sql-tests.sh).
+  sql-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/run-sql-tests.sh

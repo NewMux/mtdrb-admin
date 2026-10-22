@@ -180,6 +180,30 @@ stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
 access) before relying on this for real customer traffic.
 
+## Database tests
+
+The database rules are tested in SQL (`supabase/tests/*.test.sql`): row level
+security and cross-tenant isolation (`tenant_isolation`), the platform console,
+subscription and billing guards (`cancel_subscription`, `past_due_grace`,
+`extra_locations`) and POS money (`pos_currency_decimals`). CI runs them on every
+pull request in a throwaway Postgres 16; locally:
+
+```
+PGHOST=localhost PGUSER=postgres PGPASSWORD=... scripts/run-sql-tests.sh
+```
+
+The script **drops and recreates** its own database (`mtdrb_sql_tests` unless you
+pass a name), so never aim it at a database you care about.
+
+These tests prove the **schema and migrations** on a plain Postgres with a small
+stand-in for Supabase (`supabase/tests/support/supabase_shim.sql`). They do not
+prove your hosted project. The same files could be pointed at a Supabase
+**branch** (not production) after applying the migrations there - each runs in
+one transaction and rolls back - but that has not been tried: the fixtures insert
+into `auth.users` directly, which a real Supabase project may constrain. The
+September audit's remaining live checks (a second tenant's real JWT against the
+hosted API, storage buckets) still need doing by hand against a branch.
+
 ## Point of sale and currency decimals
 
 POS amounts follow the sale's currency: 3 decimals for BHD/KWD/OMR/JOD/TND
