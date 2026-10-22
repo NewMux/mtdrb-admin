@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import { ensureGym, type GymSetupClient } from "../utils/ensureGym";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
+import Captcha from "../components/auth/Captcha";
+import { useCaptcha } from "../hooks/useCaptcha";
 import { validatePassword, DEFAULT_PASSWORD_POLICY } from "../utils/passwordPolicy";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
@@ -63,6 +65,7 @@ export default function Signup() {
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
   const [signedUpUser, setSignedUpUser] = React.useState<User | null>(null);
+  const captcha = useCaptcha();
   const [awaitingConfirmation, setAwaitingConfirmation] = React.useState(false);
   const [resendIn, setResendIn] = React.useState(0);
   const [resendState, setResendState] = React.useState<"idle" | "sent" | "error">("idle");
@@ -84,8 +87,9 @@ export default function Signup() {
     const { error: resendError } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: `${appUrl}/welcome` },
+      options: { emailRedirectTo: `${appUrl}/welcome`, captchaToken: captcha.token },
     });
+    captcha.reset();
     setResendState(resendError ? "error" : "sent");
     // Supabase rate-limits resends, so back off even after a failure.
     setResendIn(RESEND_COOLDOWN_SECONDS);
@@ -130,8 +134,10 @@ export default function Signup() {
       options: { 
         data: { name, gym_name: gymName },
         emailRedirectTo: redirectUrl,
+        captchaToken: captcha.token,
       },
     });
+    captcha.reset();
     setLoading(false);
     if (error) {
       registerFailure();
@@ -278,10 +284,11 @@ export default function Signup() {
                 {resendState === "error" && (
                   <p role="alert" className="text-sm text-red-700">{t("auth.confirmEmailResendFailed")}</p>
                 )}
+                <Captcha captcha={captcha} />
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={resendIn > 0}
+                  disabled={resendIn > 0 || captcha.pending}
                   className="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                   {resendIn > 0
@@ -440,13 +447,15 @@ export default function Signup() {
                 </div>
               )}
 
+              <Captcha captcha={captcha} />
+
               {/* Signup Button */}
               <motion.button
                 type="submit"
                 className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
                 whileHover={{ scale: loading || isLocked ? 1 : 1.02 }}
                 whileTap={{ scale: loading || isLocked ? 1 : 0.98 }}
-                disabled={loading || isLocked}
+                disabled={loading || isLocked || captcha.pending}
               >
                 {loading ? (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>

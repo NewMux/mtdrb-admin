@@ -421,11 +421,20 @@ in the repo and the app cannot check them):
 - Authentication → SMTP: configure **custom SMTP**. Supabase's built-in mailer is
   heavily rate-limited (a handful of emails per hour) and meant for testing; at
   launch sign-ups would silently stop receiving their confirmation email.
-- Authentication → Rate Limits and **CAPTCHA / bot protection** (Authentication →
-  Attack Protection): turn on a captcha provider for sign-up. Public sign-up
-  without it invites scripted account creation. The sign-up form does not render
-  a captcha widget yet, so enabling it in Supabase requires adding one to
-  `Signup.tsx` first (`options.captchaToken` on `signUp`).
+- **CAPTCHA (Cloudflare Turnstile).** The sign-up, sign-in, forgot-password and
+  resend-confirmation forms render a Turnstile challenge and send its token to
+  Supabase. Setup, in this order:
+  1. Cloudflare dashboard → Turnstile → add a widget for your production domain
+     (and `localhost` if you test there). Copy the **site key** and **secret key**.
+  2. Set `VITE_TURNSTILE_SITE_KEY` (Vercel env / Docker build arg) and redeploy.
+  3. Supabase → Authentication → Attack Protection → enable CAPTCHA, provider
+     Turnstile, paste the **secret key**.
+  Set **both or neither**. Supabase enforces the check on every one of those
+  calls, so enabling it in Supabase without the site key deployed locks everyone
+  out of signing in; the site key without Supabase enforcement is harmless but
+  protects nothing. The CSP in `vercel.json` / `nginx.conf.template` already
+  allows `challenges.cloudflare.com`. A production Vercel build without the key
+  prints a warning. Also review Authentication → Rate Limits.
 - Authentication → Email Templates → **Confirm signup**: Arabic/English wording
   and your brand; it should say what happens next (choose a plan).
 

@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { FiMail, FiArrowRight, FiCheckCircle } from "react-icons/fi";
 import { useRTL } from "../hooks/useRTL";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
+import Captcha from "../components/auth/Captcha";
+import { useCaptcha } from "../hooks/useCaptcha";
 
 // ===== FORGOT PASSWORD PAGE =====
 export default function ForgotPassword() {
@@ -41,6 +43,7 @@ export default function ForgotPassword() {
 
   const { isLocked, remainingSeconds, registerFailure } =
     useAuthAttemptLimiter("forgot-password", email, lockoutThreshold);
+  const captcha = useCaptcha();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +63,9 @@ export default function ForgotPassword() {
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${appUrl}/reset-password`,
+      captchaToken: captcha.token,
     });
+    captcha.reset();
 
     setLoading(false);
     if (resetError) {
@@ -200,12 +205,14 @@ export default function ForgotPassword() {
                     </div>
                   )}
 
+                  <Captcha captcha={captcha} />
+
                   <motion.button
                     type="submit"
                     className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
                     whileHover={{ scale: loading || isLocked ? 1 : 1.02 }}
                     whileTap={{ scale: loading || isLocked ? 1 : 0.98 }}
-                    disabled={loading || isLocked}
+                    disabled={loading || isLocked || captcha.pending}
                   >
                     {loading ? (
                       <div className={`flex items-center ${isRTL ? "flex-row-reverse" : ""}`}>

@@ -32,4 +32,11 @@ if (checkout.errors.length > 0) {
   process.exit(1);
 }
 
+if (process.env.VERCEL_ENV === "production" && !process.env.VITE_TURNSTILE_SITE_KEY?.trim()) {
+  console.warn(
+    "Warning: VITE_TURNSTILE_SITE_KEY is not set, so sign-up, sign-in and password reset have no captcha. " +
+      "Set it and enable CAPTCHA in Supabase Auth (DEPLOYMENT.md, \"Self-serve sign-up\") before a public launch.",
+  );
+}
+
 console.log("Production environment check passed.");
