@@ -133,8 +133,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                 <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                   <p>
                     {isArabic
-                      ? "مرحبًا بكم في منصة إدراة / MTDRB (المشار إليها بـ \"المنصة\" أو \"الخدمة\"). باستخدامك لخدماتنا أو تسجيل حساب جديد، فإنك توافق على الالتزام الكامل بهذه الشروط والأحكام. تُشغَّل المنصة بواسطة شركة NewMux المؤسسة في مملكة البحرين (\"نيو مَكس\" أو \"نحن\")."
-                      : "Welcome to MTDRB / Idara (the \"Platform\" or \"Service\"). By using our services or creating an account, you agree to comply with and be bound by these Terms of Service. The Platform is operated by NewMux, a company established in the Kingdom of Bahrain (\"NewMux\", \"we\", \"us\")."}
+                      ? "مرحبًا بكم في منصة إدراة / MTDRB (المشار إليها بـ \"المنصة\" أو \"الخدمة\"). باستخدامك لخدماتنا أو تسجيل حساب جديد، فإنك توافق على الالتزام الكامل بهذه الشروط والأحكام. تُشغَّل المنصة بواسطة شركة MTDRB المؤسسة في مملكة البحرين (\"MTDRB\" أو \"نحن\")."
+                      : "Welcome to MTDRB / Idara (the \"Platform\" or \"Service\"). By using our services or creating an account, you agree to comply with and be bound by these Terms of Service. The Platform is operated by MTDRB, a company established in the Kingdom of Bahrain (\"MTDRB\", \"we\", \"us\")."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -215,8 +215,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                 <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                   <p>
                     {isArabic
-                      ? "نحن نولي خصوصية بياناتكم وأمن معلومات أعضائكم أهمية قصوى. توضح هذه السياسة كيفية جمع البيانات، استخدامها، وحمايتها داخل منصة إدراة. تقدّم المنصة شركة NewMux المؤسسة في مملكة البحرين."
-                      : "We are committed to protecting the privacy of your business data and your members' information. This Privacy Policy details how we collect, process, and protect information within the MTDRB application. MTDRB is provided by NewMux, a company established in the Kingdom of Bahrain."}
+                      ? "نحن نولي خصوصية بياناتكم وأمن معلومات أعضائكم أهمية قصوى. توضح هذه السياسة كيفية جمع البيانات، استخدامها، وحمايتها داخل منصة إدراة. تقدّم المنصة شركة MTDRB المؤسسة في مملكة البحرين."
+                      : "We are committed to protecting the privacy of your business data and your members' information. This Privacy Policy details how we collect, process, and protect information within the MTDRB application. The Platform is provided by MTDRB, a company established in the Kingdom of Bahrain."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
