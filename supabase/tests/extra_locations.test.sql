@@ -182,16 +182,16 @@ RESET ROLE;
 -- --------------------------------------------------------------------------
 SELECT test.become('00000000-0000-0000-0000-0000000000a2');
 SELECT test.expect_err($q$UPDATE public.platform_subscriptions SET extra_locations = 10 WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002'$q$,
-                       'P0001', 'may only cancel', 'plain self-service raise is rejected');
--- The sneaky version: cancel AND raise in one update. The raise must be dropped.
-UPDATE public.platform_subscriptions SET status = 'cancelled', extra_locations = 10 WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002';
+                       'P0001', 'through billing', 'plain self-service raise is rejected');
+-- Cancelling and raising in one update used to slip a change through; now no
+-- self-service write is accepted at all.
+SELECT test.expect_err($q$UPDATE public.platform_subscriptions SET status = 'cancelled', extra_locations = 10 WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002'$q$,
+                       'P0001', 'through billing', 'cancel + raise in one update is rejected');
 RESET ROLE;
 SELECT test.ok((SELECT extra_locations FROM public.platform_subscriptions WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002') = 0,
-               'cancel + raise: extra_locations is pinned to its old value');
-SELECT test.ok((SELECT status FROM public.platform_subscriptions WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002') = 'cancelled',
-               'cancel + raise: the cancellation itself still applied');
-SELECT test.ok(public.tenant_location_limit('bbbbbbbb-0000-0000-0000-000000000002') = 1,
-               'a cancelled tenant keeps the base limit and gains nothing');
+               'extra_locations is unchanged after the rejected updates');
+SELECT test.ok((SELECT status FROM public.platform_subscriptions WHERE tenant_id = 'bbbbbbbb-0000-0000-0000-000000000002') = 'active',
+               'status is unchanged after the rejected updates');
 
 -- --------------------------------------------------------------------------
 -- 4. Range constraint

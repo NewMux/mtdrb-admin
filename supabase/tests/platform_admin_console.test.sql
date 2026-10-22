@@ -396,7 +396,7 @@ RESET ROLE;
 -- Tenant admin of Alpha (now has a manual active row): cannot self-upgrade or fake a charge
 SELECT test.become('00000000-0000-0000-0000-0000000000b1', 'aal2', NULL);
 SELECT test.expect_err('UPDATE public.platform_subscriptions SET status = ''active'', amount = 999 WHERE tenant_id = ''aaaaaaaa-0000-0000-0000-000000000001''',
-                       'P0001', 'only cancel', 'trigger: tenant admin still cannot write status=active');
+                       'P0001', 'through billing', 'trigger: tenant admin still cannot write status=active');
 SELECT test.expect_err('INSERT INTO public.platform_subscriptions (tenant_id, status) VALUES (''aaaaaaaa-0000-0000-0000-000000000001'', ''active'')',
                        'P0001', NULL, 'trigger: tenant admin still cannot insert');
 RESET ROLE;
@@ -404,20 +404,22 @@ RESET ROLE;
 -- The owner (also admin of gym Delta) gets NO bypass on a direct, flagless write
 SELECT test.become('00000000-0000-0000-0000-0000000000a1', 'aal2', '11111111-1111-1111-1111-111111111111');
 SELECT test.expect_err('UPDATE public.platform_subscriptions SET status = ''active'', amount = 5 WHERE tenant_id = ''aaaaaaaa-0000-0000-0000-000000000004''',
-                       'P0001', 'only cancel', 'trigger: owner direct write (no RPC flag) is blocked');
+                       'P0001', 'through billing', 'trigger: owner direct write (no RPC flag) is blocked');
 -- ...and the flag alone is not enough without being a valid admin
 RESET ROLE;
 SELECT test.become('00000000-0000-0000-0000-0000000000b1', 'aal2', NULL);
 SELECT set_config('app.platform_admin_write', 'on', true);
 SELECT test.expect_err('UPDATE public.platform_subscriptions SET status = ''active'', amount = 5 WHERE tenant_id = ''aaaaaaaa-0000-0000-0000-000000000001''',
-                       'P0001', 'only cancel', 'trigger: a forged flag does not help a non-admin');
+                       'P0001', 'through billing', 'trigger: a forged flag does not help a non-admin');
 SELECT set_config('app.platform_admin_write', 'off', true);
 
--- Cancelling remains the one allowed self-service action
-UPDATE public.platform_subscriptions SET status = 'cancelled' WHERE tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+-- Cancelling is no longer a self-service write: it goes through Paddle
+-- (paddle-cancel-subscription) so billing and our row cannot disagree.
+SELECT test.expect_err('UPDATE public.platform_subscriptions SET status = ''cancelled'' WHERE tenant_id = ''aaaaaaaa-0000-0000-0000-000000000001''',
+                       'P0001', 'through billing', 'trigger: tenant admin cannot cancel by editing the row');
 RESET ROLE;
-SELECT test.ok((SELECT status = 'cancelled' FROM public.platform_subscriptions WHERE tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
-               'trigger: tenant admin can still cancel');
+SELECT test.ok((SELECT status <> 'cancelled' FROM public.platform_subscriptions WHERE tenant_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
+               'trigger: the row is untouched');
 
 -- --------------------------------------------------------------------------
 -- 7. Audit log is append-only (even for the table owner)

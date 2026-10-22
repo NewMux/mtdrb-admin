@@ -27,6 +27,7 @@
 // reference. The paddle-docs MCP server was not connected when this was
 // written, so confirm them against the sandbox before relying on this.
 
+import { bearerToken, corsHeaders, reply, type HttpResponse } from "../_shared/http.ts";
 import { breakdownItems, extraPriceIdFor, type PlanTier, type PriceConfig } from "../_shared/paddle-items.ts";
 
 export interface ManageRequest {
@@ -36,12 +37,7 @@ export interface ManageRequest {
   bodyText: string;
 }
 
-export interface ManageResponse {
-  status: number;
-  headers: Record<string, string>;
-  /** JSON string, or null for an empty response. */
-  body: string | null;
-}
+export type ManageResponse = HttpResponse;
 
 /** What get_location_usage() returns for the signed-in caller. */
 export interface LocationUsage {
@@ -89,25 +85,6 @@ export interface ManageDeps {
 
 const MAX_BODY_BYTES = 2_000;
 
-function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
-  if (!origin || !allowed.includes(origin)) return {};
-  return {
-    "Access-Control-Allow-Origin": origin,
-    Vary: "Origin",
-    "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Max-Age": "600",
-  };
-}
-
-function reply(status: number, cors: Record<string, string>, payload?: unknown): ManageResponse {
-  return {
-    status,
-    headers: { ...cors, ...(payload === undefined ? {} : { "Content-Type": "application/json" }) },
-    body: payload === undefined ? null : JSON.stringify(payload),
-  };
-}
-
 export function parseInput(raw: unknown, maxExtra: number): { ok: true; extraLocations: number } | { ok: false; error: string } {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { ok: false, error: "Send a JSON object." };
@@ -142,9 +119,8 @@ export async function handleManageLocations(req: ManageRequest, deps: ManageDeps
   if (req.method === "OPTIONS") return reply(204, cors);
   if (req.method !== "POST") return reply(405, cors, { error: "Method not allowed." });
 
-  const match = /^Bearer\s+(\S+)$/i.exec(req.authorization ?? "");
-  if (!match) return reply(401, cors, { error: "Sign in again." });
-  const token = match[1];
+  const token = bearerToken(req.authorization);
+  if (!token) return reply(401, cors, { error: "Sign in again." });
 
   // 2. Who is this, which gym, and are they its admin?
   let usage: LocationUsage | null;

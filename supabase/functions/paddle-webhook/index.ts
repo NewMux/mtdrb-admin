@@ -19,6 +19,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { breakdownItems, readPriceConfig } from "../_shared/paddle-items.ts";
+import { readSubscriptionDates } from "../_shared/paddle-subscription.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -127,7 +128,9 @@ async function syncSubscription(
 
   const paddleStatus = typeof data.status === "string" ? data.status : "canceled";
   const status = mapStatus(paddleStatus);
-  const nextBilledAt = typeof data.next_billed_at === "string" ? data.next_billed_at : null;
+  // A cancellation scheduled for the end of the period leaves the status
+  // "active" (access continues) and shows up as scheduled_change.
+  const { cancelAt, periodEnd } = readSubscriptionDates(data, paddleStatus);
 
   const { error } = await serviceClient
     .from("platform_subscriptions")
@@ -141,7 +144,8 @@ async function syncSubscription(
         // null = extra-location price IDs aren't configured, so the quantity
         // can't be read: leave the stored value alone rather than zero it.
         ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
-        current_period_end: nextBilledAt,
+        current_period_end: periodEnd,
+        cancel_at: cancelAt,
         payment_provider: "paddle",
         payment_reference: typeof data.id === "string" ? data.id : null,
         metadata: {
