@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiArrowUpRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { getCurrencyDecimals } from "../../utils/invoiceMath";
 
 interface PerformanceMetric {
   name: string;
   current: number;
-  previous: number;
+  /** null = there is no earlier period to compare with. Shown as such, never as zero. */
+  previous: number | null;
   target: number;
   trend: "up" | "down" | "stable";
   format?: "currency" | "percentage" | "number" | "decimal";
@@ -20,19 +22,33 @@ interface PerformanceMetricsCardProps {
   metrics: PerformanceMetric[];
   title?: string;
   subtitle?: string;
+  /** ISO currency code for "currency" metrics (the gym's own, e.g. BHD). */
+  currency?: string;
 }
 
 export default function PerformanceMetricsCard({
   metrics,
   title,
   subtitle,
+  currency,
 }: PerformanceMetricsCardProps) {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
   const formatValue = (value: number, format?: string, suffix?: string) => {
     switch (format) {
-      case "currency":
-        return `$${value.toLocaleString()}`;
+      case "currency": {
+        if (!currency) return value.toLocaleString();
+        try {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: getCurrencyDecimals(currency),
+          }).format(value);
+        } catch {
+          return `${currency} ${value.toLocaleString()}`;
+        }
+      }
       case "percentage":
         return `${value}%`;
       case "decimal":
@@ -140,29 +156,35 @@ export default function PerformanceMetricsCard({
                 </div>
               </div>
 
-              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
-                <span className="text-gray-600 dark:text-gray-400">
-                  {t("dashboard.previous")}: {formatValue(metric.previous, metric.format, metric.suffix)}
-                </span>
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
-                  <FiArrowUpRight className="h-3 w-3" />
-                  <span
-                    className={`font-medium ${
-                      metric.current > metric.previous
-                        ? "text-green-600 dark:text-green-400"
-                        : metric.current < metric.previous
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-gray-600 dark:text-gray-400"
-                    }`}
-                  >
-                    {metric.current > metric.previous ? "+" : ""}
-                    {metric.format === "decimal"
-                      ? (metric.current - metric.previous).toFixed(1)
-                      : metric.current - metric.previous}
-                    {metric.format === "percentage" ? "%" : ""}
-                  </span>
+              {metric.previous === null ? (
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("dashboard.noComparison", "No earlier period to compare")}
                 </div>
-              </div>
+              ) : (
+                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {t("dashboard.previous")}: {formatValue(metric.previous, metric.format, metric.suffix)}
+                  </span>
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
+                    <FiArrowUpRight className="h-3 w-3" />
+                    <span
+                      className={`font-medium ${
+                        metric.current > metric.previous
+                          ? "text-green-600 dark:text-green-400"
+                          : metric.current < metric.previous
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      {metric.current > metric.previous ? "+" : ""}
+                      {metric.format === "decimal"
+                        ? (metric.current - metric.previous).toFixed(1)
+                        : metric.current - metric.previous}
+                      {metric.format === "percentage" ? "%" : ""}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         ))}

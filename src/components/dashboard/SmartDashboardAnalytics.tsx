@@ -15,6 +15,11 @@ import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { fetchAllRows } from "../../utils/fetchAllRows";
+import { getDateRange } from "../../utils/dashboardRange";
+import { getCurrencyDecimals, resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
+import { countMembersActiveAsOf, isMemberCurrentlyActive, type MemberActivityRow } from "../../utils/memberActivity";
 
 interface SmartDashboardAnalyticsProps {
   refreshKey: number;
@@ -23,7 +28,8 @@ interface SmartDashboardAnalyticsProps {
 interface DashboardMetric {
   name: string;
   current: number;
-  previous: number;
+  /** null = there is no earlier period to compare with (not "zero"). */
+  previous: number | null;
   target: number;
   trend: "up" | "down" | "stable";
   format?: "currency" | "percentage" | "number" | "decimal";
@@ -32,82 +38,18 @@ interface DashboardMetric {
   color?: string;
 }
 
-/**
- * Calculate date ranges based on time range selection
- */
-const getDateRange = (
-  timeRange: "week" | "month" | "quarter" | "year"
-): {
-  currentStart: Date;
-  currentEnd: Date;
-  previousStart: Date;
-  previousEnd: Date;
-} => {
-  const now = new Date();
-  let currentStart: Date;
-  let currentEnd: Date = new Date(now);
-  let previousStart: Date;
-  let previousEnd: Date;
-
-  switch (timeRange) {
-    case "week": {
-      // Current week (Monday to Sunday)
-      const dayOfWeek = now.getDay();
-      const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      currentStart = new Date(now.getFullYear(), now.getMonth(), diff);
-      currentStart.setHours(0, 0, 0, 0);
-      currentEnd = new Date(currentStart);
-      currentEnd.setDate(currentStart.getDate() + 6);
-      currentEnd.setHours(23, 59, 59, 999);
-
-      // Previous week
-      previousEnd = new Date(currentStart);
-      previousEnd.setDate(previousEnd.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousStart.getDate() - 6);
-      break;
-    }
-    case "month": {
-      // Current month
-      currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      currentEnd = new Date(now);
-
-      // Previous month
-      previousEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-      previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      break;
-    }
-    case "quarter": {
-      // Current quarter
-      const currentQuarter = Math.floor(now.getMonth() / 3);
-      currentStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
-      currentEnd = new Date(now);
-
-      // Previous quarter
-      const prevQuarter = currentQuarter === 0 ? 3 : currentQuarter - 1;
-      const prevYear = currentQuarter === 0 ? now.getFullYear() - 1 : now.getFullYear();
-      previousEnd = new Date(now.getFullYear(), currentQuarter * 3, 0);
-      previousStart = new Date(prevYear, prevQuarter * 3, 1);
-      break;
-    }
-    case "year": {
-      // Current year
-      currentStart = new Date(now.getFullYear(), 0, 1);
-      currentEnd = new Date(now);
-
-      // Previous year
-      previousEnd = new Date(now.getFullYear(), 0, 0);
-      previousStart = new Date(now.getFullYear() - 1, 0, 1);
-      break;
-    }
+const formatCurrency = (value: number, currency: string) => {
+  const decimals = getCurrencyDecimals(currency);
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toLocaleString()}`;
   }
-
-  return {
-    currentStart,
-    currentEnd,
-    previousStart,
-    previousEnd,
-  };
 };
 
 export default function SmartDashboardAnalytics({
@@ -121,6 +63,7 @@ export default function SmartDashboardAnalytics({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetric[]>([]);
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [revenueData, setRevenueData] = useState({
     current: 0,
     previous: 0,
@@ -157,67 +100,56 @@ export default function SmartDashboardAnalytics({
       const { currentStart, currentEnd, previousStart, previousEnd } =
         getDateRange(selectedTimeRange);
 
-      // Format dates for Supabase queries
-      const formatDate = (date: Date) => date.toISOString().split("T")[0];
+      // Full instants, not bare dates: comparing a date string with a
+      // timestamptz column means "midnight UTC at the start of that day", which
+      // dropped the whole last day of every range (today's rows never showed).
+      const cur = { startISO: currentStart.toISOString(), endISO: currentEnd.toISOString() };
+      const prev = { startISO: previousStart.toISOString(), endISO: previousEnd.toISOString() };
 
-      // Fetch revenue data (from invoices)
-      const [currentInvoices, previousInvoices] = await Promise.all([
-        supabase
-          .from("invoices")
-          .select("amount, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(currentStart))
-          .lte("created_at", formatDate(currentEnd))
-          .eq("status", "paid"),
-        supabase
-          .from("invoices")
-          .select("amount, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousStart))
-          .lte("created_at", formatDate(previousEnd))
-          .eq("status", "paid"),
-      ]);
+      const { data: settingsRow } = await supabase
+        .from("gym_settings")
+        .select("currency")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      setCurrency(settingsRow?.currency || DEFAULT_CURRENCY);
 
-      const currentRevenue =
-        currentInvoices.data?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
-      const previousRevenue =
-        previousInvoices.data?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
+      // Revenue from paid invoices (gross, like the rest of the app). Paged so a
+      // money total does not stop growing at PostgREST's 1000-row cap.
+      const revenueIn = async (period: { startISO: string; endISO: string }) => {
+        const invoices = await fetchAllRows<{ amount: number | null; total: number | null }>((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, total")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .gte("created_at", period.startISO)
+            .lte("created_at", period.endISO)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
+        return invoices.reduce((sum, inv) => sum + resolveInvoiceGrossAmount(inv), 0);
+      };
+      const [currentRevenue, previousRevenue] = await Promise.all([revenueIn(cur), revenueIn(prev)]);
 
       setRevenueData({ current: currentRevenue, previous: previousRevenue });
 
-      // Fetch member data
-      const [allMembers, newCurrentMembers] = await Promise.all([
+      // Members: one paged read, then the same point-in-time estimate the
+      // overview dashboard uses (join/expiry dates) instead of "current minus
+      // new", which ignored everyone who left.
+      const members = await fetchAllRows<MemberActivityRow>((from, to) =>
         supabase
           .from("members")
-          .select("id, status, created_at")
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("members")
-          .select("id, status, created_at")
+          .select("status, join_date, created_at, expiry_date")
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(currentStart))
-          .lte("created_at", formatDate(currentEnd)),
-        supabase
-          .from("members")
-          .select("id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousStart))
-          .lte("created_at", formatDate(previousEnd)),
-      ]);
-
-      // Get all active members (current period)
-      const currentActiveMembers = allMembers.data?.filter(
-        (m) => m.status === "active" || m.status === "Active"
-      ).length || 0;
-
-      // For previous period, estimate based on current minus new members in current period
-      // This is a simplification - ideally we'd track historical member counts
-      const newMembersInCurrentPeriod = newCurrentMembers.data?.length || 0;
-      const previousActiveMembers = Math.max(
-        0,
-        currentActiveMembers - newMembersInCurrentPeriod
+          .order("id", { ascending: true })
+          .range(from, to),
       );
-      const newMembersCount = newCurrentMembers.data?.length || 0;
+      const currentActiveMembers = members.filter(isMemberCurrentlyActive).length;
+      const previousActiveMembers = countMembersActiveAsOf(members, previousEnd);
+      const newMembersCount = members.filter((m) => {
+        const joined = new Date(m.join_date || m.created_at || "");
+        return joined >= currentStart && joined <= currentEnd;
+      }).length;
 
       setMemberData({
         current: currentActiveMembers,
@@ -225,50 +157,43 @@ export default function SmartDashboardAnalytics({
         newCount: newMembersCount,
       });
 
-      // Fetch class attendance data
-      const [currentBookings, previousBookings, currentClasses, previousClasses] =
-        await Promise.all([
-          supabase
-            .from("class_bookings")
-            .select("id, class_id, created_at")
-            .eq("tenant_id", tenantId)
-            .eq("status", "booked")
-            .gte("created_at", formatDate(currentStart))
-            .lte("created_at", formatDate(currentEnd)),
-          supabase
-            .from("class_bookings")
-            .select("id, class_id, created_at")
-            .eq("tenant_id", tenantId)
-            .eq("status", "booked")
-            .gte("created_at", formatDate(previousStart))
-            .lte("created_at", formatDate(previousEnd)),
+      // Class attendance: bookings are only counted, capacity is summed.
+      const bookingsIn = (period: { startISO: string; endISO: string }) =>
+        supabase
+          .from("class_bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId)
+          .eq("status", "booked")
+          .gte("created_at", period.startISO)
+          .lte("created_at", period.endISO);
+      const capacityIn = async (period: { startISO: string; endISO: string }) => {
+        const classes = await fetchAllRows<{ capacity: number | null }>((from, to) =>
           supabase
             .from("classes")
-            .select("id, capacity, starttime")
+            .select("capacity")
             .eq("tenant_id", tenantId)
-            .gte("starttime", formatDate(currentStart))
-            .lte("starttime", formatDate(currentEnd)),
-          supabase
-            .from("classes")
-            .select("id, capacity, starttime")
-            .eq("tenant_id", tenantId)
-            .gte("starttime", formatDate(previousStart))
-            .lte("starttime", formatDate(previousEnd)),
-        ]);
+            .gte("start_time", period.startISO)
+            .lte("start_time", period.endISO)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
+        return classes.reduce((sum, c) => sum + (c.capacity || 0), 0);
+      };
+      const [currentBookings, previousBookings, currentCapacity, previousCapacity] = await Promise.all([
+        bookingsIn(cur),
+        bookingsIn(prev),
+        capacityIn(cur),
+        capacityIn(prev),
+      ]);
+      if (currentBookings.error || previousBookings.error) {
+        throw currentBookings.error || previousBookings.error;
+      }
 
-      const currentCapacity =
-        currentClasses.data?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
-      const previousCapacity =
-        previousClasses.data?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
-
+      // Round the percentage, not the ratio: Math.round(0.62) * 100 is 100.
       const currentAttendance =
-        currentCapacity > 0
-          ? Math.round((currentBookings.data?.length || 0) / currentCapacity) * 100
-          : 0;
+        currentCapacity > 0 ? Math.round(((currentBookings.count ?? 0) / currentCapacity) * 100) : 0;
       const previousAttendance =
-        previousCapacity > 0
-          ? Math.round((previousBookings.data?.length || 0) / previousCapacity) * 100
-          : 0;
+        previousCapacity > 0 ? Math.round(((previousBookings.count ?? 0) / previousCapacity) * 100) : 0;
 
       // Fetch trainer ratings
       const trainersData = await supabase
@@ -282,13 +207,11 @@ export default function SmartDashboardAnalytics({
         ratings.length > 0
           ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
           : 4.5;
-      const previousAvgRating = avgRating * 0.96; // Simulate previous rating
 
-      // Calculate member retention
-      const totalMembers = allMembers.data?.length || 0;
+      // Member retention: share of all members who are currently active.
+      const totalMembers = members.length;
       const retentionRate =
         totalMembers > 0 ? Math.round((currentActiveMembers / totalMembers) * 100) : 0;
-      const previousRetentionRate = retentionRate + 2; // Simulate previous retention
 
       // Calculate gym health score (composite metric)
       const revenueScore = Math.min(100, (currentRevenue / 50000) * 100);
@@ -297,7 +220,6 @@ export default function SmartDashboardAnalytics({
       const healthScore = Math.round(
         (revenueScore * 0.3 + memberScore * 0.3 + attendanceScore * 0.4)
       );
-      const previousHealthScore = healthScore - 4;
 
       // Build metrics array
       const metrics: DashboardMetric[] = [
@@ -334,9 +256,9 @@ export default function SmartDashboardAnalytics({
         {
           name: t("dashboard.trainerRating"),
           current: Math.round(avgRating * 10) / 10,
-          previous: Math.round(previousAvgRating * 10) / 10,
+          previous: null, // ratings are stored as a single current value: there is no history to compare
           target: 4.8,
-          trend: avgRating >= previousAvgRating ? "up" : "down",
+          trend: "stable",
           format: "decimal",
           icon: <FiStar className="h-5 w-5" />,
           color: "yellow",
@@ -344,9 +266,9 @@ export default function SmartDashboardAnalytics({
         {
           name: t("dashboard.memberRetention"),
           current: retentionRate,
-          previous: previousRetentionRate,
+          previous: null, // no earlier snapshot of retention is kept
           target: 90,
-          trend: retentionRate >= previousRetentionRate ? "up" : "down",
+          trend: "stable",
           format: "percentage",
           icon: <FiTarget className="h-5 w-5" />,
           color: "red",
@@ -354,9 +276,9 @@ export default function SmartDashboardAnalytics({
         {
           name: t("dashboard.gymHealthScore"),
           current: healthScore,
-          previous: previousHealthScore,
+          previous: null, // a composite of the above: no history either
           target: 95,
-          trend: healthScore >= previousHealthScore ? "up" : "down",
+          trend: "stable",
           format: "percentage",
           icon: <FiZap className="h-5 w-5" />,
           color: "indigo",
@@ -469,6 +391,7 @@ export default function SmartDashboardAnalytics({
       {/* Enhanced Performance Metrics */}
       <PerformanceMetricsCard 
         metrics={dashboardMetrics}
+        currency={currency}
         title={t("dashboard.performanceOverview")}
         subtitle={t("dashboard.keyMetricsProgress")}
       />
@@ -503,7 +426,7 @@ export default function SmartDashboardAnalytics({
                 {selectedTimeRange === "week" ? t("dashboard.thisWeek") : selectedTimeRange === "month" ? t("dashboard.thisMonth") : selectedTimeRange === "quarter" ? t("dashboard.thisQuarter") : t("dashboard.thisYear")}
               </span>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ${revenueData.current.toLocaleString()}
+                {formatCurrency(revenueData.current, currency)}
               </span>
             </div>
             <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
@@ -511,7 +434,7 @@ export default function SmartDashboardAnalytics({
                 {selectedTimeRange === "week" ? t("dashboard.previousWeek") : selectedTimeRange === "month" ? t("dashboard.previousMonth") : selectedTimeRange === "quarter" ? t("dashboard.previousQuarter") : t("dashboard.previousYear")}
               </span>
               <span className="text-sm text-gray-500 dark:text-gray-500">
-                ${revenueData.previous.toLocaleString()}
+                {formatCurrency(revenueData.previous, currency)}
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
