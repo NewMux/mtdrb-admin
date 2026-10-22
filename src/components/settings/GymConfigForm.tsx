@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { applyRegionPreset, type ConfigErrors, type GymConfigInput } from "../../config/gymConfig";
+import { combinedRate, MAX_TAX_COMPONENTS, type TaxComponent } from "../../utils/taxMath";
 import {
   REGION_PRESETS,
   countryName,
@@ -32,6 +33,101 @@ function FieldError({ code }: { code?: string }) {
   );
 }
 
+// One tax: name, rate, and (for every tax after the first) whether it is
+// charged on top of the taxes before it. The rate is edited as text so "7." and
+// "" are possible mid-typing.
+function TaxRow({
+  index,
+  component,
+  errors,
+  disabled,
+  canRemove,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  component: TaxComponent;
+  errors: ConfigErrors;
+  disabled: boolean;
+  canRemove: boolean;
+  onChange: (next: TaxComponent) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  const [rateText, setRateText] = React.useState(String(component.rate));
+  React.useEffect(() => {
+    // NaN means the field was cleared mid-edit: leave what is typed alone.
+    setRateText((current) => {
+      if (Number.isNaN(component.rate)) return current;
+      return Number(current) === component.rate && current !== "" ? current : String(component.rate);
+    });
+  }, [component.rate]);
+
+  const nameId = `gc-tax-name-${index}`;
+  const rateId = `gc-tax-rate-${index}`;
+  const compoundId = `gc-tax-compound-${index}`;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_9rem_auto] gap-4 items-start rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <div>
+        <label htmlFor={nameId} className={labelClass}>{t("gymConfig.taxName")}</label>
+        <input
+          id={nameId}
+          type="text"
+          className={inputClass}
+          value={component.name}
+          onChange={(e) => onChange({ ...component, name: e.target.value })}
+          placeholder="VAT"
+          disabled={disabled}
+        />
+        <FieldError code={errors[`taxName${index}`]} />
+      </div>
+      <div>
+        <label htmlFor={rateId} className={labelClass}>{t("gymConfig.taxRate")}</label>
+        <input
+          id={rateId}
+          type="text"
+          inputMode="decimal"
+          className={inputClass}
+          value={rateText}
+          onChange={(e) => {
+            setRateText(e.target.value);
+            onChange({ ...component, rate: e.target.value.trim() === "" ? Number.NaN : Number(e.target.value) });
+          }}
+          disabled={disabled}
+        />
+        <FieldError code={errors[`taxRate${index}`]} />
+      </div>
+      <div className="flex items-center gap-4 md:pt-8">
+        {index > 0 && (
+          <div className="flex items-center gap-2">
+            <input
+              id={compoundId}
+              type="checkbox"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              checked={component.compound}
+              onChange={(e) => onChange({ ...component, compound: e.target.checked })}
+              disabled={disabled}
+            />
+            <label htmlFor={compoundId} className="text-xs text-gray-600 dark:text-gray-400">{t("gymConfig.taxCompound")}</label>
+          </div>
+        )}
+        {canRemove && (
+          <button
+            type="button"
+            className="text-sm text-red-600 hover:underline disabled:opacity-50"
+            onClick={onRemove}
+            disabled={disabled}
+            aria-label={t("gymConfig.taxRemove", { name: component.name || index + 1 })}
+          >
+            {t("gymConfig.taxRemoveShort")}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Region, currency, tax and business details. Shared by the setup wizard and
 // Settings > Business & tax so a gym is configured the same way in both.
 // Choosing a country pre-fills currency, timezone and tax as SUGGESTIONS; every
@@ -50,17 +146,8 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
     [language],
   );
 
-  // The rate is edited as text so "7." and "" are possible mid-typing.
-  const [rateText, setRateText] = React.useState(String(value.tax.rate));
-  React.useEffect(() => {
-    // NaN means the field was cleared mid-edit: leave what is typed alone.
-    setRateText((current) => {
-      if (Number.isNaN(value.tax.rate)) return current;
-      return Number(current) === value.tax.rate && current !== "" ? current : String(value.tax.rate);
-    });
-  }, [value.tax.rate]);
-
   const suggestion = getRegionPreset(value.country);
+  const combinedPercent = value.tax.enabled ? combinedRate(value.tax.components) : null;
 
   const set = (patch: Partial<GymConfigInput>) => onChange({ ...value, ...patch });
   const setTax = (patch: Partial<GymConfigInput["tax"]>) => set({ tax: { ...value.tax, ...patch } });
@@ -167,36 +254,47 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
         )}
 
         {value.tax.enabled && (
+          <div className="space-y-3">
+            {value.tax.components.map((component, index) => (
+              <TaxRow
+                key={index}
+                index={index}
+                component={component}
+                errors={errors}
+                disabled={disabled}
+                canRemove={value.tax.components.length > 1}
+                onChange={(next) =>
+                  setTax({ components: value.tax.components.map((c, i) => (i === index ? next : c)) })
+                }
+                onRemove={() => setTax({ components: value.tax.components.filter((_, i) => i !== index) })}
+              />
+            ))}
+            <FieldError code={errors.taxCount} />
+            <FieldError code={errors.taxCombined} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {value.tax.components.length < MAX_TAX_COMPONENTS && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+                  onClick={() =>
+                    setTax({ components: [...value.tax.components, { name: "", rate: 0, compound: false }] })
+                  }
+                  disabled={disabled}
+                >
+                  {t("gymConfig.taxAdd")}
+                </button>
+              )}
+              {value.tax.components.length > 1 && combinedPercent !== null && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("gymConfig.taxCombined", { rate: combinedPercent })}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {value.tax.enabled && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="gc-tax-name" className={labelClass}>{t("gymConfig.taxName")}</label>
-              <input
-                id="gc-tax-name"
-                type="text"
-                className={inputClass}
-                value={value.tax.name}
-                onChange={(e) => setTax({ name: e.target.value })}
-                placeholder="VAT"
-                disabled={disabled}
-              />
-              <FieldError code={errors.taxName} />
-            </div>
-            <div>
-              <label htmlFor="gc-tax-rate" className={labelClass}>{t("gymConfig.taxRate")}</label>
-              <input
-                id="gc-tax-rate"
-                type="text"
-                inputMode="decimal"
-                className={inputClass}
-                value={rateText}
-                onChange={(e) => {
-                  setRateText(e.target.value);
-                  setTax({ rate: e.target.value.trim() === "" ? Number.NaN : Number(e.target.value) });
-                }}
-                disabled={disabled}
-              />
-              <FieldError code={errors.taxRate} />
-            </div>
             <div>
               <label htmlFor="gc-tax-number" className={labelClass}>{t("gymConfig.taxNumber")}</label>
               <input

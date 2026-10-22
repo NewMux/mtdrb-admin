@@ -13,17 +13,41 @@
 // dashboardTargets) and other keys are never dropped.
 
 import { isValidCurrencyCode, isValidTimezone, type RegionPreset } from "./regions";
+import {
+  allocateTax,
+  combinedRate,
+  taxLabel,
+  MAX_TAX_COMPONENTS,
+  type TaxBreakdownLine,
+  type TaxComponent,
+} from "../utils/taxMath";
 
-export interface TaxConfig {
+export type { TaxComponent };
+
+/** What the owner edits about tax. */
+export interface TaxSettings {
   enabled: boolean;
-  /** "VAT", "GST", "Sales tax"... shown on invoices and in reports */
-  name: string;
-  /** Standard rate in percent, as configured (apply with taxRateToApply) */
-  rate: number;
+  /**
+   * The taxes charged on a sale, in the order they apply (see utils/taxMath.ts).
+   * Most gyms have exactly one ("VAT" at some rate); a gym can add more, for
+   * example a service charge, or GST plus a provincial tax.
+   */
+  components: TaxComponent[];
   /** The gym's tax registration number, printed on invoices */
   number: string;
   /** Whether entered prices already include tax */
   pricesIncludeTax: boolean;
+}
+
+/** TaxSettings plus what is worked out from them. */
+export interface TaxConfig extends TaxSettings {
+  /** Heading for the taxes together: "VAT" or "Service charge + VAT" */
+  name: string;
+  /**
+   * The single combined rate (percent) every line is charged at - the value in
+   * gym_settings.vat_rate. Apply it with taxRateToApply.
+   */
+  rate: number;
 }
 
 export interface BusinessProfile {
@@ -46,7 +70,13 @@ export interface GymConfig {
 }
 
 /** The editable part: what the setup wizard and Settings > Business & tax save. */
-export type GymConfigInput = Omit<GymConfig, "configured">;
+export interface GymConfigInput {
+  country: string;
+  currency: string;
+  timezone: string;
+  tax: TaxSettings;
+  business: BusinessProfile;
+}
 
 export interface GymConfigDefaults {
   currency: string;
@@ -75,6 +105,19 @@ function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
 
+function readComponents(value: unknown): TaxComponent[] {
+  if (!Array.isArray(value)) return [];
+  const out: TaxComponent[] = [];
+  for (const item of value.slice(0, MAX_TAX_COMPONENTS)) {
+    const c = obj(item);
+    const name = str(c.name).trim();
+    const rate = Number(c.rate);
+    if (!name || !Number.isFinite(rate) || rate < 0) continue;
+    out.push({ name, rate, compound: c.compound === true });
+  }
+  return out;
+}
+
 export function resolveGymConfig(
   row: GymSettingsRow | null | undefined,
   defaults: GymConfigDefaults,
@@ -86,8 +129,14 @@ export function resolveGymConfig(
   const setup = obj(meta.setup);
 
   const rawRate = Number(row?.vat_rate);
-  const rate = row && Number.isFinite(rawRate) && rawRate >= 0 ? rawRate : defaults.vatRate;
+  const columnRate = row && Number.isFinite(rawRate) && rawRate >= 0 ? rawRate : defaults.vatRate;
   const enabled = row ? row.vat_enabled === true : defaults.vatRate > 0;
+
+  // Gyms that configured a single tax before taxes became a list have only the
+  // name in metadata and the rate in the column: that is one component.
+  const stored = readComponents(tax.components);
+  const components: TaxComponent[] =
+    stored.length > 0 ? stored : [{ name: str(tax.name).trim() || "VAT", rate: columnRate, compound: false }];
 
   return {
     country: (str(general.country) || defaults.countryCode).toUpperCase(),
@@ -95,8 +144,10 @@ export function resolveGymConfig(
     timezone: str(general.timezone) || defaults.timezone,
     tax: {
       enabled,
-      name: str(tax.name).trim() || "VAT",
-      rate,
+      components,
+      name: taxLabel(components),
+      // The column is what invoice maths multiplies by, so it is the rate in force.
+      rate: columnRate,
       number: str(tax.number).trim(),
       pricesIncludeTax: tax.prices_include_tax === true,
     },
@@ -124,6 +175,9 @@ export type ConfigErrorCode =
   | "tax_name_too_long"
   | "tax_rate_invalid"
   | "tax_rate_precision"
+  | "tax_count"
+  | "tax_combined_invalid"
+  | "tax_combined_precision"
   | "tax_number_too_long"
   | "email_invalid"
   | "website_invalid";
@@ -139,13 +193,32 @@ export function validateGymConfig(input: GymConfigInput): ConfigErrors {
   if (input.country && !/^[A-Z]{2}$/.test(input.country)) errors.country = "country_invalid";
 
   if (input.tax.enabled) {
-    const name = input.tax.name.trim();
-    if (!name) errors.taxName = "tax_name_required";
-    else if (name.length > MAX_TAX_NAME) errors.taxName = "tax_name_too_long";
+    const components = input.tax.components;
+    if (components.length < 1 || components.length > MAX_TAX_COMPONENTS) errors.taxCount = "tax_count";
 
-    const rate = input.tax.rate;
-    if (!Number.isFinite(rate) || rate < 0 || rate > 100) errors.taxRate = "tax_rate_invalid";
-    else if (Math.round(rate * 100) / 100 !== rate) errors.taxRate = "tax_rate_precision";
+    let allRatesValid = true;
+    components.forEach((component, i) => {
+      const name = component.name.trim();
+      if (!name) errors[`taxName${i}`] = "tax_name_required";
+      else if (name.length > MAX_TAX_NAME) errors[`taxName${i}`] = "tax_name_too_long";
+
+      const rate = component.rate;
+      if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
+        errors[`taxRate${i}`] = "tax_rate_invalid";
+        allRatesValid = false;
+      } else if (Math.round(rate * 100) / 100 !== rate) {
+        errors[`taxRate${i}`] = "tax_rate_precision";
+        allRatesValid = false;
+      }
+    });
+
+    // Every rate column in the database is numeric(5,2): the taxes together must
+    // come to a rate that fits it.
+    if (allRatesValid && components.length > 0) {
+      const combined = combinedRate(components);
+      if (combined === null) errors.taxCombined = "tax_combined_precision";
+      else if (combined > 100) errors.taxCombined = "tax_combined_invalid";
+    }
   }
   if (input.tax.number.trim().length > MAX_TAX_NUMBER) errors.taxNumber = "tax_number_too_long";
 
@@ -181,7 +254,9 @@ export function buildSettingsWrite(
   return {
     currency: input.currency.trim().toUpperCase(),
     vat_enabled: input.tax.enabled,
-    vat_rate: input.tax.enabled ? input.tax.rate : 0,
+    // The one combined rate every line is charged at (validateGymConfig has
+    // already checked it fits numeric(5,2)).
+    vat_rate: input.tax.enabled ? (combinedRate(input.tax.components) ?? 0) : 0,
     metadata: {
       ...meta,
       general: {
@@ -191,7 +266,14 @@ export function buildSettingsWrite(
       },
       tax: {
         ...obj(meta.tax),
-        name: input.tax.name.trim() || "VAT",
+        // "name" is the older single-tax field; keep it as the heading so an
+        // older build reading this gym still shows something sensible.
+        name: taxLabel(input.tax.components),
+        components: input.tax.components.map((c) => ({
+          name: c.name.trim(),
+          rate: c.rate,
+          compound: c.compound,
+        })),
         number: input.tax.number.trim(),
         prices_include_tax: input.tax.pricesIncludeTax,
       },
@@ -215,15 +297,20 @@ export function buildSettingsWrite(
 }
 
 export function configToInput(config: GymConfig): GymConfigInput {
-  const { configured: _configured, ...input } = config;
-  void _configured;
-  return input;
+  const { enabled, components, number, pricesIncludeTax } = config.tax;
+  return {
+    country: config.country,
+    currency: config.currency,
+    timezone: config.timezone,
+    tax: { enabled, components: components.map((c) => ({ ...c })), number, pricesIncludeTax },
+    business: { ...config.business },
+  };
 }
 
 /**
  * `input` with a country preset applied: its currency, timezone and tax
- * suggestion replace the current ones. Business details and the tax number are
- * the owner's own and are left alone. A country with no national rate turns tax
+ * suggestion replace the current ones (a single tax; the owner can add more).
+ * Business details and the tax number are the owner's own and are left alone. A country with no national rate turns tax
  * off instead of inventing one.
  */
 export function applyRegionPreset(input: GymConfigInput, preset: RegionPreset): GymConfigInput {
@@ -235,8 +322,27 @@ export function applyRegionPreset(input: GymConfigInput, preset: RegionPreset): 
     tax: {
       ...input.tax,
       enabled: preset.taxRate > 0,
-      name: preset.taxName,
-      rate: preset.taxRate,
+      components: [{ name: preset.taxName, rate: preset.taxRate, compound: false }],
     },
   };
+}
+
+/**
+ * How `taxAmount` splits between the gym's taxes, to store on a new document.
+ * `rateUsed` is the rate the document was actually charged at: if the user
+ * overrode the gym's rate (a different or exempt rate on the form), splitting by
+ * the gym's taxes would be wrong, so the whole amount goes on one line at that
+ * rate. Returns null when no tax was charged.
+ */
+export function buildTaxBreakdown(
+  config: Pick<GymConfig, "tax">,
+  taxAmount: number,
+  rateUsed: number,
+  currency: string,
+): TaxBreakdownLine[] | null {
+  if (!(taxAmount > 0)) return null;
+  if (Math.abs(rateUsed - taxRateToApply(config)) < 0.005) {
+    return allocateTax(taxAmount, config.tax.components, currency);
+  }
+  return allocateTax(taxAmount, [{ name: config.tax.name, rate: rateUsed, compound: false }], currency);
 }

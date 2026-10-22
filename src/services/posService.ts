@@ -1,3 +1,4 @@
+import { parseTaxBreakdown } from "../utils/taxMath";
 import { supabase } from "../supabaseClient";
 import type {
   PosCategory,
@@ -88,6 +89,7 @@ const normalizeSale = (row: PosRow): PosSale => ({
   subtotal: toNumber(row.subtotal),
   discount_total: toNumber(row.discount_total),
   vat_total: toNumber(row.vat_total),
+  tax_breakdown: parseTaxBreakdown(row.tax_breakdown),
   total: toNumber(row.total),
   currency: String(row.currency ?? "AED"),
   payment_method: (row.payment_method ?? "cash") as PosPaymentMethod,
@@ -286,6 +288,7 @@ export async function completePosSale(input: {
     subtotal: toNumber(result.subtotal),
     discount_total: toNumber(result.discount_total),
     vat_total: toNumber(result.vat_total),
+    tax_breakdown: parseTaxBreakdown((result as { tax_breakdown?: unknown }).tax_breakdown),
     total: toNumber(result.total),
     currency: String(result.currency ?? input.currency),
   };

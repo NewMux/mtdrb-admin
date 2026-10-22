@@ -27,7 +27,7 @@ import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useGymConfig } from "../../contexts/gym-config-context";
-import { taxRateToApply } from "../../config/gymConfig";
+import { buildTaxBreakdown, taxRateToApply } from "../../config/gymConfig";
 import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
 import { toLocalDateString } from "../../utils/analyticsRange";
 
@@ -267,7 +267,7 @@ export function AddInvoiceModal({
           : 0;
     const enteredRate = Number(watch("vat_rate"));
     const vatRate = Number.isFinite(enteredRate) ? enteredRate : defaultVatRate;
-    return splitVat(amount, vatRate, watchedVatIncluded, currency);
+    return { ...splitVat(amount, vatRate, watchedVatIncluded, currency), rate: vatRate };
   };
 
   // Handle form submission
@@ -301,7 +301,7 @@ export function AddInvoiceModal({
         invoiceUrl = fileName;
       }
 
-      const { net, vat, gross } = calculateVatSplit();
+      const { net, vat, gross, rate: rateUsed } = calculateVatSplit();
       const issueDate = new Date(data.date);
       const dueDate = new Date(issueDate);
       dueDate.setDate(dueDate.getDate() + 7);
@@ -318,6 +318,7 @@ export function AddInvoiceModal({
         tenant_id: authTenantId,
         currency: currency,
         vat_total: vat,
+        tax_breakdown: buildTaxBreakdown(gymConfig, vat, rateUsed, currency),
         metadata: {
           title: data.title,
           notes: data.description || null,
@@ -373,7 +374,8 @@ export function AddInvoiceModal({
     }
   };
 
-  const { net: netAmount, vat: vatAmount, gross: finalAmount } = calculateVatSplit();
+  const { net: netAmount, vat: vatAmount, gross: finalAmount, rate: summaryRate } = calculateVatSplit();
+  const taxLines = buildTaxBreakdown(gymConfig, vatAmount, summaryRate, currency);
   const currencyDecimals = getCurrencyDecimals(currency);
 
   const footer = (
@@ -528,10 +530,19 @@ export function AddInvoiceModal({
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
                   <span>{netAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
-                  <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
-                </div>
+                {taxLines && taxLines.length > 1 ? (
+                  taxLines.map((line) => (
+                    <div key={line.name} className="flex justify-between text-sm">
+                      <span>{line.name} ({line.rate}%):</span>
+                      <span>{line.amount.toFixed(currencyDecimals)} {currency}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
+                    <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
                   <span>{finalAmount.toFixed(currencyDecimals)} {currency}</span>

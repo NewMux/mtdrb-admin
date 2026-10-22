@@ -29,7 +29,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useGymConfig } from "../../contexts/gym-config-context";
-import { taxRateToApply } from "../../config/gymConfig";
+import { buildTaxBreakdown, taxRateToApply } from "../../config/gymConfig";
 import { computeLineTotals, computeInvoiceTotals, getCurrencyDecimals } from "../../utils/invoiceMath";
 
 // Smart suggestions for line items
@@ -191,6 +191,19 @@ export function NewInvoiceModal({
     0,
   );
   const remaining_balance = total - invoiceData.paid_amount;
+
+  // How the tax splits between the gym's taxes. If every taxed line uses the same
+  // rate (exempt lines don't matter) that rate is the one charged; if lines were
+  // given different rates, the effective rate is used, which differs from the
+  // gym's own, so the amount stays on one line instead of being split wrongly.
+  const taxedRates = [...new Set(items.filter((i) => i.unit_price * i.quantity > 0 && i.vat_rate > 0).map((i) => i.vat_rate))];
+  const effectiveRate = subtotal > 0 ? Math.round((vat_total / subtotal) * 10000) / 100 : 0;
+  const taxLines = buildTaxBreakdown(
+    gymConfig,
+    vat_total,
+    taxedRates.length === 1 ? taxedRates[0] : effectiveRate,
+    invoiceData.currency,
+  );
 
   // Auto-calculate a single line item's total (net + vat, after discount),
   // consistent with the header totals above.
@@ -394,6 +407,7 @@ export function NewInvoiceModal({
         currency: invoiceData.currency,
         amount: subtotal,
         vat_total,
+        tax_breakdown: taxLines,
         total,
         line_items: items,
         tenant_id: tenantId,
@@ -938,12 +952,23 @@ export function NewInvoiceModal({
                       {subtotal.toFixed(currencyDecimals)} {invoiceData.currency}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">{t("billing.vatTotal", "إجمالي الضريبة:")}</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {vat_total.toFixed(currencyDecimals)} {invoiceData.currency}
-                    </span>
-                  </div>
+                  {taxLines && taxLines.length > 1 ? (
+                    taxLines.map((line) => (
+                      <div key={line.name} className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">{line.name} ({line.rate}%)</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {line.amount.toFixed(currencyDecimals)} {invoiceData.currency}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400">{t("billing.vatTotal", "إجمالي الضريبة:")}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {vat_total.toFixed(currencyDecimals)} {invoiceData.currency}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 dark:text-gray-400">{t("billing.discountTotal", "الخصم:")}</span>
                     <span className="font-medium text-red-600 dark:text-red-400">

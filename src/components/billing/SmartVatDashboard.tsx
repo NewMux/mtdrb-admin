@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useGymConfig } from "../../contexts/gym-config-context";
 import { taxRateToApply } from "../../config/gymConfig";
+import { aggregateTaxBreakdowns, parseTaxBreakdown, type TaxTotalLine } from "../../utils/taxMath";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 import { toLocalDateString } from "../../utils/analyticsRange";
@@ -43,6 +44,7 @@ interface InvoiceSummary {
   status?: string | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
+  tax_breakdown?: unknown;
 }
 
 interface ExpenseSummary {
@@ -88,6 +90,7 @@ export default function SmartVatDashboard({
     recommendations: string[];
     alerts: string[];
   } | null>(null);
+  const [taxTotals, setTaxTotals] = useState<TaxTotalLine[]>([]);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
   const { config: gymConfig } = useGymConfig();
   const currency = gymConfig.currency;
@@ -114,7 +117,7 @@ export default function SmartVatDashboard({
         invoices = await fetchAllRows((from, to) =>
           supabase
             .from("invoices")
-            .select("amount, status, created_at, metadata, total, vat_total")
+            .select("amount, status, created_at, metadata, total, vat_total, tax_breakdown")
             .eq("tenant_id", tenantId)
             .range(from, to),
         );
@@ -186,9 +189,23 @@ export default function SmartVatDashboard({
         return (amount * configuredVatRate) / 100;
       };
 
-      const totalVatCollected = invoiceList
-        .filter(inv => inv.status === "paid" || inv.status === "completed")
-        .reduce((sum, inv) => sum + invoiceVat(inv), 0);
+      const collectedInvoices = invoiceList.filter(
+        (inv) => inv.status === "paid" || inv.status === "completed",
+      );
+      const totalVatCollected = collectedInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0);
+
+      // The same tax split by tax (service charge, VAT...). An invoice made before
+      // the gym had several taxes counts under the gym's tax name.
+      setTaxTotals(
+        aggregateTaxBreakdowns(
+          collectedInvoices.map((inv) => ({
+            breakdown: parseTaxBreakdown(inv.tax_breakdown),
+            taxTotal: invoiceVat(inv),
+          })),
+          gymConfig.tax.name,
+          currency,
+        ),
+      );
 
       // Calculate VAT paid from expenses
       const totalVatPaid = expenseList
@@ -352,7 +369,7 @@ export default function SmartVatDashboard({
     } finally {
       setLoading(false);
     }
-  }, [tenantId, configuredVatRate, currency]);
+  }, [tenantId, configuredVatRate, currency, gymConfig.tax.name]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -649,6 +666,23 @@ export default function SmartVatDashboard({
               </div>
             </div>
           </div>
+
+          {/* Collected, by tax (only when the gym charges more than one) */}
+          {taxTotals.length > 1 && (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+              <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("billing.collectedByTax")}
+              </h3>
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {taxTotals.map((line) => (
+                  <li key={line.name} className="flex justify-between py-2 text-sm">
+                    <span className="text-gray-700 dark:text-gray-300">{line.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(line.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Compliance Alerts */}
           {(dashboardData?.complianceAlerts || []).length > 0 && (

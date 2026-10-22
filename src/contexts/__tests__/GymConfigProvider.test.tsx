@@ -29,7 +29,7 @@ const input: GymConfigInput = {
   country: "KW",
   currency: "KWD",
   timezone: "Asia/Kuwait",
-  tax: { enabled: false, name: "VAT", rate: 0, number: "", pricesIncludeTax: false },
+  tax: { enabled: false, components: [{ name: "VAT", rate: 0, compound: false }], number: "", pricesIncludeTax: false },
   business: { legalName: "", address: "", phone: "", email: "", website: "" },
 };
 
