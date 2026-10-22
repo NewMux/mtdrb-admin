@@ -187,8 +187,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "يمكن لمسؤول النادي في أي وقت تنزيل بيانات ناديه وحذف النادي نهائياً من الإعدادات ← البيانات والخصوصية. يؤدي الحذف إلى إلغاء الاشتراك فوراً دون أي رسوم إضافية ودون استرداد عن الفترة الحالية، ويحذف بيانات النادي والملفات المرفوعة وحسابات الموظفين المرتبطة بهذا النادي وحده. لا يمكن التراجع عن ذلك."
-                      : "A gym admin can at any time download the gym's data and permanently delete the gym from Settings → Data & privacy. Deleting cancels the subscription immediately with no further charges and no refund for the current period, and removes the gym's data, uploaded files and the accounts of staff who belong to no other gym. This cannot be undone."}
+                      ? "يمكن لمسؤول النادي في أي وقت تنزيل بيانات ناديه وحذف النادي نهائياً من الإعدادات ← البيانات والخصوصية. يؤدي الحذف إلى إلغاء الاشتراك فوراً دون أي رسوم إضافية (وتسري سياسة الاسترجاع: استرداد كامل إن طُلب خلال 14 يوماً من أول دفعة، ولا استرداد عن الفترة الحالية بعد ذلك)، ويحذف بيانات النادي والملفات المرفوعة وحسابات الموظفين المرتبطة بهذا النادي وحده. لا يمكن التراجع عن ذلك."
+                      : "A gym admin can at any time download the gym's data and permanently delete the gym from Settings → Data & privacy. Deleting cancels the subscription immediately with no further charges (refunds follow the Refund & Cancellation policy: a full refund if requested within 14 days of your first payment, none for the current period after that), and removes the gym's data, uploaded files and the accounts of staff who belong to no other gym. This cannot be undone."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -347,12 +347,20 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
-                    {isArabic ? "4. سياسة عدم الاسترجاع" : "4. Refund Policy"}
+                    {isArabic ? "4. ضمان استرداد الأموال خلال 14 يوماً" : "4. 14-Day Money-Back Guarantee"}
                   </h2>
                   <p>
                     {isArabic
-                      ? "نظرًا لأن الوصول إلى حسابك يبقى نشطًا حتى نهاية دورة الفوترة المدفوعة بعد الإلغاء، فإن جميع المبالغ المدفوعة للاشتراكات غير قابلة للاسترجاع. لا يتم رد مبالغ جزئية مقابل الإلغاء في منتصف الدورة."
-                      : "Because your workspace access remains active through the end of the paid billing cycle upon cancellation, all subscription payments are non-refundable. No partial refunds are issued for mid-cycle cancellations."}
+                      ? "إذا لم تكن راضياً عن المنصة، فاطلب استرداد أموالك خلال 14 يوماً من أول دفعة لاشتراكك وسنردّ لك كل ما دفعته في تلك الفترة، بما في ذلك أي مواقع إضافية أضفتها خلالها. يُرد المبلغ إلى وسيلة الدفع الأصلية عبر مزود الدفع لدينا Paddle وقد يستغرق ظهوره بضعة أيام. يؤدي الاسترداد إلى إنهاء الاشتراك والوصول إلى الحساب، فنزّل بياناتك قبل ذلك من الإعدادات ← البيانات والخصوصية. التجديدات اللاحقة غير قابلة للاسترداد بعد تحصيلها، ويمكنك تجنّبها بالإلغاء قبل موعد التجديد؛ مع عدم المساس بأي حقوق يمنحك إياها القانون."
+                      : "If you are not satisfied, ask for a refund within 14 days of your first payment for a subscription and we will refund everything you paid in that period, including any extra locations you added during it. The refund goes back to the original payment method through our payment provider, Paddle, and can take a few days to appear. A refund ends the subscription and your access to the account, so download your data first from Settings → Data & privacy. Later renewals are not refundable once charged (cancel before the renewal date to avoid them), without affecting any rights the law gives you."}
+                  </p>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white pt-2">
+                    {isArabic ? "كيف تطلب الاسترداد" : "How to request a refund"}
+                  </h3>
+                  <p>
+                    {isArabic
+                      ? "راسلنا على legal@mtdrb.net من البريد الإلكتروني المسجّل في حسابك مع ذكر اسم ناديك. سنؤكد استلام الطلب ونعالجه في أقرب وقت."
+                      : "Email legal@mtdrb.net from the email address on your account and name your gym. We will confirm your request and process it promptly."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -360,8 +368,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "إذا حذفت ناديك نهائياً من الإعدادات ← البيانات والخصوصية فإن الاشتراك يُلغى فوراً، ولا يُرد أي مبلغ عن الفترة الحالية، ولا تُحصَّل أي رسوم إضافية."
-                      : "If you permanently delete your gym from Settings → Data & privacy, the subscription is cancelled immediately, no amount is refunded for the current period, and you are not charged again."}
+                      ? "إذا حذفت ناديك نهائياً من الإعدادات ← البيانات والخصوصية فإن الاشتراك يُلغى فوراً ولا تُحصَّل أي رسوم إضافية. ويظل بإمكانك طلب الاسترداد خلال 14 يوماً من أول دفعة وفق البند 4؛ أما بعد ذلك فلا يُرد مبلغ عن الفترة الحالية."
+                      : "If you permanently delete your gym from Settings → Data & privacy, the subscription is cancelled immediately and you are not charged again. You can still ask for a refund within 14 days of your first payment as described in section 4; after that, no amount is refunded for the current period."}
                   </p>
                 </div>
               </article>

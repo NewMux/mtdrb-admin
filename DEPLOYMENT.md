@@ -344,6 +344,29 @@ before that date. When the date arrives Paddle sends `subscription.canceled`,
   passes (use Paddle's sandbox to advance the clock, or cancel with a short
   period) the row becomes `cancelled` and access ends.
 
+## Refunds (14-day money-back guarantee)
+
+The Refund & Cancellation page promises a full refund of the first payment (and
+anything added in that period, such as extra locations) if the gym asks within 14
+days; later renewals are not refundable. Requests come to `legal@mtdrb.net`
+(change the address in `src/pages/Legal.tsx` if you prefer a support mailbox).
+The app has no refund button on purpose: refunds are money leaving your account,
+so a person does them.
+
+To process one: find the transaction in Paddle (Transactions), confirm it is
+inside the 14 days and the email matches the gym, and refund it in full
+(Paddle → the transaction → Refund). **A refund does not cancel the
+subscription.** Also cancel it immediately in Paddle (Subscriptions → Cancel →
+immediately), otherwise it renews. `paddle-webhook` then sets the gym to
+`cancelled` and its access ends, as the policy says. Remind the customer to
+download their data first (Settings → Data & privacy); if they ask you to
+delete it as well, they can delete the gym themselves.
+
+Paddle is the merchant of record and also gives buyers its own refund rights, so
+a customer may go to Paddle directly; refunds issued there show up in your Paddle
+dashboard, but they do not cancel the subscription either, so check
+Subscriptions for refunded-but-active ones from time to time.
+
 ## Deleting an account (right to erasure) and exporting data
 
 **Settings → Data & privacy.** A gym admin can (a) download everything in the gym

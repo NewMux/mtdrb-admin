@@ -40,6 +40,10 @@ describe("Legal pages", () => {
     expect(text).not.toMatch(/Tap Payments/);
     expect(text).toMatch(/Paddle/);
     expect(text).toMatch(/cancelled immediately/);
+    expect(text).toMatch(/14-Day Money-Back Guarantee/);
+    expect(text).toMatch(/within 14 days of your first payment/);
+    expect(text).not.toMatch(/non-refundable/);
+    expect(text).toMatch(/How to request a refund/);
   });
 
   it("terms: covers sales tax responsibility, account deletion and taxes at checkout", () => {
@@ -53,6 +57,15 @@ describe("Legal pages", () => {
     expect(text).toMatch(/operated by MTDRB, a company established in the Kingdom of Bahrain/);
     expect(text).toMatch(/laws of the Kingdom of Bahrain/);
     expect(text).not.toMatch(/Dubai|United Arab Emirates/);
+  });
+
+  it("the Arabic refund page states the same guarantee", () => {
+    h.language = "ar";
+    page("/refund", "refund");
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("ضمان استرداد الأموال خلال 14 يوماً");
+    expect(text).toContain("كيف تطلب الاسترداد");
+    expect(text).not.toContain("سياسة عدم الاسترجاع");
   });
 
   it("the Arabic versions carry the same sections", () => {
