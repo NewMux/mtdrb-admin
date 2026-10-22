@@ -4,7 +4,8 @@ import { parseTaxBreakdown, type TaxBreakdownLine } from "./taxMath";
 /**
  * Tax on shop (POS) sales and refunds, in the same shape the VAT dashboard
  * already uses for invoices: one signed entry per sale or return, so a return
- * simply reduces the figures in the period it was made.
+ * simply reduces the figures in the period it was made. Returns carry the tax
+ * they gave back (pos_returns.vat_total / tax_breakdown).
  */
 export interface PosSaleTaxRow {
   status?: string | null;
@@ -16,12 +17,9 @@ export interface PosSaleTaxRow {
 export interface PosReturnTaxRow {
   status?: string | null;
   created_at: string;
-  /** The sale the goods came from. */
-  pos_sales?: { vat_total?: number | string | null; tax_breakdown?: unknown } | null;
-  pos_return_items?: ReadonlyArray<{
-    quantity?: number | string | null;
-    pos_sale_items?: { line_vat?: number | string | null; quantity?: number | string | null } | null;
-  }> | null;
+  /** The tax this return gave back, and how it splits between the sale's taxes. */
+  vat_total?: number | string | null;
+  tax_breakdown?: unknown;
 }
 
 export interface PosVatDocument {
@@ -56,28 +54,10 @@ export function posVatDocuments(
 
   for (const ret of returns) {
     if (ret.status === "cancelled") continue;
-
-    // The tax in the goods handed back: each line's tax pro rata to the quantity returned.
-    let returned = 0;
-    for (const item of ret.pos_return_items ?? []) {
-      const original = item.pos_sale_items;
-      const soldQty = num(original?.quantity);
-      if (!original || soldQty <= 0) continue;
-      returned += (num(original.line_vat) * Math.min(num(item.quantity), soldQty)) / soldQty;
-    }
-    returned = roundMoney(returned, decimals);
-
-    const saleVat = num(ret.pos_sales?.vat_total);
-    if (returned <= 0 || saleVat <= 0) continue;
-    returned = Math.min(returned, saleVat);
-
-    // Split that refund between the taxes in the same proportions as the sale.
-    const saleBreakdown = parseTaxBreakdown(ret.pos_sales?.tax_breakdown);
-    const scaled = saleBreakdown?.map((line) => ({
-      ...line,
-      amount: -roundMoney((line.amount * returned) / saleVat, decimals),
-    }));
-    docs.push({ date: ret.created_at, breakdown: scaled && scaled.length > 0 ? scaled : null, taxTotal: -returned });
+    const refunded = roundMoney(num(ret.vat_total), decimals);
+    if (refunded <= 0) continue;
+    const lines = parseTaxBreakdown(ret.tax_breakdown)?.map((line) => ({ ...line, amount: -line.amount }));
+    docs.push({ date: ret.created_at, breakdown: lines && lines.length > 0 ? lines : null, taxTotal: -refunded });
   }
 
   return docs;

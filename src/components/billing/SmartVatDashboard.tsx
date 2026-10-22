@@ -141,15 +141,13 @@ export default function SmartVatDashboard({
             .eq("tenant_id", tenantId)
             .range(from, to),
         );
-        posReturns = (await fetchAllRows((from, to) =>
+        posReturns = await fetchAllRows((from, to) =>
           supabase
             .from("pos_returns")
-            .select(
-              "status, created_at, pos_sales(vat_total, tax_breakdown), pos_return_items(quantity, pos_sale_items(line_vat, quantity))",
-            )
+            .select("status, created_at, vat_total, tax_breakdown")
             .eq("tenant_id", tenantId)
             .range(from, to),
-        )) as unknown as PosReturnTaxRow[];
+        );
       } catch (posError) {
         const message = posError instanceof Error ? posError.message : JSON.stringify(posError);
         throw new Error(`Failed to fetch shop sales: ${message}`);

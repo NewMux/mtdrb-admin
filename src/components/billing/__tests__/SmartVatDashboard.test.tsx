@@ -10,12 +10,8 @@ const tables: Record<string, unknown[]> = {
     { status: "voided", created_at: now, vat_total: 99, tax_breakdown: null },
   ],
   pos_returns: [
-    {
-      status: "completed",
-      created_at: now,
-      pos_sales: { vat_total: 10, tax_breakdown: null },
-      pos_return_items: [{ quantity: 1, pos_sale_items: { line_vat: 10, quantity: 4 } }],
-    },
+    { status: "completed", created_at: now, vat_total: 2.5, tax_breakdown: null },
+    { status: "cancelled", created_at: now, vat_total: 7, tax_breakdown: null },
   ],
   expenses: [],
   vat_returns: [],
@@ -53,7 +49,7 @@ import SmartVatDashboard from "../SmartVatDashboard";
 describe("SmartVatDashboard", () => {
   it("counts shop sales and subtracts shop returns from the tax collected", async () => {
     render(<SmartVatDashboard tenantId="t1" refreshKey={0} />);
-    // invoice 5.00 + sale 10.00 (voided sale ignored) - returned 1/4 of 10.00 = 2.50
+    // invoice 5.00 + sale 10.00 (voided sale ignored) - a completed return of 2.50 (cancelled one ignored)
     expect((await screen.findAllByText(/12\.50/)).length).toBeGreaterThan(0);
   });
 });

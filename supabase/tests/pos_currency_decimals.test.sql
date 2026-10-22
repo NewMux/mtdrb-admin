@@ -156,6 +156,12 @@ SELECT test.ok(NOT EXISTS (
 -- --------------------------------------------------------------------------
 -- Returns refund exactly what was paid
 -- --------------------------------------------------------------------------
+-- The gym has two taxes, so the refund has something to split between.
+RESET ROLE;
+INSERT INTO public.gym_settings (tenant_id, currency, vat_enabled, vat_rate, metadata) VALUES
+  ('eeeeeeee-0000-0000-0000-000000000001', 'BHD', true, 10,
+   '{"tax":{"components":[{"name":"VAT","rate":7,"compound":false},{"name":"Service charge","rate":3,"compound":false}]}}');
+SELECT test.become('00000000-0000-0000-0000-0000000000e1');
 -- 3 x 3.333 BHD at 10% VAT: subtotal 9.999, VAT 1.000, total 10.999.
 CREATE TEMP TABLE r_j AS SELECT test.sell('[{"product_id":"e0000000-0000-0000-0000-000000000012","quantity":3}]', 0, 'BHD') AS r;
 SELECT test.ok((SELECT (r->>'total')::numeric = 10.999 FROM r_j), 'J: 3 x 3.333 + VAT = 10.999');
@@ -168,6 +174,15 @@ SELECT test.ok((SELECT (r->>'total')::numeric = 3.666 FROM j_ret1), 'J: first pa
 SELECT test.ok((SELECT (r->>'total')::numeric = 3.666 FROM j_ret2), 'J: second partial return refunds 3.666');
 SELECT test.ok((SELECT (r->>'total')::numeric = 3.667 FROM j_ret3), 'J: the final return refunds exactly what is left (3.667)');
 SELECT test.ok((SELECT sum(total) FROM public.pos_returns WHERE sale_id = (SELECT (r->>'sale_id')::uuid FROM r_j)) = 10.999, 'J: refunds add up to exactly what was paid');
+-- ... and the tax inside them: 1.000 VAT -> 0.333 + 0.333 + 0.334
+SELECT test.ok((SELECT (r->>'vat_total')::numeric = 0.333 FROM j_ret1), 'J: first return refunds 0.333 of the tax');
+SELECT test.ok((SELECT (r->>'vat_total')::numeric = 0.334 FROM j_ret3), 'J: the final return refunds the tax that is left (0.334)');
+SELECT test.ok((SELECT sum(vat_total) FROM public.pos_returns WHERE sale_id = (SELECT (r->>'sale_id')::uuid FROM r_j)) = (SELECT vat_total FROM public.pos_sales WHERE id = (SELECT (r->>'sale_id')::uuid FROM r_j)), 'J: refunded tax adds up to exactly the tax charged');
+SELECT test.ok((SELECT sum(vat_amount) FROM public.pos_return_items WHERE return_id IN (SELECT id FROM public.pos_returns WHERE sale_id = (SELECT (r->>'sale_id')::uuid FROM r_j))) = 1.000, 'J: the lines carry the same tax');
+SELECT test.ok((SELECT coalesce(sum((l->>'amount')::numeric), 0) FROM public.pos_returns r, jsonb_array_elements(r.tax_breakdown) l WHERE r.sale_id = (SELECT (r->>'sale_id')::uuid FROM r_j)) = 1.000, 'J: the per-tax refunds add up to the tax charged');
+SELECT test.ok(NOT EXISTS (SELECT 1 FROM public.pos_returns r WHERE r.sale_id = (SELECT (r->>'sale_id')::uuid FROM r_j) AND r.tax_breakdown IS NULL), 'J: every return stored a per-tax breakdown');
+SELECT test.ok((SELECT (r->'tax_breakdown'->0->>'name') = 'VAT' AND (r->'tax_breakdown'->1->>'name') = 'Service charge' FROM j_ret1), 'J: the breakdown names the sale''s taxes');
+SELECT test.ok((SELECT (r->'tax_breakdown'->0->>'amount')::numeric + (r->'tax_breakdown'->1->>'amount')::numeric = 0.333 FROM j_ret1), 'J: the per-tax split of a return adds up to its tax');
 SELECT test.ok((SELECT status FROM public.pos_sales WHERE id = (SELECT (r->>'sale_id')::uuid FROM r_j)) = 'returned', 'J: the sale is closed once everything is returned');
 SELECT test.expect_err($q$SELECT public.return_pos_sale((SELECT (r->>'sale_id')::uuid FROM r_j), (SELECT jsonb_build_array(jsonb_build_object('sale_item_id', id, 'quantity', 1)) FROM j_item), 'again')$q$,
                        'P0001', 'already closed', 'J: a closed sale cannot be returned again');
