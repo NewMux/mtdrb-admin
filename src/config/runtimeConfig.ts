@@ -24,8 +24,8 @@ export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
   readEnv("VITE_PLATFORM_CURRENCY") || "BHD";
-export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 20);
-export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 10);
+export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 10);
+export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15);
 
 export type SubscriptionPlan = {
   id: "starter" | "pro";
@@ -50,7 +50,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     features: [
       "All core features",
       "Single location",
-      `+${readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 20)} ${PLATFORM_CURRENCY}/month per extra location`,
+      `+${readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 10)} ${PLATFORM_CURRENCY}/month per extra location`,
       "Basic analytics",
       "Email support",
     ],
@@ -66,7 +66,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     description: "Everything in Starter & scale your gym",
     features: [
       "Everything in Starter",
-      `${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 10)} ${PLATFORM_CURRENCY}/month per extra location`,
+      `${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15)} ${PLATFORM_CURRENCY}/month per extra location`,
       "Unlimited members",
       "Advanced analytics",
       "Priority support",

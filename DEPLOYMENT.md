@@ -80,8 +80,8 @@ these deliberately rather than relying on the defaults for a real launch:
 - `VITE_DEFAULT_COUNTRY_CODE` — falls back to empty.
 - `VITE_DEFAULT_VAT_RATE` — falls back to `0`.
 - `VITE_PLATFORM_CURRENCY` — falls back to `BHD`. Display only: the amount actually charged is whatever the Paddle price (`VITE_PADDLE_*_PRICE_ID`) is set to, so keep the two in sync.
-- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — fall back to "Starter", `20`, `20`.
-- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — fall back to "Pro", `35`, `10`.
+- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — fall back to "Starter", `20`, `10`.
+- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — fall back to "Pro", `35`, `15`.
 
 Optional:
 
