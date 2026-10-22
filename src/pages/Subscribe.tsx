@@ -7,6 +7,7 @@ import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers } from "react-icons/fi"
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";
 import { SUBSCRIPTION_PLANS } from "../config/runtimeConfig";
+import { getCheckoutAvailability } from "../config/checkout";
 import {
   contextSubscriptionToEntitlement,
   isSubscriptionEntitled,
@@ -122,11 +123,14 @@ export default function Subscribe() {
   // webhook (supabase/functions/paddle-webhook) is the sole source of
   // truth for activation, matching the self-service trigger's
   // service-role-only write rule.
-  // Checkout is closed by default: Paddle is still sandbox-only (no live
-  // business verification yet), so a completed "purchase" right now would
-  // grant full paid access for zero real revenue. Flip
-  // VITE_CHECKOUT_ENABLED=true once live payments are actually ready.
-  const CHECKOUT_ENABLED = (import.meta.env.VITE_CHECKOUT_ENABLED as string | undefined) === "true";
+  // Checkout is open whenever Paddle is configured. VITE_CHECKOUT_ENABLED=false
+  // is the owner's kill switch for pausing new subscriptions (see
+  // src/config/checkout.ts); the build fails if the flag is not "false" and
+  // the Paddle values are missing, so a deployed build is either usable or
+  // deliberately paused.
+  const CHECKOUT_ENABLED = getCheckoutAvailability(
+    import.meta.env as Record<string, string | undefined>,
+  ).open;
   const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN as string | undefined;
   const PADDLE_ENVIRONMENT = (import.meta.env.VITE_PADDLE_ENVIRONMENT as string | undefined) || "sandbox";
   const PADDLE_PRICE_IDS: Record<string, string | undefined> = {
@@ -322,8 +326,8 @@ export default function Subscribe() {
 
           {!CHECKOUT_ENABLED && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
-              <p className="font-medium text-blue-900">{t("subscribe.checkoutClosedTitle")}</p>
-              <p className="text-sm text-blue-800 mt-1">{t("subscribe.checkoutClosedMessage")}</p>
+              <p className="font-medium text-blue-900">{t("subscribe.checkoutUnavailableTitle")}</p>
+              <p className="text-sm text-blue-800 mt-1">{t("subscribe.checkoutUnavailableMessage")}</p>
             </div>
           )}
 
@@ -388,7 +392,7 @@ export default function Subscribe() {
                   disabled={subscribing || !CHECKOUT_ENABLED}
                 >
                   {!CHECKOUT_ENABLED
-                    ? t("subscribe.checkoutClosedButton")
+                    ? t("subscribe.checkoutUnavailableButton")
                     : subscribing
                     ? t("subscribe.processing")
                     : t("subscribe.startFreeTrial")}

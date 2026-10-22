@@ -401,6 +401,12 @@ const resources = {
         tryAgain: "Try Again",
         pleaseEnterGymName: "Please enter your gym name",
         checkEmailConfirm: "Please check your email to confirm your account, then try again.",
+        confirmEmailTitle: "Check your email",
+        confirmEmailMessage: "We sent a confirmation link to {{email}}. Open it to finish creating your gym and choose a plan.",
+        confirmEmailResend: "Resend the email",
+        confirmEmailResendIn: "Resend the email in {{seconds}}s",
+        confirmEmailResent: "Sent. It can take a minute to arrive; check your spam folder too.",
+        confirmEmailResendFailed: "We couldn't resend the email. Please wait a minute and try again.",
         signupSuccessButNoUser: "Signup successful but user data not available. Please try signing in."
       },
       dashboard: {
@@ -2263,6 +2269,13 @@ const resources = {
           sunday: "Sunday"
         }
       },
+      welcome: {
+        title: "Setting up your gym",
+        subtitle: "Your email is confirmed. We're creating your gym and taking you to choose a plan.",
+        errorTitle: "We couldn't finish setting up your gym",
+        failed: "Something went wrong while setting up your gym. Please try again.",
+        retry: "Try again",
+      },
       subscribe: {
         checkingAccount: "Checking your account…",
         startTrial: "Get started with MTDRB",
@@ -2288,9 +2301,9 @@ const resources = {
         invalidPlan: "The selected plan is not available.",
         membershipMissing: "Your workspace membership is not ready yet. Please complete onboarding first.",
         tenantMissing: "We could not find your workspace. Please complete onboarding first.",
-        checkoutClosedTitle: "Sign-ups are invite-only right now",
-        checkoutClosedMessage: "We're finishing setup before opening subscriptions to everyone. If you're testing MTDRB, your account will be activated directly — no payment needed. Otherwise, contact us to get on the list.",
-        checkoutClosedButton: "Invite only",
+        checkoutUnavailableTitle: "Subscriptions are unavailable right now",
+        checkoutUnavailableMessage: "We can't take new subscriptions at the moment. Your account is saved — please try again shortly or contact us and we'll help.",
+        checkoutUnavailableButton: "Unavailable",
         starterDescription: "Perfect for single-location gyms",
         proDescription: "Everything in Starter & scale your gym",
         starterFeatures: ["All core features", "Single location", "Basic analytics", "Email support"],
@@ -2826,6 +2839,12 @@ const resources = {
         tryAgain: "حاول مرة أخرى",
         pleaseEnterGymName: "يرجى إدخال اسم صالتك الرياضية",
         checkEmailConfirm: "يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك، ثم حاول مرة أخرى.",
+        confirmEmailTitle: "تحقق من بريدك الإلكتروني",
+        confirmEmailMessage: "أرسلنا رابط التأكيد إلى {{email}}. افتحه لإكمال إنشاء ناديك واختيار الباقة.",
+        confirmEmailResend: "إعادة إرسال الرسالة",
+        confirmEmailResendIn: "إعادة الإرسال بعد {{seconds}} ث",
+        confirmEmailResent: "تم الإرسال. قد تستغرق الرسالة دقيقة؛ تحقق أيضاً من مجلد الرسائل غير المرغوبة.",
+        confirmEmailResendFailed: "تعذّرت إعادة إرسال الرسالة. يرجى الانتظار دقيقة والمحاولة مرة أخرى.",
         signupSuccessButNoUser: "تم إنشاء الحساب بنجاح ولكن بيانات المستخدم غير متاحة. يرجى محاولة تسجيل الدخول."
       },
       dashboard: {
@@ -4688,6 +4707,13 @@ const resources = {
           sunday: "الأحد"
         }
       },
+      welcome: {
+        title: "جارٍ إعداد النادي",
+        subtitle: "تم تأكيد بريدك الإلكتروني. نقوم بإنشاء ناديك ثم ننقلك لاختيار الباقة.",
+        errorTitle: "تعذّر إكمال إعداد ناديك",
+        failed: "حدث خطأ أثناء إعداد ناديك. يرجى المحاولة مرة أخرى.",
+        retry: "حاول مرة أخرى",
+      },
       subscribe: {
         checkingAccount: "جارٍ التحقق من حسابك…",
         startTrial: "ابدأ مع MTDRB",
@@ -4713,9 +4739,9 @@ const resources = {
         invalidPlan: "الخطة المحددة غير متاحة.",
         membershipMissing: "عضوية مساحة العمل غير جاهزة بعد. يرجى إكمال الإعداد الأولي أولاً.",
         tenantMissing: "تعذر العثور على مساحة العمل. يرجى إكمال الإعداد الأولي أولاً.",
-        checkoutClosedTitle: "التسجيل حالياً بالدعوة فقط",
-        checkoutClosedMessage: "نقوم بإنهاء الإعداد قبل فتح الاشتراكات للجميع. إذا كنت تختبر MTDRB، سيتم تفعيل حسابك مباشرة دون الحاجة للدفع. غير ذلك، يرجى التواصل معنا للانضمام إلى القائمة.",
-        checkoutClosedButton: "بالدعوة فقط",
+        checkoutUnavailableTitle: "الاشتراكات غير متاحة حالياً",
+        checkoutUnavailableMessage: "لا يمكننا استقبال اشتراكات جديدة في الوقت الحالي. حسابك محفوظ — يرجى المحاولة مرة أخرى بعد قليل أو التواصل معنا وسنساعدك.",
+        checkoutUnavailableButton: "غير متاح",
         starterDescription: "مثالية للصالات الرياضية ذات الموقع الواحد",
         proDescription: "كل مزايا البداية مع قابلية التوسع لصالتك",
         starterFeatures: ["جميع الميزات الأساسية", "موقع واحد", "تحليلات أساسية", "دعم عبر البريد الإلكتروني"],

@@ -28,6 +28,7 @@ const Signup = lazy(() => import("./pages/Signup"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const SubscribeCallback = lazy(() => import("./pages/SubscribeCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -144,6 +145,7 @@ const App = () => {
                       <Route path="/subscribe" element={<Subscribe />} />
                       <Route path="/subscribe/callback" element={<SubscribeCallback />} />
                       <Route path="/onboarding" element={<Onboarding />} />
+                      <Route path="/welcome" element={<Welcome />} />
                       <Route path="/terms" element={<Legal initialTab="terms" />} />
                       <Route path="/privacy" element={<Legal initialTab="privacy" />} />
                       <Route path="/refund" element={<Legal initialTab="refund" />} />

@@ -8,6 +8,7 @@ import { isValidRole } from "../types/roles";
 import { withTimeout } from "../utils/withTimeout";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import { isPlatformAdminPath } from "../utils/platformAdmin";
+import { needsGymSetupRedirect } from "../utils/ensureGym";
 import {
   AuthContext,
   type AuthErrorState,
@@ -213,12 +214,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user);
       const metadata = await handleUserMetadata(user);
 
+      // Signed in but no gym yet (they signed up and confirmed their email
+      // somewhere the inline setup never ran): /welcome creates it.
+      if (
+        user &&
+        !metadata &&
+        needsGymSetupRedirect(location.pathname) &&
+        !isPlatformAdminPath(location.pathname)
+      ) {
+        navigate("/welcome", { replace: true });
+        return;
+      }
+
       const publicRoutes = [
         "/",
         "/login",
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/welcome",
         "/reset-password",
         "/forgot-password",
         "/terms",
@@ -253,6 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/welcome",
         "/reset-password",
         "/forgot-password",
         "/terms",
@@ -308,6 +323,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // it must leave the platform console alone. Read the live location:
           // the closed-over pathname can be stale between re-subscriptions.
           if (isPlatformAdminPath(window.location.pathname)) {
+            break;
+          }
+
+          if (!metadata && needsGymSetupRedirect(window.location.pathname)) {
+            navigate("/welcome");
             break;
           }
 

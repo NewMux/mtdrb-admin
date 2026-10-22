@@ -5,10 +5,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
-import { withTimeout } from "../utils/withTimeout";
+import { ensureGym, type GymSetupClient } from "../utils/ensureGym";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
 import { validatePassword, DEFAULT_PASSWORD_POLICY } from "../utils/passwordPolicy";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -61,10 +63,33 @@ export default function Signup() {
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
   const [signedUpUser, setSignedUpUser] = React.useState<User | null>(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = React.useState(false);
+  const [resendIn, setResendIn] = React.useState(0);
+  const [resendState, setResendState] = React.useState<"idle" | "sent" | "error">("idle");
   const { isLocked, remainingSeconds, registerFailure } = useAuthAttemptLimiter(
     "signup",
     email,
   );
+
+  React.useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
+  const handleResend = async () => {
+    if (resendIn > 0) return;
+    setResendState("idle");
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${appUrl}/welcome` },
+    });
+    setResendState(resendError ? "error" : "sent");
+    // Supabase rate-limits resends, so back off even after a failure.
+    setResendIn(RESEND_COOLDOWN_SECONDS);
+  };
 
   // ===== HANDLE SIGNUP SUBMIT =====
   const handleSignup = async (e: React.FormEvent) => {
@@ -95,7 +120,9 @@ export default function Signup() {
     // Sign up with Supabase
     // Use VITE_APP_URL for email redirects, fallback to current origin
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-    const redirectUrl = `${appUrl}/dashboard`;
+    // /welcome creates the gym, so it also works when the user confirms their
+    // email later, on another device, after this page is gone.
+    const redirectUrl = `${appUrl}/welcome`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -116,20 +143,12 @@ export default function Signup() {
       // If session is available, it's already set in Supabase client
       // If email confirmation is required, session might be null
       if (data.session) {
-        // Session is available - auto-create tenant and proceed
         await createTenantAndProceed(createdUser);
       } else {
-        // Email confirmation might be required
-        // Check Supabase settings - if email confirmation is disabled, session should be available
-        // Wait a moment for session to establish, then check
-        setTimeout(async () => {
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData?.session) {
-            await createTenantAndProceed(createdUser);
-          } else {
-            setError(t("auth.checkEmailConfirm"));
-          }
-        }, 1000);
+        // Email confirmation is on: there is no session until the user opens the
+        // link, which lands on /welcome and creates the gym there.
+        setAwaitingConfirmation(true);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
       }
     } else {
       setError(t("auth.signupSuccessButNoUser"));
@@ -148,45 +167,11 @@ export default function Signup() {
         throw new Error("Missing signed-up user. Please refresh and try again.");
       }
 
-      // A prior attempt may have already created the tenant/membership and
-      // only failed on a later step (e.g. the updateUser timeout below).
-      // Reuse that membership instead of creating a duplicate tenant on retry.
-      const { data: existingMembership } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from("memberships")
-            .select("tenant_id")
-            .eq("user_id", userForSetup.id)
-            .maybeSingle()
-        ),
-        10000,
-        "Checking your account is taking longer than expected. Please try again."
-      );
-
-      if (!existingMembership?.tenant_id) {
-        // Create Tenant/org and membership using RPC function (bypasses RLS)
-        const { data: newTenantId, error: tenantError } = await withTimeout(
-          Promise.resolve(
-            supabase.rpc('create_tenant_with_membership', {
-              p_tenant_name: gymName || "My Gym",
-              p_user_role: 'admin',
-              p_tenant_metadata: {}
-            })
-          ),
-          15000,
-          "Setting up your gym is taking longer than expected. Please check your connection and try again."
-        );
-
-        if (tenantError) {
-          if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
-          throw new Error(tenantError.message || "Failed to create organization");
-        }
-
-        if (!newTenantId) {
-          throw new Error("Failed to create organization: No tenant ID returned");
-        }
-
-      }
+      // Reuses an existing gym if a prior attempt got that far.
+      await ensureGym(supabase as unknown as GymSetupClient, {
+        id: userForSetup.id,
+        user_metadata: { ...userForSetup.user_metadata, gym_name: gymName || userForSetup.user_metadata?.gym_name },
+      });
 
       // The gym name was already captured during signup. Avoid a second,
       // nonessential Auth metadata request that can block the redirect.
@@ -280,6 +265,31 @@ export default function Signup() {
               </p>
             </div>
 
+            {awaitingConfirmation ? (
+              <div role="status" className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center space-y-4">
+                <FiMail className="h-10 w-10 text-blue-600 mx-auto" aria-hidden="true" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t("auth.confirmEmailTitle")}</h2>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {t("auth.confirmEmailMessage", { email })}
+                </p>
+                {resendState === "sent" && (
+                  <p className="text-sm text-green-700">{t("auth.confirmEmailResent")}</p>
+                )}
+                {resendState === "error" && (
+                  <p role="alert" className="text-sm text-red-700">{t("auth.confirmEmailResendFailed")}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendIn > 0}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {resendIn > 0
+                    ? t("auth.confirmEmailResendIn", { seconds: resendIn })
+                    : t("auth.confirmEmailResend")}
+                </button>
+              </div>
+            ) : (
             <form className="space-y-6" onSubmit={handleSignup}>
               {/* Gym Name Field */}
               <div className="space-y-2">
@@ -453,6 +463,7 @@ export default function Signup() {
                 )}
               </motion.button>
             </form>
+            )}
 
             {/* Sign In Link */}
             <div className="mt-8 text-center">

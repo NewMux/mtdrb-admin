@@ -131,17 +131,19 @@ key isn't):
   deployment**, or checkout will silently run against Paddle's sandbox.
 - `VITE_PADDLE_STARTER_PRICE_ID`, `VITE_PADDLE_PRO_PRICE_ID` — the price
   IDs from your Paddle catalog for the Starter and Pro plans.
-- `VITE_CHECKOUT_ENABLED` — **the go-live switch.** Checkout stays closed (the
-  Subscribe page tells customers "checkout is closed" and the buttons are
-  disabled) unless this is exactly `true`; unset, `false`, `TRUE` or `1` all
-  leave it closed. Set it only after the other `VITE_PADDLE_*` values are in
-  place and a sandbox purchase has completed end to end. `npm run build:deploy`
-  (also what the Docker build runs) checks it via `scripts/checkoutConfig.mjs`:
-  it **fails** if the flag is `true` while the token or either price ID is
-  missing, or if the token doesn't match `VITE_PADDLE_ENVIRONMENT` (sandbox
-  tokens start with `test_`); it **warns** if `VITE_PADDLE_ENVIRONMENT=production`
-  with the flag off. Docker builds must pass these as build args — the
-  Dockerfile declares them.
+- `VITE_CHECKOUT_ENABLED` — **the pause switch.** Sign-up and checkout are
+  open to everyone by default as soon as the token and both price IDs are set;
+  there is no invite-only mode. Set it to exactly `false` (case-insensitive) to
+  pause new subscriptions: `/subscribe` then tells customers subscriptions are
+  unavailable and the buttons are disabled. Anything else (unset, blank,
+  `true`) leaves checkout open. `npm run build:deploy` (also what the Vercel
+  and Docker builds run) checks it via `scripts/checkoutConfig.mjs`: it
+  **fails** if checkout would be open while the token or either price ID is
+  missing (set `VITE_CHECKOUT_ENABLED=false` to ship a deliberately paused
+  build), or if the token doesn't match `VITE_PADDLE_ENVIRONMENT` (sandbox
+  tokens start with `test_`); it **warns** when pausing, and when a Vercel
+  production build still points at the sandbox. Docker builds must pass these
+  as build args — the Dockerfile declares them.
 
 Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 

@@ -1,52 +1,57 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error - plain ESM script shared with the build
 import { checkCheckoutConfig } from "./checkoutConfig.mjs";
+import { getCheckoutAvailability } from "../src/config/checkout";
 
-const ready = {
-  VITE_CHECKOUT_ENABLED: "true",
+type Env = Record<string, string>;
+const ready: Env = {
   VITE_PADDLE_ENVIRONMENT: "sandbox",
   VITE_PADDLE_CLIENT_TOKEN: "test_abc",
   VITE_PADDLE_STARTER_PRICE_ID: "pri_s",
   VITE_PADDLE_PRO_PRICE_ID: "pri_p",
 };
-const check = (env: Record<string, string>) => checkCheckoutConfig(env) as { errors: string[]; warnings: string[] };
+const check = (env: Env) => checkCheckoutConfig(env) as { errors: string[]; warnings: string[] };
 
-describe("checkCheckoutConfig", () => {
-  it("passes a fully configured sandbox checkout", () => {
+describe("checkCheckoutConfig (the build guard)", () => {
+  it("passes a configured sandbox deployment, with checkout open by default", () => {
     expect(check(ready)).toEqual({ errors: [], warnings: [] });
   });
 
-  it("passes a fully configured production checkout", () => {
+  it("passes a configured production deployment", () => {
     expect(check({ ...ready, VITE_PADDLE_ENVIRONMENT: "production", VITE_PADDLE_CLIENT_TOKEN: "live_abc" })).toEqual({
       errors: [],
       warnings: [],
     });
   });
 
-  it("checkout off in sandbox is fine and silent", () => {
-    expect(check({})).toEqual({ errors: [], warnings: [] });
-    expect(check({ VITE_CHECKOUT_ENABLED: "false" })).toEqual({ errors: [], warnings: [] });
+  it.each(["VITE_PADDLE_CLIENT_TOKEN", "VITE_PADDLE_STARTER_PRICE_ID", "VITE_PADDLE_PRO_PRICE_ID"])(
+    "FAILS when %s is missing or blank and the kill switch is not set (no silent 'cannot pay' deployments)",
+    (key) => {
+      for (const blank of ["", "   "]) {
+        const out = check({ ...ready, [key]: blank });
+        expect(out.errors.join(" ")).toContain(key);
+        expect(out.errors.join(" ")).toContain("VITE_CHECKOUT_ENABLED=false");
+      }
+    },
+  );
+
+  it("fails a deployment with no Paddle settings at all, naming every missing value", () => {
+    const out = check({});
+    expect(out.errors.join(" ")).toContain("VITE_PADDLE_CLIENT_TOKEN");
+    expect(out.errors.join(" ")).toContain("VITE_PADDLE_STARTER_PRICE_ID");
+    expect(out.errors.join(" ")).toContain("VITE_PADDLE_PRO_PRICE_ID");
   });
 
-  it("checkout off for production warns that customers cannot subscribe, but does not fail", () => {
-    const out = check({ VITE_PADDLE_ENVIRONMENT: "production" });
-    expect(out.errors).toEqual([]);
-    expect(out.warnings.join(" ")).toMatch(/cannot subscribe/);
+  it("the kill switch lets a deployment ship with subscriptions paused, with a warning, even with no Paddle settings", () => {
+    for (const flag of ["false", "FALSE", " False "]) {
+      const out = check({ VITE_CHECKOUT_ENABLED: flag });
+      expect(out.errors).toEqual([]);
+      expect(out.warnings.join(" ")).toContain("paused");
+    }
   });
 
-  it.each([["TRUE"], ["1"], ["yes"], ["True"]])("warns that %s does not open checkout (only exact 'true' does)", (flag) => {
-    const out = check({ VITE_CHECKOUT_ENABLED: flag });
-    expect(out.warnings.join(" ")).toMatch(/exact value "true"/);
-    expect(out.errors).toEqual([]);
-  });
-
-  it.each([
-    ["VITE_PADDLE_CLIENT_TOKEN"],
-    ["VITE_PADDLE_STARTER_PRICE_ID"],
-    ["VITE_PADDLE_PRO_PRICE_ID"],
-  ])("fails when checkout is on and %s is missing or blank", (key) => {
-    expect(check({ ...ready, [key]: "" }).errors.join(" ")).toContain(key);
-    expect(check({ ...ready, [key]: "   " }).errors.join(" ")).toContain(key);
+  it.each([["true"], ["TRUE"], ["1"], ["yes"], [""]])("%j does not close checkout (only 'false' does)", (flag) => {
+    expect(check({ ...ready, VITE_CHECKOUT_ENABLED: flag }).errors).toEqual([]);
   });
 
   it("fails on a live-looking token in sandbox, and a sandbox token in production", () => {
@@ -56,8 +61,37 @@ describe("checkCheckoutConfig", () => {
     ).toMatch(/starts with "test_"/);
   });
 
-  it("does not check the token's prefix when there is no token (the missing-token error covers it)", () => {
-    const errors = check({ ...ready, VITE_PADDLE_CLIENT_TOKEN: "" }).errors;
-    expect(errors).toHaveLength(1);
+  it("warns when a Vercel production build runs Paddle in sandbox, without failing it", () => {
+    const out = check({ ...ready, VERCEL_ENV: "production" });
+    expect(out.errors).toEqual([]);
+    expect(out.warnings.join(" ")).toMatch(/nobody is charged/);
+    expect(check({ ...ready, VERCEL_ENV: "preview" }).warnings).toEqual([]);
+  });
+});
+
+describe("getCheckoutAvailability (the app) agrees with the build guard", () => {
+  const cases: Array<[string, Env]> = [
+    ["configured", ready],
+    ["configured, flag true", { ...ready, VITE_CHECKOUT_ENABLED: "true" }],
+    ["configured, flag false", { ...ready, VITE_CHECKOUT_ENABLED: "false" }],
+    ["configured, flag FALSE", { ...ready, VITE_CHECKOUT_ENABLED: "FALSE" }],
+    ["nothing configured", {}],
+    ["nothing configured, flag false", { VITE_CHECKOUT_ENABLED: "false" }],
+    ["no token", { ...ready, VITE_PADDLE_CLIENT_TOKEN: "" }],
+    ["no starter price", { ...ready, VITE_PADDLE_STARTER_PRICE_ID: " " }],
+    ["no pro price", { ...ready, VITE_PADDLE_PRO_PRICE_ID: "" }],
+  ];
+
+  it.each(cases)("%s: the app opens checkout exactly when the build guard raises no config error and the kill switch is off", (_label, env) => {
+    const availability = getCheckoutAvailability(env);
+    const guard = check(env);
+    const killSwitch = (env.VITE_CHECKOUT_ENABLED ?? "").trim().toLowerCase() === "false";
+    expect(availability.open).toBe(!killSwitch && guard.errors.length === 0);
+  });
+
+  it("says why it is closed", () => {
+    expect(getCheckoutAvailability({ ...ready, VITE_CHECKOUT_ENABLED: "false" })).toEqual({ open: false, reason: "disabled" });
+    expect(getCheckoutAvailability({})).toEqual({ open: false, reason: "not_configured" });
+    expect(getCheckoutAvailability(ready)).toEqual({ open: true });
   });
 });

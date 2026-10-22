@@ -27,7 +27,7 @@ try {
 const checkout = checkCheckoutConfig(process.env);
 for (const warning of checkout.warnings) console.warn(`Warning: ${warning}`);
 if (checkout.errors.length > 0) {
-  console.error("Checkout is enabled but its Paddle settings are not usable:");
+  console.error("The checkout (Paddle) settings are not usable:");
   for (const error of checkout.errors) console.error(`- ${error}`);
   process.exit(1);
 }
