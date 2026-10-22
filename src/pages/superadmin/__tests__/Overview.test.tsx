@@ -4,9 +4,11 @@ import { MemoryRouter } from "react-router-dom";
 
 const fetchOverview = vi.fn();
 const grantAccess = vi.fn();
+const fetchGymsByCountry = vi.fn();
 vi.mock("../../../api/platformAdmin", () => ({
   fetchOverview: (...a: unknown[]) => fetchOverview(...a),
   grantAccess: (...a: unknown[]) => grantAccess(...a),
+  fetchGymsByCountry: (...a: unknown[]) => fetchGymsByCountry(...a),
 }));
 vi.mock("react-hot-toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -28,6 +30,15 @@ const renderPage = () => render(<MemoryRouter><Overview /></MemoryRouter>);
 beforeEach(() => {
   vi.clearAllMocks();
   grantAccess.mockResolvedValue(undefined);
+  fetchGymsByCountry.mockResolvedValue({
+    generated_at: "2026-10-19T00:00:00Z",
+    total: 3,
+    countries: 2,
+    rows: [
+      { country: "BH", gyms: 2, paid: 1, trialing: 0, members: 5 },
+      { country: "DE", gyms: 1, paid: 0, trialing: 1, members: 0 },
+    ],
+  });
 });
 
 describe("Overview", () => {
@@ -62,5 +73,32 @@ describe("Overview", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("nope");
     fireEvent.click(screen.getByRole("button", { name: /try again/i }));
     await waitFor(() => expect(screen.getByText("All caught up")).toBeInTheDocument());
+  });
+
+  it("shows gyms by country, and a failure there does not hide the rest", async () => {
+    fetchOverview.mockResolvedValue(overview([]));
+    renderPage();
+    expect(await screen.findByText("Bahrain")).toBeInTheDocument();
+    expect(screen.getByText("Germany")).toBeInTheDocument();
+    expect(screen.getByText(/2 countries · 3 gyms/)).toBeInTheDocument();
+  });
+
+  it("labels gyms without a country as not set yet", async () => {
+    fetchOverview.mockResolvedValue(overview([]));
+    fetchGymsByCountry.mockResolvedValue({
+      generated_at: "x", total: 1, countries: 0,
+      rows: [{ country: null, gyms: 1, paid: 0, trialing: 0, members: 0 }],
+    });
+    renderPage();
+    expect(await screen.findByText("Not set yet")).toBeInTheDocument();
+  });
+
+  it("keeps the overview when the country report fails", async () => {
+    fetchOverview.mockResolvedValue(overview([]));
+    fetchGymsByCountry.mockRejectedValue(new Error("boom"));
+    renderPage();
+    expect(await screen.findByText("Gyms by country")).toBeInTheDocument();
+    expect(await screen.findByText(/boom|could not load gyms by country/i)).toBeInTheDocument();
+    expect(screen.getByText("Overview")).toBeInTheDocument();
   });
 });

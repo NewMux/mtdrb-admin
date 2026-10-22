@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FiCheckCircle, FiRefreshCw } from "react-icons/fi";
 import { EmptyState, SmartButton, SmartLoading } from "../../components/ui";
 import AccessStateBadge from "../../components/superadmin/AccessStateBadge";
+import GymsByCountryCard from "../../components/superadmin/GymsByCountryCard";
 import AuditList from "../../components/superadmin/AuditList";
 import GrantAccessModal, { type GrantTarget } from "../../components/superadmin/GrantAccessModal";
 import { fetchOverview } from "../../api/platformAdmin";
@@ -190,6 +191,8 @@ export default function Overview() {
           )}
         </Card>
       </div>
+
+      <GymsByCountryCard />
 
       <Card title="Recent changes">
         <AuditList entries={data.recent_changes} showTenant emptyText="No changes made from this console yet." />

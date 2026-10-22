@@ -8,6 +8,7 @@ import type {
   InviteGymResult,
   PlatformAdminStatus,
   PlatformAuditList,
+  PlatformGymsByCountry,
   PlatformOverview,
   PlatformTenantDetail,
   PlatformTenantList,
@@ -77,6 +78,18 @@ export async function fetchOverview(): Promise<PlatformOverview> {
     "by_state",
     "awaiting_activation",
   ]);
+}
+
+export async function fetchGymsByCountry(): Promise<PlatformGymsByCountry> {
+  const data = expectObject<PlatformGymsByCountry>(
+    await call("platform_gyms_by_country"),
+    "gyms by country",
+    ["total", "countries", "rows"],
+  );
+  if (!Array.isArray(data.rows)) {
+    throw new PlatformAdminError("Unexpected response from the server (gyms by country).");
+  }
+  return data;
 }
 
 export async function listTenants(

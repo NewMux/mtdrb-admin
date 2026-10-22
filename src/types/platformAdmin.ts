@@ -160,6 +160,23 @@ export interface PlatformOverview {
   recent_changes: PlatformAuditEntry[];
 }
 
+export interface GymsByCountryRow {
+  /** ISO 3166-1 alpha-2, or null for gyms that have not chosen one yet. */
+  country: string | null;
+  gyms: number;
+  paid: number;
+  trialing: number;
+  members: number;
+}
+
+export interface PlatformGymsByCountry {
+  generated_at: string;
+  total: number;
+  /** Distinct real countries (the "unknown" group is not counted). */
+  countries: number;
+  rows: GymsByCountryRow[];
+}
+
 export interface PlatformTenantDetail {
   tenant: { id: string; name: string; created_at: string };
   access_state: AccessState;

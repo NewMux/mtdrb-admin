@@ -15,6 +15,7 @@ import {
   changeUserRole,
   deleteGym,
   deleteUser,
+  fetchGymsByCountry,
   fetchOverview,
   fetchPlatformAdminStatus,
   fetchTenantDetail,
@@ -70,6 +71,14 @@ describe("response validation", () => {
     await expect(listTenants()).rejects.toThrow(/unexpected response/i);
     rpc.mockReturnValueOnce(ok(null));
     await expect(fetchTenantDetail("t1")).rejects.toThrow(/unexpected response/i);
+  });
+
+  it("validates the gyms-by-country payload", async () => {
+    rpc.mockReturnValueOnce(ok({ total: 1, countries: 1, rows: "x" }));
+    await expect(fetchGymsByCountry()).rejects.toThrow(/unexpected response/i);
+    rpc.mockReturnValueOnce(ok({ total: 0, countries: 0, rows: [] }));
+    await expect(fetchGymsByCountry()).resolves.toMatchObject({ rows: [] });
+    expect(rpc).toHaveBeenLastCalledWith("platform_gyms_by_country", undefined);
   });
 
   it("maps the generic database denial to a friendly message", async () => {

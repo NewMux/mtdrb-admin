@@ -899,6 +899,14 @@ features, and "no expiry" is entitled forever until revoked.
 **Tests**: `supabase/tests/` holds a Supabase shim and a SQL suite that runs on a
 plain Postgres 16 (see the header of `platform_admin_console.test.sql`).
 
+**Where are the gyms? ("Gyms by country")** The Overview page has a
+"Gyms by country" table (gyms, paid, trial and members per country), served by
+`platform_gyms_by_country()` (`20261024180000_platform_gyms_by_country.sql`;
+apply it before the frontend). A gym's country is the one it picked in its own
+setup; gyms that haven't chosen one yet are listed as "Not set yet". It counts
+gyms, not visitors — for paying customers' billing countries use the Paddle
+dashboard, and for site visitors Vercel Analytics.
+
 ## Financial document migration
 
 New receipt and invoice records store an object path rather than a public URL. The UI requests a five-minute signed URL only when a user opens a document. Existing values that use the old Supabase public URL format are converted to their object path by `src/utils/storage.ts`; arbitrary external URLs are rejected. After confirming signed access works, remove any old public bucket access and invalidate old public URLs where your storage policy permits.
