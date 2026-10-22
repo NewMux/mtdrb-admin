@@ -446,6 +446,40 @@ in the repo and the app cannot check them):
 - A user who signs up and never confirms leaves an unconfirmed Auth user and no
   gym — nothing to clean up on the app side.
 
+## Gym configuration (region, currency, tax)
+
+Each gym configures itself in the setup wizard (first step) and afterwards in
+**Settings → Business & tax**: country, currency, timezone, whether it charges
+sales tax and under what name/rate/registration number, whether the prices it
+enters include tax, and business details printed on receipts. Nothing is
+hard-coded to a country: choosing a country only *suggests* a currency, timezone
+and the usual standard tax rate (`src/config/regions.ts`; rates are a starting
+point, not tax advice, and the owner can change every value).
+
+- **Storage** needs no migration: the existing `gym_settings.currency`,
+  `vat_enabled`, `vat_rate` columns plus `metadata.general.{country,timezone}`,
+  `metadata.tax`, `metadata.business` and `metadata.setup.configured_at`.
+  `src/config/gymConfig.ts` is the only code that reads or writes them, and a
+  save merges into the stored metadata so other keys are kept. `vat_rate` is
+  `numeric(5,2)`, so rates have at most two decimals (7.5 is fine).
+- **Env defaults** (`VITE_DEFAULT_CURRENCY`, `VITE_DEFAULT_TIMEZONE`,
+  `VITE_DEFAULT_VAT_RATE`, `VITE_DEFAULT_COUNTRY_CODE`) now only seed a gym that
+  has not configured itself. For a global product leave them unset: a new gym is
+  then pre-filled from the country its browser timezone points to.
+- **Everything else follows the gym's own values**: invoice and expense
+  defaults, POS products and receipts, the VAT dashboard, dashboards (day and
+  month boundaries use the gym's timezone), and money decimals (BHD/KWD/OMR 3,
+  JPY 0, otherwise 2).
+- **Not covered yet**: the interface is English/Arabic only; no tax-authority
+  e-invoicing (e.g. ZATCA, FTA); one tax rate per gym (POS products and invoice
+  lines can still carry their own); invoices are not printed as PDFs.
+
+**Setup checklist.** A gym that has not finished the basics sees a "Get your gym
+set up" card on its dashboard (configure region and tax, create a plan, add a
+member, schedule a class, create an invoice). Each tick is computed from real
+data, not stored; the card hides itself when all five are done or when
+dismissed (remembered per gym in that browser only).
+
 ## Platform owner console (`/superadmin`)
 
 The owner-only console for seeing every gym and activating / comping /

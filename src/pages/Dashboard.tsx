@@ -4,6 +4,7 @@ import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { DashboardTabs } from "../components/dashboard/DashboardTabs";
 import { DashboardOverview } from "../components/dashboard/DashboardOverview";
 import { DashboardAnalytics } from "../components/dashboard/DashboardAnalytics";
+import SetupChecklist from "../components/dashboard/SetupChecklist";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRTL } from "../hooks/useRTL";
@@ -48,6 +49,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       <DashboardHeader onRefresh={handleRefresh} />
+
+      <SetupChecklist refreshKey={refreshKey} />
       
       <DashboardTabs 
         activeTab={activeTab} 

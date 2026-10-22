@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { guessRegionFromTimezone } from "../../../config/regions";
 import GymConfigForm from "../GymConfigForm";
 import type { GymConfigInput } from "../../../config/gymConfig";
 
@@ -67,5 +68,37 @@ describe("GymConfigForm", () => {
     setup({ ...base, tax: { ...base.tax, enabled: true } }, { taxRate: "tax_rate_invalid", currency: "currency_invalid" });
     expect(screen.getByText("gymConfig.errors.tax_rate_invalid")).toBeInTheDocument();
     expect(screen.getByText("gymConfig.errors.currency_invalid")).toBeInTheDocument();
+  });
+});
+
+function Stateful({ initial }: { initial: GymConfigInput }) {
+  const [value, setValue] = React.useState(initial);
+  return <GymConfigForm value={value} onChange={setValue} />;
+}
+
+describe("GymConfigForm (controlled by real state)", () => {
+  it("lets the rate be cleared and retyped without turning into NaN", () => {
+    render(<Stateful initial={{ ...base, tax: { ...base.tax, enabled: true, rate: 5 } }} />);
+    const rate = screen.getByLabelText("gymConfig.taxRate") as HTMLInputElement;
+    fireEvent.change(rate, { target: { value: "" } });
+    expect(rate.value).toBe("");
+    fireEvent.change(rate, { target: { value: "7.5" } });
+    expect(rate.value).toBe("7.5");
+  });
+
+  it("shows the suggested rate after choosing a country", () => {
+    render(<Stateful initial={base} />);
+    fireEvent.change(screen.getByLabelText("gymConfig.country"), { target: { value: "SA" } });
+    expect((screen.getByLabelText("gymConfig.taxRate") as HTMLInputElement).value).toBe("15");
+    expect((screen.getByLabelText("gymConfig.currency") as HTMLSelectElement).value).toBe("SAR");
+  });
+});
+
+describe("guessRegionFromTimezone", () => {
+  it("matches an exact timezone only", () => {
+    expect(guessRegionFromTimezone("Asia/Bahrain")?.code).toBe("BH");
+    expect(guessRegionFromTimezone("Asia/Dubai")?.code).toBe("AE");
+    expect(guessRegionFromTimezone("Mars/Base")).toBeNull();
+    expect(guessRegionFromTimezone(null)).toBeNull();
   });
 });

@@ -2315,6 +2315,18 @@ const resources = {
           website_invalid: "Enter a full address starting with http:// or https://",
         },
       },
+      setupChecklist: {
+        title: "Get your gym set up",
+        progress: "{{done}} of {{total}} done",
+        dismiss: "Hide this checklist",
+        items: {
+          configure: { title: "Set your country, currency and tax", hint: "So prices, tax and dates are right from day one." },
+          plan: { title: "Create a membership plan", hint: "What members buy: monthly, class packs, day passes." },
+          member: { title: "Add your first member", hint: "Add one by hand, or import your list." },
+          class: { title: "Schedule a class", hint: "Put your timetable in so members can book." },
+          invoice: { title: "Create your first invoice", hint: "Record a payment and see it in your reports." },
+        },
+      },
       welcome: {
         title: "Setting up your gym",
         subtitle: "Your email is confirmed. We're creating your gym and taking you to choose a plan.",
@@ -4797,6 +4809,18 @@ const resources = {
           tax_number_too_long: "الرقم طويل جداً.",
           email_invalid: "أدخل بريداً إلكترونياً صحيحاً.",
           website_invalid: "أدخل عنواناً كاملاً يبدأ بـ http:// أو https://",
+        },
+      },
+      setupChecklist: {
+        title: "جهّز ناديك",
+        progress: "تم {{done}} من {{total}}",
+        dismiss: "إخفاء هذه القائمة",
+        items: {
+          configure: { title: "حدّد الدولة والعملة والضريبة", hint: "لتكون الأسعار والضريبة والتواريخ صحيحة من اليوم الأول." },
+          plan: { title: "أنشئ باقة اشتراك", hint: "ما يشتريه الأعضاء: شهري، حزم حصص، تذاكر يومية." },
+          member: { title: "أضف أول عضو", hint: "أضف عضواً يدوياً أو استورد قائمتك." },
+          class: { title: "جدول حصة", hint: "ضع جدولك حتى يتمكن الأعضاء من الحجز." },
+          invoice: { title: "أنشئ أول فاتورة", hint: "سجّل دفعة وشاهدها في تقاريرك." },
         },
       },
       welcome: {

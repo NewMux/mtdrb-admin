@@ -15,7 +15,9 @@ import {
   FiArrowLeft,
 } from "react-icons/fi";
 import { DEFAULT_LANGUAGE } from "../config/runtimeConfig";
+import { guessRegionFromTimezone } from "../config/regions";
 import {
+  applyRegionPreset,
   buildSettingsWrite,
   configToInput,
   resolveGymConfig,
@@ -79,6 +81,16 @@ interface OnboardingFormData {
 
 type SetOnboardingFormData = React.Dispatch<React.SetStateAction<OnboardingFormData>>;
 
+// A new gym starts from the platform defaults, or - when the platform sets no
+// country - from the country the browser's timezone points to, so most owners
+// only confirm the suggestion instead of filling the form in.
+function initialConfig(): GymConfigInput {
+  const base = configToInput(resolveGymConfig(null, PLATFORM_CONFIG_DEFAULTS));
+  if (base.country) return base;
+  const guess = guessRegionFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  return guess ? applyRegionPreset(base, guess) : base;
+}
+
 // ===== ONBOARDING WIZARD =====
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -95,7 +107,7 @@ export default function Onboarding() {
     // Step 1: Gym Info
     gymName: "",
     language: DEFAULT_LANGUAGE,
-    config: configToInput(resolveGymConfig(null, PLATFORM_CONFIG_DEFAULTS)),
+    config: initialConfig(),
     
     // Step 2: Branch Setup
     branchName: "",

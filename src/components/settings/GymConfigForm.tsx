@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import type { ConfigErrors, GymConfigInput } from "../../config/gymConfig";
+import { applyRegionPreset, type ConfigErrors, type GymConfigInput } from "../../config/gymConfig";
 import {
   REGION_PRESETS,
   countryName,
@@ -53,7 +53,11 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
   // The rate is edited as text so "7." and "" are possible mid-typing.
   const [rateText, setRateText] = React.useState(String(value.tax.rate));
   React.useEffect(() => {
-    setRateText((current) => (Number(current) === value.tax.rate && current !== "" ? current : String(value.tax.rate)));
+    // NaN means the field was cleared mid-edit: leave what is typed alone.
+    setRateText((current) => {
+      if (Number.isNaN(value.tax.rate)) return current;
+      return Number(current) === value.tax.rate && current !== "" ? current : String(value.tax.rate);
+    });
   }, [value.tax.rate]);
 
   const suggestion = getRegionPreset(value.country);
@@ -69,18 +73,7 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
       set({ country: "" });
       return;
     }
-    onChange({
-      ...value,
-      country: preset.code,
-      currency: preset.currency,
-      timezone: preset.timezone,
-      tax: {
-        ...value.tax,
-        enabled: preset.taxRate > 0,
-        name: preset.taxName,
-        rate: preset.taxRate,
-      },
-    });
+    onChange(applyRegionPreset(value, preset));
   };
 
   return (

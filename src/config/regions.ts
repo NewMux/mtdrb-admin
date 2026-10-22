@@ -52,6 +52,17 @@ export const REGION_PRESETS: readonly RegionPreset[] = [
   { code: "KE", currency: "KES", timezone: "Africa/Nairobi", taxName: "VAT", taxRate: 16 },
 ];
 
+/**
+ * The preset whose timezone matches the browser's, e.g. Asia/Bahrain -> Bahrain.
+ * Only an exact match: a zone shared by several countries or an unlisted zone
+ * returns null rather than guessing.
+ */
+export function guessRegionFromTimezone(timezone: string | null | undefined): RegionPreset | null {
+  if (!timezone) return null;
+  const matches = REGION_PRESETS.filter((r) => r.timezone === timezone);
+  return matches.length === 1 ? matches[0] : null;
+}
+
 export function getRegionPreset(code: string | null | undefined): RegionPreset | null {
   const normalized = (code ?? "").trim().toUpperCase();
   return REGION_PRESETS.find((r) => r.code === normalized) ?? null;

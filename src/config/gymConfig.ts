@@ -12,7 +12,7 @@
 // Writes MERGE into the existing metadata so other namespaces (security,
 // dashboardTargets) and other keys are never dropped.
 
-import { isValidCurrencyCode, isValidTimezone } from "./regions";
+import { isValidCurrencyCode, isValidTimezone, type RegionPreset } from "./regions";
 
 export interface TaxConfig {
   enabled: boolean;
@@ -218,4 +218,25 @@ export function configToInput(config: GymConfig): GymConfigInput {
   const { configured: _configured, ...input } = config;
   void _configured;
   return input;
+}
+
+/**
+ * `input` with a country preset applied: its currency, timezone and tax
+ * suggestion replace the current ones. Business details and the tax number are
+ * the owner's own and are left alone. A country with no national rate turns tax
+ * off instead of inventing one.
+ */
+export function applyRegionPreset(input: GymConfigInput, preset: RegionPreset): GymConfigInput {
+  return {
+    ...input,
+    country: preset.code,
+    currency: preset.currency,
+    timezone: preset.timezone,
+    tax: {
+      ...input.tax,
+      enabled: preset.taxRate > 0,
+      name: preset.taxName,
+      rate: preset.taxRate,
+    },
+  };
 }

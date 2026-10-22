@@ -5,6 +5,7 @@ import {
   validateGymConfig,
   buildSettingsWrite,
   configToInput,
+  applyRegionPreset,
   type GymConfigDefaults,
   type GymConfigInput,
 } from "./gymConfig";
@@ -205,5 +206,28 @@ describe("buildSettingsWrite", () => {
     const w = buildSettingsWrite(input({ currency: " bhd ", country: "bh" }), {}, now);
     expect(w.currency).toBe("BHD");
     expect((w.metadata.general as Record<string, string>).country).toBe("BH");
+  });
+});
+
+describe("applyRegionPreset", () => {
+  const owner = input({ tax: { enabled: true, name: "VAT", rate: 10, number: "MY-TAX-ID", pricesIncludeTax: true } });
+
+  it("replaces currency, timezone and tax suggestion but keeps the owner's own details", () => {
+    const next = applyRegionPreset(owner, getRegionPreset("SA")!);
+    expect(next).toMatchObject({ country: "SA", currency: "SAR", timezone: "Asia/Riyadh" });
+    expect(next.tax).toEqual({ enabled: true, name: "VAT", rate: 15, number: "MY-TAX-ID", pricesIncludeTax: true });
+    expect(next.business).toEqual(owner.business);
+  });
+
+  it("turns tax off for a country with no national rate instead of inventing one", () => {
+    const next = applyRegionPreset(owner, getRegionPreset("KW")!);
+    expect(next.tax).toMatchObject({ enabled: false, rate: 0 });
+    expect(next.currency).toBe("KWD");
+  });
+
+  it("produces a configuration that validates", () => {
+    for (const r of REGION_PRESETS) {
+      expect(validateGymConfig(applyRegionPreset(input(), r))).toEqual({});
+    }
   });
 });

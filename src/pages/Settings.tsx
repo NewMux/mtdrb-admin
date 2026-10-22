@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FiSettings,
   FiUser,
@@ -79,7 +79,14 @@ const Settings: React.FC = () => {
   } = useSettings();
 
   // Local state
-  const [activeTab, setActiveTab] = useState("general");
+  // /dashboard/settings?tab=business opens that tab (used by the setup checklist).
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    requestedTab && ["general", "business", "profile", "security", "billing"].includes(requestedTab)
+      ? requestedTab
+      : "general",
+  );
 
 
   // Fetch billing state from the membership-scoped subscription row.
