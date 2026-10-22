@@ -30,6 +30,7 @@ describe("Legal pages", () => {
     expect(text).toMatch(/anonymous record/);
     expect(text).toMatch(/do not use advertising cookies/);
     expect(text).toMatch(/GDPR/);
+    expect(text).toMatch(/provided by NewMux/);
   });
 
   it("refund: no longer names a payment gateway the product does not use", () => {
@@ -49,6 +50,7 @@ describe("Legal pages", () => {
     expect(text).toMatch(/Deleting Your Account/);
     expect(text).toMatch(/collected at checkout by our payment provider, Paddle/);
     expect(text).toMatch(/7\. Governing Law/);
+    expect(text).toMatch(/operated by NewMux/);
     expect(text).toMatch(/laws of the Kingdom of Bahrain/);
     expect(text).not.toMatch(/Dubai|United Arab Emirates/);
   });
