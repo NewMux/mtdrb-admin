@@ -106,10 +106,11 @@ not be gotten working reliably; see git history for that attempt.
   round-trip to start a purchase, unlike the CrediMax flow this replaced.
 - `paddle-webhook` — public; receives Paddle's subscription event
   notifications, verifies Paddle's HMAC webhook signature (`Paddle-Signature`
-  header), and is the only path allowed to write `platform_subscriptions`
-  besides a self-service cancellation (see
+  header). Only server-side code (this webhook and the `paddle-*` Edge
+  Functions, using the service role) and the audited platform-owner RPCs may
+  write `platform_subscriptions`; a tenant admin's browser may not (see
   `enforce_platform_subscription_self_service()` in
-  `supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
+  `supabase/migrations/20261022120000_cancel_at_and_billing_only_writes.sql`).
   JWT verification disabled (`supabase/config.toml`) — Paddle calls this
   server-to-server, authenticated by its own signature, not a Supabase JWT.
 
@@ -180,7 +181,7 @@ default). Three pieces make it real, and all three must be in place:
   `branches` that refuses a branch beyond `1 + extra_locations` with SQLSTATE
   `LC001` (`location_limit_reached`). The limit lives in Postgres, so a direct
   REST insert cannot bypass the UI. `extra_locations` is service-role-only: a
-  tenant admin cannot raise it, even in the same update that cancels.
+  tenant admin cannot write `platform_subscriptions` at all.
   **Never limited:** gyms with no subscription row (the existing, untracked
   tenants), manual grants from `/superadmin` (`payment_provider = 'manual'`),
   and `enterprise`/`demo` tiers. Existing branches are never removed — a gym
@@ -230,6 +231,56 @@ the database, (4) removing unused extras lowers the quantity at renewal.
 Known gap: webhook events are applied in arrival order. If Paddle delivered
 an older `subscription.updated` after a newer one, `extra_locations` would
 briefly show the older quantity until the next event.
+
+## Cancelling a subscription
+
+A tenant admin cancels from Settings → Billing. Cancelling is **scheduled in
+Paddle for the end of the period already paid for**: the gym keeps full access
+until then, is not billed again, and can change its mind ("Keep subscription")
+before that date. When the date arrives Paddle sends `subscription.canceled`,
+`paddle-webhook` sets the row to `cancelled`, and access ends.
+
+- **Edge Function `paddle-cancel-subscription`** — `{ "action": "cancel" }`
+  calls Paddle's `POST /subscriptions/{id}/cancel` with
+  `effective_from: "next_billing_period"`; `{ "action": "resume" }` removes the
+  scheduled cancellation (`PATCH /subscriptions/{id}` with
+  `scheduled_change: null`). It asks Paddle first and records
+  `platform_subscriptions.cancel_at` only after Paddle accepts, so the app can
+  never show "cancelled" while Paddle keeps billing. The caller must be the
+  gym's admin (checked in Postgres from their own JWT); it is idempotent and
+  rate-limited. Deploy with `supabase functions deploy paddle-cancel-subscription`
+  and redeploy `paddle-webhook`. It uses the same secrets as
+  `paddle-manage-locations` (`PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`,
+  `APP_ALLOWED_ORIGINS`); nothing new to set.
+- **The row's `status` stays `active` while a cancellation is pending**, so
+  access continues through `is_tenant_entitled()` / `current_period_end`. The
+  webhook reads Paddle's `scheduled_change` into `cancel_at`, and if Paddle
+  reports no `next_billed_at` it uses the cancel date (or the billing period's
+  end) as `current_period_end`, so an active row never has "no end" (which the
+  entitlement check treats as access for ever).
+- **Tenants can no longer write `platform_subscriptions` from the browser**
+  (`20261022120000_cancel_at_and_billing_only_writes.sql`). The old in-app
+  cancel flipped the row's status without telling Paddle: the customer kept
+  being billed and the next webhook set the row back to `active`. **Order
+  matters:** apply the migration first (Settings now reads `cancel_at`; against
+  a database without it that query fails and Settings would show the gym as
+  Free), then deploy the two functions, then the frontend. Between the
+  migration and the new frontend the old Cancel button shows an error instead
+  of cancelling, so keep that gap short.
+- **Not self-service:** access granted by the platform owner (`manual`) has
+  nothing in Paddle to cancel. Settings hides the cancel option for it; the
+  owner revokes it from `/superadmin`.
+- **Unverified against a live Paddle account** (the `paddle-docs` MCP server
+  was not connected when this was written): the `cancel` and `PATCH` request
+  bodies, and the `scheduled_change` / `next_billed_at` fields on the
+  subscription entity for a cancel-at-period-end. In the sandbox: subscribe,
+  cancel in the app, and confirm (1) Paddle shows the subscription as set to
+  cancel on the period end date, (2) `cancel_at` is that date and `status` is
+  still `active`, (3) "Keep subscription" clears both, (4) when the date
+  passes (use Paddle's sandbox to advance the clock, or cancel with a short
+  period) the row becomes `cancelled` and access ends.
+- **Not done yet:** a failed renewal payment (`past_due`) still maps to
+  `cancelled` immediately, with no grace period.
 
 ## Platform owner console (`/superadmin`)
 

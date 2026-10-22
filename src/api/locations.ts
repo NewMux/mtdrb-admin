@@ -6,6 +6,7 @@
 
 import { supabase } from "../supabaseClient";
 import { PRO_EXTRA_LOCATION_PRICE, STARTER_EXTRA_LOCATION_PRICE } from "../config/runtimeConfig";
+import { functionErrorMessage } from "../utils/functionError";
 
 /** Locations every plan includes before any extra is bought. */
 export const INCLUDED_LOCATIONS = 1;
@@ -121,27 +122,20 @@ type FunctionsClient = {
   };
 };
 
-async function functionErrorMessage(error: unknown): Promise<string> {
-  const ctx = (error as { context?: { status?: number; json?: () => Promise<unknown> } } | null)?.context;
-  if (ctx?.json) {
-    try {
-      const body = await ctx.json();
-      if (isRecord(body) && typeof body.error === "string") return body.error;
-    } catch {
-      // fall through to the generic messages
-    }
-  }
-  if (ctx?.status === 404) return "Adding locations isn't available yet.";
-  return "Could not reach billing. Try again.";
-}
-
 /** Sets how many extra locations the gym pays for (an absolute number, never a delta). */
 export async function setExtraLocations(extraLocations: number): Promise<ExtraLocationsResult> {
   const { data, error } = await (supabase as unknown as FunctionsClient).functions.invoke(
     "paddle-manage-locations",
     { body: { extra_locations: extraLocations } },
   );
-  if (error) throw new LocationBillingError(await functionErrorMessage(error));
+  if (error) {
+    throw new LocationBillingError(
+      await functionErrorMessage(error, {
+        notDeployed: "Adding locations isn't available yet.",
+        unreachable: "Could not reach billing. Try again.",
+      }),
+    );
+  }
 
   const confirmed = isRecord(data) ? asCount(data.extra_locations) : null;
   const limit = isRecord(data) ? asCount(data.limit) : null;
