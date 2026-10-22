@@ -16,6 +16,8 @@ interface MockSubscription {
   currency: string;
   trial_end: string | null;
   current_period_end: string | null;
+  /** While status is past_due: access continues until this time. */
+  grace_until?: string | null;
 }
 
 interface MockTenant {
@@ -151,6 +153,7 @@ function accessState(sub: MockSubscription | null): string {
     return sub.payment_provider === "manual" ? "complimentary" : "paid";
   }
   if (sub.status === "trialing" && sub.trial_end && Date.parse(sub.trial_end) > now) return "trialing";
+  if (sub.status === "past_due" && sub.grace_until && Date.parse(sub.grace_until) > now) return "past_due";
   return "inactive";
 }
 
@@ -255,7 +258,7 @@ export function mockPlatformRpc(name: string, args: Record<string, unknown> = {}
       return { data: "ok", error: null };
 
     case "platform_overview": {
-      const states = ["awaiting_activation", "paid", "complimentary", "trialing", "inactive"];
+      const states = ["awaiting_activation", "paid", "complimentary", "trialing", "past_due", "inactive"];
       const byState = Object.fromEntries(
         states.map((s) => [s, tenants.filter((t) => accessState(t.sub) === s).length]),
       );

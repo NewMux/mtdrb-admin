@@ -149,7 +149,53 @@ RESET ROLE;
 SELECT test.ok(EXISTS (SELECT 1 FROM public.members WHERE email = 'still@here.dev'), 'inside grace, the gym can keep creating members');
 
 -- --------------------------------------------------------------------------
--- 4. Privileges survived the function replacement
+-- 4. The owner console: a gym in its grace period is 'past_due', not 'inactive'
+--    (20261022210000_console_past_due_state.sql)
+-- --------------------------------------------------------------------------
+SELECT test.ok(public.platform_access_state(true, 'past_due', 'paddle', NULL, NULL, now() + interval '1 day') = 'past_due', 'access state: past_due inside grace is past_due');
+SELECT test.ok(public.platform_access_state(true, 'past_due', 'paddle', NULL, NULL, now() - interval '1 second') = 'inactive', 'access state: past_due after grace is inactive');
+SELECT test.ok(public.platform_access_state(true, 'past_due', 'paddle', NULL, NULL, NULL) = 'inactive', 'access state: past_due with no grace date is inactive (fails closed)');
+SELECT test.ok(public.platform_access_state(true, 'past_due', 'paddle', NULL, NULL) = 'inactive', 'the original 5-argument form is unchanged');
+SELECT test.ok(public.platform_access_state(true, 'active', 'paddle', NULL, now() + interval '1 day', NULL) = 'paid', 'a paid gym is still paid');
+SELECT test.ok(public.platform_access_state(true, 'active', 'manual', NULL, NULL, NULL) = 'complimentary', 'a complimentary gym is still complimentary');
+
+-- tenant 1 is inside its grace period here (2 days left); tenant 2's has ended.
+SELECT test.ok((SELECT access_state FROM public.platform_tenant_base() WHERE id = 'dddddddd-0000-0000-0000-000000000001') = 'past_due', 'console list: the gym in grace is past_due');
+SELECT test.ok((SELECT access_state FROM public.platform_tenant_base() WHERE id = 'dddddddd-0000-0000-0000-000000000002') = 'inactive', 'console list: the gym whose grace ended is inactive');
+SELECT test.ok((SELECT access_state FROM public.platform_tenant_base() WHERE id = 'dddddddd-0000-0000-0000-000000000003') = 'paid', 'console list: the paid gym is paid');
+SELECT test.ok((SELECT access_state FROM public.platform_tenant_base() WHERE id = 'dddddddd-0000-0000-0000-000000000004') = 'inactive', 'console list: the cancelled gym is inactive');
+
+-- The owner cannot overwrite a gym whose Paddle subscription is still alive and retrying the card.
+INSERT INTO auth.users (id, email, last_sign_in_at) VALUES ('00000000-0000-0000-0000-0000000000f1', 'owner@test.dev', now());
+INSERT INTO auth.sessions (id, user_id, aal) VALUES ('f1f1f1f1-1111-1111-1111-111111111111', '00000000-0000-0000-0000-0000000000f1', 'aal2');
+INSERT INTO auth.mfa_factors (user_id, friendly_name, factor_type, status) VALUES ('00000000-0000-0000-0000-0000000000f1', 'phone', 'totp', 'verified');
+INSERT INTO public.platform_admins (user_id, note) VALUES ('00000000-0000-0000-0000-0000000000f1', 'owner');
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', '00000000-0000-0000-0000-0000000000f1', 'role', 'authenticated', 'aal', 'aal2',
+                  'session_id', 'f1f1f1f1-1111-1111-1111-111111111111', 'email', 'owner@test.dev')::text, true);
+SET LOCAL ROLE authenticated;
+SELECT test.expect_err($q$SELECT public.platform_grant_access('dddddddd-0000-0000-0000-000000000001', 'pro', now() + interval '30 days', 'trying to comp a gym in grace')$q$,
+                       '55000', 'billed through Paddle', 'granting over a gym in its payment grace period is refused');
+-- ...but once the grace has ended and Paddle is no longer billing, it can be granted.
+RESET ROLE;
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+UPDATE public.platform_subscriptions SET grace_until = now() - interval '1 second' WHERE tenant_id = 'dddddddd-0000-0000-0000-000000000001';
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', '00000000-0000-0000-0000-0000000000f1', 'role', 'authenticated', 'aal', 'aal2',
+                  'session_id', 'f1f1f1f1-1111-1111-1111-111111111111', 'email', 'owner@test.dev')::text, true);
+SET LOCAL ROLE authenticated;
+SELECT public.platform_grant_access('dddddddd-0000-0000-0000-000000000001', 'pro', now() + interval '30 days', 'grace ended, comping them');
+RESET ROLE;
+SELECT test.ok((SELECT payment_provider FROM public.platform_subscriptions WHERE tenant_id = 'dddddddd-0000-0000-0000-000000000001') = 'manual', 'and the row is now a manual grant');
+
+-- The overview counts the new state.
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', '00000000-0000-0000-0000-0000000000f1', 'role', 'authenticated', 'aal', 'aal2',
+                  'session_id', 'f1f1f1f1-1111-1111-1111-111111111111', 'email', 'owner@test.dev')::text, true);
+SET LOCAL ROLE authenticated;
+SELECT test.ok((public.platform_overview() -> 'by_state') ? 'past_due', 'the overview reports a past_due count');
+SELECT test.ok(jsonb_typeof(public.platform_list_tenants(NULL, 'past_due', 'created_desc', 20, 0) -> 'rows') = 'array', 'the tenant list accepts the past_due filter');
+RESET ROLE;
+
+-- --------------------------------------------------------------------------
+-- 5. Privileges survived the function replacement
 -- --------------------------------------------------------------------------
 SELECT test.ok(NOT has_function_privilege('anon', 'public.is_tenant_entitled(uuid)', 'EXECUTE'), 'anon still cannot call is_tenant_entitled');
 SELECT test.ok(has_function_privilege('authenticated', 'public.is_tenant_entitled(uuid)', 'EXECUTE'), 'authenticated still can (policies need it)');

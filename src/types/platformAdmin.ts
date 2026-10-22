@@ -16,6 +16,8 @@ export type AccessState =
   | "paid"
   | "complimentary"
   | "trialing"
+  /** A renewal payment failed; access continues until the grace period ends. */
+  | "past_due"
   | "inactive";
 
 export type PlanTier = "starter" | "pro" | "enterprise" | "demo";

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  ACCESS_STATE_LABEL,
+  ACCESS_STATE_TONE,
   computeGrantUntil,
   describeAuditEntry,
   formatRelativeDays,
@@ -291,3 +293,28 @@ describe("suspended filter", () => {
     expect(parseTenantListQuery(new URLSearchParams("filter=suspended")).filter).toBe("suspended");
   });
 });
+
+describe("the past_due (payment failed) access state", () => {
+  const paddle = { payment_provider: "paddle" } as Parameters<typeof isPaddleManaged>[0];
+  const manual = { payment_provider: "manual" } as Parameters<typeof isPaddleManaged>[0];
+
+  it("is still billed through Paddle, so the owner is not offered to overwrite it", () => {
+    expect(isPaddleManaged(paddle, "past_due")).toBe(true);
+    expect(isPaddleManaged(manual, "past_due")).toBe(false);
+  });
+
+  it("has a label, a colour and a list filter like every other state", () => {
+    expect(ACCESS_STATE_LABEL.past_due).toBe("Payment failed");
+    expect(ACCESS_STATE_TONE.past_due).toContain("amber");
+    expect(TENANT_FILTERS.map((f) => f.value)).toContain("past_due");
+  });
+
+  it("every access state has a label, a tone and (except the derived ones) a filter", () => {
+    const states = Object.keys(ACCESS_STATE_LABEL);
+    expect(Object.keys(ACCESS_STATE_TONE).sort()).toEqual([...states].sort());
+    for (const state of states) {
+      expect(TENANT_FILTERS.map((f) => f.value)).toContain(state);
+    }
+  });
+});
+

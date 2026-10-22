@@ -278,9 +278,14 @@ charged the prorated amount, (2) `platform_subscriptions.extra_locations` = N
 and `amount` = base + N × add-on, (3) a branch beyond the limit is refused by
 the database, (4) removing unused extras lowers the quantity at renewal.
 
-Known gap: webhook events are applied in arrival order. If Paddle delivered
-an older `subscription.updated` after a newer one, `extra_locations` would
-briefly show the older quantity until the next event.
+**Out-of-order webhooks.** Paddle can deliver events late or out of order. The
+webhook stores the `occurred_at` of the newest event it has applied
+(`platform_subscriptions.paddle_event_at`, migration
+`20261022200000_paddle_event_ordering.sql`) and ignores any older one, so a late
+"active" can no longer overwrite a newer cancel or past-due. The check is
+repeated inside the `UPDATE`, so two events racing cannot both win. Events with
+the same timestamp are applied (a redelivery is harmless); an event with no
+`occurred_at` is applied as before.
 
 ## Cancelling a subscription
 
@@ -353,9 +358,11 @@ first failure instead of being locked out at once:
 - Choose the grace length with Paddle's own retry schedule in mind (Dashboard →
   Billing → Retries): if Paddle stops retrying sooner than 7 days it cancels the
   subscription and access ends then.
-- The owner console still labels a gym inside its grace period "inactive"
-  (`platform_access_state()` does not know about `grace_until`), although it has
-  access.
+- The owner console shows a gym inside its grace period as **Payment failed**
+  (its own access state, filter and overview tile; migration
+  `20261022210000_console_past_due_state.sql`). It counts as having access and as
+  billed through Paddle, so "Grant access" refuses to overwrite it while Paddle is
+  still retrying the card. After the grace date it shows "No access".
 - **Unverified against a live Paddle account:** that a failed renewal arrives as
   `subscription.past_due` / `subscription.updated` with `status: "past_due"`.
   In the sandbox, use a card that fails on renewal and check the row goes

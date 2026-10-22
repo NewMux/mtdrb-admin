@@ -30,14 +30,16 @@ interface Member {
   name: string;
   email?: string | null;
   phone: string;
-  age: number;
+  age?: number;
   gender: string;
   joinDate: string;
+  /** "" = no expiry date recorded. */
   planEnd: string;
+  /** "" = no check-in recorded. */
   lastCheckIn: string;
   checkInCount: number;
   status: "active" | "inactive" | "suspended" | "expired" | "trial";
-  membershipPrice: number;
+  membershipPrice?: number;
   formsSubmitted: string[];
   isTrial: boolean;
   attendance: string[]; // Array of check-in dates
@@ -257,6 +259,12 @@ export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({
       expiry: `Hi ${member.name}, your membership expires in ${getDaysLeft(member.planEnd)} days. Renew now to keep your progress! 💪`,
       custom: `Hi ${member.name}, we have a special offer just for you! 🎉`,
     };
+    // The renewal reminder quotes days left: with no expiry date on record there
+    // is no honest number to put in it, so do not send it.
+    if (template === "expiry" && !member.planEnd) {
+      toast.error(`${member.name} has no membership expiry date on record`);
+      return;
+    }
     const message = templates[template as keyof typeof templates];
     const digitsOnly = (member.phone || "").replace(/[^\d]/g, "");
 
@@ -609,7 +617,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 text-start">
                         <span className="text-sm text-gray-900 dark:text-gray-100">
-                          {new Date(member.lastCheckIn).toLocaleDateString()}
+                          {member.lastCheckIn ? new Date(member.lastCheckIn).toLocaleDateString() : "—"}
                         </span>
                         {member.isInactive && (
                           <FiAlertTriangle

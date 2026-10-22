@@ -240,7 +240,6 @@ const AuthSetup = ({ children }: AuthSetupProps) => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          console.log("AuthSetup: No session found, completing setup");
           finishSetup();
           clearTimeout(timeoutId);
           return;

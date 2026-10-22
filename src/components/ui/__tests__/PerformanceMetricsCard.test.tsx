@@ -31,4 +31,18 @@ describe("PerformanceMetricsCard", () => {
     expect(text).toMatch(/BHD|BD/);
     expect(text).toContain("1,000.125");
   });
+
+  it("with no target set it shows no target pill, no progress and no 0% - and still shows the value", () => {
+    render(<PerformanceMetricsCard metrics={[{ ...base, name: "Active members", current: 120, previous: 100, target: null, format: "number" }]} />);
+    expect(screen.getByText("120")).toBeInTheDocument();
+    expect(screen.queryByText(/target:/i)).toBeNull();
+    expect(screen.queryByText(/progress/i)).toBeNull();
+    expect(screen.queryByText(/NaN|Infinity/)).toBeNull();
+  });
+
+  it("with a target it shows the target and the progress towards it", () => {
+    render(<PerformanceMetricsCard metrics={[{ ...base, name: "Active members", current: 50, previous: 40, target: 200, format: "number" }]} />);
+    expect(screen.getByText(/target: 200/i)).toBeInTheDocument();
+    expect(screen.getByText("25%")).toBeInTheDocument();
+  });
 });

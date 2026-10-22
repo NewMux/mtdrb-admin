@@ -74,14 +74,16 @@ type TableMember = Member & {
   id: string;
   name: string;
   phone: string;
-  age: number;
+  age?: number;
   gender: "Male" | "Female" | "Other";
   joinDate: string;
+  /** "" = no expiry date recorded. */
   planEnd: string;
+  /** "" = no check-in recorded. */
   lastCheckIn: string;
   checkInCount: number;
   status: "active" | "inactive" | "suspended" | "expired" | "trial";
-  membershipPrice: number;
+  membershipPrice?: number;
   formsSubmitted: string[];
   isTrial: boolean;
   attendance: string[];
@@ -214,7 +216,10 @@ const Members: React.FC = () => {
             name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || m.email,
             email: m.email,
             phone: m.phone || "",
-            age: metadata.age ?? 18,
+            // Missing data stays missing. These used to be filled with made-up values
+            // (age 18, a plan ending in a year, a visit 30 days ago, a 99.99 price) that
+            // then showed up as facts and drove the status and "expires in N days" logic.
+            age: metadata.age,
             gender: (["Male", "Female", "Other"].includes(metadata.gender ?? "")
               ? metadata.gender
               : "Other") as "Male" | "Female" | "Other",
@@ -222,17 +227,11 @@ const Members: React.FC = () => {
               m.join_date ||
               (m.created_at ? toLocalDateString(new Date(m.created_at)) : "") ||
               toLocalDateString(new Date()),
-            planEnd:
-              m.expiry_date ||
-              toLocalDateString(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
-            lastCheckIn:
-              metadata.last_check_in ||
-              new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0],
+            planEnd: m.expiry_date || "", // "" = no expiry date recorded
+            lastCheckIn: metadata.last_check_in || "", // "" = no check-in recorded
             checkInCount: metadata.check_in_count || 0,
             status,
-            membershipPrice: parseFloat(String(metadata.membership_price ?? "")) || 99.99,
+            membershipPrice: parseFloat(String(metadata.membership_price ?? "")) || undefined,
             formsSubmitted: metadata.forms_submitted || [],
             isTrial: metadata.is_trial || false,
             attendance: metadata.attendance || [],
@@ -543,8 +542,9 @@ const Members: React.FC = () => {
         console.error('Failed to add test member:', error);
         showError('Error', `Failed to add test member: ${error.message}`);
       } else {
-        console.log('✅ Test member added:', data.id);
-        console.log('Name:', `${data.first_name} ${data.last_name}`);
+        // Development-only helper (the only caller is gated on import.meta.env.DEV).
+        // eslint-disable-next-line no-console
+        console.info('Test member added:', data.id);
         setRefreshKey((prev) => prev + 1);
         showSuccess('Test Member Added', `Ahmed Al-Mansoori has been added to your members list.`);
       }
@@ -573,7 +573,8 @@ const Members: React.FC = () => {
     if (import.meta.env.DEV) {
       (window as Window & { addTestMember?: () => Promise<void> }).addTestMember =
         addTestMember;
-      console.log('🧪 Development mode: Use window.addTestMember() to add a test member');
+      // eslint-disable-next-line no-console -- development only (import.meta.env.DEV)
+      console.info('Development mode: use window.addTestMember() to add a test member');
     }
   }, [addTestMember]);
 

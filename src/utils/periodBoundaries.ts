@@ -158,3 +158,18 @@ export function daysWindow(
   const windowStart = dayBoundary(reference, days - 1, timezone);
   return { startISO: windowStart.startISO, endExclusiveISO: todayEnd.endExclusiveISO };
 }
+
+/**
+ * The calendar date (YYYY-MM-DD) of `date` as seen in `timezone`. Use this, not
+ * `toISOString().split("T")[0]`, for DATE columns: the ISO string is the UTC
+ * date, which is the previous day for the first hours of every day in UTC+3.
+ */
+export function toZonedDateString(date: Date, timezone: string): string {
+  // "en-CA" formats as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}

@@ -10,7 +10,8 @@ interface PerformanceMetric {
   current: number;
   /** null = there is no earlier period to compare with. Shown as such, never as zero. */
   previous: number | null;
-  target: number;
+  /** null = no target set: the target pill and progress bar are left out. */
+  target: number | null;
   trend: "up" | "down" | "stable";
   format?: "currency" | "percentage" | "number" | "decimal";
   suffix?: string;
@@ -124,37 +125,41 @@ export default function PerformanceMetricsCard({
                 <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {formatValue(metric.current, metric.format, metric.suffix)}
                 </span>
-                <span
-                  className={`text-sm font-medium px-2 py-1 rounded-full ${
-                    metric.current >= metric.target
-                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                      : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
-                  }`}
-                >
-                  {t("dashboard.target")}: {formatValue(metric.target, metric.format, metric.suffix)}
-                </span>
+                {metric.target !== null && (
+                  <span
+                    className={`text-sm font-medium px-2 py-1 rounded-full ${
+                      metric.current >= metric.target
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                        : "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                    }`}
+                  >
+                    {t("dashboard.target")}: {formatValue(metric.target, metric.format, metric.suffix)}
+                  </span>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
-                  <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">
-                    {Math.round((metric.current / metric.target) * 100)}%
-                  </span>
+              {metric.target !== null && (
+                <div className="space-y-2">
+                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between text-sm`}>
+                    <span className="text-gray-600 dark:text-gray-400">{t("dashboard.progress")}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {Math.round((metric.current / metric.target) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        metric.current >= metric.target
+                          ? "bg-green-500"
+                          : "bg-orange-500"
+                      }`}
+                      style={{
+                        width: `${Math.min((metric.current / metric.target) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      metric.current >= metric.target
-                        ? "bg-green-500"
-                        : "bg-orange-500"
-                    }`}
-                    style={{
-                      width: `${Math.min((metric.current / metric.target) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
+              )}
 
               {metric.previous === null ? (
                 <div className="text-sm text-gray-500 dark:text-gray-400">

@@ -39,6 +39,7 @@ export const ACCESS_STATE_LABEL: Record<AccessState, string> = {
   paid: "Paid (Paddle)",
   complimentary: "Complimentary",
   trialing: "Trial",
+  past_due: "Payment failed",
   inactive: "No access",
 };
 
@@ -48,6 +49,7 @@ export const ACCESS_STATE_TONE: Record<AccessState, string> = {
   paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
   complimentary: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
   trialing: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300",
+  past_due: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   inactive: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
 };
 
@@ -57,6 +59,7 @@ export const TENANT_FILTERS: Array<{ value: TenantFilter; label: string }> = [
   { value: "paid", label: "Paid" },
   { value: "complimentary", label: "Complimentary" },
   { value: "trialing", label: "Trial" },
+  { value: "past_due", label: "Payment failed" },
   { value: "inactive", label: "No access" },
   { value: "ending_soon", label: "Ending soon" },
   { value: "suspended", label: "Suspended" },
@@ -191,7 +194,7 @@ export function isPaddleManaged(
 ): boolean {
   return (
     subscription?.payment_provider === "paddle" &&
-    (accessState === "paid" || accessState === "trialing")
+    (accessState === "paid" || accessState === "trialing" || accessState === "past_due")
   );
 }
 

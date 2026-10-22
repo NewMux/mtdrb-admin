@@ -105,7 +105,9 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
     if (isOpen && member) {
       reset({
         name: member.name || "",
-        age: member.age || 18,
+        // No age on record stays empty, so staff must enter a real one (the field is
+        // required) instead of silently saving a made-up 18.
+        age: member.age ?? ("" as unknown as number),
         gender: (member.gender as "Male" | "Female" | "Other") || "Male",
         email: member.email || "",
         phone: member.phone || "",

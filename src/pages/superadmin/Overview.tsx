@@ -111,6 +111,7 @@ export default function Overview() {
           data.no_expiry_comps > 0 ? `${data.no_expiry_comps} with no expiry` : undefined,
         )}
         {stateTile("trialing", "Trial")}
+        {stateTile("past_due", "Payment failed", "Still has access (grace period)")}
         {stateTile("inactive", "No access", "Cancelled or lapsed")}
       </div>
 

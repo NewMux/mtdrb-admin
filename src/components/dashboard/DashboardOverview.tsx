@@ -16,7 +16,7 @@ import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
-import { monthBoundary } from "../../utils/periodBoundaries";
+import { monthBoundary, toZonedDateString } from "../../utils/periodBoundaries";
 import { fetchAllRows } from "../../utils/fetchAllRows";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
@@ -54,6 +54,17 @@ interface DashboardTargets {
   memberSatisfaction?: number;
 }
 
+interface PrimaryStat {
+  name: string;
+  value: string;
+  change: string;
+  icon: React.ReactNode;
+  color: keyof typeof kpiColorMap;
+  /** null = the gym has not set a target for this KPI: none is invented. */
+  target: string | null;
+  progress: number | undefined;
+}
+
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ 
   refreshKey 
 }) => {
@@ -62,15 +73,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const [showTargetsModal, setShowTargetsModal] = useState(false);
   const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
-  const [primaryStats, setPrimaryStats] = useState([
+  const [primaryStats, setPrimaryStats] = useState<PrimaryStat[]>([
     {
       name: t("dashboard.totalRevenue"),
       value: "$0",
       change: t("common.loading"),
       icon: <FiDollarSign className="w-6 h-6" />,
       color: "green" as const,
-      target: "$0",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.activeMembers"),
@@ -78,8 +89,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiUsers className="w-6 h-6" />,
       color: "blue" as const,
-      target: "0",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.classAttendance"),
@@ -87,8 +98,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiCalendar className="w-6 h-6" />,
       color: "purple" as const,
-      target: "85%",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.memberSatisfaction"),
@@ -96,8 +107,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiStar className="w-6 h-6" />,
       color: "yellow" as const,
-      target: "4.8",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
   ]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +149,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       // Members: only the counts are used, so ask the database to count (a
       // plain select would be capped at 1000 rows and under-report big gyms).
+      // The previous figure is where the gym stood at the END of last month
+      // (joined by then, not yet expired) - the same rule as memberActivity.ts -
+      // not "members who joined last month", a much smaller group.
+      const previousMonthLastDay = toZonedDateString(new Date(Date.parse(previousMonth.endExclusiveISO) - 1), DEFAULT_TIMEZONE);
       const [currentMembers, previousMembers] = await Promise.all([
         supabase
           .from("members")
@@ -149,10 +164,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           .from("members")
           .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", previousMonth.startISO)
-          .lt("created_at", previousMonth.endExclusiveISO),
+          .lte("join_date", previousMonthLastDay)
+          .or(`expiry_date.is.null,expiry_date.gt.${previousMonthLastDay}`),
       ]);
 
       const memberError = currentMembers.error || previousMembers.error;
@@ -242,23 +255,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : t("dashboard.notAvailable");
       const satisfactionChange = avgRating > 0 ? t("dashboard.basedOnTrainerRatings") : t("dashboard.noRatingData");
 
-      // Calculate targets: use saved targets or fallback to calculated defaults
-      const revenueTarget = targets?.revenue ?? (currentRevenue * 1.1);
-      const membersTarget = targets?.activeMembers ?? (currentMemberCount * 1.05);
-      const attendanceTarget = targets?.classAttendance ?? 85;
-      const satisfactionTarget = targets?.memberSatisfaction ?? 4.8;
+      // Targets are only what the gym has set (Set Targets). The old fallbacks -
+      // 110% of this month's revenue, 105% of today's members - made every card
+      // read about 91% "progress" whatever happened. With no target there is
+      // nothing to measure against, so the card says so and shows no meter.
+      const revenueTarget = targets?.revenue || null;
+      const membersTarget = targets?.activeMembers || null;
+      const attendanceTarget = targets?.classAttendance || null;
+      const satisfactionTarget = targets?.memberSatisfaction || null;
 
-      // Format targets for display
-      const revenueTargetDisplay = `${currencySymbol} ${revenueTarget.toLocaleString()}`;
-      const membersTargetDisplay = membersTarget.toLocaleString();
-      const attendanceTargetDisplay = `${attendanceTarget}%`;
-      const satisfactionTargetDisplay = satisfactionTarget.toFixed(1);
+      const revenueTargetDisplay = revenueTarget ? `${currencySymbol} ${revenueTarget.toLocaleString()}` : null;
+      const membersTargetDisplay = membersTarget ? membersTarget.toLocaleString() : null;
+      const attendanceTargetDisplay = attendanceTarget ? `${attendanceTarget}%` : null;
+      const satisfactionTargetDisplay = satisfactionTarget ? satisfactionTarget.toFixed(1) : null;
 
-      // Calculate progress percentages
-      const revenueProgress = revenueTarget > 0 ? Math.min(100, (currentRevenue / revenueTarget) * 100) : 0;
-      const membersProgress = membersTarget > 0 ? Math.min(100, (currentMemberCount / membersTarget) * 100) : 0;
-      const attendanceProgress = Math.min(100, (currentAttendanceRate / attendanceTarget) * 100);
-      const satisfactionProgress = avgRating > 0 ? Math.min(100, (avgRating / satisfactionTarget) * 100) : 0;
+      const progressOf = (value: number, target: number | null) =>
+        target ? Math.min(100, (value / target) * 100) : undefined;
+      const revenueProgress = progressOf(currentRevenue, revenueTarget);
+      const membersProgress = progressOf(currentMemberCount, membersTarget);
+      const attendanceProgress = progressOf(currentAttendanceRate, attendanceTarget);
+      const satisfactionProgress = avgRating > 0 ? progressOf(avgRating, satisfactionTarget) : undefined;
 
       setPrimaryStats([
         {
@@ -351,7 +367,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               type="button"
             >
               <span className="whitespace-nowrap">
-                {t("dashboard.target")} {stat.target}
+                {stat.target ? `${t("dashboard.target")} ${stat.target}` : t("dashboard.targets.setTargets")}
               </span>
               <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>

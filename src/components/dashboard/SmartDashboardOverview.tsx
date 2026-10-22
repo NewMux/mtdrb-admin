@@ -239,7 +239,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // Get currency
       const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .single();
       // PGRST116 = no row found, which is a legitimate "not configured
@@ -248,6 +248,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       const currency = settings?.currency || DEFAULT_CURRENCY;
       const currencySymbol = currency || "";
+      // The revenue target is the one the gym set (Set Targets on the dashboard).
+      // This card used to show "110% of this month's revenue" as a target, which is
+      // not a target - it just moved with the number it was measuring.
+      const savedRevenueTarget = Number(
+        (settings?.metadata as { dashboardTargets?: { revenue?: number } } | null)?.dashboardTargets?.revenue,
+      );
 
       // Find inactive members (haven't visited in 14+ days)
       const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
@@ -285,7 +291,10 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           trend: revenueChange >= 0 ? "up" : "down",
           icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
           color: "green",
-          subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+          subtitle:
+            savedRevenueTarget > 0
+              ? `${t("dashboard.target")}: ${currencySymbol} ${(savedRevenueTarget / 1000).toFixed(1)}k`
+              : t("dashboard.vsLastMonth"),
         },
         {
           // This week's raw attendance rate, not a trend - there's no

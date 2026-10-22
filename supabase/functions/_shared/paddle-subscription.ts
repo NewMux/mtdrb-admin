@@ -78,3 +78,23 @@ export function nextGraceUntil(
   if (kept) return kept;
   return new Date(now.getTime() + PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000).toISOString();
 }
+
+// --- Event ordering ----------------------------------------------------------
+
+/** The event's own timestamp (Paddle sets occurred_at on every event), as an ISO string, or null. */
+export function eventOccurredAt(event: { occurred_at?: unknown }): string | null {
+  return asIso(event.occurred_at);
+}
+
+/**
+ * True when an event is OLDER than the newest one already applied, so it must be
+ * ignored: applying it would roll the row back to a state Paddle has since left.
+ * An event with the same timestamp is not stale (a redelivery of the same event
+ * is idempotent), and when either time is unknown we cannot tell, so we apply it.
+ */
+export function isStaleEvent(appliedAt: string | null | undefined, eventAt: string | null | undefined): boolean {
+  const applied = asIso(appliedAt);
+  const incoming = asIso(eventAt);
+  if (!applied || !incoming) return false;
+  return Date.parse(incoming) < Date.parse(applied);
+}

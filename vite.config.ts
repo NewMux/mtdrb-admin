@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  // Belt and braces next to the no-console lint rule: a production build drops
+  // console.log/info/debug calls outright (warn/error stay, Sentry reads them).
+  esbuild: mode === 'production' ? { pure: ['console.log', 'console.info', 'console.debug'] } : {},
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -48,4 +51,4 @@ export default defineConfig({
       ],
     },
   },
-}) 
+}))

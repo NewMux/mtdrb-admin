@@ -83,7 +83,7 @@ export default function TenantDetail() {
 
   const { tenant, subscription, access_state: state, usage } = data;
   const paddleManaged = isPaddleManaged(subscription, state);
-  const hasAccess = state === "paid" || state === "complimentary" || state === "trialing";
+  const hasAccess = state === "paid" || state === "complimentary" || state === "trialing" || state === "past_due";
   const target = { id: tenant.id, name: tenant.name, subscription, accessState: state };
   const suspension = data.suspension;
   const hasPlatformAdmin = data.staff.some((s) => s.is_platform_admin);

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { PAST_DUE_GRACE_DAYS, mapPaddleStatus, nextGraceUntil, readSubscriptionDates } from "./paddle-subscription";
+import {
+  PAST_DUE_GRACE_DAYS,
+  eventOccurredAt,
+  isStaleEvent,
+  mapPaddleStatus,
+  nextGraceUntil,
+  readSubscriptionDates,
+} from "./paddle-subscription";
 
 const END = "2026-11-20T10:00:00Z";
 const END_ISO = "2026-11-20T10:00:00.000Z";
@@ -118,5 +125,48 @@ describe("nextGraceUntil", () => {
     for (const status of ["active", "trialing", "canceled", "paused"]) {
       expect(nextGraceUntil(status, { status: "past_due", grace_until: "2026-11-05T00:00:00.000Z" }, now)).toBeNull();
     }
+  });
+});
+
+describe("eventOccurredAt", () => {
+  it("reads Paddle's occurred_at as an ISO string", () => {
+    expect(eventOccurredAt({ occurred_at: "2026-11-03T10:15:30.123456Z" })).toBe("2026-11-03T10:15:30.123Z");
+    expect(eventOccurredAt({ occurred_at: "2026-11-03T13:15:30+03:00" })).toBe("2026-11-03T10:15:30.000Z");
+  });
+
+  it("is null when it is missing or not a date", () => {
+    expect(eventOccurredAt({})).toBeNull();
+    expect(eventOccurredAt({ occurred_at: "yesterday" })).toBeNull();
+    expect(eventOccurredAt({ occurred_at: 12345 })).toBeNull();
+  });
+});
+
+describe("isStaleEvent", () => {
+  const applied = "2026-11-03T10:00:00.000Z";
+
+  it("an older event than the one applied is stale (an old 'active' after a newer cancel)", () => {
+    expect(isStaleEvent(applied, "2026-11-03T09:59:59.999Z")).toBe(true);
+    expect(isStaleEvent(applied, "2026-10-01T00:00:00.000Z")).toBe(true);
+  });
+
+  it("a newer event is applied", () => {
+    expect(isStaleEvent(applied, "2026-11-03T10:00:00.001Z")).toBe(false);
+  });
+
+  it("the same timestamp is not stale: a redelivery is idempotent, and two events can share a second", () => {
+    expect(isStaleEvent(applied, applied)).toBe(false);
+  });
+
+  it("when either time is unknown it cannot tell, so it applies the event", () => {
+    expect(isStaleEvent(null, applied)).toBe(false);
+    expect(isStaleEvent(undefined, applied)).toBe(false);
+    expect(isStaleEvent(applied, null)).toBe(false);
+    expect(isStaleEvent(applied, "not a date")).toBe(false);
+    expect(isStaleEvent("garbage", applied)).toBe(false);
+  });
+
+  it("compares instants, not strings or offsets", () => {
+    // 12:00+03:00 is 09:00Z - older than 10:00Z even though "12" sorts after "10".
+    expect(isStaleEvent(applied, "2026-11-03T12:00:00+03:00")).toBe(true);
   });
 });

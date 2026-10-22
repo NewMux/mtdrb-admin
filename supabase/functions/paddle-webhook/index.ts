@@ -17,9 +17,15 @@
 // webhook deliveries before relying on this for real customer traffic --
 // event payload details can still differ in ways docs don't fully cover.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { breakdownItems, readPriceConfig } from "../_shared/paddle-items.ts";
-import { mapPaddleStatus, nextGraceUntil, readSubscriptionDates } from "../_shared/paddle-subscription.ts";
+import {
+  eventOccurredAt,
+  isStaleEvent,
+  mapPaddleStatus,
+  nextGraceUntil,
+  readSubscriptionDates,
+} from "../_shared/paddle-subscription.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -62,7 +68,7 @@ Deno.serve(async (req) => {
     return new Response("Invalid signature", { status: 401 });
   }
 
-  let event: { event_type?: string; data?: Record<string, unknown> };
+  let event: { event_type?: string; occurred_at?: string; data?: Record<string, unknown> };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -81,7 +87,7 @@ Deno.serve(async (req) => {
       case "subscription.canceled":
       case "subscription.past_due":
       case "subscription.paused":
-        await syncSubscription(serviceClient, event.data);
+        await syncSubscription(serviceClient, event.data, eventOccurredAt(event));
         break;
       default:
         // transaction.* and other event types: not acted on here.
@@ -95,9 +101,17 @@ Deno.serve(async (req) => {
   return new Response("ok", { status: 200 });
 });
 
+/** The stored columns the webhook needs before it writes. */
+interface StoredSubscriptionState {
+  status: string | null;
+  grace_until: string | null;
+  paddle_event_at: string | null;
+}
+
 async function syncSubscription(
-  serviceClient: ReturnType<typeof createClient>,
+  serviceClient: SupabaseClient,
   data: Record<string, unknown>,
+  occurredAt: string | null,
 ) {
   const customData = (data.custom_data ?? {}) as Record<string, unknown>;
   const tenantId = typeof customData.tenant_id === "string" ? customData.tenant_id : undefined;
@@ -117,46 +131,61 @@ async function syncSubscription(
   // "active" (access continues) and shows up as scheduled_change.
   const { cancelAt, periodEnd } = readSubscriptionDates(data, paddleStatus);
 
-  // A failed renewal keeps access for a grace period (see
-  // 20261022150000_past_due_grace.sql). The window starts when the
-  // subscription FIRST goes past_due, so read what is stored before deciding.
-  let graceUntil: string | null = null;
-  if (paddleStatus === "past_due") {
-    const { data: existing, error: existingError } = await serviceClient
-      .from("platform_subscriptions")
-      .select("status, grace_until")
-      .eq("tenant_id", tenantId)
-      .maybeSingle();
-    if (existingError) throw existingError;
-    graceUntil = nextGraceUntil(paddleStatus, existing);
+  // What is stored now: decides whether this event is stale, and when a failed
+  // renewal's grace period started.
+  const { data: existingRow, error: existingError } = await serviceClient
+    .from("platform_subscriptions")
+    .select("status, grace_until, paddle_event_at")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  const existing = existingRow as StoredSubscriptionState | null;
+
+  // Paddle can deliver events late or out of order. An event older than the
+  // newest one already applied would roll the row back (an old "active" after a
+  // newer cancel), so ignore it. Answer 200: retrying it can never help.
+  if (isStaleEvent(existing?.paddle_event_at, occurredAt)) {
+    console.warn("paddle-webhook: ignoring a stale event", { subscription: data.id, occurredAt, applied: existing?.paddle_event_at });
+    return;
   }
 
-  const { error } = await serviceClient
-    .from("platform_subscriptions")
-    .upsert(
-      {
-        tenant_id: tenantId,
-        status,
-        ...(planTier ? { plan_tier: planTier } : {}),
-        ...(amount !== null ? { amount } : {}),
-        ...(currencyCode ? { currency: currencyCode } : {}),
-        // null = extra-location price IDs aren't configured, so the quantity
-        // can't be read: leave the stored value alone rather than zero it.
-        ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
-        current_period_end: periodEnd,
-        cancel_at: cancelAt,
-        grace_until: graceUntil,
-        payment_provider: "paddle",
-        payment_reference: typeof data.id === "string" ? data.id : null,
-        metadata: {
-          paddle_subscription_id: data.id,
-          paddle_status: paddleStatus,
-        },
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "tenant_id" },
-    );
+  // A failed renewal keeps access for a grace period (see
+  // 20261022150000_past_due_grace.sql). The window starts when the
+  // subscription FIRST goes past_due.
+  const graceUntil = nextGraceUntil(paddleStatus, existing);
 
+  const row = {
+    tenant_id: tenantId,
+    status,
+    ...(planTier ? { plan_tier: planTier } : {}),
+    ...(amount !== null ? { amount } : {}),
+    ...(currencyCode ? { currency: currencyCode } : {}),
+    // null = extra-location price IDs aren't configured, so the quantity
+    // can't be read: leave the stored value alone rather than zero it.
+    ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
+    current_period_end: periodEnd,
+    cancel_at: cancelAt,
+    grace_until: graceUntil,
+    ...(occurredAt ? { paddle_event_at: occurredAt } : {}),
+    payment_provider: "paddle",
+    payment_reference: typeof data.id === "string" ? data.id : null,
+    metadata: {
+      paddle_subscription_id: data.id,
+      paddle_status: paddleStatus,
+    },
+    updated_at: new Date().toISOString(),
+  };
+
+  // The ordering check is repeated inside the UPDATE so it is atomic: if two
+  // events race, only the newer one can win.
+  let error;
+  if (existing) {
+    let update = serviceClient.from("platform_subscriptions").update(row).eq("tenant_id", tenantId);
+    if (occurredAt) update = update.or(`paddle_event_at.is.null,paddle_event_at.lte.${occurredAt}`);
+    ({ error } = await update);
+  } else {
+    ({ error } = await serviceClient.from("platform_subscriptions").insert(row));
+  }
   if (error) throw error;
 }
 

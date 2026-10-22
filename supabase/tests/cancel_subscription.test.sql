@@ -133,6 +133,16 @@ RESET ROLE;
 SELECT test.ok((SELECT status FROM public.platform_subscriptions WHERE tenant_id = 'cccccccc-0000-0000-0000-000000000001') = 'active',
                'the rejected writes changed nothing');
 
+-- paddle_event_at (the newest webhook event applied) is service-role-only too.
+SELECT test.become_service();
+UPDATE public.platform_subscriptions SET paddle_event_at = '2026-11-03T10:00:00Z' WHERE tenant_id = 'cccccccc-0000-0000-0000-000000000001';
+RESET ROLE;
+SELECT test.ok((SELECT paddle_event_at FROM public.platform_subscriptions WHERE tenant_id = 'cccccccc-0000-0000-0000-000000000001') = '2026-11-03T10:00:00Z', 'service role records the newest applied Paddle event time');
+SELECT test.become('00000000-0000-0000-0000-0000000000c1');
+SELECT test.expect_err($q$UPDATE public.platform_subscriptions SET paddle_event_at = '2000-01-01' WHERE tenant_id = 'cccccccc-0000-0000-0000-000000000001'$q$,
+                       'P0001', 'through billing', 'a tenant admin cannot rewind it to let an old event through');
+RESET ROLE;
+
 -- --------------------------------------------------------------------------
 -- 3. A tenant can still READ its own row (including cancel_at), and only its own
 -- --------------------------------------------------------------------------

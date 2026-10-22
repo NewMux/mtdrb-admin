@@ -97,7 +97,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       let taskError = null;
       
       try {
-        console.log("TaskTable: Fetching tasks for tenant:", tenantId);
         const result = await supabase
           .from("tasks")
           .select(
@@ -107,13 +106,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
           .order("due_date", { ascending: true });
         taskData = result.data;
         taskError = result.error;
-        
-        console.log("TaskTable: Query result:", { 
-          dataCount: taskData?.length || 0, 
-          error: taskError,
-          errorCode: taskError?.code,
-          errorMessage: taskError?.message 
-        });
+
       } catch (err: unknown) {
         // Table might not exist
         if (isMissingTableError(err)) {

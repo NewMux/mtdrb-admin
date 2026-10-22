@@ -1338,7 +1338,6 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
         };
 
         setAnalyticsData(calculatedData);
-        console.log("Task analytics data loaded:", calculatedData.performanceSummary);
       } catch (error) {
         console.error("Error fetching task analytics:", error);
         // Set empty/zero data on error instead of hardcoded values

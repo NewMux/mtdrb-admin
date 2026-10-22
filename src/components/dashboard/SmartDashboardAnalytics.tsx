@@ -9,7 +9,6 @@ import {
   FiCalendar,
   FiStar,
   FiTarget,
-  FiZap,
 } from "react-icons/fi";
 import { SmartAnalyticsHeader, PerformanceMetricsCard } from "../ui";
 import { supabase } from "../../supabaseClient";
@@ -30,7 +29,8 @@ interface DashboardMetric {
   current: number;
   /** null = there is no earlier period to compare with (not "zero"). */
   previous: number | null;
-  target: number;
+  /** null = the gym has not set a target for this KPI: none is invented. */
+  target: number | null;
   trend: "up" | "down" | "stable";
   format?: "currency" | "percentage" | "number" | "decimal";
   suffix?: string;
@@ -64,6 +64,13 @@ export default function SmartDashboardAnalytics({
   const [loadError, setLoadError] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetric[]>([]);
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  // The KPI targets this gym saved with "Set Targets" on the dashboard.
+  const [targets, setTargets] = useState<{
+    revenue?: number;
+    activeMembers?: number;
+    classAttendance?: number;
+    memberSatisfaction?: number;
+  } | null>(null);
   const [revenueData, setRevenueData] = useState({
     current: 0,
     previous: 0,
@@ -108,10 +115,13 @@ export default function SmartDashboardAnalytics({
 
       const { data: settingsRow } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .maybeSingle();
       setCurrency(settingsRow?.currency || DEFAULT_CURRENCY);
+      const savedTargets =
+        (settingsRow?.metadata as { dashboardTargets?: NonNullable<typeof targets> } | null)?.dashboardTargets ?? null;
+      setTargets(savedTargets);
 
       // Revenue from paid invoices (gross, like the rest of the app). Paged so a
       // money total does not stop growing at PostgREST's 1000-row cap.
@@ -213,21 +223,13 @@ export default function SmartDashboardAnalytics({
       const retentionRate =
         totalMembers > 0 ? Math.round((currentActiveMembers / totalMembers) * 100) : 0;
 
-      // Calculate gym health score (composite metric)
-      const revenueScore = Math.min(100, (currentRevenue / 50000) * 100);
-      const memberScore = Math.min(100, (currentActiveMembers / 1300) * 100);
-      const attendanceScore = currentAttendance;
-      const healthScore = Math.round(
-        (revenueScore * 0.3 + memberScore * 0.3 + attendanceScore * 0.4)
-      );
-
       // Build metrics array
       const metrics: DashboardMetric[] = [
         {
           name: t("dashboard.totalRevenue"),
           current: currentRevenue,
           previous: previousRevenue,
-          target: 50000,
+          target: savedTargets?.revenue || null,
           trend: currentRevenue >= previousRevenue ? "up" : "down",
           format: "currency",
           icon: <FiDollarSign className="h-5 w-5" />,
@@ -237,7 +239,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.activeMembers"),
           current: currentActiveMembers,
           previous: previousActiveMembers,
-          target: 1300,
+          target: savedTargets?.activeMembers || null,
           trend: currentActiveMembers >= previousActiveMembers ? "up" : "down",
           format: "number",
           icon: <FiUsers className="h-5 w-5" />,
@@ -247,7 +249,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.classAttendance"),
           current: currentAttendance,
           previous: previousAttendance,
-          target: 85,
+          target: savedTargets?.classAttendance || null,
           trend: currentAttendance >= previousAttendance ? "up" : "down",
           format: "percentage",
           icon: <FiCalendar className="h-5 w-5" />,
@@ -257,7 +259,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.trainerRating"),
           current: Math.round(avgRating * 10) / 10,
           previous: null, // ratings are stored as a single current value: there is no history to compare
-          target: 4.8,
+          target: savedTargets?.memberSatisfaction || null,
           trend: "stable",
           format: "decimal",
           icon: <FiStar className="h-5 w-5" />,
@@ -267,21 +269,11 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.memberRetention"),
           current: retentionRate,
           previous: null, // no earlier snapshot of retention is kept
-          target: 90,
+          target: null, // retention has no target setting
           trend: "stable",
           format: "percentage",
           icon: <FiTarget className="h-5 w-5" />,
           color: "red",
-        },
-        {
-          name: t("dashboard.gymHealthScore"),
-          current: healthScore,
-          previous: null, // a composite of the above: no history either
-          target: 95,
-          trend: "stable",
-          format: "percentage",
-          icon: <FiZap className="h-5 w-5" />,
-          color: "indigo",
         },
       ];
 
@@ -295,7 +287,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.totalRevenue"),
           current: 0,
           previous: 0,
-          target: 0,
+          target: null,
           trend: "stable",
           format: "currency",
           icon: <FiDollarSign className="h-5 w-5" />,
@@ -305,7 +297,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.activeMembers"),
           current: 0,
           previous: 0,
-          target: 0,
+          target: null,
           trend: "stable",
           format: "number",
           icon: <FiUsers className="h-5 w-5" />,
@@ -315,7 +307,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.classAttendance"),
           current: 0,
           previous: 0,
-          target: 85,
+          target: null,
           trend: "stable",
           format: "percentage",
           icon: <FiCalendar className="h-5 w-5" />,
@@ -325,7 +317,7 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.trainerRating"),
           current: 0,
           previous: 0,
-          target: 4.8,
+          target: null,
           trend: "stable",
           format: "decimal",
           icon: <FiStar className="h-5 w-5" />,
@@ -335,21 +327,11 @@ export default function SmartDashboardAnalytics({
           name: t("dashboard.memberRetention"),
           current: 0,
           previous: 0,
-          target: 90,
+          target: null,
           trend: "stable",
           format: "percentage",
           icon: <FiTarget className="h-5 w-5" />,
           color: "red",
-        },
-        {
-          name: t("dashboard.gymHealthScore"),
-          current: 0,
-          previous: 0,
-          target: 95,
-          trend: "stable",
-          format: "percentage",
-          icon: <FiZap className="h-5 w-5" />,
-          color: "indigo",
         },
       ]);
     } finally {
@@ -437,14 +419,16 @@ export default function SmartDashboardAnalytics({
                 {formatCurrency(revenueData.previous, currency)}
               </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div
-                className="h-2 bg-green-500 dark:bg-green-400 rounded-full"
-                style={{
-                  width: `${Math.min(100, (revenueData.current / 50000) * 100)}%`,
-                }}
-              ></div>
-            </div>
+            {targets?.revenue ? (
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div
+                  className="h-2 bg-green-500 dark:bg-green-400 rounded-full"
+                  style={{
+                    width: `${Math.min(100, (revenueData.current / targets.revenue) * 100)}%`,
+                  }}
+                ></div>
+              </div>
+            ) : null}
             <div
               className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm ${
                 revenueData.current >= revenueData.previous
@@ -494,14 +478,16 @@ export default function SmartDashboardAnalytics({
                 +{memberData.newCount}
               </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div
-                className="h-2 bg-blue-500 dark:bg-blue-400 rounded-full"
-                style={{
-                  width: `${Math.min(100, (memberData.current / 1300) * 100)}%`,
-                }}
-              ></div>
-            </div>
+            {targets?.activeMembers ? (
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div
+                  className="h-2 bg-blue-500 dark:bg-blue-400 rounded-full"
+                  style={{
+                    width: `${Math.min(100, (memberData.current / targets.activeMembers) * 100)}%`,
+                  }}
+                ></div>
+              </div>
+            ) : null}
             <div
               className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2 text-sm ${
                 memberData.current >= memberData.previous
