@@ -194,8 +194,8 @@ SELECT test.ok((SELECT array_agg(c.table_name::text ORDER BY c.table_name::text)
                 JOIN pg_class k ON k.relname = c.table_name AND k.relnamespace = 'public'::regnamespace AND k.relkind = 'r'
                 WHERE c.table_schema = 'public' AND c.column_name = 'tenant_id'
                   AND NOT EXISTS (SELECT 1 FROM pg_policies p WHERE p.schemaname = 'public' AND p.tablename = c.table_name))
-               = ARRAY['legacy_unbilled_tenants', 'platform_audit_log', 'platform_suspensions']::text[],
-               'the only closed-by-design tables are the platform console''s own and the legacy-gym list (a new one needs a decision, not an accident)');
+               = ARRAY['attendance_device_keys', 'legacy_unbilled_tenants', 'platform_audit_log', 'platform_suspensions']::text[],
+               'the only closed-by-design tables are the platform console''s own, the legacy-gym list and the device-key hashes (a new one needs a decision, not an accident)');
 
 SELECT test.ok(NOT EXISTS (
   SELECT 1 FROM pg_policies p
