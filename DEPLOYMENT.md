@@ -549,6 +549,85 @@ member, schedule a class, create an invoice). Each tick is computed from real
 data, not stored; the card hides itself when all five are done or when
 dismissed (remembered per gym in that browser only).
 
+## Go-live runbook (sandbox first, then live)
+
+Prices decided: **USD 49 (Starter) / 89 (Pro) a month; extra location 25 / 40**,
+monthly only. Paddle's sandbox and live accounts are separate: do every step in
+the sandbox, run the smoke test, then repeat steps 3-6 for live.
+
+1. **Database (staging Supabase branch first, never production).** Run the
+   grandfathered-gyms query under "Self-serve sign-up", then apply every file in
+   `supabase/migrations/` in filename order (`supabase db push`). Run
+   `scripts/run-sql-tests.sh` against a throwaway Postgres to be sure the repo
+   itself is green.
+2. **Auth.** Supabase dashboard: Confirm email on; Site URL and `<url>/welcome`
+   redirect; custom SMTP; Turnstile captcha with the secret key (and
+   `VITE_TURNSTILE_SITE_KEY` in step 6 - both or neither).
+3. **Create the Paddle catalog** (in the sandbox, with the sandbox API key
+   - sandbox keys contain `_sdbx`):
+
+   ```
+   PADDLE_STARTER_PRICE=49 PADDLE_PRO_PRICE=89 \
+   PADDLE_STARTER_EXTRA_PRICE=25 PADDLE_PRO_EXTRA_PRICE=40 \
+   PADDLE_API_KEY=pdl_sdbx_... node scripts/seed-paddle-catalog.mjs --dry-run
+   ```
+
+   Read the dry run, then run it again without `--dry-run`. It prints the four
+   monthly price IDs; running it twice duplicates the products. In the dashboard
+   check: no trial period, the add-on prices allow quantity 1-50, and the
+   currency is USD. Decide tax-exclusive or tax-inclusive pricing once
+   (Paddle → Checkout / tax settings).
+4. **Webhook destination** (Paddle → Developer tools → Notifications): URL
+   `https://<project-ref>.supabase.co/functions/v1/paddle-webhook`, subscribed to
+   `subscription.created`, `.updated`, `.activated`, `.canceled`, `.past_due`,
+   `.paused`, `.resumed`. Copy its signing secret. Also create a **client-side
+   token** (Developer tools → Authentication) and **approve your app's domain**
+   for checkout (Checkout settings).
+5. **Edge Function secrets and deploy.**
+
+   ```
+   supabase secrets set \
+     PADDLE_API_KEY=... PADDLE_ENVIRONMENT=sandbox PADDLE_WEBHOOK_SECRET=... \
+     PADDLE_STARTER_PRICE_ID=pri_... PADDLE_PRO_PRICE_ID=pri_... \
+     PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID=pri_... PADDLE_PRO_EXTRA_LOCATION_PRICE_ID=pri_... \
+     APP_ALLOWED_ORIGINS=https://your-app.example PLATFORM_ALLOWED_ORIGINS=https://your-app.example
+   supabase functions deploy paddle-webhook paddle-manage-locations \
+     paddle-cancel-subscription delete-account platform-invite-gym
+   ```
+
+6. **Frontend env (Vercel).** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+   `VITE_APP_URL`, `VITE_PADDLE_ENVIRONMENT=sandbox`,
+   `VITE_PADDLE_CLIENT_TOKEN=test_...`, `VITE_PADDLE_STARTER_PRICE_ID`,
+   `VITE_PADDLE_PRO_PRICE_ID`, `VITE_PLATFORM_CURRENCY=USD`,
+   `VITE_STARTER_PRICE=49`, `VITE_PRO_PRICE=89`,
+   `VITE_STARTER_EXTRA_LOCATION_PRICE=25`, `VITE_PRO_EXTRA_LOCATION_PRICE=40`,
+   `VITE_TURNSTILE_SITE_KEY`. Remove any older BHD values and any
+   `VITE_DEFAULT_*` region values. The build fails with a clear message if
+   something above is missing or the currency is one Paddle can't bill in.
+7. **Smoke test** (a real browser, sandbox card `4242 4242 4242 4242`). After each
+   step, look at the **Result** column; a mismatch is the bug to chase.
+
+   | Do | Expect |
+   |---|---|
+   | Sign up with a fresh email | "Check your email" panel, resend works after 60 s |
+   | Open the email link | `/welcome` creates the gym, lands on `/subscribe` |
+   | Subscribe to Starter | Paddle overlay shows USD 49 (plus tax per your setting); after paying, `platform_subscriptions` has `active`, `starter`, `amount 49`, `currency USD`, and the dashboard opens |
+   | Wizard step 1 | Country suggests currency, timezone and tax; finishing saves them |
+   | Branches → add an extra location | Paddle subscription shows two items (plan x1, extra x1); `extra_locations = 1`; a second branch can now be created |
+   | Settings → Billing → Cancel | Paddle shows it set to cancel at period end; access continues; "Keep subscription" clears it |
+   | Pay with a failing card (`4000 0000 0000 0341`) at renewal / dashboard "retry" | Status `past_due`, banner with a 7-day grace, access continues |
+   | Another browser: second gym, try to read gym 1's ids through the API | Nothing returned (RLS) |
+   | Settings → Data & privacy → delete the gym | Subscription cancelled in Paddle, gym and files gone, sign-in lands on the landing page |
+
+   The sandbox can also advance time (Paddle → simulate) to test a renewal and
+   the end of a cancelled period.
+8. **Go live.** In Paddle's live account repeat steps 3-5 with the live API key
+   (`PADDLE_ENVIRONMENT=production`), a live client token (`live_...`), the
+   live webhook secret and the live price IDs; in Vercel set
+   `VITE_PADDLE_ENVIRONMENT=production` and the live token and price IDs. Make one
+   real purchase with your own card, refund it in Paddle, and cancel it.
+   Remove the sandbox values from production environments.
+
 ## Worldwide launch checklist
 
 Things the code cannot do for you, in the order I would do them.

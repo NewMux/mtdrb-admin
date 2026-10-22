@@ -24,8 +24,8 @@ export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
   readEnv("VITE_PLATFORM_CURRENCY") || "USD";
-export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 10);
-export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15);
+export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 25);
+export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 40);
 
 export type SubscriptionPlan = {
   id: "starter" | "pro";
@@ -43,14 +43,14 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "starter",
     name: readEnv("VITE_STARTER_PLAN_NAME") || "Starter",
-    price: readNumber("VITE_STARTER_PRICE", 20),
+    price: readNumber("VITE_STARTER_PRICE", 49),
     period: "month",
     currency: PLATFORM_CURRENCY,
     description: "Perfect for single-location gyms",
     features: [
       "All core features",
       "Single location",
-      `+${readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 10)} ${PLATFORM_CURRENCY}/month per extra location`,
+      `+${readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 25)} ${PLATFORM_CURRENCY}/month per extra location`,
       "Basic analytics",
       "Email support",
     ],
@@ -60,13 +60,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "pro",
     name: readEnv("VITE_PRO_PLAN_NAME") || "Pro",
-    price: readNumber("VITE_PRO_PRICE", 35),
+    price: readNumber("VITE_PRO_PRICE", 89),
     period: "month",
     currency: PLATFORM_CURRENCY,
     description: "Everything in Starter & scale your gym",
     features: [
       "Everything in Starter",
-      `+${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 15)} ${PLATFORM_CURRENCY}/month per extra location`,
+      `+${readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 40)} ${PLATFORM_CURRENCY}/month per extra location`,
       "Unlimited members",
       "Advanced analytics",
       "Priority support",

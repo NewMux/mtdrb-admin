@@ -50,6 +50,13 @@ beforeEach(() => {
   invoke.mockReset();
 });
 
+// The displayed prices come from env defaults; pin them so this test says what it means.
+vi.mock("../config/runtimeConfig", async (original) => ({
+  ...(await original<typeof import("../config/runtimeConfig")>()),
+  STARTER_EXTRA_LOCATION_PRICE: 10,
+  PRO_EXTRA_LOCATION_PRICE: 15,
+}));
+
 describe("parseLocationUsage", () => {
   it("reads a well-formed payload", () => {
     expect(parseLocationUsage(raw)).toEqual(usage());
