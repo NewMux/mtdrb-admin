@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,7 +8,7 @@ import { isValidRole } from "../types/roles";
 import { withTimeout } from "../utils/withTimeout";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import { isPlatformAdminPath } from "../utils/platformAdmin";
-import { needsGymSetupRedirect } from "../utils/ensureGym";
+import { hasSignupGymName, needsGymSetupRedirect } from "../utils/ensureGym";
 import {
   AuthContext,
   type AuthErrorState,
@@ -21,6 +21,28 @@ const DEFAULT_ERROR: AuthErrorState = {
 };
 
 /**
+ * True when two auth users are the same session state. supabase-js re-emits
+ * SIGNED_IN with a freshly built user object every time the tab regains focus
+ * and TOKEN_REFRESHED hourly; storing each one made every consumer with `user`
+ * in an effect dependency list reload its data ("the app keeps refreshing").
+ */
+function sameAuthUser(a: User | null, b: User | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.id === b.id && a.email === b.email && a.updated_at === b.updated_at;
+}
+
+function sameMetadata(a: UserMetadata | null, b: UserMetadata): boolean {
+  return (
+    !!a &&
+    a.tenant_id === b.tenant_id &&
+    a.paid === b.paid &&
+    a.role === b.role &&
+    a.subscription_tier === b.subscription_tier
+  );
+}
+
+/**
  * Provides authentication state and actions to the application.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -31,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  // The user the last SIGNED_IN redirect decision was made for. supabase-js
+  // fires SIGNED_IN again on every tab refocus; those must not navigate.
+  const signedInUserId = useRef<string | null>(null);
 
   const handleAuthError = useCallback((error: unknown) => {
     const authError = error as AuthError;
@@ -120,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription_tier: tier,
     };
 
-    setUserMetadata(metadata);
+    setUserMetadata((current) => (sameMetadata(current, metadata) ? current : metadata));
     setTenantId(metadata.tenant_id);
 
     // Compatibility mirror for older UI filters. This is local React state,
@@ -128,6 +153,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // the membership/subscription tables and all writes remain RLS-protected.
     setUser((currentUser) => {
       if (!currentUser || currentUser.id !== user.id) return currentUser;
+      const mirrored = currentUser.user_metadata;
+      if (
+        mirrored?.tenant_id === tId &&
+        mirrored?.role === validatedRole &&
+        mirrored?.paid === isPaid &&
+        mirrored?.subscription_tier === tier
+      ) {
+        return currentUser;
+      }
       return {
         ...currentUser,
         user_metadata: {
@@ -211,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      setUser(user);
+      setUser((current) => (sameAuthUser(current, user) ? current : user));
       const metadata = await handleUserMetadata(user);
 
       // Signed in but no gym yet (they signed up and confirmed their email
@@ -219,6 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (
         user &&
         !metadata &&
+        hasSignupGymName(user) &&
         needsGymSetupRedirect(location.pathname) &&
         !isPlatformAdminPath(location.pathname)
       ) {
@@ -300,13 +335,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const sessionUser = session?.user ?? null;
 
-      setUser(sessionUser);
+      setUser((current) => (sameAuthUser(current, sessionUser) ? current : sessionUser));
       const metadata = await handleUserMetadata(sessionUser);
       setIsLoading(false);
 
       switch (event) {
         case "SIGNED_IN":
           if (!sessionUser) break;
+
+          // A repeat SIGNED_IN for the user we already routed (tab refocus,
+          // session recovery) refreshes state above but must not move them: it
+          // used to send a paid user who skipped onboarding back to it, and an
+          // unpaid one back to /subscribe, every time they switched tabs.
+          if (signedInUserId.current === sessionUser.id) break;
+          signedInUserId.current = sessionUser.id;
 
           if (
             location.pathname === "/signup" ||
@@ -326,7 +368,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             break;
           }
 
-          if (!metadata && needsGymSetupRedirect(window.location.pathname)) {
+          if (!metadata && hasSignupGymName(sessionUser) && needsGymSetupRedirect(window.location.pathname)) {
             navigate("/welcome");
             break;
           }
@@ -350,6 +392,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case "SIGNED_OUT":
+          signedInUserId.current = null;
           navigate("/");
           break;
 
@@ -601,19 +644,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [handleAuthError, handleUserMetadata]);
 
-  const value = {
-    user,
-    tenantId,
-    isLoading,
-    error,
-    userMetadata,
-    signIn,
-    signUp,
-    signOut,
-    checkAuth,
-    hasPermission,
-    refreshSession,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      tenantId,
+      isLoading,
+      error,
+      userMetadata,
+      signIn,
+      signUp,
+      signOut,
+      checkAuth,
+      hasPermission,
+      refreshSession,
+    }),
+    [
+      user,
+      tenantId,
+      isLoading,
+      error,
+      userMetadata,
+      signIn,
+      signUp,
+      signOut,
+      checkAuth,
+      hasPermission,
+      refreshSession,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

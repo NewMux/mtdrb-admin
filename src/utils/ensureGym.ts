@@ -31,6 +31,17 @@ export function gymNameFor(user: GymSetupUser): string {
 }
 
 /**
+ * True for an account created through the signup form, which records the gym
+ * name it asked for. Only those are sent to /welcome to get a gym: the platform
+ * owner's login and invited admins have none (or already have a gym) and must
+ * not have one created for them just by signing in.
+ */
+export function hasSignupGymName(user: GymSetupUser): boolean {
+  const raw = user.user_metadata?.gym_name;
+  return typeof raw === "string" && raw.trim().length > 0;
+}
+
+/**
  * Makes sure the signed-in user has a gym (tenant + admin membership) and
  * returns its id. Safe to call repeatedly: an existing membership is reused, so
  * a retry after a half-finished attempt - or a second tab - never creates a

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   ensureGym,
   gymNameFor,
+  hasSignupGymName,
   needsGymSetupRedirect,
   DEFAULT_GYM_NAME,
   type GymSetupClient,
@@ -86,5 +87,14 @@ describe("needsGymSetupRedirect", () => {
     for (const p of ["/dashboard", "/members", "/subscribe", "/subscribe/callback", "/onboarding"]) {
       expect(needsGymSetupRedirect(p)).toBe(true);
     }
+  });
+});
+
+describe("hasSignupGymName", () => {
+  it("is true only for accounts that came through the signup form", () => {
+    expect(hasSignupGymName(user)).toBe(true);
+    expect(hasSignupGymName({ id: "owner" })).toBe(false);
+    expect(hasSignupGymName({ id: "owner", user_metadata: { gym_name: "  " } })).toBe(false);
+    expect(hasSignupGymName({ id: "owner", user_metadata: { gym_name: 7 } })).toBe(false);
   });
 });
