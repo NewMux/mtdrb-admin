@@ -454,6 +454,11 @@ export function AddExpenseModal({
                   <option value="Maintenance">{t("billing.maintenance", "الصيانة والتشغيل")}</option>
                   <option value="Software">{t("billing.software", "البرامج والأنظمة")}</option>
                   <option value="Office Supplies">{t("billing.officeSupplies", "مستلزمات مكتبية")}</option>
+                  {gymConfig.expenseCategories.map((name) => (
+                    <option key={`custom-${name}`} value={name}>
+                      {name}
+                    </option>
+                  ))}
                   <option value="Other">{t("billing.other", "مصروفات أخرى")}</option>
                 </AppleSelect>
               </div>

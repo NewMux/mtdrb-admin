@@ -253,7 +253,7 @@ describe("buildSettingsWrite", () => {
   it("round-trips through resolveGymConfig", () => {
     const w = buildSettingsWrite(input(), {}, now);
     const c = resolveGymConfig(w, defaults);
-    expect(configToInput(c)).toEqual(input());
+    expect(configToInput(c)).toEqual({ ...input(), expenseCategories: [] });
     expect(c.configured).toBe(true);
   });
 
@@ -323,7 +323,7 @@ describe("several taxes", () => {
     const c = resolveGymConfig(w, defaults);
     expect(c.tax.rate).toBe(21);
     expect(c.tax.name).toBe("Service charge + VAT");
-    expect(configToInput(c)).toEqual(two);
+    expect(configToInput(c)).toEqual({ ...two, expenseCategories: [] });
     expect(taxRateToApply(c)).toBe(21);
   });
 
@@ -394,5 +394,39 @@ describe("buildTaxBreakdown", () => {
 
   it("is null when no tax was charged", () => {
     expect(buildTaxBreakdown(two, 0, 0, "USD")).toBeNull();
+  });
+});
+
+describe("expense categories", () => {
+  it("are stored under metadata.expenses and read back, keeping other keys", () => {
+    const w = buildSettingsWrite(input({ expenseCategories: ["Towels", "Laundry"] }), { expenses: { other: 1 } }, new Date("2026-10-25T00:00:00Z"));
+    expect(w.metadata.expenses).toEqual({ other: 1, categories: ["Towels", "Laundry"] });
+    expect(resolveGymConfig(w, defaults).expenseCategories).toEqual(["Towels", "Laundry"]);
+  });
+
+  it("are left alone when the input does not mention them", () => {
+    const w = buildSettingsWrite(input(), { expenses: { categories: ["Towels"] } }, new Date("2026-10-25T00:00:00Z"));
+    expect(w.metadata.expenses).toEqual({ categories: ["Towels"] });
+  });
+
+  it("are cleaned when read: trimmed, deduplicated, no built-ins, no junk", () => {
+    const c = resolveGymConfig(
+      { metadata: { expenses: { categories: [" Towels ", "towels", "Rent", "", 5, "x".repeat(41), "Spa  day"] } } },
+      defaults,
+    );
+    expect(c.expenseCategories).toEqual(["Towels", "Spa day"]);
+  });
+
+  it("an older gym with none has an empty list", () => {
+    expect(resolveGymConfig(null, defaults).expenseCategories).toEqual([]);
+  });
+
+  it("are validated before saving", () => {
+    expect(validateGymConfig(input({ expenseCategories: ["Towels"] }))).toEqual({});
+    expect(validateGymConfig(input({ expenseCategories: ["Rent"] })).expenseCategories).toBe("category_duplicate");
+    expect(validateGymConfig(input({ expenseCategories: ["Towels", "towels"] })).expenseCategories).toBe("category_duplicate");
+    expect(validateGymConfig(input({ expenseCategories: ["  "] })).expenseCategories).toBe("category_empty");
+    expect(validateGymConfig(input({ expenseCategories: ["x".repeat(41)] })).expenseCategories).toBe("category_too_long");
+    expect(validateGymConfig(input({ expenseCategories: Array.from({ length: 31 }, (_, i) => `C${i}`) })).expenseCategories).toBe("category_count");
   });
 });

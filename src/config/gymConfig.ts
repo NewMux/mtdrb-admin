@@ -13,6 +13,7 @@
 // dashboardTargets) and other keys are never dropped.
 
 import { isValidCurrencyCode, isValidTimezone, type RegionPreset } from "./regions";
+import { cleanExpenseCategories, validateExpenseCategories, type ExpenseCategoryError } from "./expenseCategories";
 import {
   allocateTax,
   combinedRate,
@@ -65,6 +66,8 @@ export interface GymConfig {
   timezone: string;
   tax: TaxConfig;
   business: BusinessProfile;
+  /** Expense categories the owner added to the built-in ones (see config/expenseCategories.ts) */
+  expenseCategories: string[];
   /** True once the owner has saved this section (setup.configured_at is set) */
   configured: boolean;
 }
@@ -76,6 +79,8 @@ export interface GymConfigInput {
   timezone: string;
   tax: TaxSettings;
   business: BusinessProfile;
+  /** Left out = keep whatever is stored. */
+  expenseCategories?: string[];
 }
 
 export interface GymConfigDefaults {
@@ -158,6 +163,7 @@ export function resolveGymConfig(
       email: str(business.email),
       website: str(business.website),
     },
+    expenseCategories: cleanExpenseCategories(obj(meta.expenses).categories),
     configured: typeof setup.configured_at === "string" && setup.configured_at.length > 0,
   };
 }
@@ -180,7 +186,8 @@ export type ConfigErrorCode =
   | "tax_combined_precision"
   | "tax_number_too_long"
   | "email_invalid"
-  | "website_invalid";
+  | "website_invalid"
+  | ExpenseCategoryError;
 
 export type ConfigErrors = Partial<Record<string, ConfigErrorCode>>;
 
@@ -221,6 +228,11 @@ export function validateGymConfig(input: GymConfigInput): ConfigErrors {
     }
   }
   if (input.tax.number.trim().length > MAX_TAX_NUMBER) errors.taxNumber = "tax_number_too_long";
+
+  if (input.expenseCategories !== undefined) {
+    const problem = validateExpenseCategories(input.expenseCategories);
+    if (problem) errors.expenseCategories = problem;
+  }
 
   const email = input.business.email.trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "email_invalid";
@@ -285,6 +297,14 @@ export function buildSettingsWrite(
         email: input.business.email.trim(),
         website: input.business.website.trim(),
       },
+      ...(input.expenseCategories === undefined
+        ? {}
+        : {
+            expenses: {
+              ...obj(meta.expenses),
+              categories: cleanExpenseCategories(input.expenseCategories),
+            },
+          }),
       setup: {
         ...setup,
         configured_at:
@@ -304,6 +324,7 @@ export function configToInput(config: GymConfig): GymConfigInput {
     timezone: config.timezone,
     tax: { enabled, components: components.map((c) => ({ ...c })), number, pricesIncludeTax },
     business: { ...config.business },
+    expenseCategories: [...config.expenseCategories],
   };
 }
 

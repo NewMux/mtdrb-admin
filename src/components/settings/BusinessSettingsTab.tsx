@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import GymConfigForm from "./GymConfigForm";
+import ExpenseCategoriesEditor from "./ExpenseCategoriesEditor";
 import { useGymConfig } from "../../contexts/gym-config-context";
 import { configToInput, type ConfigErrors, type GymConfigInput } from "../../config/gymConfig";
 
@@ -68,6 +69,12 @@ export default function BusinessSettingsTab() {
         </div>
       </div>
       <GymConfigForm value={draft} onChange={setDraft} errors={errors} disabled={saving || loading} />
+      <ExpenseCategoriesEditor
+        value={draft.expenseCategories ?? []}
+        onChange={(expenseCategories) => setDraft({ ...draft, expenseCategories })}
+        errorCode={errors.expenseCategories}
+        disabled={saving || loading}
+      />
     </div>
   );
 }

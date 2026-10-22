@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import {
+  FiRefreshCw,
   FiEdit,
   FiTrash2,
   FiEye,
@@ -55,6 +56,8 @@ interface SmartMemberTableProps {
   onEdit: (member: Member) => void;
   onDelete: (member: Member) => void;
   onCancelMembership?: (member: Member) => void;
+  /** Put the member on a plan, or renew them. */
+  onChangePlan?: (member: Member) => void;
   onView: (member: Member) => void;
   onAssignTrainer: (member: Member) => void;
   loading?: boolean;
@@ -503,6 +506,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
   onEdit,
   onDelete,
   onCancelMembership,
+  onChangePlan,
   onView,
   loading = false,
   // Pagination props with defaults
@@ -655,6 +659,17 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                             title={t("members.editMember")}
                           >
                             <FiEdit className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {canEdit && onChangePlan && (
+                          <button
+                            onClick={() => onChangePlan(member)}
+                            className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                            title={t("membershipPlans.changePlan")}
+                            aria-label={t("membershipPlans.changePlan")}
+                          >
+                            <FiRefreshCw className="w-4 h-4" />
                           </button>
                         )}
 

@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { fetchPlanMemberCounts } from "../api/membershipPlans";
 import { UnifiedModal } from "../components/ui/UnifiedModal";
 import { AppleInput, AppleTextarea, AppleSelect } from "../components/AppleStyleModal";
 
@@ -158,6 +159,10 @@ export default function Plans() {
 
       if (error) throw error;
 
+      // Members currently on each plan, counted by the database (the stored
+      // plans.members_count column is not maintained).
+      const counts = await fetchPlanMemberCounts().catch(() => ({}) as Record<string, number>);
+
       setPlans(
         (data || []).map((row) => ({
           id: row.id,
@@ -167,7 +172,7 @@ export default function Plans() {
           duration: row.duration,
           features: Array.isArray(row.features) ? (row.features as string[]) : [],
           status: row.status === "inactive" ? "inactive" : "active",
-          members_count: row.members_count ?? 0,
+          members_count: counts[row.id] ?? 0,
           created_at: row.created_at,
         })),
       );

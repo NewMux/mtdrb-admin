@@ -582,6 +582,45 @@ member, schedule a class, create an invoice). Each tick is computed from real
 data, not stored; the card hides itself when all five are done or when
 dismissed (remembered per gym in that browser only).
 
+## Membership plans and expense categories
+
+**Membership plans.** The Plans page (admin) defines plans: name, price and
+duration in days. Members are now actually put on them:
+
+- **Add Member** has a "Membership plan" section (shown once the gym has an
+  active plan): choose a plan, optionally change the price (a discount, or 0).
+- **Renew or change plan** (the refresh icon on a member row, employee and
+  above) puts an existing member on a plan. If they are still paid up, the
+  default is to continue from the day after their current end date, so no paid
+  day is lost; a lapsed member starts today and is reactivated. A suspended
+  member keeps their suspension.
+- A plan of N days gives exactly N days of access: start to start + N - 1. The
+  expiry date is the last day the member may enter (the door readers use it).
+  "Today" and every date here are in the gym's own timezone.
+- It all runs in `assign_member_plan()` (migration
+  `20261025090000_membership_plans.sql`), which sets `members.plan_id`,
+  `membership_type` (the plan's name), `expiry_date` and the price paid
+  (`metadata.membership_price`). A plan must be active and belong to the gym;
+  deleting a plan just leaves its members without one.
+- The Plans page's "members on this plan" now comes from `plan_member_counts()`
+  (active/trial members whose expiry has not passed); the old stored
+  `plans.members_count` column is no longer used.
+- **Not included:** assigning a plan does not create an invoice or take a
+  payment - record that in Billing as before. **Apply the migration BEFORE
+  deploying the frontend** (the dialog calls the new function).
+
+**Expense categories.** Settings > Business & tax has an "Expense categories"
+editor: owners add categories of their own (up to 30, 40 characters each) next
+to the standard ones (Salaries, Rent, Utilities, ...). They are saved in
+`gym_settings.metadata.expenses.categories` (no migration; `src/config/
+gymConfig.ts` reads and writes them) and an expense stores the category as
+plain text, so reports group by the name. Removing a custom category does not
+change expenses that already use it.
+
+**Still fixed by design:** staff roles (admin / employee / trainer - they decide
+what the database allows), the payment-method list (accounting and reports
+depend on it), and the interface languages (English and Arabic).
+
 ## Go-live runbook (sandbox first, then live)
 
 Prices decided: **USD 49 (Starter) / 89 (Pro) a month; extra location 25 / 40**,

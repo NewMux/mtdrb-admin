@@ -34,6 +34,8 @@ import {
   ImportMembersModal,
   AssignTrainerModal,
 } from "../components/members/modals";
+import { assignMemberPlan } from "../api/membershipPlans";
+import MemberPlanModal from "../components/members/modals/MemberPlanModal";
 
 // Import hooks
 // Removed mock members - using real data from Supabase
@@ -656,6 +658,12 @@ const Members: React.FC = () => {
     [openAssignTrainerModal, showError, members],
   );
 
+  const [planMember, setPlanMember] = React.useState<{ id: string; name: string; planEnd: string } | null>(null);
+  const handleChangePlan = React.useCallback(
+    (member: { id: string; name: string; planEnd: string }) => setPlanMember(member),
+    [],
+  );
+
   const handleCancelMembership = React.useCallback(
     (member: { id: string }) => {
       try {
@@ -730,7 +738,7 @@ const Members: React.FC = () => {
         };
 
         // Insert the member into Supabase
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("members")
           .insert(memberPayload as Database["public"]["Tables"]["members"]["Insert"])
           .select()
@@ -740,9 +748,24 @@ const Members: React.FC = () => {
           throw error;
         }
 
+        // Put the new member on the chosen plan: the database sets the expiry
+        // date from the plan's length in the gym's own calendar.
+        let planError: string | null = null;
+        if (memberData.plan_id && data?.id) {
+          try {
+            await assignMemberPlan(data.id, memberData.plan_id, { price: memberData.plan_price ?? null });
+          } catch (planFailure) {
+            planError = planFailure instanceof Error ? planFailure.message : "unknown error";
+          }
+        }
+
         // Success - refresh members list and show toast
         setRefreshKey((prev) => prev + 1);
-        showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
+        if (planError) {
+          showError("Plan not applied", t("membershipPlans.planAddedFailed", { message: planError }));
+        } else {
+          showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
+        }
         handleAddMemberSuccess();
       } catch (error: unknown) {
         console.error("Failed to add member:", error);
@@ -755,7 +778,7 @@ const Members: React.FC = () => {
         setModalLoading(false);
       }
     },
-    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess],
+    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess, t],
   );
 
   // Handle saving an edited member (persists EditMemberModal's form data)
@@ -908,6 +931,7 @@ const Members: React.FC = () => {
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onCancelMembership={handleCancelMembership}
+                onChangePlan={handleChangePlan}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
@@ -982,6 +1006,7 @@ const Members: React.FC = () => {
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onCancelMembership={handleCancelMembership}
+                onChangePlan={handleChangePlan}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
@@ -1166,6 +1191,18 @@ const Members: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      {planMember && (
+        <MemberPlanModal
+          isOpen
+          member={planMember}
+          onClose={() => setPlanMember(null)}
+          onDone={() => {
+            setPlanMember(null);
+            setRefreshKey((prev) => prev + 1);
+          }}
+        />
+      )}
 
       {/* Filter Modal */}
       <AdvancedFilterModal
