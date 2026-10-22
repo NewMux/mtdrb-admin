@@ -49,6 +49,8 @@ describe("Legal pages", () => {
     expect(text).toMatch(/Deleting Your Account/);
     expect(text).toMatch(/collected at checkout by our payment provider, Paddle/);
     expect(text).toMatch(/7\. Governing Law/);
+    expect(text).toMatch(/laws of the Kingdom of Bahrain/);
+    expect(text).not.toMatch(/Dubai|United Arab Emirates/);
   });
 
   it("the Arabic versions carry the same sections", () => {

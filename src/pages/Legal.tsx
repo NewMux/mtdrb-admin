@@ -196,8 +196,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "تخضع هذه الشروط وتفسر وفقًا للقوانين المعمول بها في دولة الإمارات العربية المتحدة. وتختص محاكم دبي بشكل حصري بأي نزاع قد ينشأ عن استخدام الخدمة."
-                      : "These Terms shall be governed by and construed in accordance with the laws of the United Arab Emirates. Any disputes arising under these terms shall be subject to the exclusive jurisdiction of the courts of Dubai."}
+                      ? "تخضع هذه الشروط وتفسر وفقًا للقوانين المعمول بها في مملكة البحرين. وتختص محاكم مملكة البحرين بشكل حصري بأي نزاع ينشأ عنها."
+                      : "These Terms shall be governed by and construed in accordance with the laws of the Kingdom of Bahrain. Any disputes arising under these terms shall be subject to the exclusive jurisdiction of the courts of the Kingdom of Bahrain."}
                   </p>
                 </div>
               </article>
@@ -251,8 +251,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "نبني المنصة لتدعم التزامات أصحاب الصالات بموجب قوانين حماية البيانات مثل قانون حماية البيانات الشخصية في دولة الإمارات واللائحة الأوروبية والبريطانية العامة لحماية البيانات وما يماثلها. يمكنك في أي وقت تصدير بياناتك أو حذف حسابك نهائياً من الإعدادات ← البيانات والخصوصية."
-                      : "We build the Platform to support gym owners' obligations under data protection laws such as the UAE PDPL, the EU and UK GDPR and similar laws. You can export your data or permanently delete your account at any time from Settings → Data & privacy."}
+                      ? "نبني المنصة لتدعم التزامات أصحاب الصالات بموجب قوانين حماية البيانات مثل قانون حماية البيانات الشخصية في مملكة البحرين (القانون رقم 30 لسنة 2018) واللائحة الأوروبية والبريطانية العامة لحماية البيانات وما يماثلها. يمكنك في أي وقت تصدير بياناتك أو حذف حسابك نهائياً من الإعدادات ← البيانات والخصوصية."
+                      : "We build the Platform to support gym owners' obligations under data protection laws such as Bahrain's Personal Data Protection Law (Law No. 30 of 2018), the EU and UK GDPR and similar laws. You can export your data or permanently delete your account at any time from Settings → Data & privacy."}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">

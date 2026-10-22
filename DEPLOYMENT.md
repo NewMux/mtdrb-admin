@@ -568,9 +568,11 @@ Things the code cannot do for you, in the order I would do them.
    dashboard that tax is enabled for the countries you sell to and whether your
    prices are tax-inclusive or exclusive.
 4. **Legal review.** The Terms, Privacy and Refund pages are drafts a lawyer has
-   not reviewed. In particular: the governing-law clause names UAE law and the
-   Dubai courts (correct only if that is where the contracting entity is); the
-   privacy page names the processors the code actually uses (Supabase, Vercel,
+   not reviewed. In particular: the governing-law clause names the laws and
+   courts of the Kingdom of Bahrain (the contracting company is Bahraini; have a
+   lawyer confirm the wording, the company's legal name and address, and whether
+   Bahrain's Personal Data Protection Law (Law No. 30 of 2018) needs a
+   registration or notification from you as a processor); the privacy page names the processors the code actually uses (Supabase, Vercel,
    Paddle, Cloudflare Turnstile, optional Sentry) and describes the controller /
    processor split and the retention behaviour described above; sign data
    processing agreements with each provider; decide whether you need an EU/UK
