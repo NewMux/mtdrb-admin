@@ -197,7 +197,10 @@ export async function fetchMemberAttendanceHistory(
   return (data ?? []) as AttendanceEvent[];
 }
 
-export function getAttendanceMetrics(events: AttendanceEvent[]) {
+export function getAttendanceMetrics(allEvents: AttendanceEvent[]) {
+  // Only accepted events mean someone is (or was) in the gym: a refused scan at the
+  // door and a double tap are recorded for the log but never counted.
+  const events = allEvents.filter((event) => (event.status ?? "accepted") === "accepted");
   // "Today" is the local calendar day. Comparing UTC date strings reset these
   // counters at 03:00 Bahrain time instead of midnight.
   const today = toLocalDateString(new Date());

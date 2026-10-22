@@ -38,6 +38,7 @@ const Classes = lazy(() => import("./pages/Classes"));
 const Trainers = lazy(() => import("./pages/Trainers"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Attendance = lazy(() => import("./pages/Attendance"));
+const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
@@ -223,6 +224,15 @@ const App = () => {
                           element={
                             <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
                               <Attendance />
+                            </PermissionGuard>
+                          }
+                        />
+                        {/* Front-desk scanner screen - requires employee or higher */}
+                        <Route
+                          path="attendance/kiosk"
+                          element={
+                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                              <Kiosk />
                             </PermissionGuard>
                           }
                         />

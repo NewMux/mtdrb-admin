@@ -56,3 +56,30 @@ describe("getAttendanceMetrics - what counts as today", () => {
     expect(metrics.currentlyInGym).toBe(1);
   });
 });
+
+describe("getAttendanceMetrics - which events count", () => {
+  const withStatus = (member_id: string, direction: "check_in" | "check_out", occurred_at: string, status: string) =>
+    ({ member_id, direction, occurred_at, status }) as unknown as Parameters<typeof getAttendanceMetrics>[0][number];
+
+  it("ignores refused scans and double taps", () => {
+    vi.setSystemTime(new Date(2026, 10, 3, 18, 0));
+    const metrics = getAttendanceMetrics([
+      withStatus("a", "check_in", at(2026, 11, 3, 17), "rejected"),
+      withStatus("b", "check_in", at(2026, 11, 3, 16, 1), "duplicate"),
+      withStatus("b", "check_in", at(2026, 11, 3, 16), "accepted"),
+    ]);
+    expect(metrics.eventsToday).toBe(1);
+    expect(metrics.checkInsToday).toBe(1);
+    expect(metrics.uniqueMembersToday).toBe(1);
+    expect(metrics.currentlyInGym).toBe(1);
+  });
+
+  it("a refused exit scan does not mark someone as having left", () => {
+    vi.setSystemTime(new Date(2026, 10, 3, 18, 0));
+    const metrics = getAttendanceMetrics([
+      withStatus("a", "check_out", at(2026, 11, 3, 17), "rejected"),
+      withStatus("a", "check_in", at(2026, 11, 3, 9), "accepted"),
+    ]);
+    expect(metrics.currentlyInGym).toBe(1);
+  });
+});

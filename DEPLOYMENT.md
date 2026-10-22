@@ -707,6 +707,57 @@ Things the code cannot do for you, in the order I would do them.
    records tax correctly and prints the gym's tax number on POS receipts, but it
    does not generate authority-compliant e-invoices.
 
+## Door and reader integration (entry / exit hardware)
+
+Gyms use very different hardware, so the app does not talk to any one brand.
+It exposes a vendor-neutral layer; anything that can send an HTTP request (a
+controller's webhook/HTTP push, a small bridge box, a script) can plug in, and
+a tablet at the desk works with no integration at all.
+
+**Deploy order:** apply `supabase/migrations/20261024150000_access_control.sql`
+*before* the frontend, then `supabase functions deploy attendance-ingest`
+(`verify_jwt = false` is already set in `supabase/config.toml`; the function
+authenticates with the device key instead).
+
+**Setting up a reader (gym admin):** Attendance → Readers → add a device, pick
+its direction (entry / exit / auto), then "Create key". The key
+(`mtdrb_dev_…`) is shown **once**; only its SHA-256 is stored. Rotating a key
+invalidates the old one; revoking stops the reader immediately. The panel
+shows a ready-to-paste `curl` example:
+
+```
+POST https://<project>.supabase.co/functions/v1/attendance-ingest
+x-device-key: mtdrb_dev_…
+{"credential_type":"qr|badge|vendor_user_id","credential":"…","external_event_id":"<unique per scan>","occurred_at":"<ISO time, optional>"}
+→ {"allowed":true|false,"reason":"…","duplicate":false,"direction":"check_in","member":{"name":"…","expiry_date":"…"}}
+```
+
+The device should open the door only when `allowed` is `true`.
+
+**Credentials (Attendance → Member credentials):** a printable QR
+(`MTDRB-` + 20 hex, shown once), an RFID/NFC card or fob UID, or the member's
+user id inside a terminal (`vendor_user_id`). Card UIDs and QR tokens are stored
+hashed; no biometric templates are ever stored — fingerprint/face terminals keep
+those on the device and send only their own user id.
+
+**Rules the server enforces:**
+- Allowed only if the member status is active or trial **and** the expiry date
+  is not past, evaluated in the gym's own timezone (Gym settings).
+- Entry readers always record a check-in, exit readers a check-out; `auto`
+  alternates (check-in, then check-out; a new check-in after 16 h).
+- Idempotent on `external_event_id`; a second tap within 5 s on the same reader
+  is recorded as `duplicate`, not a second visit.
+- Refused taps are logged as `rejected` with a reason (and don't count in
+  attendance metrics). An unknown credential is denied and **not** stored.
+- Device scans do not check the gym's own subscription entitlement; the desk
+  kiosk (`/dashboard/attendance/kiosk`, any keyboard-style USB/Bluetooth
+  scanner or card reader works) does.
+- Rate-limited and size-limited at the function (429 / 413).
+
+**Not built:** vendor-specific adapters (ZKTeco ADMS push, Hikvision ISAPI,
+Suprema, etc.) — they need a real device to test against; camera-based QR
+scanning in the kiosk; blocking entry for unpaid invoices.
+
 ## Platform owner console (`/superadmin`)
 
 The owner-only console for seeing every gym and activating / comping /
