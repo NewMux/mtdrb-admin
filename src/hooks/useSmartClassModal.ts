@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
+import { toLocalDateString } from "../utils/analyticsRange";
 // Removed mock data - using real data from Supabase
 
 interface ClassConflict {
@@ -194,7 +195,7 @@ export const useSmartClassModal = ({
           minute: '2-digit',
           hour12: false
         }),
-        date: new Date(classData.start_time).toISOString().split('T')[0],
+        date: toLocalDateString(new Date(classData.start_time)),
         capacity: classData.capacity,
         enrolled_count: bookingCount || 0,
         waitlist_count: waitlistCount || 0,

@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { withTimeout } from "../utils/withTimeout";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
 import { validatePassword, DEFAULT_PASSWORD_POLICY } from "../utils/passwordPolicy";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -34,12 +35,13 @@ export default function Signup() {
 
       const { data: subscription } = await supabase
         .from("platform_subscriptions")
-        .select("status")
+        .select("status, trial_end, current_period_end, grace_until")
         .eq("tenant_id", membership.tenant_id)
         .maybeSingle();
 
-      const hasActiveSubscription =
-        subscription?.status === "active" || subscription?.status === "trialing";
+      // The same rule the rest of the app enforces (lapsed periods, trials and a
+      // failed-payment grace period included), not a bare status string.
+      const hasActiveSubscription = isSubscriptionEntitled(subscription);
       navigate(hasActiveSubscription ? "/dashboard" : "/subscribe", {
         replace: true,
       });

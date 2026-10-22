@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { useSmartClassModal } from "../../../hooks/useSmartClassModal";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { supabase } from "../../../supabaseClient";
+import { toLocalDateString } from "../../../utils/analyticsRange";
 
 ChartJS.register(
   CategoryScale,
@@ -218,7 +219,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
 
       const trendMap = new Map<string, number>();
       (bookingRows || []).forEach((b) => {
-        const day = new Date(b.created_at).toISOString().split("T")[0];
+        const day = toLocalDateString(new Date(b.created_at));
         trendMap.set(day, (trendMap.get(day) || 0) + 1);
       });
       setEnrollmentTrend(

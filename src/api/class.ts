@@ -1,6 +1,7 @@
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 import { Class, ClassBooking } from "../types";
+import { toLocalDateString } from "../utils/analyticsRange";
 
 // ============================================================================
 // TYPES
@@ -415,10 +416,14 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
     const weeklyTrends = [];
     const weeklyRevenue: number[] = [];
     for (let i = 3; i >= 0; i--) {
+      // Whole days, Sunday to Saturday: starting from "now" left every week's last
+      // day short of its closing time of day, so late-week classes fell in no week.
       const weekStart = new Date();
       weekStart.setDate(weekStart.getDate() - (weekStart.getDay() + i * 7));
+      weekStart.setHours(0, 0, 0, 0);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
 
       const weekClasses =
         classes?.filter((c) => {
@@ -439,7 +444,7 @@ export const getClassAnalytics = async (): Promise<ClassAnalyticsData> => {
       );
 
       weeklyTrends.push({
-        week: weekStart.toISOString().split("T")[0],
+        week: toLocalDateString(weekStart),
         totalClasses: weekClasses.length,
         attendance:
           weekBookingTotals.total > 0

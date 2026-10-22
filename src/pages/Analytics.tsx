@@ -33,75 +33,6 @@ type MemberAnalyticsData = React.ComponentProps<typeof MemberAnalytics>;
 type RevenueOverviewData = React.ComponentProps<typeof RevenueOverview>;
 
 /**
- * Format a date to YYYY-MM-DD.
- */
-const toDateString = (date: Date) => date.toISOString().split("T")[0];
-
-/**
- * Resolve current and previous ranges based on filter.
- */
-const resolveDateRange = (rangeKey: string, customStart?: string, customEnd?: string) => {
-  const now = new Date();
-  let start = new Date(now);
-  let end = new Date(now);
-  let previousStart = new Date(now);
-  let previousEnd = new Date(now);
-
-  switch (rangeKey) {
-    case "custom": {
-      start = customStart ? new Date(customStart) : start;
-      end = customEnd ? new Date(customEnd) : end;
-      // Calculate length of the custom range in days
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-      
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - diffDays);
-      break;
-    }
-    case "last-7-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 6);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 6);
-      break;
-    }
-    case "last-90-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 89);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 89);
-      break;
-    }
-    case "this-year": {
-      start = new Date(now.getFullYear(), 0, 1);
-      end = new Date(now);
-      previousStart = new Date(now.getFullYear() - 1, 0, 1);
-      previousEnd = new Date(now.getFullYear() - 1, 11, 31);
-      break;
-    }
-    case "last-30-days":
-    default: {
-      start = new Date(now);
-      start.setDate(now.getDate() - 29);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 29);
-      break;
-    }
-  }
-
-  return { start, end, previousStart, previousEnd };
-};
-
-/**
  * Convert a date string into a YYYY-MM key.
  */
 const toMonthKey = (dateValue?: string | null) => {
@@ -129,6 +60,9 @@ import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import { fetchAllRows, pagedResult } from "../utils/fetchAllRows";
+import { resolveAnalyticsRange, toLocalDateString } from "../utils/analyticsRange";
+import { contextSubscriptionToEntitlement, isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 type AnalyticsView =
   | "overview"
@@ -160,8 +94,7 @@ export default function Analytics() {
     isLoading: subscriptionLoading,
     subscription,
   } = useSubscription();
-  const hasActiveSubscription =
-    subscription?.status === "active" || subscription?.status === "trialing";
+  const hasActiveSubscription = isSubscriptionEntitled(contextSubscriptionToEntitlement(subscription));
 
   // Track loading state
   const [loading, setLoading] = useState(false);
@@ -169,8 +102,8 @@ export default function Analytics() {
   const [insights, setInsights] = useState<SmartInsight[]>([]);
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
-    customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-    customEndDate: toDateString(new Date()),
+    customStartDate: toLocalDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+    customEndDate: toLocalDateString(new Date()),
     branch: "all",
     metricType: "all",
     minRevenue: "",
@@ -258,13 +191,15 @@ export default function Analytics() {
     try {
       setLoading(true);
 
-      const { start, end, previousStart, previousEnd } = resolveDateRange(
+      const { start, end, previousStart, previousEnd } = resolveAnalyticsRange(
         filters.dateRange,
         filters.customStartDate,
         filters.customEndDate,
       );
-      const queryStart = toDateString(previousStart);
-      const queryEnd = toDateString(end);
+      // Full instants, not bare dates (see utils/analyticsRange.ts): a date string
+      // would exclude today's rows and the last day of a custom range.
+      const queryStart = previousStart.toISOString();
+      const queryEnd = end.toISOString();
 
       const [
         settingsResult,
@@ -284,26 +219,46 @@ export default function Analytics() {
           .eq("tenant_id", tenantId)
           .eq("is_active", true)
           .order("name"),
-        supabase
-          .from("members")
-          .select(
-            "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
-          )
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("invoices")
-          .select(
-            "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
-          )
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
-        supabase
-          .from("class_bookings")
-          .select("id, member_id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
+        // The three big reads are paged (PostgREST caps one response at 1000 rows).
+        // Each is wrapped so the page keeps its { data, error } handling below.
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("members")
+              .select(
+                "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
+              )
+              .eq("tenant_id", tenantId)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("invoices")
+              .select(
+                "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
+              )
+              .eq("tenant_id", tenantId)
+              .gte("created_at", queryStart)
+              .lte("created_at", queryEnd)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("class_bookings")
+              .select("id, member_id, status, created_at")
+              .eq("tenant_id", tenantId)
+              .gte("created_at", queryStart)
+              .lte("created_at", queryEnd)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
       ]);
 
       // Handle errors with better messaging
@@ -1420,8 +1375,8 @@ export default function Analytics() {
         onClear={() => {
           setFilters({
             dateRange: "last-30-days",
-            customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-            customEndDate: toDateString(new Date()),
+            customStartDate: toLocalDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+            customEndDate: toLocalDateString(new Date()),
             branch: "all",
             metricType: "all",
             minRevenue: "",

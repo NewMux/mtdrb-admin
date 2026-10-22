@@ -15,6 +15,7 @@ import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 import type { Database } from "../../../types/supabase";
+import { toLocalDateString } from "../../../utils/analyticsRange";
 
 interface ExportReportModalProps {
   open: boolean;
@@ -247,8 +248,8 @@ export default function ExportReportModal({
             .from("expenses")
             .select("id, amount, category, date")
             .eq("tenant_id", tenantId)
-            .gte("date", quarterStart.toISOString().split("T")[0])
-            .lte("date", quarterEnd.toISOString().split("T")[0]),
+            .gte("date", toLocalDateString(quarterStart))
+            .lte("date", toLocalDateString(quarterEnd)),
         ]);
 
         if (invoicesResult.error) throw invoicesResult.error;

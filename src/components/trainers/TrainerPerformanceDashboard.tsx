@@ -22,6 +22,7 @@ import type { Database } from "../../types/supabase";
 import { exportCSV } from "../../utils/exportData";
 import { useRTL } from "../../hooks/useRTL";
 import { useTranslation } from "react-i18next";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 import {
   LineChart,
   Line,
@@ -463,32 +464,39 @@ export default function TrainerPerformanceDashboard({
       const days = daysMap[filters.dateRange] || 30;
       const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       const prevStartDate = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      // Full instants, not bare dates: a date string is "midnight UTC", which
+      // shifts each window by up to a day for a gym in UTC+3. Both windows are
+      // [start, end) so the current and previous periods never overlap.
+      const formatDate = (date: Date) => date.toISOString();
 
+      // Paged: a single PostgREST response is capped at 1000 rows, which would
+      // silently truncate a busy gym's 90-day or 1-year window.
       const fetchClasses = async (from: Date, to?: Date) => {
-        let query = supabase
-          .from("classes")
-          .select("*, trainers(*)")
-          .eq("tenant_id", tenantId)
-          .gte("start_time", formatDate(from));
-        if (to) query = query.lt("start_time", formatDate(to));
-        if (filters.trainer) query = query.eq("trainer_id", filters.trainer);
-        if (filters.classType) query = query.eq("metadata->>type", filters.classType);
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data || []) as ClassWithTrainer[];
+        const rows = await fetchAllRows((rangeFrom, rangeTo) => {
+          let query = supabase
+            .from("classes")
+            .select("*, trainers(*)")
+            .eq("tenant_id", tenantId)
+            .gte("start_time", formatDate(from));
+          if (to) query = query.lt("start_time", formatDate(to));
+          if (filters.trainer) query = query.eq("trainer_id", filters.trainer);
+          if (filters.classType) query = query.eq("metadata->>type", filters.classType);
+          return query.order("id", { ascending: true }).range(rangeFrom, rangeTo);
+        });
+        return rows as ClassWithTrainer[];
       };
 
       const fetchBookings = async (from: Date, to?: Date) => {
-        let query = supabase
-          .from("class_bookings")
-          .select("*, members(*), classes(*)")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(from));
-        if (to) query = query.lt("created_at", formatDate(to));
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data || []) as ClassBookingWithRelations[];
+        const rows = await fetchAllRows((rangeFrom, rangeTo) => {
+          let query = supabase
+            .from("class_bookings")
+            .select("*, members(*), classes(*)")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", formatDate(from));
+          if (to) query = query.lt("created_at", formatDate(to));
+          return query.order("id", { ascending: true }).range(rangeFrom, rangeTo);
+        });
+        return rows as ClassBookingWithRelations[];
       };
 
       const [classes, bookings, prevClasses, prevBookings] =

@@ -42,6 +42,7 @@ import { AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { fetchAllRows } from "../../../utils/fetchAllRows";
 
 // Register Chart.js components
 ChartJS.register(
@@ -953,63 +954,66 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         return;
       }
 
-      const formatDate = (date: Date) => date.toISOString().split("T")[0];
       const now = dayjs();
-      const periodStart = now.subtract(30, "days").toDate();
-      const periodEnd = now.toDate();
+      // Full instants, not bare dates: a date string is "midnight UTC", which
+      // drops the whole last day of the range (today's signups never showed).
+      const periodStart = now.subtract(30, "days").toDate().toISOString();
+      const periodEnd = now.toDate().toISOString();
 
-      // Fetch all necessary data in parallel
-      const [
-        allMembersResult,
-        newMembersResult,
-        bookingsResult,
-        classesResult,
-        invoicesResult,
-      ] = await Promise.all([
+      // Every read is paged: a single PostgREST response is capped at 1000 rows,
+      // and these tables (all members, all bookings, all paid invoices) grow
+      // without bound - totals must not silently stop at the cap.
+      const [allMembers, newMembers, bookings, classes, invoices] = await Promise.all([
         // All members
-        supabase
-          .from("members")
-          .select("id, status, created_at, join_date, expiry_date, membership_type, metadata")
-          .eq("tenant_id", tenantId),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, status, created_at, join_date, expiry_date, membership_type, metadata")
+            .eq("tenant_id", tenantId)
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
         // New members this period
-        supabase
-          .from("members")
-          .select("id, status, created_at, join_date")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(periodStart))
-          .lte("created_at", formatDate(periodEnd)),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("id, status, created_at, join_date")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", periodStart)
+            .lte("created_at", periodEnd)
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
         // Bookings
-        supabase
-          .from("class_bookings")
-          .select("id, class_id, member_id, created_at, status")
-          .eq("tenant_id", tenantId)
-          .in("status", ["booked", "checked_in", "completed"]),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("id, class_id, member_id, created_at, status")
+            .eq("tenant_id", tenantId)
+            .in("status", ["booked", "checked_in", "completed"])
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
         // Classes with names
-        supabase
-          .from("classes")
-          .select("id, name")
-          .eq("tenant_id", tenantId),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("classes")
+            .select("id, name")
+            .eq("tenant_id", tenantId)
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
         // Invoices for revenue
-        supabase
-          .from("invoices")
-          .select("amount, created_at, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid"),
+        fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, created_at, status")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .order("id", { ascending: true })
+            .range(from, to),
+        ),
       ]);
-
-      const queryError =
-        allMembersResult.error ||
-        newMembersResult.error ||
-        bookingsResult.error ||
-        classesResult.error ||
-        invoicesResult.error;
-      if (queryError) throw queryError;
-
-      const allMembers = allMembersResult.data || [];
-      const newMembers = newMembersResult.data || [];
-      const bookings = bookingsResult.data || [];
-      const classes = classesResult.data || [];
-      const invoices = invoicesResult.data || [];
 
       // Calculate overview metrics
       const activeMembers = allMembers.filter(

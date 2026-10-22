@@ -26,6 +26,7 @@ import { useRTL } from "../../hooks/useRTL";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { toLocalDateString } from "../../utils/analyticsRange";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -221,7 +222,7 @@ export default function SmartVatDashboard({
         );
         
         monthlyBreakdown.push({
-          month: month.toISOString().substring(0, 7),
+          month: toLocalDateString(month).slice(0, 7), // local month: toISOString() labels it one month early in UTC+3
           vatCollected: monthVat,
           vatPaid: expenseList
             .filter(exp => {
@@ -377,9 +378,13 @@ export default function SmartVatDashboard({
       const { error } = await supabase.from("vat_returns").insert([
         {
           tenant_id: tenantId,
-          period: periodStart.toISOString().substring(0, 7),
-          period_start: periodStart.toISOString().split("T")[0],
-          period_end: periodEnd.toISOString().split("T")[0],
+          // These are calendar dates (DATE columns): use the local calendar day.
+          // Going through toISOString() turned local midnight on the 1st into
+          // 21:00 UTC on the LAST day of the previous month in UTC+3, so a
+          // November return was labelled October and started on 31 October.
+          period: toLocalDateString(periodStart).slice(0, 7),
+          period_start: toLocalDateString(periodStart),
+          period_end: toLocalDateString(periodEnd),
           status: "draft",
           vat_collected: dashboardData.currentPeriodVat,
           vat_paid: dashboardData.currentPeriodVatPaid,
@@ -388,7 +393,7 @@ export default function SmartVatDashboard({
           // reads due_date to find "next filing deadline" (both columns
           // exist on vat_returns, but only one was ever populated, so
           // that card was always blank).
-          due_date: filingDeadline.toISOString().split("T")[0],
+          due_date: toLocalDateString(filingDeadline),
         },
       ]);
 
@@ -409,7 +414,7 @@ export default function SmartVatDashboard({
         .from("vat_returns")
         .update({
           status: "submitted",
-          filed_date: new Date().toISOString().split("T")[0],
+          filed_date: toLocalDateString(new Date()),
         })
         .eq("id", returnId)
         .eq("tenant_id", tenantId);
@@ -437,7 +442,7 @@ export default function SmartVatDashboard({
         "Filing Deadline": vr.due_date,
         "Filed Date": vr.filed_date,
       }));
-      const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;
+      const filename = `vat-returns-${toLocalDateString(new Date())}`;
 
       if (format === "csv") {
         exportCSV(rows, filename);

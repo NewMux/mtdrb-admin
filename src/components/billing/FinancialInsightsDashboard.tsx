@@ -43,6 +43,8 @@ import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import type { Branch, Expense, Invoice, Member, PaymentMethodType, InvoiceStatus } from "../../types";
 import { resolveInvoiceGrossAmount } from "../../utils/invoiceMath";
+import { fetchAllRows, pagedResult } from "../../utils/fetchAllRows";
+import { endOfDay, toLocalDateString } from "../../utils/analyticsRange";
 
 interface FinancialInsightsDashboardProps {
   refreshKey: number;
@@ -138,8 +140,8 @@ const resolveDateRange = (rangeKey: string) => {
   switch (rangeKey) {
     case "last-month": {
       start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      end.setFullYear(now.getFullYear(), now.getMonth(), 0);
-      break;
+      // The last day of last month, to the end of that day (not "now" on that day).
+      return { start, end: endOfDay(new Date(now.getFullYear(), now.getMonth(), 0)) };
     }
     case "last-3-months": {
       start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
@@ -158,11 +160,6 @@ const resolveDateRange = (rangeKey: string) => {
 
   return { start, end };
 };
-
-/**
- * Format a date to YYYY-MM-DD for Supabase filters.
- */
-const toDateString = (date: Date) => date.toISOString().split("T")[0];
 
 /**
  * Resolve invoice date for grouping.
@@ -557,8 +554,13 @@ export default function FinancialInsightsDashboard({
       setLoadError(false);
 
       const { start, end } = resolveDateRange(filters.dateRange);
-      const startDate = toDateString(start);
-      const endDate = toDateString(end);
+      // invoices.created_at is a timestamptz: filter it with full instants (a bare
+      // date means "midnight UTC" and would drop the last day, today included).
+      // expenses.date is a plain DATE: filter it with the local calendar day.
+      const startISO = start.toISOString();
+      const endISO = end.toISOString();
+      const startDay = toLocalDateString(start);
+      const endDay = toLocalDateString(end);
 
       const [
         settingsResult,
@@ -579,26 +581,46 @@ export default function FinancialInsightsDashboard({
           .eq("tenant_id", tenantId)
           .eq("is_active", true)
           .order("name"),
-        supabase
-          .from("members")
-          .select(
-            "id, status, membership_type, created_at, join_date, expiry_date, assigned_branch_id",
-          )
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("invoices")
-          .select(
-            "id, member_id, type, status, issue_date, created_at, due_date, payment_method, total, amount, paid_amount, vat_total, currency",
-          )
-          .eq("tenant_id", tenantId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("expenses")
-          .select("amount, category, date, created_at, status, vat_amount")
-          .eq("tenant_id", tenantId)
-          .gte("date", startDate)
-          .lte("date", endDate),
+        // Members, invoices and expenses feed money totals: each is paged so the
+        // figures do not stop at PostgREST's 1000-row cap.
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("members")
+              .select(
+                "id, status, membership_type, created_at, join_date, expiry_date, assigned_branch_id",
+              )
+              .eq("tenant_id", tenantId)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("invoices")
+              .select(
+                "id, member_id, type, status, issue_date, created_at, due_date, payment_method, total, amount, paid_amount, vat_total, currency",
+              )
+              .eq("tenant_id", tenantId)
+              .gte("created_at", startISO)
+              .lte("created_at", endISO)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("expenses")
+              .select("amount, category, date, created_at, status, vat_amount")
+              .eq("tenant_id", tenantId)
+              .gte("date", startDay)
+              .lte("date", endDay)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
         supabase
           .from("vat_returns")
           .select("status, due_date, filed_date, period_start, period_end")

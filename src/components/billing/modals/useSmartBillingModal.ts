@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../supabaseClient";
 import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../../config/runtimeConfig";
+import { toLocalDateString } from "../../../utils/analyticsRange";
 
 interface BillingData {
   memberId?: string;
@@ -151,7 +152,7 @@ export const useSmartBillingModal = (initialData?: BillingData) => {
           .select("id, member_id, amount, status, due_date")
           .eq("tenant_id", membership.tenant_id)
           .eq("status", "unpaid")
-          .lt("due_date", new Date().toISOString().split("T")[0]);
+          .lt("due_date", toLocalDateString(new Date()));
 
         if (invoices && invoices.length > 0) {
           const overdueCount = invoices.length;

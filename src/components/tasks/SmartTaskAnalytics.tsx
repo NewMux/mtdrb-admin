@@ -37,6 +37,8 @@ import {
 } from "chart.js";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { AnimatePresence } from "framer-motion";
+import { fetchAllRows } from "../../utils/fetchAllRows";
+import { toLocalDateString } from "../../utils/analyticsRange";
 
 // Register Chart.js components
 ChartJS.register(
@@ -958,22 +960,23 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
 
       setLoading(true);
       try {
-        // Fetch all tasks for the tenant
-        const { data: tasks, error } = await supabase
-          .from("member_tasks")
-          .select(
-            `
+        // Fetch all tasks for the tenant. Paged: every figure below is computed from
+        // this list, and one PostgREST response stops at 1000 rows.
+        const tasksData = await fetchAllRows((from, to) =>
+          supabase
+            .from("member_tasks")
+            .select(
+              `
             *,
             member:members(id, first_name, last_name),
             assignee:profiles(id, first_name, last_name)
           `,
-          )
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        const tasksData = tasks || [];
+            )
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
 
         // Calculate date range (last 30 days by default)
         const now = new Date();
@@ -1020,13 +1023,16 @@ const SmartTaskAnalytics: React.FC<SmartTaskAnalyticsProps> = ({
         const tasksOverTime: Array<{ date: string; created: number; completed: number }> = [];
         for (let i = 29; i >= 0; i--) {
           const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-          const dateStr = date.toISOString().split("T")[0];
+          // Bucket by the local calendar day on BOTH sides: slicing the UTC string
+          // put a task created at 1am Bahrain time on the previous day's bar.
+          const dateStr = toLocalDateString(date);
           const created = tasksData.filter(
-            (t) => t.created_at?.split("T")[0] === dateStr,
+            (t) => t.created_at && toLocalDateString(new Date(t.created_at)) === dateStr,
           ).length;
           const completed = tasksData.filter(
             (t) =>
-              t.completed_at?.split("T")[0] === dateStr &&
+              t.completed_at &&
+              toLocalDateString(new Date(t.completed_at)) === dateStr &&
               t.status === "completed",
           ).length;
           tasksOverTime.push({ date: dateStr, created, completed });

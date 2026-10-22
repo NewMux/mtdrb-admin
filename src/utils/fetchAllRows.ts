@@ -33,3 +33,21 @@ export async function fetchAllRows<T>(
 
   return results;
 }
+
+/**
+ * Runs a paged read and returns it in the { data, error } shape of a single
+ * Supabase call, so a caller that already handles `{ data, error }` per query
+ * (several in a Promise.all) can switch to paging without restructuring its
+ * error handling. The error carries the original `code` so callers can still
+ * tell "table missing" from a real failure.
+ */
+export async function pagedResult<T>(
+  read: () => Promise<T[]>,
+): Promise<{ data: T[] | null; error: { message: string; code?: string } | null }> {
+  try {
+    return { data: await read(), error: null };
+  } catch (error) {
+    const e = error as { message?: string; code?: string } | null;
+    return { data: null, error: { message: e?.message ?? "Request failed", code: e?.code } };
+  }
+}

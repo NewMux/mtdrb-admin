@@ -25,6 +25,7 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
+import { toLocalDateString } from "../../utils/analyticsRange";
 import {
   DEFAULT_COUNTRY_CODE,
   DEFAULT_CURRENCY,
@@ -121,7 +122,7 @@ export function AddExpenseModal({
     defaultValues: {
       title: "",
       amount: 0,
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalDateString(new Date()),
       category: "Other",
       payment_method: "card",
       vendor: "",
@@ -165,7 +166,7 @@ export function AddExpenseModal({
       reset({
         title: editingExpense.title || "",
         amount: typeof editingExpense.amount === 'number' ? editingExpense.amount : parseFloat(String(editingExpense.amount)) || 0,
-        date: editingExpense.date || new Date().toISOString().split("T")[0],
+        date: editingExpense.date || toLocalDateString(new Date()),
         category: editingExpense.category || "Other",
         payment_method: editingExpense.payment_method || "card",
         vendor: editingExpense.vendor || "",

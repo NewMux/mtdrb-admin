@@ -45,6 +45,11 @@ import { type Member } from "../types/member";
 import type { Database, Json } from "../types/supabase";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import { fetchAllRows } from "../utils/fetchAllRows";
+import { monthBoundary } from "../utils/periodBoundaries";
+import { toLocalDateString } from "../utils/analyticsRange";
+import { countMembersActiveAsOf } from "../utils/memberActivity";
+import { DEFAULT_TIMEZONE } from "../config/runtimeConfig";
 
 // Raw "members" table row as returned by Supabase (select("*"))
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -179,14 +184,18 @@ const Members: React.FC = () => {
       try {
         setLoading(true);
         
-        const { data, error } = await supabase
-          .from("members")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false });
+        // Paged: one PostgREST response stops at 1000 rows, which would silently
+        // cut a big gym's member list (and every count below) short.
+        const data = await fetchAllRows((from, to) =>
+          supabase
+            .from("members")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
 
-        if (error) throw error;
-        
         const convertedMembers: TableMember[] = (data || []).map((m: MemberRow) => {
           const metadata = (m.metadata as MemberRowMetadata | undefined) ?? {};
           const rawStatus = String(m.status);
@@ -211,13 +220,11 @@ const Members: React.FC = () => {
               : "Other") as "Male" | "Female" | "Other",
             joinDate:
               m.join_date ||
-              m.created_at?.split("T")[0] ||
-              new Date().toISOString().split("T")[0],
+              (m.created_at ? toLocalDateString(new Date(m.created_at)) : "") ||
+              toLocalDateString(new Date()),
             planEnd:
               m.expiry_date ||
-              new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0],
+              toLocalDateString(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
             lastCheckIn:
               metadata.last_check_in ||
               new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -240,12 +247,13 @@ const Members: React.FC = () => {
         setMembers(convertedMembers);
         
         // Calculate stats
+        // Months in the gym's timezone as full instants with an exclusive upper
+        // bound (see periodBoundaries.ts); a bare date string would drop the last
+        // day of every range.
         const now = new Date();
-        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+        const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
+        const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
         const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
         const totalCount = convertedMembers.length;
         const activeCount = convertedMembers.filter(m => m.status === "active").length;
@@ -254,16 +262,16 @@ const Members: React.FC = () => {
           return joinDate >= monthAgo;
         }).length;
         
-        // Get previous month stats for comparison
-        const { data: previousMonthMembers } = await supabase
-          .from("members")
-          .select("id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd));
-
-        const previousTotal = (previousMonthMembers || []).length;
-        const previousActive = (previousMonthMembers || []).filter(m => m.status === "active").length;
+        // Compare with where the gym stood at the END of last month, worked out
+        // from the members already loaded (join/expiry dates). The old code
+        // compared today's totals with the members who JOINED last month, a much
+        // smaller group, so the change was nonsense.
+        const previousMonthEnd = new Date(Date.parse(previousMonth.endExclusiveISO) - 1);
+        const previousTotal = data.filter((m: MemberRow) => {
+          const joined = new Date(m.join_date || m.created_at || "");
+          return !Number.isNaN(joined.getTime()) && joined <= previousMonthEnd;
+        }).length;
+        const previousActive = countMembersActiveAsOf(data, previousMonthEnd);
         const totalChange = totalCount - previousTotal;
         const activeChange = activeCount - previousActive;
         
@@ -285,40 +293,30 @@ const Members: React.FC = () => {
           ? trainers.reduce((sum, t) => sum + Number(t.rating || 0), 0) / trainers.length
           : 0;
 
-        // Get previous month average rating
-        await supabase
-          .from("trainers")
-          .select("rating")
-          .eq("tenant_id", tenantId)
-          .not("rating", "is", null);
-
-        // For simplicity, using same trainers (ratings don't change monthly typically)
-        // In a real system, you'd track rating history
-        const previousAvgRating = avgRating > 0 ? avgRating - 0.2 : 0; // Placeholder
-        const ratingChange = avgRating - previousAvgRating;
+        // Ratings are stored as a single current value per trainer, so there is no
+        // last-month figure to compare with. (This used to show avgRating - 0.2, an
+        // invented improvement.)
 
         // Fetch Monthly Check-ins
+        const checkInsIn = (period: { startISO: string; endExclusiveISO: string }) =>
+          supabase
+            .from("class_bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("tenant_id", tenantId)
+            .in("status", ["checked_in", "completed"])
+            .gte("created_at", period.startISO)
+            .lt("created_at", period.endExclusiveISO);
         const [currentCheckIns, previousCheckIns] = await Promise.all([
-          supabase
-            .from("class_bookings")
-            .select("id, status, created_at")
-            .eq("tenant_id", tenantId)
-            .in("status", ["checked_in", "completed"])
-            .gte("created_at", formatDate(currentMonthStart)),
-          supabase
-            .from("class_bookings")
-            .select("id, status, created_at")
-            .eq("tenant_id", tenantId)
-            .in("status", ["checked_in", "completed"])
-            .gte("created_at", formatDate(previousMonthStart))
-            .lte("created_at", formatDate(previousMonthEnd)),
+          checkInsIn(currentMonth),
+          checkInsIn(previousMonth),
         ]);
 
-        const currentCheckInsCount = (currentCheckIns.data || []).length;
-        const previousCheckInsCount = (previousCheckIns.data || []).length;
+        const currentCheckInsCount = currentCheckIns.count ?? 0;
+        const previousCheckInsCount = previousCheckIns.count ?? 0;
+        // No check-ins last month means there is nothing to compare, not "+0%".
         const checkInsChange = previousCheckInsCount > 0
           ? ((currentCheckInsCount - previousCheckInsCount) / previousCheckInsCount) * 100
-          : 0;
+          : null;
 
         // Update member stats
         setMemberStats([
@@ -339,16 +337,16 @@ const Members: React.FC = () => {
           {
             name: t("members.averageRating"),
             value: avgRating > 0 ? avgRating.toFixed(1) : t("dashboard.notAvailable"),
-            change: avgRating > 0
-              ? ratingChange >= 0 ? `+${ratingChange.toFixed(1)} ${t("members.fromLastMonth")}` : `${ratingChange.toFixed(1)} ${t("members.fromLastMonth")}`
-              : t("members.noRatingData"),
+            change: avgRating > 0 ? t("members.acrossAllTrainers") : t("members.noRatingData"),
             icon: FiStar,
             color: "bg-yellow-500",
           },
           {
             name: t("members.monthlyCheckins"),
             value: currentCheckInsCount.toLocaleString(),
-            change: checkInsChange >= 0 ? `+${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}` : `${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}`,
+            change: checkInsChange === null
+              ? t("dashboard.noComparison")
+              : checkInsChange >= 0 ? `+${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}` : `${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}`,
             icon: FiClock,
             color: "bg-purple-500",
           },
@@ -483,7 +481,7 @@ const Members: React.FC = () => {
           : "N/A",
       }));
 
-      const filename = `members-export-${new Date().toISOString().split("T")[0]}`;
+      const filename = `members-export-${toLocalDateString(new Date())}`;
       exportCSV(exportData, filename);
       showSuccess(t("members.exportSuccessful"), t("members.membersDataExported"));
     } catch (error) {
@@ -513,8 +511,8 @@ const Members: React.FC = () => {
         status: 'active',
         membership_type: 'Premium',
         membership_status: 'active',
-        join_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        join_date: toLocalDateString(new Date()),
+        expiry_date: toLocalDateString(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
         metadata: {
           gender: 'Male',
           fitness_level: 'Intermediate',
@@ -698,7 +696,7 @@ const Members: React.FC = () => {
           status: memberData.status || "active",
           membership_type: memberData.membership_type || memberData.membershipType || "Standard",
           membership_status: memberData.membership_status || "active",
-          join_date: memberData.start_date || memberData.join_date || new Date().toISOString().split("T")[0],
+          join_date: memberData.start_date || memberData.join_date || toLocalDateString(new Date()),
           expiry_date: memberData.end_date || memberData.expiry_date || null,
           trainer_id: memberData.assigned_trainer_id || memberData.trainer_id || null,
           metadata: {

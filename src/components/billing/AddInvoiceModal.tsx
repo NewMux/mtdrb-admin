@@ -32,6 +32,7 @@ import {
   DEFAULT_VAT_RATE,
 } from "../../config/runtimeConfig";
 import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
+import { toLocalDateString } from "../../utils/analyticsRange";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -128,7 +129,7 @@ export function AddInvoiceModal({
     defaultValues: {
       title: "",
       amount: 0,
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalDateString(new Date()),
       category: "Other",
       payment_method: "card",
       member_id: "",
@@ -173,7 +174,7 @@ export function AddInvoiceModal({
         title: editingInvoice.title || "",
         amount: typeof editingInvoice.amount === 'number' ? editingInvoice.amount : (typeof editingInvoice.total === 'number' ? editingInvoice.total : 0),
         date:
-          editingInvoice.issue_date || new Date().toISOString().split("T")[0],
+          editingInvoice.issue_date || toLocalDateString(new Date()),
         category: editingInvoice.type || "Other",
         payment_method: editingInvoice.payment_method || "card",
         member_id: editingInvoice.member?.id || "",
