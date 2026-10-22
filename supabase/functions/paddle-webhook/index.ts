@@ -185,6 +185,13 @@ async function syncSubscription(
     ({ error } = await update);
   } else {
     ({ error } = await serviceClient.from("platform_subscriptions").insert(row));
+    // 23503 = foreign_key_violation: the gym no longer exists (it deleted its
+    // account and this is the cancellation event that follows). Nothing to
+    // record, and a retry can never succeed, so answer 200.
+    if (error?.code === "23503") {
+      console.warn("paddle-webhook: ignoring an event for a gym that no longer exists", { subscription: data.id });
+      return;
+    }
   }
   if (error) throw error;
 }

@@ -13,6 +13,7 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiBriefcase,
+  FiLock,
 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
 import TabsNav from "../components/ui/TabsNav";
@@ -29,6 +30,7 @@ import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
 import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
+import DataPrivacyTab from "../components/settings/DataPrivacyTab";
 import { resumeSubscription } from "../api/billing";
 import { validatePassword } from "../utils/passwordPolicy";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -83,7 +85,7 @@ const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(
-    requestedTab && ["general", "business", "profile", "security", "billing"].includes(requestedTab)
+    requestedTab && ["general", "business", "profile", "security", "billing", "privacy"].includes(requestedTab)
       ? requestedTab
       : "general",
   );
@@ -323,6 +325,7 @@ const Settings: React.FC = () => {
     { id: "profile", name: t("settings.profile"), icon: FiUser },
     { id: "security", name: t("settings.security"), icon: FiShield },
     { id: "billing", name: t("settings.billing"), icon: FiCreditCard },
+    { id: "privacy", name: t("dataPrivacy.title"), icon: FiLock },
   ];
 
   // Render loading state
@@ -516,6 +519,8 @@ const Settings: React.FC = () => {
           )}
 
           {activeTab === "business" && <BusinessSettingsTab />}
+
+          {activeTab === "privacy" && <DataPrivacyTab />}
 
           {activeTab === "profile" && (
             <div className="space-y-6">
