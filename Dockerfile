@@ -32,6 +32,13 @@ ARG VITE_PRO_PLAN_NAME
 ARG VITE_PRO_PRICE
 ARG VITE_PRO_EXTRA_LOCATION_PRICE
 ARG VITE_SENTRY_DSN
+# Paddle checkout (all public, see DEPLOYMENT.md). Without these a Docker build
+# can never open checkout: VITE_CHECKOUT_ENABLED must be exactly "true".
+ARG VITE_CHECKOUT_ENABLED
+ARG VITE_PADDLE_CLIENT_TOKEN
+ARG VITE_PADDLE_ENVIRONMENT
+ARG VITE_PADDLE_STARTER_PRICE_ID
+ARG VITE_PADDLE_PRO_PRICE_ID
 
 # scripts/check-env.mjs fails this step fast if the two required vars above
 # are missing or malformed - same fail-fast behavior as the Vercel build.

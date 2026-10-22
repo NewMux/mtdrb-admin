@@ -222,18 +222,17 @@ export const TrendSparkline: React.FC<{ data: string[]; memberId: string }> = ({
 };
 
 // Document Checklist Component
+// Shows how many required documents a member has submitted. There is no
+// reminder button: nothing here can send one (no member messaging backend), and
+// a button that only showed a success toast would tell staff a member was
+// contacted when nobody was.
 export const DocumentChecklist: React.FC<{
   formsSubmitted: string[];
-  memberId: string;
-}> = ({ formsSubmitted, memberId }) => {
+}> = ({ formsSubmitted }) => {
   const requiredDocs = ["waiver", "id_document", "emergency_contact"];
   const safeFormsSubmitted = formsSubmitted || [];
   const completedDocs = safeFormsSubmitted.length;
   const totalDocs = requiredDocs.length;
-
-  const handleResendDocs = () => {
-    toast.success(`Document reminder sent to member ${memberId}`);
-  };
 
   return (
     <div className="flex items-center space-x-2">
@@ -243,14 +242,6 @@ export const DocumentChecklist: React.FC<{
           {completedDocs}/{totalDocs}
         </span>
       </div>
-      {completedDocs < totalDocs && (
-        <button
-          onClick={handleResendDocs}
-          className="text-xs text-blue-600 hover:text-blue-700"
-        >
-          Resend
-        </button>
-      )}
     </div>
   );
 };

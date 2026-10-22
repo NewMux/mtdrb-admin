@@ -311,7 +311,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
                 : t("settings.accessUntil", "Your access will continue until the end of your current billing period.")}
             </p>
             <p className="mt-1 text-xs">
-              {t("settings.dataRetention", "Your data will be retained for 30 days in case you change your mind.")}
+              {t("settings.dataRetention", "Your data is kept. Subscribe again at any time to pick up where you left off.")}
             </p>
           </div>
         </div>

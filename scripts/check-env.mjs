@@ -1,3 +1,5 @@
+import { checkCheckoutConfig } from "./checkoutConfig.mjs";
+
 const required = [
   ["VITE_SUPABASE_URL", "the Supabase project URL"],
   ["VITE_SUPABASE_ANON_KEY", "the Supabase publishable/anon key"],
@@ -19,6 +21,14 @@ try {
   if (!/^https?:$/.test(url.protocol)) throw new Error("unsupported protocol");
 } catch {
   console.error("VITE_SUPABASE_URL must be a valid http(s) URL.");
+  process.exit(1);
+}
+
+const checkout = checkCheckoutConfig(process.env);
+for (const warning of checkout.warnings) console.warn(`Warning: ${warning}`);
+if (checkout.errors.length > 0) {
+  console.error("Checkout is enabled but its Paddle settings are not usable:");
+  for (const error of checkout.errors) console.error(`- ${error}`);
   process.exit(1);
 }
 
