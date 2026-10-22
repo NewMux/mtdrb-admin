@@ -87,6 +87,10 @@ Deno.serve(async (req) => {
       case "subscription.canceled":
       case "subscription.past_due":
       case "subscription.paused":
+      // A subscription paused in Paddle's dashboard and later resumed (or one
+      // that enters a trial) must not stay stuck in its old state here.
+      case "subscription.resumed":
+      case "subscription.trialing":
         await syncSubscription(serviceClient, event.data, eventOccurredAt(event));
         break;
       default:

@@ -11,6 +11,15 @@
 // Rules from CLAUDE.md: sandbox client tokens start with "test_"; a value that does
 // not match the environment is flagged rather than assumed right.
 
+// Currencies Paddle can bill in (its API's currency list, checked October 2026).
+// BHD, AED, SAR, KWD, OMR and QAR are NOT among them: a Bahraini company prices
+// in USD (or EUR/GBP) and Paddle shows each customer the right local figure.
+export const PADDLE_BILLING_CURRENCIES = [
+  "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "HKD", "SGD", "SEK", "ARS", "BRL", "CLP",
+  "CNY", "COP", "CZK", "DKK", "HUF", "ILS", "INR", "KRW", "MXN", "NOK", "NZD", "PEN", "PLN",
+  "RUB", "THB", "TRY", "TWD", "UAH", "VND", "ZAR",
+];
+
 export function checkCheckoutConfig(env) {
   const errors = [];
   const warnings = [];
@@ -41,6 +50,36 @@ export function checkCheckoutConfig(env) {
       "Set the Paddle values (DEPLOYMENT.md, \"Payment gateway (Paddle)\"), or set VITE_CHECKOUT_ENABLED=false to deploy with subscriptions paused on purpose.",
     );
     return { errors, warnings };
+  }
+
+  // What the pages SHOW must be what Paddle CHARGES. The displayed prices come from
+  // these variables, the charged ones from the Paddle price IDs, and nothing links
+  // them - so they must be set on purpose, not left to code defaults, and the
+  // currency must be one Paddle can bill in.
+  const currency = value("VITE_PLATFORM_CURRENCY").toUpperCase();
+  if (!currency) {
+    errors.push(
+      "VITE_PLATFORM_CURRENCY is not set. Set it to the currency of your Paddle prices (Paddle cannot bill in BHD; use USD, EUR or GBP).",
+    );
+  } else if (!PADDLE_BILLING_CURRENCIES.includes(currency)) {
+    errors.push(
+      `VITE_PLATFORM_CURRENCY=${currency} is not a currency Paddle can bill in (BHD, AED, SAR, KWD, OMR and QAR are not supported). Use USD, EUR or GBP.`,
+    );
+  }
+  for (const [key, label] of [
+    ["VITE_STARTER_PRICE", "the Starter monthly price shown on the pricing page"],
+    ["VITE_PRO_PRICE", "the Pro monthly price shown on the pricing page"],
+  ]) {
+    const n = Number(value(key));
+    if (!value(key) || !Number.isFinite(n) || n <= 0) {
+      errors.push(`${key} (${label}) must be set to the same amount as the Paddle price, e.g. 49.`);
+    }
+  }
+  for (const key of ["VITE_STARTER_EXTRA_LOCATION_PRICE", "VITE_PRO_EXTRA_LOCATION_PRICE"]) {
+    const n = Number(value(key));
+    if (!value(key) || !Number.isFinite(n) || n <= 0) {
+      warnings.push(`${key} is not set; the extra-location price shown to customers falls back to a code default that may not match Paddle.`);
+    }
   }
 
   if (!production && !token.startsWith("test_")) {

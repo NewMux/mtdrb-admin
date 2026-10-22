@@ -79,9 +79,9 @@ these deliberately rather than relying on the defaults for a real launch:
 - `VITE_DEFAULT_CURRENCY` — falls back to `USD`.
 - `VITE_DEFAULT_COUNTRY_CODE` — falls back to empty.
 - `VITE_DEFAULT_VAT_RATE` — falls back to `0`.
-- `VITE_PLATFORM_CURRENCY` — falls back to `BHD`. Display only: the amount actually charged is whatever the Paddle price (`VITE_PADDLE_*_PRICE_ID`) is set to, so keep the two in sync.
-- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — fall back to "Starter", `20`, `10`.
-- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — fall back to "Pro", `35`, `15`.
+- `VITE_PLATFORM_CURRENCY` — falls back to `USD`. **Paddle cannot bill in BHD, AED, SAR, KWD, OMR or QAR** (use USD, EUR or GBP). Display only: the amount actually charged is whatever the Paddle price (`VITE_PADDLE_*_PRICE_ID`) is set to, so keep the two in sync - the build refuses to deploy with an unsupported currency or no displayed price.
+- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — the plan name falls back to "Starter". **Set the three prices explicitly** (the build fails without the plan prices): the code's old defaults were in BHD.
+- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — likewise, "Pro".
 
 Optional:
 
@@ -156,17 +156,23 @@ Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
   automatically to every Edge Function; nothing to set.
 
-**Pricing and currency.** Platform plans are BHD 20/month (Starter) and
-BHD 35/month (Pro). The in-app/landing prices come from `VITE_STARTER_PRICE`,
-`VITE_PRO_PRICE` and `VITE_PLATFORM_CURRENCY` (defaults 20 / 35 / BHD) — if you
-set those in Vercel, update them there too or the old values keep showing.
-BHD has **3 decimals**, so Paddle amounts are in fils (BHD 20 = `"20000"`); the
-seed script and `paddle-webhook` both account for this. **Unverified:** whether
-your Paddle account accepts BHD as a price currency and how it reports the
-amount — confirm in the sandbox (`PADDLE_BASE_CURRENCY=USD` is the fallback for
-the seed script) before opening checkout. Existing Paddle prices must be
-recreated or replaced (Paddle prices are immutable in amount) and the
-`*_PRICE_ID` vars updated.
+**Pricing and currency.** Paddle's API lists the currencies it can bill in
+(USD, EUR, GBP, JPY, AUD, CAD, CHF, HKD, SGD, SEK, ARS, BRL, CLP, CNY, COP, CZK,
+DKK, HUF, ILS, INR, KRW, MXN, NOK, NZD, PEN, PLN, RUB, THB, TRY, TWD, UAH, VND,
+ZAR): **BHD is not one of them**, nor are AED, SAR, KWD, OMR or QAR. USD is
+offered in Bahrain, the UAE, Saudi Arabia, Kuwait, Oman and Qatar, so price in
+USD (or EUR/GBP) and add per-country overrides in Paddle if you want local
+figures. The displayed prices come from `VITE_STARTER_PRICE`, `VITE_PRO_PRICE`,
+the two `VITE_*_EXTRA_LOCATION_PRICE` values and `VITE_PLATFORM_CURRENCY` - set
+them to exactly what the Paddle prices charge. Paddle prices are immutable in
+amount: to change a price, create a new one and update the `*_PRICE_ID` vars.
+`scripts/seed-paddle-catalog.mjs` creates the catalog and takes the amounts from
+`PADDLE_STARTER_PRICE`, `PADDLE_PRO_PRICE`, `PADDLE_STARTER_EXTRA_PRICE` and
+`PADDLE_PRO_EXTRA_PRICE` (no defaults: they are a pricing decision). The
+Paddle request shapes this integration uses (cancel `effective_from`, update
+`items` + `proration_billing_mode`, `scheduled_change: null` to un-cancel, the
+`subscription.*` event names) were checked against Paddle's API reference in
+October 2026 and match.
 
 Set up in Paddle's dashboard before this can go live: create the Starter
 and Pro products/prices (sandbox first), point a webhook notification

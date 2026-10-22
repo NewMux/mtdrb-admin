@@ -2,6 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const setExtraLocations = vi.fn();
+// The displayed prices come from env defaults; pin them so this test says what it means.
+vi.mock("../../../../config/runtimeConfig", async (original) => ({
+  ...(await original<typeof import("../../../../config/runtimeConfig")>()),
+  PLATFORM_CURRENCY: "USD",
+  STARTER_EXTRA_LOCATION_PRICE: 10,
+  PRO_EXTRA_LOCATION_PRICE: 15,
+}));
+
 vi.mock("../../../../api/locations", async () => {
   const actual = await vi.importActual<typeof import("../../../../api/locations")>("../../../../api/locations");
   return { ...actual, setExtraLocations: (...a: unknown[]) => setExtraLocations(...a) };
@@ -49,14 +57,14 @@ beforeEach(() => {
 describe("ExtraLocationModal (add)", () => {
   it("shows the price for the plan and that the prorated amount is charged now", () => {
     open(usage());
-    expect(screen.getByText(/\+10 BHD per month/)).toBeInTheDocument();
+    expect(screen.getByText(/\+10 USD per month/)).toBeInTheDocument();
     expect(screen.getByText(/prorated amount/i)).toBeInTheDocument();
     expect(screen.getByText(/Starter plan includes 1 location/)).toBeInTheDocument();
   });
 
   it("uses Pro's price on Pro", () => {
     open(usage({ planTier: "pro" }));
-    expect(screen.getByText(/\+15 BHD per month/)).toBeInTheDocument();
+    expect(screen.getByText(/\+15 USD per month/)).toBeInTheDocument();
   });
 
   it("buys exactly one more than the gym has now, then reports done", async () => {
@@ -71,7 +79,7 @@ describe("ExtraLocationModal (add)", () => {
     // Subscribed with 3 branches on a plan that includes 1: limit 1, used 3.
     const { onDone } = open(usage({ used: 3, limit: 1, extraLocations: 0 }));
     expect(screen.getByText(/already have 3 branches, so 3 extra locations are needed/)).toBeInTheDocument();
-    expect(screen.getByText(/\+30 BHD per month/)).toBeInTheDocument();
+    expect(screen.getByText(/\+30 USD per month/)).toBeInTheDocument();
     fireEvent.click(confirmButton(/add location/i)!);
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     // limit = 1 + 3 = 4 > used 3: the branch can now actually be created.
@@ -81,7 +89,7 @@ describe("ExtraLocationModal (add)", () => {
   it("does not mention catching up when only one extra is needed", () => {
     open(usage({ used: 2, limit: 2, extraLocations: 1 }));
     expect(screen.queryByText(/extra locations are needed/)).toBeNull();
-    expect(screen.getByText(/\+10 BHD per month/)).toBeInTheDocument();
+    expect(screen.getByText(/\+10 USD per month/)).toBeInTheDocument();
   });
 
   it("tells the user when billing changed but has not synced yet", async () => {
@@ -129,7 +137,7 @@ describe("ExtraLocationModal (release)", () => {
   it("says how many are unused and what removing them saves", () => {
     open(releasable, "release");
     expect(screen.getByText(/3 extra location\(s\) that no branch uses/)).toBeInTheDocument();
-    expect(screen.getByText(/saves 30 BHD per month/)).toBeInTheDocument();
+    expect(screen.getByText(/saves 30 USD per month/)).toBeInTheDocument();
   });
 
   it("sets the number of extras to what the branches need, never below", async () => {

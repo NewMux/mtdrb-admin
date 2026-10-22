@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error - plain ESM script shared with the build
-import { checkCheckoutConfig } from "./checkoutConfig.mjs";
+import { checkCheckoutConfig, PADDLE_BILLING_CURRENCIES } from "./checkoutConfig.mjs";
 import { getCheckoutAvailability } from "../src/config/checkout";
 
 type Env = Record<string, string>;
@@ -9,6 +9,11 @@ const ready: Env = {
   VITE_PADDLE_CLIENT_TOKEN: "test_abc",
   VITE_PADDLE_STARTER_PRICE_ID: "pri_s",
   VITE_PADDLE_PRO_PRICE_ID: "pri_p",
+  VITE_PLATFORM_CURRENCY: "USD",
+  VITE_STARTER_PRICE: "49",
+  VITE_PRO_PRICE: "89",
+  VITE_STARTER_EXTRA_LOCATION_PRICE: "25",
+  VITE_PRO_EXTRA_LOCATION_PRICE: "35",
 };
 const check = (env: Env) => checkCheckoutConfig(env) as { errors: string[]; warnings: string[] };
 
@@ -93,5 +98,39 @@ describe("getCheckoutAvailability (the app) agrees with the build guard", () => 
     expect(getCheckoutAvailability({ ...ready, VITE_CHECKOUT_ENABLED: "false" })).toEqual({ open: false, reason: "disabled" });
     expect(getCheckoutAvailability({})).toEqual({ open: false, reason: "not_configured" });
     expect(getCheckoutAvailability(ready)).toEqual({ open: true });
+  });
+});
+
+describe("displayed prices must match what Paddle charges", () => {
+  it("fails when the platform currency is a currency Paddle cannot bill in", () => {
+    for (const bad of ["BHD", "AED", "SAR", "KWD", "OMR", "QAR", "bhd"]) {
+      const out = check({ ...ready, VITE_PLATFORM_CURRENCY: bad });
+      expect(out.errors.join(" ")).toContain("not a currency Paddle can bill in");
+    }
+  });
+
+  it("accepts the currencies Paddle supports, in any case", () => {
+    for (const ok of ["USD", "eur", "GBP"]) expect(check({ ...ready, VITE_PLATFORM_CURRENCY: ok }).errors).toEqual([]);
+    expect(PADDLE_BILLING_CURRENCIES).toContain("USD");
+    expect(PADDLE_BILLING_CURRENCIES).not.toContain("BHD");
+  });
+
+  it("fails when the currency or a plan price is left to the code defaults", () => {
+    expect(check({ ...ready, VITE_PLATFORM_CURRENCY: "" }).errors.join(" ")).toContain("VITE_PLATFORM_CURRENCY is not set");
+    for (const key of ["VITE_STARTER_PRICE", "VITE_PRO_PRICE"]) {
+      for (const bad of ["", "abc", "0", "-5"]) {
+        expect(check({ ...ready, [key]: bad }).errors.join(" ")).toContain(key);
+      }
+    }
+  });
+
+  it("only warns about extra-location prices", () => {
+    const out = check({ ...ready, VITE_STARTER_EXTRA_LOCATION_PRICE: "" });
+    expect(out.errors).toEqual([]);
+    expect(out.warnings.join(" ")).toContain("VITE_STARTER_EXTRA_LOCATION_PRICE");
+  });
+
+  it("does not apply while the kill switch has paused checkout", () => {
+    expect(check({ VITE_CHECKOUT_ENABLED: "false", VITE_PLATFORM_CURRENCY: "BHD" }).errors).toEqual([]);
   });
 });

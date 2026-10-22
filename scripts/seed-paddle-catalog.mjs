@@ -1,5 +1,5 @@
 // One-time setup script: creates MTDRB's Starter/Pro products and prices
-// (monthly + annual, BHD, no trial period) in a Paddle Billing account via
+// (monthly + annual, no trial period) in a Paddle Billing account via
 // its REST API, plus one "extra location" add-on product/price per plan.
 // The add-on is a second line item on a subscription whose quantity is the
 // number of extra locations the gym pays for (supabase/functions/
@@ -14,11 +14,17 @@
 // (developer.paddle.com/api-reference) from stable, public documentation,
 // not a live-verified account, the same caveat as paddle-webhook.
 //
-// UNVERIFIED: that Paddle accepts BHD as a price currency. The Paddle docs
-// weren't reachable when this was written. If the first POST /prices fails
-// with a currency error, BHD isn't supported on your account -- change
-// BASE_CURRENCY to one Paddle supports and re-price (see "Re-running"
-// below), and update VITE_PLATFORM_CURRENCY to match.
+// CURRENCY: Paddle cannot bill in BHD (nor AED, SAR, KWD, OMR or QAR) - checked
+// against its currency list in October 2026. Prices are created in
+// PADDLE_BASE_CURRENCY (default USD), and the monthly amounts must be given
+// explicitly, because they are a pricing decision:
+//   PADDLE_STARTER_PRICE=49 PADDLE_PRO_PRICE=89 \
+//   PADDLE_STARTER_EXTRA_PRICE=25 PADDLE_PRO_EXTRA_PRICE=35 \
+//   PADDLE_API_KEY=... node scripts/seed-paddle-catalog.mjs
+// Annual prices are ten times the monthly one (two months free). Use the SAME
+// amounts and currency for VITE_PLATFORM_CURRENCY, VITE_STARTER_PRICE,
+// VITE_PRO_PRICE and the two VITE_*_EXTRA_LOCATION_PRICE variables - the build
+// refuses to deploy with an unsupported currency or no displayed price.
 //
 // Usage:
 //   PADDLE_API_KEY=your_sandbox_key node scripts/seed-paddle-catalog.mjs
@@ -55,44 +61,50 @@ if (!DRY_RUN && ENVIRONMENT === "sandbox" && !PADDLE_API_KEY.includes("_sdbx")) 
   );
 }
 
-// Paddle takes amounts as strings in the currency's smallest unit. BHD has
-// three decimal places (1 BHD = 1000 fils), unlike USD's two, so 20 BHD is
-// "20000", not "2000". Keep this table in step with BASE_CURRENCY.
-const BASE_CURRENCY = "BHD";
-const MINOR_UNIT_DIGITS = { BHD: 3, USD: 2 };
+// Paddle takes amounts as strings in the currency's smallest unit (cents for
+// USD, 20.00 -> "2000"). JPY-like currencies have none; BHD-like (3 decimals)
+// are not billable by Paddle at all.
+const BASE_CURRENCY = (process.env.PADDLE_BASE_CURRENCY || "USD").toUpperCase();
+const MINOR_UNIT_DIGITS = { USD: 2, EUR: 2, GBP: 2, JPY: 0 };
 
 function toMinorUnits(majorAmount) {
-  const digits = MINOR_UNIT_DIGITS[BASE_CURRENCY];
-  if (digits === undefined) {
-    throw new Error(`No minor-unit exponent configured for ${BASE_CURRENCY}; add it to MINOR_UNIT_DIGITS.`);
-  }
+  const digits = MINOR_UNIT_DIGITS[BASE_CURRENCY] ?? 2;
   return String(Math.round(majorAmount * 10 ** digits));
 }
 
-// No country overrides: the old GB/IE/AU amounts were derived from the USD
-// 80/130 prices and don't map onto 20/35 BHD without guessing exchange
-// rates. Add overrides in the Paddle dashboard once you've decided them.
+function requiredPrice(name) {
+  const value = Number(process.env[name]);
+  if (!Number.isFinite(value) || value <= 0) {
+    console.error(`Set ${name} to the monthly price in ${BASE_CURRENCY} (a number above 0). Prices are a business decision, so this script has no defaults.`);
+    process.exit(1);
+  }
+  return value;
+}
+
+// No country overrides: add them in the Paddle dashboard once you've decided them.
 const PLANS = [
   {
     id: "starter",
     name: "Starter",
     description: "Perfect for single-location gyms",
-    monthlyPrice: 20, // BHD 20.00
-    annualPrice: 200, // BHD 200.00 (2 months free)
+    monthlyPrice: requiredPrice("PADDLE_STARTER_PRICE"),
     // Per extra location. Keep in step with VITE_STARTER_EXTRA_LOCATION_PRICE:
     // that is only the displayed price, this is what is charged.
-    extraLocation: { monthlyPrice: 10, annualPrice: 100 },
+    extraMonthly: requiredPrice("PADDLE_STARTER_EXTRA_PRICE"),
   },
   {
     id: "pro",
     name: "Pro",
     description: "Everything in Starter & scale your gym",
-    monthlyPrice: 35, // BHD 35.00
-    annualPrice: 350, // BHD 350.00 (2 months free)
+    monthlyPrice: requiredPrice("PADDLE_PRO_PRICE"),
     // Keep in step with VITE_PRO_EXTRA_LOCATION_PRICE (see above).
-    extraLocation: { monthlyPrice: 15, annualPrice: 150 },
+    extraMonthly: requiredPrice("PADDLE_PRO_EXTRA_PRICE"),
   },
-];
+].map((plan) => ({
+  ...plan,
+  annualPrice: plan.monthlyPrice * 10, // two months free
+  extraLocation: { monthlyPrice: plan.extraMonthly, annualPrice: plan.extraMonthly * 10 },
+}));
 
 // MTDRB intentionally has no free trial (see
 // supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql),
@@ -251,12 +263,12 @@ async function main() {
   console.log("=".repeat(70));
 
   console.log("\nVerify in the Paddle dashboard before trusting this output:");
-  console.log(`- Each price shows ${BASE_CURRENCY} 20.00 / 35.00 monthly (200.00 / 350.00 annual), not a units error.`);
-  console.log(`- Each add-on price shows ${BASE_CURRENCY} 10.00 (Starter) / 15.00 (Pro) monthly, with a quantity range of 1-${MAX_EXTRA_LOCATIONS}.`);
+  console.log(`- Each plan price shows ${BASE_CURRENCY} ${PLANS.map((p) => p.monthlyPrice.toFixed(2)).join(" / ")} monthly (x10 annual), not a units error.`);
+  console.log(`- Each add-on price shows ${BASE_CURRENCY} ${PLANS.map((p) => p.extraMonthly.toFixed(2)).join(" / ")} monthly, with a quantity range of 1-${MAX_EXTRA_LOCATIONS}.`);
   console.log("- No price has a trial period (MTDRB has no free trial).");
   console.log("- Nothing was created twice if you re-run this script (it does not");
   console.log("  check for existing products first -- re-running will duplicate them).");
-  console.log("- After a sandbox checkout, platform_subscriptions.amount shows 20 / 35");
+  console.log(`- After a sandbox checkout, platform_subscriptions.amount shows ${PLANS.map((p) => p.monthlyPrice).join(" / ")}`);
   console.log("  (paddle-webhook converts by the currency's decimals; see _shared/money.ts).");
   console.log("- After adding an extra location in the app, the Paddle subscription shows two");
   console.log("  items (plan x1, extra location xN) and platform_subscriptions.extra_locations = N.");
