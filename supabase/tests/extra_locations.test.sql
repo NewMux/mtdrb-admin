@@ -105,9 +105,11 @@ INSERT INTO public.memberships (user_id, tenant_id, role) VALUES
   ('00000000-0000-0000-0000-0000000000a5', 'bbbbbbbb-0000-0000-0000-000000000004', 'admin'),
   ('00000000-0000-0000-0000-0000000000a6', 'bbbbbbbb-0000-0000-0000-000000000005', 'admin');
 
--- Gym 1 has NO subscription row at all (grandfathered). Subscription rows are
+-- Gym 1 has NO subscription row at all and predates the subscription system
+-- (grandfathered: listed in legacy_unbilled_tenants). Subscription rows are
 -- service-role-only writes, so seed them as the service role.
 SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+INSERT INTO public.legacy_unbilled_tenants (tenant_id) VALUES ('bbbbbbbb-0000-0000-0000-000000000001');
 INSERT INTO public.platform_subscriptions (tenant_id, status, plan_tier, amount, currency, payment_provider, payment_reference, current_period_end) VALUES
   ('bbbbbbbb-0000-0000-0000-000000000002', 'active', 'starter', 20, 'BHD', 'paddle', 'sub_paid', now() + interval '20 days'),
   ('bbbbbbbb-0000-0000-0000-000000000003', 'active', 'pro', 0, 'BHD', 'manual', NULL, now() + interval '20 days'),
