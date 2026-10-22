@@ -180,6 +180,21 @@ stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
 access) before relying on this for real customer traffic.
 
+## Point of sale and currency decimals
+
+POS amounts follow the sale's currency: 3 decimals for BHD/KWD/OMR/JOD/TND
+(1 BHD = 1000 fils), 0 for JPY and similar, otherwise 2
+(`public.currency_decimals()`, the same table as `src/utils/invoiceMath.ts`).
+`20261022180000_pos_currency_decimals.sql` widens the POS money columns to
+`numeric(12,3)` (existing values are unchanged) and rewrites
+`complete_pos_sale()` / `return_pos_sale()` to round per currency, so apply it
+**before** deploying the frontend: the new price inputs accept 3 decimals and
+the old function would round them away. Sales recorded before it were rounded
+to 2 decimals and stay as recorded. `src/utils/posMath.ts` computes the cart
+preview the same way the database does; if you change one, change the other
+and the shared golden cases in `src/utils/posMath.test.ts` and
+`supabase/tests/pos_currency_decimals.test.sql`.
+
 ## Extra locations (paid add-on)
 
 Every plan includes **one** location. Each additional branch is a paid
