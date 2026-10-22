@@ -39,3 +39,9 @@ verify_jwt = false
 # the function verifies the caller's JWT itself with auth.getUser(token) and
 # resolves their gym and role in Postgres.
 verify_jwt = false
+
+[functions.attendance-ingest]
+# Called by readers, door controllers and gateways, which have no Supabase session.
+# They authenticate with their own device key (hashed in the database); the function
+# never trusts a gym id from the request.
+verify_jwt = false
