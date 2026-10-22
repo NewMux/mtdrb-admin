@@ -187,7 +187,7 @@ access) before relying on this for real customer traffic.
 The database rules are tested in SQL (`supabase/tests/*.test.sql`): row level
 security and cross-tenant isolation (`tenant_isolation`), the platform console,
 subscription and billing guards (`cancel_subscription`, `past_due_grace`,
-`extra_locations`) and POS money (`pos_currency_decimals`). CI runs them on every
+`extra_locations`, `self_serve_entitlement`) and POS money (`pos_currency_decimals`). CI runs them on every
 pull request in a throwaway Postgres 16; locally:
 
 ```
@@ -370,6 +370,72 @@ first failure instead of being locked out at once:
   In the sandbox, use a card that fails on renewal and check the row goes
   `past_due` with a `grace_until` 7 days out, then `active` with it cleared when
   a retry succeeds.
+
+## Self-serve sign-up (public launch)
+
+Anyone can now sign up, create a gym and pay without the owner. The path is:
+
+1. `/signup` creates the Supabase Auth user (gym name and full name travel in
+   the user's metadata). With **Confirm email** on — required, see below — no
+   session exists yet, so the page shows "check your email" with a resend button
+   (60 s cooldown).
+2. The confirmation link lands on `/welcome` (`src/pages/Welcome.tsx`), which
+   calls `ensureGym()` (`src/utils/ensureGym.ts`): it reuses an existing
+   membership or creates the gym through `create_tenant_with_membership` as its
+   admin, using the gym name from signup. It is safe to repeat (retry, second tab).
+   A signed-in user with no gym is sent to `/welcome` from anywhere in the app.
+3. `/welcome` continues to `/subscribe`; Paddle checkout opens
+   (`VITE_CHECKOUT_ENABLED` — see the Paddle section); the webhook writes the
+   subscription row and the gym gets access. The owner is not involved.
+
+**Database rule (migration `20261023090000_new_gyms_need_a_subscription.sql`).**
+A gym with no `platform_subscriptions` row used to count as entitled so that gyms
+from before the subscription system were not locked out. That would let a
+self-serve sign-up skip checkout and write through the API for free, so the
+rule is now: no row = entitled **only** for gyms listed in
+`legacy_unbilled_tenants`. The migration lists every gym that exists today, has
+no subscription row and was created before 2026-09-09 (when the entitlement
+check was introduced). Review that list before applying to production:
+
+```sql
+select t.id, t.name, t.created_at from public.tenants t
+where t.created_at < timestamptz '2026-09-09 00:00:00+00'
+  and not exists (select 1 from public.platform_subscriptions s where s.tenant_id = t.id);
+```
+
+A gym created since then with no row is treated as unpaid. To grandfather one by
+hand, insert its id into `legacy_unbilled_tenants` as the service role; the table
+is closed to every browser role. An unpaid new gym is also limited to one
+location. (The owner console still lists such a gym as "awaiting activation" and
+can still comp it, and *Invite a gym* remains available as a concierge path.)
+
+**Supabase Auth settings the owner must set** (Supabase dashboard — these are not
+in the repo and the app cannot check them):
+
+- Authentication → Providers → Email: **Confirm email ON**. Without it anyone
+  can register with someone else's address.
+- Authentication → URL Configuration: **Site URL** = the production URL, and add
+  `<production URL>/welcome` (and the preview URL pattern if you test there) to
+  **Redirect URLs**. A confirmation link to an unlisted URL falls back to the
+  Site URL and the user lands on the wrong page.
+- Authentication → SMTP: configure **custom SMTP**. Supabase's built-in mailer is
+  heavily rate-limited (a handful of emails per hour) and meant for testing; at
+  launch sign-ups would silently stop receiving their confirmation email.
+- Authentication → Rate Limits and **CAPTCHA / bot protection** (Authentication →
+  Attack Protection): turn on a captcha provider for sign-up. Public sign-up
+  without it invites scripted account creation. The sign-up form does not render
+  a captcha widget yet, so enabling it in Supabase requires adding one to
+  `Signup.tsx` first (`options.captchaToken` on `signUp`).
+- Authentication → Email Templates → **Confirm signup**: Arabic/English wording
+  and your brand; it should say what happens next (choose a plan).
+
+**Not built, and worth knowing before launch**
+
+- No free trial: it was removed on purpose; a new gym must subscribe to use the
+  product.
+- No self-service account deletion or data export for a gym that leaves.
+- A user who signs up and never confirms leaves an unconfirmed Auth user and no
+  gym — nothing to clean up on the app side.
 
 ## Platform owner console (`/superadmin`)
 
