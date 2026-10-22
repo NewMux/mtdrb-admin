@@ -187,7 +187,8 @@ access) before relying on this for real customer traffic.
 The database rules are tested in SQL (`supabase/tests/*.test.sql`): row level
 security and cross-tenant isolation (`tenant_isolation`), the platform console,
 subscription and billing guards (`cancel_subscription`, `past_due_grace`,
-`extra_locations`, `self_serve_entitlement`) and POS money (`pos_currency_decimals`). CI runs them on every
+`extra_locations`, `self_serve_entitlement`, `account_deletion`,
+`multiple_taxes`) and POS money (`pos_currency_decimals`). CI runs them on every
 pull request in a throwaway Postgres 16; locally:
 
 ```
@@ -337,6 +338,50 @@ before that date. When the date arrives Paddle sends `subscription.canceled`,
   passes (use Paddle's sandbox to advance the clock, or cancel with a short
   period) the row becomes `cancelled` and access ends.
 
+## Deleting an account (right to erasure) and exporting data
+
+**Settings → Data & privacy.** A gym admin can (a) download everything in the gym
+as one JSON file, (b) download everything held about one member (for that
+member's own data request), and (c) permanently delete the gym. Anyone else can
+delete just their own account. Both deletions ask the person to type the gym's
+exact name (or their email) first.
+
+- **Edge Function `delete-account`** — `{ "scope": "gym" | "me", "confirm": "..." }`.
+  The caller is resolved from their JWT (nothing about identity comes from the
+  request body). For `gym` it **cancels a live Paddle subscription immediately
+  first** (`POST /subscriptions/{id}/cancel`, `effective_from: "immediately"`)
+  and deletes nothing if Paddle refuses, so a gym is never billed for something
+  that no longer exists; then one database transaction
+  (`account_delete_gym()`) deletes the gym and its staff accounts; then the
+  uploaded files are removed from the six storage buckets (best effort, reported
+  to the caller). Platform-owner accounts are refused. Rate limited to 5
+  attempts an hour per person. Deploy with
+  `supabase functions deploy delete-account`; it uses the same secrets as
+  `paddle-cancel-subscription` (`PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`,
+  `APP_ALLOWED_ORIGINS`). Redeploy `paddle-webhook` too: it now ignores the
+  cancellation event that arrives after a gym is gone instead of failing and
+  being retried for days.
+- **Migration `20261024090000_self_service_account_deletion.sql`**:
+  `account_delete_gym()` and `account_delete_user()`, callable by the service
+  role only. They reuse the owner console's deletion rules (returns are removed
+  before sales, a leaving user's records are handed to another admin, a gym's
+  only admin must delete the gym instead). The audit row they write holds only
+  internal ids and counts - no email, no gym name.
+- **What survives a deletion:** the anonymous audit row, payment records held by
+  Paddle, and copies in Supabase's backups until they expire. The privacy policy
+  says so.
+- **A test keeps this honest:** `supabase/tests/account_deletion.test.sql` fails
+  if any table with a `tenant_id` column stops cascading from `tenants`, so a
+  future table cannot silently survive a gym's deletion. When you add a storage
+  bucket, add its `<folder>/<tenant id>/` prefix to
+  `supabase/functions/_shared/tenant-storage.ts`.
+- **The export reads through row level security**, so it can only ever contain
+  the signed-in gym's rows. Tables it cannot read are listed under `errors` in
+  the file rather than skipped silently. Internal platform tables are excluded.
+- **Unverified against a live Paddle account:** the immediate-cancel request
+  body. In the sandbox, subscribe, delete the gym, and confirm Paddle shows the
+  subscription cancelled and the gym is gone.
+
 ## Failed renewal payments (grace period)
 
 When a renewal charge fails Paddle emails the customer and retries for a while
@@ -442,7 +487,7 @@ in the repo and the app cannot check them):
 
 - No free trial: it was removed on purpose; a new gym must subscribe to use the
   product.
-- No self-service account deletion or data export for a gym that leaves.
+- Account deletion and data export exist (see "Deleting an account").
 - A user who signs up and never confirms leaves an unconfirmed Auth user and no
   gym — nothing to clean up on the app side.
 
@@ -470,15 +515,87 @@ point, not tax advice, and the owner can change every value).
   defaults, POS products and receipts, the VAT dashboard, dashboards (day and
   month boundaries use the gym's timezone), and money decimals (BHD/KWD/OMR 3,
   JPY 0, otherwise 2).
-- **Not covered yet**: the interface is English/Arabic only; no tax-authority
-  e-invoicing (e.g. ZATCA, FTA); one tax rate per gym (POS products and invoice
-  lines can still carry their own); invoices are not printed as PDFs.
+- **Several taxes.** A gym can list up to five taxes (a service charge and VAT;
+  GST and a provincial tax). Each has a name, a rate, and an optional "charged on
+  top of the taxes above" (compound) flag. Everything that multiplies - invoices,
+  expenses, POS products and `complete_pos_sale()` - still uses ONE combined rate
+  (`gym_settings.vat_rate`, which is `numeric(5,2)`, so the taxes together must
+  come to a rate with at most two decimals; the form says so if they don't).
+  What is new is a snapshot of how each invoice's and POS sale's tax splits
+  between the taxes (`tax_breakdown`, set when the document is created and never
+  rewritten when the gym later changes its taxes). Receipts, the invoice summary
+  and the VAT dashboard ("Tax collected, by tax") show it. The split is
+  `src/utils/taxMath.ts` in the browser and `allocate_tax_breakdown()` in SQL;
+  `taxMath.test.ts` and `supabase/tests/multiple_taxes.test.sql` share identical
+  golden cases. **Order matters:** apply `20261024120000_multiple_taxes.sql`
+  BEFORE deploying the frontend - invoice creation writes `tax_breakdown`, which
+  fails against a database without the column.
+- **Not covered**: the interface is English/Arabic only; no tax-authority
+  e-invoicing (e.g. ZATCA, FTA); POS returns do not record a per-tax refund (the
+  sale's snapshot is unchanged); the VAT dashboard counts invoices, not POS sales;
+  expenses record one VAT amount, not a per-tax split. Zakat is an annual levy on
+  the business, not a tax added to each sale, so it is deliberately not modelled
+  here.
 
 **Setup checklist.** A gym that has not finished the basics sees a "Get your gym
 set up" card on its dashboard (configure region and tax, create a plan, add a
 member, schedule a class, create an invoice). Each tick is computed from real
 data, not stored; the card hides itself when all five are done or when
 dismissed (remembered per gym in that browser only).
+
+## Worldwide launch checklist
+
+Things the code cannot do for you, in the order I would do them.
+
+1. **Database first, then functions, then the frontend.** Apply every migration
+   in filename order (the last two are `20261024090000_self_service_account_deletion`
+   and `20261024120000_multiple_taxes`); deploy `delete-account` and redeploy
+   `paddle-webhook`; only then deploy the frontend. The new frontend writes
+   `invoices.tax_breakdown` and reads `pos_sales.tax_breakdown`, which fail
+   against a database without them.
+2. **Prices in more than one currency.** The app prices the platform in
+   `VITE_PLATFORM_CURRENCY` (currently BHD). Whether Paddle accepts BHD for your
+   products is **unconfirmed**. Paddle supports a limited list of currencies and
+   shows customers a local price when you add per-country prices to a price
+   object. Before launch: check Paddle's supported-currency list in the
+   dashboard, create prices in USD (and EUR/GBP if you want them), and complete a
+   sandbox purchase from a non-Gulf country. If BHD is not supported, change the
+   price IDs and `VITE_PLATFORM_CURRENCY`/`VITE_STARTER_PRICE`/`VITE_PRO_PRICE`
+   (the plan cards read them) - no code change is needed. The extra-location
+   add-on has its own price IDs and the same question.
+3. **Taxes on your own subscription.** Paddle is the merchant of record: it
+   calculates and remits VAT/sales tax on what gyms pay you. Confirm in the
+   dashboard that tax is enabled for the countries you sell to and whether your
+   prices are tax-inclusive or exclusive.
+4. **Legal review.** The Terms, Privacy and Refund pages are drafts a lawyer has
+   not reviewed. In particular: the governing-law clause names UAE law and the
+   Dubai courts (correct only if that is where the contracting entity is); the
+   privacy page names the processors the code actually uses (Supabase, Vercel,
+   Paddle, Cloudflare Turnstile, optional Sentry) and describes the controller /
+   processor split and the retention behaviour described above; sign data
+   processing agreements with each provider; decide whether you need an EU/UK
+   representative. If you add Google Tag Manager or any analytics, add a cookie
+   consent banner first: today the app stores only session, language/theme and a
+   session-only UTM record, and pushes events to a `dataLayer` that nothing reads.
+5. **Where the data lives.** Choose the Supabase project region deliberately
+   (EU gyms may expect EU hosting); it cannot be moved later without a migration.
+   Use a paid Supabase plan: the free tier pauses after inactivity and has no
+   point-in-time recovery. Turn on backups/PITR and test a restore once.
+6. **Email and abuse.** Custom SMTP, Confirm email, redirect URLs and the
+   Turnstile captcha, as described under "Self-serve sign-up".
+7. **Support and status.** A monitored `support@` / `legal@mtdrb.net` mailbox
+   (the legal pages publish `legal@mtdrb.net`), a place to report problems, and a
+   status page. Set `VITE_SENTRY_DSN` so you hear about errors before customers do.
+8. **Languages.** The interface is English and Arabic only. Adding a language
+   means translating the `translation` block in `src/i18n.ts` (about 5,000
+   strings), registering it in `LanguageSwitcher`, and checking dates and
+   numbers; a missing key shows its raw key name. Gym owners elsewhere can use
+   the English interface; their members' data is entered by them and is not
+   translated.
+9. **Per-country invoicing rules.** Some countries require specific invoice
+   formats or e-invoicing (Saudi ZATCA, UAE FTA, India GST e-invoice). The app
+   records tax correctly and prints the gym's tax number on POS receipts, but it
+   does not generate authority-compliant e-invoices.
 
 ## Platform owner console (`/superadmin`)
 
