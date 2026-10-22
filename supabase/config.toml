@@ -18,3 +18,10 @@ verify_jwt = false
 # function; the function verifies the caller's JWT itself and requires a fully
 # verified platform admin (allowlist + MFA) before it does anything.
 verify_jwt = false
+
+[functions.paddle-manage-locations]
+# Called from the browser by a signed-in tenant admin. verify_jwt stays off so
+# the CORS preflight (no Authorization header) reaches the function; the
+# function runs get_location_usage() as the caller, so Postgres verifies the
+# JWT and decides who they are and whether they are their gym's admin.
+verify_jwt = false

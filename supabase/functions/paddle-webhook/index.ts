@@ -18,21 +18,15 @@
 // event payload details can still differ in ways docs don't fully cover.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { paddleAmountToMajor } from "./money.ts";
+import { breakdownItems, readPriceConfig } from "../_shared/paddle-items.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PADDLE_WEBHOOK_SECRET = Deno.env.get("PADDLE_WEBHOOK_SECRET");
 
-// Maps a Paddle price ID (the subscription's first line item) to our
-// plan_tier. Set PADDLE_STARTER_PRICE_ID/PADDLE_PRO_PRICE_ID to the real
-// price IDs from your Paddle catalog once it exists.
-function priceIdToPlan(priceId: string | undefined): string | undefined {
-  if (!priceId) return undefined;
-  if (priceId === Deno.env.get("PADDLE_STARTER_PRICE_ID")) return "starter";
-  if (priceId === Deno.env.get("PADDLE_PRO_PRICE_ID")) return "pro";
-  return undefined;
-}
+// Price IDs from your Paddle catalog (see scripts/seed-paddle-catalog.mjs):
+// the base Starter / Pro prices and the per-plan extra-location add-on prices.
+const priceConfig = () => readPriceConfig((key) => Deno.env.get(key));
 
 // Paddle subscription statuses -> our platform_subscriptions.status.
 // Paddle: active | trialing | past_due | paused | canceled
@@ -126,21 +120,14 @@ async function syncSubscription(
     return;
   }
 
-  const items = Array.isArray(data.items) ? (data.items as Record<string, unknown>[]) : [];
-  const firstItem = items[0];
-  const price = firstItem?.price as Record<string, unknown> | undefined;
-  const priceId = typeof price?.id === "string" ? price.id : undefined;
-  const planTier = priceIdToPlan(priceId);
+  // The subscription has a base plan item and, once the tenant has added
+  // branches, an extra-location item. Items are matched by price ID (not
+  // position); see _shared/paddle-items.ts.
+  const { planTier, extraLocations, amount, currencyCode } = breakdownItems(data.items, priceConfig());
 
   const paddleStatus = typeof data.status === "string" ? data.status : "canceled";
   const status = mapStatus(paddleStatus);
   const nextBilledAt = typeof data.next_billed_at === "string" ? data.next_billed_at : null;
-
-  // Paddle returns unit_price.amount as a string in the currency's smallest
-  // unit; the number of decimals depends on the currency (see money.ts).
-  const unitPrice = price?.unit_price as Record<string, unknown> | undefined;
-  const currencyCode = typeof unitPrice?.currency_code === "string" ? unitPrice.currency_code : undefined;
-  const amount = paddleAmountToMajor(unitPrice?.amount, currencyCode);
 
   const { error } = await serviceClient
     .from("platform_subscriptions")
@@ -151,6 +138,9 @@ async function syncSubscription(
         ...(planTier ? { plan_tier: planTier } : {}),
         ...(amount !== null ? { amount } : {}),
         ...(currencyCode ? { currency: currencyCode } : {}),
+        // null = extra-location price IDs aren't configured, so the quantity
+        // can't be read: leave the stored value alone rather than zero it.
+        ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
         current_period_end: nextBilledAt,
         payment_provider: "paddle",
         payment_reference: typeof data.id === "string" ? data.id : null,
