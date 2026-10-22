@@ -101,6 +101,7 @@ export async function listTenants(
     p_sort: params.sort ?? "created_desc",
     p_limit: params.limit ?? 25,
     p_offset: params.offset ?? 0,
+    p_country: params.country || null,
   });
   const list = expectObject<PlatformTenantList>(data, "tenant list", ["total", "rows"]);
   if (!Array.isArray(list.rows)) {

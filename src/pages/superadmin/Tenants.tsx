@@ -4,7 +4,7 @@ import { FiSearch, FiUsers } from "react-icons/fi";
 import { EmptyState, SmartButton, SmartLoading } from "../../components/ui";
 import AccessStateBadge from "../../components/superadmin/AccessStateBadge";
 import InviteGymModal from "../../components/superadmin/InviteGymModal";
-import { listTenants } from "../../api/platformAdmin";
+import { fetchGymsByCountry, listTenants } from "../../api/platformAdmin";
 import { useRemoteData } from "../../hooks/useRemoteData";
 import type { PlatformTenantRow } from "../../types/platformAdmin";
 import {
@@ -13,6 +13,7 @@ import {
   TENANT_SORTS,
   describeSource,
   formatDate,
+  countryName,
   formatRelativeDays,
   parseTenantListQuery,
   serializeTenantListQuery,
@@ -60,11 +61,21 @@ export default function Tenants() {
         search: query.q,
         filter: query.filter,
         sort: query.sort,
+        country: query.country,
         limit: TENANT_PAGE_SIZE,
         offset: (query.page - 1) * TENANT_PAGE_SIZE,
       }),
-    [query.q, query.filter, query.sort, query.page],
+    [query.q, query.filter, query.sort, query.country, query.page],
   );
+
+  // The country choices come from the report; if it fails the filter simply
+  // offers what the URL already selected.
+  const { data: countryData } = useRemoteData(fetchGymsByCountry, []);
+  const countryOptions = useMemo(() => {
+    const codes = (countryData?.rows ?? []).flatMap((r) => (r.country ? [r.country] : []));
+    if (/^[A-Z]{2}$/.test(query.country) && !codes.includes(query.country)) codes.push(query.country);
+    return codes;
+  }, [countryData, query.country]);
 
   const total = data?.total ?? 0;
   const rows = data?.rows ?? [];
@@ -100,6 +111,23 @@ export default function Tenants() {
               className="w-full rounded-lg border border-gray-300 bg-white py-2 ps-9 pe-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
             />
           </div>
+          <label htmlFor="tenant-country" className="sr-only">
+            Country
+          </label>
+          <select
+            id="tenant-country"
+            value={query.country}
+            onChange={(e) => update({ country: e.target.value, page: 1 })}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+          >
+            <option value="">All countries</option>
+            {countryOptions.map((c) => (
+              <option key={c} value={c}>
+                {countryName(c)}
+              </option>
+            ))}
+            <option value="none">Not set yet</option>
+          </select>
           <label htmlFor="tenant-sort" className="sr-only">
             Sort
           </label>
@@ -153,7 +181,7 @@ export default function Tenants() {
             title="No gyms match"
             description={query.page > 1 ? "There is nothing on this page." : "Try a different search or filter."}
             action={
-              <SmartButton variant="secondary" size="sm" onClick={() => update({ q: "", filter: "all", page: 1 })}>
+              <SmartButton variant="secondary" size="sm" onClick={() => update({ q: "", filter: "all", country: "", page: 1 })}>
                 Clear filters
               </SmartButton>
             }
@@ -167,6 +195,7 @@ export default function Tenants() {
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-start font-medium">Gym</th>
+                  <th scope="col" className="px-4 py-3 text-start font-medium">Country</th>
                   <th scope="col" className="px-4 py-3 text-start font-medium">Access</th>
                   <th scope="col" className="px-4 py-3 text-start font-medium">Plan · source</th>
                   <th scope="col" className="px-4 py-3 text-start font-medium">Access ends</th>
@@ -184,6 +213,9 @@ export default function Tenants() {
                       <span className="block truncate text-xs text-gray-500 dark:text-gray-400" title={row.admin_email ?? ""}>
                         {row.admin_email ?? "no admin email"}
                       </span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {row.country ? countryName(row.country) : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <AccessStateBadge state={row.access_state} />
@@ -220,7 +252,10 @@ export default function Tenants() {
                     )}
                   </span>
                 </div>
-                <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{row.admin_email ?? "no admin email"}</p>
+                <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">
+                  {row.admin_email ?? "no admin email"}
+                  {row.country ? ` · ${countryName(row.country)}` : ""}
+                </p>
                 <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
                   {row.subscription ? `${planAndSource(row)} · ${accessEnds(row)}` : "No subscription yet"}
                 </p>

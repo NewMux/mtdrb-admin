@@ -246,10 +246,22 @@ export function formatRelativeDays(
 
 export const TENANT_PAGE_SIZE = 25;
 
+/** "BH" -> "Bahrain". Falls back to the code if the runtime does not know it. */
+export function countryName(code: string | null | undefined): string {
+  if (!code) return "Not set yet";
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 export interface TenantListQuery {
   q: string;
   filter: TenantFilter;
   sort: TenantSort;
+  /** "" = every country, "none" = no country set, else an ISO code. */
+  country: string;
   page: number;
 }
 
@@ -261,10 +273,12 @@ export function parseTenantListQuery(search: URLSearchParams): TenantListQuery {
   const filter = search.get("filter") as TenantFilter | null;
   const sort = search.get("sort") as TenantSort | null;
   const page = Number.parseInt(search.get("page") ?? "1", 10);
+  const country = (search.get("country") ?? "").trim().toUpperCase();
   return {
     q: (search.get("q") ?? "").slice(0, 100),
     filter: filter && FILTER_VALUES.includes(filter) ? filter : "all",
     sort: sort && SORT_VALUES.includes(sort) ? sort : "created_desc",
+    country: country === "NONE" ? "none" : /^[A-Z]{2}$/.test(country) ? country : "",
     page: Number.isFinite(page) && page >= 1 ? page : 1,
   };
 }
@@ -275,6 +289,7 @@ export function serializeTenantListQuery(query: TenantListQuery): URLSearchParam
   if (query.q) params.set("q", query.q);
   if (query.filter !== "all") params.set("filter", query.filter);
   if (query.sort !== "created_desc") params.set("sort", query.sort);
+  if (query.country) params.set("country", query.country);
   if (query.page > 1) params.set("page", String(query.page));
   return params;
 }

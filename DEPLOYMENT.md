@@ -907,6 +907,13 @@ setup; gyms that haven't chosen one yet are listed as "Not set yet". It counts
 gyms, not visitors — for paying customers' billing countries use the Paddle
 dashboard, and for site visitors Vercel Analytics.
 
+The Gyms list also shows each gym's country and has a country filter
+(`?country=BH`, or `?country=none` for gyms that haven't chosen one); the
+country names in the Overview table link to it. That needs
+`20261024210000_gyms_list_country_filter.sql`, which replaces
+`platform_list_tenants` with a version that has one extra optional argument —
+apply it before the frontend.
+
 ## Financial document migration
 
 New receipt and invoice records store an object path rather than a public URL. The UI requests a five-minute signed URL only when a user opens a document. Existing values that use the old Supabase public URL format are converted to their object path by `src/utils/storage.ts`; arbitrary external URLs are rejected. After confirming signed access works, remove any old public bucket access and invalidate old public URLs where your storage policy permits.

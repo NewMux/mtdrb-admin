@@ -49,6 +49,8 @@ export interface PlatformTenantRow {
   admin_email: string | null;
   admin_last_sign_in: string | null;
   access_state: AccessState;
+  /** ISO 3166-1 alpha-2 chosen in the gym's setup; null until then. */
+  country: string | null;
   /** True while the gym is suspended (its staff cannot sign in). */
   suspended: boolean;
   subscription: SubscriptionSummary | null;
@@ -199,6 +201,8 @@ export interface ListTenantsParams {
   search?: string;
   filter?: TenantFilter;
   sort?: TenantSort;
+  /** ISO code, or "none" for gyms without a country; omit for all. */
+  country?: string;
   limit?: number;
   offset?: number;
 }

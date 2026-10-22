@@ -97,6 +97,7 @@ describe("request shaping", () => {
       p_sort: "created_desc",
       p_limit: 25,
       p_offset: 25,
+      p_country: null,
     });
   });
 

@@ -178,6 +178,7 @@ describe("tenant list query <-> URL", () => {
       q: "",
       filter: "all",
       sort: "created_desc",
+      country: "",
       page: 1,
     });
     const hostile = parseTenantListQuery(
@@ -187,14 +188,20 @@ describe("tenant list query <-> URL", () => {
     expect(hostile.sort).toBe("created_desc");
     expect(hostile.page).toBe(1);
     expect(hostile.q).toHaveLength(100);
+    expect(parseTenantListQuery(new URLSearchParams("country=bahrain; drop")).country).toBe("");
   });
 
   it("round-trips, omitting defaults", () => {
-    const query = { q: "iron", filter: "awaiting_activation", sort: "name_asc", page: 3 } as const;
+    const query = { q: "iron", filter: "awaiting_activation", sort: "name_asc", country: "BH", page: 3 } as const;
     const params = serializeTenantListQuery(query);
-    expect(params.toString()).toBe("q=iron&filter=awaiting_activation&sort=name_asc&page=3");
+    expect(params.toString()).toBe("q=iron&filter=awaiting_activation&sort=name_asc&country=BH&page=3");
     expect(parseTenantListQuery(params)).toEqual(query);
-    expect(serializeTenantListQuery({ q: "", filter: "all", sort: "created_desc", page: 1 }).toString()).toBe("");
+    expect(serializeTenantListQuery({ q: "", filter: "all", sort: "created_desc", country: "", page: 1 }).toString()).toBe("");
+  });
+
+  it("normalises the country: lower case is upper-cased, 'none' is kept", () => {
+    expect(parseTenantListQuery(new URLSearchParams("country=de")).country).toBe("DE");
+    expect(parseTenantListQuery(new URLSearchParams("country=NONE")).country).toBe("none");
   });
 });
 

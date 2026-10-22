@@ -1,17 +1,9 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { SmartButton } from "../ui";
 import { fetchGymsByCountry } from "../../api/platformAdmin";
 import { useRemoteData } from "../../hooks/useRemoteData";
-
-/** "BH" -> "Bahrain". Falls back to the code if the runtime does not know it. */
-function countryName(code: string | null): string {
-  if (!code) return "Not set yet";
-  try {
-    return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code;
-  } catch {
-    return code;
-  }
-}
+import { countryName } from "../../utils/platformAdmin";
 
 /**
  * Where the platform's gyms are, from the country each gym chose in its setup.
@@ -64,7 +56,12 @@ export default function GymsByCountryCard() {
                 {data.rows.map((r) => (
                   <tr key={r.country ?? "unknown"} className="text-gray-900 dark:text-gray-100">
                     <td className="py-2 pe-3 text-start">
-                      {countryName(r.country)}
+                      <Link
+                        to={`/superadmin/tenants?country=${r.country ?? "none"}`}
+                        className="hover:underline"
+                      >
+                        {countryName(r.country)}
+                      </Link>
                       {r.country && <span className="ms-2 text-xs text-gray-500 dark:text-gray-400">{r.country}</span>}
                     </td>
                     <td className="px-3 py-2 text-end tabular-nums">{r.gyms}</td>

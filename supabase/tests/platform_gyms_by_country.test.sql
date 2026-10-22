@@ -131,6 +131,23 @@ SELECT test.ok((public.platform_gyms_by_country() #>> '{rows,1,country}') = 'DE'
 SELECT test.ok((public.platform_gyms_by_country() #>> '{rows,1,trialing}')::int = 1, 'trial count per country');
 SELECT test.ok((public.platform_gyms_by_country() #>> '{rows,2,country}') IS NULL
                AND (public.platform_gyms_by_country() #>> '{rows,2,gyms}')::int = 2, 'no setup and a junk value are grouped as unknown, last');
+
+-- 3. The gyms list: country on each row, and the filter
+SELECT test.ok((public.platform_list_tenants() ->> 'total')::int = 5, 'list: unfiltered still returns every gym');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'BH') ->> 'total')::int = 2, 'list: BH filter');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, ' bh ') ->> 'total')::int = 2, 'list: filter is case/space tolerant');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'DE') #>> '{rows,0,name}') = 'Germany 1', 'list: DE filter returns the German gym');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'DE') #>> '{rows,0,country}') = 'DE', 'list: row carries its country');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'none') ->> 'total')::int = 2, 'list: none = no setup + junk value');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'FR') ->> 'total')::int = 0, 'list: a country with no gyms is empty');
+SELECT test.ok((public.platform_list_tenants(NULL, 'paid', 'created_desc', 25, 0, 'BH') ->> 'total')::int = 1, 'list: country combines with the access filter');
+SELECT test.ok((public.platform_list_tenants('german', 'all', 'created_desc', 25, 0, 'BH') ->> 'total')::int = 0, 'list: country combines with search');
+SELECT test.ok((public.platform_list_tenants(NULL, 'all', 'created_desc', 1, 0, 'BH') ->> 'total')::int = 2, 'list: total ignores paging');
+SELECT test.expect_err($q$SELECT public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'Bahrain')$q$, '22023', 'Unknown country', 'list: junk country is refused');
+SELECT test.expect_err($q$SELECT public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, '''; drop table x;--')$q$, '22023', 'Unknown country', 'list: injection-shaped country is refused');
+RESET ROLE;
+SELECT test.become('00000000-0000-0000-0000-0000000000b1', 'aal2', NULL);
+SELECT test.expect_err($q$SELECT public.platform_list_tenants(NULL, 'all', 'created_desc', 25, 0, 'BH')$q$, '42501', 'forbidden', 'list: tenant admin still refused');
 RESET ROLE;
 
 SELECT 'ALL PASSED: ' || n || ' checks' AS result FROM test.counter;
