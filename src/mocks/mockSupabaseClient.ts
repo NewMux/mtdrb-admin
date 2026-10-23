@@ -7,6 +7,7 @@ import type { User, UserAttributes } from "@supabase/supabase-js";
 import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 import { mockInviteStaff, mockRoleRows, mockStaffRpc } from "./staffMock";
+import { mockPosRpc } from "./posMock";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -385,6 +386,9 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
           returnedRows.push(clone(tableRows[existingIndex]));
         } else {
           const insertedRow = clone(incomingRow);
+          // The database fills in the key and the creation time; lists sorted by newest rely on them.
+          if (insertedRow.id == null) insertedRow.id = globalThis.crypto.randomUUID();
+          if (insertedRow.created_at == null) insertedRow.created_at = new Date().toISOString();
           tableRows.push(insertedRow);
           returnedRows.push(clone(insertedRow));
         }
@@ -547,7 +551,7 @@ export function createMockSupabaseClient() {
   return {
     from: (table: string) => new MockQueryBuilder(table),
     rpc: (name: string, args?: Record<string, unknown>) =>
-      Promise.resolve(mockPlatformRpc(name, args) ?? mockStaffRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockRpc(name)),
+      Promise.resolve(mockPlatformRpc(name, args) ?? mockStaffRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockPosRpc(name, args, { rows: getMutableTableRows, persist: persistMockTableStore }) ?? mockRpc(name)),
     channel: () => ({
       on: () => ({ subscribe: () => noopSub }),
       subscribe: () => noopSub,

@@ -392,7 +392,7 @@ export default function ExportTrainerDataModal({
               >
                 Select All
               </button>
-              <span className="text-gray-400">|</span>
+              <span className="text-gray-500">|</span>
               <button
                 onClick={handleDeselectAll}
                 className="text-sm text-gray-600 hover:text-gray-700 font-medium"
@@ -420,7 +420,7 @@ export default function ExportTrainerDataModal({
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <div className="flex items-center gap-3 flex-1">
-                  <option.icon className="text-gray-400 w-5 h-5" />
+                  <option.icon className="text-gray-500 w-5 h-5" />
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{option.name}</h4>
                     <p className="text-sm text-gray-600">

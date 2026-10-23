@@ -195,7 +195,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {selectedTrainer && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiUser className="h-4 w-4" />
                 <span>{selectedTrainerData?.name}</span>
               </div>

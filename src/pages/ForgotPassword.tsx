@@ -136,7 +136,7 @@ export default function ForgotPassword() {
                 </p>
                 <Link
                   to="/login"
-                  className="inline-flex items-center font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="inline-flex items-center font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {isRTL ? "→ " : "← "}
                   {t("auth.backToLogin")}
@@ -165,7 +165,7 @@ export default function ForgotPassword() {
                       <div
                         className={`absolute inset-y-0 ${isRTL ? "right-0 pr-3" : "left-0 pl-3"} flex items-center pointer-events-none`}
                       >
-                        <FiMail className="h-5 w-5 text-gray-400" />
+                        <FiMail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                       </div>
                       <input
                         type="email"
@@ -235,7 +235,7 @@ export default function ForgotPassword() {
                 <div className="mt-8 text-center">
                   <Link
                     to="/login"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                   >
                     {isRTL ? "→ " : "← "}
                     {t("auth.backToLogin")}

@@ -493,7 +493,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 <div className="p-5 bg-whitebg-dark-800 rounded-xl border border-light-200border-dark-600 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex items-center space-x-2 mb-4">
                     <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                      <FiDollarSign className="h-4 w-4 text-green-600" />
+                      <FiDollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                     <h3 className="text-sm font-semibold text-dark-900text-white">
                       Financial Summary
@@ -664,7 +664,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       />
                     ) : (
                       <div className="h-full bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
-                        <span className="text-sm text-gray-500">No bookings yet</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">No bookings yet</span>
                       </div>
                     )}
                   </div>
@@ -707,7 +707,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                       />
                     ) : (
                       <div className="h-full bg-gray-100bg-gray-800 rounded-lg flex items-center justify-center">
-                        <span className="text-sm text-gray-500">No bookings yet</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">No bookings yet</span>
                       </div>
                     )}
                   </div>
@@ -721,7 +721,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {analytics?.attendance_rate || 0}%
                     </div>
                     <div className="text-light-600text-dark-400">
@@ -729,7 +729,7 @@ const ViewClassDetailsModal: React.FC<ViewClassDetailsModalProps> = ({
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {analytics?.capacity_utilization || 0}%
                     </div>
                     <div className="text-light-600text-dark-400">

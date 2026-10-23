@@ -487,7 +487,7 @@ export const getDefaultWorkflows = (
       type: "booking_reminders",
       status: "active",
       icon: "FiBell",
-      color: "text-blue-600",
+      color: "text-blue-600 dark:text-blue-400",
       bg_color: "bg-blue-50",
       triggers: buildTriggers([
         "24 hours before class",
@@ -531,7 +531,7 @@ export const getDefaultWorkflows = (
       type: "capacity_optimization",
       status: "active",
       icon: "FiTarget",
-      color: "text-green-600",
+      color: "text-green-600 dark:text-green-400",
       bg_color: "bg-green-50",
       triggers: buildTriggers([
         "24 hours before class",
@@ -678,7 +678,7 @@ export const getDefaultWorkflows = (
       type: "attendance_tracking",
       status: "active",
       icon: "FiUsers",
-      color: "text-red-600",
+      color: "text-red-600 dark:text-red-400",
       bg_color: "bg-red-50",
       triggers: [
         {

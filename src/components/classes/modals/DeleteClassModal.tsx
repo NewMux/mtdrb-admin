@@ -113,7 +113,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
         <div className="flex items-center justify-between gap-4 w-full">
           <div className="flex items-center gap-2">
             {isHighImpact && (
-              <div className="flex items-center gap-1 text-sm text-red-600">
+              <div className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400">
                 <FiAlertTriangle className="h-4 w-4 flex-shrink-0" />
                 <span>{t("classes.highImpactAction", "إجراء عالي التأثير")}</span>
               </div>
@@ -325,7 +325,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     id="notify-members"
                     checked={notifyMembers}
                     onChange={(e) => setNotifyMembers(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                   />
                   <label
                     htmlFor="notify-members"
@@ -343,7 +343,7 @@ const DeleteClassModal: React.FC<DeleteClassModalProps> = ({
                     id="notify-trainer"
                     checked={notifyTrainer}
                     onChange={(e) => setNotifyTrainer(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-600 dark:text-green-400 focus:ring-green-500"
                   />
                   <label
                     htmlFor="notify-trainer"

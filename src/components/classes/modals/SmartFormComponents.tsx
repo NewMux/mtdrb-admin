@@ -38,7 +38,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       </label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
             {icon}
           </div>
         )}
@@ -180,7 +180,7 @@ export const TimeField: React.FC<TimeFieldProps> = ({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
         <input
           type="time"
           value={value}
@@ -235,7 +235,7 @@ export const DateField: React.FC<DateFieldProps> = ({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
         <input
           type="date"
           value={value}
@@ -309,7 +309,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-gray-400"
+            className="text-gray-500"
           >
             <FiChevronDown className="h-4 w-4" />
           </motion.div>

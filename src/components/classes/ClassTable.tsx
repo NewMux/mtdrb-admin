@@ -333,7 +333,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
                   <td className="px-6 py-4 text-start">
                     <div className="flex items-center gap-2">
-                      <FiClock className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                      <FiClock className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-900 dark:text-white font-medium">
                         {formatClassTime(classItem.start_time)}
                       </span>

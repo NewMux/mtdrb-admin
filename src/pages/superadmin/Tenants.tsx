@@ -97,7 +97,7 @@ export default function Tenants() {
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="relative flex-1">
-            <FiSearch className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+            <FiSearch className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" aria-hidden="true" />
             <label htmlFor="tenant-search" className="sr-only">
               Search gyms or admin emails
             </label>

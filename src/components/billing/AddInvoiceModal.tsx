@@ -577,7 +577,7 @@ export function AddInvoiceModal({
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {selectedFile.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
@@ -588,7 +588,7 @@ export function AddInvoiceModal({
                           setFilePreview(null);
                           setValue("invoice_file", null);
                         }}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium cursor-pointer"
                       >
                         {t("billing.removeFile", "حذف الملف")}
                       </button>
@@ -596,7 +596,7 @@ export function AddInvoiceModal({
                   ) : (
                     <div className="space-y-4">
                       <div className="flex justify-center">
-                        <FiUpload className="h-12 w-12 text-gray-400" />
+                        <FiUpload className="h-12 w-12 text-gray-500 dark:text-gray-400" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -604,7 +604,7 @@ export function AddInvoiceModal({
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium cursor-pointer"
                           >
                             {t("billing.browseFiles", "استعراض الملفات")}
                           </button>

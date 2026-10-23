@@ -116,12 +116,12 @@ export default function UpdateTrainerStatusModal({
       {status === "on_leave" && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <FiLock className="text-gray-400" title="Pro feature" />
+            <FiLock className="text-gray-500 dark:text-gray-400" title="Pro feature" />
             <span className="font-semibold text-gray-900">
               Smart: Suggest backup trainers
             </span>
           </div>
-          <div className="text-gray-500 text-sm">
+          <div className="text-gray-500 dark:text-gray-400 text-sm">
             (Pro) System will suggest available backup trainers for this period.
           </div>
         </div>

@@ -265,7 +265,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
                     <FiClock className={`w-5 h-5 ${
                       cancellationType === "immediate" 
                         ? "text-red-600 dark:text-red-400" 
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }`} />
                     <div>
                       <p className={`font-medium ${
@@ -294,7 +294,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
                     <FiCalendar className={`w-5 h-5 ${
                       cancellationType === "end_of_period" 
                         ? "text-amber-600 dark:text-amber-400" 
-                        : "text-gray-400"
+                        : "text-gray-500"
                     }`} />
                     <div>
                       <p className={`font-medium ${
@@ -383,7 +383,7 @@ const CancelMembershipModal: React.FC<CancelMembershipModalProps> = ({
                 id="confirm-cancellation"
                 checked={confirmChecked}
                 onChange={(e) => setConfirmChecked(e.target.checked)}
-                className="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                className="mt-1 w-4 h-4 text-red-600 dark:text-red-400 border-gray-300 rounded focus:ring-red-500"
               />
               <label htmlFor="confirm-cancellation" className="text-sm text-gray-700 dark:text-gray-300">
                 {t("members.confirmCancellationCheckbox", "I understand that this action will cancel the membership and the member will lose access to gym facilities. I have verified that this cancellation is authorized.")}

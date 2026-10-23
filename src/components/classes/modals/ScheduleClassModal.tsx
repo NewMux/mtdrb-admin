@@ -282,13 +282,13 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {isPro && recommendations.length > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiZap className="h-4 w-4" />
                 <span>{recommendations.length} Smart suggestions</span>
               </div>
             )}
             {schedulePreview.length > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-green-600">
+              <div className="flex items-center space-x-1 text-sm text-green-600 dark:text-green-400">
                 <FiCheck className="h-4 w-4" />
                 <span>{schedulePreview.length} classes scheduled</span>
               </div>
@@ -444,7 +444,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
           {isPro && optimalTimes.length > 0 && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
-                <FiClock className="h-4 w-4 text-blue-600" />
+                <FiClock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                   Popular Time Slots
                 </span>

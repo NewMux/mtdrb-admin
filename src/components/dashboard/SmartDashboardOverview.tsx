@@ -96,7 +96,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       value: 0,
       change: t("common.loading"),
       trend: "neutral",
-      icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+      icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       color: "blue",
       subtitle: t("dashboard.vsLastMonth"),
     },
@@ -105,7 +105,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       value: "0",
       change: t("common.loading"),
       trend: "neutral",
-      icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
+      icon: <FiCreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />,
       color: "green",
       subtitle: t("dashboard.thisMonth"),
     },
@@ -283,7 +283,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
                 ? `+${memberChange.toFixed(1)}%`
                 : `${memberChange.toFixed(1)}%`,
           trend: memberChange === null ? "neutral" : memberChange >= 0 ? "up" : "down",
-          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
           color: "blue",
           subtitle: t("dashboard.vsLastMonth"),
         },
@@ -292,7 +292,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           value: `${currencySymbol} ${(currentRevenue / 1000).toFixed(1)}k`,
           change: revenueChange >= 0 ? `+${revenueChange.toFixed(1)}%` : `${revenueChange.toFixed(1)}%`,
           trend: revenueChange >= 0 ? "up" : "down",
-          icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
+          icon: <FiCreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />,
           color: "green",
           subtitle:
             savedRevenueTarget > 0
@@ -331,7 +331,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       
       if (inactiveMembers > 0) {
         insights.push({
-          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
           title: t("dashboard.memberChurnRisk"),
           description: `${inactiveMembers} ${t("dashboard.membersHaventVisited")}`,
           action: t("dashboard.sendCampaign"),
@@ -342,7 +342,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       if (weekAttendanceRate > 80) {
         insights.push({
-          icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
+          icon: <FiTrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />,
           title: t("dashboard.highAttendanceWeek"),
           description: `${t("dashboard.thisWeeksAttendance")} ${weekAttendanceRate.toFixed(1)}%. ${t("dashboard.considerAddingMoreClasses")}`,
           action: t("dashboard.scheduleClass"),

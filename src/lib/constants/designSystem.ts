@@ -41,7 +41,7 @@ export const DESIGN_TOKENS = {
   colors: {
     primary: {
       bg: 'bg-blue-500',
-      text: 'text-blue-600',
+      text: 'text-blue-600 dark:text-blue-400',
       hover: 'hover:bg-blue-600',
       light: 'bg-blue-50',
       border: 'border-blue-200',
@@ -62,14 +62,14 @@ export const DESIGN_TOKENS = {
     },
     danger: {
       bg: 'bg-red-500',
-      text: 'text-red-600',
+      text: 'text-red-600 dark:text-red-400',
       hover: 'hover:bg-red-600',
       light: 'bg-red-50',
       border: 'border-red-200',
     },
     neutral: {
       bg: 'bg-gray-500',
-      text: 'text-gray-600',
+      text: 'text-gray-600 dark:text-gray-300',
       hover: 'hover:bg-gray-600',
       light: 'bg-gray-50',
       border: 'border-gray-200',
@@ -119,7 +119,7 @@ export const MODAL_STYLES = {
     container: 'sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200/50 dark:border-gray-700/50 px-8 py-6',
     title: 'text-xl font-semibold text-gray-900 dark:text-white tracking-tight',
     subtitle: 'text-sm text-gray-600 dark:text-gray-400 mt-1',
-    closeButton: 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700',
+    closeButton: 'text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-gray-700',
   },
 
   // Content

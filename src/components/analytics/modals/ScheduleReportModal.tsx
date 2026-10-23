@@ -250,7 +250,7 @@ export default function ScheduleReportModal({
                     {template.recommendedFrequency}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   {template.description}
                 </p>
               </div>
@@ -295,8 +295,8 @@ export default function ScheduleReportModal({
                     <Icon
                       className={
                         frequency === freq.id
-                          ? "text-blue-600"
-                          : "text-gray-500"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-gray-500 dark:text-gray-400"
                       }
                     />
                     <h4 className="font-semibold text-gray-900">
@@ -308,7 +308,7 @@ export default function ScheduleReportModal({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{freq.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{freq.description}</p>
                 </div>
               </label>
             );
@@ -349,15 +349,15 @@ export default function ScheduleReportModal({
                     <Icon
                       className={
                         deliveryMethod === method.id
-                          ? "text-blue-600"
-                          : "text-gray-500"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-gray-500 dark:text-gray-400"
                       }
                     />
                     <h4 className="font-semibold text-gray-900">
                       {method.label}
                     </h4>
                   </div>
-                  <p className="text-sm text-gray-600">{method.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{method.description}</p>
                 </div>
               </label>
             );
@@ -380,7 +380,7 @@ export default function ScheduleReportModal({
               }
               placeholder="admin@mtdrb.net, employee@mtdrb.net"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Separate multiple emails with commas
             </p>
           </div>
@@ -400,7 +400,7 @@ export default function ScheduleReportModal({
       <Section title="Smart Recommendations">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <FiZap className="text-blue-600 mt-1" />
+            <FiZap className="text-blue-600 dark:text-blue-400 mt-1" />
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Smart Suggestions
@@ -427,7 +427,7 @@ export default function ScheduleReportModal({
                     collaboration
                   </span>
                   {!isPro && (
-                    <FiLock className="text-gray-400" title="Pro feature" />
+                    <FiLock className="text-gray-500 dark:text-gray-400" title="Pro feature" />
                   )}
                 </li>
               </ul>
@@ -448,14 +448,14 @@ export default function ScheduleReportModal({
                 <h4 className="font-semibold text-gray-900">
                   {getSelectedTemplate()?.name}
                 </h4>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {frequency} delivery
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-white rounded-lg p-3 border">
                   <div className="font-medium text-gray-900">Would Next Occur</div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-300">
                     {computeNextDelivery(startDate, frequency).toLocaleDateString(undefined, {
                       weekday: "long",
                       year: "numeric",
@@ -468,13 +468,13 @@ export default function ScheduleReportModal({
                   <div className="font-medium text-gray-900">
                     Delivery Method
                   </div>
-                  <div className="text-gray-600 capitalize">
+                  <div className="text-gray-600 dark:text-gray-300 capitalize">
                     {deliveryMethod}
                   </div>
                 </div>
                 <div className="bg-white rounded-lg p-3 border">
                   <div className="font-medium text-gray-900">Recipients</div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-300">
                     {recipients.length} email(s)
                   </div>
                 </div>

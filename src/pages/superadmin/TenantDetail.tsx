@@ -201,7 +201,7 @@ export default function TenantDetail() {
                       type="button"
                       onClick={() => void copy(subscription.payment_reference as string)}
                       aria-label="Copy Paddle subscription id"
-                      className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="rounded p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <FiCopy className="h-4 w-4" aria-hidden="true" />
                     </button>

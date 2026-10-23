@@ -242,8 +242,8 @@ export const DocumentChecklist: React.FC<{
   return (
     <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-1">
-        <FiFileText className="w-4 h-4 text-gray-500" />
-        <span className="text-xs text-gray-600">
+        <FiFileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <span className="text-xs text-gray-600 dark:text-gray-300">
           {completedDocs}/{totalDocs}
         </span>
       </div>
@@ -286,7 +286,7 @@ export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({
   return (
     <button
       onClick={handleSendWhatsApp}
-      className="text-green-600 hover:text-green-700 p-1 rounded hover:bg-green-50"
+      className="text-green-600 dark:text-green-400 hover:text-green-700 p-1 rounded hover:bg-green-50"
       title={`Send ${template} message`}
     >
       <FiMessageCircle className="w-4 h-4" />
@@ -353,11 +353,12 @@ const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700`}>
+    <div className={`flex flex-wrap items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between gap-y-3 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700`}>
       {/* Items per page selector */}
       <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
         <span className="text-sm text-gray-700 dark:text-gray-300">{t("members.show")}</span>
         <select
+          aria-label={t("members.show")}
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           className="form-select text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
@@ -377,12 +378,12 @@ const Pagination: React.FC<PaginationProps> = ({
       </div>
 
       {/* Pagination controls */}
-      <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
+      <div className={`flex flex-wrap items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-1`}>
         {/* First page */}
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           title={t("members.firstPage")}
         >
           <FiChevronsLeft className="w-4 h-4" />
@@ -392,7 +393,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           title={t("members.previousPage")}
         >
           <FiChevronLeft className="w-4 h-4" />
@@ -422,7 +423,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           title={t("members.nextPage")}
         >
           <FiChevronRight className="w-4 h-4" />
@@ -432,7 +433,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           title={t("members.lastPage")}
         >
           <FiChevronsRight className="w-4 h-4" />
@@ -601,7 +602,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {member.phone}
                           </div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {t("members.joinDate")}{" "}
                             {new Date(member.joinDate).toLocaleDateString()}
                           </div>
@@ -646,8 +647,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => onView(member)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                          className="p-1.5 -m-1 rounded-md text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                           title={t("members.viewProfile")}
+                          aria-label={t("members.viewProfile")}
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -655,8 +657,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         {canEdit && (
                           <button
                             onClick={() => onEdit(member)}
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                            className="p-1.5 -m-1 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                             title={t("members.editMember")}
+                            aria-label={t("members.editMember")}
                           >
                             <FiEdit className="w-4 h-4" />
                           </button>
@@ -665,7 +668,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         {canEdit && onChangePlan && (
                           <button
                             onClick={() => onChangePlan(member)}
-                            className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                            className="p-1.5 -m-1 rounded-md text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
                             title={t("membershipPlans.changePlan")}
                             aria-label={t("membershipPlans.changePlan")}
                           >
@@ -678,8 +681,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         {onCancelMembership && member.status === "active" && (
                           <button
                             onClick={() => onCancelMembership(member)}
-                            className="text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300"
+                            className="p-1.5 -m-1 rounded-md text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300"
                             title={t("members.cancelMembership", "Cancel Membership")}
+                            aria-label={t("members.cancelMembership", "Cancel Membership")}
                           >
                             <FiUserX className="w-4 h-4" />
                           </button>
@@ -688,8 +692,9 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
                         {canDelete && (
                           <button
                             onClick={() => onDelete(member)}
-                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                            className="p-1.5 -m-1 rounded-md text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                             title={t("members.deleteMember")}
+                            aria-label={t("members.deleteMember")}
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </button>
@@ -706,7 +711,7 @@ const SmartMemberTable: React.FC<SmartMemberTableProps> = ({
         {/* Empty State */}
         {filteredMembers.length === 0 && (
           <div className="text-center py-12">
-            <FiUser className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+            <FiUser className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
               {t("members.noMembersFound")}
             </h3>

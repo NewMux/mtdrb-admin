@@ -362,7 +362,7 @@ export default function Plans() {
       <FilterBar>
         <div className="flex-1 max-w-md">
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
             <input
               type="text"
               placeholder={t("plans.search")}
@@ -374,6 +374,7 @@ export default function Plans() {
         </div>
 
         <select
+          aria-label={t("common.filter")}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="ps-4 pe-9 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

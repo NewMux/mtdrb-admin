@@ -1104,11 +1104,32 @@ npm ci
 npm run typecheck
 npm run lint
 npm test -- --run
+npm run e2e
 npm run test:coverage
 npm audit --omit=dev
 npm run build:deploy
 ```
 
 `npm run build:deploy` must be run with the Production values configured in Vercel. A local build without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` is expected to fail with an actionable configuration message; this prevents a blank production artifact from being published.
+
+### Browser end-to-end and accessibility tests
+
+`npm run e2e` starts the app on the demo backend (the same credential-free mode as `npm run dev`, so it needs no database, accounts or secrets) and drives it in a real Chromium browser with Playwright. CI runs it as the `e2e` job on every pull request.
+
+| Spec | What it checks |
+| --- | --- |
+| `e2e/a11y.spec.ts` | Every public and signed-in screen scanned with axe against WCAG 2.2 level A/AA, in light and dark mode and in English and Arabic (colour contrast, labels, names, keyboard focus in dialogs, skip link). Any finding fails the run. |
+| `e2e/responsive.spec.ts` | Runs on a phone (393 px) and a tablet (768 px): no sideways scrolling, minimum tap-target size, the menu button opens the navigation. English and Arabic. |
+| `e2e/members.spec.ts`, `pos.spec.ts`, `billing.spec.ts`, `settings.spec.ts`, `app.spec.ts` | The main flows: member search, paging and adding a member on a plan; selling in the shop with a discount and VAT; invoices and expenses; the team, custom roles and expense categories; language, right-to-left layout, dark mode and navigation. |
+
+Useful variations:
+
+```bash
+npm run e2e -- --project=phone           # one device
+npm run e2e -- e2e/pos.spec.ts           # one file
+npx playwright show-report               # after a CI failure, open the downloaded report
+```
+
+First run on a machine: `npx playwright install --with-deps chromium`. Where a Chromium is already installed (a sandbox), set `PW_CHROMIUM` to its path instead. The demo backend lives in `src/mocks/`; when a flow needs a database function the demo does not imitate yet, add it there (see `posMock.ts`) rather than skipping the test. Real database rules are covered by the SQL tests, not here.
 
 The release gate should fail on lint warnings, missing coverage, or critical/high production advisories. Any temporary dependency exception must be documented with an owner and expiration date.

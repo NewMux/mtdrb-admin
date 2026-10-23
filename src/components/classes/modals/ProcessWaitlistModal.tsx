@@ -251,7 +251,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1 text-sm text-blue-600">
+            <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
               <FiUsers className="h-4 w-4" />
               <span>{selectedMembers.length} members selected</span>
             </div>
@@ -436,7 +436,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                       <span className="text-green-600 dark:text-green-400">
                         {member.attendance_score}% attendance
                       </span>
-                      <FiCheck className="h-4 w-4 text-green-600" />
+                      <FiCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                   </div>
                 );

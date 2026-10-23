@@ -49,6 +49,7 @@ export const StatStrip: React.FC<StatStripProps> = ({ items, className = "" }) =
               <div
                 className="flex-1 h-1 rounded-full bg-black/[0.08] dark:bg-white/10 overflow-hidden"
                 role="progressbar"
+                aria-label={typeof item.label === "string" ? item.label : undefined}
                 aria-valuenow={Math.round(item.meter)}
                 aria-valuemin={0}
                 aria-valuemax={100}

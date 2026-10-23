@@ -1302,7 +1302,7 @@ export default function FinancialInsightsDashboard({
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-sm font-bold text-red-600">
+                    <span className="text-sm font-bold text-red-600 dark:text-red-400">
                       {index + 1}
                     </span>
                   </div>
@@ -1310,7 +1310,7 @@ export default function FinancialInsightsDashboard({
                     {category.category}
                   </span>
                 </div>
-                <span className="text-sm font-semibold text-gray-600">
+                <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                   {currencyCode ? `${currencyCode} ` : ""}
                   {category.amount.toLocaleString()}
                 </span>

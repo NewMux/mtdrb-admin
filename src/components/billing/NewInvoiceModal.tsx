@@ -883,6 +883,7 @@ export function NewInvoiceModal({
                           {t("billing.vatRate", "نسبة الضريبة")}
                         </label>
                         <select
+                          aria-label={t("billing.vatRate", "نسبة الضريبة")}
                           value={item.vat_rate}
                           onChange={(e) =>
                             handleItemChange(

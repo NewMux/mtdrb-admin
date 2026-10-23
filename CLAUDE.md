@@ -84,3 +84,12 @@ function/table near them:
   `requiredPermission`) only hides things - the database is the guarantee.
 - One login belongs to one gym (the app opens the oldest membership), so invites
   refuse an email that already has an account.
+
+## Accessibility and browser tests
+
+`npm run e2e` (see `DEPLOYMENT.md`, "Browser end-to-end and accessibility tests") fails on any axe finding for any screen, so when adding UI:
+
+- Text colours: on light surfaces use `text-gray-500`/`-600` or darker (the palette's 600 shades are AA-safe on white); always pair a text colour with a lighter `dark:` variant when the surface has a `dark:bg-*`. Light-only pages (landing, plans, legal) have no dark variants on purpose.
+- Every `<input>`, `<select>` and icon-only `<button>` needs an accessible name (`aria-label`, or a `<label htmlFor>`; `AppleInput`/`AppleSelect`/`AppleTextarea` link theirs automatically). `AppleSelect` must keep forwarding its ref — react-hook-form's `register()` needs it, and without it Add Invoice and Add Expense cannot be saved.
+- Tables go in an `overflow-x-auto` wrapper, never `overflow-hidden`, so phones can scroll them; row action buttons need at least 24×24 px of hit area.
+- A flow that needs a database function the demo backend does not imitate gets a stand-in in `src/mocks/` (lazy state, no top-level side effects — `scripts/check-dist-no-mock.mjs` guards the production bundle).

@@ -240,12 +240,12 @@ export default function ShareReportModal({
       {/* Recipients */}
       <Section title="Add Recipients">
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Type an email address to note who this was shared with (delivery isn&apos;t automated yet - copy the link and send it yourself).
           </p>
           {/* Recipient email entry */}
           <div className="relative flex gap-2">
-            <FiUsers className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiUsers className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" />
             <input
               type="email"
               placeholder="name@example.com"
@@ -283,7 +283,7 @@ export default function ShareReportModal({
                     <span className="text-sm">{email}</span>
                     <button
                       onClick={() => handleRemoveRecipient(email)}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800"
                     >
                       ×
                     </button>
@@ -299,7 +299,7 @@ export default function ShareReportModal({
       <Section title="Smart Recommendations">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <FiShare2 className="text-blue-600 mt-1" />
+            <FiShare2 className="text-blue-600 dark:text-blue-400 mt-1" />
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">
                 Smart Suggestions
@@ -325,7 +325,7 @@ export default function ShareReportModal({
                     still requires them to log in to your tenant
                   </span>
                   {!isPro && (
-                    <FiLock className="text-gray-400" title="Pro feature" />
+                    <FiLock className="text-gray-500 dark:text-gray-400" title="Pro feature" />
                   )}
                 </li>
               </ul>
@@ -340,31 +340,31 @@ export default function ShareReportModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Report</span>
-              <span className="text-gray-600">{reportName}</span>
+              <span className="text-gray-600 dark:text-gray-300">{reportName}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Permission</span>
-              <span className="text-gray-600 capitalize">
+              <span className="text-gray-600 dark:text-gray-300 capitalize">
                 {selectedPermission}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Recipients</span>
-              <span className="text-gray-600">
+              <span className="text-gray-600 dark:text-gray-300">
                 {selectedRecipients.length} people
               </span>
             </div>
             {expirationDate && (
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-900">Expires</span>
-                <span className="text-gray-600">
+                <span className="text-gray-600 dark:text-gray-300">
                   {new Date(expirationDate).toLocaleDateString()}
                 </span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">Link Access</span>
-              <span className="text-gray-600">Requires login to your tenant</span>
+              <span className="text-gray-600 dark:text-gray-300">Requires login to your tenant</span>
             </div>
           </div>
         </div>

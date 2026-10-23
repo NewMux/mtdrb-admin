@@ -241,7 +241,7 @@ export default function Login() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiMail className="h-5 w-5 text-gray-400" />
+                    <FiMail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="email"
@@ -265,7 +265,7 @@ export default function Login() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiLock className="h-5 w-5 text-gray-400" />
+                    <FiLock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -283,11 +283,13 @@ export default function Login() {
                     type="button"
                     className={`absolute inset-y-0 ${isRTL ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center`}
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-pressed={showPassword}
                   >
                     {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEyeOff className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEye className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>
@@ -300,7 +302,7 @@ export default function Login() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className={`${isRTL ? 'mr-2' : 'ml-2'} block text-sm text-gray-700 dark:text-gray-300`}>
                     {t("auth.rememberMe")}
@@ -308,7 +310,7 @@ export default function Login() {
                 </div>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.forgotPassword")}
                 </Link>
@@ -362,7 +364,7 @@ export default function Login() {
                 {t("auth.dontHaveAccount")}{" "}
                 <Link
                   to="/signup"
-                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.signUp")}
                 </Link>

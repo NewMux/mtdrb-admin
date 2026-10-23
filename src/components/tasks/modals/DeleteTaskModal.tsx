@@ -81,7 +81,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             ))}
             <button
               onClick={clearAlerts}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700"
             >
               Clear alerts
             </button>
@@ -192,7 +192,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 value="archive"
                 checked={deleteType === "archive"}
                 onChange={() => handleDeleteTypeChange("archive")}
-                className="text-blue-600 focus:ring-blue-500"
+                className="text-blue-600 dark:text-blue-400 focus:ring-blue-500"
               />
               <div className="flex items-center space-x-2">
                 <FiArchive className="w-4 h-4 text-blue-500" />
@@ -214,7 +214,7 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
                 value="delete"
                 checked={deleteType === "delete"}
                 onChange={() => handleDeleteTypeChange("delete")}
-                className="text-red-600 focus:ring-red-500"
+                className="text-red-600 dark:text-red-400 focus:ring-red-500"
               />
               <div className="flex items-center space-x-2">
                 <FiTrash2 className="w-4 h-4 text-red-500" />

@@ -209,7 +209,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-shrink-0 [&_svg]:w-4 [&_svg]:h-4">
-                  <FiUser className="h-5 w-5 text-blue-600" />
+                  <FiUser className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="text-start">
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -348,7 +348,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             >
               <div className="flex items-center space-x-3 mb-4">
                 <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                  <FiTarget className="h-5 w-5 text-green-600" />
+                  <FiTarget className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -437,7 +437,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
             >
               <div className="flex items-center space-x-3 mb-4">
                 <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                  <FiActivity className="h-5 w-5 text-red-600" />
+                  <FiActivity className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -530,7 +530,7 @@ const EditMemberModal: React.FC<EditMemberModalProps> = ({
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <FiUpload className="w-8 h-8 text-gray-400 mx-auto" />
+                        <FiUpload className="w-8 h-8 text-gray-500 dark:text-gray-400 mx-auto" />
                         <p className="text-gray-600 dark:text-gray-400">
                           Click to upload or drag and drop
                         </p>

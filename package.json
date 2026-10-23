@@ -13,8 +13,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
-    "validate": "npm run lint && npm run typecheck && npm run test -- --run"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json",
+    "validate": "npm run lint && npm run typecheck && npm run test -- --run",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fullcalendar/interaction": "^6.1.18",
@@ -51,6 +52,8 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "1.56.1",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@types/node": "^20.11.24",
@@ -89,6 +92,7 @@
     },
     "eslint-plugin-react": {
       "minimatch": "3.1.5"
-    }
+    },
+    "playwright-core": "1.56.1"
   }
 }

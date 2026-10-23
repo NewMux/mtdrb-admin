@@ -201,7 +201,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           {/* End Section (Search, Theme & Notifications) */}
           <div className="flex items-center gap-1">
             <div className="relative w-56 me-2 hidden md:block">
-              <FiSearch className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5 pointer-events-none`} />
+              <FiSearch className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 w-3.5 h-3.5 pointer-events-none`} />
               <input
                 type="search"
                 placeholder={t("topbar.searchPlaceholder")}
@@ -336,7 +336,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
                                   <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                                     {notification.message || notification.body}
                                   </p>
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     {new Date(notification.created_at).toLocaleString()}
                                   </p>
                                 </div>

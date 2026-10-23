@@ -68,11 +68,11 @@ export const pageThemes = {
     },
     accent: "#0ea5e9", // Sky blue
     gradient: "bg-sky-400",
-    icon: "text-sky-600",
+    icon: "text-sky-600 dark:text-sky-400",
     button: "bg-sky-500 hover:bg-sky-600",
     card: "border-sky-200 bg-sky-50/30",
     badge: "bg-sky-100 text-sky-800",
-    tab: "text-sky-600 border-sky-600",
+    tab: "text-sky-600 dark:text-sky-400 border-sky-600",
   },
 
   members: {
@@ -116,11 +116,11 @@ export const pageThemes = {
     },
     accent: "#f59e0b", // Amber orange
     gradient: "bg-amber-400",
-    icon: "text-amber-600",
+    icon: "text-amber-600 dark:text-amber-400",
     button: "bg-amber-500 hover:bg-amber-600",
     card: "border-amber-200 bg-amber-50/30",
     badge: "bg-amber-100 text-amber-800",
-    tab: "text-amber-600 border-amber-600",
+    tab: "text-amber-600 dark:text-amber-400 border-amber-600",
   },
 
   trainers: {
@@ -164,11 +164,11 @@ export const pageThemes = {
     },
     accent: "#22c55e", // Green
     gradient: "bg-green-400",
-    icon: "text-green-600",
+    icon: "text-green-600 dark:text-green-400",
     button: "bg-green-500 hover:bg-green-600",
     card: "border-green-200 bg-green-50/30",
     badge: "bg-green-100 text-green-800",
-    tab: "text-green-600 border-green-600",
+    tab: "text-green-600 dark:text-green-400 border-green-600",
   },
 
   analytics: {
@@ -188,11 +188,11 @@ export const pageThemes = {
     },
     accent: "#3b82f6", // Blue
     gradient: "bg-blue-400",
-    icon: "text-blue-600",
+    icon: "text-blue-600 dark:text-blue-400",
     button: "bg-blue-500 hover:bg-blue-600",
     card: "border-blue-200 bg-blue-50/30",
     badge: "bg-blue-100 text-blue-800",
-    tab: "text-blue-600 border-blue-600",
+    tab: "text-blue-600 dark:text-blue-400 border-blue-600",
   },
 
   promotions: {
@@ -236,11 +236,11 @@ export const pageThemes = {
     },
     accent: "#64748b", // Slate gray
     gradient: "bg-slate-400",
-    icon: "text-slate-600",
+    icon: "text-slate-600 dark:text-slate-300",
     button: "bg-slate-500 hover:bg-slate-600",
     card: "border-slate-200 bg-slate-50/30",
     badge: "bg-slate-100 text-slate-800",
-    tab: "text-slate-600 border-slate-600",
+    tab: "text-slate-600 dark:text-slate-300 border-slate-600",
   },
 
   tasks: {
@@ -284,11 +284,11 @@ export const pageThemes = {
     },
     accent: "#6b7280", // Gray
     gradient: "bg-gray-400",
-    icon: "text-gray-600",
+    icon: "text-gray-600 dark:text-gray-300",
     button: "bg-gray-500 hover:bg-gray-600",
     card: "border-gray-200 bg-gray-50/30",
     badge: "bg-gray-100 text-gray-800",
-    tab: "text-gray-600 border-gray-600",
+    tab: "text-gray-600 dark:text-gray-300 border-gray-600",
   },
 
   insights: {
@@ -308,11 +308,11 @@ export const pageThemes = {
     },
     accent: "#0ea5e9", // Sky blue
     gradient: "bg-sky-400",
-    icon: "text-sky-600",
+    icon: "text-sky-600 dark:text-sky-400",
     button: "bg-sky-500 hover:bg-sky-600",
     card: "border-sky-200 bg-sky-50/30",
     badge: "bg-sky-100 text-sky-800",
-    tab: "text-sky-600 border-sky-600",
+    tab: "text-sky-600 dark:text-sky-400 border-sky-600",
   },
 };
 

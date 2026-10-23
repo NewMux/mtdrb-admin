@@ -47,7 +47,7 @@ export default function LanguageSwitcher({ forceLight = false }: LanguageSwitche
             type="button"
             key={lang.code}
             onClick={() => setLang(lang.code)}
-            aria-label={lang.code === "ar" ? "العربية" : "English"}
+            aria-label={`${lang.label} – ${lang.code === "ar" ? "العربية" : "English"}`}
             aria-pressed={isActive}
             className={
               forceLight

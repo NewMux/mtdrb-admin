@@ -164,7 +164,7 @@ export default function EditTrainerModal({
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.name && (
-                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.name}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1.5 font-medium">{errors.name}</p>
               )}
             </div>
 
@@ -183,7 +183,7 @@ export default function EditTrainerModal({
                 dir="ltr"
               />
               {errors.email && (
-                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.email}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1.5 font-medium">{errors.email}</p>
               )}
             </div>
 
@@ -202,7 +202,7 @@ export default function EditTrainerModal({
                 dir="ltr"
               />
               {errors.phone && (
-                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.phone}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1.5 font-medium">{errors.phone}</p>
               )}
             </div>
 
@@ -223,7 +223,7 @@ export default function EditTrainerModal({
                 dir={isRTL ? "rtl" : "ltr"}
               />
               {errors.experience && (
-                <p className="text-red-600 text-sm mt-1.5 font-medium">{errors.experience}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1.5 font-medium">{errors.experience}</p>
               )}
             </div>
           </div>

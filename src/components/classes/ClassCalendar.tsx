@@ -350,7 +350,7 @@ const ClassCalendar: React.FC = () => {
             </div>
           ) : filteredEvents.length === 0 ? (
             <div className="p-12 text-center">
-              <FiCalendar className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <FiCalendar className="h-16 w-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
               <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
                 {t('classes.noClassesScheduled')}
               </h3>
@@ -403,7 +403,7 @@ const ClassCalendar: React.FC = () => {
                 minute: '2-digit',
                 hour12: false,
               }}
-              slotLabelClassNames="text-gray-600 font-medium"
+              slotLabelClassNames="text-gray-600 dark:text-gray-300 font-medium"
               dayHeaderClassNames="text-gray-900 font-semibold"
               titleFormat={{
                 month: 'long',

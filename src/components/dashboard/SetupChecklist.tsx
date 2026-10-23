@@ -60,7 +60,7 @@ export default function SetupChecklist({ refreshKey }: { refreshKey?: number }) 
           type="button"
           onClick={dismiss}
           aria-label={t("setupChecklist.dismiss")}
-          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/60 dark:hover:bg-white/10"
+          className="p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-600 hover:bg-white/60 dark:hover:bg-white/10"
         >
           <FiX className="h-4 w-4" />
         </button>
@@ -69,6 +69,7 @@ export default function SetupChecklist({ refreshKey }: { refreshKey?: number }) 
       <div
         className="mt-3 h-2 rounded-full bg-white dark:bg-gray-800 overflow-hidden"
         role="progressbar"
+        aria-label={t("setupChecklist.title")}
         aria-valuemin={0}
         aria-valuemax={progress.total}
         aria-valuenow={progress.done}
@@ -93,7 +94,7 @@ export default function SetupChecklist({ refreshKey }: { refreshKey?: number }) 
                 <FiCircle className="h-5 w-5 shrink-0 text-gray-300" aria-hidden="true" />
               )}
               <span className="flex-1 text-start">
-                <span className={`block font-medium ${item.done ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>
+                <span className={`block font-medium ${item.done ? "text-gray-500 dark:text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>
                   {t(`setupChecklist.items.${item.id}.title`)}
                 </span>
                 {!item.done && (
@@ -102,7 +103,7 @@ export default function SetupChecklist({ refreshKey }: { refreshKey?: number }) 
                   </span>
                 )}
               </span>
-              {!item.done && <FiArrowRight className="h-4 w-4 shrink-0 text-gray-400 rtl:rotate-180" aria-hidden="true" />}
+              {!item.done && <FiArrowRight className="h-4 w-4 shrink-0 text-gray-500 dark:text-gray-400 rtl:rotate-180" aria-hidden="true" />}
             </Link>
           </li>
         ))}

@@ -27,7 +27,7 @@ function FieldError({ code }: { code?: string }) {
   const { t } = useTranslation();
   if (!code) return null;
   return (
-    <p role="alert" className="mt-1 text-sm text-red-600">
+    <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
       {t(`gymConfig.errors.${code}`)}
     </p>
   );
@@ -104,7 +104,7 @@ function TaxRow({
             <input
               id={compoundId}
               type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 rounded"
               checked={component.compound}
               onChange={(e) => onChange({ ...component, compound: e.target.checked })}
               disabled={disabled}
@@ -115,7 +115,7 @@ function TaxRow({
         {canRemove && (
           <button
             type="button"
-            className="text-sm text-red-600 hover:underline disabled:opacity-50"
+            className="text-sm text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
             onClick={onRemove}
             disabled={disabled}
             aria-label={t("gymConfig.taxRemove", { name: component.name || index + 1 })}
@@ -231,7 +231,7 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
           <input
             id="gc-tax-enabled"
             type="checkbox"
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 rounded"
             checked={value.tax.enabled}
             onChange={(e) => setTax({ enabled: e.target.checked })}
             disabled={disabled}
@@ -275,7 +275,7 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
               {value.tax.components.length < MAX_TAX_COMPONENTS && (
                 <button
                   type="button"
-                  className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
                   onClick={() =>
                     setTax({ components: [...value.tax.components, { name: "", rate: 0, compound: false }] })
                   }
@@ -313,7 +313,7 @@ export default function GymConfigForm({ value, onChange, errors = {}, disabled =
               <input
                 id="gc-prices-include-tax"
                 type="checkbox"
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="mt-1 h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 rounded"
                 checked={value.tax.pricesIncludeTax}
                 onChange={(e) => setTax({ pricesIncludeTax: e.target.checked })}
                 disabled={disabled}

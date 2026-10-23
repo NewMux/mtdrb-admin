@@ -54,7 +54,7 @@ export default function ExpenseCategoriesEditor({ value, onChange, errorCode, di
               {name}
               <button
                 type="button"
-                className="text-gray-500 hover:text-red-600"
+                className="text-gray-500 dark:text-gray-400 hover:text-red-600"
                 aria-label={t("expenseCategories.remove", { name })}
                 onClick={() => onChange(value.filter((v) => v !== name))}
                 disabled={disabled}

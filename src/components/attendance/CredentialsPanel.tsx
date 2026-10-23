@@ -128,7 +128,7 @@ export default function CredentialsPanel({ members }: { members: MemberOption[] 
               <li key={m.id}>
                 <button type="button" onClick={() => setMemberId(m.id)} className="w-full px-3 py-2 text-start text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                   <span className="font-medium text-gray-900 dark:text-white">{m.name}</span>
-                  <span className="ms-2 text-xs text-gray-500">{m.email}</span>
+                  <span className="ms-2 text-xs text-gray-500 dark:text-gray-400">{m.email}</span>
                 </button>
               </li>
             ))}
@@ -178,16 +178,16 @@ export default function CredentialsPanel({ members }: { members: MemberOption[] 
           <p className="text-xs text-gray-500 dark:text-gray-400">{t("accessControl.vendorHint")}</p>
 
           <ul className="divide-y divide-gray-200 text-sm dark:divide-gray-700">
-            {credentials.length === 0 && <li className="py-2 text-gray-500">{t("accessControl.noCredentials")}</li>}
+            {credentials.length === 0 && <li className="py-2 text-gray-500 dark:text-gray-400">{t("accessControl.noCredentials")}</li>}
             {credentials.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 py-2">
                 <span className="text-gray-800 dark:text-gray-200">
                   {t(`accessControl.credentialTypes.${c.identity_type}`)}
-                  <span className="ms-2 text-xs text-gray-500">{statusLabel(c)}</span>
-                  {c.last_used_at && <span className="ms-2 text-xs text-gray-500">{new Date(c.last_used_at).toLocaleDateString()}</span>}
+                  <span className="ms-2 text-xs text-gray-500 dark:text-gray-400">{statusLabel(c)}</span>
+                  {c.last_used_at && <span className="ms-2 text-xs text-gray-500 dark:text-gray-400">{new Date(c.last_used_at).toLocaleDateString()}</span>}
                 </span>
                 {c.status === "active" && (
-                  <button type="button" disabled={busy} onClick={() => void run(() => revokeCredential(c.id))} className="text-xs text-red-600 hover:underline">
+                  <button type="button" disabled={busy} onClick={() => void run(() => revokeCredential(c.id))} className="text-xs text-red-600 dark:text-red-400 hover:underline">
                     {t("accessControl.revoke")}
                   </button>
                 )}

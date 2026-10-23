@@ -1,6 +1,7 @@
 import * as React from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { PaymentFailedBanner } from "./PaymentFailedBanner";
@@ -9,6 +10,7 @@ import { useRTL } from "../hooks/useRTL";
 
 const Layout: React.FC = () => {
   const { isRTL } = useRTL();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
 
@@ -32,6 +34,12 @@ const Layout: React.FC = () => {
       className="min-h-screen bg-white dark:bg-gray-900"
       dir={isRTL ? "rtl" : "ltr"}
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:rounded-lg focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        {t("topbar.skipToContent")}
+      </a>
       <PageThemeDetector />
       <div className="flex h-screen">
         {/* Sidebar (desktop: static, always visible) */}
@@ -74,7 +82,7 @@ const Layout: React.FC = () => {
           <PaymentFailedBanner />
           {/* Page Content. A plain fade on navigation, like switching
               panes in a Mac app; no slide. */}
-          <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+          <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 focus:outline-none">
             <div
               key={location.pathname}
               className="px-4 py-5 sm:px-6 lg:px-8 max-w-7xl mx-auto animate-window-in"

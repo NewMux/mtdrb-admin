@@ -417,7 +417,7 @@ export default function SmartDashboardAnalytics({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedTimeRange === "week" ? t("dashboard.previousWeek") : selectedTimeRange === "month" ? t("dashboard.previousMonth") : selectedTimeRange === "quarter" ? t("dashboard.previousQuarter") : t("dashboard.previousYear")}
               </span>
-              <span className="text-sm text-gray-500 dark:text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {formatCurrency(revenueData.previous, currency)}
               </span>
             </div>
@@ -476,7 +476,7 @@ export default function SmartDashboardAnalytics({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedTimeRange === "week" ? t("dashboard.newThisWeek") : selectedTimeRange === "month" ? t("dashboard.newThisMonth") : selectedTimeRange === "quarter" ? t("dashboard.newThisQuarter") : t("dashboard.newThisYear")}
               </span>
-              <span className="text-sm text-gray-500 dark:text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 +{memberData.newCount}
               </span>
             </div>

@@ -446,10 +446,10 @@ export default function ExportReportModal({
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   {report.description}
                 </p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                   <span>Size: {report.size}</span>
                   <span>
                     Last generated:{" "}
@@ -464,7 +464,7 @@ export default function ExportReportModal({
                     e.preventDefault();
                     handleRefreshReport(report.id);
                   }}
-                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 rounded-lg transition-colors"
                   title="Refresh report data"
                 >
                   <FiRefreshCw
@@ -510,13 +510,13 @@ export default function ExportReportModal({
                       onChange={(e) => setIncludeVisuals(e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       Include charts and graphs
                     </span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="rounded" />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       Include raw data
                     </span>
                   </label>
@@ -532,7 +532,7 @@ export default function ExportReportModal({
                 <h4 className="font-semibold text-gray-900">
                   {getSelectedReport()?.name}
                 </h4>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <span>Size: {getSelectedReport()?.size}</span>
                   <span>•</span>
                   <span>
@@ -547,7 +547,7 @@ export default function ExportReportModal({
                     <div className="text-sm font-medium text-gray-900 mb-1">
                       {section}
                     </div>
-                    <div className="text-xs text-gray-500">Section {i + 1}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Section {i + 1}</div>
                   </div>
                 ))}
               </div>

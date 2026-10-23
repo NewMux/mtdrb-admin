@@ -254,7 +254,7 @@ export default function Subscribe() {
   if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <p className="text-gray-600">{t("subscribe.checkingAccount")}</p>
+        <p className="text-gray-600 dark:text-gray-300">{t("subscribe.checkingAccount")}</p>
       </div>
     );
   }
@@ -319,7 +319,7 @@ export default function Subscribe() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {t("subscribe.selectPlan")}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               {t("subscribe.trialNoCard")}
             </p>
           </div>
@@ -357,14 +357,14 @@ export default function Subscribe() {
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     {t(plan.id === "starter" ? "landing.starter" : "landing.pro")}
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
                     {t(plan.id === "starter" ? "subscribe.starterDescription" : "subscribe.proDescription")}
                   </p>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold text-gray-900">
                       {plan.currency} {plan.price}
                     </span>
-                    <span className="text-gray-500 ml-1">/{t(`subscribe.${plan.period}`)}</span>
+                    <span className="text-gray-500 dark:text-gray-400 ml-1">/{t(`subscribe.${plan.period}`)}</span>
                   </div>
                 </div>
 
@@ -380,7 +380,7 @@ export default function Subscribe() {
                 <motion.button
                   className={`w-full py-3 px-6 rounded-xl font-medium transition-all duration-200 ${
                     !CHECKOUT_ENABLED
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                       : selectedPlan === plan.id
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -419,7 +419,7 @@ export default function Subscribe() {
 
           {/* Additional Info */}
           <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
+            <div className="flex items-center justify-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center">
                 <FiShield className="h-4 w-4 mr-2" />
                 <span>{t("subscribe.sslSecure")}</span>
@@ -430,13 +430,13 @@ export default function Subscribe() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {t("subscribe.agreeIntro")}{" "}
-              <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+              <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                 {t("subscribe.terms")}
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+              <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                 {t("subscribe.privacy")}
               </Link>
             </p>
@@ -446,7 +446,7 @@ export default function Subscribe() {
           <div className="mt-8 text-center">
             <Link
               to="/"
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors"
             >
               ← {t("subscribe.backHome")}
             </Link>

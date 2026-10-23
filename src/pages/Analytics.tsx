@@ -998,7 +998,7 @@ export default function Analytics() {
               </div>
             ) : analyticsStats.length === 0 ? (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiBarChart2 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiBarChart2 className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1036,7 +1036,7 @@ export default function Analytics() {
               <MemberAnalytics {...memberAnalyticsData} />
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiUsers className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiUsers className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1068,7 +1068,7 @@ export default function Analytics() {
               <RevenueOverview {...revenueOverviewData} />
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiDollarSign className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiDollarSign className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1098,7 +1098,7 @@ export default function Analytics() {
               </div>
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiCalendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiCalendar className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.classAnalytics")}
                 </h3>
@@ -1126,11 +1126,11 @@ export default function Analytics() {
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-                  <p className={`ml-3 text-gray-600 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading insights...</p>
+                  <p className={`ml-3 text-gray-600 dark:text-gray-300 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading insights...</p>
                 </div>
               ) : uiInsights.length === 0 ? (
                 <div className={`py-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                  <FiTarget className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <FiTarget className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                   <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                     No Insights Available
                   </h3>
@@ -1204,6 +1204,7 @@ export default function Analytics() {
           {/* Date Range Filter */}
           <div className="flex-1">
             <select
+              aria-label={t("common.filter")}
               value={filters.dateRange}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
@@ -1222,6 +1223,7 @@ export default function Analytics() {
           {/* Branch Filter */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={filters.branch}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, branch: e.target.value }))

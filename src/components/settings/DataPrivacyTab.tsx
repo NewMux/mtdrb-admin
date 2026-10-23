@@ -149,7 +149,7 @@ export default function DataPrivacyTab() {
 
       <section className="rounded-3xl border border-red-200 dark:border-red-900/60 bg-red-50/50 dark:bg-red-950/20 p-6 space-y-4" aria-labelledby="dp-delete">
         <div className="flex items-start gap-3 text-start">
-          <FiAlertTriangle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" aria-hidden="true" />
+          <FiAlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" aria-hidden="true" />
           <div>
             <h3 id="dp-delete" className="text-base font-semibold text-red-700 dark:text-red-400">
               {isAdmin ? t("dataPrivacy.deleteGymTitle") : t("dataPrivacy.deleteMeTitle")}

@@ -47,6 +47,8 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // Browser specs under e2e/ belong to Playwright (`npm run e2e`).
+    exclude: ['node_modules/', 'dist/', 'e2e/'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [

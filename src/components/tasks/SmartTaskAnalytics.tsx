@@ -934,7 +934,7 @@ const RiskIndicatorsCards: React.FC<{ data: typeof emptyTaskAnalyticsData }> = (
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">{risk.value}</h3>
             <p className="text-sm font-semibold text-gray-900 dark:text-white">{risk.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{risk.subtitle}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{risk.description}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{risk.description}</p>
           </div>
         </motion.div>
       ))}

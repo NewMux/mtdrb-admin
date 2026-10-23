@@ -576,7 +576,7 @@ export function AddExpenseModal({
                           setFilePreview(null);
                           setValue("receipt_file", null);
                         }}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium cursor-pointer"
                       >
                         {t("billing.removeFile", "حذف الملف")}
                       </button>
@@ -584,7 +584,7 @@ export function AddExpenseModal({
                   ) : (
                     <div className="space-y-4">
                       <div className="flex justify-center">
-                        <FiUpload className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                        <FiUpload className="h-12 w-12 text-gray-500 dark:text-gray-400" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">

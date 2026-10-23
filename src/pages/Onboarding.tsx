@@ -540,7 +540,7 @@ export default function Onboarding() {
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
                   index <= currentStep 
                     ? "bg-blue-600 border-blue-600 text-white" 
-                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400"
+                    : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400"
                 }`}>
                   {index < currentStep ? (
                     <FiCheck className="h-4 w-4" />
@@ -785,9 +785,9 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
                       [day]: { ...hours, closed: !e.target.checked }
                     }
                   })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <span className="text-sm text-gray-500">{t("onboarding.open")}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{t("onboarding.open")}</span>
               </div>
               {!hours.closed && (
                 <div className="flex items-center space-x-2">
@@ -803,7 +803,7 @@ function BranchSetupStep({ formData, setFormData }: { formData: OnboardingFormDa
                     })}
                     className="px-3 py-1 border border-gray-300 rounded text-sm"
                   />
-                  <span className="text-sm text-gray-500">{t("onboarding.to")}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t("onboarding.to")}</span>
                   <input
                     type="time"
                     value={hours.close}
@@ -960,7 +960,7 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
           {t("onboarding.gymLogo")}
         </label>
         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
-          <FiUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <FiUpload className="h-12 w-12 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             {t("onboarding.uploadLogo")}
           </p>
@@ -978,7 +978,7 @@ function BrandingStep({ formData, setFormData }: { formData: OnboardingFormData;
               {t("common.chooseFile", "Choose file")}
           </label>
           {formData.logo && (
-            <p className="text-sm text-green-600 mt-2">
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">
               {formData.logo.name} {t("onboarding.logoSelected")}
             </p>
           )}

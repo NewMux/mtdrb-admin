@@ -112,11 +112,11 @@ export default function DeleteTrainerModal({
           <h4 className="font-medium text-gray-900 dark:text-white">{t("trainers.impactTitle", "سيتأثر بهذا الإجراء:")}</h4>
           <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <li className="flex items-center gap-2">
-              <FiUser className="text-gray-400 flex-shrink-0" />
+              <FiUser className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
               <span>{trainer.classes} {t("trainers.assignedClassesCount", "حصص مسندة")}</span>
             </li>
             <li className="flex items-center gap-2">
-              <FiUser className="text-gray-400 flex-shrink-0" />
+              <FiUser className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
               <span>{t("trainers.allDataHistory", "جميع بيانات وسجلات المدرب")}</span>
             </li>
           </ul>

@@ -110,7 +110,7 @@ export default function TeamSettingsTab() {
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {error ?? t("team.loadFailed")}
         </p>
-        <button type="button" className="mt-3 text-sm text-sky-600 hover:underline" onClick={refresh}>
+        <button type="button" className="mt-3 text-sm text-sky-600 dark:text-sky-400 hover:underline" onClick={refresh}>
           {t("team.retry")}
         </button>
       </div>
@@ -134,7 +134,7 @@ export default function TeamSettingsTab() {
                 <div className="min-w-0">
                   <p className="truncate font-medium text-gray-900 dark:text-white">
                     {memberLabel(member)}
-                    {isSelf && <span className="ms-2 text-xs text-gray-500">({t("team.you")})</span>}
+                    {isSelf && <span className="ms-2 text-xs text-gray-500 dark:text-gray-400">({t("team.you")})</span>}
                   </p>
                   {member.name && <p className="truncate text-xs text-gray-500 dark:text-gray-400">{member.email}</p>}
                   {member.pendingInvite && (
@@ -155,7 +155,7 @@ export default function TeamSettingsTab() {
                     <button
                       type="button"
                       aria-label={t("team.remove", { name: memberLabel(member) })}
-                      className="text-sm text-red-600 hover:underline dark:text-red-400"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-lg leading-none text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                       onClick={() => void remove(member)}
                     >
                       ×

@@ -297,15 +297,15 @@ export default function PrintReportModal({
                     <Icon
                       className={
                         selectedLayout === layout.id
-                          ? "text-blue-600"
-                          : "text-gray-500"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-gray-500 dark:text-gray-400"
                       }
                     />
                     <h4 className="font-semibold text-gray-900">
                       {layout.label}
                     </h4>
                   </div>
-                  <p className="text-sm text-gray-600">{layout.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{layout.description}</p>
                 </div>
               </label>
             );
@@ -344,7 +344,7 @@ export default function PrintReportModal({
                   onChange={(e) => setIncludeCharts(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Include charts and graphs
                 </span>
               </label>
@@ -355,7 +355,7 @@ export default function PrintReportModal({
                   onChange={(e) => setIncludeHeaders(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Include headers and footers
                 </span>
               </label>
@@ -366,7 +366,7 @@ export default function PrintReportModal({
                   onChange={(e) => setPageNumbers(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-gray-600">Add page numbers</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Add page numbers</span>
               </label>
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function PrintReportModal({
                   <h3 className="text-base font-semibold text-gray-900">
                     {reportName}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Generated on {new Date().toLocaleDateString()}
                   </p>
                 </div>
@@ -445,16 +445,16 @@ export default function PrintReportModal({
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {summary.totalMembers.toLocaleString()}
                       </div>
-                      <div className="text-sm text-gray-600">Total Members</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Total Members</div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {summary.attendanceRate}%
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
                         Attendance Rate
                       </div>
                     </div>
@@ -462,7 +462,7 @@ export default function PrintReportModal({
                       <div className="text-2xl font-bold text-purple-600">
                         ${summary.monthlyRevenue.toLocaleString()}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
                         Monthly Revenue
                       </div>
                     </div>
@@ -470,7 +470,7 @@ export default function PrintReportModal({
                 </div>
 
                 {pageNumbers && (
-                  <div className="text-center text-xs text-gray-500 mt-6">
+                  <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">
                     Page 1 of 1
                   </div>
                 )}

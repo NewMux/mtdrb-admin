@@ -570,7 +570,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                     onChange={(e) =>
                       handleAvailabilityChange(index, "available", e.target.checked)
                     }
-                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600"
+                    className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600"
                   />
                   <label
                     htmlFor={`available-${index}`}

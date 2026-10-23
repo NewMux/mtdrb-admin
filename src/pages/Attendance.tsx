@@ -259,7 +259,7 @@ const Attendance: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
               {t("attendance.branch", "Branch")}
               <div className="relative mt-2">
-                <FiMapPin className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FiMapPin className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <select
                   value={selectedBranchId}
                   onChange={(event) => setSelectedBranchId(event.target.value)}
@@ -288,12 +288,12 @@ const Attendance: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
               {t("attendance.findMember", "Find member")}
               <div className="relative mt-2">
-                <FiSearch className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FiSearch className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 {searchTerm && (
                   <button
                     type="button"
                     onClick={() => setSearchTerm("")}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     aria-label={t("common.clear", "Clear")}
                   >
                     <FiX />
@@ -408,7 +408,7 @@ const Attendance: React.FC = () => {
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{selectedMember ? buildMemberName(selectedMember) : t("attendance.memberHistoryHint", "Select a member to view recent activity")}</p>
               </div>
-              <FiClock className="h-5 w-5 text-gray-400" />
+              <FiClock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </div>
             <div className="mt-5 space-y-3">
               {selectedMemberEvents.length === 0 ? (

@@ -154,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         {navigation.map((section, index) => (
           <div key={section.title ?? index}>
             {section.title && (
-              <h2 className="px-2 pb-1 text-[11px] font-semibold text-gray-500/90 dark:text-gray-400/80">
+              <h2 className="px-2 pb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
                 {section.title}
               </h2>
             )}

@@ -95,7 +95,7 @@ const ChartPlaceholder = ({
               {type === "bar" && "Bar Chart"}
               {type === "pie" && "Pie Chart"}
             </p>
-            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">No data available</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">No data available</p>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ const ChartPlaceholder = ({
       <div className="h-64">
         {chartData.length === 0 ? (
           <div className="h-full bg-gray-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">No data available</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No data available</p>
           </div>
         ) : type === "line" ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -212,7 +212,7 @@ const VATSummaryCard = ({
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className=" [&_svg]:w-4 [&_svg]:h-4">
-            <FiPieChart className="w-6 h-6 text-green-600" />
+            <FiPieChart className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
           <div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
@@ -259,7 +259,7 @@ const VATSummaryCard = ({
     <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className=" [&_svg]:w-4 [&_svg]:h-4">
-          <FiPieChart className="w-6 h-6 text-green-600" />
+          <FiPieChart className="w-6 h-6 text-green-600 dark:text-green-400" />
         </div>
         <div>
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">VAT Summary</h3>
@@ -479,7 +479,7 @@ export default function RevenueOverview({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartPlaceholder
             title="Revenue Trend"
-            icon={<FiTrendingUp className="w-6 h-6 text-blue-600" />}
+            icon={<FiTrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />}
             data={timeSeriesData}
             type="line"
           />
@@ -491,7 +491,7 @@ export default function RevenueOverview({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ChartPlaceholder
             title="By Membership Type"
-            icon={<FiUsers className="w-6 h-6 text-green-600" />}
+            icon={<FiUsers className="w-6 h-6 text-green-600 dark:text-green-400" />}
             data={membershipRevenue}
             type="pie"
           />

@@ -103,3 +103,7 @@ temp/
 # Vercel
 .vercel 
 .vercel
+
+# Playwright
+playwright-report/
+test-results/

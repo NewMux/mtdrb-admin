@@ -273,7 +273,7 @@ export default function Signup() {
 
             {awaitingConfirmation ? (
               <div role="status" className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center space-y-4">
-                <FiMail className="h-10 w-10 text-blue-600 mx-auto" aria-hidden="true" />
+                <FiMail className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto" aria-hidden="true" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t("auth.confirmEmailTitle")}</h2>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   {t("auth.confirmEmailMessage", { email })}
@@ -289,7 +289,7 @@ export default function Signup() {
                   type="button"
                   onClick={handleResend}
                   disabled={resendIn > 0 || captcha.pending}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                   {resendIn > 0
                     ? t("auth.confirmEmailResendIn", { seconds: resendIn })
@@ -305,7 +305,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiHome className="h-5 w-5 text-gray-400" />
+                    <FiHome className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -328,7 +328,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiUser className="h-5 w-5 text-gray-400" />
+                    <FiUser className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -351,7 +351,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiMail className="h-5 w-5 text-gray-400" />
+                    <FiMail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="email"
@@ -375,7 +375,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiLock className="h-5 w-5 text-gray-400" />
+                    <FiLock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -393,11 +393,13 @@ export default function Signup() {
                     type="button"
                     className={`absolute inset-y-0 ${isRTL ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center`}
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-pressed={showPassword}
                   >
                     {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEyeOff className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEye className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>
@@ -413,18 +415,18 @@ export default function Signup() {
                     id="terms"
                     name="terms"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                     required
                   />
                 </div>
                 <div className={`${isRTL ? 'mr-3' : 'ml-3'} text-sm`}>
                   <label htmlFor="terms" className="text-gray-700 dark:text-gray-300">
                     {t("auth.agreeTerms")}{" "}
-                    <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                    <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                       {t("auth.termsOfService")}
                     </Link>{" "}
                     {t("auth.and")}{" "}
-                    <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                    <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                       {t("auth.privacyPolicy")}
                     </Link>
                   </label>
@@ -476,11 +478,11 @@ export default function Signup() {
 
             {/* Sign In Link */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t("auth.alreadyHaveAccount")}{" "}
                 <Link
                   to="/login"
-                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.signIn")}
                 </Link>
@@ -491,7 +493,7 @@ export default function Signup() {
             <div className="mt-6 text-center">
               <Link
                 to="/"
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors"
               >
                 {isRTL ? '→ ' : '← '}{t("auth.backToHome")}
               </Link>
@@ -514,17 +516,17 @@ export default function Signup() {
                 {onboardingLoading ? (
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 ) : onboardingError ? (
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <FiHome className="h-8 w-8 text-blue-600" />
+                  <FiHome className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 )}
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {onboardingError ? t("auth.setupFailed") : t("auth.settingUpGym")}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 {onboardingError 
                   ? t("auth.setupFailedDescription")
                   : t("auth.settingUpDescription")
@@ -550,7 +552,7 @@ export default function Signup() {
                 </div>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'space-x-3'}`}>
                   <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-sm text-gray-500">{t("auth.redirectingToSubscription")}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t("auth.redirectingToSubscription")}</span>
                 </div>
               </div>
             )}

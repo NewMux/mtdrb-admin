@@ -130,7 +130,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
             {/* Contact Information */}
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <FiUser className="w-5 h-5 text-blue-600" />
+                <FiUser className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>{t("members.contactInformation", "معلومات الاتصال")}</span>
               </h3>
 
@@ -162,10 +162,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 {member.address && (
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors md:col-span-2">
                     <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                      <FiMapPin className="w-4 h-4 text-gray-500" />
+                      <FiMapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-gray-500 mb-0.5">Address</p>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Address</p>
                       <p className="text-sm font-medium text-gray-900">
                         {member.address}
                       </p>
@@ -176,10 +176,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 {member.emergency_contact && (
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                     <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                      <FiPhone className="w-4 h-4 text-gray-500" />
+                      <FiPhone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-0.5">Emergency Contact</p>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Emergency Contact</p>
                       <p className="text-sm font-medium text-gray-900">
                         {member.emergency_contact}
                       </p>
@@ -199,10 +199,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                   <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                    <FiCalendar className="w-4 h-4 text-gray-500" />
+                    <FiCalendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-0.5">Join Date</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Join Date</p>
                     <p className="text-sm font-medium text-gray-900">
                       {joinDateValue
                         ? new Date(joinDateValue).toLocaleDateString()
@@ -213,10 +213,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                   <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                    <FiActivity className="w-4 h-4 text-gray-500" />
+                    <FiActivity className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-0.5">Last Visit</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Last Visit</p>
                     <p className="text-sm font-medium text-gray-900">
                       {lastVisitValue
                         ? new Date(lastVisitValue).toLocaleDateString()
@@ -227,10 +227,10 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
 
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                   <div className=" [&_svg]:w-4 [&_svg]:h-4">
-                    <FiTrendingUp className="w-4 h-4 text-gray-500" />
+                    <FiTrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-0.5">Membership Type</p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Membership Type</p>
                     <p className="text-sm font-medium text-gray-900">
                       {membershipLabel}
                     </p>
@@ -250,7 +250,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 {goalsList.length > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-3">
-                      <FiTarget className="w-4 h-4 text-gray-500" />
+                      <FiTarget className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                       <span className="text-sm font-medium text-gray-700">
                         Fitness Goals
                       </span>
@@ -273,7 +273,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                 {healthConditions.length > 0 && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center space-x-2 mb-3">
-                        <FiHeart className="w-4 h-4 text-gray-500" />
+                        <FiHeart className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <span className="text-sm font-medium text-gray-700">
                           Health Conditions
                         </span>
@@ -312,7 +312,7 @@ const ViewMemberProfileModal: React.FC<ViewMemberProfileModalProps> = ({
                       <p className="font-medium text-gray-900">
                         Personal Trainer
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Assigned trainer ID: {member.trainer_id}
                       </p>
                     </div>

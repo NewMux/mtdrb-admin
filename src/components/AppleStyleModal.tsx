@@ -151,14 +151,17 @@ export const AppleInput = React.forwardRef<
     className?: string;
     required?: boolean;
   } & React.InputHTMLAttributes<HTMLInputElement>
->(({ label, error, className = "", required = false, ...props }, ref) => {
+>(({ label, error, className = "", required = false, id, ...props }, ref) => {
+  const generatedId = React.useId();
+  const fieldId = id ?? generatedId;
   return (
     <div className="space-y-1.5 text-start">
-      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
+      <label htmlFor={fieldId} className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <input
+        id={fieldId}
         ref={ref}
         className={`
           w-full px-2.5 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
@@ -178,7 +181,10 @@ export const AppleInput = React.forwardRef<
 
 AppleInput.displayName = "AppleInput";
 
-export const AppleSelect: React.FC<
+// forwardRef so react-hook-form's register() can read the value: without the ref
+// a form built on this component never sees the chosen option.
+export const AppleSelect = React.forwardRef<
+  HTMLSelectElement,
   {
     label: string;
     error?: string;
@@ -186,21 +192,26 @@ export const AppleSelect: React.FC<
     required?: boolean;
     children: React.ReactNode;
   } & React.SelectHTMLAttributes<HTMLSelectElement>
-> = ({
+>(({
   label,
   error,
   className = "",
   required = false,
   children,
+  id,
   ...props
-}) => {
+}, ref) => {
+  const generatedId = React.useId();
+  const fieldId = id ?? generatedId;
   return (
     <div className="space-y-1.5 text-start">
-      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
+      <label htmlFor={fieldId} className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <select
+        id={fieldId}
+        ref={ref}
         className={`
           w-full ps-2.5 pe-9 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
           bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md shadow-sm
@@ -216,7 +227,9 @@ export const AppleSelect: React.FC<
       {error && <p className="text-xs text-red-500 text-start">{error}</p>}
     </div>
   );
-};
+});
+
+AppleSelect.displayName = "AppleSelect";
 
 export const AppleTextarea = React.forwardRef<
   HTMLTextAreaElement,
@@ -226,14 +239,17 @@ export const AppleTextarea = React.forwardRef<
     className?: string;
     required?: boolean;
   } & React.TextareaHTMLAttributes<HTMLTextAreaElement>
->(({ label, error, className = "", required = false, ...props }, ref) => {
+>(({ label, error, className = "", required = false, id, ...props }, ref) => {
+  const generatedId = React.useId();
+  const fieldId = id ?? generatedId;
   return (
     <div className="space-y-1.5 text-start">
-      <label className="block text-sm text-gray-700 dark:text-gray-300 text-start">
+      <label htmlFor={fieldId} className="block text-sm text-gray-700 dark:text-gray-300 text-start">
         {label}
         {required && <span className="text-red-500 mx-1">*</span>}
       </label>
       <textarea
+        id={fieldId}
         ref={ref}
         className={`
           w-full px-2.5 py-1.5 text-sm text-gray-900 dark:text-gray-100 text-start
@@ -264,6 +280,9 @@ export const AppleToggle: React.FC<{
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <button
         type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
         onClick={() => onChange(!checked)}
         className={`
           relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full transition-colors duration-150 focus:outline-none focus-visible:shadow-focus

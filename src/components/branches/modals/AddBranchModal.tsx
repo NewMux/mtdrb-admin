@@ -379,7 +379,7 @@ export default function AddBranchModal({
                   id="is_active"
                   checked={formData.is_active}
                   onChange={(e) => handleInputChange("is_active", e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label
                   htmlFor="is_active"
@@ -424,7 +424,7 @@ export default function AddBranchModal({
                       id={`${day}-open`}
                       checked={formData.business_hours[day].is_open}
                       onChange={(e) => handleBusinessHoursChange(day, 'is_open', e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <label htmlFor={`${day}-open`} className="text-sm text-gray-600 dark:text-gray-400 min-w-[50px]">
                       {formData.business_hours[day].is_open 

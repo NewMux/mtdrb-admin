@@ -162,7 +162,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             ))}
             <button
               onClick={clearAlerts}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700"
             >
               Clear alerts
             </button>
@@ -291,7 +291,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               Due Date
             </label>
             <div className="relative">
-              <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               <input
                 type="datetime-local"
                 value={formData.dueDate}
@@ -309,7 +309,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               Assigned To
             </label>
             <div className="relative">
-              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" />
               <input
                 type="email"
                 value={formData.assignedTo}
@@ -421,7 +421,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                             {suggestion.description}
                           </p>
                           <div className="flex items-center space-x-4 mt-2">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               Confidence: {suggestion.confidence}%
                             </span>
                             <span

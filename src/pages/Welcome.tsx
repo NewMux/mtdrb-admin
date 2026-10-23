@@ -45,7 +45,7 @@ export default function Welcome() {
         {error ? (
           <>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{t("welcome.errorTitle")}</h1>
-            <p role="alert" className="text-sm text-red-600 mb-6">{error}</p>
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400 mb-6">{error}</p>
             <button
               type="button"
               className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700"

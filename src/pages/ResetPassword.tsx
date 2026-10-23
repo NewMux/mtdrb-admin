@@ -197,7 +197,7 @@ export default function ResetPassword() {
                 </p>
                 <Link
                   to="/forgot-password"
-                  className="inline-flex items-center font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="inline-flex items-center font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.requestNewResetLink")}
                   <FiArrowRight className={`h-4 w-4 ${isRTL ? "mr-2 rotate-180" : "ml-2"}`} />
@@ -246,7 +246,7 @@ export default function ResetPassword() {
                       <div
                         className={`absolute inset-y-0 ${isRTL ? "right-0 pr-3" : "left-0 pl-3"} flex items-center pointer-events-none`}
                       >
-                        <FiLock className="h-5 w-5 text-gray-400" />
+                        <FiLock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                       </div>
                       <input
                         type={showPassword ? "text" : "password"}
@@ -266,9 +266,9 @@ export default function ResetPassword() {
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <FiEyeOff className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                         ) : (
-                          <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                          <FiEye className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                         )}
                       </button>
                     </div>
@@ -288,7 +288,7 @@ export default function ResetPassword() {
                       <div
                         className={`absolute inset-y-0 ${isRTL ? "right-0 pr-3" : "left-0 pl-3"} flex items-center pointer-events-none`}
                       >
-                        <FiLock className="h-5 w-5 text-gray-400" />
+                        <FiLock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                       </div>
                       <input
                         type={showPassword ? "text" : "password"}

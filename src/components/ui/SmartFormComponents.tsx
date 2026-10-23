@@ -121,7 +121,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           ))}
         </select>
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <FiChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <FiChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
         </div>
       </div>
       {error && (
@@ -216,7 +216,7 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+        className="mt-1 h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
       />
       <div className="flex-1">
         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>

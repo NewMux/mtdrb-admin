@@ -351,7 +351,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {selectedExport && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiDownload className="h-4 w-4" />
                 <span>{getSelectedExportOption()?.label}</span>
               </div>
@@ -562,7 +562,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       includeWaitlist: e.target.checked,
                     }))
                   }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                 />
                 <label
                   htmlFor="include-waitlist"
@@ -583,7 +583,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       includeAnalytics: e.target.checked,
                     }))
                   }
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  className="rounded border-gray-300 text-green-600 dark:text-green-400 focus:ring-green-500"
                 />
                 <label
                   htmlFor="include-analytics"

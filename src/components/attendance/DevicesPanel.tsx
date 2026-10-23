@@ -131,7 +131,7 @@ export default function DevicesPanel({ tenantId, devices, branches, isAdmin, onC
                 <tr key={device.id}>
                   <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
                     {device.name}
-                    <span className="block text-xs font-normal text-gray-500">{t(`accessControl.types.${device.device_type}`)}</span>
+                    <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">{t(`accessControl.types.${device.device_type}`)}</span>
                   </td>
                   <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{t(`accessControl.directions.${device.direction}`)}</td>
                   <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{t(`accessControl.statuses.${device.status}`)}</td>

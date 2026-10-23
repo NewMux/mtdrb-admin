@@ -894,7 +894,7 @@ export default function SmartVatDashboard({
             </div>
             {(vatReturns || []).length === 0 ? (
               <div className="text-center py-8">
-                <FiFileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                <FiFileText className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                   {t("billing.noVatReturns")}
                 </h3>
@@ -1053,7 +1053,7 @@ export default function SmartVatDashboard({
             <div className="space-y-4">
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiCalendar className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiCalendar className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.vatReturnsFiledOnTime")}
                   </span>
@@ -1073,7 +1073,7 @@ export default function SmartVatDashboard({
 
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.vatPaymentsMadeOnTime")}
                   </span>
@@ -1093,7 +1093,7 @@ export default function SmartVatDashboard({
 
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.upcomingDeadlines")}
                   </span>
