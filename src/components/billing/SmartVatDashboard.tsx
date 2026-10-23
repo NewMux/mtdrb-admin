@@ -495,7 +495,7 @@ export default function SmartVatDashboard({
       } else if (format === "excel") {
         await exportExcel(rows, filename, "VAT Returns");
       } else {
-        exportPDF(rows, filename, "VAT Returns");
+        await exportPDF(rows, filename, "VAT Returns");
       }
 
       toast.success(`${format.toUpperCase()} ${t("billing.reportExported")}`);

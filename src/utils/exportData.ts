@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 const FORMULA_PREFIX = /^[=+\-@]/;
 
 const sanitizeSpreadsheetValue = (value: unknown): string | number | boolean => {
@@ -63,7 +61,10 @@ export const exportCSV = <T extends Record<string, unknown>>(
   URL.revokeObjectURL(url);
 };
 
-export const exportPDF = (data: unknown, filename: string, title?: string) => {
+// jsPDF is large, so it is fetched when someone exports a PDF, not with every screen
+// that can export a CSV.
+export const exportPDF = async (data: unknown, filename: string, title?: string): Promise<void> => {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
 
   if (title) {

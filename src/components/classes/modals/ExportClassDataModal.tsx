@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiDownload,
   FiFileText,
@@ -313,7 +313,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
       if (option.format === "csv") {
         exportCSV(exportData, filename);
       } else if (option.format === "pdf") {
-        exportPDF(exportData, filename, option.label);
+        await exportPDF(exportData, filename, option.label);
       } else if (option.format === "excel") {
         await exportExcel(exportData, filename, option.label);
       }

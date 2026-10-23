@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiPrinter,
   FiFileText,
@@ -207,7 +207,7 @@ export default function PrintReportModal({
     setPrinting(true);
     try {
       const filename = `${reportName.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}`;
-      exportPDF(
+      await exportPDF(
         [
           { Metric: "Total Members", Value: summary.totalMembers },
           { Metric: "Attendance Rate", Value: `${summary.attendanceRate}%` },

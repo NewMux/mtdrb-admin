@@ -329,7 +329,7 @@ export default function ExportTrainerDataModal({
         } else if (option.format === "xlsx") {
           await exportExcel(exportData, filename, option.name);
         } else if (option.format === "pdf") {
-          exportPDF(exportData, filename, option.name);
+          await exportPDF(exportData, filename, option.name);
         }
       }
 

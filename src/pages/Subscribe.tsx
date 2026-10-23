@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../supabaseClient";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { FiCheck, FiCreditCard, FiShield, FiZap, FiUsers } from "react-icons/fi";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { withTimeout } from "../utils/withTimeout";

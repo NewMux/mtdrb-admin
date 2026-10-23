@@ -331,7 +331,7 @@ export default function ExportReportModal({
       } else if (exportFormat === "excel") {
         await exportExcel(exportData, filename, report.name);
       } else if (exportFormat === "pdf") {
-        exportPDF(exportData, filename, report.name);
+        await exportPDF(exportData, filename, report.name);
       } else if (exportFormat === "json") {
         exportJSON(exportData, filename);
       }

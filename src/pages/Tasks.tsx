@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiSearch,
   FiFilter,
@@ -9,7 +9,9 @@ import {
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import TaskTable from "../components/tasks/TaskTable";
-import SmartTaskAnalytics from "../components/tasks/SmartTaskAnalytics";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const SmartTaskAnalytics = React.lazy(() => import("../components/tasks/SmartTaskAnalytics"));
 import { AnimatePresence } from "framer-motion";
 import AddButton from "../components/ui/AddButton";
 import { AddTaskModal } from "../components/tasks/modals/AddTaskModal";
@@ -269,7 +271,9 @@ const Tasks: React.FC = () => {
 
           {activeTab === "analytics" && (
             <div className="space-y-6">
-              <SmartTaskAnalytics refreshKey={refreshKey} />
+              <React.Suspense fallback={<TabFallback />}>
+                <SmartTaskAnalytics refreshKey={refreshKey} />
+              </React.Suspense>
             </div>
           )}
 

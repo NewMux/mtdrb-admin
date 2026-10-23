@@ -14,6 +14,8 @@ type Filter =
   | { kind: "gte"; field: string; value: unknown }
   | { kind: "lte"; field: string; value: unknown }
   | { kind: "lt"; field: string; value: unknown }
+  | { kind: "gt"; field: string; value: unknown }
+  | { kind: "is"; field: string; value: unknown }
   | { kind: "in"; field: string; value: unknown[] }
   | { kind: "or"; expr: string }
   | { kind: "not"; field: string; operator: string; value: unknown };
@@ -124,15 +126,64 @@ function getTableRows(table: string): MockRow[] {
   return clone(getMutableTableRows(table));
 }
 
+/** Splits "a,b(c,d),e" at the commas that are not inside parentheses. */
+function splitTopLevel(expr: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of expr) {
+    if (ch === "(") depth += 1;
+    if (ch === ")") depth -= 1;
+    if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current) parts.push(current);
+  return parts;
+}
+
+/** One PostgREST condition ("field.op.value", or and(...) / or(...) of them) against a row. */
+function matchesCondition(row: Record<string, unknown>, condition: string): boolean {
+  const group = /^(and|or)\((.*)\)$/.exec(condition);
+  if (group) {
+    const inner = splitTopLevel(group[2]);
+    return group[1] === "and"
+      ? inner.every((c) => matchesCondition(row, c))
+      : inner.some((c) => matchesCondition(row, c));
+  }
+  const match = /^(\w+)\.(\w+)\.(.*)$/.exec(condition);
+  if (!match) return false;
+  const [, field, op, raw] = match;
+  const v = row[field];
+  switch (op) {
+    case "ilike": {
+      const pattern = raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/%/g, ".*");
+      return new RegExp(`^${pattern}$`, "i").test(String(v ?? ""));
+    }
+    case "is":
+      return raw === "null" ? v == null : v != null;
+    case "eq":
+      return v != null && String(v) === raw;
+    case "neq":
+      return String(v) !== raw;
+    case "gt":
+      return v != null && String(v) > raw;
+    case "gte":
+      return v != null && String(v) >= raw;
+    case "lt":
+      return v != null && String(v) < raw;
+    case "lte":
+      return v != null && String(v) <= raw;
+    default:
+      return false;
+  }
+}
+
 function matchesOr(row: Record<string, unknown>, expr: string): boolean {
-  const parts = expr.split(",");
-  return parts.some((part) => {
-    const match = part.match(/(\w+)\.ilike\.%(.+)%/);
-    if (!match) return false;
-    const [, field, term] = match;
-    const val = String(row[field] ?? "").toLowerCase();
-    return val.includes(term.toLowerCase());
-  });
+  return splitTopLevel(expr).some((condition) => matchesCondition(row, condition));
 }
 
 function applyFilters(
@@ -158,6 +209,12 @@ function applyFilters(
           const v = row[f.field];
           return v != null && String(v) < String(f.value);
         }
+        case "gt": {
+          const v = row[f.field];
+          return v != null && String(v) > String(f.value);
+        }
+        case "is":
+          return f.value === null ? row[f.field] == null : row[f.field] != null;
         case "in":
           return (f.value as unknown[]).includes(row[f.field]);
         case "or":
@@ -178,8 +235,9 @@ function applyFilters(
 class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; count?: number }> {
   private table: string;
   private filters: Filter[] = [];
-  private orderField?: string;
-  private orderAsc = true;
+  private orders: Array<{ field: string; asc: boolean }> = [];
+  private wantCount = false;
+  private headOnly = false;
   private limitN?: number;
   private rangeFrom?: number;
   private rangeTo?: number;
@@ -192,8 +250,10 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
     this.table = table;
   }
 
-  select(columns?: string) {
+  select(columns?: string, options?: { count?: string; head?: boolean }) {
     void columns;
+    this.wantCount = Boolean(options?.count);
+    this.headOnly = Boolean(options?.head);
     if (this.op !== "insert" && this.op !== "update" && this.op !== "upsert") {
       this.op = "select";
     }
@@ -243,6 +303,16 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
     return this;
   }
 
+  gt(field: string, value: unknown) {
+    this.filters.push({ kind: "gt", field, value });
+    return this;
+  }
+
+  is(field: string, value: unknown) {
+    this.filters.push({ kind: "is", field, value });
+    return this;
+  }
+
   lt(field: string, value: unknown) {
     this.filters.push({ kind: "lt", field, value });
     return this;
@@ -264,8 +334,7 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
   }
 
   order(field: string, opts?: { ascending?: boolean }) {
-    this.orderField = field;
-    this.orderAsc = opts?.ascending ?? true;
+    this.orders.push({ field, asc: opts?.ascending ?? true });
     return this;
   }
 
@@ -360,15 +429,20 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
 
     let rows = applyFilters(getTableRows(this.table), this.filters);
 
-    if (this.orderField) {
-      const field = this.orderField;
-      const asc = this.orderAsc;
+    if (this.orders.length > 0) {
+      const orders = this.orders;
       rows.sort((a, b) => {
-        const av = String(a[field] ?? "");
-        const bv = String(b[field] ?? "");
-        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        for (const { field, asc } of orders) {
+          const cmp = String(a[field] ?? "").localeCompare(String(b[field] ?? ""));
+          if (cmp !== 0) return asc ? cmp : -cmp;
+        }
+        return 0;
       });
     }
+
+    // The count PostgREST reports ignores paging; a head request returns no rows.
+    const total = rows.length;
+    if (this.headOnly) return { data: null, error: null, count: total };
 
     if (this.rangeFrom != null && this.rangeTo != null) {
       rows = rows.slice(this.rangeFrom, this.rangeTo + 1);
@@ -388,7 +462,7 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
       return { data: rows[0], error: null };
     }
 
-    return { data: rows, error: null, count: rows.length };
+    return { data: rows, error: null, ...(this.wantCount ? { count: total } : { count: rows.length }) };
   }
 
   then<TResult1 = { data: unknown; error: unknown }, TResult2 = never>(

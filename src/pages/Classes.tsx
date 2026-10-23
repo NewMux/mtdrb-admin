@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -25,7 +25,8 @@ import {
 import type { IconType } from "react-icons";
 import ClassTable from "../components/classes/ClassTable";
 import ClassDetailsDrawer from "../components/classes/ClassDetailsDrawer";
-import ClassCalendar from "../components/classes/ClassCalendar";
+// The calendar (FullCalendar is a large library) is only fetched when that tab is opened.
+const ClassCalendar = lazy(() => import("../components/classes/ClassCalendar"));
 
 // Import smart class modals
 import {
@@ -50,7 +51,9 @@ import {
   getClassAnalytics,
 } from "../api/class";
 
-import ClassAnalyticsTab from "../components/classes/tabs/ClassAnalyticsTab";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const ClassAnalyticsTab = lazy(() => import("../components/classes/tabs/ClassAnalyticsTab"));
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
@@ -527,7 +530,9 @@ export default function SmartClassManagement() {
       case "analytics":
         return (
           <div className="space-y-6">
-            <ClassAnalyticsTab classes={classes} />
+            <Suspense fallback={<TabFallback />}>
+              <ClassAnalyticsTab classes={classes} />
+            </Suspense>
           </div>
         );
 
@@ -586,7 +591,15 @@ export default function SmartClassManagement() {
       case "calendar":
         return (
           <div className="h-[calc(100vh-300px)]">
-            <ClassCalendar />
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center" role="status" aria-label="Loading calendar">
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sky-600" />
+                </div>
+              }
+            >
+              <ClassCalendar />
+            </Suspense>
           </div>
         );
 

@@ -25,7 +25,7 @@ import {
 import { AppleInput, AppleSelect, AppleTextarea } from "../AppleStyleModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { SmartModal } from "../ui/SmartModal";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
 import { useGymConfig } from "../../contexts/gym-config-context";

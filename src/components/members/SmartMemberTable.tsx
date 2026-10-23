@@ -20,7 +20,7 @@ import {
   FiChevronsRight,
   FiUserX,
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { usePermissions } from "../../hooks/usePermissions";
 import { useTranslation } from "react-i18next";
@@ -349,7 +349,7 @@ const Pagination: React.FC<PaginationProps> = ({
     return rangeWithDots;
   };
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (

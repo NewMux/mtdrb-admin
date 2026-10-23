@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { DashboardTabs } from "../components/dashboard/DashboardTabs";
 import { DashboardOverview } from "../components/dashboard/DashboardOverview";

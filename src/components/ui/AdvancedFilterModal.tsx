@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import { useRTL } from "../../hooks/useRTL";
 import { useTranslation } from "react-i18next";

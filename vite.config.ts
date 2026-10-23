@@ -23,10 +23,14 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          mui: ['@mui/material'],
-          utils: ['date-fns', 'i18next', 'react-i18next'],
+        // Stable libraries get their own files so a returning visitor keeps them
+        // cached across deploys and only re-downloads the app's own (small) code.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)) return 'vendor';
+          if (/node_modules\/@supabase\//.test(id)) return 'supabase';
+          if (/node_modules\/(i18next|react-i18next|html-parse-stringify|void-elements)\//.test(id)) return 'i18n';
+          return undefined;
         },
       },
     },

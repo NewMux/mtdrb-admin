@@ -1,3 +1,4 @@
+import { LazyMotion } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
 // Production deployment marker for mtdrb-fit 20260817.
 import {
@@ -6,8 +7,6 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { ThemeProvider as MuiThemeProvider } from "@mui/material";
-import { theme } from "./theme";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 import { GymConfigProvider } from "./contexts/GymConfigProvider";
@@ -59,6 +58,9 @@ import AuthSetup from "./components/AuthSetup";
 import PermissionGuard from "./components/auth/PermissionGuard";
 import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
 import { PlatformAdminProvider } from "./contexts/PlatformAdminProvider";
+
+// The animation engine arrives after the first paint (see motionFeatures.ts).
+const loadMotionFeatures = () => import("./motionFeatures").then((module) => module.default);
 
 const App = () => {
   // Global async error handling
@@ -115,7 +117,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <MuiThemeProvider theme={theme}>
+      <LazyMotion features={loadMotionFeatures}>
         <ThemeProvider>
           <PageThemeProvider>
             <Router>
@@ -398,7 +400,7 @@ const App = () => {
             </Router>
           </PageThemeProvider>
         </ThemeProvider>
-      </MuiThemeProvider>
+      </LazyMotion>
     </ErrorBoundary>
   );
 };

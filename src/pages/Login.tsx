@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { supabase } from "../supabaseClient";
 import { useNavigate, Link, useLocation, Navigate } from "react-router-dom";

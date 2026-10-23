@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -17,7 +17,9 @@ import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import SmartVatDashboard from "../components/billing/SmartVatDashboard";
-import FinancialInsightsDashboard from "../components/billing/FinancialInsightsDashboard";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const FinancialInsightsDashboard = React.lazy(() => import("../components/billing/FinancialInsightsDashboard"));
 import { NewInvoiceModal } from "../components/billing/NewInvoiceModal";
 import ExportBillingDataModal from "../components/billing/modals/ExportBillingDataModal";
 import AddExpenseModal from "../components/billing/AddExpenseModal";
@@ -894,7 +896,9 @@ const Billing: React.FC = () => {
       case "analytics":
         return (
           <div className="space-y-6">
-            <FinancialInsightsDashboard refreshKey={refreshKey} />
+            <React.Suspense fallback={<TabFallback />}>
+              <FinancialInsightsDashboard refreshKey={refreshKey} />
+            </React.Suspense>
           </div>
         );
 

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 
 // ===== PROFILE PAGE =====

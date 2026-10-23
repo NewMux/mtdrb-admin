@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -19,7 +19,9 @@ import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import TrainerTable from "../components/trainers/TrainerTable";
-import TrainerPerformanceDashboard from "../components/trainers/TrainerPerformanceDashboard";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const TrainerPerformanceDashboard = React.lazy(() => import("../components/trainers/TrainerPerformanceDashboard"));
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { supabase } from "../supabaseClient";
 import { mapDbTrainerToUI } from "../mocks/demoData";
@@ -310,7 +312,9 @@ const Trainers: React.FC = () => {
       case "analytics":
         return (
           <div className="space-y-6">
-            <TrainerPerformanceDashboard refreshKey={refreshKey} />
+            <React.Suspense fallback={<TabFallback />}>
+              <TrainerPerformanceDashboard refreshKey={refreshKey} />
+            </React.Suspense>
           </div>
         );
 

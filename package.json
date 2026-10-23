@@ -17,14 +17,11 @@
     "validate": "npm run lint && npm run typecheck && npm run test -- --run"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
     "@fullcalendar/interaction": "^6.1.18",
     "@fullcalendar/react": "^6.1.18",
     "@fullcalendar/timegrid": "^6.1.18",
     "@headlessui/react": "2.2.4",
     "@hookform/resolvers": "5.1.1",
-    "@mui/material": "^7.1.1",
     "@radix-ui/react-dialog": "1.1.14",
     "@sentry/react": "^10.70.0",
     "@supabase/supabase-js": "^2.50.0",

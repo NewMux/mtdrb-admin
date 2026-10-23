@@ -9,7 +9,7 @@ import {
   FiCheck,
   FiActivity,
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
 import { Member } from "../../../types/member";

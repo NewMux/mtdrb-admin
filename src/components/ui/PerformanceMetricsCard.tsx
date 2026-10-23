@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiArrowUpRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";

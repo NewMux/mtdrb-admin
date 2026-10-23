@@ -635,6 +635,39 @@ change expenses that already use it.
 what the database allows), the payment-method list (accounting and reports
 depend on it), and the interface languages (English and Arabic).
 
+## Performance: first load and very large member lists
+
+**First load.** What a visitor downloads on the landing page went from about
+287 KB to 214 KB gzipped (the animation engine, 18 KB of that, now arrives after
+the first paint, so the page is usable at about 196 KB). Done by:
+- removing an unused UI library (`@mui/material` and its Emotion packages: it only
+  wrapped the app in a provider and no component used it);
+- loading the Arabic text on demand (`src/i18n.ar.ts`; English stays in the main
+  file and is the fallback; the app waits for Arabic before it first renders if
+  that is the reader's language, so there is no flash of English);
+- the slim `m` form of the animation library with `<LazyMotion>`;
+- `jsPDF` (about 120 KB) loads only when someone exports a PDF, so every screen with
+  a CSV export no longer carries it;
+- the calendar and the chart-heavy analytics tabs (members, billing, trainers,
+  tasks, classes) load when that tab is first opened: Members 255 -> 61 KB,
+  Billing 174 -> 58 KB, Trainers 137 -> 20 KB, Classes 515 -> 246 KB (raw);
+- stable libraries (React, Supabase, i18next) in their own files, so a returning
+  visitor re-downloads only the app's small own code after a deploy.
+Analytics and Insights are chart pages by nature (the charting library is about
+104 KB gzipped) and still load it.
+
+**Members list.** The page used to download every member and filter in the
+browser. It now fetches one page at a time with the search and filter applied in
+the database (`src/api/memberList.ts`): search is per word across first name, last
+name, email and phone; the headline numbers are head-only counts; the CSV export
+reads every member page by page (it was silently cut off at 1,000 rows).
+Apply `20261027090000_members_search_indexes.sql` for big gyms (trigram indexes
+for the search, name-order and newest-first indexes). Measured on 180,000
+members for one gym: first page 26 ms -> 0.1 ms, a two-word search 135 ms ->
+6 ms, a phone-digits search 109 ms -> 8 ms. The page works without the migration,
+just slower on large tables. Still reading all members (a few columns, not the
+whole row): the Members analytics tab, and pickers that list members.
+
 ## Team and custom roles
 
 Until now a gym's staff were admin / employee / trainer. **Settings > Team &
