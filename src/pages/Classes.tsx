@@ -54,6 +54,7 @@ import ClassAnalyticsTab from "../components/classes/tabs/ClassAnalyticsTab";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 type ModalType =
   | "add"
@@ -553,13 +554,15 @@ export default function SmartClassManagement() {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("classes.export")}</span>
                   </button>
-                  <button
-                    onClick={handleAddClass}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("classes.addClass")}</span>
-                  </button>
+                  <Can permission="classes.manage">
+                    <button
+                      onClick={handleAddClass}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("classes.addClass")}</span>
+                    </button>
+                  </Can>
                 </div>
               </div>
 
@@ -609,13 +612,15 @@ export default function SmartClassManagement() {
               <FiRefreshCw className="w-4 h-4" />
               <span>{t("classes.refresh")}</span>
             </button>
-            <button
-              onClick={handleAddClass}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("classes.addClass")}</span>
-            </button>
+            <Can permission="classes.manage">
+              <button
+                onClick={handleAddClass}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("classes.addClass")}</span>
+              </button>
+            </Can>
           </>
         }
       />

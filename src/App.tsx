@@ -231,7 +231,7 @@ const App = () => {
                         <Route
                           path="attendance/kiosk"
                           element={
-                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" requiredPermission="attendance.manage" fallbackPath="/dashboard">
                               <Kiosk />
                             </PermissionGuard>
                           }
@@ -267,7 +267,7 @@ const App = () => {
                         <Route
                           path="pos"
                           element={
-                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" requiredPermission={["pos.use", "pos.manage"]} fallbackPath="/dashboard">
                               <POS />
                             </PermissionGuard>
                           }
@@ -276,7 +276,7 @@ const App = () => {
                         <Route 
                           path="billing" 
                           element={
-                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" requiredPermission={["billing.view", "billing.manage"]} fallbackPath="/dashboard">
                               <Billing />
                             </PermissionGuard>
                           } 

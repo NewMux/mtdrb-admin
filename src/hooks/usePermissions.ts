@@ -14,7 +14,7 @@ import { hasRole, UserRole } from "../types/roles";
  * ```
  */
 export function usePermissions() {
-  const { userMetadata, hasPermission } = useAuth();
+  const { userMetadata, hasPermission, can } = useAuth();
 
   // AuthProvider derives this role from the membership table. Fail closed
   // when that database-backed context is unavailable.
@@ -31,9 +31,11 @@ export function usePermissions() {
   /**
    * Permission checks for common actions
    */
-  const canCreate = hasPermission("write") || hasPermission("all");
-  const canEdit = hasPermission("write") || hasPermission("all");
-  const canDelete = hasPermission("write") || hasPermission("all");
+  // Used by the members screens, so a custom role also needs members.manage.
+  const canWriteMembers = can("members.manage");
+  const canCreate = (hasPermission("write") || hasPermission("all")) && canWriteMembers;
+  const canEdit = (hasPermission("write") || hasPermission("all")) && canWriteMembers;
+  const canDelete = (hasPermission("write") || hasPermission("all")) && canWriteMembers;
   const canView = hasPermission("read") || hasPermission("all");
   const canManageStaff = hasPermission("manage_staff") || hasPermission("all");
   const canManageClasses = hasPermission("write_classes") || hasPermission("all");
@@ -52,6 +54,9 @@ export function usePermissions() {
     isEmployee,
     isTrainer,
     hasRoleAccess,
+
+    // Custom-role limits: can("billing.view") or can(["pos.use", "pos.manage"]) for any-of
+    can,
 
     // Permission checks
     canCreate,

@@ -6,6 +6,7 @@
 import type { User, UserAttributes } from "@supabase/supabase-js";
 import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
+import { mockInviteStaff, mockRoleRows, mockStaffRpc } from "./staffMock";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -118,6 +119,8 @@ function getMutableTableRows(table: string): MockRow[] {
 }
 
 function getTableRows(table: string): MockRow[] {
+  // Custom roles live in the staff mock so the Team & roles screen can edit them.
+  if (table === "tenant_roles") return mockRoleRows() as MockRow[];
   return clone(getMutableTableRows(table));
 }
 
@@ -470,7 +473,7 @@ export function createMockSupabaseClient() {
   return {
     from: (table: string) => new MockQueryBuilder(table),
     rpc: (name: string, args?: Record<string, unknown>) =>
-      Promise.resolve(mockPlatformRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockRpc(name)),
+      Promise.resolve(mockPlatformRpc(name, args) ?? mockStaffRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockRpc(name)),
     channel: () => ({
       on: () => ({ subscribe: () => noopSub }),
       subscribe: () => noopSub,
@@ -480,7 +483,9 @@ export function createMockSupabaseClient() {
       invoke: async (name: string, options?: { body?: unknown }) =>
         name === "platform-invite-gym"
           ? mockInviteGym(options?.body)
-          : { data: null, error: new Error(`Mock backend has no function ${name}`) },
+          : name === "invite-staff"
+            ? mockInviteStaff(options?.body)
+            : { data: null, error: new Error(`Mock backend has no function ${name}`) },
     },
     auth: {
       getUser: async () => ({ data: { user: getMockUser() }, error: null }),

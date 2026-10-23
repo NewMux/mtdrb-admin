@@ -32,6 +32,7 @@ import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import type { Invoice, Expense } from "../types";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 // Using real data from Supabase - no mock data
 interface InvoiceRow {
@@ -674,13 +675,15 @@ const Billing: React.FC = () => {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("billing.export")}</span>
                   </button>
-                  <button
-                    onClick={() => setActiveModal("addInvoice")}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("billing.addInvoice")}</span>
-                  </button>
+                  <Can permission="billing.manage">
+                    <button
+                      onClick={() => setActiveModal("addInvoice")}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("billing.addInvoice")}</span>
+                    </button>
+                  </Can>
                 </div>
               </div>
 
@@ -809,13 +812,15 @@ const Billing: React.FC = () => {
                     {t("billing.expenseManagementDesc")}
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveModal("expense")}
-                  className="btn btn-primary"
-                >
-                  <FiPlus className="w-4 h-4" />
-                  <span>{t("billing.addExpense")}</span>
-                </button>
+                <Can permission="billing.manage">
+                  <button
+                    onClick={() => setActiveModal("expense")}
+                    className="btn btn-primary"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span>{t("billing.addExpense")}</span>
+                  </button>
+                </Can>
               </div>
 
               <div className="overflow-x-auto">
@@ -1016,13 +1021,15 @@ const Billing: React.FC = () => {
               <FiActivity className="w-4 h-4" />
               <span>{t("billing.refresh")}</span>
             </button>
-            <button
-              onClick={() => setActiveModal("addInvoice")}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("billing.addInvoice")}</span>
-            </button>
+            <Can permission="billing.manage">
+              <button
+                onClick={() => setActiveModal("addInvoice")}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("billing.addInvoice")}</span>
+              </button>
+            </Can>
           </>
         }
       />

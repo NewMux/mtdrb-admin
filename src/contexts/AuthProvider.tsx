@@ -14,6 +14,8 @@ import {
   type AuthErrorState,
   type UserMetadata,
 } from "./auth-context";
+import { fetchMyStaffAccess } from "../api/staff";
+import { allows } from "../config/staffPermissions";
 
 const DEFAULT_ERROR: AuthErrorState = {
   code: "unknown",
@@ -38,7 +40,9 @@ function sameMetadata(a: UserMetadata | null, b: UserMetadata): boolean {
     a.tenant_id === b.tenant_id &&
     a.paid === b.paid &&
     a.role === b.role &&
-    a.subscription_tier === b.subscription_tier
+    a.subscription_tier === b.subscription_tier &&
+    (a.custom_role_name ?? null) === (b.custom_role_name ?? null) &&
+    JSON.stringify(a.permissions ?? null) === JSON.stringify(b.permissions ?? null)
   );
 }
 
@@ -138,11 +142,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // A custom role's limits. Null (also when the database does not have custom
+    // roles yet, or the call fails) means a built-in role: nothing is hidden, and
+    // the database still decides every write.
+    const access = await fetchMyStaffAccess();
+
     const metadata: UserMetadata = {
       tenant_id: tId,
       paid: isPaid,
       role: validatedRole,
       subscription_tier: tier,
+      permissions: access?.permissions ?? null,
+      custom_role_name: access?.customRoleName ?? null,
     };
 
     setUserMetadata((current) => (sameMetadata(current, metadata) ? current : metadata));
@@ -625,6 +636,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [userMetadata],
   );
 
+  const can = useCallback(
+    (permission: string | readonly string[]): boolean => {
+      if (!userMetadata) return false;
+      return allows(userMetadata.permissions, permission);
+    },
+    [userMetadata],
+  );
+
   const refreshSession = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -656,6 +675,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       checkAuth,
       hasPermission,
+      can,
       refreshSession,
     }),
     [
@@ -669,6 +689,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       checkAuth,
       hasPermission,
+      can,
       refreshSession,
     ],
   );

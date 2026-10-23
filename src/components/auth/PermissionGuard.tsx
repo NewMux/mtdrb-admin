@@ -15,6 +15,13 @@ interface PermissionGuardProps {
   requiredRole: UserRole;
 
   /**
+   * Optional: a permission (or any of several) a custom role must hold on top of
+   * the tier. A built-in role always passes. Hides the screen only; the database
+   * decides every read and write.
+   */
+  requiredPermission?: string | readonly string[];
+
+  /**
    * Optional path to redirect to if user lacks permission
    * If not provided, shows an "Unauthorized" message
    */
@@ -48,10 +55,11 @@ interface PermissionGuardProps {
 export default function PermissionGuard({
   children,
   requiredRole,
+  requiredPermission,
   fallbackPath,
   unauthorizedComponent,
 }: PermissionGuardProps) {
-  const { userMetadata, isLoading } = useAuth();
+  const { userMetadata, isLoading, can } = useAuth();
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -86,7 +94,8 @@ export default function PermissionGuard({
   const userRole = userMetadata.role as UserRole;
 
   // Check if user has required role
-  const hasPermission = hasRole(userRole, requiredRole);
+  const hasPermission =
+    hasRole(userRole, requiredRole) && (requiredPermission === undefined || can(requiredPermission));
 
   if (!hasPermission) {
     // Redirect if fallback path is provided

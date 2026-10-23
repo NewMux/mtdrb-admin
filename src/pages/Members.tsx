@@ -52,6 +52,7 @@ import { monthBoundary } from "../utils/periodBoundaries";
 import { toLocalDateString } from "../utils/analyticsRange";
 import { countMembersActiveAsOf } from "../utils/memberActivity";
 import { useGymConfig } from "../contexts/gym-config-context";
+import Can from "../components/auth/Can";
 
 // Raw "members" table row as returned by Supabase (select("*"))
 type MemberRow = Database["public"]["Tables"]["members"]["Row"];
@@ -979,13 +980,15 @@ const Members: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => openImportMembersModal()}
-                    className="btn btn-secondary"
-                  >
-                    <FiUpload className="w-4 h-4" />
-                    <span>{t("members.import")}</span>
-                  </button>
+                  <Can permission="members.manage">
+                    <button
+                      onClick={() => openImportMembersModal()}
+                      className="btn btn-secondary"
+                    >
+                      <FiUpload className="w-4 h-4" />
+                      <span>{t("members.import")}</span>
+                    </button>
+                  </Can>
                   <button
                     onClick={handleExportMembers}
                     className="btn btn-secondary"

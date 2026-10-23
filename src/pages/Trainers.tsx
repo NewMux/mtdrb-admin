@@ -36,6 +36,7 @@ import {
 } from "../components/trainers/modals";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 interface Trainer {
   id: string;
@@ -334,13 +335,15 @@ const Trainers: React.FC = () => {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("trainers.export")}</span>
                   </button>
-                  <button
-                    onClick={handleAddTrainer}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("trainers.addTrainer")}</span>
-                  </button>
+                  <Can permission="trainers.manage">
+                    <button
+                      onClick={handleAddTrainer}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("trainers.addTrainer")}</span>
+                    </button>
+                  </Can>
                   <button
                     onClick={handleRefresh}
                     className="btn btn-secondary"
@@ -386,13 +389,15 @@ const Trainers: React.FC = () => {
               <FiTarget className="w-4 h-4" />
               <span>{t("trainers.viewSchedule")}</span>
             </button>
-            <button
-              onClick={handleAddTrainer}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("trainers.addTrainer")}</span>
-            </button>
+            <Can permission="trainers.manage">
+              <button
+                onClick={handleAddTrainer}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("trainers.addTrainer")}</span>
+              </button>
+            </Can>
           </>
         }
       />

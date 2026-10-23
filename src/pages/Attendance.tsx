@@ -28,6 +28,7 @@ import CredentialsPanel from "../components/attendance/CredentialsPanel";
 import { Link } from "react-router-dom";
 import { reasonKey } from "../api/accessControl";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 const methodOptions: Array<{
   value: AttendanceMethod;
@@ -207,9 +208,11 @@ const Attendance: React.FC = () => {
         )}
         actions={
           <>
-          <Link to="/dashboard/attendance/kiosk" className="btn btn-primary">
-            {t("accessControl.openKiosk")}
-          </Link>
+          <Can permission="attendance.manage">
+            <Link to="/dashboard/attendance/kiosk" className="btn btn-primary">
+              {t("accessControl.openKiosk")}
+            </Link>
+          </Can>
           <button
             type="button"
             onClick={() => void loadSnapshot(false)}
@@ -236,6 +239,7 @@ const Attendance: React.FC = () => {
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.4fr)]">
+        <Can permission="attendance.manage">
         <section className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -368,6 +372,7 @@ const Attendance: React.FC = () => {
             </div>
           </div>
         </section>
+        </Can>
 
         <section className="space-y-6">
           <div className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
@@ -479,9 +484,11 @@ const Attendance: React.FC = () => {
             onChanged={() => void loadSnapshot(false)}
           />
         )}
-        <CredentialsPanel
-          members={(snapshot?.members ?? []).map((m) => ({ id: m.id, name: buildMemberName(m), email: m.email ?? "" }))}
-        />
+        <Can permission="attendance.manage">
+          <CredentialsPanel
+            members={(snapshot?.members ?? []).map((m) => ({ id: m.id, name: buildMemberName(m), email: m.email ?? "" }))}
+          />
+        </Can>
       </div>
     </div>
   );

@@ -19,6 +19,13 @@ verify_jwt = false
 # verified platform admin (allowlist + MFA) before it does anything.
 verify_jwt = false
 
+[functions.invite-staff]
+# Called from the browser by a signed-in gym admin. verify_jwt stays off so the
+# CORS preflight (no Authorization header) reaches the function; the function
+# verifies the caller's JWT itself and the database requires them to be an admin
+# of the gym they are inviting into (staff_invite_context).
+verify_jwt = false
+
 [functions.paddle-manage-locations]
 # Called from the browser by a signed-in tenant admin. verify_jwt stays off so
 # the CORS preflight (no Authorization header) reaches the function; the

@@ -6,7 +6,8 @@ import { UserRole } from "../../types/roles";
 // Mock the AuthContext
 const mockUseAuth = vi.fn();
 vi.mock("../../contexts/AuthContext", () => ({
-  useAuth: () => mockUseAuth(),
+  // A built-in role is not limited by custom-role permissions, so `can` defaults to yes.
+  useAuth: () => ({ can: () => true, ...mockUseAuth() }),
 }));
 
 describe("usePermissions", () => {
@@ -158,6 +159,33 @@ describe("usePermissions", () => {
       const { result } = renderHook(() => usePermissions());
 
       expect(result.current.hasRoleAccess("trainer")).toBe(false);
+    });
+  });
+
+  describe("custom roles", () => {
+    const withCan = (can: (p: string | readonly string[]) => boolean) =>
+      mockUseAuth.mockReturnValue({
+        userMetadata: { tenant_id: "tenant-a", role: "employee" as UserRole },
+        hasPermission: vi.fn((perm: string) => perm === "read" || perm === "write" || perm === "manage_staff"),
+        can,
+      });
+
+    it("lets an employee on a members-only custom role create, edit and delete members", () => {
+      withCan((p) => p === "members.manage");
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.canCreate).toBe(true);
+      expect(result.current.canEdit).toBe(true);
+      expect(result.current.canDelete).toBe(true);
+    });
+
+    it("takes member editing away from a custom role without members.manage", () => {
+      withCan((p) => p === "billing.view");
+      const { result } = renderHook(() => usePermissions());
+      expect(result.current.canCreate).toBe(false);
+      expect(result.current.canEdit).toBe(false);
+      expect(result.current.canDelete).toBe(false);
+      expect(result.current.isEmployee).toBe(true); // the tier is unchanged
+      expect(result.current.can("billing.view")).toBe(true);
     });
   });
 });

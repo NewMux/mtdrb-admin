@@ -13,6 +13,7 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiBriefcase,
+  FiUsers,
   FiLock,
 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
@@ -31,6 +32,7 @@ import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
 import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
 import DataPrivacyTab from "../components/settings/DataPrivacyTab";
+import TeamSettingsTab from "../components/settings/TeamSettingsTab";
 import { resumeSubscription } from "../api/billing";
 import { validatePassword } from "../utils/passwordPolicy";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -41,7 +43,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, userMetadata } = useAuth();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +87,7 @@ const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(
-    requestedTab && ["general", "business", "profile", "security", "billing", "privacy"].includes(requestedTab)
+    requestedTab && ["general", "business", "team", "profile", "security", "billing", "privacy"].includes(requestedTab)
       ? requestedTab
       : "general",
   );
@@ -322,6 +324,7 @@ const Settings: React.FC = () => {
   const tabs = [
     { id: "general", name: t("settings.general"), icon: FiSettings },
     { id: "business", name: t("gymConfig.title"), icon: FiBriefcase },
+    ...(userMetadata?.role === "admin" ? [{ id: "team", name: t("team.title"), icon: FiUsers }] : []),
     { id: "profile", name: t("settings.profile"), icon: FiUser },
     { id: "security", name: t("settings.security"), icon: FiShield },
     { id: "billing", name: t("settings.billing"), icon: FiCreditCard },
@@ -519,6 +522,8 @@ const Settings: React.FC = () => {
           )}
 
           {activeTab === "business" && <BusinessSettingsTab />}
+
+          {activeTab === "team" && userMetadata?.role === "admin" && <TeamSettingsTab />}
 
           {activeTab === "privacy" && <DataPrivacyTab />}
 

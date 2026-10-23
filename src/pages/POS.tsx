@@ -377,10 +377,11 @@ function ReturnModal({ open, sale, currency, onClose, onReturned }: { open: bool
 }
 
 const POS = () => {
+  const { can } = useAuth();
   const { t } = useTranslation();
   const { tenantId } = useAuth();
   const { isRTL } = useRTL();
-  const [activeTab, setActiveTab] = React.useState<PosTab>("checkout");
+  const [activeTab, setActiveTab] = React.useState<PosTab>(can(["pos.use"]) ? "checkout" : "inventory");
   const [products, setProducts] = React.useState<PosProduct[]>([]);
   const [categories, setCategories] = React.useState<PosCategory[]>([]);
   const [sales, setSales] = React.useState<PosSale[]>([]);
@@ -473,10 +474,12 @@ const POS = () => {
   const completeSale = (result: PosSaleReceipt) => { setCart([]); setDiscount(0); setMemberId(""); setReceipt(result); setModal("receipt"); void load(); };
   const processReturn = () => { setModal(null); setSelectedSale(null); void load(); };
 
+  const canSell = can(["pos.use"]);
+  const canManageProducts = can(["pos.manage"]);
   const tabs: { id: PosTab; label: string; icon: React.ElementType; helper: string }[] = [
-    { id: "checkout", label: t("pos.checkout"), icon: FiShoppingCart, helper: t("pos.sellProducts") },
-    { id: "inventory", label: t("pos.inventory"), icon: FiPackage, helper: t("pos.manageStock") },
-    { id: "sales", label: t("pos.salesHistory"), icon: FiBarChart2, helper: t("pos.receiptsReturns") },
+    ...(canSell ? [{ id: "checkout" as PosTab, label: t("pos.checkout"), icon: FiShoppingCart, helper: t("pos.sellProducts") }] : []),
+    ...(canManageProducts ? [{ id: "inventory" as PosTab, label: t("pos.inventory"), icon: FiPackage, helper: t("pos.manageStock") }] : []),
+    ...(canSell ? [{ id: "sales" as PosTab, label: t("pos.salesHistory"), icon: FiBarChart2, helper: t("pos.receiptsReturns") }] : []),
   ];
 
   return <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>

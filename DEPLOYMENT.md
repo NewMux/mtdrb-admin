@@ -635,6 +635,77 @@ change expenses that already use it.
 what the database allows), the payment-method list (accounting and reports
 depend on it), and the interface languages (English and Arabic).
 
+## Team and custom roles
+
+Until now a gym's staff were admin / employee / trainer. **Settings > Team &
+roles** (admins only) now lets an owner invite staff by email and give each person
+a built-in role or a **custom role** of their own ("Front desk", "Accountant",
+"Coach"), choosing exactly what that role may do.
+
+**Permissions** (the database's `staff_permission_catalog()`; mirrored in
+`src/config/staffPermissions.ts`):
+
+| Permission | What it covers |
+|---|---|
+| `members.manage` | add / edit / remove members and subscriptions, put them on plans, book them into classes |
+| `billing.view` | see invoices, expenses, VAT, revenue figures and their files |
+| `billing.manage` | create / change invoices and expenses (includes `billing.view`); needed to record a payment with a plan |
+| `pos.use` | sell, process returns, see sales |
+| `pos.manage` | products, categories, stock |
+| `classes.manage` | classes, bookings, trainer schedules |
+| `trainers.manage` | trainer records and documents |
+| `attendance.manage` | check members in/out, the scanner screen, member credentials |
+
+**How it stays safe**
+
+- A custom role sits on a built-in **tier** (employee or trainer) and can only
+  *narrow* it. Every existing row-level-security rule is unchanged; the new
+  `RESTRICTIVE` policies are ANDed with them, so a custom role can never do
+  something its tier couldn't. A person with no custom role (everyone today) is
+  unaffected: `has_permission()` returns true for them and the old policies decide.
+- Only a gym **admin** can create, edit or delete roles or move people between
+  them (`staff_role_save`, `staff_role_delete`, `staff_set_role`, `staff_remove`;
+  the role tables have no write privileges for the browser). An admin never holds
+  a custom role, so the owner can't lock themselves out, and an admin can't change
+  or remove themselves.
+- The `SECURITY DEFINER` functions that touch finance, the shop, attendance or
+  plans check the permission themselves (they bypass RLS): `complete_pos_sale`,
+  `return_pos_sale`, `adjust_pos_inventory`, `attendance_scan`,
+  `attendance_issue_credential`, `assign_member_plan`, `get_financial_metrics`,
+  `generate_vat_return`, `calculate_vat_compliance_score`, and the revenue figures
+  in `get_analytics_overview` (they read 0 without `billing.view`).
+  **When you add a function like that, add the check - and a test in
+  `supabase/tests/custom_roles.test.sql`.**
+- The screens hide what a role can't do (menu items, the shop's inventory tab,
+  the add buttons). That is a convenience only: the database refuses the action
+  either way. If the database hasn't been updated yet, or `my_staff_access()`
+  fails, the screens simply behave as before.
+
+**Not covered by permissions** (any staff member keeps these): reading members,
+classes and trainers; tasks, notifications and the activity feed. Branches, rooms,
+gym settings, plans and devices stay admin-only as they always were.
+
+**Inviting.** The `invite-staff` Edge Function (admin only, verified from the
+caller's own token; the gym comes from that token, never from the request) sends
+the Supabase Auth invitation and adds the person with `staff_provision()`. One
+login belongs to **one gym**: inviting an email that already has an account is
+refused, because the app opens a person's oldest membership. A gym can have at
+most 50 staff accounts and 20 custom roles. An invited person shows as "Invited,
+not signed in yet" until they set a password.
+
+**Deploy:** apply `supabase/migrations/20261026090000_custom_roles.sql` BEFORE the
+frontend (it is also safe to deploy the frontend first: the screens fall back to
+today's behaviour, but the Team tab will show an error), then
+
+```
+supabase functions deploy invite-staff
+supabase secrets set STAFF_ALLOWED_ORIGINS=https://app.example.com STAFF_APP_URL=https://app.example.com
+```
+
+and in Supabase Auth: add `<app>/reset-password` to **Redirect URLs** (the
+platform invitations already need it) and edit the **Invite user** email template
+so it reads sensibly for a gym staff member.
+
 ## Go-live runbook (sandbox first, then live)
 
 Prices decided: **USD 49 (Starter) / 89 (Pro) a month; extra location 25 / 40**,
