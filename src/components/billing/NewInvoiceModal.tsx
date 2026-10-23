@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
 import {
@@ -313,13 +314,13 @@ export function NewInvoiceModal({
       }
 
       if (overdueInvoices > 0) {
-        toast.error(`Client has ${overdueInvoices} overdue invoice(s)!`, {
+        toast.error(i18n.t("toasts.clientOverdue", { count: overdueInvoices }), {
           duration: 4000,
         });
       }
     } catch (error) {
       console.error("Error loading client history:", error);
-      toast.error("Failed to load client billing history");
+      toast.error(i18n.t("toasts.billingHistoryFailed"));
     }
   }, []);
 
@@ -348,7 +349,7 @@ export function NewInvoiceModal({
       setItems(newItems);
     } catch (error) {
       console.error("Error updating item:", error);
-      toast.error("Error updating item");
+      toast.error(i18n.t("toasts.itemUpdateError"));
     }
   };
 
@@ -383,18 +384,17 @@ export function NewInvoiceModal({
 
   const handleSave = async (saveAsDraft: boolean = false) => {
     if (!selectedClient) {
-      toast.error("Please select a client");
+      toast.error(i18n.t("toasts.pickClient"));
       return;
     }
 
     if (items.length === 0 || items.every((item) => !item.description)) {
-      toast.error("Please add at least one line item");
+      toast.error(i18n.t("toasts.addLineItem"));
       return;
     }
 
     setIsSaving(true);
     try {
-      const action = editingInvoice ? "updated" : "created";
       const existingMetadata = (editingInvoice?.metadata as Record<string, unknown>) || {};
       const invoicePayload = {
         type: invoiceData.type,
@@ -436,14 +436,14 @@ export function NewInvoiceModal({
 
       if (result.error) throw result.error;
 
-      toast.success(`Invoice ${action} successfully!`);
+      // The page shows the (translated) confirmation.
       onSave();
       onClose();
     } catch (error: unknown) {
       console.error("Error saving invoice:", error);
       const message =
         error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to save invoice: ${message}`);
+      toast.error(i18n.t("toasts.invoiceSaveFailedWith", { message }));
     } finally {
       setIsSaving(false);
     }
@@ -618,7 +618,7 @@ export function NewInvoiceModal({
                         "Error selecting client:",
                         error,
                       );
-                      toast.error("Error selecting client");
+                      toast.error(i18n.t("toasts.clientSelectError"));
                     }
                   }}
                 >

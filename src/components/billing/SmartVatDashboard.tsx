@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   FiTrendingUp,
@@ -379,7 +380,7 @@ export default function SmartVatDashboard({
       console.error("Error loading VAT dashboard data:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to load VAT dashboard data: ${errorMessage}`);
+      toast.error(i18n.t("toasts.vatLoadFailed", { message: errorMessage }));
       
       // Set empty data to prevent UI crashes
       setDashboardData({
@@ -445,7 +446,7 @@ export default function SmartVatDashboard({
 
       if (error) throw error;
 
-      toast.success("VAT return generated successfully");
+      toast.success(i18n.t("toasts.vatReturnGenerated"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
       console.error("Error generating VAT return:", error);

@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import React, { useState, useEffect, useCallback } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -176,7 +177,7 @@ export default function Analytics() {
       setInsights(insightsData);
     } catch (error) {
       console.error("Error fetching smart insights:", error);
-      toast.error("Failed to load smart insights");
+      toast.error(i18n.t("toasts.insightsFailed"));
     }
   }, [tenantId]);
 
@@ -914,20 +915,20 @@ export default function Analytics() {
     const label = action || id;
     switch (action) {
       case "Create Task":
-        toast.success("Opening task creation...");
+        toast.success(i18n.t("toasts.openingTask"));
         break;
       case "Create Campaign":
-        toast.success("Opening campaign creation...");
+        toast.success(i18n.t("toasts.openingCampaign"));
         break;
       case "View Members":
-        toast.success("Opening members list...");
+        toast.success(i18n.t("toasts.openingMembers"));
         navigate("/dashboard/members");
         break;
       case "Schedule Class":
-        toast.success("Opening class scheduling...");
+        toast.success(i18n.t("toasts.openingScheduling"));
         break;
       case "Create Package":
-        toast.success("Opening package creation...");
+        toast.success(i18n.t("toasts.openingPackage"));
         break;
       default:
         toast(`Action: ${label}`);

@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useMemo } from "react";
 import {
   FiRefreshCw,
@@ -265,14 +266,14 @@ export const WhatsAppButton: React.FC<{ member: Member; template: string }> = ({
     // The renewal reminder quotes days left: with no expiry date on record there
     // is no honest number to put in it, so do not send it.
     if (template === "expiry" && !member.planEnd) {
-      toast.error(`${member.name} has no membership expiry date on record`);
+      toast.error(i18n.t("toasts.noExpiry", { name: member.name }));
       return;
     }
     const message = templates[template as keyof typeof templates];
     const digitsOnly = (member.phone || "").replace(/[^\d]/g, "");
 
     if (!digitsOnly) {
-      toast.error(`No phone number on file for ${member.name}`);
+      toast.error(i18n.t("toasts.noPhone", { name: member.name }));
       return;
     }
 

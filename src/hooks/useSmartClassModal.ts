@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
@@ -216,7 +217,7 @@ export const useSmartClassModal = ({
       setClassData(transformedClass);
     } catch (error) {
       console.error("Error fetching class:", error);
-      toast.error("Failed to fetch class data");
+      toast.error(i18n.t("toasts.classFetchFailed"));
     } finally {
       setLoading(false);
     }
@@ -344,7 +345,7 @@ export const useSmartClassModal = ({
         return room;
       } catch (error) {
         console.error("Error creating room:", error);
-        toast.error("Failed to create room");
+        toast.error(i18n.t("toasts.roomCreateFailed"));
         return null;
       }
     },
@@ -561,7 +562,7 @@ export const useSmartClassModal = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("User not authenticated");
+        toast.error(i18n.t("toasts.notAuthenticated"));
         return false;
       }
 
@@ -576,7 +577,7 @@ export const useSmartClassModal = ({
       }
 
       if (!tenantId) {
-        toast.error("No workspace found. Please complete onboarding.");
+        toast.error(i18n.t("toasts.noWorkspace"));
         return false;
       }
 
@@ -625,20 +626,20 @@ export const useSmartClassModal = ({
           .update(dbPayload)
           .eq("id", classId);
         if (error) throw error;
-        toast.success("Class updated successfully");
+        toast.success(i18n.t("toasts.classUpdated"));
       } else {
         // Create new class
         const { error } = await supabase
           .from("classes")
           .insert(dbPayload);
         if (error) throw error;
-        toast.success("Class created successfully");
+        toast.success(i18n.t("toasts.classCreated"));
       }
 
       return true;
     } catch (error) {
       console.error("Error saving class:", error);
-      toast.error("Failed to save class");
+      toast.error(i18n.t("toasts.classSaveFailed"));
       return false;
     } finally {
       setLoading(false);
@@ -656,11 +657,11 @@ export const useSmartClassModal = ({
         .delete()
         .eq("id", classId);
       if (error) throw error;
-      toast.success("Class deleted successfully");
+      toast.success(i18n.t("toasts.classDeleted"));
       return true;
     } catch (error) {
       console.error("Error deleting class:", error);
-      toast.error("Failed to delete class");
+      toast.error(i18n.t("toasts.classDeleteFailed"));
       return false;
     } finally {
       setDeleteLoading(false);

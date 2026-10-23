@@ -246,13 +246,14 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
   private allowEmptySingle = false;
   private op: "select" | "insert" | "update" | "delete" | "upsert" = "select";
   private payload?: unknown;
+  private columns = "";
 
   constructor(table: string) {
     this.table = table;
   }
 
   select(columns?: string, options?: { count?: string; head?: boolean }) {
-    void columns;
+    this.columns = columns ?? "";
     this.wantCount = Boolean(options?.count);
     this.headOnly = Boolean(options?.head);
     if (this.op !== "insert" && this.op !== "update" && this.op !== "upsert") {
@@ -441,6 +442,19 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
           if (cmp !== 0) return asc ? cmp : -cmp;
         }
         return 0;
+      });
+    }
+
+    // `members(...)` in the select list joins the member a row points at (the
+    // database does this through the foreign key; seeded rows already embed it).
+    if (/\bmembers\(/.test(this.columns)) {
+      const members = getTableRows("members");
+      rows = rows.map((row) => {
+        if (row.members || !row.member_id) return row;
+        const member = members.find((m) => m.id === row.member_id);
+        return member
+          ? { ...row, members: { id: member.id, first_name: member.first_name, last_name: member.last_name, email: member.email } }
+          : row;
       });
     }
 

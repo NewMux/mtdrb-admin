@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import { SmartModal } from "../../ui/SmartModal";
 import { SmartButton } from "../../ui/DesignSystem";
@@ -83,12 +84,12 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
 
       if (error) throw error;
 
-      toast.success("Expense updated successfully");
+      toast.success(i18n.t("toasts.expenseUpdated"));
       setIsEditing(false);
       onSuccess?.();
     } catch (error) {
       console.error("Error updating expense:", error);
-      toast.error("Failed to update expense");
+      toast.error(i18n.t("toasts.expenseUpdateFailed"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
 
   const handleDownloadReceipt = async () => {
     if (!expense?.receipt_url) {
-      toast.error("No receipt available for this expense");
+      toast.error(i18n.t("toasts.noReceipt"));
       return;
     }
 
@@ -105,7 +106,7 @@ const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
       expense.receipt_url,
     );
     if (!signedUrl) {
-      toast.error("Unable to open receipt");
+      toast.error(i18n.t("toasts.receiptOpenFailed"));
       return;
     }
 

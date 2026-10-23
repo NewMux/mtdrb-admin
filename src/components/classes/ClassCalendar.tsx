@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -126,7 +127,7 @@ const ClassCalendar: React.FC = () => {
         : e
     );
     setEvents(updatedEvents);
-    toast.success('Class rescheduled successfully!');
+    toast.success(i18n.t("toasts.classRescheduled"));
   }, [events]);
 
   const handleEventResize = useCallback((info: EventResizeDoneArg) => {

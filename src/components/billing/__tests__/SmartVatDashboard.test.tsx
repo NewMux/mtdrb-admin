@@ -31,7 +31,10 @@ vi.mock("../../../supabaseClient", () => {
   };
   return { supabase: { from: (table: string) => query(table) } };
 });
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }) }));
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "en" } }),
+}));
 vi.mock("react-hot-toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("../../../hooks/useRTL", () => ({ useRTL: () => ({ isRTL: false }) }));
 vi.mock("../../../contexts/gym-config-context", async (importOriginal) => {

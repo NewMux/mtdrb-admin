@@ -93,3 +93,5 @@ function/table near them:
 - Every `<input>`, `<select>` and icon-only `<button>` needs an accessible name (`aria-label`, or a `<label htmlFor>`; `AppleInput`/`AppleSelect`/`AppleTextarea` link theirs automatically). `AppleSelect` must keep forwarding its ref — react-hook-form's `register()` needs it, and without it Add Invoice and Add Expense cannot be saved.
 - Tables go in an `overflow-x-auto` wrapper, never `overflow-hidden`, so phones can scroll them; row action buttons need at least 24×24 px of hit area.
 - A flow that needs a database function the demo backend does not imitate gets a stand-in in `src/mocks/` (lazy state, no top-level side effects — `scripts/check-dist-no-mock.mjs` guards the production bundle).
+- User-facing toast text lives in the `toasts` block of `src/i18n.ts` / `src/i18n.ar.ts`; code with no component (hooks, `src/api`, modals) calls `i18n.t("toasts.…")`. Never hard-code English into `toast.*`.
+- Build-only packages (Tailwind and its plugins, PostCSS, Vite) stay in `devDependencies`, so `npm audit --omit=dev` reflects what actually ships; it must stay at 0 critical/high.

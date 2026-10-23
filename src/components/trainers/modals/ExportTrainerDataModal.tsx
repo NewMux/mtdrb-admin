@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import {
   FiDownload,
@@ -120,12 +121,12 @@ export default function ExportTrainerDataModal({
 
   const handleExport = async () => {
     if (selectedOptions.length === 0) {
-      toast.error("Please select at least one export option");
+      toast.error(i18n.t("toasts.pickExportOption"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
@@ -334,14 +335,16 @@ export default function ExportTrainerDataModal({
       }
 
       toast.success(
-        `Export completed! ${selectedOptions.length} file(s) downloaded.`,
+        i18n.t("toasts.exportCompleted", { count: selectedOptions.length }),
       );
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
     } finally {
       setLoading(false);

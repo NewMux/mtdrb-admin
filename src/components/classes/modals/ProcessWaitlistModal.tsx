@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -200,7 +201,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
             : "Failed to process waitlist",
         );
       } else {
-        toast.success(`Enrolled ${processedCount} member(s) from waitlist`);
+        toast.success(i18n.t("toasts.waitlistEnrolled", { count: processedCount }));
       }
 
       if (processedCount > 0) {
@@ -214,7 +215,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       }
     } catch (error) {
       console.error("Error processing waitlist:", error);
-      toast.error("Failed to process waitlist");
+      toast.error(i18n.t("toasts.waitlistFailed"));
     } finally {
       setLoading(false);
     }

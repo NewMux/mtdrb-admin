@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import { m as motion } from "framer-motion";
 import {
@@ -189,7 +190,7 @@ export default function PrintReportModal({
     try {
       const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        toast.error("Please allow pop-ups to print this report");
+        toast.error(i18n.t("toasts.allowPopups"));
         return;
       }
       printWindow.document.write(buildReportHtml());
@@ -216,10 +217,10 @@ export default function PrintReportModal({
         filename,
         reportName,
       );
-      toast.success("PDF downloaded");
+      toast.success(i18n.t("toasts.pdfDownloaded"));
     } catch (error) {
       console.error("PDF generation failed:", error);
-      toast.error("Failed to generate PDF");
+      toast.error(i18n.t("toasts.pdfFailed"));
     } finally {
       setPrinting(false);
     }

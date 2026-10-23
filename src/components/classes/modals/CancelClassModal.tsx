@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -101,7 +102,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Error cancelling class:", error);
-      toast.error("Failed to cancel class");
+      toast.error(i18n.t("toasts.classCancelFailed"));
     } finally {
       setLoading(false);
     }

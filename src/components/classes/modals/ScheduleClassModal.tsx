@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import {
   FiCalendar,
@@ -167,11 +168,11 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
   const handleSave = async () => {
     if (!validateForm(formData)) {
-      toast.error("Please fill in all required fields");
+      toast.error(i18n.t("toasts.fillRequired"));
       return;
     }
     if (schedulePreview.length === 0) {
-      toast.error("No class sessions to schedule -- adjust the date range or days");
+      toast.error(i18n.t("toasts.noSessions"));
       return;
     }
 
@@ -217,12 +218,12 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       const { error } = await supabase.from("classes").insert(rows);
       if (error) throw error;
 
-      toast.success(`${rows.length} classes scheduled successfully`);
+      toast.success(i18n.t("toasts.classesScheduled", { count: rows.length }));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error creating schedule:", error);
-      toast.error("Failed to create schedule");
+      toast.error(i18n.t("toasts.scheduleFailed"));
     } finally {
       setLoading(false);
     }

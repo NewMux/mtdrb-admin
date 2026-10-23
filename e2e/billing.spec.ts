@@ -21,9 +21,9 @@ test.describe("billing", () => {
     await dialog.getByRole("button", { name: /^add invoice$/i }).click();
     await expect(dialog).toBeHidden();
 
-    // The list refreshes by itself: one more invoice, paid.
+    // The list refreshes by itself: one more invoice, for the chosen member, paid.
     await page.getByText("Invoices", { exact: true }).first().click();
-    const row = page.locator("tbody tr").filter({ hasText: "SAR 105.00" }); // 100 plus 5% VAT
+    const row = page.locator("tbody tr").filter({ hasText: "David Miller" }).filter({ hasText: "SAR 105.00" }); // 100 plus 5% VAT
     await expect(row).toHaveCount(1);
     await expect(row).toContainText("Paid");
   });

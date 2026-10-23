@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -79,7 +80,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         attachments = uploads;
       } catch (error) {
         console.error("Error uploading task attachments:", error);
-        toast.error("Failed to upload attachments - task was not completed");
+        toast.error(i18n.t("toasts.attachmentsFailed"));
         return;
       } finally {
         setUploading(false);

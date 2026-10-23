@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 import { Class, ClassBooking } from "../types";
@@ -72,7 +73,7 @@ export const getAllClasses = async (): Promise<Class[]> => {
     return data || [];
   } catch (error) {
     console.error("Error fetching classes:", error);
-    toast.error("Failed to load classes");
+    toast.error(i18n.t("toasts.classesFetchFailed"));
     return [];
   }
 };
@@ -94,7 +95,7 @@ export const getClassById = async (id: string): Promise<Class | null> => {
     return data;
   } catch (error) {
     console.error("Error fetching class:", error);
-    toast.error("Failed to load class details");
+    toast.error(i18n.t("toasts.classDetailsFailed"));
     return null;
   }
 };
@@ -110,11 +111,11 @@ export const createClass = async (
       .single();
 
     if (error) throw error;
-    toast.success("Class created successfully");
+    toast.success(i18n.t("toasts.classCreated"));
     return data;
   } catch (error) {
     console.error("Error creating class:", error);
-    toast.error("Failed to create class");
+    toast.error(i18n.t("toasts.classCreateFailed"));
     return null;
   }
 };
@@ -132,11 +133,11 @@ export const updateClass = async (
       .single();
 
     if (error) throw error;
-    toast.success("Class updated successfully");
+    toast.success(i18n.t("toasts.classUpdated"));
     return data;
   } catch (error) {
     console.error("Error updating class:", error);
-    toast.error("Failed to update class");
+    toast.error(i18n.t("toasts.classUpdateFailed"));
     return null;
   }
 };
@@ -146,11 +147,11 @@ export const deleteClass = async (id: string): Promise<boolean> => {
     const { error } = await supabase.from("classes").delete().eq("id", id);
 
     if (error) throw error;
-    toast.success("Class deleted successfully");
+    toast.success(i18n.t("toasts.classDeleted"));
     return true;
   } catch (error) {
     console.error("Error deleting class:", error);
-    toast.error("Failed to delete class");
+    toast.error(i18n.t("toasts.classDeleteFailed"));
     return false;
   }
 };
@@ -232,7 +233,7 @@ export const bookClass = async (
     if (countError) throw countError;
 
     if (classRow && (bookedCount ?? 0) >= classRow.capacity) {
-      toast.error("Class is at full capacity");
+      toast.error(i18n.t("toasts.classFull"));
       return null;
     }
 
@@ -247,11 +248,11 @@ export const bookClass = async (
       .single();
 
     if (error) throw error;
-    toast.success("Class booked successfully");
+    toast.success(i18n.t("toasts.classBooked"));
     return data;
   } catch (error) {
     console.error("Error booking class:", error);
-    toast.error("Failed to book class");
+    toast.error(i18n.t("toasts.bookFailed"));
     return null;
   }
 };
@@ -264,11 +265,11 @@ export const cancelBooking = async (bookingId: string): Promise<boolean> => {
       .eq("id", bookingId);
 
     if (error) throw error;
-    toast.success("Booking cancelled successfully");
+    toast.success(i18n.t("toasts.bookingCancelled"));
     return true;
   } catch (error) {
     console.error("Error cancelling booking:", error);
-    toast.error("Failed to cancel booking");
+    toast.error(i18n.t("toasts.bookingCancelFailed"));
     return false;
   }
 };
@@ -284,11 +285,11 @@ export const markAttendance = async (
       .eq("id", bookingId);
 
     if (error) throw error;
-    toast.success(`Attendance marked as ${attended ? "attended" : "no-show"}`);
+    toast.success(i18n.t("toasts.attendanceMarked", { status: attended ? i18n.t("toasts.attended") : i18n.t("toasts.noShow") }));
     return true;
   } catch (error) {
     console.error("Error marking attendance:", error);
-    toast.error("Failed to mark attendance");
+    toast.error(i18n.t("toasts.attendanceFailed"));
     return false;
   }
 };
@@ -671,11 +672,11 @@ export const createClassReview = async (
       .single();
 
     if (error) throw error;
-    toast.success("Review submitted successfully");
+    toast.success(i18n.t("toasts.reviewSubmitted"));
     return data;
   } catch (error) {
     console.error("Error creating class review:", error);
-    toast.error("Failed to submit review");
+    toast.error(i18n.t("toasts.reviewFailed"));
     throw error;
   }
 };

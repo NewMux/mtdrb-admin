@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import { m as motion } from "framer-motion";
 import {
@@ -139,12 +140,12 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
   const handleExport = async () => {
     if (!selectedExport) {
-      toast.error("Please select an export option");
+      toast.error(i18n.t("toasts.pickExport"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
@@ -318,13 +319,15 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         await exportExcel(exportData, filename, option.label);
       }
 
-      toast.success("Data exported successfully");
+      toast.success(i18n.t("toasts.dataExported"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error exporting data:", error);
       toast.error(
-        `Failed to export data: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
     } finally {
       setLoading(false);

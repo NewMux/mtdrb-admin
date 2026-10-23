@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import {
   FiShare2,
@@ -108,7 +109,7 @@ export default function ShareReportModal({
       onClose();
     } catch (error) {
       console.error("Failed to share report:", error);
-      toast.error("Failed to copy share link");
+      toast.error(i18n.t("toasts.copyLinkFailed"));
     } finally {
       setSharing(false);
     }

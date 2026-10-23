@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useState, useEffect, useRef } from "react";
 import { m as motion } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -211,12 +212,12 @@ export function AddInvoiceModal({
       "application/pdf",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      toast.error(i18n.t("toasts.badFileType"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(i18n.t("toasts.fileTooBig"));
       return;
     }
 
@@ -275,7 +276,7 @@ export function AddInvoiceModal({
     if (isSubmitting) return;
 
     if (!authTenantId) {
-      toast.error("Tenant ID not found. Please ensure you're logged in.");
+      toast.error(i18n.t("toasts.noTenantLogin"));
       return;
     }
 
@@ -338,16 +339,12 @@ export function AddInvoiceModal({
         throw error;
       }
 
-      toast.success(
-        editingInvoice
-          ? "Invoice updated successfully"
-          : "Invoice added successfully",
-      );
+      // The page shows the (translated) confirmation.
       onInvoiceAdded();
       onClose();
     } catch (error) {
       console.error("Error saving invoice:", error);
-      toast.error("Failed to save invoice. Please try again.");
+      toast.error(i18n.t("toasts.invoiceSaveFailed"));
     } finally {
       setIsSubmitting(false);
     }

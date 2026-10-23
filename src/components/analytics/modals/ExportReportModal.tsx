@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import {
   FiDownload,
@@ -160,12 +161,12 @@ export default function ExportReportModal({
 
   const handleExport = async () => {
     if (!selectedReport) {
-      toast.error("Please select a report to export");
+      toast.error(i18n.t("toasts.pickReport"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
@@ -173,7 +174,7 @@ export default function ExportReportModal({
     try {
       const report = savedReports.find((r) => r.id === selectedReport);
       if (!report) {
-        toast.error("Report not found");
+        toast.error(i18n.t("toasts.reportNotFound"));
         return;
       }
 
@@ -336,13 +337,15 @@ export default function ExportReportModal({
         exportJSON(exportData, filename);
       }
 
-      toast.success("Report exported successfully");
+      toast.success(i18n.t("toasts.reportExported"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
     } finally {
       setExporting(false);
@@ -359,7 +362,7 @@ export default function ExportReportModal({
             : report,
         ),
       );
-      toast.success("Report data refreshed");
+      toast.success(i18n.t("toasts.reportRefreshed"));
     } finally {
       setExporting(false);
     }

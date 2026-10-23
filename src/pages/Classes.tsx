@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -441,7 +442,7 @@ export default function SmartClassManagement() {
     closeModal();
     fetchAllClasses();
     fetchClassStats();
-    toast.success("Class operation completed successfully!");
+    toast.success(i18n.t("toasts.classOpDone"));
   };
 
   const handleCloseDrawer = () => {

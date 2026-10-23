@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { api } from "../api/client";
@@ -479,12 +480,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // them yet, a separate pre-existing gap.
       if (userMetadata?.role === "admin") {
         toast.error(
-          "Your password has expired and needs to be changed to continue.",
+          i18n.t("toasts.passwordExpiredAdmin"),
         );
         navigate("/dashboard/settings", { replace: true });
       } else {
         toast.error(
-          "Your password has expired. Please contact your gym admin to reset it.",
+          i18n.t("toasts.passwordExpiredStaff"),
         );
       }
     }
@@ -515,7 +516,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setUserMetadata(null);
           setTenantId(null);
-          toast.error("You've been signed out due to inactivity.");
+          toast.error(i18n.t("toasts.signedOutInactive"));
           navigate("/login", { replace: true });
         });
       }
@@ -541,7 +542,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         const { error } = await api.auth.signIn(email, password);
         if (error) throw error;
-        toast.success("Successfully signed in!");
+        toast.success(i18n.t("toasts.signedIn"));
       } catch (err) {
         const errorState = handleAuthError(err);
         toast.error(errorState.message);
@@ -566,7 +567,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await api.auth.signUp(email, password, name);
         if (error) throw error;
         toast.success(
-          "Successfully signed up! Please check your email for verification.",
+          i18n.t("toasts.signedUp"),
         );
       } catch (err) {
         const errorState = handleAuthError(err);
@@ -591,7 +592,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setUserMetadata(null);
         setTenantId(null);
-        toast.success("Successfully signed out!");
+        toast.success(i18n.t("toasts.signedOut"));
         navigate("/", { replace: true });
         setIsLoading(false);
         return;
@@ -602,7 +603,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setUserMetadata(null);
       setTenantId(null);
-      toast.success("Successfully signed out!");
+      toast.success(i18n.t("toasts.signedOut"));
       navigate("/", { replace: true });
     } catch (err) {
       const errorState = handleAuthError(err);
