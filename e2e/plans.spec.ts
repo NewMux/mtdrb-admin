@@ -18,7 +18,7 @@ test.describe("Starter plan", () => {
   test("sees an upgrade explanation instead of the Analytics screen", async ({ page }) => {
     await openPage(page, "/dashboard/analytics");
     await expect(page.getByRole("heading", { name: /analytics is part of the pro plan/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /see your plan/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /upgrade to pro/i })).toBeVisible();
     const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
     expect(axe.violations.map((v) => `${v.id}: ${v.nodes[0].target.join(" ")}`)).toEqual([]);
   });
@@ -46,4 +46,48 @@ test.describe("Pro plan", () => {
     await openPage(page, "/dashboard/members");
     await expect(page.getByRole("main").getByText(/^analytics$/i).first()).toBeVisible();
   });
+});
+
+test.describe("Upgrading from Starter to Pro", () => {
+  test.beforeEach(async ({ page }) => {
+    await useDemoPlan(page, "starter");
+  });
+
+  test("shows the price first, then unlocks Analytics without a reload", async ({ page }) => {
+    await openPage(page, "/dashboard/analytics");
+    await page.getByRole("link", { name: /upgrade to pro/i }).click();
+
+    // The link opens the upgrade on the billing tab, with the cost spelled out before anything is paid.
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText(/charged to your card today/i)).toBeVisible();
+    await expect(dialog.getByText(/per month, before tax/i)).toBeVisible();
+    await page.waitForTimeout(900); // let the dialog finish animating in before measuring contrast
+    const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+    expect(axe.violations.map((v) => `${v.id}: ${v.nodes[0].target.join(" ")}`)).toEqual([]);
+
+    await dialog.getByRole("button", { name: /upgrade and pay/i }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText(/^pro plan$/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /upgrade to pro/i })).toHaveCount(0);
+
+    // Same page session: the sidebar and the screen now follow the new plan.
+    await page.getByRole("navigation").getByRole("link", { name: /analytics/i }).click();
+    await expect(page.getByRole("heading", { name: /analytics is part of the pro plan/i })).toHaveCount(0);
+  });
+
+  test("the billing tab offers the upgrade to a Starter gym only", async ({ page }) => {
+    await openPage(page, "/dashboard/settings?tab=billing");
+    await expect(page.getByRole("button", { name: /upgrade to pro/i })).toBeVisible();
+    await page.getByRole("button", { name: /upgrade to pro/i }).click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: /upgrade and pay/i })).toBeEnabled();
+    await page.getByRole("dialog").getByRole("button", { name: /^cancel$/i }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
+  });
+});
+
+test("a Pro gym is not offered the upgrade", async ({ page }) => {
+  await useDemoPlan(page, "pro");
+  await openPage(page, "/dashboard/settings?tab=billing");
+  await expect(page.getByText(/^pro plan$/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /upgrade to pro/i })).toHaveCount(0);
 });

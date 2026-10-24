@@ -8,6 +8,7 @@ import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 import { mockInviteStaff, mockRoleRows, mockStaffRpc } from "./staffMock";
 import { mockPosRpc } from "./posMock";
+import { demoSubscriptionRows, mockChangePlan } from "./demoPlan";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -124,6 +125,8 @@ function getMutableTableRows(table: string): MockRow[] {
 function getTableRows(table: string): MockRow[] {
   // Custom roles live in the staff mock so the Team & roles screen can edit them.
   if (table === "tenant_roles") return mockRoleRows() as MockRow[];
+  // The plan the demo gym is on (a test or the console picks it), when one was picked.
+  if (table === "platform_subscriptions") return demoSubscriptionRows() as MockRow[];
   return clone(getMutableTableRows(table));
 }
 
@@ -577,7 +580,9 @@ export function createMockSupabaseClient() {
           ? mockInviteGym(options?.body)
           : name === "invite-staff"
             ? mockInviteStaff(options?.body)
-            : { data: null, error: new Error(`Mock backend has no function ${name}`) },
+            : name === "paddle-change-plan"
+              ? mockChangePlan(options?.body)
+              : { data: null, error: new Error(`Mock backend has no function ${name}`) },
     },
     auth: {
       getUser: async () => ({ data: { user: getMockUser() }, error: null }),

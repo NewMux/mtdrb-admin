@@ -112,3 +112,8 @@ The Starter plan has no analytics; Pro and above do (`src/utils/planFeatures.ts`
   ordinary RLS and `has_permission()` rules.
 - In the demo backend, `sessionStorage["mtdrb.demoPlan"]` picks the plan (default
   enterprise); `useDemoPlan()` in `e2e/helpers.ts` sets it for tests.
+- A Starter gym moves to Pro through the `paddle-change-plan` Edge Function (Settings →
+  Billing; `DEPLOYMENT.md` "Upgrading from Starter to Pro"). It builds the whole item
+  list from Paddle's copy of the subscription, so a new add-on item has to be handled
+  in `buildProItems` or it will be dropped from the customer's bill. The demo backend
+  stands in for it in `src/mocks/demoPlan.ts`.

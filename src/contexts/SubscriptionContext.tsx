@@ -29,6 +29,8 @@ interface SubscriptionContextType {
   canUseAnalytics: boolean;
   isLoading: boolean;
   subscription: Subscription | null;
+  /** Re-reads the plan (after an upgrade) without showing the loading state. */
+  refresh: () => Promise<void>;
   proFeatures: {
     deepAnalytics: boolean;
     advancedReports: boolean;
@@ -66,26 +68,31 @@ export function SubscriptionProvider({
     apiAccess: isPro,
   };
 
+  // The demo gym is on the top plan unless a test (or you, in the console:
+  // sessionStorage.setItem("mtdrb.demoPlan", "starter")) picks another. The key
+  // is shared with src/mocks/demoPlan.ts, which this file must not import.
+  const applyDemoPlan = () => {
+    let demoTier = "enterprise";
+    try {
+      demoTier = window.sessionStorage.getItem("mtdrb.demoPlan") || demoTier;
+    } catch {
+      // storage unavailable: keep the default
+    }
+    setIsPro(demoTier === "pro" || demoTier === "enterprise");
+    setPlanTier(demoTier);
+    setSubscription({
+      id: "localhost-subscription",
+      member_id: "mock-member",
+      status: "active",
+      plan_type: demoTier,
+      created_at: new Date().toISOString(),
+    });
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (IS_MOCK_MODE) {
-      // The demo gym is on the top plan unless a test (or you, in the console:
-      // sessionStorage.setItem("mtdrb.demoPlan", "starter")) picks another.
-      let demoTier = "enterprise";
-      try {
-        demoTier = window.sessionStorage.getItem("mtdrb.demoPlan") || demoTier;
-      } catch {
-        // storage unavailable: keep the default
-      }
-      setIsPro(demoTier === "pro" || demoTier === "enterprise");
-      setPlanTier(demoTier);
-      setSubscription({
-        id: "localhost-subscription",
-        member_id: "mock-member",
-        status: "active",
-        plan_type: demoTier,
-        created_at: new Date().toISOString(),
-      });
-      setIsLoading(false);
+      applyDemoPlan();
       return;
     }
 
@@ -121,7 +128,7 @@ export function SubscriptionProvider({
     };
   }, []);
 
-  const checkSubscription = async (currentUser: User | null) => {
+  const checkSubscription = async (currentUser: User | null, options: { silent?: boolean } = {}) => {
     if (!currentUser) {
       setIsPro(false);
       setPlanTier(null);
@@ -131,7 +138,9 @@ export function SubscriptionProvider({
     }
 
     try {
-      setIsLoading(true);
+      // A silent re-read (after an upgrade) keeps the screen as it is instead of
+      // flashing the loading state that gates the whole app.
+      if (!options.silent) setIsLoading(true);
 
       // Get the tenant membership of the user first
       const { data: membershipData } = await supabase
@@ -187,6 +196,17 @@ export function SubscriptionProvider({
     }
   };
 
+  const refresh = async () => {
+    if (IS_MOCK_MODE) {
+      applyDemoPlan();
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await checkSubscription(user, { silent: true });
+  };
+
   const checkProFeature = (): boolean => {
     return isPro;
   };
@@ -201,6 +221,7 @@ export function SubscriptionProvider({
     canUseAnalytics: !isLoading && planIncludesAnalytics(planTier),
     isLoading,
     subscription,
+    refresh,
     proFeatures,
     checkProFeature,
     upgradePrompt,
@@ -223,6 +244,7 @@ export function useSubscription() {
       canUseAnalytics: false,
       isLoading: false,
       subscription: null,
+      refresh: async () => {},
       proFeatures: {
         deepAnalytics: false,
         advancedReports: false,
