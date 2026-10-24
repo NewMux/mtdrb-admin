@@ -2,6 +2,8 @@ export type SubscriptionEntitlement = {
   status?: string | null;
   trial_end?: string | null;
   current_period_end?: string | null;
+  /** While status is "past_due": access continues until this time. */
+  grace_until?: string | null;
 };
 
 const isFuture = (value: string | null | undefined, now: Date): boolean => {
@@ -29,6 +31,12 @@ export const isSubscriptionEntitled = (
     return isFuture(subscription.trial_end, now);
   }
 
+  // A failed renewal keeps access for a grace period while billing retries the
+  // payment. No grace date means no access: never guess one.
+  if (subscription.status === "past_due") {
+    return isFuture(subscription.grace_until, now);
+  }
+
   return false;
 };
 
@@ -45,6 +53,7 @@ export const contextSubscriptionToEntitlement = (
         status?: string | null;
         trial_end?: string | null;
         expires_at?: string | null;
+        grace_until?: string | null;
       }
     | null
     | undefined,
@@ -54,5 +63,6 @@ export const contextSubscriptionToEntitlement = (
     status: subscription.status,
     trial_end: subscription.trial_end,
     current_period_end: subscription.expires_at,
+    grace_until: subscription.grace_until,
   };
 };

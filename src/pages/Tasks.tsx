@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiSearch,
   FiFilter,
@@ -9,7 +9,9 @@ import {
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import TaskTable from "../components/tasks/TaskTable";
-import SmartTaskAnalytics from "../components/tasks/SmartTaskAnalytics";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const SmartTaskAnalytics = React.lazy(() => import("../components/tasks/SmartTaskAnalytics"));
 import { AnimatePresence } from "framer-motion";
 import AddButton from "../components/ui/AddButton";
 import { AddTaskModal } from "../components/tasks/modals/AddTaskModal";
@@ -169,7 +171,7 @@ const Tasks: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("tasks.searchPlaceholder")}
@@ -183,6 +185,7 @@ const Tasks: React.FC = () => {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
               className="form-select"
@@ -269,7 +272,9 @@ const Tasks: React.FC = () => {
 
           {activeTab === "analytics" && (
             <div className="space-y-6">
-              <SmartTaskAnalytics refreshKey={refreshKey} />
+              <React.Suspense fallback={<TabFallback />}>
+                <SmartTaskAnalytics refreshKey={refreshKey} />
+              </React.Suspense>
             </div>
           )}
 

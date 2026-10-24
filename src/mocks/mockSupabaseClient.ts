@@ -4,8 +4,10 @@
  */
 
 import type { User, UserAttributes } from "@supabase/supabase-js";
-import { DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
+import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
+import { mockInviteStaff, mockRoleRows, mockStaffRpc } from "./staffMock";
+import { mockPosRpc } from "./posMock";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -13,6 +15,8 @@ type Filter =
   | { kind: "gte"; field: string; value: unknown }
   | { kind: "lte"; field: string; value: unknown }
   | { kind: "lt"; field: string; value: unknown }
+  | { kind: "gt"; field: string; value: unknown }
+  | { kind: "is"; field: string; value: unknown }
   | { kind: "in"; field: string; value: unknown[] }
   | { kind: "or"; expr: string }
   | { kind: "not"; field: string; operator: string; value: unknown };
@@ -118,18 +122,69 @@ function getMutableTableRows(table: string): MockRow[] {
 }
 
 function getTableRows(table: string): MockRow[] {
+  // Custom roles live in the staff mock so the Team & roles screen can edit them.
+  if (table === "tenant_roles") return mockRoleRows() as MockRow[];
   return clone(getMutableTableRows(table));
 }
 
+/** Splits "a,b(c,d),e" at the commas that are not inside parentheses. */
+function splitTopLevel(expr: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of expr) {
+    if (ch === "(") depth += 1;
+    if (ch === ")") depth -= 1;
+    if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  if (current) parts.push(current);
+  return parts;
+}
+
+/** One PostgREST condition ("field.op.value", or and(...) / or(...) of them) against a row. */
+function matchesCondition(row: Record<string, unknown>, condition: string): boolean {
+  const group = /^(and|or)\((.*)\)$/.exec(condition);
+  if (group) {
+    const inner = splitTopLevel(group[2]);
+    return group[1] === "and"
+      ? inner.every((c) => matchesCondition(row, c))
+      : inner.some((c) => matchesCondition(row, c));
+  }
+  const match = /^(\w+)\.(\w+)\.(.*)$/.exec(condition);
+  if (!match) return false;
+  const [, field, op, raw] = match;
+  const v = row[field];
+  switch (op) {
+    case "ilike": {
+      const pattern = raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/%/g, ".*");
+      return new RegExp(`^${pattern}$`, "i").test(String(v ?? ""));
+    }
+    case "is":
+      return raw === "null" ? v == null : v != null;
+    case "eq":
+      return v != null && String(v) === raw;
+    case "neq":
+      return String(v) !== raw;
+    case "gt":
+      return v != null && String(v) > raw;
+    case "gte":
+      return v != null && String(v) >= raw;
+    case "lt":
+      return v != null && String(v) < raw;
+    case "lte":
+      return v != null && String(v) <= raw;
+    default:
+      return false;
+  }
+}
+
 function matchesOr(row: Record<string, unknown>, expr: string): boolean {
-  const parts = expr.split(",");
-  return parts.some((part) => {
-    const match = part.match(/(\w+)\.ilike\.%(.+)%/);
-    if (!match) return false;
-    const [, field, term] = match;
-    const val = String(row[field] ?? "").toLowerCase();
-    return val.includes(term.toLowerCase());
-  });
+  return splitTopLevel(expr).some((condition) => matchesCondition(row, condition));
 }
 
 function applyFilters(
@@ -155,6 +210,12 @@ function applyFilters(
           const v = row[f.field];
           return v != null && String(v) < String(f.value);
         }
+        case "gt": {
+          const v = row[f.field];
+          return v != null && String(v) > String(f.value);
+        }
+        case "is":
+          return f.value === null ? row[f.field] == null : row[f.field] != null;
         case "in":
           return (f.value as unknown[]).includes(row[f.field]);
         case "or":
@@ -175,8 +236,9 @@ function applyFilters(
 class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; count?: number }> {
   private table: string;
   private filters: Filter[] = [];
-  private orderField?: string;
-  private orderAsc = true;
+  private orders: Array<{ field: string; asc: boolean }> = [];
+  private wantCount = false;
+  private headOnly = false;
   private limitN?: number;
   private rangeFrom?: number;
   private rangeTo?: number;
@@ -184,13 +246,16 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
   private allowEmptySingle = false;
   private op: "select" | "insert" | "update" | "delete" | "upsert" = "select";
   private payload?: unknown;
+  private columns = "";
 
   constructor(table: string) {
     this.table = table;
   }
 
-  select(columns?: string) {
-    void columns;
+  select(columns?: string, options?: { count?: string; head?: boolean }) {
+    this.columns = columns ?? "";
+    this.wantCount = Boolean(options?.count);
+    this.headOnly = Boolean(options?.head);
     if (this.op !== "insert" && this.op !== "update" && this.op !== "upsert") {
       this.op = "select";
     }
@@ -240,6 +305,16 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
     return this;
   }
 
+  gt(field: string, value: unknown) {
+    this.filters.push({ kind: "gt", field, value });
+    return this;
+  }
+
+  is(field: string, value: unknown) {
+    this.filters.push({ kind: "is", field, value });
+    return this;
+  }
+
   lt(field: string, value: unknown) {
     this.filters.push({ kind: "lt", field, value });
     return this;
@@ -261,8 +336,7 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
   }
 
   order(field: string, opts?: { ascending?: boolean }) {
-    this.orderField = field;
-    this.orderAsc = opts?.ascending ?? true;
+    this.orders.push({ field, asc: opts?.ascending ?? true });
     return this;
   }
 
@@ -313,6 +387,9 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
           returnedRows.push(clone(tableRows[existingIndex]));
         } else {
           const insertedRow = clone(incomingRow);
+          // The database fills in the key and the creation time; lists sorted by newest rely on them.
+          if (insertedRow.id == null) insertedRow.id = globalThis.crypto.randomUUID();
+          if (insertedRow.created_at == null) insertedRow.created_at = new Date().toISOString();
           tableRows.push(insertedRow);
           returnedRows.push(clone(insertedRow));
         }
@@ -357,15 +434,33 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
 
     let rows = applyFilters(getTableRows(this.table), this.filters);
 
-    if (this.orderField) {
-      const field = this.orderField;
-      const asc = this.orderAsc;
+    if (this.orders.length > 0) {
+      const orders = this.orders;
       rows.sort((a, b) => {
-        const av = String(a[field] ?? "");
-        const bv = String(b[field] ?? "");
-        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        for (const { field, asc } of orders) {
+          const cmp = String(a[field] ?? "").localeCompare(String(b[field] ?? ""));
+          if (cmp !== 0) return asc ? cmp : -cmp;
+        }
+        return 0;
       });
     }
+
+    // `members(...)` in the select list joins the member a row points at (the
+    // database does this through the foreign key; seeded rows already embed it).
+    if (/\bmembers\(/.test(this.columns)) {
+      const members = getTableRows("members");
+      rows = rows.map((row) => {
+        if (row.members || !row.member_id) return row;
+        const member = members.find((m) => m.id === row.member_id);
+        return member
+          ? { ...row, members: { id: member.id, first_name: member.first_name, last_name: member.last_name, email: member.email } }
+          : row;
+      });
+    }
+
+    // The count PostgREST reports ignores paging; a head request returns no rows.
+    const total = rows.length;
+    if (this.headOnly) return { data: null, error: null, count: total };
 
     if (this.rangeFrom != null && this.rangeTo != null) {
       rows = rows.slice(this.rangeFrom, this.rangeTo + 1);
@@ -385,7 +480,7 @@ class MockQueryBuilder implements PromiseLike<{ data: unknown; error: unknown; c
       return { data: rows[0], error: null };
     }
 
-    return { data: rows, error: null, count: rows.length };
+    return { data: rows, error: null, ...(this.wantCount ? { count: total } : { count: rows.length }) };
   }
 
   then<TResult1 = { data: unknown; error: unknown }, TResult2 = never>(
@@ -423,6 +518,44 @@ function mockRpc(name: string): { data: unknown; error: null } {
   return { data: rpcMap[name] ?? overview, error: null };
 }
 
+const isoDay = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+/**
+ * Membership plans in the demo: enough to click through assigning a plan. Nothing
+ * is stored - the real rules (dates in the gym's calendar, invoices) live in the
+ * database function assign_member_plan().
+ */
+function mockMembershipRpc(
+  name: string,
+  args: Record<string, unknown> = {},
+): { data: unknown; error: { message: string; code?: string } | null } | undefined {
+  if (name === "plan_member_counts") {
+    return { data: DEMO_PLANS.map((p) => ({ plan_id: p.id, members: p.members_count })), error: null };
+  }
+  if (name !== "assign_member_plan") return undefined;
+
+  const plan = DEMO_PLANS.find((p) => p.id === args.p_plan_id);
+  if (!plan) return { data: null, error: { message: "Plan not found", code: "P0002" } };
+  const start = typeof args.p_start === "string" ? new Date(`${args.p_start}T00:00:00`) : new Date();
+  const end = new Date(start);
+  end.setDate(end.getDate() + plan.duration - 1);
+  const price = typeof args.p_price === "number" ? args.p_price : plan.price;
+  return {
+    data: {
+      invoice_id: args.p_invoice !== false && price > 0 ? "demo-invoice" : null,
+      member_id: args.p_member_id,
+      plan_id: plan.id,
+      plan_name: plan.name,
+      start_date: isoDay(start),
+      expiry_date: isoDay(end),
+      price,
+      renewed: args.p_renew === true,
+    },
+    error: null,
+  };
+}
+
 /**
  * Creates a mock Supabase client that returns hardcoded demo data.
  */
@@ -432,7 +565,7 @@ export function createMockSupabaseClient() {
   return {
     from: (table: string) => new MockQueryBuilder(table),
     rpc: (name: string, args?: Record<string, unknown>) =>
-      Promise.resolve(mockPlatformRpc(name, args) ?? mockRpc(name)),
+      Promise.resolve(mockPlatformRpc(name, args) ?? mockStaffRpc(name, args) ?? mockMembershipRpc(name, args) ?? mockPosRpc(name, args, { rows: getMutableTableRows, persist: persistMockTableStore }) ?? mockRpc(name)),
     channel: () => ({
       on: () => ({ subscribe: () => noopSub }),
       subscribe: () => noopSub,
@@ -442,7 +575,9 @@ export function createMockSupabaseClient() {
       invoke: async (name: string, options?: { body?: unknown }) =>
         name === "platform-invite-gym"
           ? mockInviteGym(options?.body)
-          : { data: null, error: new Error(`Mock backend has no function ${name}`) },
+          : name === "invite-staff"
+            ? mockInviteStaff(options?.body)
+            : { data: null, error: new Error(`Mock backend has no function ${name}`) },
     },
     auth: {
       getUser: async () => ({ data: { user: getMockUser() }, error: null }),

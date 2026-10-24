@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
   FiUsers,
@@ -200,7 +201,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
             : "Failed to process waitlist",
         );
       } else {
-        toast.success(`Enrolled ${processedCount} member(s) from waitlist`);
+        toast.success(i18n.t("toasts.waitlistEnrolled", { count: processedCount }));
       }
 
       if (processedCount > 0) {
@@ -214,7 +215,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       }
     } catch (error) {
       console.error("Error processing waitlist:", error);
-      toast.error("Failed to process waitlist");
+      toast.error(i18n.t("toasts.waitlistFailed"));
     } finally {
       setLoading(false);
     }
@@ -251,7 +252,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1 text-sm text-blue-600">
+            <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
               <FiUsers className="h-4 w-4" />
               <span>{selectedMembers.length} members selected</span>
             </div>
@@ -436,7 +437,7 @@ const ProcessWaitlistModal: React.FC<ProcessWaitlistModalProps> = ({
                       <span className="text-green-600 dark:text-green-400">
                         {member.attendance_score}% attendance
                       </span>
-                      <FiCheck className="h-4 w-4 text-green-600" />
+                      <FiCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                   </div>
                 );

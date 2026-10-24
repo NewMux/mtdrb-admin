@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -17,7 +17,9 @@ import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import SmartVatDashboard from "../components/billing/SmartVatDashboard";
-import FinancialInsightsDashboard from "../components/billing/FinancialInsightsDashboard";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const FinancialInsightsDashboard = React.lazy(() => import("../components/billing/FinancialInsightsDashboard"));
 import { NewInvoiceModal } from "../components/billing/NewInvoiceModal";
 import ExportBillingDataModal from "../components/billing/modals/ExportBillingDataModal";
 import AddExpenseModal from "../components/billing/AddExpenseModal";
@@ -25,12 +27,14 @@ import AddInvoiceModal from "../components/billing/AddInvoiceModal";
 import { usePageThemeContext } from "../contexts/PageThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabaseClient";
-import { DEFAULT_CURRENCY } from "../config/runtimeConfig";
+import { useGymConfig } from "../contexts/gym-config-context";
 import { normalizeInvoiceStatus } from "../utils/invoiceStatus";
+import { getCurrencyDecimals } from "../utils/invoiceMath";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import type { Invoice, Expense } from "../types";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 // Using real data from Supabase - no mock data
 interface InvoiceRow {
@@ -149,11 +153,12 @@ const Billing: React.FC = () => {
     paymentReminders: true,
     vatEnabled: false,
   });
-  const [currency, setCurrency] = React.useState(DEFAULT_CURRENCY);
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
 
   const formatMoney = React.useCallback(
-    (value: number, maximumFractionDigits = 2) => {
-      const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    (value: number, maximumFractionDigits = getCurrencyDecimals(currency)) => {
+      const code = /^[A-Z]{3}$/.test(currency) ? currency : "USD";
       try {
         return new Intl.NumberFormat(undefined, {
           style: "currency",
@@ -270,7 +275,6 @@ const Billing: React.FC = () => {
       }
 
       const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
-      setCurrency(data?.currency || DEFAULT_CURRENCY);
       const saved = metadata.billing_settings as Partial<typeof settings> | undefined;
       if (saved) {
         setSettings((previous) => ({ ...previous, ...saved }));
@@ -673,13 +677,15 @@ const Billing: React.FC = () => {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("billing.export")}</span>
                   </button>
-                  <button
-                    onClick={() => setActiveModal("addInvoice")}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("billing.addInvoice")}</span>
-                  </button>
+                  <Can permission="billing.manage">
+                    <button
+                      onClick={() => setActiveModal("addInvoice")}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("billing.addInvoice")}</span>
+                    </button>
+                  </Can>
                 </div>
               </div>
 
@@ -808,13 +814,15 @@ const Billing: React.FC = () => {
                     {t("billing.expenseManagementDesc")}
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveModal("expense")}
-                  className="btn btn-primary"
-                >
-                  <FiPlus className="w-4 h-4" />
-                  <span>{t("billing.addExpense")}</span>
-                </button>
+                <Can permission="billing.manage">
+                  <button
+                    onClick={() => setActiveModal("expense")}
+                    className="btn btn-primary"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span>{t("billing.addExpense")}</span>
+                  </button>
+                </Can>
               </div>
 
               <div className="overflow-x-auto">
@@ -888,7 +896,9 @@ const Billing: React.FC = () => {
       case "analytics":
         return (
           <div className="space-y-6">
-            <FinancialInsightsDashboard refreshKey={refreshKey} />
+            <React.Suspense fallback={<TabFallback />}>
+              <FinancialInsightsDashboard refreshKey={refreshKey} />
+            </React.Suspense>
           </div>
         );
 
@@ -1015,13 +1025,15 @@ const Billing: React.FC = () => {
               <FiActivity className="w-4 h-4" />
               <span>{t("billing.refresh")}</span>
             </button>
-            <button
-              onClick={() => setActiveModal("addInvoice")}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("billing.addInvoice")}</span>
-            </button>
+            <Can permission="billing.manage">
+              <button
+                onClick={() => setActiveModal("addInvoice")}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("billing.addInvoice")}</span>
+              </button>
+            </Can>
           </>
         }
       />
@@ -1031,7 +1043,7 @@ const Billing: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("billing.searchPlaceholder")}
@@ -1045,6 +1057,7 @@ const Billing: React.FC = () => {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
               className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -1114,6 +1127,7 @@ const Billing: React.FC = () => {
             invoice={null}
             onInvoiceAdded={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.invoiceCreated"));
             }}
           />
@@ -1127,6 +1141,7 @@ const Billing: React.FC = () => {
             expense={null}
             onExpenseAdded={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.expenseAdded"));
             }}
           />
@@ -1147,6 +1162,7 @@ const Billing: React.FC = () => {
             tenantId={tenantIdValue}
             onSave={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.invoiceUpdated"));
             }}
             invoice={toInvoiceProp(selectedInvoice)}
@@ -1161,6 +1177,7 @@ const Billing: React.FC = () => {
             tenantId={tenantIdValue}
             onSave={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.invoiceUpdated"));
             }}
             invoice={toInvoiceProp(selectedInvoice)}
@@ -1175,6 +1192,7 @@ const Billing: React.FC = () => {
             tenantId={tenantId}
             onExpenseAdded={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.expenseUpdated"));
             }}
           />
@@ -1188,6 +1206,7 @@ const Billing: React.FC = () => {
             tenantId={tenantId}
             onExpenseAdded={() => {
               closeModal();
+              setRefreshKey(Date.now());
               toast.success(t("billing.expenseUpdated"));
             }}
           />

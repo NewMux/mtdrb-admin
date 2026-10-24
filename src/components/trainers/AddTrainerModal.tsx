@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useState } from "react";
 import {
   FiX,
@@ -235,7 +236,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fill in all required fields");
+      toast.error(i18n.t("toasts.fillRequired"));
       return;
     }
 
@@ -330,7 +331,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
         if (docError) throw docError;
       }
 
-      toast.success("Trainer added successfully!");
+      toast.success(i18n.t("toasts.trainerAdded"));
       onSuccess?.();
       onClose();
 
@@ -341,7 +342,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setSubmitError(message);
-      toast.error("Failed to add trainer");
+      toast.error(i18n.t("toasts.trainerAddFailed"));
     } finally {
       setLoading(false);
     }
@@ -570,7 +571,7 @@ export function AddTrainerModal({ isOpen, onClose, onSuccess }: Props) {
                     onChange={(e) =>
                       handleAvailabilityChange(index, "available", e.target.checked)
                     }
-                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600"
+                    className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600"
                   />
                   <label
                     htmlFor={`available-${index}`}

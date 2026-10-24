@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import {
   FiActivity,
   FiArrowUpRight,
@@ -161,7 +161,7 @@ const Home: React.FC = () => {
       {/* Navigation */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-white/80 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">
-          <Link to="/" aria-label={t("landing.home_link")} className="text-gray-900">
+          <Link to="/" className="text-gray-900">
             <BrandMark poweredBy className="text-[17px]" poweredByClassName="text-gray-500" />
           </Link>
 

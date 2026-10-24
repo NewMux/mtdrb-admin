@@ -209,7 +209,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             {currentTrainer && (
               <div className="space-y-4">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <FiUser className="w-5 h-5 text-blue-600" />
+                  <FiUser className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <span>{t("members.currentTrainer", "المدرب الحالي")}</span>
                 </h3>
 
@@ -251,7 +251,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             {/* Available Trainers */}
             <div className="space-y-4">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <FiUsers className="w-5 h-5 text-blue-600" />
+                <FiUsers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>{t("members.availableTrainers", "المدربون المتاحون")}</span>
               </h3>
 
@@ -319,7 +319,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                             checked={selectedTrainer === trainer.id}
                             onChange={(e) => setSelectedTrainer(e.target.value)}
                             disabled={!isAvailable(trainer)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 focus:ring-blue-500"
                           />
                         )}
                       </div>

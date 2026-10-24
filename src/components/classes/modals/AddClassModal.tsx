@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiAlertTriangle,
   FiCheck,
@@ -403,7 +403,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddRoom(true)}
-                  className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                  className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700"
                 >
                   + {t("classes.addNewRoom", "Add new room")}
                 </button>
@@ -484,7 +484,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center space-x-2 mt-2 text-red-600"
+              className="flex items-center space-x-2 mt-2 text-red-600 dark:text-red-400"
             >
               <FiAlertTriangle className="h-4 w-4" />
               <span className="text-sm">
@@ -506,7 +506,7 @@ const AddClassModal: React.FC<AddClassModalProps> = ({
                   Popular Time Slots
                 </span>
                 <div className="flex items-center space-x-1 bg-blue-100 px-2 py-1 rounded-full">
-                  <FiStar className="h-3 w-3 text-blue-600" />
+                  <FiStar className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs font-medium text-blue-700">
                     PRO
                   </span>

@@ -1,5 +1,6 @@
+import i18n from "../../i18n";
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,12 +27,10 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import {
-  DEFAULT_COUNTRY_CODE,
-  DEFAULT_CURRENCY,
-  DEFAULT_VAT_RATE,
-} from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { buildTaxBreakdown, taxRateToApply } from "../../config/gymConfig";
 import { splitVat, getCurrencyDecimals } from "../../utils/invoiceMath";
+import { toLocalDateString } from "../../utils/analyticsRange";
 
 interface AddInvoiceModalProps {
   isOpen: boolean;
@@ -93,6 +92,9 @@ export function AddInvoiceModal({
   const { isRTL } = useRTL();
   const { user } = useAuth();
   const { tenantId: authTenantId } = useAuth();
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const defaultVatRate = taxRateToApply(gymConfig);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -128,7 +130,7 @@ export function AddInvoiceModal({
     defaultValues: {
       title: "",
       amount: 0,
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalDateString(new Date()),
       category: "Other",
       payment_method: "card",
       member_id: "",
@@ -136,8 +138,8 @@ export function AddInvoiceModal({
       status: "pending",
       recurring: false,
       recurring_frequency: "monthly",
-      vat_included: false,
-      vat_rate: DEFAULT_VAT_RATE,
+      vat_included: gymConfig.tax.pricesIncludeTax,
+      vat_rate: defaultVatRate,
       internal_notes: "",
       public_notes: "",
     },
@@ -173,7 +175,7 @@ export function AddInvoiceModal({
         title: editingInvoice.title || "",
         amount: typeof editingInvoice.amount === 'number' ? editingInvoice.amount : (typeof editingInvoice.total === 'number' ? editingInvoice.total : 0),
         date:
-          editingInvoice.issue_date || new Date().toISOString().split("T")[0],
+          editingInvoice.issue_date || toLocalDateString(new Date()),
         category: editingInvoice.type || "Other",
         payment_method: editingInvoice.payment_method || "card",
         member_id: editingInvoice.member?.id || "",
@@ -182,12 +184,21 @@ export function AddInvoiceModal({
         recurring: false,
         recurring_frequency: "monthly",
         vat_included: false,
-        vat_rate: DEFAULT_VAT_RATE,
+        vat_rate: defaultVatRate,
         internal_notes: "",
         public_notes: "",
       });
     }
-  }, [editingInvoice, isOpen, reset]);
+  }, [editingInvoice, isOpen, reset, defaultVatRate]);
+
+  // A new invoice starts from the gym's own tax settings, which may finish
+  // loading after the modal first renders.
+  useEffect(() => {
+    if (isOpen && !editingInvoice) {
+      setValue("vat_rate", defaultVatRate);
+      setValue("vat_included", gymConfig.tax.pricesIncludeTax);
+    }
+  }, [isOpen, editingInvoice, defaultVatRate, gymConfig.tax.pricesIncludeTax, setValue]);
 
   // Handle file upload with preview
   const handleFileSelection = (files: FileList | null) => {
@@ -201,12 +212,12 @@ export function AddInvoiceModal({
       "application/pdf",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      toast.error(i18n.t("toasts.badFileType"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(i18n.t("toasts.fileTooBig"));
       return;
     }
 
@@ -255,8 +266,9 @@ export function AddInvoiceModal({
         : typeof watchedAmount === "string"
           ? parseFloat(watchedAmount)
           : 0;
-    const vatRate = watch("vat_rate") || DEFAULT_VAT_RATE;
-    return splitVat(amount, vatRate, watchedVatIncluded, DEFAULT_CURRENCY);
+    const enteredRate = Number(watch("vat_rate"));
+    const vatRate = Number.isFinite(enteredRate) ? enteredRate : defaultVatRate;
+    return { ...splitVat(amount, vatRate, watchedVatIncluded, currency), rate: vatRate };
   };
 
   // Handle form submission
@@ -264,7 +276,7 @@ export function AddInvoiceModal({
     if (isSubmitting) return;
 
     if (!authTenantId) {
-      toast.error("Tenant ID not found. Please ensure you're logged in.");
+      toast.error(i18n.t("toasts.noTenantLogin"));
       return;
     }
 
@@ -290,7 +302,7 @@ export function AddInvoiceModal({
         invoiceUrl = fileName;
       }
 
-      const { net, vat, gross } = calculateVatSplit();
+      const { net, vat, gross, rate: rateUsed } = calculateVatSplit();
       const issueDate = new Date(data.date);
       const dueDate = new Date(issueDate);
       dueDate.setDate(dueDate.getDate() + 7);
@@ -305,14 +317,15 @@ export function AddInvoiceModal({
         payment_method: data.payment_method,
         status: data.status as InvoiceStatus,
         tenant_id: authTenantId,
-        currency: DEFAULT_CURRENCY,
+        currency: currency,
         vat_total: vat,
+        tax_breakdown: buildTaxBreakdown(gymConfig, vat, rateUsed, currency),
         metadata: {
           title: data.title,
           notes: data.description || null,
           invoice_url: invoiceUrl,
           created_by: user?.id,
-          country_code: DEFAULT_COUNTRY_CODE || null,
+          country_code: gymConfig.country || null,
           internal_notes: data.internal_notes || null,
           public_notes: data.public_notes || null,
         },
@@ -326,16 +339,12 @@ export function AddInvoiceModal({
         throw error;
       }
 
-      toast.success(
-        editingInvoice
-          ? "Invoice updated successfully"
-          : "Invoice added successfully",
-      );
+      // The page shows the (translated) confirmation.
       onInvoiceAdded();
       onClose();
     } catch (error) {
       console.error("Error saving invoice:", error);
-      toast.error("Failed to save invoice. Please try again.");
+      toast.error(i18n.t("toasts.invoiceSaveFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -362,8 +371,9 @@ export function AddInvoiceModal({
     }
   };
 
-  const { net: netAmount, vat: vatAmount, gross: finalAmount } = calculateVatSplit();
-  const currencyDecimals = getCurrencyDecimals(DEFAULT_CURRENCY);
+  const { net: netAmount, vat: vatAmount, gross: finalAmount, rate: summaryRate } = calculateVatSplit();
+  const taxLines = buildTaxBreakdown(gymConfig, vatAmount, summaryRate, currency);
+  const currencyDecimals = getCurrencyDecimals(currency);
 
   const footer = (
     <div className="flex items-center justify-end gap-3 w-full">
@@ -515,15 +525,24 @@ export function AddInvoiceModal({
               <div className="bg-white dark:bg-white/[0.04] rounded-lg p-4 space-y-2 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{netAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                  <span>{netAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                  <span>{vatAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
-                </div>
+                {taxLines && taxLines.length > 1 ? (
+                  taxLines.map((line) => (
+                    <div key={line.name} className="flex justify-between text-sm">
+                      <span>{line.name} ({line.rate}%):</span>
+                      <span>{line.amount.toFixed(currencyDecimals)} {currency}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between text-sm">
+                    <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
+                    <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(currencyDecimals)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">
@@ -555,7 +574,7 @@ export function AddInvoiceModal({
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {selectedFile.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
@@ -566,7 +585,7 @@ export function AddInvoiceModal({
                           setFilePreview(null);
                           setValue("invoice_file", null);
                         }}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium cursor-pointer"
                       >
                         {t("billing.removeFile", "حذف الملف")}
                       </button>
@@ -574,7 +593,7 @@ export function AddInvoiceModal({
                   ) : (
                     <div className="space-y-4">
                       <div className="flex justify-center">
-                        <FiUpload className="h-12 w-12 text-gray-400" />
+                        <FiUpload className="h-12 w-12 text-gray-500 dark:text-gray-400" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -582,7 +601,7 @@ export function AddInvoiceModal({
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium cursor-pointer"
                           >
                             {t("billing.browseFiles", "استعراض الملفات")}
                           </button>

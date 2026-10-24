@@ -105,7 +105,7 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
           {section === "revenue" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   45,280 BHD
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -113,7 +113,7 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">+12.5%</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">+12.5%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Growth Rate
                 </div>
@@ -136,19 +136,19 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
           {section === "members" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">1,247</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">1,247</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Total Members
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">+8.2%</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">+8.2%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Growth Rate
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">3.2%</div>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">3.2%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Churn Rate
                 </div>
@@ -165,13 +165,13 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
           {section === "classes" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">156</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">156</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Classes This Month
                 </div>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">85%</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">85%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Average Attendance
                 </div>
@@ -201,12 +201,12 @@ const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
           <div className="p-6 bg-white dark:bg-white/[0.04] rounded-lg">
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
-                <FiBarChart className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <FiBarChart className="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600 dark:text-gray-400">
                   Interactive charts and detailed breakdowns would be displayed
                   here
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Including trend analysis, comparisons, and predictive insights
                 </p>
               </div>

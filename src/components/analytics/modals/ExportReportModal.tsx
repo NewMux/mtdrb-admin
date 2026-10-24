@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import {
   FiDownload,
@@ -15,6 +16,7 @@ import { toast } from "react-hot-toast";
 import { SmartAnalyticsModal } from "./SmartAnalyticsModal";
 import { useSmartAnalyticsModal } from "./useSmartAnalyticsModal";
 import type { Database } from "../../../types/supabase";
+import { toLocalDateString } from "../../../utils/analyticsRange";
 
 interface ExportReportModalProps {
   open: boolean;
@@ -159,12 +161,12 @@ export default function ExportReportModal({
 
   const handleExport = async () => {
     if (!selectedReport) {
-      toast.error("Please select a report to export");
+      toast.error(i18n.t("toasts.pickReport"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
@@ -172,7 +174,7 @@ export default function ExportReportModal({
     try {
       const report = savedReports.find((r) => r.id === selectedReport);
       if (!report) {
-        toast.error("Report not found");
+        toast.error(i18n.t("toasts.reportNotFound"));
         return;
       }
 
@@ -247,8 +249,8 @@ export default function ExportReportModal({
             .from("expenses")
             .select("id, amount, category, date")
             .eq("tenant_id", tenantId)
-            .gte("date", quarterStart.toISOString().split("T")[0])
-            .lte("date", quarterEnd.toISOString().split("T")[0]),
+            .gte("date", toLocalDateString(quarterStart))
+            .lte("date", toLocalDateString(quarterEnd)),
         ]);
 
         if (invoicesResult.error) throw invoicesResult.error;
@@ -330,18 +332,20 @@ export default function ExportReportModal({
       } else if (exportFormat === "excel") {
         await exportExcel(exportData, filename, report.name);
       } else if (exportFormat === "pdf") {
-        exportPDF(exportData, filename, report.name);
+        await exportPDF(exportData, filename, report.name);
       } else if (exportFormat === "json") {
         exportJSON(exportData, filename);
       }
 
-      toast.success("Report exported successfully");
+      toast.success(i18n.t("toasts.reportExported"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
     } finally {
       setExporting(false);
@@ -358,7 +362,7 @@ export default function ExportReportModal({
             : report,
         ),
       );
-      toast.success("Report data refreshed");
+      toast.success(i18n.t("toasts.reportRefreshed"));
     } finally {
       setExporting(false);
     }
@@ -445,10 +449,10 @@ export default function ExportReportModal({
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   {report.description}
                 </p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                   <span>Size: {report.size}</span>
                   <span>
                     Last generated:{" "}
@@ -463,7 +467,7 @@ export default function ExportReportModal({
                     e.preventDefault();
                     handleRefreshReport(report.id);
                   }}
-                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 rounded-lg transition-colors"
                   title="Refresh report data"
                 >
                   <FiRefreshCw
@@ -509,13 +513,13 @@ export default function ExportReportModal({
                       onChange={(e) => setIncludeVisuals(e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       Include charts and graphs
                     </span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="checkbox" defaultChecked className="rounded" />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       Include raw data
                     </span>
                   </label>
@@ -531,7 +535,7 @@ export default function ExportReportModal({
                 <h4 className="font-semibold text-gray-900">
                   {getSelectedReport()?.name}
                 </h4>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <span>Size: {getSelectedReport()?.size}</span>
                   <span>•</span>
                   <span>
@@ -546,7 +550,7 @@ export default function ExportReportModal({
                     <div className="text-sm font-medium text-gray-900 mb-1">
                       {section}
                     </div>
-                    <div className="text-xs text-gray-500">Section {i + 1}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Section {i + 1}</div>
                   </div>
                 ))}
               </div>

@@ -1,5 +1,6 @@
+import i18n from "../../i18n";
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,11 +26,10 @@ import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import {
-  DEFAULT_COUNTRY_CODE,
-  DEFAULT_CURRENCY,
-  DEFAULT_VAT_RATE,
-} from "../../config/runtimeConfig";
+import { toLocalDateString } from "../../utils/analyticsRange";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
+import { getCurrencyDecimals } from "../../utils/invoiceMath";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -103,6 +103,10 @@ export function AddExpenseModal({
   const { isRTL } = useRTL();
   const { user } = useAuth();
   const { tenantId: authTenantId } = useAuth();
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const currencyDecimals = getCurrencyDecimals(currency);
+  const defaultVatRate = taxRateToApply(gymConfig);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -121,7 +125,7 @@ export function AddExpenseModal({
     defaultValues: {
       title: "",
       amount: 0,
-      date: new Date().toISOString().split("T")[0],
+      date: toLocalDateString(new Date()),
       category: "Other",
       payment_method: "card",
       vendor: "",
@@ -130,7 +134,7 @@ export function AddExpenseModal({
       recurring: false,
       recurring_frequency: "monthly",
       vat_included: false,
-      vat_rate: DEFAULT_VAT_RATE,
+      vat_rate: defaultVatRate,
       internal_notes: "",
       public_notes: "",
     },
@@ -165,7 +169,7 @@ export function AddExpenseModal({
       reset({
         title: editingExpense.title || "",
         amount: typeof editingExpense.amount === 'number' ? editingExpense.amount : parseFloat(String(editingExpense.amount)) || 0,
-        date: editingExpense.date || new Date().toISOString().split("T")[0],
+        date: editingExpense.date || toLocalDateString(new Date()),
         category: editingExpense.category || "Other",
         payment_method: editingExpense.payment_method || "card",
         vendor: editingExpense.vendor || "",
@@ -174,12 +178,20 @@ export function AddExpenseModal({
         recurring: editingExpense.recurring || false,
         recurring_frequency: editingExpense.recurring_frequency || "monthly",
         vat_included: false,
-        vat_rate: DEFAULT_VAT_RATE,
+        vat_rate: defaultVatRate,
         internal_notes: editingExpense.internal_notes || "",
         public_notes: editingExpense.public_notes || "",
       });
     }
-  }, [editingExpense, isOpen, reset]);
+  }, [editingExpense, isOpen, reset, defaultVatRate]);
+
+  // A new expense starts from the gym's own tax settings, which may finish
+  // loading after the modal first renders.
+  useEffect(() => {
+    if (isOpen && !editingExpense) {
+      setValue("vat_rate", defaultVatRate);
+    }
+  }, [isOpen, editingExpense, defaultVatRate, setValue]);
 
   // Handle file upload with preview
   const handleFileSelection = (files: FileList | null) => {
@@ -193,12 +205,12 @@ export function AddExpenseModal({
       "application/pdf",
     ];
     if (!validTypes.includes(file.type)) {
-      toast.error("Please select a valid file type (JPEG, PNG, GIF, or PDF)");
+      toast.error(i18n.t("toasts.badFileType"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(i18n.t("toasts.fileTooBig"));
       return;
     }
 
@@ -246,7 +258,8 @@ export function AddExpenseModal({
       typeof watchedAmount === "number"
         ? watchedAmount
         : parseFloat(String(watchedAmount)) || 0;
-    const vatRate = watch("vat_rate") || 15;
+    const enteredRate = Number(watch("vat_rate"));
+    const vatRate = Number.isFinite(enteredRate) ? enteredRate : defaultVatRate;
     return watchedVatIncluded ? (amount * vatRate) / 100 : 0;
   };
 
@@ -255,7 +268,7 @@ export function AddExpenseModal({
     if (isSubmitting) return;
 
     if (!authTenantId) {
-      toast.error("Tenant ID not found. Please ensure you're logged in.");
+      toast.error(i18n.t("toasts.noTenantLogin"));
       return;
     }
 
@@ -294,7 +307,7 @@ export function AddExpenseModal({
         recurring: data.recurring,
         recurring_frequency: data.recurring ? data.recurring_frequency : null,
         tenant_id: authTenantId,
-        country_code: DEFAULT_COUNTRY_CODE || null,
+        country_code: gymConfig.country || null,
         vat_amount: calculateVatAmount(),
         internal_notes: data.internal_notes || null,
         public_notes: data.public_notes || null,
@@ -314,16 +327,12 @@ export function AddExpenseModal({
         throw error;
       }
 
-      toast.success(
-        editingExpense
-          ? "Expense updated successfully"
-          : "Expense added successfully",
-      );
+      // The page shows the (translated) confirmation.
       onExpenseAdded();
       onClose();
     } catch (error) {
       console.error("Error saving expense:", error);
-      toast.error("Failed to save expense. Please try again.");
+      toast.error(i18n.t("toasts.expenseSaveFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -442,6 +451,11 @@ export function AddExpenseModal({
                   <option value="Maintenance">{t("billing.maintenance", "الصيانة والتشغيل")}</option>
                   <option value="Software">{t("billing.software", "البرامج والأنظمة")}</option>
                   <option value="Office Supplies">{t("billing.officeSupplies", "مستلزمات مكتبية")}</option>
+                  {gymConfig.expenseCategories.map((name) => (
+                    <option key={`custom-${name}`} value={name}>
+                      {name}
+                    </option>
+                  ))}
                   <option value="Other">{t("billing.other", "مصروفات أخرى")}</option>
                 </AppleSelect>
               </div>
@@ -506,17 +520,17 @@ export function AddExpenseModal({
               <div className="bg-white dark:bg-white/[0.04] rounded-lg p-4 space-y-2 text-start">
                 <div className="flex justify-between text-sm">
                   <span>{t("billing.subtotal", "المجموع الفرعي:")}</span>
-                  <span>{totalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{totalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
                 {watchedVatIncluded && (
                   <div className="flex justify-between text-sm">
-                    <span>{t("billing.vatLabel", "ضريبة القيمة المضافة")} ({watch("vat_rate")}%):</span>
-                    <span>{vatAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                    <span>{gymConfig.tax.name} ({watch("vat_rate")}%):</span>
+                    <span>{vatAmount.toFixed(currencyDecimals)} {currency}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium border-t border-gray-200 dark:border-gray-700 pt-2 text-base text-blue-600 dark:text-blue-400">
                   <span>{t("billing.grandTotal", "المجموع الكلي:")}</span>
-                  <span>{finalAmount.toFixed(3)} {DEFAULT_CURRENCY}</span>
+                  <span>{finalAmount.toFixed(currencyDecimals)} {currency}</span>
                 </div>
               </div>
               <div className="space-y-4 text-start">
@@ -559,7 +573,7 @@ export function AddExpenseModal({
                           setFilePreview(null);
                           setValue("receipt_file", null);
                         }}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium cursor-pointer"
                       >
                         {t("billing.removeFile", "حذف الملف")}
                       </button>
@@ -567,7 +581,7 @@ export function AddExpenseModal({
                   ) : (
                     <div className="space-y-4">
                       <div className="flex justify-center">
-                        <FiUpload className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                        <FiUpload className="h-12 w-12 text-gray-500 dark:text-gray-400" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">

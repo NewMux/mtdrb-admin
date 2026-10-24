@@ -8,7 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../hooks/useToast";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 
 interface DashboardTargets {
   revenue?: number;
@@ -33,8 +33,11 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
   onClose,
   onSave,
   currentTargets,
-  currency = DEFAULT_CURRENCY,
+  currency: currencyProp,
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const currency = currencyProp ?? gymConfig.currency;
+
   const { tenantId } = useAuth();
   const { showSuccess, showError } = useToast();
   const { t } = useTranslation();
@@ -103,7 +106,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
         .upsert({
           tenant_id: tenantId,
           metadata: updatedMetadata,
-          currency: currentSettings?.currency || currency || DEFAULT_CURRENCY,
+          currency: currentSettings?.currency || currency || gymConfig.currency,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: "tenant_id"

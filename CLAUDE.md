@@ -62,3 +62,36 @@ The owner-only `/superadmin` console is documented in `DEPLOYMENT.md`
   `supabase/tests/platform_admin_console.test.sql` loops over `platform_%`
   functions to catch a miss.
 
+## Custom staff roles
+
+Gym admins can define custom roles (`tenant_roles`, `memberships.custom_role_id`;
+`DEPLOYMENT.md` "Team and custom roles"). When touching roles, permissions or any
+function/table near them:
+
+- A custom role is a **restriction on a built-in tier** (`employee`/`trainer`),
+  never a new tier. Keep `UserRole`, `memberships.role` and `has_tenant_role()`
+  at admin/employee/trainer; narrowing is done only by the `RESTRICTIVE` policies
+  (`*_perm_*`) and `has_permission()`. Never add a permissive policy that grants
+  by custom permission, and never let a custom role hold or imply admin (the
+  `memberships_custom_role_guard` trigger clears it).
+- `has_permission()` returns true for anyone without a custom role, so built-in
+  roles behave exactly as before. A new table that employees can write, or a new
+  `SECURITY DEFINER` function that reads/writes finance, shop, attendance, member
+  or class data, needs a matching restrictive policy / an explicit
+  `has_permission` check, and a case in `supabase/tests/custom_roles.test.sql`.
+- Role and team changes go through the admin-only `staff_*` functions; the browser
+  has no write privileges on the role tables. The UI (`can()`, `<Can>`,
+  `requiredPermission`) only hides things - the database is the guarantee.
+- One login belongs to one gym (the app opens the oldest membership), so invites
+  refuse an email that already has an account.
+
+## Accessibility and browser tests
+
+`npm run e2e` (see `DEPLOYMENT.md`, "Browser end-to-end and accessibility tests") fails on any axe finding for any screen, so when adding UI:
+
+- Text colours: on light surfaces use `text-gray-500`/`-600` or darker (the palette's 600 shades are AA-safe on white); always pair a text colour with a lighter `dark:` variant when the surface has a `dark:bg-*`. Light-only pages (landing, plans, legal) have no dark variants on purpose.
+- Every `<input>`, `<select>` and icon-only `<button>` needs an accessible name (`aria-label`, or a `<label htmlFor>`; `AppleInput`/`AppleSelect`/`AppleTextarea` link theirs automatically). `AppleSelect` must keep forwarding its ref — react-hook-form's `register()` needs it, and without it Add Invoice and Add Expense cannot be saved.
+- Tables go in an `overflow-x-auto` wrapper, never `overflow-hidden`, so phones can scroll them; row action buttons need at least 24×24 px of hit area.
+- A flow that needs a database function the demo backend does not imitate gets a stand-in in `src/mocks/` (lazy state, no top-level side effects — `scripts/check-dist-no-mock.mjs` guards the production bundle).
+- User-facing toast text lives in the `toasts` block of `src/i18n.ts` / `src/i18n.ar.ts`; code with no component (hooks, `src/api`, modals) calls `i18n.t("toasts.…")`. Never hard-code English into `toast.*`.
+- Build-only packages (Tailwind and its plugins, PostCSS, Vite) stay in `devDependencies`, so `npm audit --omit=dev` reflects what actually ships; it must stay at 0 critical/high.

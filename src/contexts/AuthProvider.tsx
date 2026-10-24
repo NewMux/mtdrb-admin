@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import i18n from "../i18n";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { api } from "../api/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,16 +9,43 @@ import { isValidRole } from "../types/roles";
 import { withTimeout } from "../utils/withTimeout";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 import { isPlatformAdminPath } from "../utils/platformAdmin";
+import { hasSignupGymName, needsGymSetupRedirect } from "../utils/ensureGym";
 import {
   AuthContext,
   type AuthErrorState,
   type UserMetadata,
 } from "./auth-context";
+import { fetchMyStaffAccess } from "../api/staff";
+import { allows } from "../config/staffPermissions";
 
 const DEFAULT_ERROR: AuthErrorState = {
   code: "unknown",
   message: "An unknown error occurred",
 };
+
+/**
+ * True when two auth users are the same session state. supabase-js re-emits
+ * SIGNED_IN with a freshly built user object every time the tab regains focus
+ * and TOKEN_REFRESHED hourly; storing each one made every consumer with `user`
+ * in an effect dependency list reload its data ("the app keeps refreshing").
+ */
+function sameAuthUser(a: User | null, b: User | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.id === b.id && a.email === b.email && a.updated_at === b.updated_at;
+}
+
+function sameMetadata(a: UserMetadata | null, b: UserMetadata): boolean {
+  return (
+    !!a &&
+    a.tenant_id === b.tenant_id &&
+    a.paid === b.paid &&
+    a.role === b.role &&
+    a.subscription_tier === b.subscription_tier &&
+    (a.custom_role_name ?? null) === (b.custom_role_name ?? null) &&
+    JSON.stringify(a.permissions ?? null) === JSON.stringify(b.permissions ?? null)
+  );
+}
 
 /**
  * Provides authentication state and actions to the application.
@@ -30,6 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userMetadata, setUserMetadata] = useState<UserMetadata | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  // The user the last SIGNED_IN redirect decision was made for. supabase-js
+  // fires SIGNED_IN again on every tab refocus; those must not navigate.
+  const signedInUserId = useRef<string | null>(null);
 
   const handleAuthError = useCallback((error: unknown) => {
     const authError = error as AuthError;
@@ -95,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           Promise.resolve(
             supabase
               .from("platform_subscriptions")
-              .select("status, plan_tier, trial_end, current_period_end")
+              .select("status, plan_tier, trial_end, current_period_end, grace_until")
               .eq("tenant_id", tId)
               .maybeSingle(),
           ),
@@ -112,14 +143,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // A custom role's limits. Null (also when the database does not have custom
+    // roles yet, or the call fails) means a built-in role: nothing is hidden, and
+    // the database still decides every write.
+    const access = await fetchMyStaffAccess();
+
     const metadata: UserMetadata = {
       tenant_id: tId,
       paid: isPaid,
       role: validatedRole,
       subscription_tier: tier,
+      permissions: access?.permissions ?? null,
+      custom_role_name: access?.customRoleName ?? null,
     };
 
-    setUserMetadata(metadata);
+    setUserMetadata((current) => (sameMetadata(current, metadata) ? current : metadata));
     setTenantId(metadata.tenant_id);
 
     // Compatibility mirror for older UI filters. This is local React state,
@@ -127,6 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // the membership/subscription tables and all writes remain RLS-protected.
     setUser((currentUser) => {
       if (!currentUser || currentUser.id !== user.id) return currentUser;
+      const mirrored = currentUser.user_metadata;
+      if (
+        mirrored?.tenant_id === tId &&
+        mirrored?.role === validatedRole &&
+        mirrored?.paid === isPaid &&
+        mirrored?.subscription_tier === tier
+      ) {
+        return currentUser;
+      }
       return {
         ...currentUser,
         user_metadata: {
@@ -210,8 +257,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      setUser(user);
+      setUser((current) => (sameAuthUser(current, user) ? current : user));
       const metadata = await handleUserMetadata(user);
+
+      // Signed in but no gym yet (they signed up and confirmed their email
+      // somewhere the inline setup never ran): /welcome creates it.
+      if (
+        user &&
+        !metadata &&
+        hasSignupGymName(user) &&
+        needsGymSetupRedirect(location.pathname) &&
+        !isPlatformAdminPath(location.pathname)
+      ) {
+        navigate("/welcome", { replace: true });
+        return;
+      }
 
       const publicRoutes = [
         "/",
@@ -219,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/welcome",
         "/reset-password",
         "/forgot-password",
         "/terms",
@@ -253,6 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/signup",
         "/subscribe",
         "/onboarding",
+        "/welcome",
         "/reset-password",
         "/forgot-password",
         "/terms",
@@ -285,13 +347,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       const sessionUser = session?.user ?? null;
 
-      setUser(sessionUser);
+      setUser((current) => (sameAuthUser(current, sessionUser) ? current : sessionUser));
       const metadata = await handleUserMetadata(sessionUser);
       setIsLoading(false);
 
       switch (event) {
         case "SIGNED_IN":
           if (!sessionUser) break;
+
+          // A repeat SIGNED_IN for the user we already routed (tab refocus,
+          // session recovery) refreshes state above but must not move them: it
+          // used to send a paid user who skipped onboarding back to it, and an
+          // unpaid one back to /subscribe, every time they switched tabs.
+          if (signedInUserId.current === sessionUser.id) break;
+          signedInUserId.current = sessionUser.id;
 
           if (
             location.pathname === "/signup" ||
@@ -308,6 +377,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // it must leave the platform console alone. Read the live location:
           // the closed-over pathname can be stale between re-subscriptions.
           if (isPlatformAdminPath(window.location.pathname)) {
+            break;
+          }
+
+          if (!metadata && hasSignupGymName(sessionUser) && needsGymSetupRedirect(window.location.pathname)) {
+            navigate("/welcome");
             break;
           }
 
@@ -330,6 +404,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           break;
 
         case "SIGNED_OUT":
+          signedInUserId.current = null;
           navigate("/");
           break;
 
@@ -405,12 +480,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // them yet, a separate pre-existing gap.
       if (userMetadata?.role === "admin") {
         toast.error(
-          "Your password has expired and needs to be changed to continue.",
+          i18n.t("toasts.passwordExpiredAdmin"),
         );
         navigate("/dashboard/settings", { replace: true });
       } else {
         toast.error(
-          "Your password has expired. Please contact your gym admin to reset it.",
+          i18n.t("toasts.passwordExpiredStaff"),
         );
       }
     }
@@ -441,7 +516,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setUserMetadata(null);
           setTenantId(null);
-          toast.error("You've been signed out due to inactivity.");
+          toast.error(i18n.t("toasts.signedOutInactive"));
           navigate("/login", { replace: true });
         });
       }
@@ -467,7 +542,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         const { error } = await api.auth.signIn(email, password);
         if (error) throw error;
-        toast.success("Successfully signed in!");
+        toast.success(i18n.t("toasts.signedIn"));
       } catch (err) {
         const errorState = handleAuthError(err);
         toast.error(errorState.message);
@@ -492,7 +567,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await api.auth.signUp(email, password, name);
         if (error) throw error;
         toast.success(
-          "Successfully signed up! Please check your email for verification.",
+          i18n.t("toasts.signedUp"),
         );
       } catch (err) {
         const errorState = handleAuthError(err);
@@ -517,7 +592,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setUserMetadata(null);
         setTenantId(null);
-        toast.success("Successfully signed out!");
+        toast.success(i18n.t("toasts.signedOut"));
         navigate("/", { replace: true });
         setIsLoading(false);
         return;
@@ -528,7 +603,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setUserMetadata(null);
       setTenantId(null);
-      toast.success("Successfully signed out!");
+      toast.success(i18n.t("toasts.signedOut"));
       navigate("/", { replace: true });
     } catch (err) {
       const errorState = handleAuthError(err);
@@ -562,6 +637,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [userMetadata],
   );
 
+  const can = useCallback(
+    (permission: string | readonly string[]): boolean => {
+      if (!userMetadata) return false;
+      return allows(userMetadata.permissions, permission);
+    },
+    [userMetadata],
+  );
+
   const refreshSession = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -581,19 +664,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [handleAuthError, handleUserMetadata]);
 
-  const value = {
-    user,
-    tenantId,
-    isLoading,
-    error,
-    userMetadata,
-    signIn,
-    signUp,
-    signOut,
-    checkAuth,
-    hasPermission,
-    refreshSession,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      tenantId,
+      isLoading,
+      error,
+      userMetadata,
+      signIn,
+      signUp,
+      signOut,
+      checkAuth,
+      hasPermission,
+      can,
+      refreshSession,
+    }),
+    [
+      user,
+      tenantId,
+      isLoading,
+      error,
+      userMetadata,
+      signIn,
+      signUp,
+      signOut,
+      checkAuth,
+      hasPermission,
+      can,
+      refreshSession,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

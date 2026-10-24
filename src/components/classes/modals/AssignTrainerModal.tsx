@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
   FiUser,
@@ -104,7 +105,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Error assigning trainer:", error);
-      toast.error("Failed to assign trainer");
+      toast.error(i18n.t("toasts.trainerAssignFailed"));
     } finally {
       setLoading(false);
     }
@@ -195,7 +196,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {selectedTrainer && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiUser className="h-4 w-4" />
                 <span>{selectedTrainerData?.name}</span>
               </div>
@@ -250,10 +251,11 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+              <label htmlFor="assign-trainer-specialty" className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                 Filter by Specialty
               </label>
               <input
+                id="assign-trainer-specialty"
                 type="text"
                 value={filterSpecialty}
                 onChange={(e) => setFilterSpecialty(e.target.value)}
@@ -263,10 +265,11 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
+              <label htmlFor="assign-trainer-sort" className="block text-sm font-medium text-dark-900 dark:text-white mb-2">
                 Sort by
               </label>
               <select
+                id="assign-trainer-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "rating" | "availability" | "load" | "rate")}
                 className="w-full ps-4 pe-9 py-3 border border-light-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all duration-200 bg-light-50 dark:bg-dark-700 text-dark-900 dark:text-white"
@@ -309,6 +312,7 @@ const AssignTrainerModal: React.FC<AssignTrainerModalProps> = ({
                       <input
                         type="radio"
                         name="trainer"
+                        aria-label={trainer.name}
                         checked={isSelected}
                         onChange={() => setSelectedTrainer(trainer.id)}
                         className="text-brand-600 focus:ring-brand-500"

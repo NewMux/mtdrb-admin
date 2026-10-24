@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient";
 import type { Database, Json } from "../types/supabase";
+import { toLocalDateString } from "../utils/analyticsRange";
 
 export type AttendanceEvent = Database["public"]["Tables"]["attendance_events"]["Row"];
 export type AttendanceDevice = Database["public"]["Tables"]["attendance_devices"]["Row"];
@@ -196,9 +197,14 @@ export async function fetchMemberAttendanceHistory(
   return (data ?? []) as AttendanceEvent[];
 }
 
-export function getAttendanceMetrics(events: AttendanceEvent[]) {
-  const today = new Date().toISOString().slice(0, 10);
-  const todayEvents = events.filter((event) => event.occurred_at.slice(0, 10) === today);
+export function getAttendanceMetrics(allEvents: AttendanceEvent[]) {
+  // Only accepted events mean someone is (or was) in the gym: a refused scan at the
+  // door and a double tap are recorded for the log but never counted.
+  const events = allEvents.filter((event) => (event.status ?? "accepted") === "accepted");
+  // "Today" is the local calendar day. Comparing UTC date strings reset these
+  // counters at 03:00 Bahrain time instead of midnight.
+  const today = toLocalDateString(new Date());
+  const todayEvents = events.filter((event) => toLocalDateString(new Date(event.occurred_at)) === today);
   const checkIns = todayEvents.filter((event) => event.direction === "check_in");
   const checkOuts = todayEvents.filter((event) => event.direction === "check_out");
   const uniqueMembersToday = new Set(checkIns.map((event) => event.member_id));

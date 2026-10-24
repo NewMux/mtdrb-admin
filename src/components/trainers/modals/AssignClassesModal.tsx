@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import {
   FiCalendar,
@@ -102,7 +103,7 @@ export default function AssignClassesModal({
         );
       } catch (err) {
         console.error("Error fetching classes:", err);
-        toast.error("Could not load classes");
+        toast.error(i18n.t("toasts.classesLoadFailed"));
       } finally {
         if (!cancelled) setFetching(false);
       }
@@ -163,13 +164,13 @@ export default function AssignClassesModal({
       if (error) throw error;
 
       toast.success(
-        `${selectedClasses.length} class(es) assigned to ${trainer.name}!`,
+        i18n.t("toasts.classesAssigned", { count: selectedClasses.length, name: trainer.name }),
       );
       onSuccess?.();
       onClose();
     } catch (err) {
       console.error("Error assigning classes:", err);
-      toast.error("Failed to assign classes");
+      toast.error(i18n.t("toasts.classesAssignFailed"));
     } finally {
       setLoading(false);
     }

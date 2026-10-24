@@ -24,14 +24,15 @@ export const FormField: React.FC<FormFieldProps> = ({
   required = false,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <input
+        <input id={fieldId}
           type={type}
           name={name}
           value={value}
@@ -90,14 +91,15 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   required = false,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <select
+        <select id={fieldId}
           name={name}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -121,7 +123,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           ))}
         </select>
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <FiChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <FiChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
         </div>
       </div>
       {error && (
@@ -157,13 +159,14 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   required = false,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <textarea
+      <textarea id={fieldId}
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -208,18 +211,20 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   description,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="flex items-start space-x-3">
       <input
+        id={fieldId}
         type="checkbox"
         name={name}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="mt-1 h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+        className="mt-1 h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
       />
       <div className="flex-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+        <label htmlFor={fieldId} className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
         {description && (
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
         )}

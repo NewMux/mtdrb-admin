@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { FiX, FiLock } from "react-icons/fi";
 import { useRTL } from "../../hooks/useRTL";
 

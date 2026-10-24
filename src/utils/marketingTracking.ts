@@ -96,6 +96,7 @@ export const trackMarketingEvent = (
   marketingWindow.dataLayer.push(event);
 
   if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console -- development only
     console.info("[marketing]", event);
   }
 };

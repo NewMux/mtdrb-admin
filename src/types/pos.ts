@@ -1,3 +1,4 @@
+import type { TaxBreakdownLine } from "../utils/taxMath";
 export type PosPaymentMethod =
   | "cash"
   | "card"
@@ -73,6 +74,8 @@ export interface PosSale {
   subtotal: number;
   discount_total: number;
   vat_total: number;
+  /** How vat_total splits between the gym's taxes (null when none was charged or for older sales) */
+  tax_breakdown?: TaxBreakdownLine[] | null;
   total: number;
   currency: string;
   payment_method: PosPaymentMethod;
@@ -142,6 +145,7 @@ export interface PosSaleReceipt {
   subtotal: number;
   discount_total: number;
   vat_total: number;
+  tax_breakdown?: TaxBreakdownLine[] | null;
   total: number;
   currency: string;
 }

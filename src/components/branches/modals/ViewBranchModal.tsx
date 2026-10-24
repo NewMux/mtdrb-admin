@@ -187,7 +187,7 @@ export default function ViewBranchModal({
                         {dayHours.open_time} - {dayHours.close_time}
                       </span>
                     ) : (
-                      <span className="text-sm text-gray-400 dark:text-gray-500 italic">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 italic">
                         {t("branches.closed") || "Closed"}
                       </span>
                     )}
@@ -256,7 +256,7 @@ export default function ViewBranchModal({
                         ` (max ${branch.booking_policies.max_waitlist_size})`}
                     </span>
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500">
+                    <span className="text-gray-500 dark:text-gray-400">
                       {t("branches.disabled") || "Disabled"}
                     </span>
                   )}
@@ -273,7 +273,7 @@ export default function ViewBranchModal({
                       {t("branches.allowed") || "Allowed"}
                     </span>
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500">
+                    <span className="text-gray-500 dark:text-gray-400">
                       {t("branches.notAllowed") || "Not Allowed"}
                     </span>
                   )}

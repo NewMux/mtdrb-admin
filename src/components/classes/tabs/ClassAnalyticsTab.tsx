@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiTrendingUp,
   FiUsers,
@@ -36,6 +36,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { fetchAllRows } from "../../../utils/fetchAllRows";
 
 // Register Chart.js components
 ChartJS.register(
@@ -519,7 +520,7 @@ const PerformanceOverviewCards: React.FC<PerformanceOverviewCardsProps> = ({ per
           <div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">{card.value}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{card.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{card.subtitle}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{card.subtitle}</p>
           </div>
         </motion.div>
       ))}
@@ -1315,33 +1316,62 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        // Full instants, not bare dates: a date string is "midnight UTC", which
+        // shifts the window start by up to a day for a gym in UTC+3.
+        const windowStart = thirtyDaysAgo.toISOString();
+        const previousWindowStart = sixtyDaysAgo.toISOString();
 
-        // Fetch classes
-        const { data: allClasses, error: classesError } = await supabase
-          .from("classes")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("start_time", formatDate(thirtyDaysAgo));
+        // Paged reads: a single PostgREST response is capped at 1000 rows, which
+        // would silently truncate a busy gym's month.
+        const allClasses = await fetchAllRows((from, to) =>
+          supabase
+            .from("classes")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .gte("start_time", windowStart)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
 
-        if (classesError) throw classesError;
+        const allBookings = await fetchAllRows((from, to) =>
+          supabase
+            .from("class_bookings")
+            .select("*, members(*), classes(*)")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", windowStart)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
 
-        // Fetch class bookings
-        const { data: allBookings, error: bookingsError } = await supabase
-          .from("class_bookings")
-          .select("*, members(*), classes(*)")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(thirtyDaysAgo));
-
-        if (bookingsError) throw bookingsError;
-
-        // Fetch previous period data for trends
-        const { data: previousBookings } = await supabase
-          .from("class_bookings")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(sixtyDaysAgo))
-          .lt("created_at", formatDate(thirtyDaysAgo));
+        // Previous period, for the trend arrows. Like is compared with like:
+        // classes with classes (held, cancelled, capacity), bookings with
+        // bookings (attended, no-shows), using the same windows as above.
+        const previousClasses = await fetchAllRows((from, to) =>
+          supabase
+            .from("classes")
+            .select("status, capacity")
+            .eq("tenant_id", tenantId)
+            .gte("start_time", previousWindowStart)
+            .lt("start_time", windowStart)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
+        const previousBookingCount = (statuses?: string[]) => {
+          let query = supabase
+            .from("class_bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("tenant_id", tenantId)
+            .gte("created_at", previousWindowStart)
+            .lt("created_at", windowStart);
+          if (statuses) query = query.in("status", statuses);
+          return query;
+        };
+        const [previousAttendedResult, previousNoShowResult] = await Promise.all([
+          previousBookingCount(["checked_in", "completed"]),
+          previousBookingCount(["no_show"]),
+        ]);
+        const previousBookingsError = previousAttendedResult.error || previousNoShowResult.error;
+        if (previousBookingsError) throw previousBookingsError;
 
         // Fetch trainers
         const { data: trainers, error: trainersError } = await supabase
@@ -1351,15 +1381,17 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
 
         if (trainersError) throw trainersError;
 
-        // Fetch invoices for revenue
-        const { data: invoices, error: invoicesError } = await supabase
-          .from("invoices")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(thirtyDaysAgo))
-          .in("status", ["paid", "completed"]);
-
-        if (invoicesError) throw invoicesError;
+        // Fetch invoices for revenue (paged: a money total)
+        const invoices = await fetchAllRows((from, to) =>
+          supabase
+            .from("invoices")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .gte("created_at", windowStart)
+            .in("status", ["paid", "completed"])
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
 
         // Calculate performance metrics
         const completedClasses = (allClasses || []).filter(c => c.status === "completed");
@@ -1377,14 +1409,14 @@ const ClassAnalyticsTab: React.FC<ClassAnalyticsTabProps> = ({
         const noShows = (allBookings || []).filter(b => b.status === "no_show").length;
 
         // Calculate trends
-        const previousTotalClasses = (previousBookings || []).length;
-        const previousAttendance = (previousBookings || []).filter(b => 
-          b.status === "checked_in" || b.status === "completed"
-        ).length;
+        const previousCompleted = previousClasses.filter((c) => c.status === "completed");
+        const previousTotalClasses = previousCompleted.length;
+        const previousAttendance = previousAttendedResult.count ?? 0;
         const previousAvgAttendance = previousTotalClasses > 0 ? previousAttendance / previousTotalClasses : 0;
-        const previousFillRate = 0; // Would need previous capacity data
-        const previousCancelled = 0; // Would need previous cancelled classes
-        const previousNoShows = (previousBookings || []).filter(b => b.status === "no_show").length;
+        const previousCapacity = previousCompleted.reduce((sum, c) => sum + (c.capacity || 0), 0);
+        const previousFillRate = previousCapacity > 0 ? (previousAttendance / previousCapacity) * 100 : 0;
+        const previousCancelled = previousClasses.filter((c) => c.status === "cancelled").length;
+        const previousNoShows = previousNoShowResult.count ?? 0;
 
         const trends = {
           totalClassesHeld: previousTotalClasses > 0 

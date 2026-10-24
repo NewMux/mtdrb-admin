@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { FiArrowRight, FiChevronDown, FiSearch, FiRefreshCw } from "react-icons/fi";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -166,7 +166,7 @@ const Panel: React.FC<PanelProps> = ({ title, subtitle, index }) => {
                   {/* Search bar */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="relative flex-1 mr-4">
-                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
                       <input 
                         type="text" 
                         placeholder="Search..." 

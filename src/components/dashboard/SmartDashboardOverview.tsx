@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
 import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
 import { monthBoundary, weekBoundary, daysWindow } from "../../utils/periodBoundaries";
 
@@ -84,6 +84,9 @@ const SmartInsight: React.FC<SmartInsightProps> = ({
 export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
   refreshKey,
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
+
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -93,7 +96,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       value: 0,
       change: t("common.loading"),
       trend: "neutral",
-      icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+      icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
       color: "blue",
       subtitle: t("dashboard.vsLastMonth"),
     },
@@ -102,7 +105,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       value: "0",
       change: t("common.loading"),
       trend: "neutral",
-      icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
+      icon: <FiCreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />,
       color: "green",
       subtitle: t("dashboard.thisMonth"),
     },
@@ -141,10 +144,10 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // string compared against a timestamptz column truncates to
       // midnight UTC, silently excluding same-day records and shifting
       // month/week boundaries in positive-UTC-offset timezones.
-      const currentMonth = monthBoundary(now, 0, DEFAULT_TIMEZONE);
-      const previousMonth = monthBoundary(now, 1, DEFAULT_TIMEZONE);
+      const currentMonth = monthBoundary(now, 0, timezone);
+      const previousMonth = monthBoundary(now, 1, timezone);
       const previousMonthEnd = new Date(currentMonth.startISO);
-      const week = weekBoundary(now, DEFAULT_TIMEZONE);
+      const week = weekBoundary(now, timezone);
 
       // Fetch data
       const [
@@ -239,18 +242,24 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       // Get currency
       const { data: settings, error: settingsError } = await supabase
         .from("gym_settings")
-        .select("currency")
+        .select("currency, metadata")
         .eq("tenant_id", tenantId)
         .single();
       // PGRST116 = no row found, which is a legitimate "not configured
       // yet" state here, not a failure worth surfacing.
       if (settingsError && settingsError.code !== "PGRST116") throw settingsError;
 
-      const currency = settings?.currency || DEFAULT_CURRENCY;
+      const currency = settings?.currency || gymConfig.currency;
       const currencySymbol = currency || "";
+      // The revenue target is the one the gym set (Set Targets on the dashboard).
+      // This card used to show "110% of this month's revenue" as a target, which is
+      // not a target - it just moved with the number it was measuring.
+      const savedRevenueTarget = Number(
+        (settings?.metadata as { dashboardTargets?: { revenue?: number } } | null)?.dashboardTargets?.revenue,
+      );
 
       // Find inactive members (haven't visited in 14+ days)
-      const last14Days = daysWindow(now, 14, DEFAULT_TIMEZONE);
+      const last14Days = daysWindow(now, 14, timezone);
       const { data: recentBookings, error: recentBookingsError } = await supabase
         .from("class_bookings")
         .select("member_id")
@@ -274,7 +283,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
                 ? `+${memberChange.toFixed(1)}%`
                 : `${memberChange.toFixed(1)}%`,
           trend: memberChange === null ? "neutral" : memberChange >= 0 ? "up" : "down",
-          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
           color: "blue",
           subtitle: t("dashboard.vsLastMonth"),
         },
@@ -283,9 +292,12 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
           value: `${currencySymbol} ${(currentRevenue / 1000).toFixed(1)}k`,
           change: revenueChange >= 0 ? `+${revenueChange.toFixed(1)}%` : `${revenueChange.toFixed(1)}%`,
           trend: revenueChange >= 0 ? "up" : "down",
-          icon: <FiCreditCard className="h-6 w-6 text-green-600" />,
+          icon: <FiCreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />,
           color: "green",
-          subtitle: `${t("dashboard.target")}: ${currencySymbol} ${((currentRevenue * 1.1) / 1000).toFixed(1)}k`,
+          subtitle:
+            savedRevenueTarget > 0
+              ? `${t("dashboard.target")}: ${currencySymbol} ${(savedRevenueTarget / 1000).toFixed(1)}k`
+              : t("dashboard.vsLastMonth"),
         },
         {
           // This week's raw attendance rate, not a trend - there's no
@@ -319,7 +331,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
       
       if (inactiveMembers > 0) {
         insights.push({
-          icon: <FiUsers className="h-6 w-6 text-blue-600" />,
+          icon: <FiUsers className="h-6 w-6 text-blue-600 dark:text-blue-400" />,
           title: t("dashboard.memberChurnRisk"),
           description: `${inactiveMembers} ${t("dashboard.membersHaventVisited")}`,
           action: t("dashboard.sendCampaign"),
@@ -330,7 +342,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
 
       if (weekAttendanceRate > 80) {
         insights.push({
-          icon: <FiTrendingUp className="h-6 w-6 text-green-600" />,
+          icon: <FiTrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />,
           title: t("dashboard.highAttendanceWeek"),
           description: `${t("dashboard.thisWeeksAttendance")} ${weekAttendanceRate.toFixed(1)}%. ${t("dashboard.considerAddingMoreClasses")}`,
           action: t("dashboard.scheduleClass"),
@@ -346,7 +358,7 @@ export const SmartDashboardOverview: React.FC<SmartDashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId, t]);
+  }, [tenantId, t, timezone, gymConfig.currency]);
 
   useEffect(() => {
     fetchData();

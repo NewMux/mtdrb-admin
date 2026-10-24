@@ -16,6 +16,11 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    // console.log/info/debug leave data in every user's browser console (the task
+    // table used to print tenant ids and query results). warn/error are for real
+    // failures and stay allowed; a deliberate development-only log needs a
+    // disable comment saying so.
+    "no-console": ["error", { allow: ["warn", "error"] }],
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off"
   },

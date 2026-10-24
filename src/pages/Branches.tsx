@@ -16,8 +16,19 @@ import {
   EditBranchModal,
   DeleteBranchModal,
   ViewBranchModal,
+  ExtraLocationModal,
 } from "../components/branches/modals";
 import { api } from "../api/client";
+import {
+  atLocationLimit,
+  canBuyExtraLocation,
+  fetchLocationUsage,
+  unusedExtraLocations,
+  extraLocationPrice,
+  INCLUDED_LOCATIONS,
+  type LocationUsage,
+} from "../api/locations";
+import { PLATFORM_CURRENCY } from "../config/runtimeConfig";
 import { Branch } from "../types";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -38,6 +49,14 @@ const Branches: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
+  // How many locations the plan allows. null = unknown or unlimited: the
+  // database enforces the limit either way, this only explains it up front.
+  const [usage, setUsage] = React.useState<LocationUsage | null>(null);
+  const [extraLocationMode, setExtraLocationMode] = React.useState<"add" | "release" | null>(null);
+
+  const loadUsage = React.useCallback(async () => {
+    setUsage(await fetchLocationUsage());
+  }, []);
 
   // Fetch branches
   const fetchBranches = React.useCallback(async () => {
@@ -59,7 +78,8 @@ const Branches: React.FC = () => {
 
   React.useEffect(() => {
     fetchBranches();
-  }, [fetchBranches, refreshKey]);
+    void loadUsage();
+  }, [fetchBranches, loadUsage, refreshKey]);
 
 
   const filters = [
@@ -100,7 +120,27 @@ const Branches: React.FC = () => {
 
   // Action handlers
   const handleAddBranch = () => {
+    // At the plan's limit the next branch needs a paid extra location: say
+    // so (and what it costs) before the form, not after the user filled it in.
+    if (usage && atLocationLimit(usage)) {
+      setExtraLocationMode("add");
+      return;
+    }
     handleOpenModal("add");
+  };
+
+  // The branch form was submitted at the limit (the page's numbers were stale).
+  const handleLimitReached = () => {
+    handleCloseModal();
+    void loadUsage().then(() => setExtraLocationMode("add"));
+  };
+
+  const handleExtraLocationDone = async () => {
+    const mode = extraLocationMode;
+    setExtraLocationMode(null);
+    await loadUsage();
+    // Bought a slot because a branch was being added: carry on to the form.
+    if (mode === "add") handleOpenModal("add");
   };
 
   const handleEditBranch = (branch: Branch) => {
@@ -132,6 +172,41 @@ const Branches: React.FC = () => {
 
     return filtered;
   }, [branches, selectedFilter]);
+
+  const unusedExtra = usage ? unusedExtraLocations(usage) : 0;
+  const extraPrice = usage ? extraLocationPrice(usage.planTier) : null;
+  const locationStat = usage
+    ? [
+        {
+          name: t("branches.locations.stat"),
+          value:
+            usage.limit === null
+              ? t("branches.locations.usageUnlimited", { used: usage.used })
+              : t("branches.locations.usageLimited", { used: usage.used, limit: usage.limit }),
+          change:
+            usage.limit === null
+              ? t("branches.locations.detailUnlimited")
+              : usage.extraLocations > 0 && extraPrice !== null
+                ? t("branches.locations.detailExtra", {
+                    count: usage.extraLocations,
+                    amount: extraPrice,
+                    currency: PLATFORM_CURRENCY,
+                  })
+                : t("branches.locations.detailIncluded", { count: INCLUDED_LOCATIONS }),
+          meter: usage.limit ? Math.min(100, (usage.used / usage.limit) * 100) : undefined,
+          accessory:
+            usage.isAdmin && unusedExtra > 0 && canBuyExtraLocation(usage) ? (
+              <button
+                type="button"
+                onClick={() => setExtraLocationMode("release")}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 whitespace-nowrap"
+              >
+                {t("branches.locations.removeUnused")}
+              </button>
+            ) : undefined,
+        },
+      ]
+    : [];
 
   const branchStats = [
     {
@@ -178,7 +253,16 @@ const Branches: React.FC = () => {
 
       {/* Stats Grid */}
       <StatStrip
-        items={branchStats.map((stat) => ({ label: stat.name, value: stat.value, detail: stat.change }))}
+        items={[
+          ...branchStats.map((stat) => ({ label: stat.name, value: stat.value, detail: stat.change })),
+          ...locationStat.map((stat) => ({
+            label: stat.name,
+            value: stat.value,
+            detail: stat.change,
+            meter: stat.meter,
+            accessory: stat.accessory,
+          })),
+        ]}
       />
 
       {/* Search and Filters */}
@@ -186,7 +270,7 @@ const Branches: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("branches.searchPlaceholder") || "Search branches..."}
@@ -200,6 +284,7 @@ const Branches: React.FC = () => {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
               className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -265,6 +350,17 @@ const Branches: React.FC = () => {
             isOpen={activeModal === "add"}
             onClose={handleCloseModal}
             onSuccess={handleModalSuccess}
+            onLimitReached={handleLimitReached}
+          />
+        )}
+
+        {extraLocationMode && usage && (
+          <ExtraLocationModal
+            isOpen
+            mode={extraLocationMode}
+            usage={usage}
+            onClose={() => setExtraLocationMode(null)}
+            onDone={handleExtraLocationDone}
           />
         )}
 

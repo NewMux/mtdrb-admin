@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import {
   FiCalendar,
@@ -167,11 +168,11 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
 
   const handleSave = async () => {
     if (!validateForm(formData)) {
-      toast.error("Please fill in all required fields");
+      toast.error(i18n.t("toasts.fillRequired"));
       return;
     }
     if (schedulePreview.length === 0) {
-      toast.error("No class sessions to schedule -- adjust the date range or days");
+      toast.error(i18n.t("toasts.noSessions"));
       return;
     }
 
@@ -217,12 +218,12 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
       const { error } = await supabase.from("classes").insert(rows);
       if (error) throw error;
 
-      toast.success(`${rows.length} classes scheduled successfully`);
+      toast.success(i18n.t("toasts.classesScheduled", { count: rows.length }));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error creating schedule:", error);
-      toast.error("Failed to create schedule");
+      toast.error(i18n.t("toasts.scheduleFailed"));
     } finally {
       setLoading(false);
     }
@@ -282,13 +283,13 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {isPro && recommendations.length > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiZap className="h-4 w-4" />
                 <span>{recommendations.length} Smart suggestions</span>
               </div>
             )}
             {schedulePreview.length > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-green-600">
+              <div className="flex items-center space-x-1 text-sm text-green-600 dark:text-green-400">
                 <FiCheck className="h-4 w-4" />
                 <span>{schedulePreview.length} classes scheduled</span>
               </div>
@@ -444,7 +445,7 @@ const ScheduleClassModal: React.FC<ScheduleClassModalProps> = ({
           {isPro && optimalTimes.length > 0 && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
-                <FiClock className="h-4 w-4 text-blue-600" />
+                <FiClock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                   Popular Time Slots
                 </span>

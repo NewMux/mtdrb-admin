@@ -23,7 +23,12 @@ import {
   type AttendanceSnapshot,
 } from "../api/attendance";
 import { PageHeader } from "../components/ui/PageHeader";
+import DevicesPanel from "../components/attendance/DevicesPanel";
+import CredentialsPanel from "../components/attendance/CredentialsPanel";
+import { Link } from "react-router-dom";
+import { reasonKey } from "../api/accessControl";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 const methodOptions: Array<{
   value: AttendanceMethod;
@@ -55,7 +60,7 @@ const Attendance: React.FC = () => {
   usePageThemeContext();
   const { isRTL } = useRTL();
   const { t, i18n } = useTranslation();
-  const { tenantId } = useAuth();
+  const { tenantId, userMetadata } = useAuth();
   const { showSuccess, showError } = useToast();
   const [snapshot, setSnapshot] = React.useState<AttendanceSnapshot | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -199,9 +204,15 @@ const Attendance: React.FC = () => {
         title={t("attendance.title", "Attendance")}
         subtitle={t(
           "attendance.subtitle",
-          "Run a device-agnostic check-in desk today, then connect vendor terminals when your gym needs them.",
+          "Check members in at the desk, on a scanner tablet, or from your turnstiles and readers.",
         )}
         actions={
+          <>
+          <Can permission="attendance.manage">
+            <Link to="/dashboard/attendance/kiosk" className="btn btn-primary">
+              {t("accessControl.openKiosk")}
+            </Link>
+          </Can>
           <button
             type="button"
             onClick={() => void loadSnapshot(false)}
@@ -211,6 +222,7 @@ const Attendance: React.FC = () => {
             <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
             {t("attendance.refresh", "Refresh")}
           </button>
+          </>
         }
       />
 
@@ -227,6 +239,7 @@ const Attendance: React.FC = () => {
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,1.4fr)]">
+        <Can permission="attendance.manage">
         <section className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -246,7 +259,7 @@ const Attendance: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
               {t("attendance.branch", "Branch")}
               <div className="relative mt-2">
-                <FiMapPin className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FiMapPin className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <select
                   value={selectedBranchId}
                   onChange={(event) => setSelectedBranchId(event.target.value)}
@@ -275,12 +288,12 @@ const Attendance: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
               {t("attendance.findMember", "Find member")}
               <div className="relative mt-2">
-                <FiSearch className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FiSearch className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 {searchTerm && (
                   <button
                     type="button"
                     onClick={() => setSearchTerm("")}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     aria-label={t("common.clear", "Clear")}
                   >
                     <FiX />
@@ -359,6 +372,7 @@ const Attendance: React.FC = () => {
             </div>
           </div>
         </section>
+        </Can>
 
         <section className="space-y-6">
           <div className="rounded-xl bg-gray-50 p-6 dark:bg-gray-800">
@@ -394,7 +408,7 @@ const Attendance: React.FC = () => {
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white">{t("attendance.memberHistory", "Member history")}</h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{selectedMember ? buildMemberName(selectedMember) : t("attendance.memberHistoryHint", "Select a member to view recent activity")}</p>
               </div>
-              <FiClock className="h-5 w-5 text-gray-400" />
+              <FiClock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </div>
             <div className="mt-5 space-y-3">
               {selectedMemberEvents.length === 0 ? (
@@ -442,7 +456,15 @@ const Attendance: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{event.branch_name}</td>
                   <td className="px-6 py-4"><span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-900/20 dark:text-sky-300">{eventMethodLabel(event)}</span></td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">{event.direction === "check_in" ? t("attendance.checkIn", "Check in") : t("attendance.checkOut", "Check out")}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">{event.direction === "check_in" ? t("attendance.checkIn", "Check in") : t("attendance.checkOut", "Check out")}
+                    {event.status !== "accepted" && (
+                      <span className="ms-2 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                        {event.status === "rejected"
+                          ? t(reasonKey(String((event.metadata as { reason?: unknown } | null)?.reason ?? "unknown")))
+                          : t(`accessControl.eventStatuses.${event.status}`, event.status)}
+                      </span>
+                    )}
+                  </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{formatEventTime(event.occurred_at, i18n.language)}</td>
                 </tr>
               ))}
@@ -451,6 +473,23 @@ const Attendance: React.FC = () => {
           {(snapshot?.events.length ?? 0) === 0 && <p className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">{t("attendance.noEvents", "No attendance events yet.")}</p>}
         </div>
       </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {tenantId && (
+          <DevicesPanel
+            tenantId={tenantId}
+            devices={snapshot?.devices ?? []}
+            branches={(snapshot?.branches ?? []).map((b) => ({ id: b.id, name: b.name }))}
+            isAdmin={userMetadata?.role === "admin"}
+            onChanged={() => void loadSnapshot(false)}
+          />
+        )}
+        <Can permission="attendance.manage">
+          <CredentialsPanel
+            members={(snapshot?.members ?? []).map((m) => ({ id: m.id, name: buildMemberName(m), email: m.email ?? "" }))}
+          />
+        </Can>
+      </div>
     </div>
   );
 };

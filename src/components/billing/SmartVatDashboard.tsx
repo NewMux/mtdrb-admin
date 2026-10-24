@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import React, { useState, useEffect, useCallback } from "react";
 import {
   FiTrendingUp,
@@ -23,9 +24,13 @@ import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
-import { DEFAULT_CURRENCY, DEFAULT_VAT_RATE } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { taxRateToApply } from "../../config/gymConfig";
+import { aggregateTaxBreakdowns, parseTaxBreakdown, type TaxTotalLine } from "../../utils/taxMath";
 import { exportCSV, exportExcel, exportPDF } from "../../utils/exportData";
 import { fetchAllRows } from "../../utils/fetchAllRows";
+import { posVatDocuments, type PosReturnTaxRow, type PosSaleTaxRow } from "../../utils/posVat";
+import { toLocalDateString } from "../../utils/analyticsRange";
 
 interface SmartVatDashboardProps {
   tenantId: string;
@@ -41,6 +46,7 @@ interface InvoiceSummary {
   status?: string | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
+  tax_breakdown?: unknown;
 }
 
 interface ExpenseSummary {
@@ -86,8 +92,11 @@ export default function SmartVatDashboard({
     recommendations: string[];
     alerts: string[];
   } | null>(null);
+  const [taxTotals, setTaxTotals] = useState<TaxTotalLine[]>([]);
   const [vatReturns, setVatReturns] = useState<VatReturn[]>([]);
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const { config: gymConfig } = useGymConfig();
+  const currency = gymConfig.currency;
+  const configuredVatRate = taxRateToApply(gymConfig);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<VatTab>("overview");
 
@@ -101,15 +110,6 @@ export default function SmartVatDashboard({
     try {
       setLoading(true);
 
-      const { data: settingsData, error: settingsError } = await supabase
-        .from("gym_settings")
-        .select("currency, vat_rate")
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (settingsError) throw settingsError;
-      const configuredVatRate = Number(settingsData?.vat_rate ?? DEFAULT_VAT_RATE);
-      setCurrency(settingsData?.currency || DEFAULT_CURRENCY);
-
       // Fetch invoices to calculate VAT from the live invoice schema.
       // Paged: PostgREST caps a single response at 1000 rows, and this
       // feeds "all-time" VAT totals - a gym that crosses 1000 invoices
@@ -119,7 +119,7 @@ export default function SmartVatDashboard({
         invoices = await fetchAllRows((from, to) =>
           supabase
             .from("invoices")
-            .select("amount, status, created_at, metadata, total, vat_total")
+            .select("amount, status, created_at, metadata, total, vat_total, tax_breakdown")
             .eq("tenant_id", tenantId)
             .range(from, to),
         );
@@ -128,6 +128,30 @@ export default function SmartVatDashboard({
         const message =
           invoicesError instanceof Error ? invoicesError.message : JSON.stringify(invoicesError);
         throw new Error(`Failed to fetch invoices: ${message}`);
+      }
+
+      // Shop (POS) sales charge tax too, and refunds give some back. Both are
+      // part of what the gym owes, so a failure here is an error, not a zero.
+      let posSales: PosSaleTaxRow[];
+      let posReturns: PosReturnTaxRow[];
+      try {
+        posSales = await fetchAllRows((from, to) =>
+          supabase
+            .from("pos_sales")
+            .select("status, created_at, vat_total, tax_breakdown")
+            .eq("tenant_id", tenantId)
+            .range(from, to),
+        );
+        posReturns = await fetchAllRows((from, to) =>
+          supabase
+            .from("pos_returns")
+            .select("status, created_at, vat_total, tax_breakdown")
+            .eq("tenant_id", tenantId)
+            .range(from, to),
+        );
+      } catch (posError) {
+        const message = posError instanceof Error ? posError.message : JSON.stringify(posError);
+        throw new Error(`Failed to fetch shop sales: ${message}`);
       }
 
       // Fetch expenses to calculate VAT paid
@@ -183,7 +207,7 @@ export default function SmartVatDashboard({
       const expenseList: ExpenseSummary[] = expenses ?? [];
       const vatReturnsList: VatReturn[] = (vatReturnsData ?? []) as VatReturn[];
 
-      // Calculate VAT collected (5% of paid invoices)
+      // Calculate VAT collected: the stored amount, or the gym's configured rate for older invoices without one
       const invoiceVat = (invoice: InvoiceSummary) => {
         const storedVat = invoice.vat_total == null ? Number.NaN : Number(invoice.vat_total);
         if (Number.isFinite(storedVat)) return storedVat;
@@ -191,9 +215,29 @@ export default function SmartVatDashboard({
         return (amount * configuredVatRate) / 100;
       };
 
-      const totalVatCollected = invoiceList
-        .filter(inv => inv.status === "paid" || inv.status === "completed")
-        .reduce((sum, inv) => sum + invoiceVat(inv), 0);
+      const collectedInvoices = invoiceList.filter(
+        (inv) => inv.status === "paid" || inv.status === "completed",
+      );
+      const posDocs = posVatDocuments(posSales, posReturns, currency);
+      const totalVatCollected =
+        collectedInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0) +
+        posDocs.reduce((sum, doc) => sum + doc.taxTotal, 0);
+
+      // The same tax split by tax (service charge, VAT...). An invoice made before
+      // the gym had several taxes counts under the gym's tax name.
+      setTaxTotals(
+        aggregateTaxBreakdowns(
+          [
+            ...collectedInvoices.map((inv) => ({
+              breakdown: parseTaxBreakdown(inv.tax_breakdown),
+              taxTotal: invoiceVat(inv),
+            })),
+            ...posDocs,
+          ],
+          gymConfig.tax.name,
+          currency,
+        ),
+      );
 
       // Calculate VAT paid from expenses
       const totalVatPaid = expenseList
@@ -215,13 +259,17 @@ export default function SmartVatDashboard({
           return invDate >= monthStart && invDate <= monthEnd && (inv.status === "paid" || inv.status === "completed");
         });
 
-        const monthVat = monthInvoices.reduce(
-          (sum, inv) => sum + invoiceVat(inv),
-          0,
-        );
+        const monthVat =
+          monthInvoices.reduce((sum, inv) => sum + invoiceVat(inv), 0) +
+          posDocs
+            .filter((doc) => {
+              const docDate = new Date(doc.date);
+              return docDate >= monthStart && docDate <= monthEnd;
+            })
+            .reduce((sum, doc) => sum + doc.taxTotal, 0);
         
         monthlyBreakdown.push({
-          month: month.toISOString().substring(0, 7),
+          month: toLocalDateString(month).slice(0, 7), // local month: toISOString() labels it one month early in UTC+3
           vatCollected: monthVat,
           vatPaid: expenseList
             .filter(exp => {
@@ -319,7 +367,7 @@ export default function SmartVatDashboard({
       }
 
       if (netVatPayable > 0) {
-        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${settingsData?.currency || DEFAULT_CURRENCY} payable`);
+        alerts.push(`VAT return due: ${netVatPayable.toFixed(2)} ${currency} payable`);
       }
 
       recommendations.push("Consider implementing automated VAT filing");
@@ -332,7 +380,7 @@ export default function SmartVatDashboard({
       console.error("Error loading VAT dashboard data:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to load VAT dashboard data: ${errorMessage}`);
+      toast.error(i18n.t("toasts.vatLoadFailed", { message: errorMessage }));
       
       // Set empty data to prevent UI crashes
       setDashboardData({
@@ -357,7 +405,7 @@ export default function SmartVatDashboard({
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, configuredVatRate, currency, gymConfig.tax.name]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -377,9 +425,13 @@ export default function SmartVatDashboard({
       const { error } = await supabase.from("vat_returns").insert([
         {
           tenant_id: tenantId,
-          period: periodStart.toISOString().substring(0, 7),
-          period_start: periodStart.toISOString().split("T")[0],
-          period_end: periodEnd.toISOString().split("T")[0],
+          // These are calendar dates (DATE columns): use the local calendar day.
+          // Going through toISOString() turned local midnight on the 1st into
+          // 21:00 UTC on the LAST day of the previous month in UTC+3, so a
+          // November return was labelled October and started on 31 October.
+          period: toLocalDateString(periodStart).slice(0, 7),
+          period_start: toLocalDateString(periodStart),
+          period_end: toLocalDateString(periodEnd),
           status: "draft",
           vat_collected: dashboardData.currentPeriodVat,
           vat_paid: dashboardData.currentPeriodVatPaid,
@@ -388,13 +440,13 @@ export default function SmartVatDashboard({
           // reads due_date to find "next filing deadline" (both columns
           // exist on vat_returns, but only one was ever populated, so
           // that card was always blank).
-          due_date: filingDeadline.toISOString().split("T")[0],
+          due_date: toLocalDateString(filingDeadline),
         },
       ]);
 
       if (error) throw error;
 
-      toast.success("VAT return generated successfully");
+      toast.success(i18n.t("toasts.vatReturnGenerated"));
       fetchDashboardData(); // Refresh data
     } catch (error) {
       console.error("Error generating VAT return:", error);
@@ -409,7 +461,7 @@ export default function SmartVatDashboard({
         .from("vat_returns")
         .update({
           status: "submitted",
-          filed_date: new Date().toISOString().split("T")[0],
+          filed_date: toLocalDateString(new Date()),
         })
         .eq("id", returnId)
         .eq("tenant_id", tenantId);
@@ -437,14 +489,14 @@ export default function SmartVatDashboard({
         "Filing Deadline": vr.due_date,
         "Filed Date": vr.filed_date,
       }));
-      const filename = `vat-returns-${new Date().toISOString().split("T")[0]}`;
+      const filename = `vat-returns-${toLocalDateString(new Date())}`;
 
       if (format === "csv") {
         exportCSV(rows, filename);
       } else if (format === "excel") {
         await exportExcel(rows, filename, "VAT Returns");
       } else {
-        exportPDF(rows, filename, "VAT Returns");
+        await exportPDF(rows, filename, "VAT Returns");
       }
 
       toast.success(`${format.toUpperCase()} ${t("billing.reportExported")}`);
@@ -472,7 +524,7 @@ export default function SmartVatDashboard({
   }
 
   const formatCurrency = (amount: number) => {
-    const code = /^[A-Z]{3}$/.test(currency) ? currency : DEFAULT_CURRENCY;
+    const code = /^[A-Z]{3}$/.test(currency) ? currency : "USD";
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
@@ -651,6 +703,23 @@ export default function SmartVatDashboard({
             </div>
           </div>
 
+          {/* Collected, by tax (only when the gym charges more than one) */}
+          {taxTotals.length > 1 && (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+              <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t("billing.collectedByTax")}
+              </h3>
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {taxTotals.map((line) => (
+                  <li key={line.name} className="flex justify-between py-2 text-sm">
+                    <span className="text-gray-700 dark:text-gray-300">{line.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(line.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Compliance Alerts */}
           {(dashboardData?.complianceAlerts || []).length > 0 && (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
@@ -826,7 +895,7 @@ export default function SmartVatDashboard({
             </div>
             {(vatReturns || []).length === 0 ? (
               <div className="text-center py-8">
-                <FiFileText className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                <FiFileText className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                   {t("billing.noVatReturns")}
                 </h3>
@@ -985,7 +1054,7 @@ export default function SmartVatDashboard({
             <div className="space-y-4">
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiCalendar className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiCalendar className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.vatReturnsFiledOnTime")}
                   </span>
@@ -1005,7 +1074,7 @@ export default function SmartVatDashboard({
 
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiDollarSign className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.vatPaymentsMadeOnTime")}
                   </span>
@@ -1025,7 +1094,7 @@ export default function SmartVatDashboard({
 
               <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg`}>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-400 dark:text-gray-500`} />
+                  <FiClock className={`${isRTL ? 'ml-3' : 'mr-3'} text-gray-500 dark:text-gray-400`} />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {t("billing.upcomingDeadlines")}
                   </span>

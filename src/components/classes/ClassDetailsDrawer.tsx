@@ -312,7 +312,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                   )}
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-600 focus:outline-none"
                     aria-label="Close"
                   >
                     <span className="sr-only">Close</span>×
@@ -380,18 +380,18 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                         <h3 className="text-base font-semibold text-gray-900">
                           Bookings
                         </h3>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {bookings.length} / {classData.capacity || "∞"} booked
                         </span>
                       </div>
                       {loading ? (
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
                           Loading bookings...
                         </div>
                       ) : error ? (
                         <div className="text-red-500 text-sm">{error}</div>
                       ) : bookings.length === 0 ? (
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
                           No bookings yet.
                         </div>
                       ) : (
@@ -405,12 +405,12 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                 <div className="font-medium text-gray-900">
                                   {b.member?.name || b.member_id}
                                 </div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   {b.status} {b.attended ? "• Attended" : ""}
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <div className="text-xs text-gray-400">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   {b.booked_at
                                     ? new Date(b.booked_at).toLocaleString()
                                     : ""}
@@ -437,18 +437,18 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                         <h3 className="text-base font-semibold text-gray-900">
                           Waitlist
                         </h3>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {waitlist.length} waiting
                         </span>
                       </div>
                       {loading ? (
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
                           Loading waitlist...
                         </div>
                       ) : error ? (
                         <div className="text-red-500 text-sm">{error}</div>
                       ) : waitlist.length === 0 ? (
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
                           No one on the waitlist.
                         </div>
                       ) : (
@@ -462,7 +462,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                 <div className="font-medium text-gray-900">
                                   {w.member?.name || w.member_id}
                                 </div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   {w.status}
                                 </div>
                               </div>
@@ -470,7 +470,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                                 {bookings.length <
                                   (classData.capacity || Infinity) && (
                                   <button
-                                    className="text-xs text-blue-600 hover:underline"
+                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                     onClick={() => promoteWaitlist(w)}
                                     disabled={actionLoading}
                                   >
@@ -531,7 +531,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                     </button>
                     <div className="mt-4">
                       {reviews.length === 0 ? (
-                        <p className="text-gray-500">No reviews yet.</p>
+                        <p className="text-gray-500 dark:text-gray-400">No reviews yet.</p>
                       ) : (
                         reviews.map((r) => (
                           <div key={r.id} className="border-b py-2">
@@ -539,7 +539,7 @@ const ClassDetailsDrawer: React.FC<ClassDetailsDrawerProps> = ({
                               <span className="text-yellow-400 mr-2">
                                 {"★".repeat(r.rating)}
                               </span>
-                              <span className="text-xs text-gray-400 ml-auto">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
                                 {new Date(r.created_at).toLocaleString()}
                               </span>
                             </div>

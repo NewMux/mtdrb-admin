@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiAlertTriangle,
   FiX,
@@ -10,6 +10,7 @@ import {
 import { SmartModal } from "../ui/SmartModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { supabase } from "../../supabaseClient";
+import { cancelSubscription } from "../../api/billing";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../hooks/useRTL";
@@ -19,7 +20,10 @@ interface CancelSubscriptionModalProps {
   onClose: () => void;
   currentPlan: string;
   subscriptionStart?: string;
-  onSuccess: () => void;
+  /** End of the period the gym has paid for: access continues until then. */
+  accessUntil?: string;
+  /** Called once the cancellation is scheduled; cancelAt is when it takes effect, if known. */
+  onSuccess: (cancelAt: string | null) => void;
 }
 
 interface CancellationReason {
@@ -52,6 +56,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
   onClose,
   currentPlan,
   subscriptionStart,
+  accessUntil,
   onSuccess,
 }) => {
   const { t } = useTranslation();
@@ -86,22 +91,15 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
     try {
       if (!tenantId) throw new Error("No organization membership found");
 
-      // Update the platform subscription row. RLS requires an admin membership
-      // and keeps entitlement state in the database rather than user metadata.
-      const { error: updateError } = await supabase
-        .from("platform_subscriptions")
-        .update({
-          status: "cancelled",
-          metadata: {
-            cancellation_reason: selectedReason,
-            cancellation_feedback: feedback,
-            subscription_cancelled_at: new Date().toISOString(),
-          },
-          updated_at: new Date().toISOString(),
-        })
-        .eq("tenant_id", tenantId);
-
-      if (updateError) throw updateError;
+      // Schedules the cancellation in Paddle for the end of the period the
+      // gym has already paid for, then records it. Only the Edge Function may
+      // change the subscription (the database rejects direct writes), and it
+      // checks the caller is the gym's admin.
+      const { cancelAt, synced } = await cancelSubscription();
+      if (!synced) {
+        // Billing accepted it; our own record catches up from Paddle's webhook.
+        console.warn("Cancellation accepted by billing but not yet recorded; it will appear shortly.");
+      }
 
       // Log the cancellation event (if activities table exists)
       try {
@@ -124,7 +122,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
         console.error("Failed to log cancellation:", logError);
       }
 
-      onSuccess();
+      onSuccess(cancelAt);
       handleClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to cancel subscription");
@@ -273,7 +271,7 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
           {t("settings.confirmCancellation", "Confirm Cancellation")}
         </h3>
         <p className="text-gray-500 dark:text-gray-400">
-          {t("settings.confirmCancellationDesc", "This action will cancel your subscription and you'll lose access to all MTDRB features.")}
+          {t("settings.confirmCancellationDesc", "Your subscription will not renew, and you'll lose access to MTDRB when your current billing period ends.")}
         </p>
       </div>
 
@@ -304,10 +302,16 @@ const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
           <FiCalendar className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
           <div className="text-sm text-amber-800 dark:text-amber-200">
             <p className="font-medium">
-              {t("settings.accessUntil", "Your access will continue until the end of your current billing period.")}
+              {accessUntil
+                ? t(
+                    "settings.accessUntilDate",
+                    "You keep full access until {{date}} and won't be billed again.",
+                    { date: new Date(accessUntil).toLocaleDateString() },
+                  )
+                : t("settings.accessUntil", "Your access will continue until the end of your current billing period.")}
             </p>
             <p className="mt-1 text-xs">
-              {t("settings.dataRetention", "Your data will be retained for 30 days in case you change your mind.")}
+              {t("settings.dataRetention", "Your data is kept. Subscribe again at any time to pick up where you left off.")}
             </p>
           </div>
         </div>

@@ -13,6 +13,13 @@ export interface UserMetadata {
   paid: boolean;
   role: UserRole;
   subscription_tier: "free" | "basic" | "premium" | "enterprise";
+  /**
+   * What a custom role allows, or null/undefined for a built-in role (everything
+   * its tier allows). Only for showing and hiding screens: the database decides
+   * every read and write.
+   */
+  permissions?: string[] | null;
+  custom_role_name?: string | null;
 }
 
 export interface AuthContextType {
@@ -26,6 +33,8 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   checkAuth: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
+  /** Whether the person may do something their role limits (see config/staffPermissions.ts). Any-of for a list. */
+  can: (permission: string | readonly string[]) => boolean;
   refreshSession: () => Promise<void>;
 }
 

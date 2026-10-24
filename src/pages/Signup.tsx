@@ -1,13 +1,18 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { supabase } from "../supabaseClient";
 import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiHome, FiArrowRight } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
-import { withTimeout } from "../utils/withTimeout";
+import { ensureGym, type GymSetupClient } from "../utils/ensureGym";
 import { useAuthAttemptLimiter } from "../hooks/useAuthAttemptLimiter";
+import Captcha from "../components/auth/Captcha";
+import { useCaptcha } from "../hooks/useCaptcha";
 import { validatePassword, DEFAULT_PASSWORD_POLICY } from "../utils/passwordPolicy";
+import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+
+const RESEND_COOLDOWN_SECONDS = 60;
 
 // ===== SIGNUP PAGE =====
 export default function Signup() {
@@ -34,12 +39,13 @@ export default function Signup() {
 
       const { data: subscription } = await supabase
         .from("platform_subscriptions")
-        .select("status")
+        .select("status, trial_end, current_period_end, grace_until")
         .eq("tenant_id", membership.tenant_id)
         .maybeSingle();
 
-      const hasActiveSubscription =
-        subscription?.status === "active" || subscription?.status === "trialing";
+      // The same rule the rest of the app enforces (lapsed periods, trials and a
+      // failed-payment grace period included), not a bare status string.
+      const hasActiveSubscription = isSubscriptionEntitled(subscription);
       navigate(hasActiveSubscription ? "/dashboard" : "/subscribe", {
         replace: true,
       });
@@ -59,10 +65,35 @@ export default function Signup() {
   const [onboardingLoading, setOnboardingLoading] = React.useState(false);
   const [onboardingError, setOnboardingError] = React.useState("");
   const [signedUpUser, setSignedUpUser] = React.useState<User | null>(null);
+  const captcha = useCaptcha();
+  const [awaitingConfirmation, setAwaitingConfirmation] = React.useState(false);
+  const [resendIn, setResendIn] = React.useState(0);
+  const [resendState, setResendState] = React.useState<"idle" | "sent" | "error">("idle");
   const { isLocked, remainingSeconds, registerFailure } = useAuthAttemptLimiter(
     "signup",
     email,
   );
+
+  React.useEffect(() => {
+    if (resendIn <= 0) return;
+    const timer = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendIn]);
+
+  const handleResend = async () => {
+    if (resendIn > 0) return;
+    setResendState("idle");
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${appUrl}/welcome`, captchaToken: captcha.token },
+    });
+    captcha.reset();
+    setResendState(resendError ? "error" : "sent");
+    // Supabase rate-limits resends, so back off even after a failure.
+    setResendIn(RESEND_COOLDOWN_SECONDS);
+  };
 
   // ===== HANDLE SIGNUP SUBMIT =====
   const handleSignup = async (e: React.FormEvent) => {
@@ -93,7 +124,9 @@ export default function Signup() {
     // Sign up with Supabase
     // Use VITE_APP_URL for email redirects, fallback to current origin
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-    const redirectUrl = `${appUrl}/dashboard`;
+    // /welcome creates the gym, so it also works when the user confirms their
+    // email later, on another device, after this page is gone.
+    const redirectUrl = `${appUrl}/welcome`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -101,8 +134,10 @@ export default function Signup() {
       options: { 
         data: { name, gym_name: gymName },
         emailRedirectTo: redirectUrl,
+        captchaToken: captcha.token,
       },
     });
+    captcha.reset();
     setLoading(false);
     if (error) {
       registerFailure();
@@ -114,20 +149,12 @@ export default function Signup() {
       // If session is available, it's already set in Supabase client
       // If email confirmation is required, session might be null
       if (data.session) {
-        // Session is available - auto-create tenant and proceed
         await createTenantAndProceed(createdUser);
       } else {
-        // Email confirmation might be required
-        // Check Supabase settings - if email confirmation is disabled, session should be available
-        // Wait a moment for session to establish, then check
-        setTimeout(async () => {
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData?.session) {
-            await createTenantAndProceed(createdUser);
-          } else {
-            setError(t("auth.checkEmailConfirm"));
-          }
-        }, 1000);
+        // Email confirmation is on: there is no session until the user opens the
+        // link, which lands on /welcome and creates the gym there.
+        setAwaitingConfirmation(true);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
       }
     } else {
       setError(t("auth.signupSuccessButNoUser"));
@@ -146,45 +173,11 @@ export default function Signup() {
         throw new Error("Missing signed-up user. Please refresh and try again.");
       }
 
-      // A prior attempt may have already created the tenant/membership and
-      // only failed on a later step (e.g. the updateUser timeout below).
-      // Reuse that membership instead of creating a duplicate tenant on retry.
-      const { data: existingMembership } = await withTimeout(
-        Promise.resolve(
-          supabase
-            .from("memberships")
-            .select("tenant_id")
-            .eq("user_id", userForSetup.id)
-            .maybeSingle()
-        ),
-        10000,
-        "Checking your account is taking longer than expected. Please try again."
-      );
-
-      if (!existingMembership?.tenant_id) {
-        // Create Tenant/org and membership using RPC function (bypasses RLS)
-        const { data: newTenantId, error: tenantError } = await withTimeout(
-          Promise.resolve(
-            supabase.rpc('create_tenant_with_membership', {
-              p_tenant_name: gymName || "My Gym",
-              p_user_role: 'admin',
-              p_tenant_metadata: {}
-            })
-          ),
-          15000,
-          "Setting up your gym is taking longer than expected. Please check your connection and try again."
-        );
-
-        if (tenantError) {
-          if (import.meta.env.DEV) console.error("Error creating tenant:", tenantError);
-          throw new Error(tenantError.message || "Failed to create organization");
-        }
-
-        if (!newTenantId) {
-          throw new Error("Failed to create organization: No tenant ID returned");
-        }
-
-      }
+      // Reuses an existing gym if a prior attempt got that far.
+      await ensureGym(supabase as unknown as GymSetupClient, {
+        id: userForSetup.id,
+        user_metadata: { ...userForSetup.user_metadata, gym_name: gymName || userForSetup.user_metadata?.gym_name },
+      });
 
       // The gym name was already captured during signup. Avoid a second,
       // nonessential Auth metadata request that can block the redirect.
@@ -278,6 +271,32 @@ export default function Signup() {
               </p>
             </div>
 
+            {awaitingConfirmation ? (
+              <div role="status" className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center space-y-4">
+                <FiMail className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto" aria-hidden="true" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t("auth.confirmEmailTitle")}</h2>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {t("auth.confirmEmailMessage", { email })}
+                </p>
+                {resendState === "sent" && (
+                  <p className="text-sm text-green-700">{t("auth.confirmEmailResent")}</p>
+                )}
+                {resendState === "error" && (
+                  <p role="alert" className="text-sm text-red-700">{t("auth.confirmEmailResendFailed")}</p>
+                )}
+                <Captcha captcha={captcha} />
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendIn > 0 || captcha.pending}
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {resendIn > 0
+                    ? t("auth.confirmEmailResendIn", { seconds: resendIn })
+                    : t("auth.confirmEmailResend")}
+                </button>
+              </div>
+            ) : (
             <form className="space-y-6" onSubmit={handleSignup}>
               {/* Gym Name Field */}
               <div className="space-y-2">
@@ -286,7 +305,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiHome className="h-5 w-5 text-gray-400" />
+                    <FiHome className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -309,7 +328,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiUser className="h-5 w-5 text-gray-400" />
+                    <FiUser className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="text"
@@ -332,7 +351,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiMail className="h-5 w-5 text-gray-400" />
+                    <FiMail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type="email"
@@ -356,7 +375,7 @@ export default function Signup() {
                 </label>
                 <div className="relative">
                   <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'} flex items-center pointer-events-none`}>
-                    <FiLock className="h-5 w-5 text-gray-400" />
+                    <FiLock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -374,11 +393,13 @@ export default function Signup() {
                     type="button"
                     className={`absolute inset-y-0 ${isRTL ? 'left-0 pl-3' : 'right-0 pr-3'} flex items-center`}
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                    aria-pressed={showPassword}
                   >
                     {showPassword ? (
-                      <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEyeOff className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FiEye className="h-5 w-5 text-gray-500 dark:text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>
@@ -394,18 +415,18 @@ export default function Signup() {
                     id="terms"
                     name="terms"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                     required
                   />
                 </div>
                 <div className={`${isRTL ? 'mr-3' : 'ml-3'} text-sm`}>
                   <label htmlFor="terms" className="text-gray-700 dark:text-gray-300">
                     {t("auth.agreeTerms")}{" "}
-                    <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                    <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                       {t("auth.termsOfService")}
                     </Link>{" "}
                     {t("auth.and")}{" "}
-                    <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                    <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-500">
                       {t("auth.privacyPolicy")}
                     </Link>
                   </label>
@@ -428,13 +449,15 @@ export default function Signup() {
                 </div>
               )}
 
+              <Captcha captcha={captcha} />
+
               {/* Signup Button */}
               <motion.button
                 type="submit"
                 className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
                 whileHover={{ scale: loading || isLocked ? 1 : 1.02 }}
                 whileTap={{ scale: loading || isLocked ? 1 : 0.98 }}
-                disabled={loading || isLocked}
+                disabled={loading || isLocked || captcha.pending}
               >
                 {loading ? (
                   <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -451,14 +474,15 @@ export default function Signup() {
                 )}
               </motion.button>
             </form>
+            )}
 
             {/* Sign In Link */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t("auth.alreadyHaveAccount")}{" "}
                 <Link
                   to="/login"
-                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
                 >
                   {t("auth.signIn")}
                 </Link>
@@ -469,7 +493,7 @@ export default function Signup() {
             <div className="mt-6 text-center">
               <Link
                 to="/"
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors"
               >
                 {isRTL ? '→ ' : '← '}{t("auth.backToHome")}
               </Link>
@@ -492,17 +516,17 @@ export default function Signup() {
                 {onboardingLoading ? (
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 ) : onboardingError ? (
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <FiHome className="h-8 w-8 text-blue-600" />
+                  <FiHome className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 )}
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {onboardingError ? t("auth.setupFailed") : t("auth.settingUpGym")}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 {onboardingError 
                   ? t("auth.setupFailedDescription")
                   : t("auth.settingUpDescription")
@@ -528,7 +552,7 @@ export default function Signup() {
                 </div>
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'space-x-3'}`}>
                   <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-sm text-gray-500">{t("auth.redirectingToSubscription")}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t("auth.redirectingToSubscription")}</span>
                 </div>
               </div>
             )}

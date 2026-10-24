@@ -16,6 +16,8 @@ export type AccessState =
   | "paid"
   | "complimentary"
   | "trialing"
+  /** A renewal payment failed; access continues until the grace period ends. */
+  | "past_due"
   | "inactive";
 
 export type PlanTier = "starter" | "pro" | "enterprise" | "demo";
@@ -47,6 +49,8 @@ export interface PlatformTenantRow {
   admin_email: string | null;
   admin_last_sign_in: string | null;
   access_state: AccessState;
+  /** ISO 3166-1 alpha-2 chosen in the gym's setup; null until then. */
+  country: string | null;
   /** True while the gym is suspended (its staff cannot sign in). */
   suspended: boolean;
   subscription: SubscriptionSummary | null;
@@ -158,6 +162,23 @@ export interface PlatformOverview {
   recent_changes: PlatformAuditEntry[];
 }
 
+export interface GymsByCountryRow {
+  /** ISO 3166-1 alpha-2, or null for gyms that have not chosen one yet. */
+  country: string | null;
+  gyms: number;
+  paid: number;
+  trialing: number;
+  members: number;
+}
+
+export interface PlatformGymsByCountry {
+  generated_at: string;
+  total: number;
+  /** Distinct real countries (the "unknown" group is not counted). */
+  countries: number;
+  rows: GymsByCountryRow[];
+}
+
 export interface PlatformTenantDetail {
   tenant: { id: string; name: string; created_at: string };
   access_state: AccessState;
@@ -180,6 +201,8 @@ export interface ListTenantsParams {
   search?: string;
   filter?: TenantFilter;
   sort?: TenantSort;
+  /** ISO code, or "none" for gyms without a country; omit for all. */
+  country?: string;
   limit?: number;
   offset?: number;
 }

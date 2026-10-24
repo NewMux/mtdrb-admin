@@ -1,5 +1,10 @@
 export interface Member {
   id?: string;
+  /** Price for a new member's chosen plan (plan_id); the plan is applied after the member is saved. */
+  plan_price?: number | null;
+  /** Whether to record the plan's payment as a paid invoice, and how it was paid. */
+  plan_invoice?: boolean;
+  plan_payment_method?: "cash" | "card" | "bank_transfer" | "online" | "other";
   member_number?: number;
   name: string | null;
   gender?: "Male" | "Female" | "Other";

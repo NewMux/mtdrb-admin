@@ -79,9 +79,9 @@ these deliberately rather than relying on the defaults for a real launch:
 - `VITE_DEFAULT_CURRENCY` — falls back to `USD`.
 - `VITE_DEFAULT_COUNTRY_CODE` — falls back to empty.
 - `VITE_DEFAULT_VAT_RATE` — falls back to `0`.
-- `VITE_PLATFORM_CURRENCY` — falls back to `BHD`. Display only: the amount actually charged is whatever the Paddle price (`VITE_PADDLE_*_PRICE_ID`) is set to, so keep the two in sync.
-- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — fall back to "Starter", `20`, `20`.
-- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — fall back to "Pro", `35`, `10`.
+- `VITE_PLATFORM_CURRENCY` — falls back to `USD`. **Paddle cannot bill in BHD, AED, SAR, KWD, OMR or QAR** (use USD, EUR or GBP). Display only: the amount actually charged is whatever the Paddle price (`VITE_PADDLE_*_PRICE_ID`) is set to, so keep the two in sync - the build refuses to deploy with an unsupported currency or no displayed price.
+- `VITE_STARTER_PLAN_NAME`, `VITE_STARTER_PRICE`, `VITE_STARTER_EXTRA_LOCATION_PRICE` — the plan name falls back to "Starter". **Set the three prices explicitly** (the build fails without the plan prices): the code's old defaults were in BHD.
+- `VITE_PRO_PLAN_NAME`, `VITE_PRO_PRICE`, `VITE_PRO_EXTRA_LOCATION_PRICE` — likewise, "Pro".
 
 Optional:
 
@@ -106,10 +106,11 @@ not be gotten working reliably; see git history for that attempt.
   round-trip to start a purchase, unlike the CrediMax flow this replaced.
 - `paddle-webhook` — public; receives Paddle's subscription event
   notifications, verifies Paddle's HMAC webhook signature (`Paddle-Signature`
-  header), and is the only path allowed to write `platform_subscriptions`
-  besides a self-service cancellation (see
+  header). Only server-side code (this webhook and the `paddle-*` Edge
+  Functions, using the service role) and the audited platform-owner RPCs may
+  write `platform_subscriptions`; a tenant admin's browser may not (see
   `enforce_platform_subscription_self_service()` in
-  `supabase/migrations/20260909162346_revoke_self_service_trial_creation.sql`).
+  `supabase/migrations/20261022120000_cancel_at_and_billing_only_writes.sql`).
   JWT verification disabled (`supabase/config.toml`) — Paddle calls this
   server-to-server, authenticated by its own signature, not a Supabase JWT.
 
@@ -130,6 +131,19 @@ key isn't):
   deployment**, or checkout will silently run against Paddle's sandbox.
 - `VITE_PADDLE_STARTER_PRICE_ID`, `VITE_PADDLE_PRO_PRICE_ID` — the price
   IDs from your Paddle catalog for the Starter and Pro plans.
+- `VITE_CHECKOUT_ENABLED` — **the pause switch.** Sign-up and checkout are
+  open to everyone by default as soon as the token and both price IDs are set;
+  there is no invite-only mode. Set it to exactly `false` (case-insensitive) to
+  pause new subscriptions: `/subscribe` then tells customers subscriptions are
+  unavailable and the buttons are disabled. Anything else (unset, blank,
+  `true`) leaves checkout open. `npm run build:deploy` (also what the Vercel
+  and Docker builds run) checks it via `scripts/checkoutConfig.mjs`: it
+  **fails** if checkout would be open while the token or either price ID is
+  missing (set `VITE_CHECKOUT_ENABLED=false` to ship a deliberately paused
+  build), or if the token doesn't match `VITE_PADDLE_ENVIRONMENT` (sandbox
+  tokens start with `test_`); it **warns** when pausing, and when a Vercel
+  production build still points at the sandbox. Docker builds must pass these
+  as build args — the Dockerfile declares them.
 
 Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 
@@ -142,17 +156,23 @@ Required Edge Function secrets (`supabase secrets set`, **not** `VITE_*`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase provides these
   automatically to every Edge Function; nothing to set.
 
-**Pricing and currency.** Platform plans are BHD 20/month (Starter) and
-BHD 35/month (Pro). The in-app/landing prices come from `VITE_STARTER_PRICE`,
-`VITE_PRO_PRICE` and `VITE_PLATFORM_CURRENCY` (defaults 20 / 35 / BHD) — if you
-set those in Vercel, update them there too or the old values keep showing.
-BHD has **3 decimals**, so Paddle amounts are in fils (BHD 20 = `"20000"`); the
-seed script and `paddle-webhook` both account for this. **Unverified:** whether
-your Paddle account accepts BHD as a price currency and how it reports the
-amount — confirm in the sandbox (`PADDLE_BASE_CURRENCY=USD` is the fallback for
-the seed script) before opening checkout. Existing Paddle prices must be
-recreated or replaced (Paddle prices are immutable in amount) and the
-`*_PRICE_ID` vars updated.
+**Pricing and currency.** Paddle's API lists the currencies it can bill in
+(USD, EUR, GBP, JPY, AUD, CAD, CHF, HKD, SGD, SEK, ARS, BRL, CLP, CNY, COP, CZK,
+DKK, HUF, ILS, INR, KRW, MXN, NOK, NZD, PEN, PLN, RUB, THB, TRY, TWD, UAH, VND,
+ZAR): **BHD is not one of them**, nor are AED, SAR, KWD, OMR or QAR. USD is
+offered in Bahrain, the UAE, Saudi Arabia, Kuwait, Oman and Qatar, so price in
+USD (or EUR/GBP) and add per-country overrides in Paddle if you want local
+figures. The displayed prices come from `VITE_STARTER_PRICE`, `VITE_PRO_PRICE`,
+the two `VITE_*_EXTRA_LOCATION_PRICE` values and `VITE_PLATFORM_CURRENCY` - set
+them to exactly what the Paddle prices charge. Paddle prices are immutable in
+amount: to change a price, create a new one and update the `*_PRICE_ID` vars.
+`scripts/seed-paddle-catalog.mjs` creates the catalog and takes the amounts from
+`PADDLE_STARTER_PRICE`, `PADDLE_PRO_PRICE`, `PADDLE_STARTER_EXTRA_PRICE` and
+`PADDLE_PRO_EXTRA_PRICE` (no defaults: they are a pricing decision). The
+Paddle request shapes this integration uses (cancel `effective_from`, update
+`items` + `proration_billing_mode`, `scheduled_change: null` to un-cancel, the
+`subscription.*` event names) were checked against Paddle's API reference in
+October 2026 and match.
 
 Set up in Paddle's dashboard before this can go live: create the Starter
 and Pro products/prices (sandbox first), point a webhook notification
@@ -167,6 +187,750 @@ documentation (`developer.paddle.com/webhooks`), which is public and
 stable — but still run at least one real sandbox subscription through the
 full flow (checkout → webhook → `platform_subscriptions` row → dashboard
 access) before relying on this for real customer traffic.
+
+## Database tests
+
+The database rules are tested in SQL (`supabase/tests/*.test.sql`): row level
+security and cross-tenant isolation (`tenant_isolation`), the platform console,
+subscription and billing guards (`cancel_subscription`, `past_due_grace`,
+`extra_locations`, `self_serve_entitlement`, `account_deletion`,
+`multiple_taxes`) and POS money (`pos_currency_decimals`). CI runs them on every
+pull request in a throwaway Postgres 16; locally:
+
+```
+PGHOST=localhost PGUSER=postgres PGPASSWORD=... scripts/run-sql-tests.sh
+```
+
+The script **drops and recreates** its own database (`mtdrb_sql_tests` unless you
+pass a name), so never aim it at a database you care about.
+
+These tests prove the **schema and migrations** on a plain Postgres with a small
+stand-in for Supabase (`supabase/tests/support/supabase_shim.sql`). They do not
+prove your hosted project. The same files could be pointed at a Supabase
+**branch** (not production) after applying the migrations there - each runs in
+one transaction and rolls back - but that has not been tried: the fixtures insert
+into `auth.users` directly, which a real Supabase project may constrain. The
+September audit's remaining live checks (a second tenant's real JWT against the
+hosted API, storage buckets) still need doing by hand against a branch.
+
+## Point of sale and currency decimals
+
+POS amounts follow the sale's currency: 3 decimals for BHD/KWD/OMR/JOD/TND
+(1 BHD = 1000 fils), 0 for JPY and similar, otherwise 2
+(`public.currency_decimals()`, the same table as `src/utils/invoiceMath.ts`).
+`20261022180000_pos_currency_decimals.sql` widens the POS money columns to
+`numeric(12,3)` (existing values are unchanged) and rewrites
+`complete_pos_sale()` / `return_pos_sale()` to round per currency, so apply it
+**before** deploying the frontend: the new price inputs accept 3 decimals and
+the old function would round them away. Sales recorded before it were rounded
+to 2 decimals and stay as recorded. `src/utils/posMath.ts` computes the cart
+preview the same way the database does; if you change one, change the other
+and the shared golden cases in `src/utils/posMath.test.ts` and
+`supabase/tests/pos_currency_decimals.test.sql`.
+
+## Extra locations (paid add-on)
+
+Every plan includes **one** location. Each additional branch is a paid
+add-on: a second line item on the tenant's Paddle subscription whose quantity
+is the number of extra locations (Starter +10 BHD/month, Pro +15 BHD/month by
+default). Three pieces make it real, and all three must be in place:
+
+- **Database** (`supabase/migrations/20261022090000_add_extra_locations.sql`):
+  `platform_subscriptions.extra_locations`, and a `BEFORE INSERT` trigger on
+  `branches` that refuses a branch beyond `1 + extra_locations` with SQLSTATE
+  `LC001` (`location_limit_reached`). The limit lives in Postgres, so a direct
+  REST insert cannot bypass the UI. `extra_locations` is service-role-only: a
+  tenant admin cannot write `platform_subscriptions` at all.
+  **Never limited:** gyms with no subscription row (the existing, untracked
+  tenants), manual grants from `/superadmin` (`payment_provider = 'manual'`),
+  and `enterprise`/`demo` tiers. Existing branches are never removed — a gym
+  already over its limit just cannot add more.
+- **Edge Function `paddle-manage-locations`**: a tenant admin (checked in
+  Postgres from their own JWT) sets the absolute number of extra locations. It
+  reads the subscription's current items from Paddle, replaces only the
+  add-on item, and PATCHes with `proration_billing_mode`
+  `prorated_immediately` when adding (the saved payment method is charged
+  the prorated amount straight away) or `prorated_next_billing_period` when
+  removing (credit from the next renewal). Deploy it with
+  `supabase functions deploy paddle-manage-locations`. Redeploy
+  `paddle-webhook` too: it now reads the add-on quantity and stores the
+  **total** recurring amount (base + extras) in `amount`.
+- **Paddle catalog**: one add-on product/price per plan.
+  `PADDLE_API_KEY=... node scripts/seed-paddle-catalog.mjs --addons-only`
+  creates them (add `--dry-run` first to inspect the request bodies; use
+  `--addons-only` if Starter/Pro already exist so they are not duplicated).
+
+Edge Function secrets (in addition to the Paddle ones above):
+
+- `PADDLE_API_KEY` — a **server-side** Paddle API key (sandbox keys contain
+  `_sdbx`). Never put it in a `VITE_*` variable.
+- `PADDLE_ENVIRONMENT` — `sandbox` (default) or `production`.
+- `PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID`,
+  `PADDLE_PRO_EXTRA_LOCATION_PRICE_ID` — the add-ons' **monthly** price IDs.
+  Both functions read these; without them the webhook leaves
+  `extra_locations` untouched and the manage function answers 503.
+- `APP_ALLOWED_ORIGINS` — comma-separated app origins allowed to call the
+  function from a browser (falls back to `PLATFORM_ALLOWED_ORIGINS`).
+
+The price shown in the app (`VITE_STARTER_EXTRA_LOCATION_PRICE`,
+`VITE_PRO_EXTRA_LOCATION_PRICE`) is display only, like the base plan prices:
+what is charged is the Paddle add-on price, so change both together (Paddle
+prices are immutable, so a new amount means a new price and a new ID).
+
+**Unverified against a live Paddle account** (the `paddle-docs` MCP server was
+not connected when this was written): the `PATCH /subscriptions/{id}` request
+body, that an add-on price's `quantity` range is honoured per subscription
+item, and the webhook's `items[]` shape for a two-item subscription. Before
+real customers: in the sandbox, subscribe, add an extra location in the app,
+and confirm (1) Paddle shows two items — plan ×1, extra location ×N — and
+charged the prorated amount, (2) `platform_subscriptions.extra_locations` = N
+and `amount` = base + N × add-on, (3) a branch beyond the limit is refused by
+the database, (4) removing unused extras lowers the quantity at renewal.
+
+**Out-of-order webhooks.** Paddle can deliver events late or out of order. The
+webhook stores the `occurred_at` of the newest event it has applied
+(`platform_subscriptions.paddle_event_at`, migration
+`20261022200000_paddle_event_ordering.sql`) and ignores any older one, so a late
+"active" can no longer overwrite a newer cancel or past-due. The check is
+repeated inside the `UPDATE`, so two events racing cannot both win. Events with
+the same timestamp are applied (a redelivery is harmless); an event with no
+`occurred_at` is applied as before.
+
+## Cancelling a subscription
+
+A tenant admin cancels from Settings → Billing. Cancelling is **scheduled in
+Paddle for the end of the period already paid for**: the gym keeps full access
+until then, is not billed again, and can change its mind ("Keep subscription")
+before that date. When the date arrives Paddle sends `subscription.canceled`,
+`paddle-webhook` sets the row to `cancelled`, and access ends.
+
+- **Edge Function `paddle-cancel-subscription`** — `{ "action": "cancel" }`
+  calls Paddle's `POST /subscriptions/{id}/cancel` with
+  `effective_from: "next_billing_period"`; `{ "action": "resume" }` removes the
+  scheduled cancellation (`PATCH /subscriptions/{id}` with
+  `scheduled_change: null`). It asks Paddle first and records
+  `platform_subscriptions.cancel_at` only after Paddle accepts, so the app can
+  never show "cancelled" while Paddle keeps billing. The caller must be the
+  gym's admin (checked in Postgres from their own JWT); it is idempotent and
+  rate-limited. Deploy with `supabase functions deploy paddle-cancel-subscription`
+  and redeploy `paddle-webhook`. It uses the same secrets as
+  `paddle-manage-locations` (`PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`,
+  `APP_ALLOWED_ORIGINS`); nothing new to set.
+- **The row's `status` stays `active` while a cancellation is pending**, so
+  access continues through `is_tenant_entitled()` / `current_period_end`. The
+  webhook reads Paddle's `scheduled_change` into `cancel_at`, and if Paddle
+  reports no `next_billed_at` it uses the cancel date (or the billing period's
+  end) as `current_period_end`, so an active row never has "no end" (which the
+  entitlement check treats as access for ever).
+- **Tenants can no longer write `platform_subscriptions` from the browser**
+  (`20261022120000_cancel_at_and_billing_only_writes.sql`). The old in-app
+  cancel flipped the row's status without telling Paddle: the customer kept
+  being billed and the next webhook set the row back to `active`. **Order
+  matters:** apply the migration first (Settings now reads `cancel_at`; against
+  a database without it that query fails and Settings would show the gym as
+  Free), then deploy the two functions, then the frontend. Between the
+  migration and the new frontend the old Cancel button shows an error instead
+  of cancelling, so keep that gap short.
+- **Not self-service:** access granted by the platform owner (`manual`) has
+  nothing in Paddle to cancel. Settings hides the cancel option for it; the
+  owner revokes it from `/superadmin`.
+- **Unverified against a live Paddle account** (the `paddle-docs` MCP server
+  was not connected when this was written): the `cancel` and `PATCH` request
+  bodies, and the `scheduled_change` / `next_billed_at` fields on the
+  subscription entity for a cancel-at-period-end. In the sandbox: subscribe,
+  cancel in the app, and confirm (1) Paddle shows the subscription as set to
+  cancel on the period end date, (2) `cancel_at` is that date and `status` is
+  still `active`, (3) "Keep subscription" clears both, (4) when the date
+  passes (use Paddle's sandbox to advance the clock, or cancel with a short
+  period) the row becomes `cancelled` and access ends.
+
+## Refunds (14-day money-back guarantee)
+
+The Refund & Cancellation page promises a full refund of the first payment (and
+anything added in that period, such as extra locations) if the gym asks within 14
+days; later renewals are not refundable. Requests come to `legal@mtdrb.net`
+(change the address in `src/pages/Legal.tsx` if you prefer a support mailbox).
+The app has no refund button on purpose: refunds are money leaving your account,
+so a person does them.
+
+To process one: find the transaction in Paddle (Transactions), confirm it is
+inside the 14 days and the email matches the gym, and refund it in full
+(Paddle → the transaction → Refund). **A refund does not cancel the
+subscription.** Also cancel it immediately in Paddle (Subscriptions → Cancel →
+immediately), otherwise it renews. `paddle-webhook` then sets the gym to
+`cancelled` and its access ends, as the policy says. Remind the customer to
+download their data first (Settings → Data & privacy); if they ask you to
+delete it as well, they can delete the gym themselves.
+
+Paddle is the merchant of record and also gives buyers its own refund rights, so
+a customer may go to Paddle directly; refunds issued there show up in your Paddle
+dashboard, but they do not cancel the subscription either, so check
+Subscriptions for refunded-but-active ones from time to time.
+
+## Deleting an account (right to erasure) and exporting data
+
+**Settings → Data & privacy.** A gym admin can (a) download everything in the gym
+as one JSON file, (b) download everything held about one member (for that
+member's own data request), and (c) permanently delete the gym. Anyone else can
+delete just their own account. Both deletions ask the person to type the gym's
+exact name (or their email) first.
+
+- **Edge Function `delete-account`** — `{ "scope": "gym" | "me", "confirm": "..." }`.
+  The caller is resolved from their JWT (nothing about identity comes from the
+  request body). For `gym` it **cancels a live Paddle subscription immediately
+  first** (`POST /subscriptions/{id}/cancel`, `effective_from: "immediately"`)
+  and deletes nothing if Paddle refuses, so a gym is never billed for something
+  that no longer exists; then one database transaction
+  (`account_delete_gym()`) deletes the gym and its staff accounts; then the
+  uploaded files are removed from the six storage buckets (best effort, reported
+  to the caller). Platform-owner accounts are refused. Rate limited to 5
+  attempts an hour per person. Deploy with
+  `supabase functions deploy delete-account`; it uses the same secrets as
+  `paddle-cancel-subscription` (`PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`,
+  `APP_ALLOWED_ORIGINS`). Redeploy `paddle-webhook` too: it now ignores the
+  cancellation event that arrives after a gym is gone instead of failing and
+  being retried for days.
+- **Migration `20261024090000_self_service_account_deletion.sql`**:
+  `account_delete_gym()` and `account_delete_user()`, callable by the service
+  role only. They reuse the owner console's deletion rules (returns are removed
+  before sales, a leaving user's records are handed to another admin, a gym's
+  only admin must delete the gym instead). The audit row they write holds only
+  internal ids and counts - no email, no gym name.
+- **What survives a deletion:** the anonymous audit row, payment records held by
+  Paddle, and copies in Supabase's backups until they expire. The privacy policy
+  says so.
+- **A test keeps this honest:** `supabase/tests/account_deletion.test.sql` fails
+  if any table with a `tenant_id` column stops cascading from `tenants`, so a
+  future table cannot silently survive a gym's deletion. When you add a storage
+  bucket, add its `<folder>/<tenant id>/` prefix to
+  `supabase/functions/_shared/tenant-storage.ts`.
+- **The export reads through row level security**, so it can only ever contain
+  the signed-in gym's rows. Tables it cannot read are listed under `errors` in
+  the file rather than skipped silently. Internal platform tables are excluded.
+- **Unverified against a live Paddle account:** the immediate-cancel request
+  body. In the sandbox, subscribe, delete the gym, and confirm Paddle shows the
+  subscription cancelled and the gym is gone.
+
+## Failed renewal payments (grace period)
+
+When a renewal charge fails Paddle emails the customer and retries for a while
+(subscription status `past_due`). The gym keeps access for **7 days** from the
+first failure instead of being locked out at once:
+
+- `paddle-webhook` stores `past_due` and sets
+  `platform_subscriptions.grace_until` (now + `PAST_DUE_GRACE_DAYS`, in
+  `supabase/functions/_shared/paddle-subscription.ts`) when the subscription
+  *first* goes past due. Paddle's later retry events keep the original date, so
+  retries cannot extend the grace; a recovered payment returns the row to
+  `active` and clears it.
+- Access follows `grace_until` in both `is_tenant_entitled()` (database) and
+  `isSubscriptionEntitled()` (app): `past_due` with no future grace date means
+  no access. When the date passes, or Paddle gives up and sends
+  `subscription.canceled`, access ends.
+- A banner in the app shell tells the gym to update its payment method before
+  the date; Settings shows "Payment failed" and still offers Cancel. Migration:
+  `supabase/migrations/20261022150000_past_due_grace.sql` (apply before
+  deploying the webhook and frontend).
+- Choose the grace length with Paddle's own retry schedule in mind (Dashboard →
+  Billing → Retries): if Paddle stops retrying sooner than 7 days it cancels the
+  subscription and access ends then.
+- The owner console shows a gym inside its grace period as **Payment failed**
+  (its own access state, filter and overview tile; migration
+  `20261022210000_console_past_due_state.sql`). It counts as having access and as
+  billed through Paddle, so "Grant access" refuses to overwrite it while Paddle is
+  still retrying the card. After the grace date it shows "No access".
+- **Unverified against a live Paddle account:** that a failed renewal arrives as
+  `subscription.past_due` / `subscription.updated` with `status: "past_due"`.
+  In the sandbox, use a card that fails on renewal and check the row goes
+  `past_due` with a `grace_until` 7 days out, then `active` with it cleared when
+  a retry succeeds.
+
+## Self-serve sign-up (public launch)
+
+Anyone can now sign up, create a gym and pay without the owner. The path is:
+
+1. `/signup` creates the Supabase Auth user (gym name and full name travel in
+   the user's metadata). With **Confirm email** on — required, see below — no
+   session exists yet, so the page shows "check your email" with a resend button
+   (60 s cooldown).
+2. The confirmation link lands on `/welcome` (`src/pages/Welcome.tsx`), which
+   calls `ensureGym()` (`src/utils/ensureGym.ts`): it reuses an existing
+   membership or creates the gym through `create_tenant_with_membership` as its
+   admin, using the gym name from signup. It is safe to repeat (retry, second tab).
+   A signed-in user with no gym is sent to `/welcome` from anywhere in the app.
+3. `/welcome` continues to `/subscribe`; Paddle checkout opens
+   (`VITE_CHECKOUT_ENABLED` — see the Paddle section); the webhook writes the
+   subscription row and the gym gets access. The owner is not involved.
+
+**Database rule (migration `20261023090000_new_gyms_need_a_subscription.sql`).**
+A gym with no `platform_subscriptions` row used to count as entitled so that gyms
+from before the subscription system were not locked out. That would let a
+self-serve sign-up skip checkout and write through the API for free, so the
+rule is now: no row = entitled **only** for gyms listed in
+`legacy_unbilled_tenants`. The migration lists every gym that exists today, has
+no subscription row and was created before 2026-09-09 (when the entitlement
+check was introduced). Review that list before applying to production:
+
+```sql
+select t.id, t.name, t.created_at from public.tenants t
+where t.created_at < timestamptz '2026-09-09 00:00:00+00'
+  and not exists (select 1 from public.platform_subscriptions s where s.tenant_id = t.id);
+```
+
+A gym created since then with no row is treated as unpaid. To grandfather one by
+hand, insert its id into `legacy_unbilled_tenants` as the service role; the table
+is closed to every browser role. An unpaid new gym is also limited to one
+location. (The owner console still lists such a gym as "awaiting activation" and
+can still comp it, and *Invite a gym* remains available as a concierge path.)
+
+**Supabase Auth settings the owner must set** (Supabase dashboard — these are not
+in the repo and the app cannot check them):
+
+- Authentication → Providers → Email: **Confirm email ON**. Without it anyone
+  can register with someone else's address.
+- Authentication → URL Configuration: **Site URL** = the production URL, and add
+  `<production URL>/welcome` (and the preview URL pattern if you test there) to
+  **Redirect URLs**. A confirmation link to an unlisted URL falls back to the
+  Site URL and the user lands on the wrong page.
+- Authentication → SMTP: configure **custom SMTP**. Supabase's built-in mailer is
+  heavily rate-limited (a handful of emails per hour) and meant for testing; at
+  launch sign-ups would silently stop receiving their confirmation email.
+- **CAPTCHA (Cloudflare Turnstile).** The sign-up, sign-in, forgot-password and
+  resend-confirmation forms render a Turnstile challenge and send its token to
+  Supabase. Setup, in this order:
+  1. Cloudflare dashboard → Turnstile → add a widget for your production domain
+     (and `localhost` if you test there). Copy the **site key** and **secret key**.
+  2. Set `VITE_TURNSTILE_SITE_KEY` (Vercel env / Docker build arg) and redeploy.
+  3. Supabase → Authentication → Attack Protection → enable CAPTCHA, provider
+     Turnstile, paste the **secret key**.
+  Set **both or neither**. Supabase enforces the check on every one of those
+  calls, so enabling it in Supabase without the site key deployed locks everyone
+  out of signing in; the site key without Supabase enforcement is harmless but
+  protects nothing. The CSP in `vercel.json` / `nginx.conf.template` already
+  allows `challenges.cloudflare.com`. A production Vercel build without the key
+  prints a warning. Also review Authentication → Rate Limits.
+- Authentication → Email Templates → **Confirm signup**: Arabic/English wording
+  and your brand; it should say what happens next (choose a plan).
+
+**Not built, and worth knowing before launch**
+
+- No free trial: it was removed on purpose; a new gym must subscribe to use the
+  product.
+- Account deletion and data export exist (see "Deleting an account").
+- A user who signs up and never confirms leaves an unconfirmed Auth user and no
+  gym — nothing to clean up on the app side.
+
+## Gym configuration (region, currency, tax)
+
+Each gym configures itself in the setup wizard (first step) and afterwards in
+**Settings → Business & tax**: country, currency, timezone, whether it charges
+sales tax and under what name/rate/registration number, whether the prices it
+enters include tax, and business details printed on receipts. Nothing is
+hard-coded to a country: choosing a country only *suggests* a currency, timezone
+and the usual standard tax rate (`src/config/regions.ts`; rates are a starting
+point, not tax advice, and the owner can change every value).
+
+- **Storage** needs no migration: the existing `gym_settings.currency`,
+  `vat_enabled`, `vat_rate` columns plus `metadata.general.{country,timezone}`,
+  `metadata.tax`, `metadata.business` and `metadata.setup.configured_at`.
+  `src/config/gymConfig.ts` is the only code that reads or writes them, and a
+  save merges into the stored metadata so other keys are kept. `vat_rate` is
+  `numeric(5,2)`, so rates have at most two decimals (7.5 is fine).
+- **Env defaults** (`VITE_DEFAULT_CURRENCY`, `VITE_DEFAULT_TIMEZONE`,
+  `VITE_DEFAULT_VAT_RATE`, `VITE_DEFAULT_COUNTRY_CODE`) now only seed a gym that
+  has not configured itself. For a global product leave them unset: a new gym is
+  then pre-filled from the country its browser timezone points to.
+- **Everything else follows the gym's own values**: invoice and expense
+  defaults, POS products and receipts, the VAT dashboard, dashboards (day and
+  month boundaries use the gym's timezone), and money decimals (BHD/KWD/OMR 3,
+  JPY 0, otherwise 2).
+- **Several taxes.** A gym can list up to five taxes (a service charge and VAT;
+  GST and a provincial tax). Each has a name, a rate, and an optional "charged on
+  top of the taxes above" (compound) flag. Everything that multiplies - invoices,
+  expenses, POS products and `complete_pos_sale()` - still uses ONE combined rate
+  (`gym_settings.vat_rate`, which is `numeric(5,2)`, so the taxes together must
+  come to a rate with at most two decimals; the form says so if they don't).
+  What is new is a snapshot of how each invoice's and POS sale's tax splits
+  between the taxes (`tax_breakdown`, set when the document is created and never
+  rewritten when the gym later changes its taxes). Receipts, the invoice summary
+  and the VAT dashboard ("Tax collected, by tax") show it. The split is
+  `src/utils/taxMath.ts` in the browser and `allocate_tax_breakdown()` in SQL;
+  `taxMath.test.ts` and `supabase/tests/multiple_taxes.test.sql` share identical
+  golden cases. **Order matters:** apply `20261024120000_multiple_taxes.sql`
+  BEFORE deploying the frontend - invoice creation writes `tax_breakdown`, which
+  fails against a database without the column.
+- **Not covered**: the interface is English/Arabic only; no tax-authority
+  e-invoicing (e.g. ZATCA, FTA); expenses record one VAT amount, not a per-tax split. Zakat is an annual levy on
+  the business, not a tax added to each sale, so it is deliberately not modelled
+  here.
+- **Shop (POS) tax in the VAT dashboard**: "VAT collected" (total, monthly and
+  per tax) = paid invoices + completed POS sales - tax refunded on POS returns.
+  Voided sales and cancelled returns are ignored. A return stores the
+  tax it gave back (`pos_returns.vat_total` and a per-tax `tax_breakdown`,
+  written by `return_pos_sale()`): each returned line's tax pro rata to the
+  quantity, the final return of a line taking exactly what is left, so the
+  refunds of a sale add up to the tax it charged; it counts in the month the
+  return was made. Apply `20261024230000_pos_return_tax.sql` BEFORE the frontend
+  (it adds the columns the dashboard reads and backfills earlier returns with
+  the same pro-rata arithmetic). Logic and tests: `src/utils/posVat.ts`,
+  `supabase/tests/pos_currency_decimals.test.sql`. This is a working figure for the gym, not a filed
+  return - check it with the gym's accountant.
+
+**Setup checklist.** A gym that has not finished the basics sees a "Get your gym
+set up" card on its dashboard (configure region and tax, create a plan, add a
+member, schedule a class, create an invoice). Each tick is computed from real
+data, not stored; the card hides itself when all five are done or when
+dismissed (remembered per gym in that browser only).
+
+## Membership plans and expense categories
+
+**Membership plans.** The Plans page (admin) defines plans: name, price and
+duration in days. Members are now actually put on them:
+
+- **Add Member** has a "Membership plan" section (shown once the gym has an
+  active plan): choose a plan, optionally change the price (a discount, or 0).
+- **Renew or change plan** (the refresh icon on a member row, employee and
+  above) puts an existing member on a plan. If they are still paid up, the
+  default is to continue from the day after their current end date, so no paid
+  day is lost; a lapsed member starts today and is reactivated. A suspended
+  member keeps their suspension.
+- A plan of N days gives exactly N days of access: start to start + N - 1. The
+  expiry date is the last day the member may enter (the door readers use it).
+  "Today" and every date here are in the gym's own timezone.
+- It all runs in `assign_member_plan()` (migration
+  `20261025090000_membership_plans.sql`), which sets `members.plan_id`,
+  `membership_type` (the plan's name), `expiry_date` and the price paid
+  (`metadata.membership_price`). A plan must be active and belong to the gym;
+  deleting a plan just leaves its members without one.
+- The Plans page's "members on this plan" now comes from `plan_member_counts()`
+  (active/trial members whose expiry has not passed); the old stored
+  `plans.members_count` column is no longer used.
+- **The sale is recorded with it.** Unless "Record the payment" is unticked (or
+  the price is 0), applying a plan also creates a **paid membership invoice**,
+  in the same transaction as the plan change: net, tax and total follow the gym's
+  tax settings (price inclusive of tax, or tax added on top, split per tax in
+  `tax_breakdown`), dated in the gym's calendar, with the payment method chosen
+  in the dialog. So revenue and the VAT dashboard include every renewal. It does
+  not talk to a card terminal or Paddle - it records money the gym has taken.
+  Migrations (apply in this order, all BEFORE deploying the frontend):
+  `20261025090000_membership_plans.sql`, `20261025100000_money_columns_three_decimals.sql`,
+  `20261025110000_plan_invoice.sql`.
+
+**Three-decimal currencies (BHD, KWD, OMR, JOD, TND).** Invoices, expenses,
+plan and class prices, trainer rates, VAT returns and subscriptions were stored
+with two decimals, so a Bahraini invoice of 20.505 BHD was saved as 20.51 and its
+VAT drifted from the line items. `20261025100000_money_columns_three_decimals.sql`
+widens them to three decimals (nothing is lost; existing values are kept as they
+are). Only gyms in those currencies see a difference.
+
+**Expense categories.** Settings > Business & tax has an "Expense categories"
+editor: owners add categories of their own (up to 30, 40 characters each) next
+to the standard ones (Salaries, Rent, Utilities, ...). They are saved in
+`gym_settings.metadata.expenses.categories` (no migration; `src/config/
+gymConfig.ts` reads and writes them) and an expense stores the category as
+plain text, so reports group by the name. Removing a custom category does not
+change expenses that already use it.
+
+**Still fixed by design:** staff roles (admin / employee / trainer - they decide
+what the database allows), the payment-method list (accounting and reports
+depend on it), and the interface languages (English and Arabic).
+
+## Performance: first load and very large member lists
+
+**First load.** What a visitor downloads on the landing page went from about
+287 KB to 214 KB gzipped (the animation engine, 18 KB of that, now arrives after
+the first paint, so the page is usable at about 196 KB). Done by:
+- removing an unused UI library (`@mui/material` and its Emotion packages: it only
+  wrapped the app in a provider and no component used it);
+- loading the Arabic text on demand (`src/i18n.ar.ts`; English stays in the main
+  file and is the fallback; the app waits for Arabic before it first renders if
+  that is the reader's language, so there is no flash of English);
+- the slim `m` form of the animation library with `<LazyMotion>`;
+- `jsPDF` (about 120 KB) loads only when someone exports a PDF, so every screen with
+  a CSV export no longer carries it;
+- the calendar and the chart-heavy analytics tabs (members, billing, trainers,
+  tasks, classes) load when that tab is first opened: Members 255 -> 61 KB,
+  Billing 174 -> 58 KB, Trainers 137 -> 20 KB, Classes 515 -> 246 KB (raw);
+- stable libraries (React, Supabase, i18next) in their own files, so a returning
+  visitor re-downloads only the app's small own code after a deploy.
+Analytics and Insights are chart pages by nature (the charting library is about
+104 KB gzipped) and still load it.
+
+**Members list.** The page used to download every member and filter in the
+browser. It now fetches one page at a time with the search and filter applied in
+the database (`src/api/memberList.ts`): search is per word across first name, last
+name, email and phone; the headline numbers are head-only counts; the CSV export
+reads every member page by page (it was silently cut off at 1,000 rows).
+Apply `20261027090000_members_search_indexes.sql` for big gyms (trigram indexes
+for the search, name-order and newest-first indexes). Measured on 180,000
+members for one gym: first page 26 ms -> 0.1 ms, a two-word search 135 ms ->
+6 ms, a phone-digits search 109 ms -> 8 ms. The page works without the migration,
+just slower on large tables. Still reading all members (a few columns, not the
+whole row): the Members analytics tab, and pickers that list members.
+
+## Team and custom roles
+
+Until now a gym's staff were admin / employee / trainer. **Settings > Team &
+roles** (admins only) now lets an owner invite staff by email and give each person
+a built-in role or a **custom role** of their own ("Front desk", "Accountant",
+"Coach"), choosing exactly what that role may do.
+
+**Permissions** (the database's `staff_permission_catalog()`; mirrored in
+`src/config/staffPermissions.ts`):
+
+| Permission | What it covers |
+|---|---|
+| `members.manage` | add / edit / remove members and subscriptions, put them on plans, book them into classes |
+| `billing.view` | see invoices, expenses, VAT, revenue figures and their files |
+| `billing.manage` | create / change invoices and expenses (includes `billing.view`); needed to record a payment with a plan |
+| `pos.use` | sell, process returns, see sales |
+| `pos.manage` | products, categories, stock |
+| `classes.manage` | classes, bookings, trainer schedules |
+| `trainers.manage` | trainer records and documents |
+| `attendance.manage` | check members in/out, the scanner screen, member credentials |
+
+**How it stays safe**
+
+- A custom role sits on a built-in **tier** (employee or trainer) and can only
+  *narrow* it. Every existing row-level-security rule is unchanged; the new
+  `RESTRICTIVE` policies are ANDed with them, so a custom role can never do
+  something its tier couldn't. A person with no custom role (everyone today) is
+  unaffected: `has_permission()` returns true for them and the old policies decide.
+- Only a gym **admin** can create, edit or delete roles or move people between
+  them (`staff_role_save`, `staff_role_delete`, `staff_set_role`, `staff_remove`;
+  the role tables have no write privileges for the browser). An admin never holds
+  a custom role, so the owner can't lock themselves out, and an admin can't change
+  or remove themselves.
+- The `SECURITY DEFINER` functions that touch finance, the shop, attendance or
+  plans check the permission themselves (they bypass RLS): `complete_pos_sale`,
+  `return_pos_sale`, `adjust_pos_inventory`, `attendance_scan`,
+  `attendance_issue_credential`, `assign_member_plan`, `get_financial_metrics`,
+  `generate_vat_return`, `calculate_vat_compliance_score`, and the revenue figures
+  in `get_analytics_overview` (they read 0 without `billing.view`).
+  **When you add a function like that, add the check - and a test in
+  `supabase/tests/custom_roles.test.sql`.**
+- The screens hide what a role can't do (menu items, the shop's inventory tab,
+  the add buttons). That is a convenience only: the database refuses the action
+  either way. If the database hasn't been updated yet, or `my_staff_access()`
+  fails, the screens simply behave as before.
+
+**Not covered by permissions** (any staff member keeps these): reading members,
+classes and trainers; tasks, notifications and the activity feed. Branches, rooms,
+gym settings, plans and devices stay admin-only as they always were.
+
+**Inviting.** The `invite-staff` Edge Function (admin only, verified from the
+caller's own token; the gym comes from that token, never from the request) sends
+the Supabase Auth invitation and adds the person with `staff_provision()`. One
+login belongs to **one gym**: inviting an email that already has an account is
+refused, because the app opens a person's oldest membership. A gym can have at
+most 50 staff accounts and 20 custom roles. An invited person shows as "Invited,
+not signed in yet" until they set a password.
+
+**Deploy:** apply `supabase/migrations/20261026090000_custom_roles.sql` BEFORE the
+frontend (it is also safe to deploy the frontend first: the screens fall back to
+today's behaviour, but the Team tab will show an error), then
+
+```
+supabase functions deploy invite-staff
+supabase secrets set STAFF_ALLOWED_ORIGINS=https://app.example.com STAFF_APP_URL=https://app.example.com
+```
+
+and in Supabase Auth: add `<app>/reset-password` to **Redirect URLs** (the
+platform invitations already need it) and edit the **Invite user** email template
+so it reads sensibly for a gym staff member.
+
+## Go-live runbook (sandbox first, then live)
+
+Prices decided: **USD 49 (Starter) / 89 (Pro) a month; extra location 25 / 40**,
+monthly only. Paddle's sandbox and live accounts are separate: do every step in
+the sandbox, run the smoke test, then repeat steps 3-6 for live.
+
+1. **Database (staging Supabase branch first, never production).** Run the
+   grandfathered-gyms query under "Self-serve sign-up", then apply every file in
+   `supabase/migrations/` in filename order (`supabase db push`). Run
+   `scripts/run-sql-tests.sh` against a throwaway Postgres to be sure the repo
+   itself is green.
+2. **Auth.** Supabase dashboard: Confirm email on; Site URL and `<url>/welcome`
+   redirect; custom SMTP; Turnstile captcha with the secret key (and
+   `VITE_TURNSTILE_SITE_KEY` in step 6 - both or neither).
+3. **Create the Paddle catalog** (in the sandbox, with the sandbox API key
+   - sandbox keys contain `_sdbx`):
+
+   ```
+   PADDLE_STARTER_PRICE=49 PADDLE_PRO_PRICE=89 \
+   PADDLE_STARTER_EXTRA_PRICE=25 PADDLE_PRO_EXTRA_PRICE=40 \
+   PADDLE_API_KEY=pdl_sdbx_... node scripts/seed-paddle-catalog.mjs --dry-run
+   ```
+
+   Read the dry run, then run it again without `--dry-run`. It prints the four
+   monthly price IDs; running it twice duplicates the products. In the dashboard
+   check: no trial period, the add-on prices allow quantity 1-50, and the
+   currency is USD. Decide tax-exclusive or tax-inclusive pricing once
+   (Paddle → Checkout / tax settings).
+4. **Webhook destination** (Paddle → Developer tools → Notifications): URL
+   `https://<project-ref>.supabase.co/functions/v1/paddle-webhook`, subscribed to
+   `subscription.created`, `.updated`, `.activated`, `.canceled`, `.past_due`,
+   `.paused`, `.resumed`. Copy its signing secret. Also create a **client-side
+   token** (Developer tools → Authentication) and **approve your app's domain**
+   for checkout (Checkout settings).
+5. **Edge Function secrets and deploy.**
+
+   ```
+   supabase secrets set \
+     PADDLE_API_KEY=... PADDLE_ENVIRONMENT=sandbox PADDLE_WEBHOOK_SECRET=... \
+     PADDLE_STARTER_PRICE_ID=pri_... PADDLE_PRO_PRICE_ID=pri_... \
+     PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID=pri_... PADDLE_PRO_EXTRA_LOCATION_PRICE_ID=pri_... \
+     APP_ALLOWED_ORIGINS=https://your-app.example PLATFORM_ALLOWED_ORIGINS=https://your-app.example \
+     PLATFORM_APP_URL=https://your-app.example \
+     STAFF_ALLOWED_ORIGINS=https://your-app.example STAFF_APP_URL=https://your-app.example
+   supabase functions deploy paddle-webhook paddle-manage-locations \
+     paddle-cancel-subscription delete-account platform-invite-gym \
+     invite-staff attendance-ingest
+   ```
+
+   Seven functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
+   `platform-invite-gym` (owner console) needs `PLATFORM_APP_URL`;
+   `attendance-ingest` needs nothing extra (Supabase provides its keys).
+
+6. **Frontend env (Vercel).** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+   `VITE_APP_URL`, `VITE_PADDLE_ENVIRONMENT=sandbox`,
+   `VITE_PADDLE_CLIENT_TOKEN=test_...`, `VITE_PADDLE_STARTER_PRICE_ID`,
+   `VITE_PADDLE_PRO_PRICE_ID`, `VITE_PLATFORM_CURRENCY=USD`,
+   `VITE_STARTER_PRICE=49`, `VITE_PRO_PRICE=89`,
+   `VITE_STARTER_EXTRA_LOCATION_PRICE=25`, `VITE_PRO_EXTRA_LOCATION_PRICE=40`,
+   `VITE_TURNSTILE_SITE_KEY`. Remove any older BHD values and any
+   `VITE_DEFAULT_*` region values. The build fails with a clear message if
+   something above is missing or the currency is one Paddle can't bill in.
+7. **Smoke test** (a real browser, sandbox card `4242 4242 4242 4242`). After each
+   step, look at the **Result** column; a mismatch is the bug to chase.
+
+   | Do | Expect |
+   |---|---|
+   | Sign up with a fresh email | "Check your email" panel, resend works after 60 s |
+   | Open the email link | `/welcome` creates the gym, lands on `/subscribe` |
+   | Subscribe to Starter | Paddle overlay shows USD 49 (plus tax per your setting); after paying, `platform_subscriptions` has `active`, `starter`, `amount 49`, `currency USD`, and the dashboard opens |
+   | Wizard step 1 | Country suggests currency, timezone and tax; finishing saves them |
+   | Branches → add an extra location | Paddle subscription shows two items (plan x1, extra x1); `extra_locations = 1`; a second branch can now be created |
+   | Settings → Billing → Cancel | Paddle shows it set to cancel at period end; access continues; "Keep subscription" clears it |
+   | Pay with a failing card (`4000 0000 0000 0341`) at renewal / dashboard "retry" | Status `past_due`, banner with a 7-day grace, access continues |
+   | Another browser: second gym, try to read gym 1's ids through the API | Nothing returned (RLS) |
+   | Settings → Data & privacy → delete the gym | Subscription cancelled in Paddle, gym and files gone, sign-in lands on the landing page |
+
+   The sandbox can also advance time (Paddle → simulate) to test a renewal and
+   the end of a cancelled period.
+8. **Go live.** In Paddle's live account repeat steps 3-5 with the live API key
+   (`PADDLE_ENVIRONMENT=production`), a live client token (`live_...`), the
+   live webhook secret and the live price IDs; in Vercel set
+   `VITE_PADDLE_ENVIRONMENT=production` and the live token and price IDs. Make one
+   real purchase with your own card, refund it in Paddle, and cancel it.
+   Remove the sandbox values from production environments.
+
+## Worldwide launch checklist
+
+Things the code cannot do for you, in the order I would do them.
+
+1. **Database first, then functions, then the frontend.** Apply every migration
+   in filename order (the last two are `20261024090000_self_service_account_deletion`
+   and `20261024120000_multiple_taxes`); deploy `delete-account` and redeploy
+   `paddle-webhook`; only then deploy the frontend. The new frontend writes
+   `invoices.tax_breakdown` and reads `pos_sales.tax_breakdown`, which fail
+   against a database without them.
+2. **Prices in more than one currency.** The app prices the platform in
+   `VITE_PLATFORM_CURRENCY` (currently BHD). Whether Paddle accepts BHD for your
+   products is **unconfirmed**. Paddle supports a limited list of currencies and
+   shows customers a local price when you add per-country prices to a price
+   object. Before launch: check Paddle's supported-currency list in the
+   dashboard, create prices in USD (and EUR/GBP if you want them), and complete a
+   sandbox purchase from a non-Gulf country. If BHD is not supported, change the
+   price IDs and `VITE_PLATFORM_CURRENCY`/`VITE_STARTER_PRICE`/`VITE_PRO_PRICE`
+   (the plan cards read them) - no code change is needed. The extra-location
+   add-on has its own price IDs and the same question.
+3. **Taxes on your own subscription.** Paddle is the merchant of record: it
+   calculates and remits VAT/sales tax on what gyms pay you. Confirm in the
+   dashboard that tax is enabled for the countries you sell to and whether your
+   prices are tax-inclusive or exclusive.
+4. **Legal review.** The Terms, Privacy and Refund pages are drafts a lawyer has
+   not reviewed. In particular: the governing-law clause names the laws and
+   courts of the Kingdom of Bahrain (the contracting company is Bahraini; have a
+   lawyer confirm the wording, the company's legal name and address, and whether
+   Bahrain's Personal Data Protection Law (Law No. 30 of 2018) needs a
+   registration or notification from you as a processor); the privacy page names the processors the code actually uses (Supabase, Vercel,
+   Paddle, Cloudflare Turnstile, optional Sentry) and describes the controller /
+   processor split and the retention behaviour described above; sign data
+   processing agreements with each provider; decide whether you need an EU/UK
+   representative. If you add Google Tag Manager or any analytics, add a cookie
+   consent banner first: today the app stores only session, language/theme and a
+   session-only UTM record, and pushes events to a `dataLayer` that nothing reads.
+5. **Where the data lives.** Choose the Supabase project region deliberately
+   (EU gyms may expect EU hosting); it cannot be moved later without a migration.
+   Use a paid Supabase plan: the free tier pauses after inactivity and has no
+   point-in-time recovery. Turn on backups/PITR and test a restore once.
+6. **Email and abuse.** Custom SMTP, Confirm email, redirect URLs and the
+   Turnstile captcha, as described under "Self-serve sign-up".
+7. **Support and status.** A monitored `support@` / `legal@mtdrb.net` mailbox
+   (the legal pages publish `legal@mtdrb.net`), a place to report problems, and a
+   status page. Set `VITE_SENTRY_DSN` so you hear about errors before customers do.
+8. **Languages.** The interface is English and Arabic only. Adding a language
+   means translating the `translation` block in `src/i18n.ts` (about 5,000
+   strings), registering it in `LanguageSwitcher`, and checking dates and
+   numbers; a missing key shows its raw key name. Gym owners elsewhere can use
+   the English interface; their members' data is entered by them and is not
+   translated.
+9. **Per-country invoicing rules.** Some countries require specific invoice
+   formats or e-invoicing (Saudi ZATCA, UAE FTA, India GST e-invoice). The app
+   records tax correctly and prints the gym's tax number on POS receipts, but it
+   does not generate authority-compliant e-invoices.
+
+## Door and reader integration (entry / exit hardware)
+
+Gyms use very different hardware, so the app does not talk to any one brand.
+It exposes a vendor-neutral layer; anything that can send an HTTP request (a
+controller's webhook/HTTP push, a small bridge box, a script) can plug in, and
+a tablet at the desk works with no integration at all.
+
+**Deploy order:** apply `supabase/migrations/20261024150000_access_control.sql`
+*before* the frontend, then `supabase functions deploy attendance-ingest`
+(`verify_jwt = false` is already set in `supabase/config.toml`; the function
+authenticates with the device key instead).
+
+**Setting up a reader (gym admin):** Attendance → Readers → add a device, pick
+its direction (entry / exit / auto), then "Create key". The key
+(`mtdrb_dev_…`) is shown **once**; only its SHA-256 is stored. Rotating a key
+invalidates the old one; revoking stops the reader immediately. The panel
+shows a ready-to-paste `curl` example:
+
+```
+POST https://<project>.supabase.co/functions/v1/attendance-ingest
+x-device-key: mtdrb_dev_…
+{"credential_type":"qr|badge|vendor_user_id","credential":"…","external_event_id":"<unique per scan>","occurred_at":"<ISO time, optional>"}
+→ {"allowed":true|false,"reason":"…","duplicate":false,"direction":"check_in","member":{"name":"…","expiry_date":"…"}}
+```
+
+The device should open the door only when `allowed` is `true`.
+
+**Credentials (Attendance → Member credentials):** a printable QR
+(`MTDRB-` + 20 hex, shown once), an RFID/NFC card or fob UID, or the member's
+user id inside a terminal (`vendor_user_id`). Card UIDs and QR tokens are stored
+hashed; no biometric templates are ever stored — fingerprint/face terminals keep
+those on the device and send only their own user id.
+
+**Rules the server enforces:**
+- Allowed only if the member status is active or trial **and** the expiry date
+  is not past, evaluated in the gym's own timezone (Gym settings).
+- Entry readers always record a check-in, exit readers a check-out; `auto`
+  alternates (check-in, then check-out; a new check-in after 16 h).
+- Idempotent on `external_event_id`; a second tap within 5 s on the same reader
+  is recorded as `duplicate`, not a second visit.
+- Refused taps are logged as `rejected` with a reason (and don't count in
+  attendance metrics). An unknown credential is denied and **not** stored.
+- Device scans do not check the gym's own subscription entitlement; the desk
+  kiosk (`/dashboard/attendance/kiosk`, any keyboard-style USB/Bluetooth
+  scanner or card reader works) does.
+- Rate-limited and size-limited at the function (429 / 413).
+
+**Not built:** vendor-specific adapters (ZKTeco ADMS push, Hikvision ISAPI,
+Suprema, etc.) — they need a real device to test against; camera-based QR
+scanning in the kiosk; blocking entry for unpaid invoices.
 
 ## Platform owner console (`/superadmin`)
 
@@ -309,6 +1073,21 @@ features, and "no expiry" is entitled forever until revoked.
 **Tests**: `supabase/tests/` holds a Supabase shim and a SQL suite that runs on a
 plain Postgres 16 (see the header of `platform_admin_console.test.sql`).
 
+**Where are the gyms? ("Gyms by country")** The Overview page has a
+"Gyms by country" table (gyms, paid, trial and members per country), served by
+`platform_gyms_by_country()` (`20261024180000_platform_gyms_by_country.sql`;
+apply it before the frontend). A gym's country is the one it picked in its own
+setup; gyms that haven't chosen one yet are listed as "Not set yet". It counts
+gyms, not visitors — for paying customers' billing countries use the Paddle
+dashboard, and for site visitors Vercel Analytics.
+
+The Gyms list also shows each gym's country and has a country filter
+(`?country=BH`, or `?country=none` for gyms that haven't chosen one); the
+country names in the Overview table link to it. That needs
+`20261024210000_gyms_list_country_filter.sql`, which replaces
+`platform_list_tenants` with a version that has one extra optional argument —
+apply it before the frontend.
+
 ## Financial document migration
 
 New receipt and invoice records store an object path rather than a public URL. The UI requests a five-minute signed URL only when a user opens a document. Existing values that use the old Supabase public URL format are converted to their object path by `src/utils/storage.ts`; arbitrary external URLs are rejected. After confirming signed access works, remove any old public bucket access and invalidate old public URLs where your storage policy permits.
@@ -332,11 +1111,32 @@ npm ci
 npm run typecheck
 npm run lint
 npm test -- --run
+npm run e2e
 npm run test:coverage
 npm audit --omit=dev
 npm run build:deploy
 ```
 
 `npm run build:deploy` must be run with the Production values configured in Vercel. A local build without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` is expected to fail with an actionable configuration message; this prevents a blank production artifact from being published.
+
+### Browser end-to-end and accessibility tests
+
+`npm run e2e` starts the app on the demo backend (the same credential-free mode as `npm run dev`, so it needs no database, accounts or secrets) and drives it in a real Chromium browser with Playwright. CI runs it as the `e2e` job on every pull request.
+
+| Spec | What it checks |
+| --- | --- |
+| `e2e/a11y.spec.ts` | Every public and signed-in screen scanned with axe against WCAG 2.2 level A/AA, in light and dark mode and in English and Arabic (colour contrast, labels, names, keyboard focus in dialogs, skip link). Any finding fails the run. |
+| `e2e/responsive.spec.ts` | Runs on a phone (393 px) and a tablet (768 px): no sideways scrolling, minimum tap-target size, the menu button opens the navigation. English and Arabic. |
+| `e2e/members.spec.ts`, `pos.spec.ts`, `billing.spec.ts`, `settings.spec.ts`, `app.spec.ts` | The main flows: member search, paging and adding a member on a plan; selling in the shop with a discount and VAT; invoices and expenses; the team, custom roles and expense categories; language, right-to-left layout, dark mode and navigation. |
+
+Useful variations:
+
+```bash
+npm run e2e -- --project=phone           # one device
+npm run e2e -- e2e/pos.spec.ts           # one file
+npx playwright show-report               # after a CI failure, open the downloaded report
+```
+
+First run on a machine: `npx playwright install --with-deps chromium`. Where a Chromium is already installed (a sandbox), set `PW_CHROMIUM` to its path instead. The demo backend lives in `src/mocks/`; when a flow needs a database function the demo does not imitate yet, add it there (see `posMock.ts`) rather than skipping the test. Real database rules are covered by the SQL tests, not here.
 
 The release gate should fail on lint warnings, missing coverage, or critical/high production advisories. Any temporary dependency exception must be documented with an owner and expiration date.

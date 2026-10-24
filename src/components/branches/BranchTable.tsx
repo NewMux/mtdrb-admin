@@ -67,7 +67,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700">
       <table className="w-full" dir={isRTL ? "rtl" : "ltr"}>
         <thead className="bg-gray-50 dark:bg-gray-800/50">
           <tr>
@@ -118,7 +118,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
               <td className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {branch.address || (
-                    <span className="text-gray-400 dark:text-gray-500 italic">
+                    <span className="text-gray-500 dark:text-gray-400 italic">
                       {t("branches.noAddress") || "No address"}
                     </span>
                   )}
@@ -139,7 +139,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
                     </div>
                   )}
                   {!branch.phone && !branch.email && (
-                    <span className="text-gray-400 dark:text-gray-500 italic text-sm">
+                    <span className="text-gray-500 dark:text-gray-400 italic text-sm">
                       {t("branches.noContact") || "No contact info"}
                     </span>
                   )}
@@ -148,7 +148,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
               <td className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {branch.manager_name || (
-                    <span className="text-gray-400 dark:text-gray-500 italic">
+                    <span className="text-gray-500 dark:text-gray-400 italic">
                       {t("branches.noManager") || "No manager"}
                     </span>
                   )}
@@ -174,6 +174,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => onView(branch)}
+                      aria-label={t("common.view")}
                       className="p-2"
                     >
                       <FiEye className="w-4 h-4" />
@@ -184,6 +185,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(branch)}
+                      aria-label={t("common.edit")}
                       className="p-2"
                     >
                       <FiEdit2 className="w-4 h-4" />
@@ -194,6 +196,7 @@ const BranchTable: React.FC<BranchTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDelete(branch)}
+                      aria-label={t("common.delete")}
                       className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
                     >
                       <FiTrash2 className="w-4 h-4" />

@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import { supabase } from "../supabaseClient";
 import { toast } from "react-hot-toast";
 
@@ -134,7 +135,7 @@ export const getAutomationWorkflows = async (
     return data || [];
   } catch (error) {
     console.error("Error fetching automation workflows:", error);
-    toast.error("Failed to load automation workflows");
+    toast.error(i18n.t("toasts.automationLoadFailed"));
     return [];
   }
 };
@@ -150,11 +151,11 @@ export const createAutomationWorkflow = async (
       .single();
 
     if (error) throw error;
-    toast.success("Automation workflow created successfully");
+    toast.success(i18n.t("toasts.automationCreated"));
     return data;
   } catch (error) {
     console.error("Error creating automation workflow:", error);
-    toast.error("Failed to create automation workflow");
+    toast.error(i18n.t("toasts.automationCreateFailed"));
     return null;
   }
 };
@@ -172,11 +173,11 @@ export const updateAutomationWorkflow = async (
       .single();
 
     if (error) throw error;
-    toast.success("Automation workflow updated successfully");
+    toast.success(i18n.t("toasts.automationUpdated"));
     return data;
   } catch (error) {
     console.error("Error updating automation workflow:", error);
-    toast.error("Failed to update automation workflow");
+    toast.error(i18n.t("toasts.automationUpdateFailed"));
     return null;
   }
 };
@@ -191,11 +192,11 @@ export const deleteAutomationWorkflow = async (
       .eq("id", id);
 
     if (error) throw error;
-    toast.success("Automation workflow deleted successfully");
+    toast.success(i18n.t("toasts.automationDeleted"));
     return true;
   } catch (error) {
     console.error("Error deleting automation workflow:", error);
-    toast.error("Failed to delete automation workflow");
+    toast.error(i18n.t("toasts.automationDeleteFailed"));
     return false;
   }
 };
@@ -255,7 +256,7 @@ export const upsertAutomationSetting = async (
     return data;
   } catch (error) {
     console.error("Error upserting automation setting:", error);
-    toast.error("Failed to save automation setting");
+    toast.error(i18n.t("toasts.automationSettingFailed"));
     return null;
   }
 };
@@ -487,7 +488,7 @@ export const getDefaultWorkflows = (
       type: "booking_reminders",
       status: "active",
       icon: "FiBell",
-      color: "text-blue-600",
+      color: "text-blue-600 dark:text-blue-400",
       bg_color: "bg-blue-50",
       triggers: buildTriggers([
         "24 hours before class",
@@ -531,7 +532,7 @@ export const getDefaultWorkflows = (
       type: "capacity_optimization",
       status: "active",
       icon: "FiTarget",
-      color: "text-green-600",
+      color: "text-green-600 dark:text-green-400",
       bg_color: "bg-green-50",
       triggers: buildTriggers([
         "24 hours before class",
@@ -678,7 +679,7 @@ export const getDefaultWorkflows = (
       type: "attendance_tracking",
       status: "active",
       icon: "FiUsers",
-      color: "text-red-600",
+      color: "text-red-600 dark:text-red-400",
       bg_color: "bg-red-50",
       triggers: [
         {

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FiCheckCircle, FiRefreshCw } from "react-icons/fi";
 import { EmptyState, SmartButton, SmartLoading } from "../../components/ui";
 import AccessStateBadge from "../../components/superadmin/AccessStateBadge";
+import GymsByCountryCard from "../../components/superadmin/GymsByCountryCard";
 import AuditList from "../../components/superadmin/AuditList";
 import GrantAccessModal, { type GrantTarget } from "../../components/superadmin/GrantAccessModal";
 import { fetchOverview } from "../../api/platformAdmin";
@@ -111,6 +112,7 @@ export default function Overview() {
           data.no_expiry_comps > 0 ? `${data.no_expiry_comps} with no expiry` : undefined,
         )}
         {stateTile("trialing", "Trial")}
+        {stateTile("past_due", "Payment failed", "Still has access (grace period)")}
         {stateTile("inactive", "No access", "Cancelled or lapsed")}
       </div>
 
@@ -189,6 +191,8 @@ export default function Overview() {
           )}
         </Card>
       </div>
+
+      <GymsByCountryCard />
 
       <Card title="Recent changes">
         <AuditList entries={data.recent_changes} showTenant emptyText="No changes made from this console yet." />

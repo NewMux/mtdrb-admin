@@ -229,7 +229,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         <div className="flex items-center justify-between gap-4 w-full">
           <div className="flex items-center gap-2">
             {isPro && recommendations.length > 0 && (
-              <div className="flex items-center gap-1 text-sm text-blue-600">
+              <div className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiZap className="h-4 w-4 flex-shrink-0" />
                 <span>{t("classes.smartSuggestions", "{{count}} smart suggestions", { count: recommendations.length })}</span>
               </div>
@@ -439,7 +439,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
               required
             />
             <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
-              <FiCheck className="h-4 w-4 text-green-600" />
+              <FiCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
               <span className="text-sm text-green-700 dark:text-green-300">
                 Available spots: {formData.capacity - classData.enrolled_count}
               </span>
@@ -460,7 +460,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                 id="notify-members"
                 checked={notifyMembers}
                 onChange={(e) => setNotifyMembers(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
               />
               <label
                 htmlFor="notify-members"

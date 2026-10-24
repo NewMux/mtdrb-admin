@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import i18n from "../i18n";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -25,7 +26,8 @@ import {
 import type { IconType } from "react-icons";
 import ClassTable from "../components/classes/ClassTable";
 import ClassDetailsDrawer from "../components/classes/ClassDetailsDrawer";
-import ClassCalendar from "../components/classes/ClassCalendar";
+// The calendar (FullCalendar is a large library) is only fetched when that tab is opened.
+const ClassCalendar = lazy(() => import("../components/classes/ClassCalendar"));
 
 // Import smart class modals
 import {
@@ -50,10 +52,13 @@ import {
   getClassAnalytics,
 } from "../api/class";
 
-import ClassAnalyticsTab from "../components/classes/tabs/ClassAnalyticsTab";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const ClassAnalyticsTab = lazy(() => import("../components/classes/tabs/ClassAnalyticsTab"));
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 type ModalType =
   | "add"
@@ -437,7 +442,7 @@ export default function SmartClassManagement() {
     closeModal();
     fetchAllClasses();
     fetchClassStats();
-    toast.success("Class operation completed successfully!");
+    toast.success(i18n.t("toasts.classOpDone"));
   };
 
   const handleCloseDrawer = () => {
@@ -526,7 +531,9 @@ export default function SmartClassManagement() {
       case "analytics":
         return (
           <div className="space-y-6">
-            <ClassAnalyticsTab classes={classes} />
+            <Suspense fallback={<TabFallback />}>
+              <ClassAnalyticsTab classes={classes} />
+            </Suspense>
           </div>
         );
 
@@ -553,13 +560,15 @@ export default function SmartClassManagement() {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("classes.export")}</span>
                   </button>
-                  <button
-                    onClick={handleAddClass}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("classes.addClass")}</span>
-                  </button>
+                  <Can permission="classes.manage">
+                    <button
+                      onClick={handleAddClass}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("classes.addClass")}</span>
+                    </button>
+                  </Can>
                 </div>
               </div>
 
@@ -583,7 +592,15 @@ export default function SmartClassManagement() {
       case "calendar":
         return (
           <div className="h-[calc(100vh-300px)]">
-            <ClassCalendar />
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center" role="status" aria-label="Loading calendar">
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-sky-600" />
+                </div>
+              }
+            >
+              <ClassCalendar />
+            </Suspense>
           </div>
         );
 
@@ -609,13 +626,15 @@ export default function SmartClassManagement() {
               <FiRefreshCw className="w-4 h-4" />
               <span>{t("classes.refresh")}</span>
             </button>
-            <button
-              onClick={handleAddClass}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("classes.addClass")}</span>
-            </button>
+            <Can permission="classes.manage">
+              <button
+                onClick={handleAddClass}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("classes.addClass")}</span>
+              </button>
+            </Can>
           </>
         }
       />
@@ -625,7 +644,7 @@ export default function SmartClassManagement() {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("classes.searchPlaceholder")}
@@ -639,6 +658,7 @@ export default function SmartClassManagement() {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
               className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"

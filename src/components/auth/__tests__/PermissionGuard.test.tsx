@@ -213,5 +213,60 @@ describe("PermissionGuard", () => {
       });
     });
   });
-});
 
+  describe("Custom role permissions", () => {
+    const withPermissions = (permissions: string[] | null) => {
+      const can = (wanted: string | readonly string[]) =>
+        permissions === null || (typeof wanted === "string" ? [wanted] : wanted).some((p) => permissions.includes(p));
+      return { userMetadata: { tenant_id: "t1", role: "employee" as UserRole }, isLoading: false, can };
+    };
+
+    it("lets a built-in role through a permission requirement", () => {
+      mockUseAuth.mockReturnValue(withPermissions(null));
+      render(
+        <BrowserRouter>
+          <PermissionGuard requiredRole="employee" requiredPermission="billing.view">
+            <div>Billing</div>
+          </PermissionGuard>
+        </BrowserRouter>,
+      );
+      expect(screen.getByText("Billing")).toBeInTheDocument();
+    });
+
+    it("lets a custom role through only if it holds the permission", () => {
+      mockUseAuth.mockReturnValue(withPermissions(["billing.view"]));
+      const { unmount } = render(
+        <BrowserRouter>
+          <PermissionGuard requiredRole="employee" requiredPermission={["billing.view", "billing.manage"]}>
+            <div>Billing</div>
+          </PermissionGuard>
+        </BrowserRouter>,
+      );
+      expect(screen.getByText("Billing")).toBeInTheDocument();
+      unmount();
+
+      mockUseAuth.mockReturnValue(withPermissions(["pos.use"]));
+      render(
+        <BrowserRouter>
+          <PermissionGuard requiredRole="employee" requiredPermission={["billing.view", "billing.manage"]}>
+            <div>Billing</div>
+          </PermissionGuard>
+        </BrowserRouter>,
+      );
+      expect(screen.queryByText("Billing")).not.toBeInTheDocument();
+      expect(screen.getByText("Access Denied")).toBeInTheDocument();
+    });
+
+    it("still requires the tier: a permission never lifts a role above its level", () => {
+      mockUseAuth.mockReturnValue({ ...withPermissions(["billing.manage"]), userMetadata: { tenant_id: "t1", role: "trainer" as UserRole } });
+      render(
+        <BrowserRouter>
+          <PermissionGuard requiredRole="employee" requiredPermission="billing.manage">
+            <div>Billing</div>
+          </PermissionGuard>
+        </BrowserRouter>,
+      );
+      expect(screen.queryByText("Billing")).not.toBeInTheDocument();
+    });
+  });
+});

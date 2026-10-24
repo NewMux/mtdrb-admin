@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../supabaseClient";
+import { toLocalDateString } from "../../../utils/analyticsRange";
 
 export interface AnalyticsFilters {
   dateRange: {
@@ -92,7 +93,7 @@ export const useSmartAnalyticsModal = (
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split("T")[0],
-      end: props.dateRange?.end || new Date().toISOString().split("T")[0],
+      end: props.dateRange?.end || toLocalDateString(new Date()),
     },
     reportType: resolvedReportType,
     exportFormat: "csv",

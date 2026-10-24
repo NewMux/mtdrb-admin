@@ -1,3 +1,4 @@
+import { LazyMotion } from "framer-motion";
 import { lazy, Suspense, useEffect } from "react";
 // Production deployment marker for mtdrb-fit 20260817.
 import {
@@ -6,10 +7,9 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { ThemeProvider as MuiThemeProvider } from "@mui/material";
-import { theme } from "./theme";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import { GymConfigProvider } from "./contexts/GymConfigProvider";
 import { UIProvider } from "./contexts/UIContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { PageThemeProvider } from "./contexts/PageThemeContext";
@@ -28,6 +28,7 @@ const Signup = lazy(() => import("./pages/Signup"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const SubscribeCallback = lazy(() => import("./pages/SubscribeCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -36,6 +37,7 @@ const Classes = lazy(() => import("./pages/Classes"));
 const Trainers = lazy(() => import("./pages/Trainers"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Attendance = lazy(() => import("./pages/Attendance"));
+const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
@@ -56,6 +58,9 @@ import AuthSetup from "./components/AuthSetup";
 import PermissionGuard from "./components/auth/PermissionGuard";
 import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
 import { PlatformAdminProvider } from "./contexts/PlatformAdminProvider";
+
+// The animation engine arrives after the first paint (see motionFeatures.ts).
+const loadMotionFeatures = () => import("./motionFeatures").then((module) => module.default);
 
 const App = () => {
   // Global async error handling
@@ -112,12 +117,13 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <MuiThemeProvider theme={theme}>
+      <LazyMotion features={loadMotionFeatures}>
         <ThemeProvider>
           <PageThemeProvider>
             <Router>
               <AuthProvider>
                 <SubscriptionProvider>
+                  <GymConfigProvider>
                   <UIProvider>
                     <Toaster
                       position="top-right"
@@ -144,6 +150,7 @@ const App = () => {
                       <Route path="/subscribe" element={<Subscribe />} />
                       <Route path="/subscribe/callback" element={<SubscribeCallback />} />
                       <Route path="/onboarding" element={<Onboarding />} />
+                      <Route path="/welcome" element={<Welcome />} />
                       <Route path="/terms" element={<Legal initialTab="terms" />} />
                       <Route path="/privacy" element={<Legal initialTab="privacy" />} />
                       <Route path="/refund" element={<Legal initialTab="refund" />} />
@@ -222,6 +229,15 @@ const App = () => {
                             </PermissionGuard>
                           }
                         />
+                        {/* Front-desk scanner screen - requires employee or higher */}
+                        <Route
+                          path="attendance/kiosk"
+                          element={
+                            <PermissionGuard requiredRole="employee" requiredPermission="attendance.manage" fallbackPath="/dashboard">
+                              <Kiosk />
+                            </PermissionGuard>
+                          }
+                        />
                         {/* Insights - requires employee or higher */}
                         <Route 
                           path="insights" 
@@ -253,7 +269,7 @@ const App = () => {
                         <Route
                           path="pos"
                           element={
-                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" requiredPermission={["pos.use", "pos.manage"]} fallbackPath="/dashboard">
                               <POS />
                             </PermissionGuard>
                           }
@@ -262,7 +278,7 @@ const App = () => {
                         <Route 
                           path="billing" 
                           element={
-                            <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
+                            <PermissionGuard requiredRole="employee" requiredPermission={["billing.view", "billing.manage"]} fallbackPath="/dashboard">
                               <Billing />
                             </PermissionGuard>
                           } 
@@ -378,12 +394,13 @@ const App = () => {
                       </Routes>
                     </Suspense>
                   </UIProvider>
+                  </GymConfigProvider>
                 </SubscriptionProvider>
               </AuthProvider>
             </Router>
           </PageThemeProvider>
         </ThemeProvider>
-      </MuiThemeProvider>
+      </LazyMotion>
     </ErrorBoundary>
   );
 };

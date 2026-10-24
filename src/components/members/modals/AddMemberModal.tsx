@@ -7,6 +7,10 @@ import { AppleInput, AppleSelect, AppleTextarea } from "../../AppleStyleModal";
 import { Member } from "../../../types/member";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../../../hooks/useRTL";
+import { useAuth } from "../../../contexts/AuthContext";
+import { useGymConfig } from "../../../contexts/gym-config-context";
+import { listActivePlans, PLAN_PAYMENT_METHODS, type ActivePlan, type PaymentMethod } from "../../../api/membershipPlans";
+import { getCurrencyDecimals } from "../../../utils/invoiceMath";
 
 interface AddMemberModalProps {
   isOpen: boolean;
@@ -93,6 +97,31 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { isRTL } = useRTL();
+  const { tenantId } = useAuth();
+  const { config: gymConfig } = useGymConfig();
+  const priceDecimals = getCurrencyDecimals(gymConfig.currency);
+  // The plan the new member starts on (optional). The database works out the dates.
+  const [plans, setPlans] = React.useState<ActivePlan[]>([]);
+  const [planId, setPlanId] = React.useState("");
+  const [planPrice, setPlanPrice] = React.useState("");
+  const [planInvoice, setPlanInvoice] = React.useState(true);
+  const [planPaymentMethod, setPlanPaymentMethod] = React.useState<PaymentMethod>("cash");
+  React.useEffect(() => {
+    if (!isOpen || !tenantId) return;
+    let cancelled = false;
+    listActivePlans(tenantId)
+      .then((rows) => !cancelled && setPlans(rows))
+      .catch(() => !cancelled && setPlans([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, tenantId]);
+  const selectedPlan = plans.find((p) => p.id === planId);
+  const choosePlan = (id: string) => {
+    setPlanId(id);
+    const plan = plans.find((p) => p.id === id);
+    setPlanPrice(plan ? plan.price.toFixed(priceDecimals) : "");
+  };
   const [formData, setFormData] = React.useState<AddMemberFormData>({
     name: "",
     email: "",
@@ -267,7 +296,14 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
         preferred_workout_times: formData.preferred_workout_times,
       };
 
-      await onSuccess(payload);
+      const planPriceNumber = Number(planPrice);
+      await onSuccess({
+        ...payload,
+        plan_id: selectedPlan ? selectedPlan.id : null,
+        plan_price: selectedPlan && planPrice.trim() !== "" && Number.isFinite(planPriceNumber) ? planPriceNumber : null,
+        plan_invoice: planInvoice,
+        plan_payment_method: planPaymentMethod,
+      });
       resetForm();
     } catch (error) {
       console.error("Failed to add member:", error);
@@ -275,6 +311,10 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   };
 
   const resetForm = () => {
+    setPlanId("");
+    setPlanPrice("");
+    setPlanInvoice(true);
+    setPlanPaymentMethod("cash");
     setFormData({
       name: "",
       email: "",
@@ -522,6 +562,74 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
             placeholder="Enter full address"
           />
         </section>
+        {/* Membership plan Section */}
+        {plans.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                {t("membershipPlans.title")}
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AppleSelect
+                label={t("membershipPlans.selectPlan")}
+                value={planId}
+                onChange={(e) => choosePlan(e.target.value)}
+                aria-label={t("membershipPlans.selectPlan")}
+              >
+                <option value="">{t("membershipPlans.noPlan")}</option>
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </AppleSelect>
+              {selectedPlan && (
+                <AppleInput
+                  label={`${t("membershipPlans.priceLabel")} (${gymConfig.currency})`}
+                  type="number"
+                  min="0"
+                  step={priceDecimals === 0 ? "1" : `0.${"0".repeat(priceDecimals - 1)}1`}
+                  value={planPrice}
+                  onChange={(e) => setPlanPrice(e.target.value)}
+                  aria-label={t("membershipPlans.priceLabel")}
+                />
+              )}
+            </div>
+            {selectedPlan && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-start">
+                {t("membershipPlans.daysOfAccess", { count: selectedPlan.duration })} · {t("membershipPlans.startsToday")}
+              </p>
+            )}
+            {selectedPlan && Number(planPrice) > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 text-start">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={planInvoice}
+                    onChange={(e) => setPlanInvoice(e.target.checked)}
+                  />
+                  <span>{t("membershipPlans.recordSale")}</span>
+                </label>
+                {planInvoice && (
+                  <AppleSelect
+                    label={t("membershipPlans.paymentMethod")}
+                    aria-label={t("membershipPlans.paymentMethod")}
+                    value={planPaymentMethod}
+                    onChange={(e) => setPlanPaymentMethod(e.target.value as PaymentMethod)}
+                  >
+                    {PLAN_PAYMENT_METHODS.map((m) => (
+                      <option key={m} value={m}>
+                        {t(`membershipPlans.methods.${m}`)}
+                      </option>
+                    ))}
+                  </AppleSelect>
+                )}
+              </div>
+            )}
+          </section>
+        )}
         {/* Health & Fitness Section */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">

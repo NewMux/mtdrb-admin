@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiHome,
   FiUsers,
@@ -165,7 +165,7 @@ export const SmartBreadcrumb: React.FC<SmartBreadcrumbProps> = ({ items }) => {
     <nav className="flex items-center space-x-2 mb-6">
       {items.map((item, index) => (
         <React.Fragment key={index}>
-          {index > 0 && <FiChevronRight className="h-4 w-4 text-gray-400" />}
+          {index > 0 && <FiChevronRight className="h-4 w-4 text-gray-500" />}
           {item.current ? (
             <span className="text-gray-900 font-medium">{item.label}</span>
           ) : (
@@ -309,7 +309,7 @@ export const SmartSuggestions: React.FC<SmartSuggestionsProps> = ({
               >
                 {suggestion.priority} priority
               </span>
-              <FiChevronRight className="h-4 w-4 text-gray-400" />
+              <FiChevronRight className="h-4 w-4 text-gray-500" />
             </div>
           </motion.button>
         ))}

@@ -828,6 +828,8 @@ export interface Database {
           external_device_id: string | null;
           status: "active" | "paused" | "revoked";
           last_seen_at: string | null;
+          direction: "check_in" | "check_out" | "auto";
+          key_hint: string | null;
           metadata: Json;
           created_at: string;
           updated_at: string;
@@ -842,6 +844,8 @@ export interface Database {
           external_device_id?: string | null;
           status?: "active" | "paused" | "revoked";
           last_seen_at?: string | null;
+          direction?: "check_in" | "check_out" | "auto";
+          key_hint?: string | null;
           metadata?: Json;
           created_at?: string;
           updated_at?: string;
@@ -856,6 +860,8 @@ export interface Database {
           external_device_id?: string | null;
           status?: "active" | "paused" | "revoked";
           last_seen_at?: string | null;
+          direction?: "check_in" | "check_out" | "auto";
+          key_hint?: string | null;
           metadata?: Json;
           created_at?: string;
           updated_at?: string;

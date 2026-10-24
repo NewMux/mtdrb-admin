@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiDownload,
   FiFileText,
@@ -139,12 +140,12 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
 
   const handleExport = async () => {
     if (!selectedExport) {
-      toast.error("Please select an export option");
+      toast.error(i18n.t("toasts.pickExport"));
       return;
     }
 
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
@@ -313,18 +314,20 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
       if (option.format === "csv") {
         exportCSV(exportData, filename);
       } else if (option.format === "pdf") {
-        exportPDF(exportData, filename, option.label);
+        await exportPDF(exportData, filename, option.label);
       } else if (option.format === "excel") {
         await exportExcel(exportData, filename, option.label);
       }
 
-      toast.success("Data exported successfully");
+      toast.success(i18n.t("toasts.dataExported"));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error exporting data:", error);
       toast.error(
-        `Failed to export data: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
     } finally {
       setLoading(false);
@@ -351,7 +354,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {selectedExport && (
-              <div className="flex items-center space-x-1 text-sm text-blue-600">
+              <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                 <FiDownload className="h-4 w-4" />
                 <span>{getSelectedExportOption()?.label}</span>
               </div>
@@ -562,7 +565,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       includeWaitlist: e.target.checked,
                     }))
                   }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                 />
                 <label
                   htmlFor="include-waitlist"
@@ -583,7 +586,7 @@ const ExportClassDataModal: React.FC<ExportClassDataModalProps> = ({
                       includeAnalytics: e.target.checked,
                     }))
                   }
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  className="rounded border-gray-300 text-green-600 dark:text-green-400 focus:ring-green-500"
                 />
                 <label
                   htmlFor="include-analytics"

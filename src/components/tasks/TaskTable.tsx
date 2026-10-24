@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiEdit,
   FiTrash2,
@@ -97,7 +97,6 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
       let taskError = null;
       
       try {
-        console.log("TaskTable: Fetching tasks for tenant:", tenantId);
         const result = await supabase
           .from("tasks")
           .select(
@@ -107,13 +106,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
           .order("due_date", { ascending: true });
         taskData = result.data;
         taskError = result.error;
-        
-        console.log("TaskTable: Query result:", { 
-          dataCount: taskData?.length || 0, 
-          error: taskError,
-          errorCode: taskError?.code,
-          errorMessage: taskError?.message 
-        });
+
       } catch (err: unknown) {
         // Table might not exist
         if (isMissingTableError(err)) {
@@ -315,12 +308,12 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   if (tasks.length === 0 && !loading && !error) {
     return (
       <EmptyState
-        icon={<FiCheckSquare className="w-12 h-12 text-gray-400" />}
+        icon={<FiCheckSquare className="w-12 h-12 text-gray-500 dark:text-gray-400" />}
         title={t("tasks.emptyStateTitle")}
         description={t("tasks.emptyStateDescription")}
         action={
           <div className="flex flex-col items-center space-y-2">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("tasks.emptyStateAction")}
             </p>
           </div>
@@ -330,7 +323,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700">
       <table className="w-full" dir={isRTL ? "rtl" : "ltr"}>
         <thead className="bg-gray-50 dark:bg-gray-800/50">
           <tr>
@@ -397,7 +390,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
 
               <td className="px-6 py-4">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
-                  <FiUser className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <FiUser className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   <span className="text-sm text-gray-900 dark:text-white">{assigneeName}</span>
                 </div>
               </td>
@@ -433,7 +426,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ refreshKey = 0 }) => {
 
               <td className="px-6 py-4">
                 <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
-                  <FiCalendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  <FiCalendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   <span
                     className={`text-sm ${
                       task.due_date && isOverdue(task.due_date)

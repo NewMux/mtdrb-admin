@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { fetchAllRows } from "./fetchAllRows";
+import { fetchAllRows, pagedResult } from "./fetchAllRows";
 
 describe("fetchAllRows", () => {
   it("returns all rows from a single page under the page size", async () => {
@@ -63,5 +63,39 @@ describe("fetchAllRows", () => {
     const rows = await fetchAllRows(queryPage, 2);
     expect(rows).toHaveLength(2);
     expect(queryPage).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("pagedResult", () => {
+  it("wraps a successful read as { data, error: null }", async () => {
+    expect(await pagedResult(async () => [1, 2, 3])).toEqual({ data: [1, 2, 3], error: null });
+  });
+
+  it("turns a thrown error into { data: null, error } and keeps its code", async () => {
+    const result = await pagedResult(async () => {
+      throw Object.assign(new Error("relation does not exist"), { code: "42P01" });
+    });
+    expect(result.data).toBeNull();
+    expect(result.error).toEqual({ message: "relation does not exist", code: "42P01" });
+  });
+
+  it("copes with a thrown non-Error", async () => {
+    const result = await pagedResult(async () => {
+      throw null;
+    });
+    expect(result.error?.message).toBe("Request failed");
+  });
+
+  it("composes with fetchAllRows: a failing page becomes an error, not a partial result", async () => {
+    let calls = 0;
+    const result = await pagedResult(() =>
+      fetchAllRows<number>(async () => {
+        calls += 1;
+        if (calls === 2) return { data: null, error: { message: "boom" } };
+        return { data: Array.from({ length: 2 }, (_, i) => i), error: null };
+      }, 2),
+    );
+    expect(result.data).toBeNull();
+    expect(result.error?.message).toBe("boom");
   });
 });

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { m as motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FiSettings,
   FiUser,
@@ -12,6 +12,9 @@ import {
   FiX,
   FiCalendar,
   FiCheckCircle,
+  FiBriefcase,
+  FiUsers,
+  FiLock,
 } from "react-icons/fi";
 import { SmartButton } from "../components/ui/DesignSystem";
 import TabsNav from "../components/ui/TabsNav";
@@ -27,6 +30,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
+import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
+import DataPrivacyTab from "../components/settings/DataPrivacyTab";
+import TeamSettingsTab from "../components/settings/TeamSettingsTab";
+import { resumeSubscription } from "../api/billing";
 import { validatePassword } from "../utils/passwordPolicy";
 import { PageHeader } from "../components/ui/PageHeader";
 
@@ -36,7 +43,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
-  const { user, tenantId } = useAuth();
+  const { user, tenantId, userMetadata } = useAuth();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +63,12 @@ const Settings: React.FC = () => {
     status?: string;
     trialEnd?: string;
     currentPeriodEnd?: string;
+    /** When a cancellation already scheduled in billing takes effect; access continues until then. */
+    cancelAt?: string;
+    /** "paddle" for a self-service subscription; "manual" for access granted by the platform owner. */
+    paymentProvider?: string;
   }>({ tier: "Free", isPaid: false });
+  const [resumingSubscription, setResumingSubscription] = useState(false);
 
   // Settings hook
   const {
@@ -71,7 +83,14 @@ const Settings: React.FC = () => {
   } = useSettings();
 
   // Local state
-  const [activeTab, setActiveTab] = useState("general");
+  // /dashboard/settings?tab=business opens that tab (used by the setup checklist).
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    requestedTab && ["general", "business", "team", "profile", "security", "billing", "privacy"].includes(requestedTab)
+      ? requestedTab
+      : "general",
+  );
 
 
   // Fetch billing state from the membership-scoped subscription row.
@@ -84,7 +103,7 @@ const Settings: React.FC = () => {
     try {
       const { data: subData, error: subscriptionError } = await supabase
         .from("platform_subscriptions")
-        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, metadata")
+        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, cancel_at, payment_provider")
         .eq("tenant_id", tenantId)
         .maybeSingle();
 
@@ -93,10 +112,14 @@ const Settings: React.FC = () => {
       setSubscriptionInfo({
         tier: subData?.plan_tier || "Free",
         startDate: subData?.created_at,
-        isPaid: subData?.status === "active" || subData?.status === "trialing",
+        // past_due is a live subscription whose renewal payment failed: still
+        // the gym's plan (it can fix the card or cancel), shown as "Payment failed".
+        isPaid: subData?.status === "active" || subData?.status === "trialing" || subData?.status === "past_due",
         status: subData?.status,
         trialEnd: subData?.trial_end,
         currentPeriodEnd: subData?.current_period_end,
+        cancelAt: subData?.cancel_at ?? undefined,
+        paymentProvider: subData?.payment_provider ?? undefined,
       });
     } catch (error) {
       console.error("Failed to fetch subscription info:", error);
@@ -108,10 +131,38 @@ const Settings: React.FC = () => {
     void fetchSubscriptionInfo();
   }, [fetchSubscriptionInfo]);
 
-  // Handle subscription cancellation success
-  const handleSubscriptionCancelled = () => {
-    setSubscriptionInfo({ tier: "Free", isPaid: false });
-    showSuccess(t("settings.subscriptionCancelled", "Subscription cancelled"), t("settings.subscriptionCancelledDesc", "Your subscription has been cancelled successfully."));
+  // The cancellation is scheduled for the end of the paid period: the gym keeps
+  // access until then, so reload the real state instead of showing "Free".
+  const handleSubscriptionCancelled = (cancelAt: string | null) => {
+    showSuccess(
+      t("settings.cancellationScheduled", "Cancellation scheduled"),
+      cancelAt
+        ? t("settings.cancellationScheduledDesc", "You keep full access until {{date}}. You won't be billed again.", {
+            date: new Date(cancelAt).toLocaleDateString(),
+          })
+        : t("settings.cancellationScheduledNoDate", "Your subscription will not renew."),
+    );
+    void fetchSubscriptionInfo();
+  };
+
+  // Undo a scheduled cancellation before it takes effect.
+  const handleKeepSubscription = async () => {
+    setResumingSubscription(true);
+    try {
+      await resumeSubscription();
+      showSuccess(
+        t("settings.subscriptionKept", "Subscription kept"),
+        t("settings.subscriptionKeptDesc", "Your subscription will continue to renew."),
+      );
+      await fetchSubscriptionInfo();
+    } catch (error) {
+      showError(
+        t("settings.keepSubscriptionFailed", "Could not keep your subscription"),
+        error instanceof Error ? error.message : undefined,
+      );
+    } finally {
+      setResumingSubscription(false);
+    }
   };
 
   // Handlers for missing button functionality
@@ -272,25 +323,12 @@ const Settings: React.FC = () => {
   // Tab configuration
   const tabs = [
     { id: "general", name: t("settings.general"), icon: FiSettings },
+    { id: "business", name: t("gymConfig.title"), icon: FiBriefcase },
+    ...(userMetadata?.role === "admin" ? [{ id: "team", name: t("team.title"), icon: FiUsers }] : []),
     { id: "profile", name: t("settings.profile"), icon: FiUser },
     { id: "security", name: t("settings.security"), icon: FiShield },
     { id: "billing", name: t("settings.billing"), icon: FiCreditCard },
-  ];
-
-  // Options for select fields
-  const timezoneOptions = [
-    { value: "Asia/Riyadh", label: "Riyadh (GMT+3)" },
-    { value: "Asia/Dubai", label: "Dubai (GMT+4)" },
-    { value: "America/New_York", label: "Eastern Time (GMT-5)" },
-    { value: "Europe/London", label: "London (GMT+0)" },
-    { value: "Asia/Tokyo", label: "Tokyo (GMT+9)" },
-  ];
-
-  const currencyOptions = [
-    { value: "SAR", label: "Saudi Riyal (SAR)" },
-    { value: "USD", label: "US Dollar (USD)" },
-    { value: "EUR", label: "Euro (EUR)" },
-    { value: "GBP", label: "British Pound (GBP)" },
+    { id: "privacy", name: t("dataPrivacy.title"), icon: FiLock },
   ];
 
   // Render loading state
@@ -436,76 +474,6 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Timezone */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
-                    <div className="flex-1 text-start">
-                      <label
-                        htmlFor="timezone"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {t("settings.timezone")}
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.timezoneDesc")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <select
-                        id="timezone"
-                        value={settings.general.timezone}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "general",
-                            "timezone",
-                            e.target.value,
-                          )
-                        }
-                        className="form-select w-48"
-                      >
-                        {timezoneOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Currency */}
-                  <div className="flex items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-white/[0.04]">
-                    <div className="flex-1 text-start">
-                      <label
-                        htmlFor="currency"
-                        className="block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {t("settings.currency")}
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.currencyDesc")}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <select
-                        id="currency"
-                        value={settings.general.currency}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "general",
-                            "currency",
-                            e.target.value,
-                          )
-                        }
-                        className="form-select w-48"
-                      >
-                        {currencyOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
                   {/* Language */}
                   <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-white/[0.04]">
                     <div className="flex-1 text-start">
@@ -552,6 +520,12 @@ const Settings: React.FC = () => {
               </div>
             </div>
           )}
+
+          {activeTab === "business" && <BusinessSettingsTab />}
+
+          {activeTab === "team" && userMetadata?.role === "admin" && <TeamSettingsTab />}
+
+          {activeTab === "privacy" && <DataPrivacyTab />}
 
           {activeTab === "profile" && (
             <div className="space-y-6">
@@ -991,9 +965,21 @@ const Settings: React.FC = () => {
                                 {subscriptionInfo.tier.charAt(0).toUpperCase() + subscriptionInfo.tier.slice(1)} {t("settings.plan", "Plan")}
                               </h4>
                               {subscriptionInfo.isPaid && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    subscriptionInfo.cancelAt || subscriptionInfo.status === "past_due"
+                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                      : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                  }`}
+                                >
                                   <FiCheckCircle className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {t("settings.active", "Active")}
+                                  {subscriptionInfo.status === "past_due"
+                                    ? t("settings.paymentFailed", "Payment failed")
+                                    : subscriptionInfo.cancelAt
+                                    ? t("settings.subscriptionEnding", "Ends {{date}}", {
+                                        date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
+                                      })
+                                    : t("settings.active", "Active")}
                                 </span>
                               )}
                             </div>
@@ -1028,25 +1014,50 @@ const Settings: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Cancel Subscription Option - Only show if subscribed */}
-                    {subscriptionInfo.isPaid && (
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30`}>
-                        <div>
-                          <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
-                            {t("settings.cancelSubscription", "Cancel Subscription")}
-                          </h4>
-                          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                            {t("settings.cancelSubscriptionDesc", "Cancel your subscription and lose access to premium features")}
-                          </p>
+                    {/* Cancel / keep: only for a self-service (Paddle) subscription. Access
+                        granted by the platform owner is changed from the owner console. */}
+                    {subscriptionInfo.isPaid && subscriptionInfo.paymentProvider === "paddle" && (
+                      subscriptionInfo.cancelAt ? (
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between gap-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30`}>
+                          <div>
+                            <h4 className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                              {t("settings.subscriptionEndsTitle", "Your subscription ends on {{date}}", {
+                                date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
+                              })}
+                            </h4>
+                            <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                              {t("settings.subscriptionEndsDesc", "You keep full access until then and won't be billed again.")}
+                            </p>
+                          </div>
+                          <SmartButton
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleKeepSubscription}
+                            loading={resumingSubscription}
+                            disabled={resumingSubscription}
+                          >
+                            {t("settings.keepSubscriptionBtn", "Keep subscription")}
+                          </SmartButton>
                         </div>
-                        <SmartButton
-                          variant="danger"
-                          size="sm"
-                          onClick={() => setShowCancelSubscriptionModal(true)}
-                        >
-                          {t("settings.cancel", "Cancel")}
-                        </SmartButton>
-                      </div>
+                      ) : (
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30`}>
+                          <div>
+                            <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
+                              {t("settings.cancelSubscription", "Cancel Subscription")}
+                            </h4>
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                              {t("settings.cancelSubscriptionDesc", "Stop renewing. You keep access until the end of the period you've paid for.")}
+                            </p>
+                          </div>
+                          <SmartButton
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setShowCancelSubscriptionModal(true)}
+                          >
+                            {t("settings.cancel", "Cancel")}
+                          </SmartButton>
+                        </div>
+                      )
                     )}
                   </div>
                 </div>
@@ -1108,7 +1119,11 @@ const Settings: React.FC = () => {
                         {t("settings.autoRenewal")}
                       </h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {subscriptionInfo.status === "active"
+                        {subscriptionInfo.status === "active" && subscriptionInfo.cancelAt
+                          ? t("settings.autoRenewalEnding", "Ends {{date}}, will not renew", {
+                              date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
+                            })
+                          : subscriptionInfo.status === "active"
                           ? t("settings.autoRenewalActive", "Renews automatically")
                           : subscriptionInfo.status === "trialing"
                             ? t("settings.autoRenewalTrial", "Trial ends {{date}}", {
@@ -1285,6 +1300,7 @@ const Settings: React.FC = () => {
         onClose={() => setShowCancelSubscriptionModal(false)}
         currentPlan={subscriptionInfo.tier}
         subscriptionStart={subscriptionInfo.startDate}
+        accessUntil={subscriptionInfo.currentPeriodEnd}
         onSuccess={handleSubscriptionCancelled}
       />
     </div>

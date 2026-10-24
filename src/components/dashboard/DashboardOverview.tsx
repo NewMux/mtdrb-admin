@@ -15,7 +15,9 @@ import { StatStrip } from "../ui/StatStrip";
 import { supabase } from "../../supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { DEFAULT_CURRENCY } from "../../config/runtimeConfig";
+import { useGymConfig } from "../../contexts/gym-config-context";
+import { monthBoundary, toZonedDateString } from "../../utils/periodBoundaries";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 // Color mappings for KPI cards to ensure Tailwind classes work properly
 const kpiColorMap = {
@@ -52,23 +54,37 @@ interface DashboardTargets {
   memberSatisfaction?: number;
 }
 
+interface PrimaryStat {
+  name: string;
+  value: string;
+  change: string;
+  icon: React.ReactNode;
+  color: keyof typeof kpiColorMap;
+  /** null = the gym has not set a target for this KPI: none is invented. */
+  target: string | null;
+  progress: number | undefined;
+}
+
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ 
   refreshKey 
 }) => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
+
   const { tenantId } = useAuth();
   const { t } = useTranslation();
   const [showTargetsModal, setShowTargetsModal] = useState(false);
   const [savedTargets, setSavedTargets] = useState<DashboardTargets | null>(null);
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
-  const [primaryStats, setPrimaryStats] = useState([
+  const [currency, setCurrency] = useState(gymConfig.currency);
+  const [primaryStats, setPrimaryStats] = useState<PrimaryStat[]>([
     {
       name: t("dashboard.totalRevenue"),
       value: "$0",
       change: t("common.loading"),
       icon: <FiDollarSign className="w-6 h-6" />,
       color: "green" as const,
-      target: "$0",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.activeMembers"),
@@ -76,8 +92,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiUsers className="w-6 h-6" />,
       color: "blue" as const,
-      target: "0",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.classAttendance"),
@@ -85,8 +101,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiCalendar className="w-6 h-6" />,
       color: "purple" as const,
-      target: "85%",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
     {
       name: t("dashboard.memberSatisfaction"),
@@ -94,8 +110,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       change: t("common.loading"),
       icon: <FiStar className="w-6 h-6" />,
       color: "yellow" as const,
-      target: "4.8",
-      progress: 0,
+      target: null,
+      progress: undefined,
     },
   ]);
   const [loading, setLoading] = useState(true);
@@ -107,79 +123,89 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setLoading(true);
       setLoadError(false);
 
+      // Month boundaries are full instants in the gym's timezone with an
+      // exclusive upper bound (see periodBoundaries.ts). The old code compared a
+      // bare date to a timestamptz column, which silently dropped the whole last
+      // day of every range and shifted the month start by a day in UTC+3.
       const now = new Date();
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      const currentMonth = monthBoundary(now, 0, timezone);
+      const previousMonth = monthBoundary(now, 1, timezone);
 
-      // Fetch invoices for revenue
+      // Fetch invoices for revenue. Paged: a money total must not stop growing
+      // at PostgREST's 1000-row cap.
+      const invoicesIn = (period: { startISO: string; endExclusiveISO: string }) =>
+        fetchAllRows<{ amount: number | null; total: number | null; status: string }>((from, to) =>
+          supabase
+            .from("invoices")
+            .select("amount, total, status")
+            .eq("tenant_id", tenantId)
+            .eq("status", "paid")
+            .gte("created_at", period.startISO)
+            .lt("created_at", period.endExclusiveISO)
+            .order("id", { ascending: true })
+            .range(from, to),
+        );
       const [currentInvoices, previousInvoices] = await Promise.all([
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("invoices")
-          .select("amount, total, status")
-          .eq("tenant_id", tenantId)
-          .eq("status", "paid")
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
+        invoicesIn(currentMonth),
+        invoicesIn(previousMonth),
       ]);
 
-      // Fetch members
+      // Members: only the counts are used, so ask the database to count (a
+      // plain select would be capped at 1000 rows and under-report big gyms).
+      // The previous figure is where the gym stood at the END of last month
+      // (joined by then, not yet expired) - the same rule as memberActivity.ts -
+      // not "members who joined last month", a much smaller group.
+      const previousMonthLastDay = toZonedDateString(new Date(Date.parse(previousMonth.endExclusiveISO) - 1), timezone);
       const [currentMembers, previousMembers] = await Promise.all([
         supabase
           .from("members")
-          .select("id, status, membership_status, created_at")
+          .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId)
           .in("status", ["active"])
           .in("membership_status", ["active", "trial"]),
         supabase
           .from("members")
-          .select("id, status, membership_status, created_at")
+          .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId)
-          .in("status", ["active"])
-          .in("membership_status", ["active", "trial"])
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
+          .lte("join_date", previousMonthLastDay)
+          .or(`expiry_date.is.null,expiry_date.gt.${previousMonthLastDay}`),
       ]);
 
-      const invoiceOrMemberError =
-        currentInvoices.error ||
-        previousInvoices.error ||
-        currentMembers.error ||
-        previousMembers.error;
-      if (invoiceOrMemberError) throw invoiceOrMemberError;
+      const memberError = currentMembers.error || previousMembers.error;
+      if (memberError) throw memberError;
 
-      // Fetch class bookings for attendance
-      const [currentBookings, previousBookings] = await Promise.all([
-        supabase
+      // Class bookings for the attendance rate: counts only (total, and attended).
+      const bookingCount = (period: { startISO: string; endExclusiveISO: string }, attendedOnly: boolean) => {
+        let query = supabase
           .from("class_bookings")
-          .select("id, status")
+          .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(currentMonthStart)),
-        supabase
-          .from("class_bookings")
-          .select("id, status")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd)),
-      ]);
+          .gte("created_at", period.startISO)
+          .lt("created_at", period.endExclusiveISO);
+        if (attendedOnly) query = query.in("status", ["checked_in", "completed"]);
+        return query;
+      };
+      const [currentBookingsTotal, currentBookingsAttended, previousBookingsTotal, previousBookingsAttended] =
+        await Promise.all([
+          bookingCount(currentMonth, false),
+          bookingCount(currentMonth, true),
+          bookingCount(previousMonth, false),
+          bookingCount(previousMonth, true),
+        ]);
 
-      if (currentBookings.error || previousBookings.error) {
-        throw currentBookings.error || previousBookings.error;
-      }
+      const bookingError =
+        currentBookingsTotal.error ||
+        currentBookingsAttended.error ||
+        previousBookingsTotal.error ||
+        previousBookingsAttended.error;
+      if (bookingError) throw bookingError;
 
       // Calculate revenue
-      const currentRevenue = (currentInvoices.data || []).reduce(
+      const currentRevenue = currentInvoices.reduce(
         (sum, inv) => sum + Number(inv.total || inv.amount || 0),
         0
       );
-      const previousRevenue = (previousInvoices.data || []).reduce(
+      const previousRevenue = previousInvoices.reduce(
         (sum, inv) => sum + Number(inv.total || inv.amount || 0),
         0
       );
@@ -188,21 +214,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         : 0;
 
       // Calculate members
-      const currentMemberCount = (currentMembers.data || []).length;
-      const previousMemberCount = (previousMembers.data || []).length;
+      const currentMemberCount = currentMembers.count ?? 0;
+      const previousMemberCount = previousMembers.count ?? 0;
       const memberChange = currentMemberCount - previousMemberCount;
 
       // Calculate attendance
-      const currentAttended = (currentBookings.data || []).filter(
-        b => b.status === "checked_in" || b.status === "completed"
-      ).length;
-      const currentTotal = (currentBookings.data || []).length;
+      const currentAttended = currentBookingsAttended.count ?? 0;
+      const currentTotal = currentBookingsTotal.count ?? 0;
       const currentAttendanceRate = currentTotal > 0 ? (currentAttended / currentTotal) * 100 : 0;
 
-      const previousAttended = (previousBookings.data || []).filter(
-        b => b.status === "checked_in" || b.status === "completed"
-      ).length;
-      const previousTotal = (previousBookings.data || []).length;
+      const previousAttended = previousBookingsAttended.count ?? 0;
+      const previousTotal = previousBookingsTotal.count ?? 0;
       const previousAttendanceRate = previousTotal > 0 ? (previousAttended / previousTotal) * 100 : 0;
       const attendanceChange = currentAttendanceRate - previousAttendanceRate;
 
@@ -213,7 +235,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         .eq("tenant_id", tenantId)
         .single();
 
-      const settingsCurrency = settings?.currency || DEFAULT_CURRENCY;
+      const settingsCurrency = settings?.currency || gymConfig.currency;
       setCurrency(settingsCurrency);
       const currencySymbol = settingsCurrency || "";
 
@@ -236,23 +258,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       const satisfactionValue = avgRating > 0 ? `${avgRating.toFixed(1)}/5` : t("dashboard.notAvailable");
       const satisfactionChange = avgRating > 0 ? t("dashboard.basedOnTrainerRatings") : t("dashboard.noRatingData");
 
-      // Calculate targets: use saved targets or fallback to calculated defaults
-      const revenueTarget = targets?.revenue ?? (currentRevenue * 1.1);
-      const membersTarget = targets?.activeMembers ?? (currentMemberCount * 1.05);
-      const attendanceTarget = targets?.classAttendance ?? 85;
-      const satisfactionTarget = targets?.memberSatisfaction ?? 4.8;
+      // Targets are only what the gym has set (Set Targets). The old fallbacks -
+      // 110% of this month's revenue, 105% of today's members - made every card
+      // read about 91% "progress" whatever happened. With no target there is
+      // nothing to measure against, so the card says so and shows no meter.
+      const revenueTarget = targets?.revenue || null;
+      const membersTarget = targets?.activeMembers || null;
+      const attendanceTarget = targets?.classAttendance || null;
+      const satisfactionTarget = targets?.memberSatisfaction || null;
 
-      // Format targets for display
-      const revenueTargetDisplay = `${currencySymbol} ${revenueTarget.toLocaleString()}`;
-      const membersTargetDisplay = membersTarget.toLocaleString();
-      const attendanceTargetDisplay = `${attendanceTarget}%`;
-      const satisfactionTargetDisplay = satisfactionTarget.toFixed(1);
+      const revenueTargetDisplay = revenueTarget ? `${currencySymbol} ${revenueTarget.toLocaleString()}` : null;
+      const membersTargetDisplay = membersTarget ? membersTarget.toLocaleString() : null;
+      const attendanceTargetDisplay = attendanceTarget ? `${attendanceTarget}%` : null;
+      const satisfactionTargetDisplay = satisfactionTarget ? satisfactionTarget.toFixed(1) : null;
 
-      // Calculate progress percentages
-      const revenueProgress = revenueTarget > 0 ? Math.min(100, (currentRevenue / revenueTarget) * 100) : 0;
-      const membersProgress = membersTarget > 0 ? Math.min(100, (currentMemberCount / membersTarget) * 100) : 0;
-      const attendanceProgress = Math.min(100, (currentAttendanceRate / attendanceTarget) * 100);
-      const satisfactionProgress = avgRating > 0 ? Math.min(100, (avgRating / satisfactionTarget) * 100) : 0;
+      const progressOf = (value: number, target: number | null) =>
+        target ? Math.min(100, (value / target) * 100) : undefined;
+      const revenueProgress = progressOf(currentRevenue, revenueTarget);
+      const membersProgress = progressOf(currentMemberCount, membersTarget);
+      const attendanceProgress = progressOf(currentAttendanceRate, attendanceTarget);
+      const satisfactionProgress = avgRating > 0 ? progressOf(avgRating, satisfactionTarget) : undefined;
 
       setPrimaryStats([
         {
@@ -304,7 +329,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [tenantId, t]);
+  }, [tenantId, t, timezone, gymConfig.currency]);
 
   useEffect(() => {
     fetchStats();
@@ -345,7 +370,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               type="button"
             >
               <span className="whitespace-nowrap">
-                {t("dashboard.target")} {stat.target}
+                {stat.target ? `${t("dashboard.target")} ${stat.target}` : t("dashboard.targets.setTargets")}
               </span>
               <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>

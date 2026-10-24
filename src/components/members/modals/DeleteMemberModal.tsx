@@ -55,8 +55,8 @@ const DeleteMemberModal: React.FC<DeleteMemberModalProps> = ({
           footer={
             <div className="flex items-center justify-between gap-4 w-full">
               <div className="flex items-center gap-2">
-                <FiAlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
-                <span className="text-sm text-red-600">
+                <FiAlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <span className="text-sm text-red-600 dark:text-red-400">
                   {t("members.cannotBeUndone", "لا يمكن التراجع عن هذا الإجراء")}
                 </span>
               </div>

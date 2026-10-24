@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
   FiAlertTriangle,
@@ -101,7 +102,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
       onClose();
     } catch (error) {
       console.error("Error cancelling class:", error);
-      toast.error("Failed to cancel class");
+      toast.error(i18n.t("toasts.classCancelFailed"));
     } finally {
       setLoading(false);
     }
@@ -154,7 +155,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {isHighImpact && (
-              <div className="flex items-center space-x-1 text-sm text-red-600">
+              <div className="flex items-center space-x-1 text-sm text-red-600 dark:text-red-400">
                 <FiAlertTriangle className="h-4 w-4" />
                 <span>High impact action</span>
               </div>
@@ -361,7 +362,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                   id="auto-refund"
                   checked={autoRefund}
                   onChange={(e) => setAutoRefund(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                 />
                 <label
                   htmlFor="auto-refund"
@@ -378,7 +379,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                   className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg"
                 >
                   <div className="flex items-center space-x-2">
-                    <FiDollarSign className="h-4 w-4 text-green-600" />
+                    <FiDollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm font-medium text-green-900 dark:text-green-100">
                       {t("classes.totalRefundAmount", { amount: refundAmount.toFixed(2) })}
                     </span>
@@ -407,7 +408,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     id="notify-members"
                     checked={notifyMembers}
                     onChange={(e) => setNotifyMembers(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                   />
                   <label
                     htmlFor="notify-members"
@@ -426,7 +427,7 @@ const CancelClassModal: React.FC<CancelClassModalProps> = ({
                     id="notify-trainer"
                     checked={notifyTrainer}
                     onChange={(e) => setNotifyTrainer(e.target.checked)}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-600 dark:text-green-400 focus:ring-green-500"
                   />
                   <label
                     htmlFor="notify-trainer"

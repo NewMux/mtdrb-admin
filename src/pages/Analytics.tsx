@@ -1,5 +1,6 @@
+import i18n from "../i18n";
 import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   FiBarChart2,
@@ -33,75 +34,6 @@ type MemberAnalyticsData = React.ComponentProps<typeof MemberAnalytics>;
 type RevenueOverviewData = React.ComponentProps<typeof RevenueOverview>;
 
 /**
- * Format a date to YYYY-MM-DD.
- */
-const toDateString = (date: Date) => date.toISOString().split("T")[0];
-
-/**
- * Resolve current and previous ranges based on filter.
- */
-const resolveDateRange = (rangeKey: string, customStart?: string, customEnd?: string) => {
-  const now = new Date();
-  let start = new Date(now);
-  let end = new Date(now);
-  let previousStart = new Date(now);
-  let previousEnd = new Date(now);
-
-  switch (rangeKey) {
-    case "custom": {
-      start = customStart ? new Date(customStart) : start;
-      end = customEnd ? new Date(customEnd) : end;
-      // Calculate length of the custom range in days
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-      
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - diffDays);
-      break;
-    }
-    case "last-7-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 6);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 6);
-      break;
-    }
-    case "last-90-days": {
-      start = new Date(now);
-      start.setDate(now.getDate() - 89);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 89);
-      break;
-    }
-    case "this-year": {
-      start = new Date(now.getFullYear(), 0, 1);
-      end = new Date(now);
-      previousStart = new Date(now.getFullYear() - 1, 0, 1);
-      previousEnd = new Date(now.getFullYear() - 1, 11, 31);
-      break;
-    }
-    case "last-30-days":
-    default: {
-      start = new Date(now);
-      start.setDate(now.getDate() - 29);
-      previousEnd = new Date(start);
-      previousEnd.setDate(start.getDate() - 1);
-      previousStart = new Date(previousEnd);
-      previousStart.setDate(previousEnd.getDate() - 29);
-      break;
-    }
-  }
-
-  return { start, end, previousStart, previousEnd };
-};
-
-/**
  * Convert a date string into a YYYY-MM key.
  */
 const toMonthKey = (dateValue?: string | null) => {
@@ -129,6 +61,9 @@ import ViewDetailsModal from "../components/analytics/ViewDetailsModal";
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import { fetchAllRows, pagedResult } from "../utils/fetchAllRows";
+import { resolveAnalyticsRange, toLocalDateString } from "../utils/analyticsRange";
+import { contextSubscriptionToEntitlement, isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
 
 type AnalyticsView =
   | "overview"
@@ -160,8 +95,7 @@ export default function Analytics() {
     isLoading: subscriptionLoading,
     subscription,
   } = useSubscription();
-  const hasActiveSubscription =
-    subscription?.status === "active" || subscription?.status === "trialing";
+  const hasActiveSubscription = isSubscriptionEntitled(contextSubscriptionToEntitlement(subscription));
 
   // Track loading state
   const [loading, setLoading] = useState(false);
@@ -169,8 +103,8 @@ export default function Analytics() {
   const [insights, setInsights] = useState<SmartInsight[]>([]);
   const [filters, setFilters] = useState({
     dateRange: "last-30-days",
-    customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-    customEndDate: toDateString(new Date()),
+    customStartDate: toLocalDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+    customEndDate: toLocalDateString(new Date()),
     branch: "all",
     metricType: "all",
     minRevenue: "",
@@ -243,7 +177,7 @@ export default function Analytics() {
       setInsights(insightsData);
     } catch (error) {
       console.error("Error fetching smart insights:", error);
-      toast.error("Failed to load smart insights");
+      toast.error(i18n.t("toasts.insightsFailed"));
     }
   }, [tenantId]);
 
@@ -258,13 +192,15 @@ export default function Analytics() {
     try {
       setLoading(true);
 
-      const { start, end, previousStart, previousEnd } = resolveDateRange(
+      const { start, end, previousStart, previousEnd } = resolveAnalyticsRange(
         filters.dateRange,
         filters.customStartDate,
         filters.customEndDate,
       );
-      const queryStart = toDateString(previousStart);
-      const queryEnd = toDateString(end);
+      // Full instants, not bare dates (see utils/analyticsRange.ts): a date string
+      // would exclude today's rows and the last day of a custom range.
+      const queryStart = previousStart.toISOString();
+      const queryEnd = end.toISOString();
 
       const [
         settingsResult,
@@ -284,26 +220,46 @@ export default function Analytics() {
           .eq("tenant_id", tenantId)
           .eq("is_active", true)
           .order("name"),
-        supabase
-          .from("members")
-          .select(
-            "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
-          )
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("invoices")
-          .select(
-            "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
-          )
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
-        supabase
-          .from("class_bookings")
-          .select("id, member_id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", queryStart)
-          .lte("created_at", queryEnd),
+        // The three big reads are paged (PostgREST caps one response at 1000 rows).
+        // Each is wrapped so the page keeps its { data, error } handling below.
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("members")
+              .select(
+                "id, first_name, last_name, email, status, membership_status, membership_type, join_date, created_at, assigned_branch_id",
+              )
+              .eq("tenant_id", tenantId)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("invoices")
+              .select(
+                "id, member_id, type, status, issue_date, created_at, payment_method, total, amount, paid_amount, vat_total, currency, line_items",
+              )
+              .eq("tenant_id", tenantId)
+              .gte("created_at", queryStart)
+              .lte("created_at", queryEnd)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
+        pagedResult(() =>
+          fetchAllRows((from, to) =>
+            supabase
+              .from("class_bookings")
+              .select("id, member_id, status, created_at")
+              .eq("tenant_id", tenantId)
+              .gte("created_at", queryStart)
+              .lte("created_at", queryEnd)
+              .order("id", { ascending: true })
+              .range(from, to),
+          ),
+        ),
       ]);
 
       // Handle errors with better messaging
@@ -959,20 +915,20 @@ export default function Analytics() {
     const label = action || id;
     switch (action) {
       case "Create Task":
-        toast.success("Opening task creation...");
+        toast.success(i18n.t("toasts.openingTask"));
         break;
       case "Create Campaign":
-        toast.success("Opening campaign creation...");
+        toast.success(i18n.t("toasts.openingCampaign"));
         break;
       case "View Members":
-        toast.success("Opening members list...");
+        toast.success(i18n.t("toasts.openingMembers"));
         navigate("/dashboard/members");
         break;
       case "Schedule Class":
-        toast.success("Opening class scheduling...");
+        toast.success(i18n.t("toasts.openingScheduling"));
         break;
       case "Create Package":
-        toast.success("Opening package creation...");
+        toast.success(i18n.t("toasts.openingPackage"));
         break;
       default:
         toast(`Action: ${label}`);
@@ -1043,7 +999,7 @@ export default function Analytics() {
               </div>
             ) : analyticsStats.length === 0 ? (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiBarChart2 className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiBarChart2 className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1081,7 +1037,7 @@ export default function Analytics() {
               <MemberAnalytics {...memberAnalyticsData} />
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiUsers className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiUsers className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1113,7 +1069,7 @@ export default function Analytics() {
               <RevenueOverview {...revenueOverviewData} />
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiDollarSign className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiDollarSign className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.noDataAvailable")}
                 </h3>
@@ -1143,7 +1099,7 @@ export default function Analytics() {
               </div>
             ) : (
               <div className={`bg-gray-50 dark:bg-gray-800 rounded-xl p-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <FiCalendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <FiCalendar className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                   {t("analytics.classAnalytics")}
                 </h3>
@@ -1171,11 +1127,11 @@ export default function Analytics() {
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
-                  <p className={`ml-3 text-gray-600 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading insights...</p>
+                  <p className={`ml-3 text-gray-600 dark:text-gray-300 ${isRTL ? 'mr-3 ml-0' : ''}`}>Loading insights...</p>
                 </div>
               ) : uiInsights.length === 0 ? (
                 <div className={`py-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                  <FiTarget className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <FiTarget className="w-16 h-16 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                   <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
                     No Insights Available
                   </h3>
@@ -1249,6 +1205,7 @@ export default function Analytics() {
           {/* Date Range Filter */}
           <div className="flex-1">
             <select
+              aria-label={t("common.filter")}
               value={filters.dateRange}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, dateRange: e.target.value }))
@@ -1267,6 +1224,7 @@ export default function Analytics() {
           {/* Branch Filter */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={filters.branch}
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, branch: e.target.value }))
@@ -1420,8 +1378,8 @@ export default function Analytics() {
         onClear={() => {
           setFilters({
             dateRange: "last-30-days",
-            customStartDate: toDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-            customEndDate: toDateString(new Date()),
+            customStartDate: toLocalDateString(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
+            customEndDate: toLocalDateString(new Date()),
             branch: "all",
             metricType: "all",
             minRevenue: "",

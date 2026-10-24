@@ -259,7 +259,7 @@ const ImportMembersModal: React.FC<ImportMembersModalProps> = ({
             {/* File Upload */}
             <div className="space-y-4">
               <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
-                <FiUpload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <FiUpload className="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
                 <div className="space-y-2">
                   <p className="text-lg font-medium text-gray-900 dark:text-white">
                     {file ? file.name : t("members.dropCsvHere", "اسحب ملف CSV هنا")}

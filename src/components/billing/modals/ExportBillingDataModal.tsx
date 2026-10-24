@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
 import {
   FiDownload,
@@ -123,12 +124,12 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
 
   const handleExportData = async () => {
     if (!tenantId) {
-      toast.error("No tenant ID found");
+      toast.error(i18n.t("toasts.noTenant"));
       return;
     }
 
     if (dataTypes.length === 0) {
-      toast.error("Please select at least one data type to export");
+      toast.error(i18n.t("toasts.pickDataType"));
       return;
     }
 
@@ -318,7 +319,7 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
       }
 
       if (exportData.length === 0) {
-        toast.error("No data found for the selected filters");
+        toast.error(i18n.t("toasts.noDataForFilters"));
         setIsLoading(false);
         return;
       }
@@ -334,13 +335,15 @@ const ExportBillingDataModal: React.FC<ExportBillingDataModalProps> = ({
         exportJSON(exportData, filename);
       }
 
-      toast.success("Billing data exported successfully");
+      toast.success(i18n.t("toasts.billingExported"));
       setIsLoading(false);
       onClose();
     } catch (error) {
       console.error("Export failed:", error);
       toast.error(
-        `Failed to export: ${error instanceof Error ? error.message : "Unknown error"}`,
+        i18n.t("toasts.exportFailed", {
+          message: error instanceof Error ? error.message : i18n.t("toasts.unknownError"),
+        }),
       );
       setIsLoading(false);
     }

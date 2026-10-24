@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { monthBoundary, weekBoundary, dayBoundary, daysWindow } from "./periodBoundaries";
+import { monthBoundary, weekBoundary, dayBoundary, daysWindow, toZonedDateString } from "./periodBoundaries";
 
 // Bahrain / Gulf time: UTC+3, no DST - a fixed, unambiguous offset that
 // makes the historical bug reproducible: local midnight on the 1st is
@@ -94,5 +94,24 @@ describe("daysWindow", () => {
     const window = daysWindow(reference, 30, TZ);
     const today = dayBoundary(reference, 0, TZ);
     expect(window.endExclusiveISO).toBe(today.endExclusiveISO);
+  });
+});
+
+describe("toZonedDateString", () => {
+  it("is the calendar date in the timezone, not the UTC date", () => {
+    // 22:30 UTC on 2 Nov is already 3 Nov in Bahrain (UTC+3), but still 2 Nov in UTC.
+    const instant = new Date("2026-11-02T22:30:00.000Z");
+    expect(toZonedDateString(instant, "Asia/Bahrain")).toBe("2026-11-03");
+    expect(toZonedDateString(instant, "UTC")).toBe("2026-11-02");
+  });
+
+  it("rolls the month and year over correctly", () => {
+    expect(toZonedDateString(new Date("2026-12-31T21:30:00.000Z"), "Asia/Bahrain")).toBe("2027-01-01");
+    expect(toZonedDateString(new Date("2026-10-31T21:00:00.000Z"), "Asia/Bahrain")).toBe("2026-11-01");
+  });
+
+  it("agrees with monthBoundary: the instant a month starts is the 1st in that timezone", () => {
+    const { startISO } = monthBoundary(new Date("2026-11-15T10:00:00.000Z"), 0, "Asia/Bahrain");
+    expect(toZonedDateString(new Date(startISO), "Asia/Bahrain")).toBe("2026-11-01");
   });
 });

@@ -17,37 +17,23 @@
 // webhook deliveries before relying on this for real customer traffic --
 // event payload details can still differ in ways docs don't fully cover.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { paddleAmountToMajor } from "./money.ts";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { breakdownItems, readPriceConfig } from "../_shared/paddle-items.ts";
+import {
+  eventOccurredAt,
+  isStaleEvent,
+  mapPaddleStatus,
+  nextGraceUntil,
+  readSubscriptionDates,
+} from "../_shared/paddle-subscription.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PADDLE_WEBHOOK_SECRET = Deno.env.get("PADDLE_WEBHOOK_SECRET");
 
-// Maps a Paddle price ID (the subscription's first line item) to our
-// plan_tier. Set PADDLE_STARTER_PRICE_ID/PADDLE_PRO_PRICE_ID to the real
-// price IDs from your Paddle catalog once it exists.
-function priceIdToPlan(priceId: string | undefined): string | undefined {
-  if (!priceId) return undefined;
-  if (priceId === Deno.env.get("PADDLE_STARTER_PRICE_ID")) return "starter";
-  if (priceId === Deno.env.get("PADDLE_PRO_PRICE_ID")) return "pro";
-  return undefined;
-}
-
-// Paddle subscription statuses -> our platform_subscriptions.status.
-// Paddle: active | trialing | past_due | paused | canceled
-// Ours:   active | trialing | cancelled
-// No Paddle price should have a trial period configured -- the free
-// trial was intentionally removed (see
-// 20260909162346_revoke_self_service_trial_creation.sql) -- but if one
-// ever is, "trialing" still maps correctly rather than silently
-// mismatching. past_due/paused have no equivalent in our schema; treat
-// them as not-entitled (cancelled) rather than leaving a stale "active"
-// row a lapsed payment shouldn't keep granting.
-function mapStatus(paddleStatus: string): string {
-  if (paddleStatus === "active" || paddleStatus === "trialing") return paddleStatus;
-  return "cancelled";
-}
+// Price IDs from your Paddle catalog (see scripts/seed-paddle-catalog.mjs):
+// the base Starter / Pro prices and the per-plan extra-location add-on prices.
+const priceConfig = () => readPriceConfig((key) => Deno.env.get(key));
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -82,7 +68,7 @@ Deno.serve(async (req) => {
     return new Response("Invalid signature", { status: 401 });
   }
 
-  let event: { event_type?: string; data?: Record<string, unknown> };
+  let event: { event_type?: string; occurred_at?: string; data?: Record<string, unknown> };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -101,7 +87,11 @@ Deno.serve(async (req) => {
       case "subscription.canceled":
       case "subscription.past_due":
       case "subscription.paused":
-        await syncSubscription(serviceClient, event.data);
+      // A subscription paused in Paddle's dashboard and later resumed (or one
+      // that enters a trial) must not stay stuck in its old state here.
+      case "subscription.resumed":
+      case "subscription.trialing":
+        await syncSubscription(serviceClient, event.data, eventOccurredAt(event));
         break;
       default:
         // transaction.* and other event types: not acted on here.
@@ -115,9 +105,17 @@ Deno.serve(async (req) => {
   return new Response("ok", { status: 200 });
 });
 
+/** The stored columns the webhook needs before it writes. */
+interface StoredSubscriptionState {
+  status: string | null;
+  grace_until: string | null;
+  paddle_event_at: string | null;
+}
+
 async function syncSubscription(
-  serviceClient: ReturnType<typeof createClient>,
+  serviceClient: SupabaseClient,
   data: Record<string, unknown>,
+  occurredAt: string | null,
 ) {
   const customData = (data.custom_data ?? {}) as Record<string, unknown>;
   const tenantId = typeof customData.tenant_id === "string" ? customData.tenant_id : undefined;
@@ -126,43 +124,79 @@ async function syncSubscription(
     return;
   }
 
-  const items = Array.isArray(data.items) ? (data.items as Record<string, unknown>[]) : [];
-  const firstItem = items[0];
-  const price = firstItem?.price as Record<string, unknown> | undefined;
-  const priceId = typeof price?.id === "string" ? price.id : undefined;
-  const planTier = priceIdToPlan(priceId);
+  // The subscription has a base plan item and, once the tenant has added
+  // branches, an extra-location item. Items are matched by price ID (not
+  // position); see _shared/paddle-items.ts.
+  const { planTier, extraLocations, amount, currencyCode } = breakdownItems(data.items, priceConfig());
 
   const paddleStatus = typeof data.status === "string" ? data.status : "canceled";
-  const status = mapStatus(paddleStatus);
-  const nextBilledAt = typeof data.next_billed_at === "string" ? data.next_billed_at : null;
+  const status = mapPaddleStatus(paddleStatus);
+  // A cancellation scheduled for the end of the period leaves the status
+  // "active" (access continues) and shows up as scheduled_change.
+  const { cancelAt, periodEnd } = readSubscriptionDates(data, paddleStatus);
 
-  // Paddle returns unit_price.amount as a string in the currency's smallest
-  // unit; the number of decimals depends on the currency (see money.ts).
-  const unitPrice = price?.unit_price as Record<string, unknown> | undefined;
-  const currencyCode = typeof unitPrice?.currency_code === "string" ? unitPrice.currency_code : undefined;
-  const amount = paddleAmountToMajor(unitPrice?.amount, currencyCode);
-
-  const { error } = await serviceClient
+  // What is stored now: decides whether this event is stale, and when a failed
+  // renewal's grace period started.
+  const { data: existingRow, error: existingError } = await serviceClient
     .from("platform_subscriptions")
-    .upsert(
-      {
-        tenant_id: tenantId,
-        status,
-        ...(planTier ? { plan_tier: planTier } : {}),
-        ...(amount !== null ? { amount } : {}),
-        ...(currencyCode ? { currency: currencyCode } : {}),
-        current_period_end: nextBilledAt,
-        payment_provider: "paddle",
-        payment_reference: typeof data.id === "string" ? data.id : null,
-        metadata: {
-          paddle_subscription_id: data.id,
-          paddle_status: paddleStatus,
-        },
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "tenant_id" },
-    );
+    .select("status, grace_until, paddle_event_at")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  const existing = existingRow as StoredSubscriptionState | null;
 
+  // Paddle can deliver events late or out of order. An event older than the
+  // newest one already applied would roll the row back (an old "active" after a
+  // newer cancel), so ignore it. Answer 200: retrying it can never help.
+  if (isStaleEvent(existing?.paddle_event_at, occurredAt)) {
+    console.warn("paddle-webhook: ignoring a stale event", { subscription: data.id, occurredAt, applied: existing?.paddle_event_at });
+    return;
+  }
+
+  // A failed renewal keeps access for a grace period (see
+  // 20261022150000_past_due_grace.sql). The window starts when the
+  // subscription FIRST goes past_due.
+  const graceUntil = nextGraceUntil(paddleStatus, existing);
+
+  const row = {
+    tenant_id: tenantId,
+    status,
+    ...(planTier ? { plan_tier: planTier } : {}),
+    ...(amount !== null ? { amount } : {}),
+    ...(currencyCode ? { currency: currencyCode } : {}),
+    // null = extra-location price IDs aren't configured, so the quantity
+    // can't be read: leave the stored value alone rather than zero it.
+    ...(extraLocations !== null ? { extra_locations: extraLocations } : {}),
+    current_period_end: periodEnd,
+    cancel_at: cancelAt,
+    grace_until: graceUntil,
+    ...(occurredAt ? { paddle_event_at: occurredAt } : {}),
+    payment_provider: "paddle",
+    payment_reference: typeof data.id === "string" ? data.id : null,
+    metadata: {
+      paddle_subscription_id: data.id,
+      paddle_status: paddleStatus,
+    },
+    updated_at: new Date().toISOString(),
+  };
+
+  // The ordering check is repeated inside the UPDATE so it is atomic: if two
+  // events race, only the newer one can win.
+  let error;
+  if (existing) {
+    let update = serviceClient.from("platform_subscriptions").update(row).eq("tenant_id", tenantId);
+    if (occurredAt) update = update.or(`paddle_event_at.is.null,paddle_event_at.lte.${occurredAt}`);
+    ({ error } = await update);
+  } else {
+    ({ error } = await serviceClient.from("platform_subscriptions").insert(row));
+    // 23503 = foreign_key_violation: the gym no longer exists (it deleted its
+    // account and this is the cancellation event that follows). Nothing to
+    // record, and a retry can never succeed, so answer 200.
+    if (error?.code === "23503") {
+      console.warn("paddle-webhook: ignoring an event for a gym that no longer exists", { subscription: data.id });
+      return;
+    }
+  }
   if (error) throw error;
 }
 

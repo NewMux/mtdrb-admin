@@ -8,6 +8,7 @@ import type {
   InviteGymResult,
   PlatformAdminStatus,
   PlatformAuditList,
+  PlatformGymsByCountry,
   PlatformOverview,
   PlatformTenantDetail,
   PlatformTenantList,
@@ -79,6 +80,18 @@ export async function fetchOverview(): Promise<PlatformOverview> {
   ]);
 }
 
+export async function fetchGymsByCountry(): Promise<PlatformGymsByCountry> {
+  const data = expectObject<PlatformGymsByCountry>(
+    await call("platform_gyms_by_country"),
+    "gyms by country",
+    ["total", "countries", "rows"],
+  );
+  if (!Array.isArray(data.rows)) {
+    throw new PlatformAdminError("Unexpected response from the server (gyms by country).");
+  }
+  return data;
+}
+
 export async function listTenants(
   params: ListTenantsParams = {},
 ): Promise<PlatformTenantList> {
@@ -88,6 +101,7 @@ export async function listTenants(
     p_sort: params.sort ?? "created_desc",
     p_limit: params.limit ?? 25,
     p_offset: params.offset ?? 0,
+    p_country: params.country || null,
   });
   const list = expectObject<PlatformTenantList>(data, "tenant list", ["total", "rows"]);
   if (!Array.isArray(list.rows)) {

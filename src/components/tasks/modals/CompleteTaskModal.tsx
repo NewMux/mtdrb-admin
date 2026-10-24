@@ -1,3 +1,4 @@
+import i18n from "../../../i18n";
 import * as React from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -79,7 +80,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
         attachments = uploads;
       } catch (error) {
         console.error("Error uploading task attachments:", error);
-        toast.error("Failed to upload attachments - task was not completed");
+        toast.error(i18n.t("toasts.attachmentsFailed"));
         return;
       } finally {
         setUploading(false);
@@ -149,7 +150,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             ))}
             <button
               onClick={clearAlerts}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700"
             >
               Clear alerts
             </button>
@@ -176,7 +177,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                       type="checkbox"
                       checked={showLateWarning}
                       onChange={(e) => setShowLateWarning(e.target.checked)}
-                      className="text-red-600 focus:ring-red-500"
+                      className="text-red-600 dark:text-red-400 focus:ring-red-500"
                     />
                     <span className="text-sm text-red-700 dark:text-red-300">
                       Auto-tag for review
@@ -215,7 +216,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                 <span className="text-gray-600 dark:text-gray-400">
                   Due date:
                 </span>
-                <span className={`font-medium ${isLate ? "text-red-600" : ""}`}>
+                <span className={`font-medium ${isLate ? "text-red-600 dark:text-red-400" : ""}`}>
                   {new Date(task.dueDate).toLocaleDateString()}
                   {isLate && " (Late)"}
                 </span>
@@ -267,7 +268,7 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
             Attach Files
           </label>
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center dark:border-gray-600">
-            <FiUpload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <FiUpload className="w-8 h-8 text-gray-500 dark:text-gray-400 mx-auto mb-2" />
             <input
               type="file"
               multiple
@@ -295,9 +296,9 @@ export const CompleteTaskModal: React.FC<CompleteTaskModalProps> = ({
                   className="flex items-center justify-between p-2 bg-gray-50 rounded dark:bg-gray-800"
                 >
                   <div className="flex items-center space-x-2">
-                    <FiFileText className="w-4 h-4 text-gray-500" />
+                    <FiFileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     <span className="text-sm">{file.name}</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       ({(file.size / 1024).toFixed(1)} KB)
                     </span>
                   </div>

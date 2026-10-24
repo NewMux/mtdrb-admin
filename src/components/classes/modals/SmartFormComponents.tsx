@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiAlertCircle,
   FiClock,
@@ -30,20 +30,21 @@ export const FormField: React.FC<FormFieldProps> = ({
   disabled = false,
   icon,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-900">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
             {icon}
           </div>
         )}
         {type === "textarea" ? (
-          <textarea
+          <textarea id={fieldId}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
@@ -60,7 +61,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             rows={4}
           />
         ) : (
-          <input
+          <input id={fieldId}
             type={type}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -113,13 +114,14 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   required = false,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-900">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <select
+      <select id={fieldId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
@@ -173,15 +175,16 @@ export const TimeField: React.FC<TimeFieldProps> = ({
   required = false,
   disabled = false,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-900">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <input
+        <FiClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+        <input id={fieldId}
           type="time"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -228,15 +231,16 @@ export const DateField: React.FC<DateFieldProps> = ({
   disabled = false,
   min,
 }) => {
+  const fieldId = React.useId();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-900">
+      <label htmlFor={fieldId} className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <input
+        <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+        <input id={fieldId}
           type="date"
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -309,7 +313,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-gray-400"
+            className="text-gray-500"
           >
             <FiChevronDown className="h-4 w-4" />
           </motion.div>

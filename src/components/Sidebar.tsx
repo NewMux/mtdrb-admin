@@ -27,6 +27,8 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" }>;
+  /** A custom role must hold one of these to see the item. */
+  permission?: readonly string[];
 }
 
 interface NavSection {
@@ -52,8 +54,8 @@ const getNavigation = (t: TFunction): NavSection[] => [
   {
     title: t("sidebar.sectionBusiness"),
     items: [
-      { name: t("sidebar.billing"), href: "/dashboard/billing", icon: FiDollarSign },
-      { name: t("sidebar.pos"), href: "/dashboard/pos", icon: FiShoppingCart },
+      { name: t("sidebar.billing"), href: "/dashboard/billing", icon: FiDollarSign, permission: ["billing.view", "billing.manage"] },
+      { name: t("sidebar.pos"), href: "/dashboard/pos", icon: FiShoppingCart, permission: ["pos.use", "pos.manage"] },
       { name: t("sidebar.analytics"), href: "/dashboard/analytics", icon: FiBarChart2 },
     ],
   },
@@ -93,13 +95,22 @@ function getActiveSidebarItem(pathname: string): string {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
-  const { signOut, user, isLoading } = useAuth();
+  const { signOut, user, isLoading, can } = useAuth();
   const { t, i18n } = useTranslation();
   const activeItem = getActiveSidebarItem(location.pathname);
   // Force re-render when language changes by using i18n.language as dependency
   const currentLang = i18n.language;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- currentLang isn't read directly but forces recompute when t's translations change language
-  const navigation = React.useMemo(() => getNavigation(t), [t, currentLang]);
+  const navigation = React.useMemo(
+    () =>
+      getNavigation(t)
+        .map((section) => ({
+          ...section,
+          items: section.items.filter((item) => !item.permission || can(item.permission)),
+        }))
+        .filter((section) => section.items.length > 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- currentLang forces a recompute when the language changes
+    [t, currentLang, can],
+  );
   const isRTL = currentLang === "ar";
 
   // Logout handler
@@ -143,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         {navigation.map((section, index) => (
           <div key={section.title ?? index}>
             {section.title && (
-              <h2 className="px-2 pb-1 text-[11px] font-semibold text-gray-500/90 dark:text-gray-400/80">
+              <h2 className="px-2 pb-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
                 {section.title}
               </h2>
             )}

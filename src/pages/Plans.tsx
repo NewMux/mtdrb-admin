@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { fetchPlanMemberCounts } from "../api/membershipPlans";
 import { UnifiedModal } from "../components/ui/UnifiedModal";
 import { AppleInput, AppleTextarea, AppleSelect } from "../components/AppleStyleModal";
 
@@ -158,6 +159,10 @@ export default function Plans() {
 
       if (error) throw error;
 
+      // Members currently on each plan, counted by the database (the stored
+      // plans.members_count column is not maintained).
+      const counts = await fetchPlanMemberCounts().catch(() => ({}) as Record<string, number>);
+
       setPlans(
         (data || []).map((row) => ({
           id: row.id,
@@ -167,7 +172,7 @@ export default function Plans() {
           duration: row.duration,
           features: Array.isArray(row.features) ? (row.features as string[]) : [],
           status: row.status === "inactive" ? "inactive" : "active",
-          members_count: row.members_count ?? 0,
+          members_count: counts[row.id] ?? 0,
           created_at: row.created_at,
         })),
       );
@@ -357,7 +362,7 @@ export default function Plans() {
       <FilterBar>
         <div className="flex-1 max-w-md">
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
             <input
               type="text"
               placeholder={t("plans.search")}
@@ -369,6 +374,7 @@ export default function Plans() {
         </div>
 
         <select
+          aria-label={t("common.filter")}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="ps-4 pe-9 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

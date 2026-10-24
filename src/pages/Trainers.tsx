@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -19,7 +19,9 @@ import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import TrainerTable from "../components/trainers/TrainerTable";
-import TrainerPerformanceDashboard from "../components/trainers/TrainerPerformanceDashboard";
+import TabFallback from "../components/ui/TabFallback";
+// Charts load when the analytics tab is first opened.
+const TrainerPerformanceDashboard = React.lazy(() => import("../components/trainers/TrainerPerformanceDashboard"));
 import AdvancedFilterModal from "../components/ui/AdvancedFilterModal";
 import { supabase } from "../supabaseClient";
 import { mapDbTrainerToUI } from "../mocks/demoData";
@@ -36,6 +38,7 @@ import {
 } from "../components/trainers/modals";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import Can from "../components/auth/Can";
 
 interface Trainer {
   id: string;
@@ -309,7 +312,9 @@ const Trainers: React.FC = () => {
       case "analytics":
         return (
           <div className="space-y-6">
-            <TrainerPerformanceDashboard refreshKey={refreshKey} />
+            <React.Suspense fallback={<TabFallback />}>
+              <TrainerPerformanceDashboard refreshKey={refreshKey} />
+            </React.Suspense>
           </div>
         );
 
@@ -334,13 +339,15 @@ const Trainers: React.FC = () => {
                     <FiDownload className="w-4 h-4" />
                     <span>{t("trainers.export")}</span>
                   </button>
-                  <button
-                    onClick={handleAddTrainer}
-                    className="btn btn-primary"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>{t("trainers.addTrainer")}</span>
-                  </button>
+                  <Can permission="trainers.manage">
+                    <button
+                      onClick={handleAddTrainer}
+                      className="btn btn-primary"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      <span>{t("trainers.addTrainer")}</span>
+                    </button>
+                  </Can>
                   <button
                     onClick={handleRefresh}
                     className="btn btn-secondary"
@@ -386,13 +393,15 @@ const Trainers: React.FC = () => {
               <FiTarget className="w-4 h-4" />
               <span>{t("trainers.viewSchedule")}</span>
             </button>
-            <button
-              onClick={handleAddTrainer}
-              className="btn btn-primary"
-            >
-              <FiPlus className="w-4 h-4" />
-              <span>{t("trainers.addTrainer")}</span>
-            </button>
+            <Can permission="trainers.manage">
+              <button
+                onClick={handleAddTrainer}
+                className="btn btn-primary"
+              >
+                <FiPlus className="w-4 h-4" />
+                <span>{t("trainers.addTrainer")}</span>
+              </button>
+            </Can>
           </>
         }
       />
@@ -402,7 +411,7 @@ const Trainers: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("trainers.searchPlaceholder")}
@@ -416,6 +425,7 @@ const Trainers: React.FC = () => {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(e.target.value)}
               className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"

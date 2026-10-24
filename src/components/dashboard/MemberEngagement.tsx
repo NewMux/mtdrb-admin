@@ -9,7 +9,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { StatStrip } from "../ui/StatStrip";
 import { useRTL } from "../../hooks/useRTL";
-import { countMembersActiveAsOf, isMemberCurrentlyActive } from "../../utils/memberActivity";
+import { countMembersActiveAsOf, isMemberCurrentlyActive, type MemberActivityRow } from "../../utils/memberActivity";
+import { fetchAllRows } from "../../utils/fetchAllRows";
 
 const MemberEngagement: React.FC = () => {
   interface EngagementMetric {
@@ -50,47 +51,54 @@ const MemberEngagement: React.FC = () => {
     if (!tenantId) return;
     try {
       setLoadError(false);
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const lastMonth = new Date();
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      const formatDate = (date: Date) => date.toISOString().split('T')[0];
+      const DAY = 24 * 60 * 60 * 1000;
+      const now = new Date();
+      const lastWeek = new Date(now.getTime() - 7 * DAY);
+      // Two equal rolling 30-day windows, as full instants: "signups in the last
+      // 30 days" against "the 30 days before that". (The old code compared a
+      // bare date with a timestamptz column, which drops the whole last day, and
+      // its two windows were different lengths.)
+      const windowStart = new Date(now.getTime() - 30 * DAY).toISOString();
+      const previousWindowStart = new Date(now.getTime() - 60 * DAY).toISOString();
 
-      // Fetch active members
-      const [allMembers, newSignups, previousNewSignups] = await Promise.all([
+      // All members, paged: the active count must not stop at PostgREST's 1000-row cap.
+      const allMembers = await fetchAllRows<MemberActivityRow>((from, to) =>
         supabase
           .from("members")
-          .select("id, created_at, join_date, expiry_date, status, membership_status")
-          .eq("tenant_id", tenantId),
-        supabase
-          .from("members")
-          .select("id, created_at")
+          .select("created_at, join_date, expiry_date, status, membership_status")
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(lastMonth)),
+          .order("id", { ascending: true })
+          .range(from, to),
+      );
+      // Signups are only counted.
+      const [newSignups, previousNewSignups] = await Promise.all([
         supabase
           .from("members")
-          .select("id, created_at")
+          .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(new Date(lastMonth.getTime() - 30 * 24 * 60 * 60 * 1000)))
-          .lte("created_at", formatDate(lastMonth)),
+          .gte("created_at", windowStart)
+          .lte("created_at", now.toISOString()),
+        supabase
+          .from("members")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId)
+          .gte("created_at", previousWindowStart)
+          .lt("created_at", windowStart),
       ]);
 
-      const firstError =
-        allMembers.error ||
-        newSignups.error ||
-        previousNewSignups.error;
+      const firstError = newSignups.error || previousNewSignups.error;
       if (firstError) throw firstError;
 
       // Compare "active members today" against "members who would have
       // counted as active a week ago" (approximated from join_date/
       // expiry_date), not against "members who signed up in the last
       // week" - the latter is a different, much smaller population.
-      const currentCount = (allMembers.data || []).filter(isMemberCurrentlyActive).length;
-      const previousCount = countMembersActiveAsOf(allMembers.data || [], lastWeek);
+      const currentCount = allMembers.filter(isMemberCurrentlyActive).length;
+      const previousCount = countMembersActiveAsOf(allMembers, lastWeek);
       const memberChange = previousCount > 0 ? currentCount - previousCount : null;
 
-      const newSignupsCount = (newSignups.data || []).length;
-      const previousNewSignupsCount = (previousNewSignups.data || []).length;
+      const newSignupsCount = newSignups.count ?? 0;
+      const previousNewSignupsCount = previousNewSignups.count ?? 0;
       const signupsChange = newSignupsCount - previousNewSignupsCount;
 
       setEngagementMetrics([

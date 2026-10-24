@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
+import { m as motion, type HTMLMotionProps } from "framer-motion";
 import { FiLoader } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "./PageHeader";
@@ -395,7 +395,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => (
   <div className="text-center py-8">
-    <div className="text-gray-400 dark:text-gray-500 text-3xl flex justify-center mb-3">{icon}</div>
+    <div className="text-gray-500 dark:text-gray-400 text-3xl flex justify-center mb-3">{icon}</div>
     <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
       {title}
     </h3>

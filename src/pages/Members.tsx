@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -34,56 +34,29 @@ import {
   ImportMembersModal,
   AssignTrainerModal,
 } from "../components/members/modals";
+import { assignMemberPlan } from "../api/membershipPlans";
+import MemberPlanModal from "../components/members/modals/MemberPlanModal";
 
 // Import hooks
 // Removed mock members - using real data from Supabase
 import { supabase } from "../supabaseClient";
 import { useSmartMemberModal } from "../hooks/useSmartMemberModal";
-import AnalyticsTab from "../components/members/tabs/AnalyticsTab";
+import TabFallback from "../components/ui/TabFallback";
+// The charts (and the charting library) are fetched when the analytics tab is first opened.
+const AnalyticsTab = React.lazy(() => import("../components/members/tabs/AnalyticsTab"));
 import { usePermissions } from "../hooks/usePermissions";
 import { type Member } from "../types/member";
 import type { Database, Json } from "../types/supabase";
 import { PageHeader } from "../components/ui/PageHeader";
 import { StatStrip } from "../components/ui/StatStrip";
+import { fetchAllMembersForExport, fetchMemberCounts, fetchMemberPage, fetchRecentMembers, type MemberFilter } from "../api/memberList";
+import type { MemberRow, TableMember } from "../utils/memberTableRow";
+import { monthBoundary } from "../utils/periodBoundaries";
+import { toLocalDateString } from "../utils/analyticsRange";
+import { useGymConfig } from "../contexts/gym-config-context";
+import Can from "../components/auth/Can";
 
 // Raw "members" table row as returned by Supabase (select("*"))
-type MemberRow = Database["public"]["Tables"]["members"]["Row"];
-
-// Shape of the application-specific data stored in members.metadata (jsonb)
-interface MemberRowMetadata {
-  gender?: string;
-  age?: number;
-  last_check_in?: string;
-  check_in_count?: number;
-  membership_price?: number | string;
-  forms_submitted?: string[];
-  is_trial?: boolean;
-  attendance?: string[];
-  tags?: string[];
-  fitness_goal?: string;
-  membership_type?: string;
-}
-
-// Using SmartMemberTable's Member type for converted members
-type TableMember = Member & {
-  id: string;
-  name: string;
-  phone: string;
-  age: number;
-  gender: "Male" | "Female" | "Other";
-  joinDate: string;
-  planEnd: string;
-  lastCheckIn: string;
-  checkInCount: number;
-  status: "active" | "inactive" | "suspended" | "expired" | "trial";
-  membershipPrice: number;
-  formsSubmitted: string[];
-  isTrial: boolean;
-  attendance: string[];
-  tags: string[];
-  assignedTrainerId?: string;
-  fitnessGoal?: string;
-};
 
 // Payload shape built for inserting a new row into the "members" table
 interface NewMemberPayload {
@@ -111,7 +84,16 @@ interface StatCard {
 
 // Removed mock member conversion - using real data from Supabase
 
+// "New this month" = joined within the last month.
+const getNewSince = () => {
+  const now = new Date();
+  const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  return { date: toLocalDateString(monthAgo), iso: monthAgo.toISOString() };
+};
+
 const Members: React.FC = () => {
+  const { config: gymConfig } = useGymConfig();
+  const timezone = gymConfig.timezone;
   usePageThemeContext();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
@@ -119,12 +101,14 @@ const Members: React.FC = () => {
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
 
-  // State management for members
+  // State management for members. The table shows ONE page, fetched from the
+  // database with the search and filter applied there (api/memberList.ts).
   const [members, setMembers] = React.useState<TableMember[]>([]);
+  const [recentMembers, setRecentMembers] = React.useState<TableMember[]>([]);
+  const [totalMembers, setTotalMembers] = React.useState(0);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedFilter, setSelectedFilter] = React.useState("all");
-  const [sortBy] = React.useState("name");
-  const [sortOrder] = React.useState<"asc" | "desc">("asc");
+  const [search, setSearch] = React.useState("");
+  const [selectedFilter, setSelectedFilter] = React.useState<MemberFilter>("all");
   const [loading, setLoading] = React.useState(true);
   const { tenantId } = useAuth();
   const [stats, setStats] = React.useState({
@@ -172,166 +156,74 @@ const Members: React.FC = () => {
   const [totalPages, setTotalPages] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(10);
 
-  // Fetch members and stats from Supabase
+  // The headline numbers: counts only, so nothing is downloaded however many
+  // members the gym has.
   React.useEffect(() => {
-    const fetchMembers = async () => {
-      if (!tenantId) return;
+    if (!tenantId) return;
+    let cancelled = false;
+    const loadStats = async () => {
       try {
-        setLoading(true);
-        
-        const { data, error } = await supabase
-          .from("members")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        
-        const convertedMembers: TableMember[] = (data || []).map((m: MemberRow) => {
-          const metadata = (m.metadata as MemberRowMetadata | undefined) ?? {};
-          const rawStatus = String(m.status);
-          const status =
-            rawStatus === "active"
-              ? "active"
-              : rawStatus === "inactive"
-                ? "inactive"
-                : rawStatus === "suspended"
-                  ? "suspended"
-                  : rawStatus === "trial"
-                    ? "trial"
-                    : "expired";
-          return {
-            id: m.id,
-            name: `${m.first_name || ""} ${m.last_name || ""}`.trim() || m.email,
-            email: m.email,
-            phone: m.phone || "",
-            age: metadata.age ?? 18,
-            gender: (["Male", "Female", "Other"].includes(metadata.gender ?? "")
-              ? metadata.gender
-              : "Other") as "Male" | "Female" | "Other",
-            joinDate:
-              m.join_date ||
-              m.created_at?.split("T")[0] ||
-              new Date().toISOString().split("T")[0],
-            planEnd:
-              m.expiry_date ||
-              new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0],
-            lastCheckIn:
-              metadata.last_check_in ||
-              new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .split("T")[0],
-            checkInCount: metadata.check_in_count || 0,
-            status,
-            membershipPrice: parseFloat(String(metadata.membership_price ?? "")) || 99.99,
-            formsSubmitted: metadata.forms_submitted || [],
-            isTrial: metadata.is_trial || false,
-            attendance: metadata.attendance || [],
-            tags: metadata.tags || [],
-            assignedTrainerId: m.trainer_id || undefined,
-            fitnessGoal: metadata.fitness_goal || undefined,
-            membership_type: m.membership_type || metadata.membership_type,
-            membership_status: m.membership_status as Member["membership_status"],
-          };
-        });
-
-        setMembers(convertedMembers);
-        
-        // Calculate stats
+        // Months in the gym's timezone as full instants with an exclusive upper
+        // bound (see periodBoundaries.ts); a bare date string would drop the last
+        // day of every range.
         const now = new Date();
-        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        const currentMonth = monthBoundary(now, 0, timezone);
+        const previousMonth = monthBoundary(now, 1, timezone);
+        const previousMonthEnd = new Date(Date.parse(previousMonth.endExclusiveISO) - 1);
 
-        const totalCount = convertedMembers.length;
-        const activeCount = convertedMembers.filter(m => m.status === "active").length;
-        const newThisMonthCount = convertedMembers.filter((m) => {
-          const joinDate = new Date(m.joinDate || "");
-          return joinDate >= monthAgo;
-        }).length;
-        
-        // Get previous month stats for comparison
-        const { data: previousMonthMembers } = await supabase
-          .from("members")
-          .select("id, status, created_at")
-          .eq("tenant_id", tenantId)
-          .gte("created_at", formatDate(previousMonthStart))
-          .lte("created_at", formatDate(previousMonthEnd));
+        const checkInsIn = (period: { startISO: string; endExclusiveISO: string }) =>
+          supabase
+            .from("class_bookings")
+            .select("id", { count: "exact", head: true })
+            .eq("tenant_id", tenantId)
+            .in("status", ["checked_in", "completed"])
+            .gte("created_at", period.startISO)
+            .lt("created_at", period.endExclusiveISO);
 
-        const previousTotal = (previousMonthMembers || []).length;
-        const previousActive = (previousMonthMembers || []).filter(m => m.status === "active").length;
-        const totalChange = totalCount - previousTotal;
-        const activeChange = activeCount - previousActive;
-        
-        setStats({
-          total: totalCount,
-          active: activeCount,
-          inactive: convertedMembers.filter(m => m.status === "inactive").length,
-          newThisMonth: newThisMonthCount,
-        });
+        const [counts, trainersResult, currentCheckIns, previousCheckIns] = await Promise.all([
+          // Compare with where the gym stood at the END of last month (join/expiry
+          // dates), not with the members who JOINED last month, a much smaller group.
+          fetchMemberCounts({ tenantId, newSince: getNewSince(), previousMonthEnd }),
+          supabase.from("trainers").select("rating").eq("tenant_id", tenantId).not("rating", "is", null),
+          checkInsIn(currentMonth),
+          checkInsIn(previousMonth),
+        ]);
+        if (cancelled) return;
 
-        // Fetch Average Rating from trainers
-        const { data: trainers } = await supabase
-          .from("trainers")
-          .select("rating")
-          .eq("tenant_id", tenantId)
-          .not("rating", "is", null);
-
+        const trainers = trainersResult.data;
         const avgRating = trainers && trainers.length > 0
           ? trainers.reduce((sum, t) => sum + Number(t.rating || 0), 0) / trainers.length
           : 0;
+        // Ratings are stored as a single current value per trainer, so there is no
+        // last-month figure to compare with.
 
-        // Get previous month average rating
-        await supabase
-          .from("trainers")
-          .select("rating")
-          .eq("tenant_id", tenantId)
-          .not("rating", "is", null);
+        const totalChange = counts.total - counts.previousTotal;
+        const activeChange = counts.active - counts.previousActive;
+        setStats({
+          total: counts.total,
+          active: counts.active,
+          inactive: counts.inactive,
+          newThisMonth: counts.newThisMonth,
+        });
 
-        // For simplicity, using same trainers (ratings don't change monthly typically)
-        // In a real system, you'd track rating history
-        const previousAvgRating = avgRating > 0 ? avgRating - 0.2 : 0; // Placeholder
-        const ratingChange = avgRating - previousAvgRating;
-
-        // Fetch Monthly Check-ins
-        const [currentCheckIns, previousCheckIns] = await Promise.all([
-          supabase
-            .from("class_bookings")
-            .select("id, status, created_at")
-            .eq("tenant_id", tenantId)
-            .in("status", ["checked_in", "completed"])
-            .gte("created_at", formatDate(currentMonthStart)),
-          supabase
-            .from("class_bookings")
-            .select("id, status, created_at")
-            .eq("tenant_id", tenantId)
-            .in("status", ["checked_in", "completed"])
-            .gte("created_at", formatDate(previousMonthStart))
-            .lte("created_at", formatDate(previousMonthEnd)),
-        ]);
-
-        const currentCheckInsCount = (currentCheckIns.data || []).length;
-        const previousCheckInsCount = (previousCheckIns.data || []).length;
+        const currentCheckInsCount = currentCheckIns.count ?? 0;
+        const previousCheckInsCount = previousCheckIns.count ?? 0;
+        // No check-ins last month means there is nothing to compare, not "+0%".
         const checkInsChange = previousCheckInsCount > 0
           ? ((currentCheckInsCount - previousCheckInsCount) / previousCheckInsCount) * 100
-          : 0;
+          : null;
 
-        // Update member stats
         setMemberStats([
           {
             name: t("members.totalMembers"),
-            value: totalCount.toString(),
+            value: counts.total.toString(),
             change: totalChange >= 0 ? `+${totalChange} ${t("members.fromLastMonth")}` : `${totalChange} ${t("members.fromLastMonth")}`,
             icon: FiUsers,
             color: "bg-blue-500",
           },
           {
             name: t("members.activeMembers"),
-            value: activeCount.toString(),
+            value: counts.active.toString(),
             change: activeChange >= 0 ? `+${activeChange} ${t("members.fromLastMonth")}` : `${activeChange} ${t("members.fromLastMonth")}`,
             icon: FiActivity,
             color: "bg-green-500",
@@ -339,67 +231,102 @@ const Members: React.FC = () => {
           {
             name: t("members.averageRating"),
             value: avgRating > 0 ? avgRating.toFixed(1) : t("dashboard.notAvailable"),
-            change: avgRating > 0
-              ? ratingChange >= 0 ? `+${ratingChange.toFixed(1)} ${t("members.fromLastMonth")}` : `${ratingChange.toFixed(1)} ${t("members.fromLastMonth")}`
-              : t("members.noRatingData"),
+            change: avgRating > 0 ? t("members.acrossAllTrainers") : t("members.noRatingData"),
             icon: FiStar,
             color: "bg-yellow-500",
           },
           {
             name: t("members.monthlyCheckins"),
             value: currentCheckInsCount.toLocaleString(),
-            change: checkInsChange >= 0 ? `+${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}` : `${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}`,
+            change: checkInsChange === null
+              ? t("dashboard.noComparison")
+              : checkInsChange >= 0 ? `+${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}` : `${checkInsChange.toFixed(1)}% ${t("members.fromLastMonth")}`,
             icon: FiClock,
             color: "bg-purple-500",
           },
         ]);
-        
-        setTotalPages(Math.ceil(convertedMembers.length / itemsPerPage));
       } catch (error) {
-        console.error("Error fetching members:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching member stats:", error);
       }
     };
+    void loadStats();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, tenantId, t, timezone]);
 
-    fetchMembers();
-  }, [refreshKey, itemsPerPage, tenantId, t]);
+  // The table: one page, with the search and filter applied in the database.
+  React.useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    setLoading(true);
+    fetchMemberPage({
+      tenantId,
+      page: currentPage,
+      pageSize: itemsPerPage,
+      search,
+      filter: selectedFilter,
+      newSince: getNewSince(),
+    })
+      .then(({ rows, total }) => {
+        if (cancelled) return;
+        const pages = Math.max(1, Math.ceil(total / itemsPerPage));
+        if (currentPage > pages) {
+          // The last page emptied (a member was removed): step back to the new last one.
+          setCurrentPage(pages);
+          return;
+        }
+        setMembers(rows);
+        setTotalMembers(total);
+        setTotalPages(pages);
+      })
+      .catch((error) => {
+        if (!cancelled) console.error("Error fetching members:", error);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId, currentPage, itemsPerPage, search, selectedFilter, refreshKey]);
 
-  // Filter and sort members
-  const convertedMembers = React.useMemo(() => {
-    let filtered = members;
-    
-    // Apply search
-    if (searchTerm) {
-      filtered = filtered.filter(m => 
-        (m.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.email || "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Apply filter
-    if (selectedFilter !== "all") {
-      filtered = filtered.filter(m => m.status === selectedFilter);
-    }
-    
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      const aVal = a[sortBy as keyof TableMember] ?? "";
-      const bVal = b[sortBy as keyof TableMember] ?? "";
-      if (sortOrder === "asc") {
-        return aVal > bVal ? 1 : -1;
-      }
-      return aVal < bVal ? 1 : -1;
-    });
-    
-    // Apply pagination
-    const start = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(start, start + itemsPerPage);
-  }, [members, searchTerm, selectedFilter, sortBy, sortOrder, currentPage, itemsPerPage]);
+  // The newest few, for the dashboard tab.
+  React.useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    fetchRecentMembers(tenantId, 5)
+      .then((rows) => {
+        if (!cancelled) setRecentMembers(rows);
+      })
+      .catch((error) => {
+        if (!cancelled) console.error("Error fetching recent members:", error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId, refreshKey]);
+
+  // Typing searches after a short pause, and always starts again from page 1.
+  React.useEffect(() => {
+    const trimmed = searchTerm.trim();
+    if (trimmed === search) return;
+    const id = setTimeout(() => {
+      setSearch(trimmed);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [searchTerm, search]);
+
+  // A row the user can act on: from the table page or the dashboard's recent list.
+  const findLoadedMember = React.useCallback(
+    (id: string) => members.find((m) => m.id === id) ?? recentMembers.find((m) => m.id === id),
+    [members, recentMembers],
+  );
 
   const updateSearch = React.useCallback((term: string) => setSearchTerm(term), []);
   const updateFilter = React.useCallback((filter: string) => {
-    setSelectedFilter(filter);
+    setSelectedFilter(filter as MemberFilter);
     setCurrentPage(1);
   }, []);
   const updateItemsPerPage = React.useCallback((count: number) => {
@@ -455,15 +382,10 @@ const Members: React.FC = () => {
     }
 
     try {
-      const { data: members, error } = await supabase
-        .from("members")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
+      // Every member, page by page: one request is cut off at 1,000 rows.
+      const allMembers = await fetchAllMembersForExport(tenantId);
 
-      if (error) throw error;
-
-      const exportData = (members || []).map((member: MemberRow) => ({
+      const exportData = allMembers.map((member: MemberRow) => ({
         "First Name": member.first_name || "",
         "Last Name": member.last_name || "",
         Name: `${member.first_name || ""} ${member.last_name || ""}`.trim(),
@@ -483,7 +405,7 @@ const Members: React.FC = () => {
           : "N/A",
       }));
 
-      const filename = `members-export-${new Date().toISOString().split("T")[0]}`;
+      const filename = `members-export-${toLocalDateString(new Date())}`;
       exportCSV(exportData, filename);
       showSuccess(t("members.exportSuccessful"), t("members.membersDataExported"));
     } catch (error) {
@@ -513,8 +435,8 @@ const Members: React.FC = () => {
         status: 'active',
         membership_type: 'Premium',
         membership_status: 'active',
-        join_date: new Date().toISOString().split('T')[0],
-        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        join_date: toLocalDateString(new Date()),
+        expiry_date: toLocalDateString(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
         metadata: {
           gender: 'Male',
           fitness_level: 'Intermediate',
@@ -545,8 +467,9 @@ const Members: React.FC = () => {
         console.error('Failed to add test member:', error);
         showError('Error', `Failed to add test member: ${error.message}`);
       } else {
-        console.log('✅ Test member added:', data.id);
-        console.log('Name:', `${data.first_name} ${data.last_name}`);
+        // Development-only helper (the only caller is gated on import.meta.env.DEV).
+        // eslint-disable-next-line no-console
+        console.info('Test member added:', data.id);
         setRefreshKey((prev) => prev + 1);
         showSuccess('Test Member Added', `Ahmed Al-Mansoori has been added to your members list.`);
       }
@@ -557,25 +480,13 @@ const Members: React.FC = () => {
     }
   }, [tenantId, showSuccess, showError, setRefreshKey]);
 
-  // Add test member on first load (development only)
-  React.useEffect(() => {
-    if (import.meta.env.DEV && tenantId) {
-      const hasAddedTestMember = sessionStorage.getItem('testMemberAdded');
-      if (!hasAddedTestMember) {
-        setTimeout(() => {
-          addTestMember();
-          sessionStorage.setItem('testMemberAdded', 'true');
-        }, 1000);
-      }
-    }
-  }, [tenantId, addTestMember]);
-
   // Expose function to window for manual use
   React.useEffect(() => {
     if (import.meta.env.DEV) {
       (window as Window & { addTestMember?: () => Promise<void> }).addTestMember =
         addTestMember;
-      console.log('🧪 Development mode: Use window.addTestMember() to add a test member');
+      // eslint-disable-next-line no-console -- development only (import.meta.env.DEV)
+      console.info('Development mode: use window.addTestMember() to add a test member');
     }
   }, [addTestMember]);
 
@@ -599,7 +510,7 @@ const Members: React.FC = () => {
   const handleEditMember = React.useCallback(
     (member: { id: string }) => {
       try {
-        const originalMember = members.find((m) => m.id === member.id);
+        const originalMember = findLoadedMember(member.id);
         if (originalMember) {
           openEditMemberModal(originalMember);
         }
@@ -607,13 +518,13 @@ const Members: React.FC = () => {
         showError("Error", "Failed to open edit modal. Please try again.");
       }
     },
-    [openEditMemberModal, showError, members],
+    [openEditMemberModal, showError, findLoadedMember],
   );
 
   const handleDeleteMember = React.useCallback(
     (member: { id: string }) => {
       try {
-        const originalMember = members.find((m) => m.id === member.id);
+        const originalMember = findLoadedMember(member.id);
         if (originalMember) {
           openDeleteMemberModal(originalMember);
         }
@@ -621,13 +532,13 @@ const Members: React.FC = () => {
         showError("Error", "Failed to open delete modal. Please try again.");
       }
     },
-    [openDeleteMemberModal, showError, members],
+    [openDeleteMemberModal, showError, findLoadedMember],
   );
 
   const handleViewMember = React.useCallback(
     (member: { id: string }) => {
       try {
-        const originalMember = members.find((m) => m.id === member.id);
+        const originalMember = findLoadedMember(member.id);
         if (originalMember) {
           openViewProfileModal(originalMember);
         }
@@ -635,13 +546,13 @@ const Members: React.FC = () => {
         showError("Error", "Failed to open profile modal. Please try again.");
       }
     },
-    [openViewProfileModal, showError, members],
+    [openViewProfileModal, showError, findLoadedMember],
   );
 
   const handleAssignTrainer = React.useCallback(
     (member: { id: string }) => {
       try {
-        const originalMember = members.find((m) => m.id === member.id);
+        const originalMember = findLoadedMember(member.id);
         if (originalMember) {
           openAssignTrainerModal(originalMember);
         }
@@ -652,13 +563,19 @@ const Members: React.FC = () => {
         );
       }
     },
-    [openAssignTrainerModal, showError, members],
+    [openAssignTrainerModal, showError, findLoadedMember],
+  );
+
+  const [planMember, setPlanMember] = React.useState<{ id: string; name: string; planEnd: string } | null>(null);
+  const handleChangePlan = React.useCallback(
+    (member: { id: string; name: string; planEnd: string }) => setPlanMember(member),
+    [],
   );
 
   const handleCancelMembership = React.useCallback(
     (member: { id: string }) => {
       try {
-        const originalMember = members.find((m) => m.id === member.id);
+        const originalMember = findLoadedMember(member.id);
         if (originalMember) {
           openCancelMembershipModal(originalMember);
         }
@@ -669,7 +586,7 @@ const Members: React.FC = () => {
         );
       }
     },
-    [openCancelMembershipModal, showError, members],
+    [openCancelMembershipModal, showError, findLoadedMember],
   );
 
   // Handle adding a new member
@@ -698,7 +615,7 @@ const Members: React.FC = () => {
           status: memberData.status || "active",
           membership_type: memberData.membership_type || memberData.membershipType || "Standard",
           membership_status: memberData.membership_status || "active",
-          join_date: memberData.start_date || memberData.join_date || new Date().toISOString().split("T")[0],
+          join_date: memberData.start_date || memberData.join_date || toLocalDateString(new Date()),
           expiry_date: memberData.end_date || memberData.expiry_date || null,
           trainer_id: memberData.assigned_trainer_id || memberData.trainer_id || null,
           metadata: {
@@ -729,7 +646,7 @@ const Members: React.FC = () => {
         };
 
         // Insert the member into Supabase
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("members")
           .insert(memberPayload as Database["public"]["Tables"]["members"]["Insert"])
           .select()
@@ -739,9 +656,28 @@ const Members: React.FC = () => {
           throw error;
         }
 
+        // Put the new member on the chosen plan: the database sets the expiry
+        // date from the plan's length in the gym's own calendar.
+        let planError: string | null = null;
+        if (memberData.plan_id && data?.id) {
+          try {
+            await assignMemberPlan(data.id, memberData.plan_id, {
+              price: memberData.plan_price ?? null,
+              invoice: memberData.plan_invoice ?? true,
+              paymentMethod: memberData.plan_payment_method ?? "cash",
+            });
+          } catch (planFailure) {
+            planError = planFailure instanceof Error ? planFailure.message : "unknown error";
+          }
+        }
+
         // Success - refresh members list and show toast
         setRefreshKey((prev) => prev + 1);
-        showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
+        if (planError) {
+          showError("Plan not applied", t("membershipPlans.planAddedFailed", { message: planError }));
+        } else {
+          showSuccess("Success", `Member ${firstName} ${lastName} added successfully!`);
+        }
         handleAddMemberSuccess();
       } catch (error: unknown) {
         console.error("Failed to add member:", error);
@@ -754,7 +690,7 @@ const Members: React.FC = () => {
         setModalLoading(false);
       }
     },
-    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess],
+    [tenantId, setModalLoading, showSuccess, showError, handleAddMemberSuccess, t],
   );
 
   // Handle saving an edited member (persists EditMemberModal's form data)
@@ -903,10 +839,11 @@ const Members: React.FC = () => {
                 </button>
               </div>
               <SmartMemberTable
-                members={convertedMembers.slice(0, 5)}
+                members={recentMembers}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onCancelMembership={handleCancelMembership}
+                onChangePlan={handleChangePlan}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
@@ -924,14 +861,16 @@ const Members: React.FC = () => {
       case "analytics":
         return (
           <div className="space-y-6">
-            <AnalyticsTab
-              members={convertedMembers}
-              stats={stats}
-              refreshKey={refreshKey}
-              onFilterMembers={() => {
-                // Handle filter logic here
-              }}
-            />
+            <React.Suspense fallback={<TabFallback />}>
+              <AnalyticsTab
+                members={members}
+                stats={stats}
+                refreshKey={refreshKey}
+                onFilterMembers={() => {
+                  // Handle filter logic here
+                }}
+              />
+            </React.Suspense>
           </div>
         );
 
@@ -950,13 +889,15 @@ const Members: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => openImportMembersModal()}
-                    className="btn btn-secondary"
-                  >
-                    <FiUpload className="w-4 h-4" />
-                    <span>{t("members.import")}</span>
-                  </button>
+                  <Can permission="members.manage">
+                    <button
+                      onClick={() => openImportMembersModal()}
+                      className="btn btn-secondary"
+                    >
+                      <FiUpload className="w-4 h-4" />
+                      <span>{t("members.import")}</span>
+                    </button>
+                  </Can>
                   <button
                     onClick={handleExportMembers}
                     className="btn btn-secondary"
@@ -977,16 +918,17 @@ const Members: React.FC = () => {
               </div>
 
               <SmartMemberTable
-                members={convertedMembers}
+                members={members}
                 onEdit={handleEditMember}
                 onDelete={handleDeleteMember}
                 onCancelMembership={handleCancelMembership}
+                onChangePlan={handleChangePlan}
                 onView={handleViewMember}
                 onAssignTrainer={handleAssignTrainer}
                 loading={loading}
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalItems={convertedMembers.length}
+                totalItems={totalMembers}
                 itemsPerPage={itemsPerPage}
                 onPageChange={handlePageChange}
                 onItemsPerPageChange={handleItemsPerPageChange}
@@ -1026,7 +968,7 @@ const Members: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
+            <FiSearch className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-4 h-4`} />
             <input
               type="text"
               placeholder={t("members.searchPlaceholder")}
@@ -1040,6 +982,7 @@ const Members: React.FC = () => {
           {/* Filters */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("common.filter")}
               value={selectedFilter}
               onChange={(e) => updateFilter(e.target.value)}
               className="ps-4 pe-9 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-white/5 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -1165,6 +1108,18 @@ const Members: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      {planMember && (
+        <MemberPlanModal
+          isOpen
+          member={planMember}
+          onClose={() => setPlanMember(null)}
+          onDone={() => {
+            setPlanMember(null);
+            setRefreshKey((prev) => prev + 1);
+          }}
+        />
+      )}
 
       {/* Filter Modal */}
       <AdvancedFilterModal

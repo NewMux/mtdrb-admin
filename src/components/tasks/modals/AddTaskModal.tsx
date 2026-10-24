@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
   FiZap,
@@ -182,11 +183,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         onSuccess?.();
         onClose();
       } else {
-        toast.error("Failed to create task");
+        toast.error(i18n.t("toasts.taskCreateFailed"));
       }
     } catch (error) {
       console.error("Error creating task:", error);
-      toast.error("Failed to create task");
+      toast.error(i18n.t("toasts.taskCreateFailed"));
     } finally {
       setLoading(false);
     }

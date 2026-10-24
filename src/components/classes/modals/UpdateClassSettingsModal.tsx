@@ -1,5 +1,6 @@
+import i18n from "../../../i18n";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import {
   FiSettings,
   FiUsers,
@@ -110,7 +111,7 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
   const handleSave = async () => {
     if (validationErrors.length > 0) {
-      toast.error("Please fix validation errors before saving");
+      toast.error(i18n.t("toasts.fixValidation"));
       return;
     }
 
@@ -142,13 +143,13 @@ const UpdateClassSettingsModal: React.FC<UpdateClassSettingsModalProps> = ({
 
       if (error) throw error;
 
-      toast.success("Class settings updated successfully");
+      toast.success(i18n.t("toasts.classSettingsUpdated"));
       setHasChanges(false);
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error updating settings:", error);
-      toast.error("Failed to update settings");
+      toast.error(i18n.t("toasts.settingsUpdateFailed"));
     } finally {
       setLoading(false);
     }
