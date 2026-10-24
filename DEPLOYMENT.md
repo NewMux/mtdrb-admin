@@ -780,10 +780,17 @@ the sandbox, run the smoke test, then repeat steps 3-6 for live.
      PADDLE_API_KEY=... PADDLE_ENVIRONMENT=sandbox PADDLE_WEBHOOK_SECRET=... \
      PADDLE_STARTER_PRICE_ID=pri_... PADDLE_PRO_PRICE_ID=pri_... \
      PADDLE_STARTER_EXTRA_LOCATION_PRICE_ID=pri_... PADDLE_PRO_EXTRA_LOCATION_PRICE_ID=pri_... \
-     APP_ALLOWED_ORIGINS=https://your-app.example PLATFORM_ALLOWED_ORIGINS=https://your-app.example
+     APP_ALLOWED_ORIGINS=https://your-app.example PLATFORM_ALLOWED_ORIGINS=https://your-app.example \
+     PLATFORM_APP_URL=https://your-app.example \
+     STAFF_ALLOWED_ORIGINS=https://your-app.example STAFF_APP_URL=https://your-app.example
    supabase functions deploy paddle-webhook paddle-manage-locations \
-     paddle-cancel-subscription delete-account platform-invite-gym
+     paddle-cancel-subscription delete-account platform-invite-gym \
+     invite-staff attendance-ingest
    ```
+
+   Seven functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
+   `platform-invite-gym` (owner console) needs `PLATFORM_APP_URL`;
+   `attendance-ingest` needs nothing extra (Supabase provides its keys).
 
 6. **Frontend env (Vercel).** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
    `VITE_APP_URL`, `VITE_PADDLE_ENVIRONMENT=sandbox`,
