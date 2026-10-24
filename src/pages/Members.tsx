@@ -16,6 +16,7 @@ import {
 import SmartMemberTable from "../components/members/SmartMemberTable";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "../contexts/SubscriptionContext";
 
 import ToastContainer from "../components/ui/Toast";
 import { useToast } from "../hooks/useToast";
@@ -492,12 +493,14 @@ const Members: React.FC = () => {
 
   // Permission checks
   const { canCreate } = usePermissions();
+  const { canUseAnalytics } = useSubscription();
 
-  const tabs = [
+  const allTabs = [
     { id: "dashboard", name: t("members.dashboard"), icon: FiUsers },
     { id: "list", name: t("members.memberList"), icon: FiUserPlus },
     { id: "analytics", name: t("members.analytics"), icon: FiBarChart2 },
   ];
+  const tabs = allTabs.filter((tab) => tab.id !== "analytics" || canUseAnalytics);
 
   const filters = [
     { id: "all", name: t("members.allMembers"), count: stats.total },
@@ -859,6 +862,7 @@ const Members: React.FC = () => {
         );
 
       case "analytics":
+        if (!canUseAnalytics) return null;
         return (
           <div className="space-y-6">
             <React.Suspense fallback={<TabFallback />}>

@@ -30,6 +30,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
+import UpgradePlanModal from "../components/settings/UpgradePlanModal";
 import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
 import DataPrivacyTab from "../components/settings/DataPrivacyTab";
 import TeamSettingsTab from "../components/settings/TeamSettingsTab";
@@ -39,7 +40,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 
 const Settings: React.FC = () => {
   usePageThemeContext();
-  useSubscription();
+  const { refresh: refreshPlan } = useSubscription();
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
@@ -56,6 +57,7 @@ const Settings: React.FC = () => {
   });
   const [changingPassword, setChangingPassword] = useState(false);
   const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<{
     tier: string;
     startDate?: string;
@@ -130,6 +132,21 @@ const Settings: React.FC = () => {
   useEffect(() => {
     void fetchSubscriptionInfo();
   }, [fetchSubscriptionInfo]);
+
+  // /dashboard/settings?tab=billing&upgrade=pro (the Analytics upgrade page links
+  // here) opens the upgrade straight away, once we know the gym is on Starter.
+  const wantsUpgrade = searchParams.get("upgrade") === "pro";
+  const canUpgradeToPro =
+    subscriptionInfo.isPaid && subscriptionInfo.tier === "starter" && subscriptionInfo.paymentProvider === "paddle";
+  useEffect(() => {
+    if (wantsUpgrade && canUpgradeToPro) setShowUpgradeModal(true);
+  }, [wantsUpgrade, canUpgradeToPro]);
+
+  // The gym is on Pro now: reload the plan shown here and the one the whole app gates on.
+  const handleUpgraded = async () => {
+    setShowUpgradeModal(false);
+    await Promise.all([fetchSubscriptionInfo(), refreshPlan()]);
+  };
 
   // The cancellation is scheduled for the end of the paid period: the gym keeps
   // access until then, so reload the real state instead of showing "Free".
@@ -992,7 +1009,16 @@ const Settings: React.FC = () => {
                           </div>
                         </div>
                         <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
-                          {subscriptionInfo.isPaid && (
+                          {canUpgradeToPro && (
+                            <SmartButton
+                              variant="primary"
+                              size="sm"
+                              onClick={() => setShowUpgradeModal(true)}
+                            >
+                              {t("planGate.upgradeToPro")}
+                            </SmartButton>
+                          )}
+                          {subscriptionInfo.isPaid && !canUpgradeToPro && (
                             <SmartButton
                               variant="secondary"
                               size="sm"
@@ -1302,6 +1328,12 @@ const Settings: React.FC = () => {
         subscriptionStart={subscriptionInfo.startDate}
         accessUntil={subscriptionInfo.currentPeriodEnd}
         onSuccess={handleSubscriptionCancelled}
+      />
+
+      <UpgradePlanModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onDone={handleUpgraded}
       />
     </div>
   );

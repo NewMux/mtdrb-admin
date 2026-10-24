@@ -56,6 +56,7 @@ const SuperAdminTenantDetail = lazy(() => import("./pages/superadmin/TenantDetai
 import Layout from "./components/Layout";
 import AuthSetup from "./components/AuthSetup";
 import PermissionGuard from "./components/auth/PermissionGuard";
+import { AnalyticsGuard } from "./components/auth/AnalyticsGuard";
 import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
 import { PlatformAdminProvider } from "./contexts/PlatformAdminProvider";
 
@@ -216,7 +217,9 @@ const App = () => {
                           path="analytics" 
                           element={
                             <PermissionGuard requiredRole="employee" fallbackPath="/dashboard">
-                              <Analytics />
+                              <AnalyticsGuard>
+                                <Analytics />
+                              </AnalyticsGuard>
                             </PermissionGuard>
                           } 
                         />

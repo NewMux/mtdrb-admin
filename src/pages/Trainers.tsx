@@ -18,6 +18,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import TrainerTable from "../components/trainers/TrainerTable";
 import TabFallback from "../components/ui/TabFallback";
 // Charts load when the analytics tab is first opened.
@@ -123,11 +124,13 @@ const Trainers: React.FC = () => {
   }, [trainers]);
 
 
-  const tabs = [
+  const { canUseAnalytics } = useSubscription();
+  const allTabs = [
     { id: "dashboard", name: t("trainers.dashboard"), icon: FiUser },
     { id: "analytics", name: t("trainers.analytics"), icon: FiBarChart2 },
     { id: "list", name: t("trainers.trainerList"), icon: FiSettings },
   ];
+  const tabs = allTabs.filter((tab) => tab.id !== "analytics" || canUseAnalytics);
 
   const filters = [
     { id: "all", name: t("trainers.allTrainers"), count: safeTrainers.length },
@@ -310,6 +313,7 @@ const Trainers: React.FC = () => {
         );
 
       case "analytics":
+        if (!canUseAnalytics) return null;
         return (
           <div className="space-y-6">
             <React.Suspense fallback={<TabFallback />}>

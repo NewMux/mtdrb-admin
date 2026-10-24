@@ -15,6 +15,7 @@ import {
   FiMapPin,
 } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { BrandMark } from "./BrandMark";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -29,6 +30,8 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" }>;
   /** A custom role must hold one of these to see the item. */
   permission?: readonly string[];
+  /** Hidden on plans that do not include this feature. */
+  feature?: "analytics";
 }
 
 interface NavSection {
@@ -56,7 +59,7 @@ const getNavigation = (t: TFunction): NavSection[] => [
     items: [
       { name: t("sidebar.billing"), href: "/dashboard/billing", icon: FiDollarSign, permission: ["billing.view", "billing.manage"] },
       { name: t("sidebar.pos"), href: "/dashboard/pos", icon: FiShoppingCart, permission: ["pos.use", "pos.manage"] },
-      { name: t("sidebar.analytics"), href: "/dashboard/analytics", icon: FiBarChart2 },
+      { name: t("sidebar.analytics"), href: "/dashboard/analytics", icon: FiBarChart2, feature: "analytics" },
     ],
   },
   {
@@ -96,6 +99,7 @@ function getActiveSidebarItem(pathname: string): string {
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { signOut, user, isLoading, can } = useAuth();
+  const { canUseAnalytics } = useSubscription();
   const { t, i18n } = useTranslation();
   const activeItem = getActiveSidebarItem(location.pathname);
   // Force re-render when language changes by using i18n.language as dependency
@@ -105,11 +109,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       getNavigation(t)
         .map((section) => ({
           ...section,
-          items: section.items.filter((item) => !item.permission || can(item.permission)),
+          items: section.items.filter(
+            (item) => (!item.permission || can(item.permission)) && (item.feature !== "analytics" || canUseAnalytics),
+          ),
         }))
         .filter((section) => section.items.length > 0),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- currentLang forces a recompute when the language changes
-    [t, currentLang, can],
+    [t, currentLang, can, canUseAnalytics],
   );
   const isRTL = currentLang === "ar";
 

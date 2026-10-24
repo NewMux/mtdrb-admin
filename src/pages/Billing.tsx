@@ -16,6 +16,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import SmartVatDashboard from "../components/billing/SmartVatDashboard";
 import TabFallback from "../components/ui/TabFallback";
 // Charts load when the analytics tab is first opened.
@@ -241,7 +242,8 @@ const Billing: React.FC = () => {
     ]);
   }, [t, formatMoney]);
 
-  const tabs = [
+  const { canUseAnalytics } = useSubscription();
+  const allTabs = [
     { id: "overview", name: t("billing.overview"), icon: FiDollarSign },
     { id: "invoices", name: t("billing.invoices"), icon: FiFileText },
     { id: "expenses", name: t("billing.expenses"), icon: FiShoppingCart },
@@ -249,6 +251,7 @@ const Billing: React.FC = () => {
     { id: "vat", name: t("billing.vatReports"), icon: FiCreditCard },
     { id: "settings", name: t("billing.settings"), icon: FiSettings },
   ];
+  const tabs = allTabs.filter((tab) => tab.id !== "analytics" || canUseAnalytics);
 
   const [filters, setFilters] = React.useState([
     { id: "all", name: t("billing.allTransactions"), count: 0 },
@@ -894,6 +897,7 @@ const Billing: React.FC = () => {
         );
 
       case "analytics":
+        if (!canUseAnalytics) return null;
         return (
           <div className="space-y-6">
             <React.Suspense fallback={<TabFallback />}>

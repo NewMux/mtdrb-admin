@@ -95,3 +95,25 @@ function/table near them:
 - A flow that needs a database function the demo backend does not imitate gets a stand-in in `src/mocks/` (lazy state, no top-level side effects — `scripts/check-dist-no-mock.mjs` guards the production bundle).
 - User-facing toast text lives in the `toasts` block of `src/i18n.ts` / `src/i18n.ar.ts`; code with no component (hooks, `src/api`, modals) calls `i18n.t("toasts.…")`. Never hard-code English into `toast.*`.
 - Build-only packages (Tailwind and its plugins, PostCSS, Vite) stay in `devDependencies`, so `npm audit --omit=dev` reflects what actually ships; it must stay at 0 critical/high.
+
+## Plan gating
+
+The Starter plan has no analytics; Pro and above do (`src/utils/planFeatures.ts`,
+`canUseAnalytics` from `useSubscription()`). When touching it:
+
+- Gate by calling `planIncludesAnalytics()` / reading `canUseAnalytics`, never by
+  comparing `plan_tier` strings in a component. An unknown or missing tier is allowed;
+  only `starter` is blocked, and `canUseAnalytics` is false while the plan loads.
+- The Analytics route is wrapped in `AnalyticsGuard` (upgrade page), and the sidebar
+  item and the Analytics tab on Dashboard, Members, Trainers, Billing and Tasks are
+  hidden. A new analytics surface needs the same treatment and a case in
+  `e2e/plans.spec.ts`.
+- This is a UI plan boundary, not a security boundary: the data still sits behind the
+  ordinary RLS and `has_permission()` rules.
+- In the demo backend, `sessionStorage["mtdrb.demoPlan"]` picks the plan (default
+  enterprise); `useDemoPlan()` in `e2e/helpers.ts` sets it for tests.
+- A Starter gym moves to Pro through the `paddle-change-plan` Edge Function (Settings →
+  Billing; `DEPLOYMENT.md` "Upgrading from Starter to Pro"). It builds the whole item
+  list from Paddle's copy of the subscription, so a new add-on item has to be handled
+  in `buildProItems` or it will be dropped from the customer's bill. The demo backend
+  stands in for it in `src/mocks/demoPlan.ts`.

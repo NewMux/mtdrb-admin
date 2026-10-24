@@ -181,7 +181,7 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
       "bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/15 border border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-100 shadow-sm",
     success: "bg-green-500 hover:bg-green-600 text-white shadow-sm",
     warning: "bg-orange-500 hover:bg-orange-600 text-white shadow-sm",
-    danger: "bg-red-500 hover:bg-red-600 text-white shadow-sm",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm",
     ghost:
       "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300",
   };

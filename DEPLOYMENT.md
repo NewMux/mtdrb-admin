@@ -296,6 +296,48 @@ repeated inside the `UPDATE`, so two events racing cannot both win. Events with
 the same timestamp are applied (a redelivery is harmless); an event with no
 `occurred_at` is applied as before.
 
+## Upgrading from Starter to Pro
+
+A tenant admin on Starter upgrades from Settings → Billing ("Upgrade to Pro"; the
+Analytics upgrade page links straight to it). The gym keeps its subscription:
+Paddle swaps the plan on it and charges the **prorated difference to the card on
+file immediately**. The dialog shows that amount and the new monthly price before
+the button, so nothing is charged without the admin seeing it.
+
+- **Edge Function `paddle-change-plan`** — `{ "action": "preview" }` calls
+  Paddle's `PATCH /subscriptions/{id}/preview` and returns the amount charged
+  today (the immediate transaction's grand total, falling back to
+  `update_summary`) and the new recurring price; nothing is applied.
+  `{ "action": "upgrade" }` sends the same complete item list to
+  `PATCH /subscriptions/{id}` with `proration_billing_mode: "prorated_immediately"`
+  and `on_payment_failure: "prevent_change"`, so a declined card leaves the
+  subscription exactly as it was. The item list is built from Paddle's own copy
+  of the subscription: the Starter price becomes the Pro price, any extra
+  locations move to the Pro add-on price **at the same quantity**, and anything
+  else on the subscription is kept. The price IDs come from the secrets, never
+  from the request. The caller must be the gym's admin (checked in Postgres from
+  their own JWT). Previews are limited to 30 an hour per gym and upgrades to 10.
+- **Idempotent.** If Paddle already shows Pro (a double click, a retry, an
+  upgrade whose record never saved) the function charges nothing and just repairs
+  `platform_subscriptions`. Like the other billing functions it saves `plan_tier`,
+  `amount`, `currency` and `extra_locations` itself and `paddle-webhook` does the
+  same from `subscription.updated`; both read the same items, so they agree.
+- **Who can upgrade.** Only a self-service (Paddle) subscription that is `active`,
+  not set to cancel, and on the configured Starter price. Past-due gyms are told
+  to fix the card first; manual grants and enterprise plans are changed from the
+  owner console; annual prices are refused until annual price IDs are configured.
+  There is no downgrade here.
+- **Setup.** Deploy with `supabase functions deploy paddle-change-plan`. It uses
+  `PADDLE_API_KEY`, `PADDLE_ENVIRONMENT`, `PADDLE_STARTER_PRICE_ID`,
+  `PADDLE_PRO_PRICE_ID`, `APP_ALLOWED_ORIGINS` and, for gyms that already pay for
+  extra locations, `PADDLE_PRO_EXTRA_LOCATION_PRICE_ID`. If that last secret is
+  missing the function refuses (rather than drop a gym's paid locations).
+- **Confirm in the sandbox before live.** The request shapes were checked against
+  Paddle's API reference, but the preview's `immediate_transaction` /
+  `update_summary` fields are read defensively; run one Starter subscription
+  through the upgrade and compare the amount in the dialog with the transaction
+  Paddle creates.
+
 ## Cancelling a subscription
 
 A tenant admin cancels from Settings → Billing. Cancelling is **scheduled in
@@ -784,11 +826,11 @@ the sandbox, run the smoke test, then repeat steps 3-6 for live.
      PLATFORM_APP_URL=https://your-app.example \
      STAFF_ALLOWED_ORIGINS=https://your-app.example STAFF_APP_URL=https://your-app.example
    supabase functions deploy paddle-webhook paddle-manage-locations \
-     paddle-cancel-subscription delete-account platform-invite-gym \
-     invite-staff attendance-ingest
+     paddle-cancel-subscription paddle-change-plan delete-account \
+     platform-invite-gym invite-staff attendance-ingest
    ```
 
-   Seven functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
+   Eight functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
    `platform-invite-gym` (owner console) needs `PLATFORM_APP_URL`;
    `attendance-ingest` needs nothing extra (Supabase provides its keys).
 
