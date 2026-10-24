@@ -15,7 +15,7 @@ export function corsHeaders(origin: string | null, allowed: string[]): Record<st
   return {
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin",
-    "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
+    "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info, x-application-name, prefer",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Max-Age": "600",
   };

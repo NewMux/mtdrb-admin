@@ -38,6 +38,8 @@ beforeEach(() => {
 describe("transport", () => {
   it("answers a CORS preflight for an allowed origin only", async () => {
     const ok = await handleInviteStaff(req({ method: "OPTIONS", authorization: null }), deps);
+    expect(ok.headers["Access-Control-Allow-Headers"]).toContain("x-application-name");
+    expect(ok.headers["Access-Control-Allow-Headers"]).toContain("prefer");
     expect(ok.status).toBe(204);
     expect(ok.headers["Access-Control-Allow-Origin"]).toBe(ORIGIN);
     const bad = await handleInviteStaff(req({ method: "OPTIONS", origin: "https://evil.example", authorization: null }), deps);
