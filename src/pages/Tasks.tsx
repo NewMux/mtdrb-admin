@@ -26,7 +26,7 @@ import { StatStrip } from "../components/ui/StatStrip";
 const Tasks: React.FC = () => {
   usePageThemeContext();
   const { tenantId } = useAuth();
-  const { isPro } = useSubscription();
+  const { isPro, canUseAnalytics } = useSubscription();
   const { isRTL } = useRTL();
   const { t } = useTranslation();
 
@@ -47,7 +47,7 @@ const Tasks: React.FC = () => {
   const tabs = React.useMemo(() => [
     { id: "overview", name: t("tasks.overview"), icon: FiCheckSquare },
     { id: "analytics", name: t("tasks.analytics"), icon: FiBarChart2 },
-  ], [t]);
+  ].filter((tab) => tab.id !== "analytics" || canUseAnalytics), [t, canUseAnalytics]);
 
   const [filters, setFilters] = React.useState([
     { id: "all", name: t("tasks.allTasks"), count: 0 },
@@ -270,7 +270,7 @@ const Tasks: React.FC = () => {
             </div>
           )}
 
-          {activeTab === "analytics" && (
+          {activeTab === "analytics" && canUseAnalytics && (
             <div className="space-y-6">
               <React.Suspense fallback={<TabFallback />}>
                 <SmartTaskAnalytics refreshKey={refreshKey} />

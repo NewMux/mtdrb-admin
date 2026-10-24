@@ -123,7 +123,7 @@ const Home: React.FC = () => {
       desc: t("home.plan_starter_desc"),
       price: starterPlan?.price ?? 0,
       extra: STARTER_EXTRA_LOCATION_PRICE,
-      features: [t("landing.allCoreFeatures"), t("landing.singleLocation"), t("landing.basicAnalytics"), t("landing.emailSupport")],
+      features: [t("landing.allCoreFeatures"), t("landing.singleLocation"), t("landing.emailSupport")],
       featured: false,
     },
     {

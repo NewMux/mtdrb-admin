@@ -157,11 +157,10 @@ const ar = {
         allCoreFeatures: "جميع الميزات الأساسية",
         singleLocation: "موقع واحد",
         perExtraLocation: "لكل موقع إضافي",
-        basicAnalytics: "تحليلات أساسية",
         emailSupport: "دعم عبر البريد الإلكتروني",
         everythingInStarter: "كل شيء في البداية",
         unlimitedMembers: "أعضاء غير محدودين",
-        advancedAnalytics: "تحليلات متقدمة",
+        advancedAnalytics: "التحليلات",
         prioritySupport: "دعم ذو أولوية",
         whatsappBot: "بوت واتساب",
         footerDescription: "نظام تشغيل الصالات الرياضية المبني لمنطقة MENAT.",
@@ -266,6 +265,12 @@ const ar = {
         switchToLight: "التبديل إلى الوضع الفاتح",
         switchToDark: "التبديل إلى الوضع الداكن",
         markAllRead: "تعليم الكل كمقروء"
+      },
+      planGate: {
+        analyticsTitle: "التحليلات جزء من باقة Pro",
+        analyticsBody: "ناديك على باقة Starter. انتقل إلى Pro لعرض التحليلات: نمو الأعضاء والإيرادات وأداء الحصص والمدربين.",
+        viewPlan: "عرض باقتك",
+        backToDashboard: "العودة إلى لوحة التحكم",
       },
       // Messages shown as toasts from code that has no component (hooks, API helpers, modals).
       toasts: {
@@ -2698,8 +2703,8 @@ const ar = {
         checkoutUnavailableButton: "غير متاح",
         starterDescription: "مثالية للصالات الرياضية ذات الموقع الواحد",
         proDescription: "كل مزايا البداية مع قابلية التوسع لصالتك",
-        starterFeatures: ["جميع الميزات الأساسية", "موقع واحد", "تحليلات أساسية", "دعم عبر البريد الإلكتروني"],
-        proFeatures: ["كل مزايا البداية", "أعضاء غير محدودين", "تحليلات متقدمة", "دعم ذو أولوية", "بوت واتساب"]
+        starterFeatures: ["جميع الميزات الأساسية", "موقع واحد", "دعم عبر البريد الإلكتروني"],
+        proFeatures: ["كل مزايا البداية", "أعضاء غير محدودين", "التحليلات", "دعم ذو أولوية", "بوت واتساب"]
       },
       notFound: {
         title: "الصفحة غير موجودة",

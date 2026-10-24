@@ -158,11 +158,10 @@ const resources = {
         allCoreFeatures: "All core features",
         singleLocation: "Single location",
         perExtraLocation: "per extra location",
-        basicAnalytics: "Basic analytics",
         emailSupport: "Email support",
         everythingInStarter: "Everything in Starter",
         unlimitedMembers: "Unlimited members",
-        advancedAnalytics: "Advanced analytics",
+        advancedAnalytics: "Analytics",
         prioritySupport: "Priority support",
         whatsappBot: "WhatsApp bot",
         footerDescription: "The gym operating system built for the MENAT region.",
@@ -267,6 +266,12 @@ const resources = {
         switchToLight: "Switch to light mode",
         switchToDark: "Switch to dark mode",
         markAllRead: "Mark all read"
+      },
+      planGate: {
+        analyticsTitle: "Analytics is part of the Pro plan",
+        analyticsBody: "Your gym is on the Starter plan. Move to Pro to see analytics: member growth, revenue, and class and trainer performance.",
+        viewPlan: "See your plan",
+        backToDashboard: "Back to dashboard",
       },
       // Messages shown as toasts from code that has no component (hooks, API helpers, modals).
       toasts: {
@@ -2691,8 +2696,8 @@ const resources = {
         checkoutUnavailableButton: "Unavailable",
         starterDescription: "Perfect for single-location gyms",
         proDescription: "Everything in Starter & scale your gym",
-        starterFeatures: ["All core features", "Single location", "Basic analytics", "Email support"],
-        proFeatures: ["Everything in Starter", "Unlimited members", "Advanced analytics", "Priority support", "WhatsApp bot"]
+        starterFeatures: ["All core features", "Single location", "Email support"],
+        proFeatures: ["Everything in Starter", "Unlimited members", "Analytics", "Priority support", "WhatsApp bot"]
       },
       notFound: {
         title: "Page not found",

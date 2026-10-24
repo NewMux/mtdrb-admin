@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, IS_MOCK_MODE } from "../supabaseClient";
 import { isSubscriptionEntitled } from "../utils/subscriptionEntitlement";
+import { planIncludesAnalytics } from "../utils/planFeatures";
 
 interface Subscription {
   id: string;
@@ -22,6 +23,10 @@ interface User {
 
 interface SubscriptionContextType {
   isPro: boolean;
+  /** The gym's platform plan (starter, pro, ...), or null when unknown. */
+  planTier: string | null;
+  /** Analytics screens are part of Pro and above; false while the plan is loading. */
+  canUseAnalytics: boolean;
   isLoading: boolean;
   subscription: Subscription | null;
   proFeatures: {
@@ -47,6 +52,7 @@ export function SubscriptionProvider({
   children: React.ReactNode;
 }) {
   const [isPro, setIsPro] = useState(false);
+  const [planTier, setPlanTier] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
@@ -62,12 +68,21 @@ export function SubscriptionProvider({
 
   useEffect(() => {
     if (IS_MOCK_MODE) {
-      setIsPro(true);
+      // The demo gym is on the top plan unless a test (or you, in the console:
+      // sessionStorage.setItem("mtdrb.demoPlan", "starter")) picks another.
+      let demoTier = "enterprise";
+      try {
+        demoTier = window.sessionStorage.getItem("mtdrb.demoPlan") || demoTier;
+      } catch {
+        // storage unavailable: keep the default
+      }
+      setIsPro(demoTier === "pro" || demoTier === "enterprise");
+      setPlanTier(demoTier);
       setSubscription({
         id: "localhost-subscription",
         member_id: "mock-member",
         status: "active",
-        plan_type: "enterprise",
+        plan_type: demoTier,
         created_at: new Date().toISOString(),
       });
       setIsLoading(false);
@@ -109,6 +124,7 @@ export function SubscriptionProvider({
   const checkSubscription = async (currentUser: User | null) => {
     if (!currentUser) {
       setIsPro(false);
+      setPlanTier(null);
       setSubscription(null);
       setIsLoading(false);
       return;
@@ -126,6 +142,7 @@ export function SubscriptionProvider({
 
       if (!membershipData) {
         setIsPro(false);
+        setPlanTier(null);
         return;
       }
 
@@ -139,6 +156,7 @@ export function SubscriptionProvider({
       if (subData) {
         const isActive = isSubscriptionEntitled(subData);
         setIsPro(isActive && (subData.plan_tier === 'pro' || subData.plan_tier === 'enterprise'));
+        setPlanTier(typeof subData.plan_tier === 'string' ? subData.plan_tier : null);
         setSubscription({
           id: subData.id,
           member_id: currentUser.id,
@@ -156,11 +174,13 @@ export function SubscriptionProvider({
         // paid/Pro status -- that would let any signed-up user grant
         // themselves Pro access for free.
         setIsPro(false);
+        setPlanTier(null);
         setSubscription(null);
       }
     } catch (error) {
       console.error("Error checking subscription:", error);
       setIsPro(false);
+      setPlanTier(null);
       setSubscription(null);
     } finally {
       setIsLoading(false);
@@ -177,6 +197,8 @@ export function SubscriptionProvider({
 
   const value: SubscriptionContextType = {
     isPro,
+    planTier,
+    canUseAnalytics: !isLoading && planIncludesAnalytics(planTier),
     isLoading,
     subscription,
     proFeatures,
@@ -197,6 +219,8 @@ export function useSubscription() {
     console.warn("useSubscription was called outside of a SubscriptionProvider. Returning a fail-closed fallback context.");
     return {
       isPro: false,
+      planTier: null,
+      canUseAnalytics: false,
       isLoading: false,
       subscription: null,
       proFeatures: {

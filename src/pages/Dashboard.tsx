@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { DashboardTabs } from "../components/dashboard/DashboardTabs";
@@ -15,6 +16,7 @@ const Dashboard: React.FC = () => {
   const { isRTL } = useRTL();
   const location = useLocation();
   const navigate = useNavigate();
+  const { canUseAnalytics } = useSubscription();
   const [activeTab, setActiveTab] = useState<"overview" | "analytics">("overview");
   const [refreshKey, setRefreshKey] = useState(Date.now());
   const notificationShownRef = useRef(false);
@@ -40,6 +42,7 @@ const Dashboard: React.FC = () => {
       case "overview":
         return <DashboardOverview refreshKey={refreshKey} />;
       case "analytics":
+        if (!canUseAnalytics) return null;
         return <DashboardAnalytics refreshKey={refreshKey} />;
       default:
         return null;

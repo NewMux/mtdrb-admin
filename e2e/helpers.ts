@@ -24,3 +24,14 @@ export async function openPage(page: Page, path: string) {
   // Lazy chunks and entrance animations settle shortly after the network goes quiet.
   await page.waitForTimeout(600);
 }
+
+/** Puts the demo gym on a platform plan (it is on the top plan by default). */
+export async function useDemoPlan(page: Page, tier: "starter" | "pro") {
+  await page.addInitScript((planTier) => {
+    try {
+      sessionStorage.setItem("mtdrb.demoPlan", planTier);
+    } catch {
+      // storage unavailable: the demo's own default applies
+    }
+  }, tier);
+}
