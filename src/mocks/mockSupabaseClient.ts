@@ -8,7 +8,7 @@ import { DEMO_PLANS, DEMO_TABLES, DEMO_TENANT_ID } from "./demoData";
 import { mockInviteGym, mockPlatformRpc } from "./platformAdminMock";
 import { mockInviteStaff, mockRoleRows, mockStaffRpc } from "./staffMock";
 import { mockPosRpc } from "./posMock";
-import { demoSubscriptionRows, mockChangePlan } from "./demoPlan";
+import { demoSubscriptionRows, mockBillingInfo, mockChangePlan } from "./demoPlan";
 
 type Filter =
   | { kind: "eq"; field: string; value: unknown }
@@ -582,7 +582,9 @@ export function createMockSupabaseClient() {
             ? mockInviteStaff(options?.body)
             : name === "paddle-change-plan"
               ? mockChangePlan(options?.body)
-              : { data: null, error: new Error(`Mock backend has no function ${name}`) },
+              : name === "paddle-billing-info"
+                ? mockBillingInfo(options?.body)
+                : { data: null, error: new Error(`Mock backend has no function ${name}`) },
     },
     auth: {
       getUser: async () => ({ data: { user: getMockUser() }, error: null }),

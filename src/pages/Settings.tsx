@@ -10,8 +10,6 @@ import {
   FiSave,
   FiAlertCircle,
   FiX,
-  FiCalendar,
-  FiCheckCircle,
   FiBriefcase,
   FiUsers,
   FiLock,
@@ -31,6 +29,7 @@ import { useRTL } from "../hooks/useRTL";
 import { useTranslation } from "react-i18next";
 import CancelSubscriptionModal from "../components/settings/CancelSubscriptionModal";
 import UpgradePlanModal from "../components/settings/UpgradePlanModal";
+import BillingTab, { type SubscriptionInfo } from "../components/settings/BillingTab";
 import BusinessSettingsTab from "../components/settings/BusinessSettingsTab";
 import DataPrivacyTab from "../components/settings/DataPrivacyTab";
 import TeamSettingsTab from "../components/settings/TeamSettingsTab";
@@ -58,18 +57,7 @@ const Settings: React.FC = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [subscriptionInfo, setSubscriptionInfo] = useState<{
-    tier: string;
-    startDate?: string;
-    isPaid: boolean;
-    status?: string;
-    trialEnd?: string;
-    currentPeriodEnd?: string;
-    /** When a cancellation already scheduled in billing takes effect; access continues until then. */
-    cancelAt?: string;
-    /** "paddle" for a self-service subscription; "manual" for access granted by the platform owner. */
-    paymentProvider?: string;
-  }>({ tier: "Free", isPaid: false });
+  const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo>({ tier: "Free", isPaid: false });
   const [resumingSubscription, setResumingSubscription] = useState(false);
 
   // Settings hook
@@ -105,7 +93,7 @@ const Settings: React.FC = () => {
     try {
       const { data: subData, error: subscriptionError } = await supabase
         .from("platform_subscriptions")
-        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, cancel_at, payment_provider")
+        .select("status, plan_tier, amount, currency, created_at, trial_end, current_period_end, cancel_at, payment_provider, extra_locations, grace_until")
         .eq("tenant_id", tenantId)
         .maybeSingle();
 
@@ -122,6 +110,10 @@ const Settings: React.FC = () => {
         currentPeriodEnd: subData?.current_period_end,
         cancelAt: subData?.cancel_at ?? undefined,
         paymentProvider: subData?.payment_provider ?? undefined,
+        amount: typeof subData?.amount === "number" ? subData.amount : undefined,
+        currency: subData?.currency ?? undefined,
+        extraLocations: typeof subData?.extra_locations === "number" ? subData.extra_locations : undefined,
+        graceUntil: subData?.grace_until ?? undefined,
       });
     } catch (error) {
       console.error("Failed to fetch subscription info:", error);
@@ -327,14 +319,6 @@ const Settings: React.FC = () => {
 
   const handleUpgradePlan = () => {
     navigate("/subscribe");
-  };
-
-  const handleUpdatePaymentMethod = () => {
-    navigate("/dashboard/billing");
-  };
-
-  const handleViewBillingHistory = () => {
-    navigate("/dashboard/billing");
   };
 
   // Tab configuration
@@ -962,230 +946,15 @@ const Settings: React.FC = () => {
           )}
 
           {activeTab === "billing" && (
-            <div className="space-y-6">
-              {/* Subscription Management Card */}
-              <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    {t("settings.subscriptionManagement", "Subscription Management")}
-                  </h3>
-                </div>
-                <div className="p-6 pt-4">
-                  <div className="space-y-4">
-                    {/* Current Subscription Status */}
-                    <div className={`rounded-2xl p-5 ${subscriptionInfo.isPaid ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800' : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'}`}>
-                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between`}>
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-4`}>
-                          <div>
-                            <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {subscriptionInfo.tier.charAt(0).toUpperCase() + subscriptionInfo.tier.slice(1)} {t("settings.plan", "Plan")}
-                              </h4>
-                              {subscriptionInfo.isPaid && (
-                                <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    subscriptionInfo.cancelAt || subscriptionInfo.status === "past_due"
-                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                                      : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                  }`}
-                                >
-                                  <FiCheckCircle className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {subscriptionInfo.status === "past_due"
-                                    ? t("settings.paymentFailed", "Payment failed")
-                                    : subscriptionInfo.cancelAt
-                                    ? t("settings.subscriptionEnding", "Ends {{date}}", {
-                                        date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
-                                      })
-                                    : t("settings.active", "Active")}
-                                </span>
-                              )}
-                            </div>
-                            {subscriptionInfo.startDate && (
-                              <p className={`text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-1`}>
-                                <FiCalendar className="w-3.5 h-3.5" />
-                                <span>{t("settings.memberSince", "Member since")} {new Date(subscriptionInfo.startDate).toLocaleDateString()}</span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
-                          {canUpgradeToPro && (
-                            <SmartButton
-                              variant="primary"
-                              size="sm"
-                              onClick={() => setShowUpgradeModal(true)}
-                            >
-                              {t("planGate.upgradeToPro")}
-                            </SmartButton>
-                          )}
-                          {subscriptionInfo.isPaid && !canUpgradeToPro && (
-                            <SmartButton
-                              variant="secondary"
-                              size="sm"
-                              onClick={handleUpgradePlan}
-                            >
-                              {subscriptionInfo.tier === "pro" ? t("settings.managePlan", "Manage Plan") : t("settings.upgrade", "Upgrade")}
-                            </SmartButton>
-                          )}
-                          {!subscriptionInfo.isPaid && (
-                            <SmartButton
-                              variant="primary"
-                              size="sm"
-                              onClick={handleUpgradePlan}
-                            >
-                              {t("settings.subscribe", "Subscribe")}
-                            </SmartButton>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Cancel / keep: only for a self-service (Paddle) subscription. Access
-                        granted by the platform owner is changed from the owner console. */}
-                    {subscriptionInfo.isPaid && subscriptionInfo.paymentProvider === "paddle" && (
-                      subscriptionInfo.cancelAt ? (
-                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between gap-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30`}>
-                          <div>
-                            <h4 className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                              {t("settings.subscriptionEndsTitle", "Your subscription ends on {{date}}", {
-                                date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
-                              })}
-                            </h4>
-                            <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                              {t("settings.subscriptionEndsDesc", "You keep full access until then and won't be billed again.")}
-                            </p>
-                          </div>
-                          <SmartButton
-                            variant="secondary"
-                            size="sm"
-                            onClick={handleKeepSubscription}
-                            loading={resumingSubscription}
-                            disabled={resumingSubscription}
-                          >
-                            {t("settings.keepSubscriptionBtn", "Keep subscription")}
-                          </SmartButton>
-                        </div>
-                      ) : (
-                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30`}>
-                          <div>
-                            <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
-                              {t("settings.cancelSubscription", "Cancel Subscription")}
-                            </h4>
-                            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                              {t("settings.cancelSubscriptionDesc", "Stop renewing. You keep access until the end of the period you've paid for.")}
-                            </p>
-                          </div>
-                          <SmartButton
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setShowCancelSubscriptionModal(true)}
-                          >
-                            {t("settings.cancel", "Cancel")}
-                          </SmartButton>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Billing Information Card */}
-              <div className="card dark:bg-gray-800 dark:border-gray-700 rounded-3xl shadow-sm">
-                <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between mb-6 p-6 pb-0`}>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                    {t("settings.billingInformation")}
-                  </h3>
-                </div>
-                <div className="p-6 pt-4">
-
-                <div className="space-y-4">
-                  {/* Current Plan */}
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t("settings.currentPlan")}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {subscriptionInfo.tier === "Free" ? t("settings.freePlan", "Free") : subscriptionInfo.tier}
-                      </p>
-                    </div>
-                    <SmartButton
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleUpgradePlan}
-                    >
-                      {t("settings.upgrade")}
-                    </SmartButton>
-                  </div>
-
-                  {/* Payment Method */}
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t("settings.paymentMethod")}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("billing.notSet", "Not set")}
-                      </p>
-                    </div>
-                    <SmartButton
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleUpdatePaymentMethod}
-                    >
-                      {t("settings.update")}
-                    </SmartButton>
-                  </div>
-
-                  {/* Auto Renewal - read-only: reflects the real subscription
-                      status, there's no payment gateway to toggle this against */}
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t("settings.autoRenewal")}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {subscriptionInfo.status === "active" && subscriptionInfo.cancelAt
-                          ? t("settings.autoRenewalEnding", "Ends {{date}}, will not renew", {
-                              date: new Date(subscriptionInfo.cancelAt).toLocaleDateString(),
-                            })
-                          : subscriptionInfo.status === "active"
-                          ? t("settings.autoRenewalActive", "Renews automatically")
-                          : subscriptionInfo.status === "trialing"
-                            ? t("settings.autoRenewalTrial", "Trial ends {{date}}", {
-                                date: subscriptionInfo.trialEnd
-                                  ? new Date(subscriptionInfo.trialEnd).toLocaleDateString()
-                                  : t("billing.notSet", "Not set"),
-                              })
-                            : subscriptionInfo.status === "cancelled"
-                              ? t("settings.autoRenewalCancelled", "Cancelled, will not renew")
-                              : t("settings.autoRenewalNone", "No active subscription")}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Billing History */}
-                  <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50`}>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t("settings.billingHistory")}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {t("settings.billingHistoryDesc")}
-                      </p>
-                    </div>
-                    <SmartButton
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleViewBillingHistory}
-                    >
-                      {t("settings.view")}
-                    </SmartButton>
-                  </div>
-                </div>
-                </div>
-              </div>
-            </div>
+            <BillingTab
+              info={subscriptionInfo}
+              isAdmin={userMetadata?.role === "admin"}
+              resuming={resumingSubscription}
+              onUpgrade={() => setShowUpgradeModal(true)}
+              onSubscribe={handleUpgradePlan}
+              onCancel={() => setShowCancelSubscriptionModal(true)}
+              onKeep={handleKeepSubscription}
+            />
           )}
 
         </motion.div>

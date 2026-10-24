@@ -5,7 +5,15 @@ vi.mock("../supabaseClient", () => ({
   supabase: { functions: { invoke: (...args: unknown[]) => invoke(...args) } },
 }));
 
-import { BillingError, cancelSubscription, previewUpgradeToPro, resumeSubscription, upgradeToPro } from "./billing";
+import {
+  BillingError,
+  cancelSubscription,
+  fetchBillingOverview,
+  fetchInvoiceUrl,
+  previewUpgradeToPro,
+  resumeSubscription,
+  upgradeToPro,
+} from "./billing";
 
 beforeEach(() => invoke.mockReset());
 
@@ -111,4 +119,70 @@ describe("previewUpgradeToPro / upgradeToPro", () => {
       await expect(upgradeToPro()).rejects.toThrow("unexpected answer");
     },
   );
+});
+
+describe("fetchBillingOverview / fetchInvoiceUrl", () => {
+  const overview = {
+    payment_method: { type: "card", brand: "visa", last4: "4242", expiry_month: 4, expiry_year: 2030 },
+    update_payment_method_url: "https://pay.example.com/update",
+    invoices: [
+      { id: "txn_1", number: "1001-1", billed_at: "2026-10-01T09:00:00.000Z", status: "completed", total: { amount: 89, currency: "USD" }, can_download: true },
+      { id: "txn_2", number: null, billed_at: null, status: "billed", total: null, can_download: false },
+    ],
+    invoices_available: true,
+  };
+
+  it("asks for the overview and reads the card, the update link and the invoices", async () => {
+    invoke.mockResolvedValue({ data: overview, error: null });
+    expect(await fetchBillingOverview()).toEqual({
+      paymentMethod: { type: "card", brand: "visa", last4: "4242", expiryMonth: 4, expiryYear: 2030 },
+      updatePaymentMethodUrl: "https://pay.example.com/update",
+      invoices: [
+        { id: "txn_1", number: "1001-1", billedAt: "2026-10-01T09:00:00.000Z", status: "completed", total: { amount: 89, currency: "USD" }, canDownload: true },
+        { id: "txn_2", number: null, billedAt: null, status: "billed", total: null, canDownload: false },
+      ],
+      invoicesAvailable: true,
+    });
+    expect(invoke).toHaveBeenCalledWith("paddle-billing-info", { body: { action: "overview" } });
+  });
+
+  it("never offers a link that is not https", async () => {
+    invoke.mockResolvedValue({ data: { ...overview, update_payment_method_url: "javascript:alert(1)" }, error: null });
+    expect((await fetchBillingOverview()).updatePaymentMethodUrl).toBeNull();
+  });
+
+  it("copes with no card, no link, and an invoice list that could not be loaded", async () => {
+    invoke.mockResolvedValue({ data: { payment_method: null, update_payment_method_url: null, invoices: [], invoices_available: false }, error: null });
+    expect(await fetchBillingOverview()).toEqual({ paymentMethod: null, updatePaymentMethodUrl: null, invoices: [], invoicesAvailable: false });
+  });
+
+  it("skips invoice rows it cannot read instead of failing the whole list", async () => {
+    invoke.mockResolvedValue({ data: { ...overview, invoices: [overview.invoices[0], { id: 5 }, null, "x"] }, error: null });
+    expect((await fetchBillingOverview()).invoices).toHaveLength(1);
+  });
+
+  it("shows the function's own message, or explains a missing function and a transport failure", async () => {
+    invoke.mockResolvedValue({ data: null, error: { context: { status: 403, json: async () => ({ error: "Only a workspace admin can see billing details." }) } } });
+    await expect(fetchBillingOverview()).rejects.toThrow("Only a workspace admin");
+    invoke.mockResolvedValue({ data: null, error: { context: { status: 404 } } });
+    await expect(fetchBillingOverview()).rejects.toThrow("aren't available yet");
+    invoke.mockResolvedValue({ data: null, error: new Error("network") });
+    await expect(fetchBillingOverview()).rejects.toThrow("Could not reach billing");
+  });
+
+  it.each([[null], ["x"], [{ payment_method: null }]])("rejects an unreadable overview: %j", async (data) => {
+    invoke.mockResolvedValue({ data, error: null });
+    await expect(fetchBillingOverview()).rejects.toThrow("unexpected answer");
+  });
+
+  it("asks for one invoice and returns its https link", async () => {
+    invoke.mockResolvedValue({ data: { url: "https://pay.example.com/invoice.pdf" }, error: null });
+    expect(await fetchInvoiceUrl("txn_1")).toBe("https://pay.example.com/invoice.pdf");
+    expect(invoke).toHaveBeenCalledWith("paddle-billing-info", { body: { action: "invoice", transaction_id: "txn_1" } });
+  });
+
+  it.each([[{ url: "http://insecure.example.com/x.pdf" }], [{ url: "javascript:alert(1)" }], [{}], [null]])("refuses an invoice link of %j", async (data) => {
+    invoke.mockResolvedValue({ data, error: null });
+    await expect(fetchInvoiceUrl("txn_1")).rejects.toBeInstanceOf(BillingError);
+  });
 });

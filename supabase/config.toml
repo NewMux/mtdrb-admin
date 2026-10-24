@@ -47,6 +47,13 @@ verify_jwt = false
 # JWT and decides who they are and whether they are their gym's admin.
 verify_jwt = false
 
+[functions.paddle-billing-info]
+# Called from the browser by a signed-in tenant admin (read-only). verify_jwt stays
+# off so the CORS preflight (no Authorization header) reaches the function; the
+# function runs get_location_usage() as the caller, so Postgres verifies the JWT
+# and decides who they are and whether they are their gym's admin.
+verify_jwt = false
+
 [functions.delete-account]
 # Called from the browser by a signed-in user erasing their own account. verify_jwt
 # stays off so the CORS preflight (no Authorization header) reaches the function;

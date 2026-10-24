@@ -130,3 +130,97 @@ export async function upgradeToPro(): Promise<UpgradeResult> {
     alreadyOnPro: data.already === true,
   };
 }
+
+// --- Card and invoices on Settings -> Billing (supabase/functions/paddle-billing-info) ---
+// Read-only. The Edge Function checks the caller is the gym's admin and only
+// ever reads this gym's own Paddle subscription; nothing here is trusted.
+
+export interface PaymentMethod {
+  /** "card", "paypal", ... as billing names it. */
+  type: string;
+  brand: string | null;
+  last4: string | null;
+  expiryMonth: number | null;
+  expiryYear: number | null;
+}
+
+export interface Invoice {
+  id: string;
+  number: string | null;
+  billedAt: string | null;
+  /** billing's status: completed (paid), billed, past_due. */
+  status: string;
+  total: Money | null;
+  canDownload: boolean;
+}
+
+export interface BillingOverview {
+  paymentMethod: PaymentMethod | null;
+  /** The payment provider's hosted page for changing the card, or null when the subscription has ended. */
+  updatePaymentMethodUrl: string | null;
+  invoices: Invoice[];
+  /** false when the invoice list could not be loaded, so an empty list does not mean "no invoices". */
+  invoicesAvailable: boolean;
+}
+
+const asText = (value: unknown): string | null => (typeof value === "string" && value !== "" ? value : null);
+const asInt = (value: unknown): number | null => (typeof value === "number" && Number.isInteger(value) ? value : null);
+
+function readPaymentMethod(value: unknown): PaymentMethod | null {
+  if (!isRecord(value) || typeof value.type !== "string") return null;
+  return {
+    type: value.type,
+    brand: asText(value.brand),
+    last4: asText(value.last4),
+    expiryMonth: asInt(value.expiry_month),
+    expiryYear: asInt(value.expiry_year),
+  };
+}
+
+function readInvoice(value: unknown): Invoice | null {
+  if (!isRecord(value) || typeof value.id !== "string" || typeof value.status !== "string") return null;
+  return {
+    id: value.id,
+    number: asText(value.number),
+    billedAt: asText(value.billed_at),
+    status: value.status,
+    total: readMoney(value.total),
+    canDownload: value.can_download === true,
+  };
+}
+
+async function callBillingInfo(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const { data, error } = await (supabase as unknown as FunctionsClient).functions.invoke("paddle-billing-info", { body });
+  if (error) {
+    throw new BillingError(
+      await functionErrorMessage(error, {
+        notDeployed: "Billing details aren't available yet. Contact support.",
+        unreachable: "Could not reach billing. Try again.",
+      }),
+    );
+  }
+  if (!isRecord(data)) throw new BillingError("Billing returned an unexpected answer. Try again.");
+  return data;
+}
+
+/** The card on the subscription, the link to change it, and the invoices issued so far. */
+export async function fetchBillingOverview(): Promise<BillingOverview> {
+  const data = await callBillingInfo({ action: "overview" });
+  if (!Array.isArray(data.invoices)) throw new BillingError("Billing returned an unexpected answer. Try again.");
+  const updateUrl = asText(data.update_payment_method_url);
+  return {
+    paymentMethod: readPaymentMethod(data.payment_method),
+    // Only ever opened as a link: refuse anything that is not an https address.
+    updatePaymentMethodUrl: updateUrl?.startsWith("https://") ? updateUrl : null,
+    invoices: data.invoices.map(readInvoice).filter((i): i is Invoice => i !== null),
+    invoicesAvailable: data.invoices_available !== false,
+  };
+}
+
+/** A short-lived link that downloads one invoice's PDF. */
+export async function fetchInvoiceUrl(transactionId: string): Promise<string> {
+  const data = await callBillingInfo({ action: "invoice", transaction_id: transactionId });
+  const url = asText(data.url);
+  if (!url?.startsWith("https://")) throw new BillingError("Billing returned an unexpected answer. Try again.");
+  return url;
+}

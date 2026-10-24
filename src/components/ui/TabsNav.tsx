@@ -28,6 +28,8 @@ const TabsNav: React.FC<TabsNavProps> = ({
         key={tab.id}
         role="tab"
         aria-selected={activeTab === tab.id}
+        // The text is hidden on phones, leaving only the icon, so name the tab explicitly.
+        aria-label={tab.label}
         tabIndex={activeTab === tab.id ? 0 : -1}
         onClick={() => onTabChange(tab.id)}
         className={`mac-segment whitespace-nowrap ${
