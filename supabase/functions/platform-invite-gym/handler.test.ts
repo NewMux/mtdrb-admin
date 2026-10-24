@@ -46,6 +46,8 @@ describe("CORS and request shape", () => {
     expect(r.status).toBe(204);
     expect(r.headers["Access-Control-Allow-Origin"]).toBe(ORIGIN);
     expect(r.headers["Access-Control-Allow-Headers"]).toContain("authorization");
+    expect(r.headers["Access-Control-Allow-Headers"]).toContain("x-application-name");
+    expect(r.headers["Access-Control-Allow-Headers"]).toContain("prefer");
     expect(deps.verify).not.toHaveBeenCalled();
   });
 
