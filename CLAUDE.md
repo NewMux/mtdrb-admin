@@ -91,7 +91,7 @@ function/table near them:
 
 - Text colours: on light surfaces use `text-gray-500`/`-600` or darker (the palette's 600 shades are AA-safe on white); always pair a text colour with a lighter `dark:` variant when the surface has a `dark:bg-*`. Light-only pages (landing, plans, legal) have no dark variants on purpose.
 - Every `<input>`, `<select>` and icon-only `<button>` needs an accessible name (`aria-label`, or a `<label htmlFor>`; `AppleInput`/`AppleSelect`/`AppleTextarea` link theirs automatically). `AppleSelect` must keep forwarding its ref — react-hook-form's `register()` needs it, and without it Add Invoice and Add Expense cannot be saved.
-- Tables go in an `overflow-x-auto` wrapper, never `overflow-hidden`, so phones can scroll them; row action buttons need at least 24×24 px of hit area.
+- Tables go in an `overflow-x-auto` wrapper, never `overflow-hidden`, so phones can scroll them; row action buttons need at least 24×24 px of hit area. Give the wrapper `relative` when the table contains an `sr-only` element: it is absolutely positioned, escapes the scroller otherwise, and makes the whole page scroll sideways.
 - A flow that needs a database function the demo backend does not imitate gets a stand-in in `src/mocks/` (lazy state, no top-level side effects — `scripts/check-dist-no-mock.mjs` guards the production bundle).
 - User-facing toast text lives in the `toasts` block of `src/i18n.ts` / `src/i18n.ar.ts`; code with no component (hooks, `src/api`, modals) calls `i18n.t("toasts.…")`. Never hard-code English into `toast.*`.
 - Build-only packages (Tailwind and its plugins, PostCSS, Vite) stay in `devDependencies`, so `npm audit --omit=dev` reflects what actually ships; it must stay at 0 critical/high.
@@ -117,3 +117,13 @@ The Starter plan has no analytics; Pro and above do (`src/utils/planFeatures.ts`
   list from Paddle's copy of the subscription, so a new add-on item has to be handled
   in `buildProItems` or it will be dropped from the customer's bill. The demo backend
   stands in for it in `src/mocks/demoPlan.ts`.
+
+## Billing tab
+
+Settings → Billing is `components/settings/BillingTab.tsx`. Every button on it has to do
+something real: there is no "Manage plan" (the plan is changed by upgrading, adding
+locations or cancelling), the card is changed on Paddle's hosted page via the link
+`paddle-billing-info` returns, and invoices come from Paddle, not from the gym's own
+`/dashboard/billing` (that screen is the gym's member invoices and has nothing to do with
+this subscription). Card and invoice data is admin-only and read-only; never add a
+write path for it, and keep `paddle-billing-info` returning only what the screen shows.

@@ -4,22 +4,14 @@ import { useTranslation } from "react-i18next";
 import { UnifiedModal } from "../ui/UnifiedModal";
 import { SmartButton } from "../ui/DesignSystem";
 import { useAuth } from "../../contexts/AuthContext";
-import { previewUpgradeToPro, upgradeToPro, type Money, type UpgradePreview } from "../../api/billing";
+import { previewUpgradeToPro, upgradeToPro, type UpgradePreview } from "../../api/billing";
+import { formatMoney } from "../../utils/formatMoney";
 
 interface UpgradePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Called once the gym is on Pro (or was already), so the page can reload its plan. */
   onDone: () => void | Promise<void>;
-}
-
-/** "USD 21.50" style fallback if the browser does not know the currency code. */
-function formatMoney({ amount, currency }: Money, locale: string): string {
-  try {
-    return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
-  } catch {
-    return `${currency} ${amount}`;
-  }
 }
 
 /**
@@ -115,7 +107,7 @@ const UpgradePlanModal: React.FC<UpgradePlanModalProps> = ({ isOpen, onClose, on
               <>
                 <p className="text-base font-semibold text-gray-900 dark:text-white">
                   {preview.chargeNow
-                    ? t("upgradePlan.chargeToday", { amount: formatMoney(preview.chargeNow, locale) })
+                    ? t("upgradePlan.chargeToday", { amount: formatMoney(preview.chargeNow.amount, preview.chargeNow.currency, locale) })
                     : t("upgradePlan.chargeTodayUnknown")}
                 </p>
                 <p className="text-gray-500 dark:text-gray-400">{t("upgradePlan.chargeNote")}</p>
@@ -124,9 +116,9 @@ const UpgradePlanModal: React.FC<UpgradePlanModalProps> = ({ isOpen, onClose, on
                     {preview.nextBilledAt
                       ? t("upgradePlan.renewal", {
                           date: new Date(preview.nextBilledAt).toLocaleDateString(),
-                          amount: formatMoney(preview.recurring, locale),
+                          amount: formatMoney(preview.recurring.amount, preview.recurring.currency, locale),
                         })
-                      : t("upgradePlan.renewalNoDate", { amount: formatMoney(preview.recurring, locale) })}
+                      : t("upgradePlan.renewalNoDate", { amount: formatMoney(preview.recurring.amount, preview.recurring.currency, locale) })}
                   </p>
                 )}
                 {preview.extraLocations > 0 && <p>{t("upgradePlan.extraLocations", { count: preview.extraLocations })}</p>}

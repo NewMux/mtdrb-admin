@@ -81,3 +81,38 @@ export function mockChangePlan(body: unknown): { data: unknown; error: unknown }
     error: null,
   };
 }
+
+const DEMO_INVOICES = [
+  { id: "txn_01demo000000000000000001a", number: "1001-10003", daysAgo: 1, amount: 89 },
+  { id: "txn_01demo000000000000000002b", number: "1001-10002", daysAgo: 31, amount: 49 },
+  { id: "txn_01demo000000000000000003c", number: "1001-10001", daysAgo: 61, amount: 49 },
+];
+
+/** What paddle-billing-info answers: a card and a few paid invoices, only when a self-service plan was picked. */
+export function mockBillingInfo(body: unknown): { data: unknown; error: unknown } {
+  const action = typeof body === "object" && body !== null ? (body as { action?: unknown }).action : undefined;
+  const tier = readDemoPlan();
+  if (tier !== "starter" && tier !== "pro") {
+    return { data: null, error: new Error("Your plan is not billed through a subscription, so there are no card or invoices to show.") };
+  }
+  if (action === "invoice") return { data: { url: "https://example.com/demo-invoice.pdf" }, error: null };
+  if (action !== "overview") return { data: null, error: new Error("Choose overview or invoice.") };
+
+  const day = 24 * 60 * 60 * 1000;
+  return {
+    data: {
+      payment_method: { type: "card", brand: "visa", last4: "4242", expiry_month: 12, expiry_year: 2030 },
+      update_payment_method_url: "https://example.com/demo-update-payment-method",
+      invoices: DEMO_INVOICES.map((i) => ({
+        id: i.id,
+        number: i.number,
+        billed_at: new Date(Date.now() - i.daysAgo * day).toISOString(),
+        status: "completed",
+        total: { amount: i.amount, currency: PLATFORM_CURRENCY },
+        can_download: true,
+      })),
+      invoices_available: true,
+    },
+    error: null,
+  };
+}

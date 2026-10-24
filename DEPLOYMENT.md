@@ -338,6 +338,37 @@ the button, so nothing is charged without the admin seeing it.
   through the upgrade and compare the amount in the dialog with the transaction
   Paddle creates.
 
+## Billing tab: payment method and invoices
+
+Settings → Billing shows the gym's plan, the card on file and the invoices issued
+so far. The plan comes from the `platform_subscriptions` row; the card and invoices
+come from Paddle through a read-only Edge Function, and the card is changed on
+Paddle's own hosted page (the app never handles card numbers).
+
+- **Edge Function `paddle-billing-info`** — `{ "action": "overview" }` reads the
+  Paddle subscription (`GET /subscriptions/{id}`: `management_urls.update_payment_method`)
+  and its transactions (`GET /transactions?subscription_id=…`), and returns the card
+  brand, last four digits and expiry of the newest captured payment, the update link
+  and the invoice list (number, date, amount, status). `{ "action": "invoice",
+  "transaction_id": "txn_…" }` returns a one-hour download link for one PDF
+  (`GET /transactions/{id}/invoice`). The caller must be the gym's admin (checked in
+  Postgres from their own JWT); the only thing that scopes what is read is the gym's
+  own stored Paddle subscription ID, and an invoice request for a transaction that
+  belongs to any other subscription is answered exactly like a missing one. Only the
+  fields the screen shows leave the function (no customer name, email or address).
+  Overview is limited to 60 requests an hour per gym and invoice links to 30.
+- **Setup.** Deploy with `supabase functions deploy paddle-billing-info`. It uses
+  `PADDLE_API_KEY`, `PADDLE_ENVIRONMENT` and `APP_ALLOWED_ORIGINS`; nothing new to set.
+- **What a gym sees.** Self-service (Paddle) gyms get the card, an "Update payment
+  method" link that opens Paddle's page in a new tab (with a Refresh button for when
+  they come back), and a table of invoices with a PDF download for each paid one.
+  Plans granted from the owner console have no card or invoices, so they see a short
+  explanation instead. Non-admin staff see only the plan.
+- **Confirm in the sandbox.** The request shapes were checked against Paddle's API
+  reference, but `payments[].method_details.card` and `management_urls` are read
+  defensively; after a sandbox checkout, confirm the card shows as expected, the
+  update link opens Paddle's page, and an invoice PDF downloads.
+
 ## Cancelling a subscription
 
 A tenant admin cancels from Settings → Billing. Cancelling is **scheduled in
@@ -826,11 +857,11 @@ the sandbox, run the smoke test, then repeat steps 3-6 for live.
      PLATFORM_APP_URL=https://your-app.example \
      STAFF_ALLOWED_ORIGINS=https://your-app.example STAFF_APP_URL=https://your-app.example
    supabase functions deploy paddle-webhook paddle-manage-locations \
-     paddle-cancel-subscription paddle-change-plan delete-account \
-     platform-invite-gym invite-staff attendance-ingest
+     paddle-cancel-subscription paddle-change-plan paddle-billing-info \
+     delete-account platform-invite-gym invite-staff attendance-ingest
    ```
 
-   Eight functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
+   Nine functions in all. `invite-staff` (Team & roles) needs the `STAFF_*` pair;
    `platform-invite-gym` (owner console) needs `PLATFORM_APP_URL`;
    `attendance-ingest` needs nothing extra (Supabase provides its keys).
 

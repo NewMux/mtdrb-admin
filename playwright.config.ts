@@ -33,7 +33,7 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { viewport: { width: 1280, height: 800 } } },
-    { name: "tablet", use: { viewport: { width: 768, height: 1024 }, hasTouch: true }, testMatch: /responsive\.spec\.ts/ },
-    { name: "phone", use: { ...devices["Pixel 5"] }, testMatch: /responsive\.spec\.ts/ },
+    { name: "tablet", use: { viewport: { width: 768, height: 1024 }, hasTouch: true }, testMatch: /(responsive|billing-tab)\.spec\.ts/ },
+    { name: "phone", use: { ...devices["Pixel 5"] }, testMatch: /(responsive|billing-tab)\.spec\.ts/ },
   ],
 });
