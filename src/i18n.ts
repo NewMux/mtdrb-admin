@@ -163,7 +163,6 @@ const resources = {
         unlimitedMembers: "Unlimited members",
         advancedAnalytics: "Analytics",
         prioritySupport: "Priority support",
-        whatsappBot: "WhatsApp bot",
         footerDescription: "The gym operating system built for the MENAT region.",
         product: "Product",
         company: "Company",
@@ -2773,7 +2772,7 @@ const resources = {
         starterDescription: "Perfect for single-location gyms",
         proDescription: "Everything in Starter & scale your gym",
         starterFeatures: ["All core features", "Single location", "Email support"],
-        proFeatures: ["Everything in Starter", "Unlimited members", "Analytics", "Priority support", "WhatsApp bot"]
+        proFeatures: ["Everything in Starter", "Unlimited members", "Analytics", "Priority support"]
       },
       notFound: {
         title: "Page not found",

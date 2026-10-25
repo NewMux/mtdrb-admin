@@ -137,7 +137,6 @@ const Home: React.FC = () => {
         t("landing.unlimitedMembers"),
         t("landing.advancedAnalytics"),
         t("landing.prioritySupport"),
-        t("landing.whatsappBot"),
       ],
       featured: true,
     },

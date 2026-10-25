@@ -69,7 +69,6 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Unlimited members",
       "Analytics",
       "Priority support",
-      "WhatsApp bot",
     ],
     popular: true,
     color: "purple",
