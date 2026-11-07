@@ -43,6 +43,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
 const POS = lazy(() => import("./pages/POS"));
 const Plans = lazy(() => import("./pages/Plans"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 const Tasks = lazy(() => import("./pages/Tasks"));
 const Branches = lazy(() => import("./pages/Branches"));
 const Insights = lazy(() => import("./pages/Insights"));
@@ -152,6 +153,7 @@ const App = () => {
                       <Route path="/subscribe/callback" element={<SubscribeCallback />} />
                       <Route path="/onboarding" element={<Onboarding />} />
                       <Route path="/welcome" element={<Welcome />} />
+                      <Route path="/pricing" element={<Pricing />} />
                       <Route path="/terms" element={<Legal initialTab="terms" />} />
                       <Route path="/privacy" element={<Legal initialTab="privacy" />} />
                       <Route path="/refund" element={<Legal initialTab="refund" />} />

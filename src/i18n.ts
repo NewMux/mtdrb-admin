@@ -71,7 +71,23 @@ const resources = {
         footer_product: "A NewMux product.",
         terms: "Terms",
         privacy: "Privacy",
+        refund: "Refund policy",
+        footer_operated: "MTDRB is operated by {{entity}}.",
+        footer_nav: "Footer",
+        pricing_note: "Prices are per month. Tax is added at checkout.",
+        pricing_details: "Pricing details",
         window_title: "MTDRB"
+      },
+      pricing_page: {
+        title: "Pricing",
+        subtitle: "Two plans, billed monthly. Add a location whenever you need one.",
+        billing_title: "How you are billed",
+        billing_body: "Plans are billed monthly in advance, in the currency shown, and renew automatically. Each extra location is a separate monthly charge added to your plan.",
+        tax_title: "Tax and payment",
+        tax_body: "Payments are handled by our payment provider, Paddle, the merchant of record. Sales tax or VAT is calculated at checkout from your location, and Paddle issues the invoice.",
+        cancel_title: "Cancel or get a refund",
+        cancel_body: "Cancel any time from Settings → Billing and keep access until the end of the period you paid for. If you are not satisfied, ask for a full refund within 14 days of your first payment.",
+        seller: "MTDRB is operated by {{entity}}."
       },
       landing: {
         hero_headline: "The Modern Business Platform for Gyms & Trainers",

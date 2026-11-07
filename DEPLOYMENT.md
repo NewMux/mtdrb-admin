@@ -898,6 +898,59 @@ the sandbox, run the smoke test, then repeat steps 3-6 for live.
    real purchase with your own card, refund it in Paddle, and cancel it.
    Remove the sandbox values from production environments.
 
+## Going live with Paddle (account verification and the live switch)
+
+Paddle's live account is a separate account from the sandbox and must be approved
+before it takes payments. The code side of that is done; what is left is
+Paddle's dashboard and four environment values. (The Paddle website-review
+requirements below are from Paddle's public guidance as remembered when this was
+written; `paddle.com` could not be reached from the session that wrote this, so
+re-read their current checklist in the dashboard before you submit.)
+
+1. **Sign up** at vendors.paddle.com with NewMux's business details.
+2. **Verification: what the website must show.** Submit the production domain,
+   not a Vercel preview URL. These are all public (no sign-in), linked from the
+   footer of every public page, and exist in the app:
+
+   | Paddle asks for | Where it is |
+   |---|---|
+   | Pricing page with prices, currency and billing period | `/pricing` (also the landing page's pricing section). Amounts come from `VITE_*_PRICE` and `VITE_PLATFORM_CURRENCY` |
+   | Terms of service | `/terms`. Section 3 names Paddle as Merchant of Record and links Paddle's Checkout Buyer Terms |
+   | Privacy policy | `/privacy` |
+   | Refund policy | `/refund` (14-day money-back guarantee, how to request it) |
+   | Who the seller is, and a contact | Footer, Pricing, Terms and Privacy name the seller and show the contact email |
+
+   Before submitting, set `VITE_LEGAL_ENTITY_NAME` to NewMux's **exact registered
+   name** (e.g. `NewMux W.L.L.`) and `VITE_LEGAL_EMAIL` to a mailbox that is read,
+   in Vercel Production, and redeploy. Paddle compares the name on the site with
+   the one on the application. Defaults are `NewMux` and `legal@mtdrb.net`. Also
+   have the Bahraini company's registered address added to the Terms if Paddle
+   asks for one (a lawyer should review these pages anyway, see the checklist
+   below). The pricing page must match what Paddle will charge, so finish step 3
+   and keep `VITE_*_PRICE` equal to the live prices.
+3. **Rebuild the catalog in live.** Sandbox products do not carry over:
+   `PADDLE_ENVIRONMENT=production PADDLE_API_KEY=pdl_live_... node scripts/seed-paddle-catalog.mjs --dry-run`
+   first, then without `--dry-run`. Note the new `pri_...` IDs.
+4. **Live credentials** (Paddle → Developer tools → Authentication): a live API key
+   (`pdl_live_apikey_...`) and a client-side token (`live_...`). Also approve the
+   production domain for checkout (Checkout settings) once Paddle has approved it.
+5. **Switch the app.**
+   - Supabase secrets: `supabase secrets set PADDLE_API_KEY=pdl_live_... PADDLE_ENVIRONMENT=production`
+     plus the four live `PADDLE_*_PRICE_ID` values (replacing the sandbox key).
+   - Vercel Production: `VITE_PADDLE_ENVIRONMENT=production`,
+     `VITE_PADDLE_CLIENT_TOKEN=live_...`, `VITE_PADDLE_STARTER_PRICE_ID`,
+     `VITE_PADDLE_PRO_PRICE_ID`. `src/pages/Subscribe.tsx` calls
+     `Paddle.Environment.set()` with `production` or `sandbox` from that variable,
+     so there is no hard-coded `sandbox` line to remove. The build refuses a `production` environment with a
+     `test_` token, and a Vercel production build left on sandbox warns.
+6. **Webhook in live** (Notifications): the same
+   `https://<project-ref>.supabase.co/functions/v1/paddle-webhook` URL with the
+   same seven `subscription.*` events; put its new signing secret in
+   `PADDLE_WEBHOOK_SECRET`.
+
+Then do a real purchase with your own card, refund it in Paddle, and cancel it
+(runbook step 8).
+
 ## Worldwide launch checklist
 
 Things the code cannot do for you, in the order I would do them.

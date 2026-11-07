@@ -16,6 +16,21 @@ test.describe("public pages", () => {
     }
   });
 
+  test("the pricing page shows the plans and every public page links to the policies", async ({ page }) => {
+    await openPage(page, "/pricing");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/pricing/i);
+    await expect(page.getByRole("heading", { name: "Starter" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
+
+    for (const path of ["/", "/pricing", "/terms", "/privacy", "/refund"]) {
+      await openPage(page, path);
+      const footer = page.getByRole("contentinfo");
+      for (const [name, href] of [["Pricing", "/pricing"], ["Terms", "/terms"], ["Privacy", "/privacy"], ["Refund policy", "/refund"]] as const) {
+        await expect(footer.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+      }
+    }
+  });
+
   test("an unknown address shows the not-found page with a way back", async ({ page }) => {
     await openPage(page, "/this-page-does-not-exist");
     await expect(page.getByRole("heading").first()).toBeVisible();

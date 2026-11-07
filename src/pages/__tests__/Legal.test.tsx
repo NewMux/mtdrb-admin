@@ -30,7 +30,8 @@ describe("Legal pages", () => {
     expect(text).toMatch(/anonymous record/);
     expect(text).toMatch(/do not use advertising cookies/);
     expect(text).toMatch(/GDPR/);
-    expect(text).toMatch(/provided by MTDRB, a company established in the Kingdom of Bahrain/);
+    expect(text).toMatch(/provided by NewMux, a company established in the Kingdom of Bahrain/);
+    expect(text).toContain("legal@mtdrb.net");
   });
 
   it("refund: no longer names a payment gateway the product does not use", () => {
@@ -54,9 +55,19 @@ describe("Legal pages", () => {
     expect(text).toMatch(/Deleting Your Account/);
     expect(text).toMatch(/collected at checkout by our payment provider, Paddle/);
     expect(text).toMatch(/7\. Governing Law/);
-    expect(text).toMatch(/operated by MTDRB, a company established in the Kingdom of Bahrain/);
+    expect(text).toMatch(/operated by NewMux, a company established in the Kingdom of Bahrain/);
+    expect(text).toMatch(/Paddle\.com is the Merchant of Record for all our orders/);
+    expect(document.querySelector('a[href="https://www.paddle.com/legal/checkout-buyer-terms"]')).not.toBeNull();
     expect(text).toMatch(/laws of the Kingdom of Bahrain/);
     expect(text).not.toMatch(/Dubai|United Arab Emirates/);
+  });
+
+  it("every legal page links to the other two and to pricing from the footer", () => {
+    h.language = "en";
+    page("/terms", "terms");
+    const hrefs = Array.from(document.querySelectorAll("a")).map((a) => a.getAttribute("href"));
+    for (const path of ["/terms", "/privacy", "/refund", "/pricing"]) expect(hrefs).toContain(path);
+    expect(document.querySelector('a[aria-current="page"]')?.getAttribute("href")).toBe("/terms");
   });
 
   it("the Arabic refund page states the same guarantee", () => {

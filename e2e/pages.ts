@@ -24,6 +24,7 @@ export const PUBLIC_PAGES: Array<{ path: string; name: string }> = [
   { path: "/login", name: "Sign in" },
   { path: "/signup", name: "Sign up" },
   { path: "/forgot-password", name: "Forgot password" },
+  { path: "/pricing", name: "Pricing" },
   { path: "/terms", name: "Terms" },
   { path: "/privacy", name: "Privacy" },
   { path: "/refund", name: "Refund policy" },

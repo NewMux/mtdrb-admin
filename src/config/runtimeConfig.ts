@@ -24,6 +24,12 @@ export const DEFAULT_COUNTRY_CODE = readEnv("VITE_DEFAULT_COUNTRY_CODE") || "";
 export const DEFAULT_VAT_RATE = readNumber("VITE_DEFAULT_VAT_RATE", 0);
 export const PLATFORM_CURRENCY =
   readEnv("VITE_PLATFORM_CURRENCY") || "USD";
+// Who sells MTDRB and how to reach them. Shown on the Terms, Privacy and
+// Refund pages and in the public footer; Paddle's website review checks that
+// the business named there is the one on the Paddle account, so set
+// VITE_LEGAL_ENTITY_NAME to the exact registered name (e.g. "NewMux W.L.L.").
+export const LEGAL_ENTITY_NAME = readEnv("VITE_LEGAL_ENTITY_NAME") || "NewMux";
+export const LEGAL_EMAIL = readEnv("VITE_LEGAL_EMAIL") || "legal@mtdrb.net";
 export const STARTER_EXTRA_LOCATION_PRICE = readNumber("VITE_STARTER_EXTRA_LOCATION_PRICE", 25);
 export const PRO_EXTRA_LOCATION_PRICE = readNumber("VITE_PRO_EXTRA_LOCATION_PRICE", 40);
 

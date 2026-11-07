@@ -4,7 +4,10 @@ import { FiShield, FiFileText, FiRefreshCw, FiArrowLeft, FiHelpCircle } from "re
 import { useTranslation } from "react-i18next";
 import { useRTL } from "../hooks/useRTL";
 import LanguageSwitcher from "../components/LanguageSwitcher";
-import { PLATFORM_CURRENCY } from "../config/runtimeConfig";
+import { LEGAL_EMAIL, LEGAL_ENTITY_NAME, PLATFORM_CURRENCY } from "../config/runtimeConfig";
+import PublicFooter from "../components/landing/PublicFooter";
+
+const PADDLE_BUYER_TERMS_URL = "https://www.paddle.com/legal/checkout-buyer-terms";
 
 interface LegalProps {
   initialTab?: "terms" | "privacy" | "refund";
@@ -32,16 +35,19 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
   const tabs = [
     {
       id: "terms" as const,
+      path: "/terms",
       name: isArabic ? "شروط الخدمة" : "Terms of Service",
       icon: FiFileText,
     },
     {
       id: "privacy" as const,
+      path: "/privacy",
       name: isArabic ? "سياسة الخصوصية" : "Privacy Policy",
       icon: FiShield,
     },
     {
       id: "refund" as const,
+      path: "/refund",
       name: isArabic ? "سياسة الاسترجاع والإلغاء" : "Refund & Cancellation",
       icon: FiRefreshCw,
     },
@@ -83,9 +89,10 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
-                  <button
+                  <Link
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    to={tab.path}
+                    aria-current={isActive ? "page" : undefined}
                     className={`w-full flex items-center ${
                       isRTL ? "space-x-reverse text-right" : "text-left"
                     } space-x-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all ${
@@ -96,7 +103,7 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   >
                     <Icon className="w-5 h-5" />
                     <span>{tab.name}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -111,10 +118,10 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   : "If you have any legal questions regarding our terms or privacy policy, please contact our legal support team."}
               </p>
               <a
-                href="mailto:legal@mtdrb.net"
+                href={`mailto:${LEGAL_EMAIL}`}
                 className="mt-3 block text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400"
               >
-                legal@mtdrb.net
+                {LEGAL_EMAIL}
               </a>
             </div>
           </aside>
@@ -127,14 +134,14 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   {isArabic ? "شروط الخدمة والأحكام" : "Terms of Service"}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isArabic ? "آخر تحديث: 24 أكتوبر 2026" : "Last updated: October 24, 2026"}
+                  {isArabic ? "آخر تحديث: 7 نوفمبر 2026" : "Last updated: November 7, 2026"}
                 </p>
 
                 <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                   <p>
                     {isArabic
-                      ? "مرحبًا بكم في منصة إدراة / MTDRB (المشار إليها بـ \"المنصة\" أو \"الخدمة\"). باستخدامك لخدماتنا أو تسجيل حساب جديد، فإنك توافق على الالتزام الكامل بهذه الشروط والأحكام. تُشغَّل المنصة بواسطة شركة MTDRB المؤسسة في مملكة البحرين (\"MTDRB\" أو \"نحن\")."
-                      : "Welcome to MTDRB / Idara (the \"Platform\" or \"Service\"). By using our services or creating an account, you agree to comply with and be bound by these Terms of Service. The Platform is operated by MTDRB, a company established in the Kingdom of Bahrain (\"MTDRB\", \"we\", \"us\")."}
+                      ? `مرحبًا بكم في منصة إدراة / MTDRB (المشار إليها بـ "المنصة" أو "الخدمة"). باستخدامك لخدماتنا أو تسجيل حساب جديد، فإنك توافق على الالتزام الكامل بهذه الشروط والأحكام. تُشغَّل المنصة بواسطة شركة ${LEGAL_ENTITY_NAME} المؤسسة في مملكة البحرين ("${LEGAL_ENTITY_NAME}" أو "نحن").`
+                      : `Welcome to MTDRB / Idara (the "Platform" or "Service"). By using our services or creating an account, you agree to comply with and be bound by these Terms of Service. The Platform is operated by ${LEGAL_ENTITY_NAME}, a company established in the Kingdom of Bahrain ("${LEGAL_ENTITY_NAME}", "we", "us").`}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -162,6 +169,25 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                     {isArabic
                       ? `جميع أسعار الباقات تُحتسب بعملة ${PLATFORM_CURRENCY}. يتم تحصيل الرسوم شهريًا أو سنويًا وفقًا لاختيارك. تجدد الاشتراكات تلقائيًا ما لم تقم بإلغاء الاشتراك من لوحة إعدادات الفوترة قبل نهاية الفترة الحالية. تُحتسب الضرائب المطبقة وتُحصَّل عند الدفع عبر مزود الدفع لدينا Paddle.`
                       : `All subscription fees are billed in ${PLATFORM_CURRENCY}. Fees are payable in advance on a recurring monthly or annual basis. Subscriptions automatically renew unless cancelled through your dashboard billing settings prior to the renewal date. Applicable taxes are calculated and collected at checkout by our payment provider, Paddle.`}
+                  </p>
+                  <p>
+                    {isArabic ? (
+                      <>
+                        تتم عملية الطلب عبر موزّعنا الإلكتروني Paddle.com، وهو التاجر المسجّل (Merchant of Record) لجميع طلباتنا. تتولى Paddle خدمة العملاء والاستفسارات المتعلقة بالفوترة والمرتجعات الخاصة بطلبك، وتسري{" "}
+                        <a href={PADDLE_BUYER_TERMS_URL} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
+                          شروط المشتري في Paddle
+                        </a>{" "}
+                        على عملية الشراء.
+                      </>
+                    ) : (
+                      <>
+                        Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Paddle provides all customer service inquiries and handles returns related to your order. Paddle&apos;s{" "}
+                        <a href={PADDLE_BUYER_TERMS_URL} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
+                          Checkout Buyer Terms
+                        </a>{" "}
+                        apply to your purchase.
+                      </>
+                    )}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -209,14 +235,14 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   {isArabic ? "سياسة الخصوصية وحماية البيانات" : "Privacy Policy"}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isArabic ? "آخر تحديث: 24 أكتوبر 2026" : "Last updated: October 24, 2026"}
+                  {isArabic ? "آخر تحديث: 7 نوفمبر 2026" : "Last updated: November 7, 2026"}
                 </p>
 
                 <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                   <p>
                     {isArabic
-                      ? "نحن نولي خصوصية بياناتكم وأمن معلومات أعضائكم أهمية قصوى. توضح هذه السياسة كيفية جمع البيانات، استخدامها، وحمايتها داخل منصة إدراة. تقدّم المنصة شركة MTDRB المؤسسة في مملكة البحرين."
-                      : "We are committed to protecting the privacy of your business data and your members' information. This Privacy Policy details how we collect, process, and protect information within the MTDRB application. The Platform is provided by MTDRB, a company established in the Kingdom of Bahrain."}
+                      ? `نحن نولي خصوصية بياناتكم وأمن معلومات أعضائكم أهمية قصوى. توضح هذه السياسة كيفية جمع البيانات، استخدامها، وحمايتها داخل منصة إدراة. تقدّم المنصة شركة ${LEGAL_ENTITY_NAME} المؤسسة في مملكة البحرين.`
+                      : `We are committed to protecting the privacy of your business data and your members' information. This Privacy Policy details how we collect, process, and protect information within the MTDRB application. The Platform is provided by ${LEGAL_ENTITY_NAME}, a company established in the Kingdom of Bahrain.`}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -296,8 +322,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h2>
                   <p>
                     {isArabic
-                      ? "لأي أسئلة تخص الخصوصية أو لممارسة حقوقك بما لا تتيحه أدوات الإعدادات، راسلنا على legal@mtdrb.net."
-                      : "For privacy questions, or to exercise a right the Settings tools do not cover, write to legal@mtdrb.net."}
+                      ? `لأي أسئلة تخص الخصوصية أو لممارسة حقوقك بما لا تتيحه أدوات الإعدادات، راسلنا على ${LEGAL_EMAIL}.`
+                      : `For privacy questions, or to exercise a right the Settings tools do not cover, write to ${LEGAL_EMAIL}.`}
                   </p>
                 </div>
               </article>
@@ -309,7 +335,7 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   {isArabic ? "سياسة الاسترجاع وإلغاء الاشتراكات" : "Refund & Cancellation Policy"}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isArabic ? "آخر تحديث: 24 أكتوبر 2026" : "Last updated: October 24, 2026"}
+                  {isArabic ? "آخر تحديث: 7 نوفمبر 2026" : "Last updated: November 7, 2026"}
                 </p>
 
                 <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
@@ -359,8 +385,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
                   </h3>
                   <p>
                     {isArabic
-                      ? "راسلنا على legal@mtdrb.net من البريد الإلكتروني المسجّل في حسابك مع ذكر اسم ناديك. سنؤكد استلام الطلب ونعالجه في أقرب وقت."
-                      : "Email legal@mtdrb.net from the email address on your account and name your gym. We will confirm your request and process it promptly."}
+                      ? `راسلنا على ${LEGAL_EMAIL} من البريد الإلكتروني المسجّل في حسابك مع ذكر اسم ناديك. سنؤكد استلام الطلب ونعالجه في أقرب وقت.`
+                      : `Email ${LEGAL_EMAIL} from the email address on your account and name your gym. We will confirm your request and process it promptly.`}
                   </p>
 
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white pt-2 border-b border-gray-100 dark:border-gray-700 pb-2">
@@ -377,6 +403,8 @@ const Legal: React.FC<LegalProps> = ({ initialTab = "terms" }) => {
           </div>
         </div>
       </main>
+
+      <PublicFooter adaptive />
     </div>
   );
 };
